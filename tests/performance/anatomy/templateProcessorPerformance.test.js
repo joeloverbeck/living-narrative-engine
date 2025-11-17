@@ -318,6 +318,7 @@ describe('Template Processor Performance', () => {
       }
 
       const measurements = [];
+      const operationsPerMeasurement = 5; // Bundle operations to reduce timer noise
 
       // Test with increasing limb counts
       // Using larger starting size to reduce relative timing noise
@@ -325,11 +326,15 @@ describe('Template Processor Performance', () => {
         const template = createTemplate(count);
 
         // Take multiple measurements and use median to reduce outlier impact
+        // Each measurement batches several back-to-back runs to ensure timer
+        // resolution noise doesn't overwhelm the ratios we care about.
         const times = [];
         for (let run = 0; run < 5; run++) {
           const startTime = performance.now();
-          socketGenerator.generateSockets(template);
-          slotGenerator.generateBlueprintSlots(template);
+          for (let op = 0; op < operationsPerMeasurement; op++) {
+            socketGenerator.generateSockets(template);
+            slotGenerator.generateBlueprintSlots(template);
+          }
           const endTime = performance.now();
           times.push(endTime - startTime);
         }

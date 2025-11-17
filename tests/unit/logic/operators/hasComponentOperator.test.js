@@ -238,5 +238,46 @@ describe('HasComponentOperator', () => {
         expect.stringContaining('Invalid entity ID at path entity')
       );
     });
+
+    describe('planning state awareness', () => {
+      it('should short-circuit to planning state hash when component entry exists', () => {
+        const context = {
+          state: {
+            'entity-1:core:armed': { equipped: true },
+          },
+        };
+
+        const result = operator.evaluate(['entity-1', 'core:armed'], context);
+
+        expect(result).toBe(true);
+        expect(mockEntityManager.hasComponent).not.toHaveBeenCalled();
+      });
+
+      it('should return false from planning state when entry exists but is falsy without hitting entity manager', () => {
+        const context = {
+          state: {
+            'entity-1:core:armed': null,
+          },
+        };
+
+        const result = operator.evaluate(['entity-1', 'core:armed'], context);
+
+        expect(result).toBe(false);
+        expect(mockEntityManager.hasComponent).not.toHaveBeenCalled();
+      });
+
+      it('should fall back to entity manager when planning state entry is missing', () => {
+        const context = {
+          state: {},
+        };
+
+        mockEntityManager.hasComponent.mockReturnValue(true);
+
+        const result = operator.evaluate(['entity-1', 'core:armed'], context);
+
+        expect(result).toBe(true);
+        expect(mockEntityManager.hasComponent).toHaveBeenCalledWith('entity-1', 'core:armed');
+      });
+    });
   });
 });

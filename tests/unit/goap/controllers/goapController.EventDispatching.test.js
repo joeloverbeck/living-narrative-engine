@@ -47,6 +47,7 @@ describe('GoapController - Event Dispatching (GOAPIMPL-021-08)', () => {
 
     mockGoapPlanner = {
       plan: jest.fn(),
+      getLastFailure: jest.fn().mockReturnValue(null),
     };
 
     mockRefinementEngine = {
@@ -202,6 +203,43 @@ describe('GoapController - Event Dispatching (GOAPIMPL-021-08)', () => {
       );
     });
 
+    it('should treat zero-length plans as already satisfied goals', async () => {
+      // Arrange
+      const actor = { id: 'actor_1' };
+      const world = { state: {} };
+      const goal = {
+        id: 'goal:test_goal',
+        priority: 10,
+        relevance: null,
+      };
+
+      mockDataRegistry.getAll.mockReturnValue([goal]);
+      mockGoapPlanner.plan.mockReturnValue({ tasks: [] });
+
+      // Act
+      const result = await controller.decideTurn(actor, world);
+
+      // Assert
+      expect(result).toBeNull();
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        GOAP_EVENTS.PLANNING_COMPLETED,
+        expect.objectContaining({
+          actorId: 'actor_1',
+          goalId: 'goal:test_goal',
+          planLength: 0,
+          tasks: [],
+        })
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Planner returned empty plan (goal already satisfied)',
+        expect.objectContaining({
+          actorId: 'actor_1',
+          goalId: 'goal:test_goal',
+        })
+      );
+      expect(mockRefinementEngine.refine).not.toHaveBeenCalled();
+    });
+
     it('should dispatch goap:planning_failed when planner returns null', async () => {
       // Arrange
       const actor = { id: 'actor_1' };
@@ -225,6 +263,7 @@ describe('GoapController - Event Dispatching (GOAPIMPL-021-08)', () => {
           actorId: 'actor_1',
           goalId: 'goal:test_goal',
           reason: 'Planner returned no tasks',
+          code: 'UNKNOWN_PLANNER_FAILURE',
         })
       );
     });

@@ -744,6 +744,115 @@ export class BaseCharacterBuilderController {
   }
 
   /**
+   * Create a performance mark tied to the injected PerformanceMonitor service.
+   *
+   * @protected
+   * @param {string} markName - Name for the performance mark.
+   * @returns {number|null} Timestamp recorded for the mark or null when unavailable.
+   */
+  _performanceMark(markName) {
+    if (!this.#performanceMonitor?.mark) {
+      return null;
+    }
+    return this.#performanceMonitor.mark(markName);
+  }
+
+  /**
+   * Measure the duration between two marks.
+   *
+   * @protected
+   * @param {string} measureName - Identifier for the measurement.
+   * @param {string} startMark - Starting mark name.
+   * @param {string} [endMark] - Optional ending mark name.
+   * @returns {object|null}
+   */
+  _performanceMeasure(measureName, startMark, endMark) {
+    if (!this.#performanceMonitor?.measure) {
+      return null;
+    }
+    return this.#performanceMonitor.measure(measureName, startMark, endMark);
+  }
+
+  /**
+   * Retrieve recorded performance measurements.
+   *
+   * @protected
+   * @returns {Map<string, object>} Measurements map.
+   */
+  _getPerformanceMeasurements() {
+    if (!this.#performanceMonitor?.getMeasurements) {
+      return new Map();
+    }
+    return this.#performanceMonitor.getMeasurements();
+  }
+
+  /**
+   * Clear stored performance data, optionally filtered by prefix.
+   *
+   * @protected
+   * @param {string|null} [prefix] - Optional prefix filter.
+   */
+  _clearPerformanceData(prefix = null) {
+    this.#performanceMonitor?.clearData?.(prefix);
+  }
+
+  /**
+   * Expose the shared memory manager for subclasses when needed.
+   *
+   * @protected
+   * @returns {MemoryManager|null}
+   */
+  get memoryManager() {
+    return this.#memoryManager;
+  }
+
+  /**
+   * Store a weak reference through the shared MemoryManager.
+   *
+   * @protected
+   * @param {object} key - Weak reference key.
+   * @param {any} value - Associated value.
+   */
+  _setWeakReference(key, value) {
+    return this.#memoryManager?.setWeakReference?.(key, value);
+  }
+
+  /**
+   * Retrieve a value stored via weak reference.
+   *
+   * @protected
+   * @param {object} key - Weak reference key.
+   * @returns {any}
+   */
+  _getWeakReference(key) {
+    return this.#memoryManager?.getWeakReference?.(key);
+  }
+
+  /**
+   * Track an object using the MemoryManager WeakSet helper.
+   *
+   * @protected
+   * @param {object} obj - Object to track.
+   */
+  _trackWeakly(obj) {
+    return this.#memoryManager?.trackWeakly?.(obj);
+  }
+
+  /**
+   * Determine if an object is weakly tracked.
+   *
+   * @protected
+   * @param {object} obj - Object to inspect.
+   * @returns {boolean}
+   */
+  _isWeaklyTracked(obj) {
+    if (!this.#memoryManager?.isWeaklyTracked) {
+      return false;
+    }
+    return this.#memoryManager.isWeaklyTracked(obj);
+  }
+
+  /**
    * Get additional services (for subclasses)
    *
    * @protected
@@ -919,6 +1028,43 @@ export class BaseCharacterBuilderController {
   }
 
   /**
+   * Resolve a DOM element either from a cached key or direct reference.
+   *
+   * @private
+   * @param {HTMLElement|string|null|undefined} elementOrKey - Cached element key or DOM element.
+   * @returns {HTMLElement|null} - Resolved DOM element or null if not found.
+   */
+  #resolveElement(elementOrKey) {
+    if (!elementOrKey) {
+      return null;
+    }
+
+    if (typeof elementOrKey === 'string') {
+      return this._getDomManager().getElement(elementOrKey);
+    }
+
+    if (typeof elementOrKey === 'object') {
+      if (typeof elementOrKey.addEventListener === 'function') {
+        return elementOrKey;
+      }
+
+      if (
+        elementOrKey.element &&
+        typeof elementOrKey.element.addEventListener === 'function'
+      ) {
+        return elementOrKey.element;
+      }
+    }
+
+    this.#logger?.warn?.(
+      `${this.constructor.name}: Unable to resolve element reference for listener registration`,
+      { provided: elementOrKey }
+    );
+
+    return null;
+  }
+
+  /**
    * Set text content of a cached DOM element
    *
    * @param {string} elementName - Name of the element to update
@@ -953,39 +1099,59 @@ export class BaseCharacterBuilderController {
   }
 
   /**
-   * Register an event listener for a DOM element
+   * Register an event listener for a cached element or direct DOM reference.
    *
-   * @param {string} elementName - Name of the cached element
-   * @param {string} eventType - Type of event to listen for
-   * @param {Function} handler - Event handler function
+   * @param {string|HTMLElement} elementOrKey - Cached element key or DOM element.
+   * @param {string} eventType - Type of event to listen for.
+   * @param {Function} handler - Event handler function.
+   * @param {object} [options] - Listener options forwarded to EventListenerRegistry.
    * @protected
+   * @returns {string|null} Listener identifier for later cleanup.
    */
-  _addEventListener(elementName, eventType, handler) {
-    const element = this._getDomManager().getElement(elementName);
-    if (element) {
-      this.#eventListenerRegistry.addEventListener(element, eventType, handler);
+  _addEventListener(elementOrKey, eventType, handler, options = {}) {
+    const element = this.#resolveElement(elementOrKey);
+    if (!element) {
+      this.#logger?.warn?.(
+        `${this.constructor.name}: Cannot add '${eventType}' listener - element not available`
+      );
+      return null;
     }
+
+    return this.#eventListenerRegistry.addEventListener(
+      element,
+      eventType,
+      handler,
+      options
+    );
   }
 
   /**
-   * Add debounced event listener to cached element
+   * Add debounced event listener to cached element or DOM reference.
    *
-   * @param {string} elementName - Name of the cached element
-   * @param {string} eventType - Type of event to listen for
-   * @param {Function} handler - Event handler function
-   * @param {number} delay - Debounce delay in milliseconds
+   * @param {string|HTMLElement} elementOrKey - Cached element key or DOM element.
+   * @param {string} eventType - Type of event to listen for.
+   * @param {Function} handler - Event handler function.
+   * @param {number} delay - Debounce delay in milliseconds.
+   * @param {object} [options] - Additional listener options.
    * @protected
+   * @returns {string|null} Listener identifier.
    */
-  _addDebouncedListener(elementName, eventType, handler, delay) {
-    const element = this._getDomManager().getElement(elementName);
-    if (element) {
-      this.#eventListenerRegistry.addDebouncedListener(
-        element,
-        eventType,
-        handler,
-        delay
+  _addDebouncedListener(elementOrKey, eventType, handler, delay, options = {}) {
+    const element = this.#resolveElement(elementOrKey);
+    if (!element) {
+      this.#logger?.warn?.(
+        `${this.constructor.name}: Cannot add debounced '${eventType}' listener - element not available`
       );
+      return null;
     }
+
+    return this.#eventListenerRegistry.addDebouncedListener(
+      element,
+      eventType,
+      handler,
+      delay,
+      options
+    );
   }
 
   /**
@@ -1354,36 +1520,6 @@ export class BaseCharacterBuilderController {
   _isInState(state) {
     return this.currentState === state;
   }
-
-  /**
-   * Add event listener with automatic tracking for cleanup
-   *
-   * @protected
-   * @param {HTMLElement|string} elementOrKey - Element or element key from cache
-   * @param {string} event - Event type (e.g., 'click', 'submit')
-   * @param {Function} handler - Event handler function
-   * @param {object} [options] - Event listener options
-   * @param {boolean} [options.capture] - Use capture phase
-   * @param {boolean} [options.once] - Remove after first call
-   * @param {boolean} [options.passive] - Passive listener (can't preventDefault)
-   * @param {string} [options.id] - Unique identifier for this listener
-   * @returns {string|null} Listener ID for later removal, or null if failed
-   * @example
-   * // Using cached element key
-   * this._addEventListener('submitBtn', 'click', this._handleSubmit.bind(this));
-   *
-   * // Using element directly
-   * this._addEventListener(formElement, 'submit', (e) => {
-   *   e.preventDefault();
-   *   this._handleFormSubmit();
-   * });
-   *
-   * // With options
-   * this._addEventListener('input', 'input', this._handleInput.bind(this), {
-   *   passive: true,
-   *   id: 'main-input-handler'
-   * });
-   */
 
   /**
    * Cache DOM elements - must be implemented by subclasses

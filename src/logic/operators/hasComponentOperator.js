@@ -218,13 +218,20 @@ export class HasComponentOperator {
     // During planning, check the planning state instead of EntityManager
     if (context.state && typeof context.state === 'object') {
       const stateKey = `${entityId}:${componentId}`;
-      const hasComponent = Object.hasOwn(context.state, stateKey) && context.state[stateKey];
+
+      if (Object.hasOwn(context.state, stateKey)) {
+        const hasComponent = Boolean(context.state[stateKey]);
+
+        this.#logger.debug(
+          `${this.#operatorName}: [Planning Mode] Entity ${entityId} ${hasComponent ? 'has' : 'does not have'} component ${componentId} in planning state`
+        );
+
+        return hasComponent;
+      }
 
       this.#logger.debug(
-        `${this.#operatorName}: [Planning Mode] Entity ${entityId} ${hasComponent ? 'has' : 'does not have'} component ${componentId} in planning state`
+        `${this.#operatorName}: [Planning Mode] Component ${componentId} missing from planning state for entity ${entityId}, falling back to runtime`
       );
-
-      return hasComponent;
     }
 
     // Normal runtime mode: check EntityManager

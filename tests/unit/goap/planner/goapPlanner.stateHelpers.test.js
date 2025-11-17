@@ -525,6 +525,26 @@ describe('GoapPlanner - State Management Helpers', () => {
         { state: problematicState }
       );
     });
+
+    it('should mirror state.actor tree (including flattened aliases) onto context.actor', () => {
+      const state = {
+        'actor:core:needs': { hunger: 80 },
+      };
+
+      state.actor = {
+        id: 'actor',
+        components: {
+          'core:needs': { hunger: 80 },
+          core_needs: { hunger: 80 },
+        },
+      };
+
+      const context = planner.testBuildEvaluationContext(state);
+
+      expect(context.actor).toBe(state.actor);
+      expect(context.actor.components['core:needs'].hunger).toBe(80);
+      expect(context.actor.components.core_needs.hunger).toBe(80);
+    });
   });
 
   describe('Integration - Combined Helper Usage', () => {

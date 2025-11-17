@@ -6,6 +6,7 @@
 
 import { assertNonBlankString } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
+import { goalHasPureNumericRoot } from '../planner/goalConstraintUtils.js';
 
 /**
  * Inspects and formats GOAP plans for debugging
@@ -93,6 +94,8 @@ class PlanInspector {
     const failedGoals = this.#goapController.getFailedGoals(actorId);
     const failedTasks = this.#goapController.getFailedTasks(actorId);
 
+    const heuristicSummary = this.#describeNumericHeuristic(plan.goal);
+
     return {
       actorId: plan.actorId,
       goal: {
@@ -100,6 +103,7 @@ class PlanInspector {
         name: goalDef?.name || plan.goal.id,
         description: goalDef?.description || '',
         priority: plan.goal.priority,
+        numericHeuristic: heuristicSummary,
       },
       tasks: plan.tasks.map((task, index) => {
         const taskDef = this.#dataRegistry.get('tasks', task.id);
@@ -138,6 +142,8 @@ class PlanInspector {
     const failedGoals = this.#goapController.getFailedGoals(plan.actorId);
     const failedTasks = this.#goapController.getFailedTasks(plan.actorId);
 
+    const heuristicSummary = this.#describeNumericHeuristic(plan.goal);
+
     const lines = [];
     lines.push(`=== GOAP Plan: Achieve '${plan.goal.id}' ===`);
     lines.push(`Actor: ${plan.actorId}`);
@@ -148,6 +154,8 @@ class PlanInspector {
     }
 
     lines.push(`Goal Priority: ${plan.goal.priority}`);
+    lines.push(`Numeric Heuristic: ${heuristicSummary.status}`);
+    lines.push(`Heuristic Reason: ${heuristicSummary.reason}`);
     lines.push(`Plan Length: ${plan.tasks.length} task(s)`);
     lines.push(`Created: ${new Date(plan.createdAt).toISOString()}`);
     lines.push(`Last Validated: ${new Date(plan.lastValidated).toISOString()}`);
@@ -168,8 +176,9 @@ class PlanInspector {
       lines.push('  Goal Failure Details:');
       failedGoals.forEach(({ goalId, failures }) => {
         lines.push(`    ${goalId}: ${failures.length} failure(s)`);
-        failures.forEach(({ reason, timestamp }) => {
-          lines.push(`      - ${reason} (${new Date(timestamp).toISOString()})`);
+        failures.forEach(({ reason, code, timestamp }) => {
+          const label = code ? `[${code}] ` : '';
+          lines.push(`      - ${label}${reason} (${new Date(timestamp).toISOString()})`);
         });
       });
     }
@@ -179,8 +188,9 @@ class PlanInspector {
       lines.push('  Task Failure Details:');
       failedTasks.forEach(({ taskId, failures }) => {
         lines.push(`    ${taskId}: ${failures.length} failure(s)`);
-        failures.forEach(({ reason, timestamp }) => {
-          lines.push(`      - ${reason} (${new Date(timestamp).toISOString()})`);
+        failures.forEach(({ reason, code, timestamp }) => {
+          const label = code ? `[${code}] ` : '';
+          lines.push(`      - ${label}${reason} (${new Date(timestamp).toISOString()})`);
         });
       });
     }
@@ -189,6 +199,35 @@ class PlanInspector {
     lines.push('=== End Plan ===');
 
     return lines.join('\n');
+  }
+
+  /**
+   * Describe whether numeric heuristics are active for the goal.
+   *
+   * @param {object} goal - Goal definition
+   * @returns {{status: string, reason: string, active: boolean}}
+   */
+  #describeNumericHeuristic(goal) {
+    if (!goal) {
+      return {
+        status: 'UNKNOWN',
+        reason: 'Goal not available',
+        active: false,
+      };
+    }
+
+    const active = goalHasPureNumericRoot(goal);
+    return active
+      ? {
+          status: 'ACTIVE (pure numeric root comparator)',
+          reason: 'Root operator is <=, <, >=, or >',
+          active: true,
+        }
+      : {
+          status: 'BYPASSED (composite/structural goal)',
+          reason: 'Root operator is not a numeric comparator',
+          active: false,
+        };
   }
 
   /**

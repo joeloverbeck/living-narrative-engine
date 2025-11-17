@@ -9,6 +9,14 @@ import EventBus from '../../../../src/events/eventBus.js';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import GameDataRepository from '../../../../src/data/gameDataRepository.js';
 import AjvSchemaValidator from '../../../../src/validation/ajvSchemaValidator.js';
+import { ControllerLifecycleOrchestrator } from '../../../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
+import { DOMElementManager } from '../../../../src/characterBuilder/services/domElementManager.js';
+import { EventListenerRegistry } from '../../../../src/characterBuilder/services/eventListenerRegistry.js';
+import { AsyncUtilitiesToolkit } from '../../../../src/characterBuilder/services/asyncUtilitiesToolkit.js';
+import { PerformanceMonitor } from '../../../../src/characterBuilder/services/performanceMonitor.js';
+import { MemoryManager } from '../../../../src/characterBuilder/services/memoryManager.js';
+import { ErrorHandlingStrategy } from '../../../../src/characterBuilder/services/errorHandlingStrategy.js';
+import { ValidationService } from '../../../../src/characterBuilder/services/validationService.js';
 import BaseCharacterBuilderController, {
   ERROR_CATEGORIES,
   ERROR_SEVERITY,
@@ -110,15 +118,15 @@ class RecoveryTestController extends BaseCharacterBuilderController {
   }
 
   scheduleAnimation(callback) {
-    return this._requestAnimationFrame(callback);
+    return this._getAsyncUtilitiesToolkit().requestAnimationFrame(callback);
   }
 
   cancelAnimationById(frameId) {
-    return this._cancelAnimationFrame(frameId);
+    return this._getAsyncUtilitiesToolkit().cancelAnimationFrame(frameId);
   }
 
   createDebounced(fn, delay, options) {
-    return this._debounce(fn, delay, options);
+    return this._getAsyncUtilitiesToolkit().debounce(fn, delay, options);
   }
 
   _retryLastOperation() {
@@ -172,12 +180,60 @@ function createControllerDependencies() {
     logger,
   });
   const characterBuilderService = new MinimalCharacterBuilderService(logger);
+  const controllerLifecycleOrchestrator = new ControllerLifecycleOrchestrator({
+    logger,
+    eventBus: safeDispatcher,
+  });
+  const asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({ logger });
+  const domElementManager = new DOMElementManager({
+    logger,
+    documentRef: document,
+    performanceRef: performance,
+    elementsRef: {},
+    contextName: 'RecoveryTestController:DOM',
+  });
+  const eventListenerRegistry = new EventListenerRegistry({
+    logger,
+    asyncUtilities: asyncUtilitiesToolkit,
+    contextName: 'RecoveryTestController:Listeners',
+  });
+  const performanceMonitor = new PerformanceMonitor({
+    logger,
+    eventBus: safeDispatcher,
+    performanceRef: performance,
+    contextName: 'RecoveryTestController:Performance',
+  });
+  const memoryManager = new MemoryManager({
+    logger,
+    contextName: 'RecoveryTestController:Memory',
+  });
+  const errorHandlingStrategy = new ErrorHandlingStrategy({
+    logger,
+    eventBus: safeDispatcher,
+    controllerName: 'RecoveryTestController',
+    errorCategories: ERROR_CATEGORIES,
+    errorSeverity: ERROR_SEVERITY,
+  });
+  const validationService = new ValidationService({
+    schemaValidator,
+    logger,
+    handleError: (error) => logger.error('ValidationService error', error),
+    errorCategories: ERROR_CATEGORIES,
+  });
 
   return {
     logger,
     schemaValidator,
     eventBus: safeDispatcher,
     characterBuilderService,
+    controllerLifecycleOrchestrator,
+    domElementManager,
+    eventListenerRegistry,
+    asyncUtilitiesToolkit,
+    performanceMonitor,
+    memoryManager,
+    errorHandlingStrategy,
+    validationService,
   };
 }
 

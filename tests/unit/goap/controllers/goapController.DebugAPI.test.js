@@ -34,7 +34,7 @@ describe('GoapController - Debug API', () => {
       debug: jest.fn(),
     };
 
-    mockGoapPlanner = { plan: jest.fn() };
+    mockGoapPlanner = { plan: jest.fn(), getLastFailure: jest.fn().mockReturnValue(null) };
     mockRefinementEngine = { refine: jest.fn() };
     mockPlanInvalidationDetector = { checkPlanValidity: jest.fn() };
     mockContextAssemblyService = { assemblePlanningContext: jest.fn() };

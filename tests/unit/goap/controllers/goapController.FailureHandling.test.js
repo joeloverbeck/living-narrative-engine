@@ -6,6 +6,7 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GoapController from '../../../../src/goap/controllers/goapController.js';
+import { GOAP_EVENTS } from '../../../../src/goap/events/goapEvents.js';
 
 describe('GoapController - Failure Handling (GOAPIMPL-021-05)', () => {
   let mockLogger;
@@ -41,6 +42,7 @@ describe('GoapController - Failure Handling (GOAPIMPL-021-05)', () => {
 
     mockGoapPlanner = {
       plan: jest.fn(),
+      getLastFailure: jest.fn().mockReturnValue(null),
     };
 
     mockRefinementEngine = {
@@ -101,6 +103,7 @@ describe('GoapController - Failure Handling (GOAPIMPL-021-05)', () => {
           goalId: 'goal:test',
           goalName: 'Test Goal',
           reason: 'Planner returned no tasks',
+          failureCode: 'UNKNOWN_PLANNER_FAILURE',
         })
       );
     });
@@ -128,9 +131,51 @@ describe('GoapController - Failure Handling (GOAPIMPL-021-05)', () => {
         expect.objectContaining({
           goalId: 'goal:test',
           reason: 'Planner returned no tasks',
+          code: 'UNKNOWN_PLANNER_FAILURE',
           failureCount: 1,
         })
       );
+    });
+
+    it('should propagate planner failure metadata into events and tracking', async () => {
+      const actor = { id: 'actor1' };
+      const world = { state: {} };
+      const goal = {
+        id: 'goal:test',
+        name: 'Test Goal',
+        priority: 10,
+        relevance: null,
+      };
+
+      mockDataRegistry.getAll.mockReturnValue([goal]);
+      mockGoapPlanner.plan.mockReturnValue(null);
+      mockGoapPlanner.getLastFailure.mockReturnValue({
+        code: 'DEPTH_LIMIT_REACHED',
+        reason: 'Depth limit reached before satisfying goal',
+      });
+
+      await controller.decideTurn(actor, world);
+
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        GOAP_EVENTS.PLANNING_FAILED,
+        expect.objectContaining({
+          actorId: 'actor1',
+          goalId: 'goal:test',
+          code: 'DEPTH_LIMIT_REACHED',
+          reason: 'Depth limit reached before satisfying goal',
+        })
+      );
+
+      const failures = controller.getFailedGoals('actor1');
+      expect(failures[0]).toEqual({
+        goalId: 'goal:test',
+        failures: [
+          expect.objectContaining({
+            code: 'DEPTH_LIMIT_REACHED',
+            reason: 'Depth limit reached before satisfying goal',
+          }),
+        ],
+      });
     });
 
     it('should track multiple planning failures for same goal', async () => {

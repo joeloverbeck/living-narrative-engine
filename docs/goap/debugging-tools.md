@@ -7,6 +7,8 @@
 
 The GOAP debugging tools provide comprehensive inspection and tracing capabilities for the GOAP system. These tools help developers understand planning behavior, refinement execution, and diagnose issues during development and testing.
 
+Per `specs/goap-system-specs.md` (guardrail 5), always reach for these tools—Plan Inspector, GOAPDebugger, Refinement Tracer—before sprinkling `console.log`. The built-in telemetry now emits structured failure codes so you can see depth limits, numeric guard rejections, and other planner outcomes without ad-hoc logging.
+
 ### Available Tools
 
 1. **Plan Inspector** - Visualize active GOAP plans
@@ -81,6 +83,8 @@ it('should debug GOAP behavior', async () => {
 Actor: actor-123
 Goal: Maintain nourishment
 Goal Priority: 10
+Numeric Heuristic: ACTIVE (pure numeric root comparator)
+Heuristic Reason: Root operator is <=, <, >=, or >
 Plan Length: 2 tasks
 Created: 2025-11-16T12:34:56.789Z
 
@@ -106,6 +110,9 @@ Failure Tracking:
 - Resolves entity IDs to human-readable names
 - Displays failure tracking metrics
 - Includes goal and task metadata
+- Indicates whether numeric distance heuristics are active or bypassed for the goal
+
+`inspectJSON()` exposes this data via `goal.numericHeuristic`, allowing GOAPDebugger and downstream tooling to display whether `#taskReducesDistance` is active.
 
 ### State Diff Viewer
 
@@ -142,6 +149,16 @@ Total Changes: 4 (1 added, 2 modified, 1 removed)
 - Verify task planning effects are correct
 - Debug unexpected state changes
 - Understand task preconditions/effects
+
+### Component-Aware Planning Checks
+
+`specs/goap-system-specs.md` calls out `GoapPlanner.#buildEvaluationContext` as the canonical hook for mirroring planner state into JSON Logic. When a `has_component` gate behaves oddly:
+
+- Use **Plan Inspector** to capture the raw planning state hash for the actor (`entityId:componentId[:field]` keys). Those hashes are the same format surfaced by the GOAP diagnostics scripts.
+- Feed the hash into the **State Diff Viewer** before/after a task to verify whether the expected `entityId:componentId` entries exist. If a key is missing, `HasComponentOperator` will intentionally fall back to the runtime `EntityManager`.
+- Inspect `state.actor.components` (and the flattened aliases with underscores) in the diff output to ensure colon-based component IDs stay mirrored—those mirrors are what allow JSON Logic expressions like `state.actor.components.core_needs.hunger` to resolve without helper glue.
+
+This workflow keeps component-aware planning observable without ad-hoc logging and reaffirms that `#buildEvaluationContext` is the extension point for any future preprocessing.
 
 ### Refinement Tracer
 
@@ -182,6 +199,8 @@ Summary:
 - Track local state updates
 - Identify step failures
 
+> Planner failure codes (e.g., `DEPTH_LIMIT_REACHED`, `DISTANCE_GUARD_BLOCKED`) only appear in GOAPDebugger/Plan Inspector failure history. Refinement Tracer still focuses on post-planning execution events, so check the failure history before assuming a trace bug when the tracer stays silent.
+
 ### GOAP Debugger (Main API)
 
 **Purpose**: Unified interface for all debug tools.
@@ -221,14 +240,23 @@ const debugger = container.resolve(tokens.IGOAPDebugger);
 const failures = debugger.getFailureHistory('actor-123');
 
 console.log(`Failed Goals: ${failures.failedGoals.length}`);
-for (const failure of failures.failedGoals) {
-  console.log(`  ${failure.goalId}: ${failure.reason}`);
-  console.log(`  Timestamp: ${new Date(failure.timestamp).toISOString()}`);
+for (const goalFailure of failures.failedGoals) {
+  console.log(`  ${goalFailure.goalId}: ${goalFailure.failures.length} entries`);
+  for (const entry of goalFailure.failures) {
+    const label = entry.code ? `[${entry.code}]` : '[UNKNOWN]';
+    console.log(`    ${label} ${entry.reason}`);
+    console.log(`    Timestamp: ${new Date(entry.timestamp).toISOString()}`);
+  }
 }
 
 console.log(`Failed Tasks: ${failures.failedTasks.length}`);
-for (const failure of failures.failedTasks) {
-  console.log(`  ${failure.taskId}: ${failure.reason}`);
+for (const taskFailure of failures.failedTasks) {
+  console.log(`  ${taskFailure.taskId}: ${taskFailure.failures.length} entries`);
+  for (const entry of taskFailure.failures) {
+    const label = entry.code ? `[${entry.code}]` : '[TASK_FAILURE]';
+    console.log(`    ${label} ${entry.reason}`);
+    console.log(`    Timestamp: ${new Date(entry.timestamp).toISOString()}`);
+  }
 }
 ```
 
@@ -253,6 +281,23 @@ const diff = debugger.showStateDiff(beforeState, afterState, {
 
 console.log(diff);
 ```
+
+### Planner Failure Codes
+
+Plan Inspector and GOAPDebugger now prefix each failure entry with the planner's structured code. These codes map directly to `src/goap/planner/goapPlannerFailureReasons.js` and the guardrails outlined in `specs/goap-system-specs.md`:
+
+| Code | Meaning |
+| --- | --- |
+| `TASK_LIBRARY_EXHAUSTED` | No planning tasks were available for the actor; check mod/task registrations. |
+| `ESTIMATED_COST_EXCEEDS_LIMIT` | The heuristic estimate exceeded `goal.maxCost` before search began. |
+| `TIME_LIMIT_EXCEEDED` | Search exceeded the configured time budget. |
+| `NODE_LIMIT_REACHED` | Search hit `maxNodes` without producing a plan. |
+| `DEPTH_LIMIT_REACHED` | All branches hit the depth cap (`options.maxDepth` or `goal.maxActions`). |
+| `DISTANCE_GUARD_BLOCKED` | Numeric distance guard rejected every applicable task (pure numeric goals only). |
+| `NO_APPLICABLE_TASKS` | The planner never found a task that passed parameter binding and preconditions. |
+| `NO_VALID_PLAN` | Catch-all for “open list exhausted” after exploring valid branches. |
+
+Task/refinement failures reuse the same formatting but use `TASK_FAILURE`, `REFINEMENT_FAILURE_REPLAN`, etc., so you can distinguish controller-level fallbacks from planner issues at a glance.
 
 ### Continuous Tracing
 
@@ -320,6 +365,16 @@ await goapController.decideTurn(actor, world);
 const trace = debugger.getTrace('actor-123');
 console.log(`Events captured: ${trace.events.length}`);
 ```
+
+### Empty plan completions ("goal already satisfied")
+
+Per `specs/goap-system-specs.md`, the planner can legitimately return an empty plan when the goal state is already satisfied at planning time. When this happens:
+
+- `GoapController.decideTurn` dispatches `GOAP_EVENTS.PLANNING_COMPLETED` with `planLength: 0` and an empty `tasks` array.
+- The controller logs an info-level message: `Planner returned empty plan (goal already satisfied)` that includes the `actorId` and `goalId`.
+- No refinement or primitive actions run; GOAPDebugger's plan inspector will show no current plan for the actor on the next turn.
+
+Use the event payload and structured log to confirm a "goal satisfied" completion before assuming the planner stalled. Tooling that watches the event bus can treat `planLength: 0` completions as a telemetry signal meaning "goal already met" and skip retry logic.
 
 #### 3. State diff shows unexpected changes
 

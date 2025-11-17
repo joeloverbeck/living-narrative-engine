@@ -112,7 +112,7 @@ class GoapController {
     this.#logger = ensureValidLogger(logger);
 
     validateDependency(goapPlanner, 'IGoapPlanner', this.#logger, {
-      requiredMethods: ['plan'],
+      requiredMethods: ['plan', 'getLastFailure'],
     });
     validateDependency(refinementEngine, 'IRefinementEngine', this.#logger, {
       requiredMethods: ['refine'],
@@ -271,7 +271,11 @@ class GoapController {
 
       if (!planResult || !planResult.tasks) {
         // 7. Planning failed → handle failure (GOAPIMPL-021-05)
-        return this.#handlePlanningFailure(goal);
+        const plannerFailure =
+          typeof this.#planner.getLastFailure === 'function'
+            ? this.#planner.getLastFailure()
+            : null;
+        return this.#handlePlanningFailure(goal, plannerFailure);
       }
 
       // Dispatch planning completed event
@@ -876,7 +880,7 @@ class GoapController {
    * @returns {boolean} True if max failures reached (≥3 recent attempts)
    * @private
    */
-  #trackFailedGoal(goalId, reason) {
+  #trackFailedGoal(goalId, reason, code = 'UNKNOWN_PLANNER_FAILURE') {
     const now = Date.now();
     const FAILURE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
     const MAX_FAILURES = 3;
@@ -894,7 +898,7 @@ class GoapController {
     );
 
     // Add new failure
-    recentFailures.push({ reason, timestamp: now });
+    recentFailures.push({ reason, code, timestamp: now });
 
     // Update map with pruned + new failures
     this.#failedGoals.set(goalId, recentFailures);
@@ -912,6 +916,7 @@ class GoapController {
     this.#logger.warn('Goal failure tracked', {
       goalId,
       reason,
+      code,
       failureCount: recentFailures.length,
     });
 
@@ -926,7 +931,7 @@ class GoapController {
    * @returns {boolean} True if max failures reached (≥3 recent attempts)
    * @private
    */
-  #trackFailedTask(taskId, reason) {
+  #trackFailedTask(taskId, reason, code = 'TASK_FAILURE') {
     const now = Date.now();
     const FAILURE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
     const MAX_FAILURES = 3;
@@ -944,7 +949,7 @@ class GoapController {
     );
 
     // Add new failure
-    recentFailures.push({ reason, timestamp: now });
+    recentFailures.push({ reason, code, timestamp: now });
 
     // Update map with pruned + new failures
     this.#failedTasks.set(taskId, recentFailures);
@@ -962,6 +967,7 @@ class GoapController {
     this.#logger.warn('Task failure tracked', {
       taskId,
       reason,
+      code,
       failureCount: recentFailures.length,
     });
 
@@ -978,16 +984,18 @@ class GoapController {
    * @returns {null} Returns null to idle this turn
    * @private
    */
-  #handlePlanningFailure(goal) {
+  #handlePlanningFailure(goal, failureInfo = null) {
     // Track failed goal with reason
-    const reason = 'Planner returned no tasks';
-    this.#trackFailedGoal(goal.id, reason);
+    const reason = failureInfo?.reason || 'Planner returned no tasks';
+    const failureCode = failureInfo?.code || 'UNKNOWN_PLANNER_FAILURE';
+    this.#trackFailedGoal(goal.id, reason, failureCode);
 
     // Dispatch planning failed event
     this.#dispatchEvent(GOAP_EVENTS.PLANNING_FAILED, {
       actorId: this.#currentActor,
       goalId: goal.id,
       reason,
+      code: failureCode,
     });
 
     // Log warning with goal details
@@ -995,6 +1003,7 @@ class GoapController {
       goalId: goal.id,
       goalName: goal.name,
       reason,
+      failureCode,
     });
 
     // Return null to idle this turn
@@ -1038,14 +1047,18 @@ class GoapController {
     switch (fallbackBehavior) {
       case 'replan': {
         // Default: Clear plan and track goal failure
-        this.#trackFailedGoal(this.#activePlan.goal.id, `Task failed: ${reason}`);
+        this.#trackFailedGoal(
+          this.#activePlan.goal.id,
+          `Task failed: ${reason}`,
+          'REFINEMENT_FAILURE_REPLAN'
+        );
         this.#clearPlan(`Refinement failed: ${reason}`);
         return null; // Will replan next turn
       }
 
       case 'continue': {
         // Skip failed task, advance to next task, retry decideTurn
-        this.#trackFailedTask(task.taskId, reason);
+        this.#trackFailedTask(task.taskId, reason, 'REFINEMENT_CONTINUE');
 
         // Check recursion depth limit
         if (this.#recursionDepth >= 10) {
@@ -1080,8 +1093,12 @@ class GoapController {
 
       case 'fail': {
         // Critical failure → track goal and clear plan
-        this.#trackFailedGoal(this.#activePlan.goal.id, `Task failed critically: ${reason}`);
-        this.#trackFailedTask(task.taskId, reason);
+        this.#trackFailedGoal(
+          this.#activePlan.goal.id,
+          `Task failed critically: ${reason}`,
+          'REFINEMENT_FAILURE_CRITICAL'
+        );
+        this.#trackFailedTask(task.taskId, reason, 'REFINEMENT_FAILURE_CRITICAL');
         this.#clearPlan(`Critical task failure: ${reason}`);
         return null;
       }
@@ -1098,7 +1115,11 @@ class GoapController {
           fallbackBehavior,
           taskId: task.taskId,
         });
-        this.#trackFailedGoal(this.#activePlan.goal.id, `Task failed: ${reason}`);
+        this.#trackFailedGoal(
+          this.#activePlan.goal.id,
+          `Task failed: ${reason}`,
+          'REFINEMENT_FAILURE_UNKNOWN'
+        );
         this.#clearPlan(`Refinement failed: ${reason}`);
         return null;
       }
@@ -1135,11 +1156,11 @@ class GoapController {
    * Get failed goals for an actor (debug API).
    *
    * ⚠️ CORRECTED: Returns failure arrays, NOT goal objects.
-   * The actual structure stores goalId → Array<{reason, timestamp}>,
+   * The actual structure stores goalId → Array<{reason, code, timestamp}>,
    * NOT goalId → {goal, timestamp, reason}.
    *
    * @param {string} actorId - Entity ID of actor
-   * @returns {Array} Array of { goalId, failures: Array<{reason, timestamp}> }
+   * @returns {Array} Array of { goalId, failures: Array<{reason, code, timestamp}> }
    */
   getFailedGoals(actorId) {
     assertNonBlankString(actorId, 'actorId', 'GoapController.getFailedGoals', this.#logger);
@@ -1162,7 +1183,8 @@ class GoapController {
           goalId,
           failures: recentFailures.map(f => ({
             reason: f.reason,
-            timestamp: f.timestamp
+            code: f.code || 'UNKNOWN_PLANNER_FAILURE',
+            timestamp: f.timestamp,
           })),
         });
       }
@@ -1175,13 +1197,13 @@ class GoapController {
    * Get failed tasks for an actor (debug API).
    *
    * ⚠️ CORRECTED: Returns failure arrays, NOT task objects.
-   * The actual structure stores taskId → Array<{reason, timestamp}>,
+   * The actual structure stores taskId → Array<{reason, code, timestamp}>,
    * NOT taskId → {task, timestamp, reason}.
    *
    * Task failures are actor-agnostic (tasks don't store actorId).
    *
    * @param {string} actorId - Entity ID of actor (for consistency, not used for filtering)
-   * @returns {Array} Array of { taskId, failures: Array<{reason, timestamp}> }
+   * @returns {Array} Array of { taskId, failures: Array<{reason, code, timestamp}> }
    */
   getFailedTasks(actorId) {
     assertNonBlankString(actorId, 'actorId', 'GoapController.getFailedTasks', this.#logger);
@@ -1203,7 +1225,8 @@ class GoapController {
           taskId,
           failures: recentFailures.map(f => ({
             reason: f.reason,
-            timestamp: f.timestamp
+            code: f.code || 'TASK_FAILURE',
+            timestamp: f.timestamp,
           })),
         });
       }

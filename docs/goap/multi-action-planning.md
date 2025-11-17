@@ -260,6 +260,15 @@ The planner handles overshoot differently based on goal type:
 
 **Automatic Detection**: Goal type detected via goal state analysis.
 
+> **Numeric Heuristic Guard**
+>
+> `GoapPlanner.#hasNumericConstraints` only treats a goal as "numeric" when the
+> root JSON Logic operator is a comparator (`<=`, `<`, `>=`, `>`). Mixed roots
+> (`and`, `or`, component predicates, equality wrappers) are evaluated as
+> booleans and bypass `#taskReducesDistance`. If you need heuristic-driven
+> pruning, keep the numeric comparator at the root and move structural checks
+> into separate goals or upstream gating logic.
+
 ### Impossible Goals
 
 The planner detects impossibility in several ways:
@@ -355,12 +364,34 @@ The planner detects impossibility in several ways:
    ```
 
 3. **Use more effective tasks**:
-   ```javascript
-   // Add new task with stronger effect
-   // Planner will prefer it if cost is reasonable
-   ```
+  ```javascript
+  // Add new task with stronger effect
+  // Planner will prefer it if cost is reasonable
+  ```
 
-#### Issue 3: Wrong Tasks Selected
+#### Issue 3: Numeric guard not triggering for mixed goals
+
+**Symptoms**: GOAPDebugger/Plan Inspector report "Numeric Heuristic: BYPASSED" even though the goal contains numeric comparisons inside `and`/`or` trees.
+
+**Solution**:
+
+1. **Keep numeric comparator at root**:
+   ```javascript
+   // ✅ Heuristic active
+   goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 20] }
+
+   // ❌ Heuristic bypassed
+   goalState: {
+     and: [
+       { has_component: ['actor', 'core:armed'] },
+       { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 20] },
+     ],
+   }
+   ```
+2. **Split structural gating**: Move component checks into structural gates or a separate goal so the numeric comparator can sit at the root.
+3. **Verify with tooling**: Use `goapDebugger.inspectPlan()` or `inspectPlanJSON()` to confirm the `Numeric Heuristic` line shows `ACTIVE`. See `docs/goap/debugging-tools.md` for full workflow.
+
+#### Issue 4: Wrong Tasks Selected
 
 **Symptoms**: Plan uses unexpected tasks
 

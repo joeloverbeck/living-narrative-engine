@@ -39,6 +39,7 @@ describe('GoapController - Action Hint Extraction Integration', () => {
 
     mockGoapPlanner = {
       plan: jest.fn(),
+      getLastFailure: jest.fn().mockReturnValue(null),
     };
 
     mockRefinementEngine = {

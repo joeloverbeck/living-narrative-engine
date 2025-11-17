@@ -5,8 +5,61 @@
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { SpeechPatternsGeneratorController } from '../../../src/characterBuilder/controllers/SpeechPatternsGeneratorController.js';
+import {
+  ERROR_CATEGORIES,
+  ERROR_SEVERITY,
+} from '../../../src/characterBuilder/controllers/BaseCharacterBuilderController.js';
+import { ControllerLifecycleOrchestrator } from '../../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
+import { DOMElementManager } from '../../../src/characterBuilder/services/domElementManager.js';
+import { EventListenerRegistry } from '../../../src/characterBuilder/services/eventListenerRegistry.js';
+import { AsyncUtilitiesToolkit } from '../../../src/characterBuilder/services/asyncUtilitiesToolkit.js';
+import { PerformanceMonitor } from '../../../src/characterBuilder/services/performanceMonitor.js';
+import { MemoryManager } from '../../../src/characterBuilder/services/memoryManager.js';
+import { ErrorHandlingStrategy } from '../../../src/characterBuilder/services/errorHandlingStrategy.js';
+import { ValidationService } from '../../../src/characterBuilder/services/validationService.js';
 import { EnhancedSpeechPatternsValidator } from '../../../src/characterBuilder/validators/EnhancedSpeechPatternsValidator.js';
 import { createTestBed } from '../../common/testBed.js';
+
+function createControllerDependencies({ logger, eventBus, schemaValidator }) {
+  const asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({ logger });
+  const eventListenerRegistry = new EventListenerRegistry({
+    logger,
+    asyncUtilities: asyncUtilitiesToolkit,
+  });
+
+  return {
+    controllerLifecycleOrchestrator: new ControllerLifecycleOrchestrator({
+      logger,
+      eventBus,
+    }),
+    domElementManager: new DOMElementManager({
+      logger,
+      documentRef: document,
+      elementsRef: {},
+      contextName: 'SpeechPatternsGeneratorController',
+    }),
+    eventListenerRegistry,
+    asyncUtilitiesToolkit,
+    performanceMonitor: new PerformanceMonitor({
+      logger,
+      eventBus,
+    }),
+    memoryManager: new MemoryManager({ logger }),
+    errorHandlingStrategy: new ErrorHandlingStrategy({
+      logger,
+      eventBus,
+      controllerName: 'SpeechPatternsGeneratorController',
+      errorCategories: ERROR_CATEGORIES,
+      errorSeverity: ERROR_SEVERITY,
+    }),
+    validationService: new ValidationService({
+      schemaValidator,
+      logger,
+      handleError: () => {},
+      errorCategories: ERROR_CATEGORIES,
+    }),
+  };
+}
 
 describe('Enhanced Validation Pipeline Integration', () => {
   let testBed;
@@ -22,7 +75,7 @@ describe('Enhanced Validation Pipeline Integration', () => {
     mockLogger = testBed.createMockLogger();
 
     mockSchemaValidator = {
-      validate: jest.fn(),
+      validate: jest.fn().mockReturnValue({ isValid: true }),
       isSchemaLoaded: jest.fn().mockReturnValue(true),
       validateAndSanitizeResponse: jest.fn(),
     };
@@ -52,12 +105,16 @@ describe('Enhanced Validation Pipeline Integration', () => {
 
     // Create DOM elements for controller (matching actual HTML structure)
     document.body.innerHTML = `
-      <div id="character-definition"></div>
+      <textarea id="character-definition"></textarea>
       <div id="character-input-error" class="cb-error-message enhanced-validation-container" style="display: none" role="alert" aria-live="polite" aria-atomic="false"></div>
-      <div id="generate-btn"></div>
-      <div id="clear-all-btn"></div>
-      <div id="export-btn"></div>
-      <div id="export-format"></div>
+      <button id="generate-btn"></button>
+      <button id="clear-all-btn"></button>
+      <button id="export-btn"></button>
+      <select id="export-format"></select>
+      <button id="back-btn"></button>
+      <div id="progress-container"></div>
+      <div id="progress-bar"></div>
+      <div id="time-estimate"></div>
       <div id="loading-state"></div>
       <div id="results-state"></div>
       <div id="error-state"></div>
@@ -71,6 +128,12 @@ describe('Enhanced Validation Pipeline Integration', () => {
       <div id="screen-reader-announcement"></div>
     `;
 
+    const injectedDependencies = createControllerDependencies({
+      logger: mockLogger,
+      eventBus: mockEventBus,
+      schemaValidator: mockSchemaValidator,
+    });
+
     // Initialize controller with enhanced validation capabilities
     controller = new SpeechPatternsGeneratorController({
       logger: mockLogger,
@@ -78,13 +141,17 @@ describe('Enhanced Validation Pipeline Integration', () => {
       eventBus: mockEventBus,
       schemaValidator: mockSchemaValidator,
       container: mockContainer,
+      ...injectedDependencies,
     });
 
     // Initialize the controller to cache elements and set up event listeners
     await controller.initialize();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    if (controller?.destroy) {
+      await controller.destroy();
+    }
     testBed?.cleanup();
     document.body.innerHTML = '';
   });
@@ -532,9 +599,11 @@ describe('Enhanced Validation Pipeline Integration', () => {
       const errorContainer = document.getElementById('character-input-error');
 
       // Simulate rapid typing
-      const characters = ['{', '"', 'c', 'o', 'r', 'e', ':', 'n'];
+      const rapidInput = Array.from(
+        '{"components": {"core:name": {"text": "Test"'
+      );
 
-      for (const char of characters) {
+      for (const char of rapidInput) {
         textarea.value += char;
         const event = new Event('input', { bubbles: true });
         textarea.dispatchEvent(event);
@@ -548,7 +617,7 @@ describe('Enhanced Validation Pipeline Integration', () => {
 
       // Should handle rapid input gracefully
       // The debounced validation should prevent excessive validation calls
-      // For incomplete JSON, validation should show errors
+      // For incomplete JSON longer than the validation threshold, validation should show errors
       expect(errorContainer.style.display).toBe('block');
       expect(errorContainer.innerHTML).toContain('JSON Syntax Error');
     });
