@@ -362,7 +362,7 @@ describe('RecipeValidationRunner', () => {
       const report = await validator.validate(createRecipe());
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Component existence check failed',
+        'component-existence check failed',
         failure
       );
       expect(report.errors).toEqual(
@@ -409,7 +409,7 @@ describe('RecipeValidationRunner', () => {
       const report = await validator.validate(createRecipe());
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Property schema check failed',
+        'property-schemas check failed',
         failure
       );
       expect(report.errors).toEqual(

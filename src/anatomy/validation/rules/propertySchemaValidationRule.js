@@ -9,6 +9,8 @@ import Ajv from 'ajv';
 import { ValidationRule } from '../validationRule.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
 import { levenshteinDistance } from '../../../utils/stringUtils.js';
+import { isPlainObject } from '../../../utils/objectUtils.js';
+import { createError } from '../../errors/index.js';
 
 /** @typedef {import('../loadTimeValidationContext.js').LoadTimeValidationContext} LoadTimeValidationContext */
 /** @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger */
@@ -101,7 +103,11 @@ export class PropertySchemaValidationRule extends ValidationRule {
     const recipes = context.getRecipes();
 
     for (const [recipeId, recipe] of Object.entries(recipes)) {
-      const recipeIssues = this.#validateRecipeProperties(recipe);
+      const recipeIssues = this.#validateRecipeProperties(
+        recipe,
+        recipeId,
+        recipe.recipePath
+      );
 
       // Add recipe context to each issue
       for (const issue of recipeIssues) {
@@ -135,11 +141,24 @@ export class PropertySchemaValidationRule extends ValidationRule {
    * @param {object} recipe - Recipe definition
    * @returns {Array} Array of issues found
    */
-  #validateRecipeProperties(recipe) {
+  #validateRecipeProperties(recipe, recipeId, recipePath) {
     const issues = [];
 
     // Validate slot properties
     for (const [slotName, slot] of Object.entries(recipe.slots || {})) {
+      if (
+        !this.#ensurePlainPropertyMap({
+          properties: slot.properties,
+          locationType: 'slot',
+          locationName: slotName,
+          recipeId,
+          recipePath,
+          issues,
+        })
+      ) {
+        continue;
+      }
+
       for (const [componentId, properties] of Object.entries(
         slot.properties || {}
       )) {
@@ -183,6 +202,20 @@ export class PropertySchemaValidationRule extends ValidationRule {
         (pattern.matches ? pattern.matches.join(',') : null) ||
         (pattern.matchesAll ? 'matchesAll' : `pattern-${index}`);
 
+      if (
+        !this.#ensurePlainPropertyMap({
+          properties: pattern.properties,
+          locationType: 'pattern',
+          locationName: patternId,
+          recipeId,
+          recipePath,
+          issues,
+          index,
+        })
+      ) {
+        continue;
+      }
+
       for (const [componentId, properties] of Object.entries(
         pattern.properties || {}
       )) {
@@ -217,6 +250,57 @@ export class PropertySchemaValidationRule extends ValidationRule {
     }
 
     return issues;
+  }
+
+  #ensurePlainPropertyMap({
+    properties,
+    locationType,
+    locationName,
+    recipeId,
+    recipePath,
+    issues,
+    index,
+  }) {
+    if (!properties) {
+      return true;
+    }
+
+    if (isPlainObject(properties)) {
+      return true;
+    }
+
+    const receivedType = Array.isArray(properties)
+      ? 'array'
+      : typeof properties;
+    this.#logger.warn(
+      `PropertySchemaValidationRule: ${locationType} '${locationName}' properties must be a plain object; received ${receivedType}`
+    );
+
+    issues.push({
+      severity: 'error',
+      type: 'INVALID_PROPERTY_OBJECT',
+      message: `${locationType} '${locationName}' properties must be a plain object keyed by component IDs`,
+      ruleId: this.ruleId,
+      context: {
+        location: {
+          type: locationType,
+          name: locationName,
+          field: 'properties',
+          ...(index !== undefined && { index }),
+        },
+        receivedType,
+      },
+      enhancedError: recipeId
+        ? createError('INVALID_PROPERTY_OBJECT', {
+            recipeId,
+            location: { type: locationType, name: locationName },
+            recipePath,
+            receivedType,
+          })
+        : null,
+    });
+
+    return false;
   }
 
   /**

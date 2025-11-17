@@ -2,6 +2,7 @@ import { BaseValidator } from './BaseValidator.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
 import { extractSocketsFromEntity } from '../socketExtractor.js';
 import { levenshteinDistance } from '../../../utils/stringUtils.js';
+import { createValidatorLogger } from '../utils/validatorLoggingUtils.js';
 
 /** @typedef {import('../../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 
@@ -212,6 +213,7 @@ export class SocketSlotCompatibilityValidator extends BaseValidator {
   #dataRegistry;
   #anatomyBlueprintRepository;
   #logger;
+  #logValidatorError;
 
   /**
    * Creates a socket/slot compatibility validator instance.
@@ -259,6 +261,10 @@ export class SocketSlotCompatibilityValidator extends BaseValidator {
     this.#dataRegistry = dataRegistry;
     this.#anatomyBlueprintRepository = anatomyBlueprintRepository;
     this.#logger = logger;
+    this.#logValidatorError = createValidatorLogger({
+      logger,
+      validatorName: this.name,
+    });
   }
 
   /**
@@ -295,7 +301,7 @@ export class SocketSlotCompatibilityValidator extends BaseValidator {
         builder.addIssues(issues);
       }
     } catch (error) {
-      this.#logger.error('Socket/slot compatibility check failed', error);
+      this.#logValidatorError(error);
       builder.addWarning(
         'VALIDATION_WARNING',
         'Failed to validate socket/slot compatibility',

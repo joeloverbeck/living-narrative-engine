@@ -1,5 +1,6 @@
 import { BaseValidator } from './BaseValidator.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
+import { createValidatorLogger } from '../utils/validatorLoggingUtils.js';
 
 /**
  * @file RecipeUsageValidator - ensures recipes are referenced by entity definitions.
@@ -12,7 +13,7 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
  */
 export class RecipeUsageValidator extends BaseValidator {
   #dataRegistry;
-  #logger;
+  #logValidatorError;
 
   /**
    * Creates a recipe usage validator instance.
@@ -34,7 +35,10 @@ export class RecipeUsageValidator extends BaseValidator {
     });
 
     this.#dataRegistry = dataRegistry;
-    this.#logger = logger;
+    this.#logValidatorError = createValidatorLogger({
+      logger,
+      validatorName: this.name,
+    });
   }
 
   /**
@@ -103,7 +107,7 @@ export class RecipeUsageValidator extends BaseValidator {
 
       builder.setMetadata('recipeUsage', metadataPayload);
     } catch (error) {
-      this.#logger.error('Recipe usage validation failed', error);
+      this.#logValidatorError(error);
     }
   }
 }

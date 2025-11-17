@@ -2,6 +2,7 @@ import { BaseValidator } from './BaseValidator.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
 import { PropertySchemaValidationRule } from '../rules/propertySchemaValidationRule.js';
 import { LoadTimeValidationContext } from '../loadTimeValidationContext.js';
+import { createValidatorLogger } from '../utils/validatorLoggingUtils.js';
 
 /**
  * @description Pipeline validator that reuses the property schema rule to ensure
@@ -10,6 +11,7 @@ import { LoadTimeValidationContext } from '../loadTimeValidationContext.js';
 export class PropertySchemaValidator extends BaseValidator {
   #rule;
   #logger;
+  #logValidatorError;
 
   /**
    * @param {object} params - Constructor parameters.
@@ -37,6 +39,10 @@ export class PropertySchemaValidator extends BaseValidator {
       logger,
       dataRegistry,
       schemaValidator,
+    });
+    this.#logValidatorError = createValidatorLogger({
+      logger,
+      validatorName: this.name,
     });
   }
 
@@ -69,7 +75,7 @@ export class PropertySchemaValidator extends BaseValidator {
 
       builder.addIssues(issues);
     } catch (error) {
-      this.#logger.error('Property schema validation failed', error);
+      this.#logValidatorError(error);
       builder.addError(
         'VALIDATION_ERROR',
         'Failed to validate property schemas',

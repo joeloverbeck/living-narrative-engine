@@ -226,7 +226,7 @@ describe('LoadFailureValidator', () => {
       const result = await validator.validate(recipe, { loadFailures });
 
       expect(logger.error).toHaveBeenCalledWith(
-        'Load failure validation failed',
+        'load-failures check failed',
         expect.any(Error)
       );
       expect(result.errors).toHaveLength(0);

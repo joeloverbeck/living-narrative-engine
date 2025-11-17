@@ -93,6 +93,32 @@ describe('ValidationPipeline integration', () => {
     );
   });
 
+  it('does not allow options.failFast=false to override validator failFast', async () => {
+    const stopper = new StubValidator({
+      name: 'stopper',
+      priority: 1,
+      failFast: true,
+      logger,
+      execute: async ({ builder }) => builder.addError('ERR', 'boom'),
+    });
+    const skipped = new StubValidator({
+      name: 'skipped',
+      priority: 2,
+      logger,
+      execute: jest.fn(),
+    });
+    registry.register(stopper);
+    registry.register(skipped);
+
+    const pipeline = new ValidationPipeline({ registry, logger });
+    await pipeline.execute(recipe, { failFast: false });
+
+    expect(skipped.execute).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      "ValidationPipeline: Validator 'stopper' halted execution due to failFast errors"
+    );
+  });
+
   it('respects configuration overrides for enablement and severity remapping', async () => {
     registry.register(
       new StubValidator({

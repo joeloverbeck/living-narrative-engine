@@ -127,7 +127,7 @@ describe('BlueprintExistenceValidator', () => {
       const result = await validator.validate(recipe);
 
       expect(logger.error).toHaveBeenCalledWith(
-        'Blueprint existence check failed',
+        'blueprint-existence check failed',
         repositoryError
       );
       expect(result.errors).toEqual([

@@ -339,19 +339,15 @@ describe('RecipeValidationRunner - Integration', () => {
       const report = await validator.validate(recipe, { failFast: false });
 
       expect(report.isValid).toBe(false);
-      // 3 COMPONENT_NOT_FOUND errors + 2 PART_UNAVAILABLE errors (for head and torso slots)
-      expect(report.errors.length).toBe(5);
+      // Component existence is a fail-fast validator, so we only record the
+      // missing component references before later validators stop executing.
+      expect(report.errors.length).toBe(3);
 
-      // Verify we have both types of errors
       const componentErrors = report.errors.filter(
         (e) => e.type === 'COMPONENT_NOT_FOUND'
       );
-      const partErrors = report.errors.filter(
-        (e) => e.type === 'PART_UNAVAILABLE'
-      );
 
       expect(componentErrors.length).toBe(3);
-      expect(partErrors.length).toBe(2);
     });
 
     it('should validate patterns in recipe', async () => {

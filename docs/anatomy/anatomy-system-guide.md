@@ -142,6 +142,15 @@ The anatomy system validates content across four stages, from schema load throug
 
 Run via: `npm run validate:recipe [--verbose|--json] <path>` (CLI uses `RecipeValidationRunner`)
 
+#### Fail-Fast Validators
+
+`ComponentExistenceValidator` and `PropertySchemaValidator` form the fail-fast gate for Stage 2. Both validators are constructed with `failFast: true`, so the pipeline halts as soon as either emits an error, regardless of the CLI option `--fail-fast` or the `options.failFast` flag passed to `ValidationPipeline.execute(...)`. Configuration can disable later validators or downgrade severities, but these two cannot be bypassed or downgraded—the stage will not proceed to part availability, pattern matching, or descriptor checks until component references resolve and property payloads pass schema validation.
+
+- **Component existence** stops on the first missing component and now warns (without creating false positives) when `slot.properties` or `pattern.properties` contain arrays/numbers instead of plain objects. The malformed properties are skipped so they do not masquerade as component IDs.
+- **Property schemas** emit an `INVALID_PROPERTY_OBJECT` error when those malformed property maps are encountered, ensuring contributors get an actionable error that points back to the component schema contract.
+
+Because the validators own their `failFast` flag, callers cannot override this behavior by forcing `options.failFast = false`; doing so only affects lower-priority validators. Treat the pair as the contract that guarantees component/schema integrity before any downstream checks execute.
+
 ### Stage 3: Runtime Generation Validation
 
 - **Blueprint slot enforcement**: `validateRecipeSlots` throws when a recipe declares slots that the blueprint does not define

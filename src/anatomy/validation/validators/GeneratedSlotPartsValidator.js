@@ -5,6 +5,7 @@ import {
   findMatchingSlots,
   getPatternDescription,
 } from './PatternMatchingValidator.js';
+import { createValidatorLogger } from '../utils/validatorLoggingUtils.js';
 
 const VALIDATION_CHECK = 'generated_slot_part_availability';
 
@@ -21,6 +22,7 @@ export class GeneratedSlotPartsValidator extends BaseValidator {
   #entityMatcherService;
   #anatomyBlueprintRepository;
   #logger;
+  #logValidatorError;
 
   /**
    * Configures the validator with required services.
@@ -80,6 +82,10 @@ export class GeneratedSlotPartsValidator extends BaseValidator {
     this.#entityMatcherService = entityMatcherService;
     this.#anatomyBlueprintRepository = anatomyBlueprintRepository;
     this.#logger = logger;
+    this.#logValidatorError = createValidatorLogger({
+      logger,
+      validatorName: this.name,
+    });
   }
 
   /**
@@ -142,10 +148,7 @@ export class GeneratedSlotPartsValidator extends BaseValidator {
 
       builder.addIssues(errors);
     } catch (error) {
-      this.#logger.error(
-        'Generated slot part availability check failed',
-        error
-      );
+      this.#logValidatorError(error);
       builder.addError(
         'VALIDATION_ERROR',
         'Failed to validate generated slot part availability',

@@ -1,5 +1,6 @@
 import { BaseValidator } from './BaseValidator.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
+import { createValidatorLogger } from '../utils/validatorLoggingUtils.js';
 
 /**
  * @file RecipeBodyDescriptorValidator - Validates recipe bodyDescriptors against anatomy:body schema
@@ -18,6 +19,7 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
 export class RecipeBodyDescriptorValidator extends BaseValidator {
   #dataRegistry;
   #logger;
+  #logValidatorError;
 
   /**
    * @description Creates a new recipe body descriptor validator.
@@ -41,6 +43,10 @@ export class RecipeBodyDescriptorValidator extends BaseValidator {
 
     this.#dataRegistry = dataRegistry;
     this.#logger = logger;
+    this.#logValidatorError = createValidatorLogger({
+      logger,
+      validatorName: this.name,
+    });
   }
 
   /**
@@ -99,7 +105,7 @@ export class RecipeBodyDescriptorValidator extends BaseValidator {
         });
       }
     } catch (error) {
-      this.#logger.error('Body descriptors check failed', error);
+      this.#logValidatorError(error);
       builder.addError('VALIDATION_ERROR', 'Failed to validate body descriptors', {
         check: 'body_descriptors',
         error: error.message,

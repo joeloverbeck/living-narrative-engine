@@ -7,6 +7,7 @@
 import { ValidationRule } from '../validationRule.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
 import { createError } from '../../errors/index.js';
+import { isPlainObject } from '../../../utils/objectUtils.js';
 
 /** @typedef {import('../loadTimeValidationContext.js').LoadTimeValidationContext} LoadTimeValidationContext */
 /** @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger */
@@ -188,7 +189,19 @@ export class ComponentExistenceValidationRule extends ValidationRule {
         }
       }
 
-      // Check slot property components (keys are component IDs)
+      if (
+        !this.#ensurePlainPropertyMap(
+          slot.properties,
+          'slot',
+          slotName,
+          recipeId,
+          recipePath,
+          issues
+        )
+      ) {
+        continue;
+      }
+
       for (const componentId of Object.keys(slot.properties || {})) {
         if (!componentExists(componentId)) {
           issues.push(
@@ -249,7 +262,20 @@ export class ComponentExistenceValidationRule extends ValidationRule {
         }
       }
 
-      // Check pattern property components (keys are component IDs)
+      if (
+        !this.#ensurePlainPropertyMap(
+          pattern.properties,
+          'pattern',
+          patternId,
+          recipeId,
+          recipePath,
+          issues,
+          index
+        )
+      ) {
+        continue;
+      }
+
       for (const componentId of Object.keys(pattern.properties || {})) {
         if (!componentExists(componentId)) {
           issues.push(
@@ -372,6 +398,78 @@ export class ComponentExistenceValidationRule extends ValidationRule {
       },
       // Attach enhanced error for better error reporting
       enhancedError,
+    };
+  }
+
+  #ensurePlainPropertyMap(
+    properties,
+    locationType,
+    locationName,
+    recipeId,
+    recipePath,
+    issues,
+    index
+  ) {
+    if (!properties) {
+      return true;
+    }
+
+    if (isPlainObject(properties)) {
+      return true;
+    }
+
+    const receivedType = Array.isArray(properties)
+      ? 'array'
+      : typeof properties;
+    this.#logger.warn(
+      `ComponentExistenceValidationRule: ${locationType} '${locationName}' properties must be a plain object; received ${receivedType}`
+    );
+
+    issues.push(
+      this.#createInvalidPropertyObjectIssue(
+        locationType,
+        locationName,
+        recipeId,
+        recipePath,
+        'warning',
+        receivedType,
+        index
+      )
+    );
+    return false;
+  }
+
+  #createInvalidPropertyObjectIssue(
+    locationType,
+    locationName,
+    recipeId,
+    recipePath,
+    severity,
+    receivedType,
+    index
+  ) {
+    return {
+      severity,
+      type: 'INVALID_PROPERTY_OBJECT',
+      message: `${locationType} '${locationName}' properties must be a plain object keyed by component IDs`,
+      ruleId: this.ruleId,
+      context: {
+        location: {
+          type: locationType,
+          name: locationName,
+          field: 'properties',
+          ...(index !== undefined && { index }),
+        },
+        receivedType,
+      },
+      enhancedError: recipeId
+        ? createError('INVALID_PROPERTY_OBJECT', {
+            recipeId,
+            location: { type: locationType, name: locationName },
+            recipePath,
+            receivedType,
+          })
+        : null,
     };
   }
 }

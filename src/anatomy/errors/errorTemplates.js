@@ -5,6 +5,7 @@
 
 import ComponentNotFoundError from './ComponentNotFoundError.js';
 import InvalidPropertyError from './InvalidPropertyError.js';
+import InvalidPropertyObjectError from './InvalidPropertyObjectError.js';
 import SocketNotFoundError from './SocketNotFoundError.js';
 import RecipeValidationError from './RecipeValidationError.js';
 
@@ -17,6 +18,7 @@ import RecipeValidationError from './RecipeValidationError.js';
 const ERROR_TEMPLATES = {
   COMPONENT_NOT_FOUND: ComponentNotFoundError,
   INVALID_PROPERTY: InvalidPropertyError,
+  INVALID_PROPERTY_OBJECT: InvalidPropertyObjectError,
   SOCKET_NOT_FOUND: SocketNotFoundError,
   RECIPE_VALIDATION: RecipeValidationError,
 };

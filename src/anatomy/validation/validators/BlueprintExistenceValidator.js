@@ -1,5 +1,6 @@
 import { BaseValidator } from './BaseValidator.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
+import { createValidatorLogger } from '../utils/validatorLoggingUtils.js';
 
 /**
  * Blueprint existence validator ensures blueprint references resolve before dependent checks.
@@ -10,7 +11,7 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
  */
 export class BlueprintExistenceValidator extends BaseValidator {
   #anatomyBlueprintRepository;
-  #logger;
+  #logValidatorError;
 
   /**
    * Creates a new blueprint existence validator with repository and logging dependencies.
@@ -38,7 +39,10 @@ export class BlueprintExistenceValidator extends BaseValidator {
     );
 
     this.#anatomyBlueprintRepository = anatomyBlueprintRepository;
-    this.#logger = logger;
+    this.#logValidatorError = createValidatorLogger({
+      logger,
+      validatorName: this.name,
+    });
   }
 
   /**
@@ -83,7 +87,7 @@ export class BlueprintExistenceValidator extends BaseValidator {
         },
       });
     } catch (error) {
-      this.#logger.error('Blueprint existence check failed', error);
+      this.#logValidatorError(error);
       builder.addError(
         'VALIDATION_ERROR',
         'Failed to check blueprint existence',

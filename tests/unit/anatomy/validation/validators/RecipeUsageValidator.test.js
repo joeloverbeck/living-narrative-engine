@@ -167,7 +167,7 @@ describe('RecipeUsageValidator', () => {
       const validator = new RecipeUsageValidator({ logger, dataRegistry });
 
       const result = await validator.validate(recipe);
-      expect(logger.error).toHaveBeenCalledWith('Recipe usage validation failed', error);
+      expect(logger.error).toHaveBeenCalledWith('recipe-usage check failed', error);
       expect(result.warnings).toHaveLength(0);
       expect(result.passed).toHaveLength(0);
       expect(result.recipeUsage).toBeUndefined();

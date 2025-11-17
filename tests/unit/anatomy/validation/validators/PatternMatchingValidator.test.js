@@ -161,7 +161,7 @@ describe('PatternMatchingValidator', () => {
       check: 'pattern_matching',
     });
     expect(logger.error).toHaveBeenCalledWith(
-      'Pattern matching check failed',
+      'pattern-matching check failed',
       expect.any(Error)
     );
   });

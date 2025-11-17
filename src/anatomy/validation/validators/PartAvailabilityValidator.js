@@ -1,5 +1,6 @@
 import { BaseValidator } from './BaseValidator.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
+import { createValidatorLogger } from '../utils/validatorLoggingUtils.js';
 
 /**
  * Validates that entity definitions exist for all recipe slots.
@@ -12,7 +13,7 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
 export class PartAvailabilityValidator extends BaseValidator {
   #dataRegistry;
   #entityMatcherService;
-  #logger;
+  #logValidatorError;
 
   /**
    * Creates a part availability validator instance.
@@ -42,7 +43,10 @@ export class PartAvailabilityValidator extends BaseValidator {
 
     this.#dataRegistry = dataRegistry;
     this.#entityMatcherService = entityMatcherService;
-    this.#logger = logger;
+    this.#logValidatorError = createValidatorLogger({
+      logger,
+      validatorName: this.name,
+    });
   }
 
   /**
@@ -115,7 +119,7 @@ export class PartAvailabilityValidator extends BaseValidator {
         builder.addIssues(issues);
       }
     } catch (error) {
-      this.#logger.error('Part availability check failed', error);
+      this.#logValidatorError(error);
       builder.addError(
         'VALIDATION_ERROR',
         'Failed to validate part availability',
