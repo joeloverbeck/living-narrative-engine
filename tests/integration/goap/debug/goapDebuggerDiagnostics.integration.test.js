@@ -2,6 +2,7 @@ import { describe, it, beforeEach, afterEach, beforeAll, afterAll, expect } from
 import { createGoapTestSetup } from '../testFixtures/goapTestSetup.js';
 import GOAPDebugger from '../../../../src/goap/debug/goapDebugger.js';
 import { createPlanningStateView } from '../../../../src/goap/planner/planningStateView.js';
+import { createGoapEventTraceProbe } from '../../../../src/goap/debug/goapEventTraceProbe.js';
 
 function createStubPlanInspector() {
   return {
@@ -32,6 +33,8 @@ describe('GOAPDebugger diagnostics integration', () => {
   let goapDebugger;
   let logger;
   let previousAssertionFlag;
+  let eventTraceProbe;
+  let detachProbeHandle;
 
   beforeAll(() => {
     previousAssertionFlag = process.env.GOAP_STATE_ASSERT;
@@ -50,16 +53,30 @@ describe('GOAPDebugger diagnostics integration', () => {
     setup = await createGoapTestSetup({ mockRefinement: true });
     logger = setup.testBed.createMockLogger();
 
+    eventTraceProbe = createGoapEventTraceProbe({ logger });
+    if (typeof setup.attachEventTraceProbe === 'function') {
+      detachProbeHandle = setup.attachEventTraceProbe(eventTraceProbe);
+    }
+
     goapDebugger = new GOAPDebugger({
       goapController: setup.controller,
       planInspector: createStubPlanInspector(),
       stateDiffViewer: createStubStateDiffViewer(),
       refinementTracer: createStubRefinementTracer(),
+      eventTraceProbe,
       logger,
     });
   });
 
   afterEach(() => {
+    if (detachProbeHandle) {
+      detachProbeHandle();
+      detachProbeHandle = null;
+    }
+    if (eventTraceProbe) {
+      eventTraceProbe.clear();
+      eventTraceProbe = null;
+    }
     if (setup?.testBed) {
       setup.testBed.cleanup();
     }
