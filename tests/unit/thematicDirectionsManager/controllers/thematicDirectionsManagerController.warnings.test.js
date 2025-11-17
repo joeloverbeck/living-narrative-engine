@@ -85,10 +85,15 @@ describe('ThematicDirectionsManagerController - Warning Scenarios', () => {
       // Mock service to return directions
       const mockDirections = [
         {
-          id: '1',
-          name: 'Test Direction',
-          description: 'Test description',
-          tags: ['test'],
+          direction: testBase.buildThematicDirection({
+            id: 'direction-1',
+            title: 'Test Direction',
+            description: 'Test description',
+          }),
+          concept: testBase.buildCharacterConcept({
+            id: 'concept-1',
+            concept: 'Test Concept',
+          }),
         },
       ];
 

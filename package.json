@@ -104,6 +104,7 @@
     "validate:operations": "node scripts/validateOperations.js",
     "generate:effects": "node scripts/generateEffects.js",
     "validate:effects": "node scripts/validateEffects.js",
+    "validate:goap-contexts": "node scripts/validateGoapContexts.js",
     "validate:goals": "node scripts/validateGoals.js",
     "update-manifest": "node scripts/updateManifest.js",
     "update-manifest:validate": "node scripts/updateManifest.js --validate-references",

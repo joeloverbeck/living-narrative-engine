@@ -74,6 +74,7 @@ describe('GOAP Heuristics - Integration with Real Components', () => {
     const numericConstraintEvaluator = new NumericConstraintEvaluator({
       jsonLogicEvaluator,
       logger: mockLogger,
+      goapEventDispatcher: { dispatch: () => {} },
     });
 
     // Create heuristic instances

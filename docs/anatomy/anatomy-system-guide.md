@@ -151,6 +151,14 @@ Run via: `npm run validate:recipe [--verbose|--json] <path>` (CLI uses `RecipeVa
 
 Because the validators own their `failFast` flag, callers cannot override this behavior by forcing `options.failFast = false`; doing so only affects lower-priority validators. Treat the pair as the contract that guarantees component/schema integrity before any downstream checks execute.
 
+#### Pipeline Guardrails & Feature Flag
+
+`RecipeValidationRunner` now normalizes pipeline payloads and asserts the registry contract by default. Guardrails are always enabled unless you explicitly opt out via `VALIDATION_PIPELINE_GUARDS=0` or `features.validationPipelineGuards: false` inside `validation-config.json`. Jest forces the flag on so tests continue to exercise the stricter behavior; only disable the guard when debugging legacy assumptions.
+
+- **Result normalization** – `normalizeValidationResult(...)` clones the `ValidationResultBuilder` success template so `ValidationReport` never dereferences `undefined`. It emits a structured log entry (`ValidationPipeline:invalid_result`) with `{ recipeId, validatorCount, issue }` and increments `MonitoringCoordinator`'s `validationPipelineHealth` counter whenever it has to synthesize payloads.
+- **Registry assertion** – `ValidatorRegistry.assertRegistered(...)` guarantees `component-existence` (priority `0`, `failFast: true`) and `property-schemas` (priority `5`, `failFast: true`) are installed and ordered correctly. Outside production the guard throws immediately; production logs a warning, returns `false`, and bumps the same monitoring counter so you can detect misconfigurations without taking down a live server.
+- **Opt-out mechanics** – set `VALIDATION_PIPELINE_GUARDS=0` or `features.validationPipelineGuards: false` to disable both guardrails temporarily if CLI consumers uncover regressions. The CLI surfaces the structured log block verbatim when `--json` is enabled so tooling can flag pipelines that returned synthetic data.
+
 ### Stage 3: Runtime Generation Validation
 
 - **Blueprint slot enforcement**: `validateRecipeSlots` throws when a recipe declares slots that the blueprint does not define

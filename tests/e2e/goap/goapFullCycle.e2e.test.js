@@ -172,7 +172,7 @@ describe('GOAP System - Full Cycle E2E', () => {
 
     const mockParameterResolutionService = testBed.createMock(
       'ParameterResolutionService',
-      ['resolve']
+      ['resolve', 'clearCache']
     );
 
     // Mock parameter resolution to resolve placeholders in bindings object

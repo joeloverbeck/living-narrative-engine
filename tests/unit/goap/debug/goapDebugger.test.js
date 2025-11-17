@@ -23,6 +23,7 @@ describe('GOAPDebugger', () => {
       'getFailedGoals',
       'getFailedTasks',
       'getDependencyDiagnostics',
+      'getNumericConstraintDiagnostics',
       'getTaskLibraryDiagnostics',
       'getPlanningStateDiagnostics',
       'getEventComplianceDiagnostics',
@@ -69,6 +70,7 @@ describe('GOAPDebugger', () => {
     mockController.getDiagnosticsContractVersion.mockReturnValue(
       GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.version
     );
+    mockController.getNumericConstraintDiagnostics.mockReturnValue(null);
 
     mockInspector = testBed.createMock('planInspector', [
       'inspect',
@@ -714,6 +716,20 @@ describe('GOAPDebugger', () => {
       const json = goapDebugger.generateReportJSON('actor-1');
       expect(json.diagnosticsMeta.planningState.available).toBe(true);
       expect(json.diagnosticsMeta.planningState.stale).toBe(true);
+    });
+  });
+
+  describe('getNumericConstraintDiagnostics', () => {
+    it('delegates to GoapController', () => {
+      mockController.getNumericConstraintDiagnostics.mockReturnValue({
+        totalFallbacks: 3,
+        recent: [],
+      });
+      const diagnostics = goapDebugger.getNumericConstraintDiagnostics('actor-n');
+      expect(mockController.getNumericConstraintDiagnostics).toHaveBeenCalledWith(
+        'actor-n'
+      );
+      expect(diagnostics.totalFallbacks).toBe(3);
     });
   });
 });

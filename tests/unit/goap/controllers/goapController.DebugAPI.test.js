@@ -44,7 +44,7 @@ describe('GoapController - Debug API', () => {
     mockJsonLogicService = { evaluate: jest.fn() };
     mockDataRegistry = { getAll: jest.fn(), get: jest.fn() };
     mockEventBus = { dispatch: jest.fn() };
-    mockParameterResolutionService = { resolve: jest.fn() };
+    mockParameterResolutionService = { resolve: jest.fn(), clearCache: jest.fn() };
 
     controller = new GoapController(createValidDependencies());
   });

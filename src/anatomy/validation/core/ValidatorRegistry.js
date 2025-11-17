@@ -94,6 +94,93 @@ export class ValidatorRegistry {
   }
 
   /**
+   * Get the number of registered validators.
+   *
+   * @returns {number} Total validators registered
+   */
+  count() {
+    return this.#validators.size;
+  }
+
+  /**
+   * Assert that required validators are registered with the expected configuration.
+   *
+   * @param {Array<{name: string, priority?: number, failFast?: boolean}>} requiredValidators
+   * Required validator descriptors.
+   * @param {object} [options] - Assertion options.
+   * @param {string} [options.environment] - Runtime environment label.
+   * @param {Function} [options.onProductionFailure] - Callback when assertion downgrades to warning.
+   * @returns {boolean} True when assertion passes, false when downgraded.
+   */
+  assertRegistered(requiredValidators = [], options = {}) {
+    if (!Array.isArray(requiredValidators) || requiredValidators.length === 0) {
+      return true;
+    }
+
+    const issues = [];
+
+    for (const requirement of requiredValidators) {
+      if (!requirement || typeof requirement.name !== 'string') {
+        continue;
+      }
+
+      const validator = this.#validators.get(requirement.name);
+      if (!validator) {
+        issues.push({ type: 'missing', name: requirement.name });
+        continue;
+      }
+
+      if (
+        typeof requirement.priority === 'number' &&
+        validator.priority !== requirement.priority
+      ) {
+        issues.push({
+          type: 'priority',
+          name: requirement.name,
+          expected: requirement.priority,
+          actual: validator.priority,
+        });
+      }
+
+      if (
+        typeof requirement.failFast === 'boolean' &&
+        Boolean(validator.failFast) !== requirement.failFast
+      ) {
+        issues.push({
+          type: 'failFast',
+          name: requirement.name,
+          expected: requirement.failFast,
+          actual: Boolean(validator.failFast),
+        });
+      }
+    }
+
+    if (issues.length === 0) {
+      return true;
+    }
+
+    const environment = options.environment || process?.env?.NODE_ENV || 'development';
+    const summary = issues
+      .map((issue) => `${issue.name}:${issue.type}`)
+      .join(', ');
+
+    if (environment === 'production') {
+      this.#logger.warn(
+        `ValidatorRegistry: Required validators misconfigured (${summary})`,
+        { issues }
+      );
+      if (typeof options.onProductionFailure === 'function') {
+        options.onProductionFailure(issues);
+      }
+      return false;
+    }
+
+    throw new Error(
+      `ValidatorRegistry: Required validators misconfigured (${summary})`
+    );
+  }
+
+  /**
    * Check if a validator is registered
    *
    * @param {string} name - Validator name

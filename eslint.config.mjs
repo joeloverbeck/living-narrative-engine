@@ -7,10 +7,17 @@ import pluginJsdoc from 'eslint-plugin-jsdoc';
 import babelParser from '@babel/eslint-parser';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import noHardcodedModReferencesRule from './scripts/eslint-rules/no-hardcoded-mod-references.js';
+import goapNoRawStateRule from './scripts/eslint-rules/goap-no-raw-state.js';
 
 const modArchitecturePlugin = {
   rules: {
     'no-hardcoded-mod-references': noHardcodedModReferencesRule,
+  },
+};
+
+const goapSafetyPlugin = {
+  rules: {
+    'no-raw-state': goapNoRawStateRule,
   },
 };
 // Potentially add: import pluginImport from 'eslint-plugin-import'; // We'll discuss this later
@@ -110,7 +117,11 @@ export default [
   // 3b. GOAP-specific safety rails
   {
     files: ['src/goap/**/*.js'],
+    plugins: {
+      goap: goapSafetyPlugin,
+    },
     rules: {
+      'goap/no-raw-state': 'error',
       'no-restricted-syntax': [
         'error',
         {

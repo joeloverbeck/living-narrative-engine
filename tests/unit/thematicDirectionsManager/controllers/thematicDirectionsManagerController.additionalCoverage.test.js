@@ -401,12 +401,10 @@ describe('ThematicDirectionsManagerController additional coverage', () => {
     const showErrorSpy = jest.spyOn(controller, '_showError');
     testBase.mocks.characterBuilderService.initialize.mockRejectedValue(initError);
 
-    await expect(controller._initializeAdditionalServices()).rejects.toThrow(
-      initError
-    );
+    await expect(controller._initializeServices()).rejects.toThrow(initError);
 
     expect(testBase.mocks.logger.error).toHaveBeenCalledWith(
-      'ThematicDirectionsManagerController: Failed to initialize',
+      'ThematicDirectionsManagerController: Failed to initialize services',
       initError
     );
     expect(showErrorSpy).toHaveBeenCalledWith(

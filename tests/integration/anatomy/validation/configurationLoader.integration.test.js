@@ -60,6 +60,7 @@ describe('ConfigurationLoader Integration - Real Schema Validator', () => {
     expect(result.pipelineConfig.validators['component-existence']).toBeDefined();
     expect(result.pipelineConfig.validators['pattern-matching']).toBeDefined();
     expect(result.pipelineConfig.validators['body-descriptors']).toBeDefined();
+    expect(result.pipelineConfig.guards.enabled).toBe(true);
   });
 
   it('should validate individual config files before normalization', async () => {

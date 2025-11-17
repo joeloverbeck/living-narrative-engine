@@ -46,6 +46,7 @@ describe('ConfigurationLoader', () => {
         'descriptor-coverage'
       ]
     ).toBe('info');
+    expect(result.pipelineConfig.guards.enabled).toBe(true);
     expect(schemaValidator.validate).toHaveBeenCalled();
   });
 
@@ -92,6 +93,34 @@ describe('ConfigurationLoader', () => {
     ]).toBe('warning');
     expect(result.rawConfig.mods.essential).toEqual(['core', 'dlc']);
     expect(result.pipelineConfig.output.format).toBe('json');
+  });
+
+  it('allows validation config to override guardrail feature flag', async () => {
+    const userConfigPath = path.join(tempDir, 'guard-config.json');
+    const userConfig = {
+      mods: { essential: ['core'], autoDetect: false },
+      validators: [
+        {
+          name: 'component_existence',
+          enabled: true,
+          priority: 0,
+        },
+      ],
+      features: {
+        validationPipelineGuards: false,
+      },
+    };
+    await fs.writeFile(userConfigPath, JSON.stringify(userConfig, null, 2));
+
+    const previousFlag = process.env.VALIDATION_PIPELINE_GUARDS;
+    process.env.VALIDATION_PIPELINE_GUARDS = '1';
+
+    const loader = new ConfigurationLoader({ schemaValidator, logger });
+    const result = await loader.load(userConfigPath);
+
+    expect(result.pipelineConfig.guards.enabled).toBe(false);
+
+    process.env.VALIDATION_PIPELINE_GUARDS = previousFlag;
   });
 
   it('deduplicates validators when merge is called directly', () => {

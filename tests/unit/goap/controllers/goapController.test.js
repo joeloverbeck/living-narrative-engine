@@ -7,6 +7,7 @@ import GoapController from '../../../../src/goap/controllers/goapController.js';
 import { createGoapPlannerMock } from '../../../common/mocks/createGoapPlannerMock.js';
 import { expectGoapPlannerMock } from '../../../common/mocks/expectGoapPlannerMock.js';
 import { GOAP_EVENTS } from '../../../../src/goap/events/goapEvents.js';
+import { recordNumericConstraintFallback, clearNumericConstraintDiagnostics } from '../../../../src/goap/planner/numericConstraintDiagnostics.js';
 
 describe('GoapController - Core Structure', () => {
   let mockLogger;
@@ -75,7 +76,12 @@ describe('GoapController - Core Structure', () => {
 
     mockParameterResolutionService = {
       resolve: jest.fn(),
+      clearCache: jest.fn(),
     };
+  });
+
+  afterEach(() => {
+    clearNumericConstraintDiagnostics();
   });
 
   describe('constructor', () => {
@@ -282,6 +288,22 @@ describe('GoapController - Core Structure', () => {
           normalizedCount: 1,
         })
       );
+    });
+  });
+
+  describe('getNumericConstraintDiagnostics', () => {
+    it('returns diagnostics snapshot for actor', () => {
+      const controller = new GoapController(createValidDependencies());
+      recordNumericConstraintFallback({ actorId: 'actor-n1', goalId: 'goal-x' });
+
+      const diagnostics = controller.getNumericConstraintDiagnostics('actor-n1');
+      expect(diagnostics).not.toBeNull();
+      expect(diagnostics.totalFallbacks).toBe(1);
+    });
+
+    it('throws when actorId missing', () => {
+      const controller = new GoapController(createValidDependencies());
+      expect(() => controller.getNumericConstraintDiagnostics()).toThrow();
     });
   });
 });

@@ -24,6 +24,7 @@ describe('PlanInspector', () => {
       'getActivePlan',
       'getFailedGoals',
       'getFailedTasks',
+      'getNumericConstraintDiagnostics',
     ]);
 
     // Mock data registry
@@ -196,6 +197,39 @@ describe('PlanInspector', () => {
       expect(result).toContain('Eat food to restore energy');
       expect(result).toContain('Collect resources from location');
       expect(result).toContain('=== End Plan ===');
+      expect(result).toContain('Numeric Constraint Diagnostics:');
+      expect(result).toContain('No numeric constraint fallbacks recorded.');
+    });
+
+    it('should list numeric constraint fallbacks when diagnostics are available', () => {
+      const mockPlan = {
+        actorId: 'actor-123',
+        goal: { id: 'goal:test', priority: 1 },
+        tasks: [],
+        currentStep: 0,
+        createdAt: 1700000000000,
+        lastValidated: 1700000001000,
+      };
+      mockGoapController.getActivePlan.mockReturnValue(mockPlan);
+      mockGoapController.getFailedGoals.mockReturnValue([]);
+      mockGoapController.getFailedTasks.mockReturnValue([]);
+      mockDataRegistry.getGoalDefinition.mockReturnValue({ name: 'Goal' });
+      mockGoapController.getNumericConstraintDiagnostics.mockReturnValue({
+        totalFallbacks: 2,
+        recent: [
+          {
+            varPath: 'state.actor.components.core_needs.hunger',
+            reason: 'non-numeric-value',
+            timestamp: 1700000002000,
+          },
+        ],
+      });
+
+      const result = planInspector.inspect('actor-123');
+      expect(result).toContain('Numeric Constraint Diagnostics');
+      expect(result).toContain('Total Fallbacks: 2');
+      expect(result).toContain('state.actor.components.core_needs.hunger');
+      expect(result).toContain('non-numeric-value');
     });
 
     it('should display task status correctly (COMPLETED/CURRENT/PENDING)', () => {
@@ -475,6 +509,10 @@ describe('PlanInspector', () => {
         failures: {
           goals: 1,
           tasks: 1,
+        },
+        numericDiagnostics: {
+          totalFallbacks: 0,
+          recent: [],
         },
       });
     });

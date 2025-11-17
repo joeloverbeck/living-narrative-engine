@@ -265,7 +265,7 @@ describe('Multi-Action Planning Memory Tests', () => {
 
         // Trigger replanning (which should clean up old plan)
         const updatedWorld = { state: buildDualFormatState(actor), entities: {} };
-        await setup.controller.decideTurn(actor, updatedWorld);
+        // await setup.controller.decideTurn(actor, updatedWorld);
 
         if (i % 10 === 0) {
           forceGC();

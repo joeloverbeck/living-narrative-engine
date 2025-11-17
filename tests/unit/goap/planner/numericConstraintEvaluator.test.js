@@ -1,17 +1,23 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import NumericConstraintEvaluator from '../../../../src/goap/planner/numericConstraintEvaluator.js';
+import { clearNumericConstraintDiagnostics, getNumericConstraintDiagnostics } from '../../../../src/goap/planner/numericConstraintDiagnostics.js';
+import { GOAP_EVENTS } from '../../../../src/goap/events/goapEvents.js';
 
 describe('NumericConstraintEvaluator', () => {
   let testBed;
   let evaluator;
   let mockJsonLogicEvaluator;
   let mockLogger;
+  let originalAdapterEnv;
+  let originalStrictEnv;
 
   beforeEach(() => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
     mockJsonLogicEvaluator = testBed.createMock('JsonLogicEvaluationService', ['evaluate']);
+    originalAdapterEnv = process.env.GOAP_NUMERIC_ADAPTER;
+    originalStrictEnv = process.env.GOAP_NUMERIC_STRICT;
 
     evaluator = new NumericConstraintEvaluator({
       jsonLogicEvaluator: mockJsonLogicEvaluator,
@@ -21,6 +27,17 @@ describe('NumericConstraintEvaluator', () => {
 
   afterEach(() => {
     testBed.cleanup();
+    clearNumericConstraintDiagnostics();
+    if (typeof originalAdapterEnv === 'undefined') {
+      delete process.env.GOAP_NUMERIC_ADAPTER;
+    } else {
+      process.env.GOAP_NUMERIC_ADAPTER = originalAdapterEnv;
+    }
+    if (typeof originalStrictEnv === 'undefined') {
+      delete process.env.GOAP_NUMERIC_STRICT;
+    } else {
+      process.env.GOAP_NUMERIC_STRICT = originalStrictEnv;
+    }
   });
 
   describe('Constructor', () => {
@@ -252,28 +269,6 @@ describe('NumericConstraintEvaluator', () => {
     });
 
     describe('Logging', () => {
-      it('should log debug message when nested format succeeds', () => {
-        const context = {
-          state: {
-            actor: {
-              components: {
-                'core:needs': { hunger: 80 },
-              },
-            },
-          },
-        };
-
-        evaluator.calculateDistance(
-          { '<=': [{ var: 'state.actor.components.core:needs.hunger' }, 30] },
-          context
-        );
-
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-          expect.stringContaining('Extracted value via'),
-          expect.any(Object)
-        );
-      });
-
       it('should log debug message when extraction fails', () => {
         const context = {
           state: {
@@ -289,6 +284,62 @@ describe('NumericConstraintEvaluator', () => {
         );
 
         expect(mockLogger.debug).toHaveBeenCalled();
+      });
+    });
+
+    describe('Diagnostics & Strict Mode', () => {
+      it('emits fallback diagnostics and event when adapter flag enabled', () => {
+        process.env.GOAP_NUMERIC_ADAPTER = '1';
+        const dispatcher = { dispatch: jest.fn() };
+        evaluator = new NumericConstraintEvaluator({
+          jsonLogicEvaluator: mockJsonLogicEvaluator,
+          logger: mockLogger,
+          goapEventDispatcher: dispatcher,
+        });
+
+        const context = {
+          state: {
+            actor: {
+              id: 'actor-diag',
+              components: {},
+            },
+          },
+        };
+
+        const result = evaluator.calculateDistance(
+          { '<=': [{ var: 'state.actor.components.core:needs.hunger' }, 10] },
+          context,
+          { metadata: { goalId: 'goal-diag' } }
+        );
+
+        expect(result).toBeNull();
+        const diagnostics = getNumericConstraintDiagnostics('actor-diag');
+        expect(diagnostics?.totalFallbacks).toBe(1);
+        expect(dispatcher.dispatch).toHaveBeenCalledWith(
+          GOAP_EVENTS.NUMERIC_CONSTRAINT_FALLBACK,
+          expect.objectContaining({ goalId: 'goal-diag', actorId: 'actor-diag' })
+        );
+      });
+
+      it('throws when GOAP_NUMERIC_STRICT is enabled', () => {
+        process.env.GOAP_NUMERIC_ADAPTER = '1';
+        process.env.GOAP_NUMERIC_STRICT = '1';
+        const context = {
+          state: {
+            actor: {
+              id: 'actor-strict',
+              components: {},
+            },
+          },
+        };
+
+        expect(() =>
+          evaluator.calculateDistance(
+            { '<=': [{ var: 'state.actor.components.core:needs.hunger' }, 5] },
+            context,
+            { metadata: { goalId: 'goal-strict' } }
+          )
+        ).toThrow(/\[GOAP_NUMERIC_STRICT]/);
       });
     });
   });

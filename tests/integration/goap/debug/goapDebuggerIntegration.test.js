@@ -42,6 +42,11 @@ describe('GOAPDebugger Integration', () => {
       getFailedGoals: jest.fn().mockReturnValue([]),
       getFailedTasks: jest.fn().mockReturnValue([]),
       getDependencyDiagnostics: jest.fn().mockReturnValue([]),
+      getNumericConstraintDiagnostics: jest.fn().mockReturnValue({
+        actorId: 'test-actor',
+        totalFallbacks: 0,
+        recent: [],
+      }),
       getTaskLibraryDiagnostics: jest.fn().mockReturnValue(null),
       getPlanningStateDiagnostics: jest.fn().mockReturnValue(null),
       getEventComplianceDiagnostics: jest.fn().mockReturnValue({

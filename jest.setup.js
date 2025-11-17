@@ -9,6 +9,9 @@ require('jest-extended/all');
 process.env.NODE_ENV = 'test';
 process.env.DEBUG_LOG_MODE = 'test';
 process.env.DEBUG_LOG_SILENT = 'true';
+if (typeof process.env.VALIDATION_PIPELINE_GUARDS === 'undefined') {
+  process.env.VALIDATION_PIPELINE_GUARDS = '1';
+}
 
 // Allow browser entrypoint modules to auto-initialize inside Jest unless overridden per test.
 globalThis.__LNE_FORCE_AUTO_INIT__ = true;

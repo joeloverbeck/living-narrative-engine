@@ -123,7 +123,7 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
    * @protected
    * @override
    * @returns {Promise<void>}
-   */
+  */
   async _initializeAdditionalServices() {
     await super._initializeAdditionalServices();
 
@@ -149,9 +149,6 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
         this.#fallbackToNativeSelect();
       }
 
-      // Initialize characterBuilderService (moved from initialize())
-      await this.characterBuilderService.initialize();
-
       this.logger.debug(
         'ThematicDirectionsManagerController: Additional services initialized'
       );
@@ -160,10 +157,41 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
         'ThematicDirectionsManagerController: Failed to initialize',
         error
       );
+      if (error && typeof error === 'object') {
+        // Mark the error so upstream handlers don't double-log
+        error.__tdmInitializationLogged = true;
+      }
       this._showError(
         'Failed to initialize directions manager. Please refresh the page.'
       );
       throw error; // Re-throw for base class to handle
+    }
+  }
+
+  /**
+   * Wrap base service initialization so we can surface errors specific to this controller
+   *
+   * @protected
+   * @override
+   * @returns {Promise<void>}
+   */
+  async _initializeServices() {
+    try {
+      await super._initializeServices();
+    } catch (error) {
+      if (!error?.__tdmInitializationLogged) {
+        this.logger.error(
+          'ThematicDirectionsManagerController: Failed to initialize services',
+          error
+        );
+        this._showError(
+          'Failed to initialize directions manager. Please refresh the page.'
+        );
+        if (error && typeof error === 'object') {
+          error.__tdmInitializationLogged = true;
+        }
+      }
+      throw error;
     }
   }
 
@@ -548,17 +576,28 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
 
     // Create InPlaceEditor instance
     const editorKey = `${directionId}-${fieldName}`;
-    const inPlaceEditor = new InPlaceEditor({
-      element: display,
-      originalValue: value,
-      onSave: async (newValue) => {
-        await this.#handleFieldSave(directionId, fieldName, value, newValue);
-      },
-      validator: (newValue) => this.#validateFieldValue(fieldName, newValue),
-    });
 
-    // Store editor instance for cleanup
-    this.#inPlaceEditors.set(editorKey, inPlaceEditor);
+    try {
+      const inPlaceEditor = new InPlaceEditor({
+        element: display,
+        originalValue: value,
+        onSave: async (newValue) => {
+          await this.#handleFieldSave(directionId, fieldName, value, newValue);
+        },
+        validator: (newValue) => this.#validateFieldValue(fieldName, newValue),
+      });
+
+      // Store editor instance for cleanup
+      this.#inPlaceEditors.set(editorKey, inPlaceEditor);
+    } catch (error) {
+      this.logger.error(
+        'ThematicDirectionsManagerController: Failed to initialize inline editor',
+        error
+      );
+      display.classList.add('editable-field-disabled');
+      display.setAttribute('data-editor-disabled', 'true');
+      display.title = 'Inline editing unavailable';
+    }
 
     return display;
   }

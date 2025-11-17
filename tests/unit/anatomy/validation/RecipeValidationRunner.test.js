@@ -168,6 +168,34 @@ describe('RecipeValidationRunner', () => {
           })
       ).toThrow();
     });
+
+    it('throws when guardrails enabled and required validators missing', () => {
+      const fakeRegistry = {
+        getAll: () => [],
+        count: () => 0,
+        assertRegistered: jest.fn(() => {
+          throw new Error('missing component-existence');
+        }),
+      };
+
+      expect(
+        () =>
+          new RecipeValidationRunner({
+            dataRegistry: mockDataRegistry,
+            anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+            schemaValidator: mockSchemaValidator,
+            slotGenerator: mockSlotGenerator,
+            entityMatcherService: mockEntityMatcherService,
+            logger: mockLogger,
+            validatorRegistry: fakeRegistry,
+            validationPipelineConfig: { guards: { enabled: true } },
+          })
+      ).toThrow('missing component-existence');
+      expect(fakeRegistry.assertRegistered).toHaveBeenCalledWith(
+        expect.any(Array),
+        expect.objectContaining({ environment: expect.any(String) })
+      );
+    });
   });
 
   describe('validate', () => {
@@ -422,24 +450,59 @@ describe('RecipeValidationRunner', () => {
       );
     });
 
-    it('returns early when validator pipeline produces no result', async () => {
-      jest
-        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
-        .mockResolvedValue([]);
-      jest
-        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
-        .mockResolvedValue([]);
+    it('wraps validation pipeline results when pipeline is short-circuited via stubbing', async () => {
+      const recipe = createRecipe();
+      const pipelineResult = {
+        recipeId: recipe.recipeId,
+        recipePath: '/tmp/test-recipe.json',
+        timestamp: '2025-01-01T00:00:00.000Z',
+        errors: [],
+        warnings: [
+          {
+            type: 'WARN',
+            severity: 'warning',
+            message: 'warn from pipeline',
+          },
+        ],
+        suggestions: [
+          {
+            type: 'INFO',
+            message: 'suggestion from pipeline',
+          },
+        ],
+        passed: [
+          {
+            check: 'stubbed',
+            message: 'stubbed pipeline pass',
+          },
+        ],
+      };
 
       const pipelineSpy = jest
         .spyOn(ValidationPipeline.prototype, 'execute')
-        .mockResolvedValue(undefined);
+        .mockResolvedValue(pipelineResult);
 
-      const report = await validator.validate(createRecipe());
+      const report = await validator.validate(recipe);
 
-      expect(pipelineSpy).toHaveBeenCalled();
-      expect(report.errors).toHaveLength(0);
-      expect(report.passed.some((entry) => entry.check === 'component_existence')).toBe(
-        true
+      expect(pipelineSpy).toHaveBeenCalledWith(recipe, expect.any(Object));
+      expect(report.recipePath).toBe('/tmp/test-recipe.json');
+      expect(report.warnings).toEqual(pipelineResult.warnings);
+      expect(report.suggestions).toEqual(pipelineResult.suggestions);
+      expect(report.passed).toEqual(pipelineResult.passed);
+    });
+
+    it('injects guardrail error when pipeline returns undefined', async () => {
+      const recipe = createRecipe();
+      jest
+        .spyOn(ValidationPipeline.prototype, 'execute')
+        .mockResolvedValueOnce(undefined);
+
+      const report = await validator.validate(recipe);
+
+      expect(report.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ type: 'VALIDATION_ERROR', severity: 'error' }),
+        ])
       );
     });
 

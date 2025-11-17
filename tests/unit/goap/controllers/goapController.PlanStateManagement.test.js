@@ -75,6 +75,7 @@ describe('GoapController - Plan State Management', () => {
 
     mockParameterResolutionService = {
       resolve: jest.fn(),
+      clearCache: jest.fn(),
     };
 
     controller = new GoapController(createValidDependencies());

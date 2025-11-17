@@ -226,7 +226,9 @@ export function createMockMonitoringCoordinator() {
       startTimer: jest.fn().mockReturnValue({ stop: jest.fn() }),
       getMetrics: jest.fn().mockReturnValue({})
     }),
-    getCircuitBreaker: jest.fn().mockReturnValue(mockCircuitBreaker)
+    getCircuitBreaker: jest.fn().mockReturnValue(mockCircuitBreaker),
+    incrementValidationPipelineHealth: jest.fn(),
+    getValidationPipelineHealth: jest.fn().mockReturnValue(0)
   };
 }
 

@@ -31,6 +31,7 @@ import { detectGoalType, allowsOvershoot } from './goalTypeDetector.js';
 import { goalHasPureNumericRoot } from './goalConstraintUtils.js';
 import { GOAP_PLANNER_FAILURES } from './goapPlannerFailureReasons.js';
 import { createPlanningStateView } from './planningStateView.js';
+import { createGoalEvaluationContextAdapter } from './goalEvaluationContextAdapter.js';
 import { normalizePlanningPreconditions } from '../utils/planningPreconditionUtils.js';
 import { validateGoalPaths, shouldEnforceGoalPathLint } from './goalPathValidator.js';
 
@@ -236,10 +237,13 @@ class GoapPlanner {
     }
 
     try {
-      const stateView = this.#buildPlanningStateView(state, {
+      const adapter = createGoalEvaluationContextAdapter({
+        state,
+        goal,
+        logger: this.#logger,
         origin: 'GoapPlanner.goalSatisfied',
-        goalId: goal?.id,
       });
+      const stateView = adapter.getStateView();
       const actorId = stateView.getActorId();
 
       const validation = validateGoalPaths(goal.goalState, {
@@ -253,10 +257,7 @@ class GoapPlanner {
       }
 
       // Build evaluation context from state
-      const context = stateView.getEvaluationContext();
-
-      // Add planning state for operators that need it (e.g., has_component)
-      context.state = state;
+      const context = adapter.getEvaluationContext();
 
       // Evaluate goal condition
       const result = this.#jsonLogicService.evaluateCondition(

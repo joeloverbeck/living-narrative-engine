@@ -77,6 +77,7 @@ describe('GoapController - Event Dispatching (GOAPIMPL-021-08)', () => {
 
     mockParameterResolutionService = {
       resolve: jest.fn(),
+      clearCache: jest.fn(),
     };
 
     controller = new GoapController(createValidDependencies());

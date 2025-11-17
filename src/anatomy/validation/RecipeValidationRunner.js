@@ -6,6 +6,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ValidationReport } from './ValidationReport.js';
 import ValidationPipeline from './core/ValidationPipeline.js';
 import ValidatorRegistry from './core/ValidatorRegistry.js';
+import { normalizeValidationResult } from './utils/validationResultNormalizer.js';
 import { ComponentExistenceValidator } from './validators/ComponentExistenceValidator.js';
 import { PropertySchemaValidator } from './validators/PropertySchemaValidator.js';
 import { BlueprintExistenceValidator } from './validators/BlueprintExistenceValidator.js';
@@ -22,10 +23,17 @@ import { RecipeUsageValidator } from './validators/RecipeUsageValidator.js';
  * @description Primary entry point for recipe validation. Builds the validator
  * registry, executes the pipeline, and returns a ValidationReport instance.
  */
+const REQUIRED_FAIL_FAST_VALIDATORS = [
+  { name: 'component-existence', priority: 0, failFast: true },
+  { name: 'property-schemas', priority: 5, failFast: true },
+];
+
 export class RecipeValidationRunner {
   #logger;
   #loadFailures;
   #validationPipeline;
+  #guardrailsEnabled;
+  #monitoringCoordinator;
 
   /**
    * @param {object} params - Constructor parameters.
@@ -39,6 +47,7 @@ export class RecipeValidationRunner {
    * @param {object} [params.validators] - Optional validator overrides for testing.
    * @param {ValidatorRegistry|null} [params.validatorRegistry] - Optional pre-built registry.
    * @param {object} [params.validationPipelineConfig] - Pipeline configuration payload.
+   * @param {import('../../entities/monitoring/MonitoringCoordinator.js').default|null} [params.monitoringCoordinator] - Guardrail instrumentation sink.
    */
   constructor({
     dataRegistry,
@@ -51,6 +60,7 @@ export class RecipeValidationRunner {
     validators = {},
     validatorRegistry = null,
     validationPipelineConfig = {},
+    monitoringCoordinator = null,
   }) {
     validateDependency(dataRegistry, 'IDataRegistry', logger, {
       requiredMethods: ['get', 'getAll'],
@@ -95,11 +105,21 @@ export class RecipeValidationRunner {
         entityMatcherService,
       });
 
+    this.#monitoringCoordinator = monitoringCoordinator ?? null;
+
     this.#validationPipeline = new ValidationPipeline({
       registry,
       logger,
       configuration: validationPipelineConfig,
     });
+
+    this.#guardrailsEnabled = this.#shouldEnableGuardrails(
+      validationPipelineConfig
+    );
+
+    if (this.#guardrailsEnabled) {
+      this.#assertMandatoryValidators(registry);
+    }
   }
 
   /**
@@ -113,7 +133,69 @@ export class RecipeValidationRunner {
       loadFailures: options.loadFailures ?? this.#loadFailures,
     });
 
-    return new ValidationReport(pipelineResult);
+    const payload = this.#guardrailsEnabled
+      ? normalizeValidationResult(recipe, pipelineResult, this.#logger, {
+          validatorCount: this.#validationPipeline.getValidatorCount(),
+          monitoringCoordinator: this.#monitoringCoordinator,
+          recipePath: options.recipePath,
+        })
+      : pipelineResult;
+
+    return new ValidationReport(payload);
+  }
+
+  #assertMandatoryValidators(registry) {
+    const assertionPassed = registry.assertRegistered(
+      REQUIRED_FAIL_FAST_VALIDATORS,
+      {
+        environment: process?.env?.NODE_ENV,
+        onProductionFailure: () => {
+          if (this.#monitoringCoordinator) {
+            this.#monitoringCoordinator.incrementValidationPipelineHealth(
+              'registry_assertion_failure'
+            );
+          }
+        },
+      }
+    );
+
+    if (assertionPassed === false) {
+      this.#logger?.warn?.(
+        'ValidatorRegistry: Mandatory validator assertion downgraded to warning in production'
+      );
+    }
+  }
+
+  #shouldEnableGuardrails(config = {}) {
+    if (config?.guards && typeof config.guards.enabled === 'boolean') {
+      return config.guards.enabled;
+    }
+
+    const envFlag = this.#parseGuardFlag(process?.env?.VALIDATION_PIPELINE_GUARDS);
+    if (envFlag !== null) {
+      return envFlag;
+    }
+
+    if (process?.env?.NODE_ENV === 'test') {
+      return true;
+    }
+
+    return false;
+  }
+
+  #parseGuardFlag(value) {
+    if (typeof value !== 'string') {
+      return null;
+    }
+
+    const normalized = value.trim().toLowerCase();
+    if (normalized === '1' || normalized === 'true') {
+      return true;
+    }
+    if (normalized === '0' || normalized === 'false') {
+      return false;
+    }
+    return null;
   }
 
   #createValidatorRegistry({

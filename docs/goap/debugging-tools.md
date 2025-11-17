@@ -197,6 +197,13 @@ Plan Inspector and the consolidated GOAPDebugger report now include two addition
 - **Goal Path Violations**—lists every actor/goal that referenced `actor.*` or `state.actor.*` without the `components` segment. Run `npm run validate:goals` locally (or export `GOAP_GOAL_PATH_LINT=1`) to catch these before they reach CI. When the planner aborts with `INVALID_GOAL_PATH`, the block shows the exact variable path(s) to fix.
 - **Effect Failure Telemetry**—captures every `{ success: false }` response from `planningEffectsSimulator` along with `{ taskId, phase, goalId }`. Treat each entry as a missing precondition; `INVALID_EFFECT_DEFINITION` remains a hard failure and GOAPDebugger links back to this section so you can see which task caused the abort.
 
+### Numeric Constraint Diagnostics
+
+- `GOAP_EVENTS.NUMERIC_CONSTRAINT_FALLBACK` fires whenever `NumericConstraintEvaluator` returns `null` and the heuristic falls back to boolean counting. The payload follows the same `(eventType, payload)` contract enforced by `createGoapEventDispatcher()` and surfaces under the event-compliance diagnostics described in the **Planner Contract Checklist**.
+- `GOAP_NUMERIC_ADAPTER=1` enables the shared `GoalEvaluationContextAdapter` so heuristics, evaluators, and `GoapController` consume the same dual-format `PlanningStateView`. `GOAP_NUMERIC_STRICT=1` turns those fallback events into hard errors; CI sets this flag to fail fast whenever numeric paths drift.
+- Plan Inspector now prints a **Numeric Constraint Diagnostics** block per actor showing total fallbacks and the most recent `{ varPath, reason, timestamp }` entries. `GOAPDebugger.inspectPlanJSON()` mirrors this data so integration harnesses can assert on it directly.
+- `MonitoringCoordinator` increments a lightweight counter whenever the fallback event dispatches on the shared event bus. `npm run test:ci` (and custom smoke tests) can read `monitoringCoordinator.getGoapNumericFallbackCount()` to ensure strict mode runs stay clean.
+
 ## Diagnostics Contract
 
 `GoapController` and `GOAPDebugger` share a diagnostics contract defined in `src/goap/debug/goapDebuggerDiagnosticsContract.js` (`version = 1.2.0` at the time of writing). The contract ensures:

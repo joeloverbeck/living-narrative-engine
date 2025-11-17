@@ -73,7 +73,10 @@ class PlanInspector {
       return this.#formatNoActivePlan(actorId);
     }
 
-    return this.#formatPlan(plan);
+    const numericDiagnostics =
+      this.#goapController.getNumericConstraintDiagnostics(actorId);
+
+    return this.#formatPlan(plan, numericDiagnostics);
   }
 
   /**
@@ -93,6 +96,8 @@ class PlanInspector {
     const goalDef = this.#dataRegistry.getGoalDefinition(plan.goal.id);
     const failedGoals = this.#goapController.getFailedGoals(actorId);
     const failedTasks = this.#goapController.getFailedTasks(actorId);
+    const numericDiagnostics =
+      this.#goapController.getNumericConstraintDiagnostics(actorId);
 
     const heuristicSummary = this.#describeNumericHeuristic(plan.goal);
 
@@ -127,6 +132,15 @@ class PlanInspector {
         goals: this.#formatFailureCount(failedGoals),
         tasks: this.#formatFailureCount(failedTasks),
       },
+      numericDiagnostics: numericDiagnostics
+        ? {
+            totalFallbacks: numericDiagnostics.totalFallbacks,
+            recent: numericDiagnostics.recent,
+          }
+        : {
+            totalFallbacks: 0,
+            recent: [],
+          },
     };
   }
 
@@ -137,7 +151,7 @@ class PlanInspector {
    * @param {object} plan - Active plan
    * @returns {string} Formatted text
    */
-  #formatPlan(plan) {
+  #formatPlan(plan, numericDiagnostics) {
     const goalDef = this.#dataRegistry.getGoalDefinition(plan.goal.id);
     const failedGoals = this.#goapController.getFailedGoals(plan.actorId);
     const failedTasks = this.#goapController.getFailedTasks(plan.actorId);
@@ -195,6 +209,9 @@ class PlanInspector {
       });
     }
 
+    lines.push('');
+    lines.push('Numeric Constraint Diagnostics:');
+    lines.push(...this.#formatNumericDiagnostics(numericDiagnostics));
     lines.push('');
     lines.push('=== End Plan ===');
 
@@ -301,6 +318,26 @@ class PlanInspector {
   #formatNoActivePlan(actorId) {
     return `No active GOAP plan for actor: ${actorId}`;
   }
+
+  #formatNumericDiagnostics(diagnostics) {
+    if (!diagnostics || diagnostics.totalFallbacks === 0) {
+      return ['  No numeric constraint fallbacks recorded.'];
+    }
+
+    const lines = [`  Total Fallbacks: ${diagnostics.totalFallbacks}`];
+
+    diagnostics.recent.forEach((entry, index) => {
+      const timestamp = entry.timestamp
+        ? new Date(entry.timestamp).toISOString()
+        : 'unknown';
+      lines.push(
+        `  ${index + 1}. ${entry.varPath || '<unknown path>'} (${entry.reason || 'unknown'}) — ${timestamp}`
+      );
+    });
+
+    return lines;
+  }
+
 }
 
 export default PlanInspector;

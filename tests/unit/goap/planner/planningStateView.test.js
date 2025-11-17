@@ -78,4 +78,14 @@ describe('PlanningStateView', () => {
 
     expect(() => view.hasComponent('ghost', 'core:needs')).toThrow(/GOAP_STATE_MISS/);
   });
+
+  it('returns cloned actor snapshot', () => {
+    const view = createPlanningStateView(createState());
+    const snapshot = view.getActorSnapshot();
+    expect(snapshot.id).toBe('actor-1');
+    snapshot.components['core:needs'].hunger = 5;
+
+    const freshSnapshot = view.getActorSnapshot();
+    expect(freshSnapshot.components['core:needs'].hunger).toBe(90);
+  });
 });

@@ -518,12 +518,12 @@ describe('GOAP Multi-Actor Coordination - Integration', () => {
 
       actors.forEach((actor) => setup.entityManager.addEntity(actor));
 
-      // Setup: Shared goal template (will use actor_a's ID as representative)
+      // Setup: Shared goal template (targets whichever actor is planning)
       const goal = createTestGoal({
         id: 'test:shared_goal',
         relevance: { '==': [true, true] },
         goalState: {
-          has_component: [actors[0].id, 'test:completed'],  // Goal: actor should HAVE test:completed
+          has_component: ['actor', 'test:completed'],  // Goal: actor should HAVE test:completed
         },
       });
       setup.dataRegistry.register('goals', goal.id, goal);

@@ -840,6 +840,11 @@ export function registerWorldAndEntity(container) {
       schemaValidator: c.resolve(tokens.ISchemaValidator),
       slotGenerator: c.resolve(tokens.ISlotGenerator),
       entityMatcherService: c.resolve(tokens.IEntityMatcherService),
+      monitoringCoordinator:
+        typeof c.isRegistered === 'function' &&
+        c.isRegistered(tokens.IMonitoringCoordinator)
+          ? c.resolve(tokens.IMonitoringCoordinator)
+          : null,
     });
   });
   logger.debug(

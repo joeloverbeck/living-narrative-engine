@@ -482,6 +482,11 @@ async function createValidationContext({
       debug: () => {},
     };
   const schemaValidator = container.resolve(tokens.ISchemaValidator);
+  const monitoringCoordinator =
+    typeof container.isRegistered === 'function' &&
+    container.isRegistered(tokens.IMonitoringCoordinator)
+      ? container.resolve(tokens.IMonitoringCoordinator)
+      : null;
 
   const configurationLoader =
     runtimeOverrides.createConfigurationLoader?.({ schemaValidator, logger }) ??
@@ -543,6 +548,7 @@ async function createValidationContext({
     logger,
     loadFailures: modLoadResult?.loadFailures ?? {},
     validationPipelineConfig: configuration.pipelineConfig,
+    monitoringCoordinator,
   };
 
   const validator =
