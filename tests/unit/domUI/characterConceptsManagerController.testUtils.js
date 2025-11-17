@@ -31,6 +31,11 @@ export function createMockCharacterBuilderService() {
     updateCharacterConcept: jest.fn(),
     deleteCharacterConcept: jest.fn(),
     getThematicDirections: jest.fn().mockResolvedValue([]),
+    updateThematicDirection: jest
+      .fn()
+      .mockImplementation((directionId, updates = {}) =>
+        Promise.resolve({ id: directionId, ...updates })
+      ),
   };
 }
 

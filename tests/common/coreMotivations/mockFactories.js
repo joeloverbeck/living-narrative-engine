@@ -578,6 +578,14 @@ export function createMockCharacterBuilderService(options = {}) {
           { id: 'dir-2', title: 'Direction 2', theme: 'Theme 2' },
         ];
       }),
+    updateThematicDirection: jest
+      .fn()
+      .mockImplementation(async (directionId, updates = {}) => {
+        if (shouldFail) {
+          throw new Error('Failed to update thematic direction');
+        }
+        return { id: directionId, ...updates };
+      }),
     getAllThematicDirectionsWithConcepts: jest
       .fn()
       .mockImplementation(async () => {

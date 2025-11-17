@@ -5,6 +5,7 @@
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import GoapPlanner from '../../../../src/goap/planner/goapPlanner.js';
+import { GOAP_PLANNER_FAILURES } from '../../../../src/goap/planner/goapPlannerFailureReasons.js';
 import { createTestBed } from '../../../common/testBed.js';
 
 describe('GoapPlanner - plan() Method (A* Search)', () => {
@@ -73,7 +74,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       const initialState = { 'actor:hunger': true };
       const goal = {
         id: 'reduce-hunger',
-        goalState: { '==': [{ var: 'actor.hunger' }, false] },
+        goalState: { '==': [{ var: 'actor.components.hunger' }, false] },
       };
 
       // Initial state: goal not satisfied
@@ -130,13 +131,13 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       };
       const goal = {
         id: 'reduce-hunger',
-        goalState: { '==': [{ var: 'actor.hunger' }, false] },
+        goalState: { '==': [{ var: 'actor.components.hunger' }, false] },
       };
 
       // Goal checks - goal is hunger === false
       mockJsonLogicService.evaluateCondition.mockImplementation((condition, context) => {
-        // Goal check: actor.hunger === false
-        return context?.actor?.hunger === false;
+        // Goal check: actor.components.hunger === false
+        return context?.actor?.components?.hunger === false;
       });
 
       // Heuristics - need more calls as both tasks are evaluated from initial state
@@ -160,8 +161,8 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
         if (effects[0]?.path === 'actor:hunger') {
           if (currentState['actor:has_apple'] !== true) {
             return {
-              success: false,
-              error: 'Cannot eat apple without having one',
+              success: true,
+              state: { ...currentState },
             };
           }
           return {
@@ -202,7 +203,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       const initialState = { 'actor:hunger': true };
       const goal = {
         id: 'reduce-hunger',
-        goalState: { '==': [{ var: 'actor.hunger' }, false] },
+        goalState: { '==': [{ var: 'actor.components.hunger' }, false] },
       };
 
       mockJsonLogicService.evaluateCondition.mockReturnValue(false); // Goal never satisfied
@@ -243,7 +244,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       const initialState = { 'actor:value': 0 };
       const goal = {
         id: 'unreachable',
-        goalState: { '==': [{ var: 'actor.value' }, 100] },
+        goalState: { '==': [{ var: 'actor.components.value' }, 100] },
       };
 
       mockJsonLogicService.evaluateCondition.mockReturnValue(false);
@@ -292,7 +293,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       const initialState = { 'actor:value': 0 };
       const goal = {
         id: 'test',
-        goalState: { '==': [{ var: 'actor.value' }, 100] },
+        goalState: { '==': [{ var: 'actor.components.value' }, 100] },
       };
 
       mockJsonLogicService.evaluateCondition.mockReturnValue(false);
@@ -351,7 +352,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       const initialState = { 'actor:steps': 0 };
       const goal = {
         id: 'many-steps',
-        goalState: { '==': [{ var: 'actor.steps' }, 100] },
+        goalState: { '==': [{ var: 'actor.components.steps' }, 100] },
       };
 
       mockJsonLogicService.evaluateCondition.mockReturnValue(false);
@@ -411,7 +412,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       const initialState = { 'actor:goal': false };
       const goal = {
         id: 'achieve-goal',
-        goalState: { '==': [{ var: 'actor.goal' }, true] },
+        goalState: { '==': [{ var: 'actor.components.goal' }, true] },
       };
 
       mockJsonLogicService.evaluateCondition
@@ -462,7 +463,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       const initialState = { 'actor:state': 'A' };
       const goal = {
         id: 'impossible',
-        goalState: { '==': [{ var: 'actor.state' }, 'C'] },
+        goalState: { '==': [{ var: 'actor.components.state' }, 'C'] },
       };
 
       mockJsonLogicService.evaluateCondition.mockReturnValue(false);
@@ -526,11 +527,11 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       const initialState = { 'actor:state_x': false, 'actor:at_goal': false };
       const goal = {
         id: 'reach-goal',
-        goalState: { '==': [{ var: 'actor.at_goal' }, true] },
+        goalState: { '==': [{ var: 'actor.components.at_goal' }, true] },
       };
 
       mockJsonLogicService.evaluateCondition.mockImplementation((condition, context) => {
-        return context?.actor?.at_goal === true;
+        return context?.actor?.components?.at_goal === true;
       });
 
       mockHeuristicRegistry.calculate.mockImplementation((heuristic, state) => {
@@ -551,8 +552,8 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
         if (effects[0]?.path === 'actor:at_goal') {
           if (currentState['actor:state_x'] !== true) {
             return {
-              success: false,
-              error: 'Cannot reach goal without state_x',
+              success: true,
+              state: { ...currentState },
             };
           }
           return {
@@ -599,7 +600,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       const initialState = { 'actor:core:hungry': true };
       const goal = {
         id: 'still-hungry',
-        goalState: { '==': [{ var: 'actor.core.hungry' }, false] },
+        goalState: { '==': [{ var: 'actor.components.core_hungry' }, false] },
       };
 
       mockJsonLogicService.evaluateCondition.mockReturnValue(false);
@@ -638,7 +639,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       const initialState = { 'actor:value': 0 };
       const goal = {
         id: 'test',
-        goalState: { '==': [{ var: 'actor.value' }, 1] },
+        goalState: { '==': [{ var: 'actor.components.value' }, 1] },
       };
 
       mockJsonLogicService.evaluateCondition
@@ -686,7 +687,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       const initialState = { 'actor:success': false };
       const goal = {
         id: 'succeed',
-        goalState: { '==': [{ var: 'actor.success' }, true] },
+        goalState: { '==': [{ var: 'actor.components.success' }, true] },
       };
 
       // Binding fails for use_item (no scope result)
@@ -720,8 +721,8 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
     });
   });
 
-  describe('12. Effect simulation failures skip task', () => {
-    it('should skip tasks when effect simulation fails', () => {
+  describe('12. Effect simulation guardrails', () => {
+    it('should record invalid effect failure when simulator returns unsuccessfully', () => {
       mockRepository.get.mockReturnValue({
         core: {
           'core:broken_task': {
@@ -740,7 +741,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       const initialState = { 'actor:success': false };
       const goal = {
         id: 'succeed',
-        goalState: { '==': [{ var: 'actor.success' }, true] },
+        goalState: { '==': [{ var: 'actor.components.success' }, true] },
       };
 
       mockJsonLogicService.evaluateCondition
@@ -770,15 +771,22 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
 
       const plan = planner.plan('actor-123', goal, initialState);
 
-      expect(plan).not.toBeNull();
-      expect(plan).toEqual({
-        tasks: expect.any(Array),
-        cost: expect.any(Number),
-        nodesExplored: expect.any(Number),
-      });
-      expect(plan.tasks[0].taskId).toBe('core:working_task');
-      // Note: Simulation failure during distance check returns false without debug logging
-      // The failing task is silently excluded from applicable tasks
+      expect(plan).toBeNull();
+
+      const failure = planner.getLastFailure();
+      expect(failure).toEqual(
+        expect.objectContaining({
+          code: GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION,
+        })
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Aborting planning due to invalid planning effect',
+        expect.objectContaining({
+          actorId: 'actor-123',
+          goalId: goal.id,
+        })
+      );
+      // Per docs/goap/debugging-tools.md invalid effects must surface via diagnostics.
     });
 
     it('should skip tasks when effect simulation throws exception', () => {
@@ -800,7 +808,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       const initialState = { 'actor:done': false };
       const goal = {
         id: 'complete',
-        goalState: { '==': [{ var: 'actor.done' }, true] },
+        goalState: { '==': [{ var: 'actor.components.done' }, true] },
       };
 
       mockJsonLogicService.evaluateCondition
@@ -836,8 +844,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
         nodesExplored: expect.any(Number),
       });
       expect(plan.tasks[0].taskId).toBe('core:safe_task');
-      // Note: Exception during distance check is caught and returns false without warn logging
-      // The failing task is silently excluded from applicable tasks
+      // Exceptions still skip individual tasks without aborting the search.
     });
   });
 
@@ -852,7 +859,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       const initialState = { 'actor:core:hungry': true };
       const goal = {
         id: 'satiate',
-        goalState: { '==': [{ var: 'actor.core.hungry' }, false] },
+        goalState: { '==': [{ var: 'actor.components.core_hungry' }, false] },
       };
 
       mockHeuristicRegistry.calculate.mockImplementation(() => {
@@ -878,7 +885,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       const initialState = { 'actor:core:hungry': true };
       const goal = {
         id: 'never-finish',
-        goalState: { '==': [{ var: 'actor.core.hungry' }, false] },
+        goalState: { '==': [{ var: 'actor.components.core_hungry' }, false] },
         maxActions: 200, // Allow deep plans so node tracking reaches 100 expansions
       };
 
@@ -954,7 +961,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       const initialState = { 'actor:happy': true };
       const goal = {
         id: 'be-happy',
-        goalState: { '==': [{ var: 'actor.happy' }, true] },
+        goalState: { '==': [{ var: 'actor.components.happy' }, true] },
       };
 
       mockJsonLogicService.evaluateCondition.mockReturnValue(true);
@@ -985,7 +992,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       });
 
       mockJsonLogicService.evaluateCondition.mockImplementation((condition, context) => {
-        const hp = context?.actor?.hp ?? 0;
+        const hp = context?.actor?.components?.hp ?? 0;
         return hp >= targetHp;
       });
 
@@ -1013,7 +1020,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       const initialState = { 'actor:hp': 70 };
       const goal = {
         id: 'restore-health',
-        goalState: { '>=': [{ var: 'actor.hp' }, 100] },
+        goalState: { '>=': [{ var: 'actor.components.hp' }, 100] },
       };
 
       const plan = planner.plan('actor-123', goal, initialState, {
@@ -1032,7 +1039,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       const initialState = { 'actor:hp': 70 };
       const goal = {
         id: 'restore-health',
-        goalState: { '>=': [{ var: 'actor.hp' }, 90] },
+        goalState: { '>=': [{ var: 'actor.components.hp' }, 90] },
       };
 
       const plan = planner.plan('actor-123', goal, initialState, {

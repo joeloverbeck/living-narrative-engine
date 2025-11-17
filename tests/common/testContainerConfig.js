@@ -281,6 +281,11 @@ export function createMockCharacterBuilderService(options = {}) {
     // Additional methods for compatibility
     getThematicDirections: jest.fn().mockResolvedValue([]),
     generateThematicDirections: jest.fn().mockResolvedValue([]),
+    updateThematicDirection: jest
+      .fn()
+      .mockImplementation((directionId, updates = {}) =>
+        Promise.resolve({ id: directionId, ...updates })
+      ),
     initialize: jest.fn().mockResolvedValue(undefined),
 
     // Test utility methods
