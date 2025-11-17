@@ -121,7 +121,7 @@ describe('registerGoapServices - GoapController', () => {
     );
   });
 
-  test('should register GoapController with all 9 required dependencies', () => {
+  test('should register GoapController with all required dependencies', () => {
     // Find the registration call for IGoapController
     const registration = registerSpy.mock.calls.find(
       (call) => call[0] === tokens.IGoapController
@@ -136,6 +136,7 @@ describe('registerGoapServices - GoapController', () => {
       tokens.JsonLogicEvaluationService,
       tokens.IDataRegistry,
       tokens.IEventBus,
+      tokens.IGoapEventDispatcher,
       tokens.ILogger,
       tokens.IParameterResolutionService,
     ]);

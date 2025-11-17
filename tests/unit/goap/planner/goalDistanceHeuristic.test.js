@@ -406,7 +406,21 @@ describe('GoalDistanceHeuristic - Numeric Constraints', () => {
 
       expect(result).toBe(50);
       expect(mockNumericEvaluator.isNumericConstraint).toHaveBeenCalledWith(goal.goalState);
-      expect(mockNumericEvaluator.calculateDistance).toHaveBeenCalledWith(goal.goalState, state);
+      expect(mockNumericEvaluator.calculateDistance).toHaveBeenCalledTimes(1);
+      const [goalArg, evaluationContext, options] =
+        mockNumericEvaluator.calculateDistance.mock.calls[0];
+      expect(goalArg).toBe(goal.goalState);
+      expect(evaluationContext).toEqual(
+        expect.objectContaining({
+          state: expect.objectContaining(state),
+        })
+      );
+      expect(options).toEqual(
+        expect.objectContaining({
+          stateView: expect.any(Object),
+          metadata: expect.objectContaining({ origin: 'GoalDistanceHeuristic' }),
+        })
+      );
       expect(mockEvaluator.evaluate).not.toHaveBeenCalled();
     });
 
@@ -444,7 +458,21 @@ describe('GoalDistanceHeuristic - Numeric Constraints', () => {
       const result = heuristic.calculate(state, goal);
 
       expect(result).toBe(40);
-      expect(mockNumericEvaluator.calculateDistance).toHaveBeenCalledWith(goal.goalState, state);
+      expect(mockNumericEvaluator.calculateDistance).toHaveBeenCalledTimes(1);
+      const [goalArg, evaluationContext, options] =
+        mockNumericEvaluator.calculateDistance.mock.calls[0];
+      expect(goalArg).toBe(goal.goalState);
+      expect(evaluationContext).toEqual(
+        expect.objectContaining({
+          state: expect.objectContaining(state),
+        })
+      );
+      expect(options).toEqual(
+        expect.objectContaining({
+          stateView: expect.any(Object),
+          metadata: expect.objectContaining({ origin: 'GoalDistanceHeuristic' }),
+        })
+      );
     });
   });
 
@@ -467,7 +495,12 @@ describe('GoalDistanceHeuristic - Numeric Constraints', () => {
       expect(result).toBe(1);
       expect(mockNumericEvaluator.isNumericConstraint).toHaveBeenCalled();
       expect(mockNumericEvaluator.calculateDistance).toHaveBeenCalled();
-      expect(mockEvaluator.evaluate).toHaveBeenCalledWith(goal.goalState, { state });
+      expect(mockEvaluator.evaluate).toHaveBeenCalledWith(
+        goal.goalState,
+        expect.objectContaining({
+          state: expect.objectContaining(state),
+        })
+      );
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('falling back to boolean evaluation')
       );
@@ -530,7 +563,12 @@ describe('GoalDistanceHeuristic - Numeric Constraints', () => {
       expect(result).toBe(0);
       expect(mockNumericEvaluator.isNumericConstraint).toHaveBeenCalledWith(goal.goalState);
       expect(mockNumericEvaluator.calculateDistance).not.toHaveBeenCalled();
-      expect(mockEvaluator.evaluate).toHaveBeenCalledWith(goal.goalState, { state });
+      expect(mockEvaluator.evaluate).toHaveBeenCalledWith(
+        goal.goalState,
+        expect.objectContaining({
+          state: expect.objectContaining(state),
+        })
+      );
     });
 
     it('should return 1 for unsatisfied non-numeric goalState', () => {
