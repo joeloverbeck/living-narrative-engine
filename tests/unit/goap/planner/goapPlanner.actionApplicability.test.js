@@ -6,6 +6,7 @@
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import GoapPlanner from '../../../../src/goap/planner/goapPlanner.js';
+import { GOAP_PLANNER_FAILURES } from '../../../../src/goap/planner/goapPlannerFailureReasons.js';
 
 describe('GoapPlanner - Action Applicability with Numeric Goals (MODCOMPLASUP-004)', () => {
   let planner;
@@ -302,10 +303,7 @@ describe('GoapPlanner - Action Applicability with Numeric Goals (MODCOMPLASUP-00
       );
     });
 
-    it('should handle simulation failure gracefully', () => {
-      // Effect simulation returns {success: false}
-      // Should return false and log debug message
-
+    it('throws when effect simulation reports an invalid effect', () => {
       const task = {
         id: 'test:invalid_action',
         planningEffects: [{ operation: 'INVALID' }],
@@ -321,30 +319,72 @@ describe('GoapPlanner - Action Applicability with Numeric Goals (MODCOMPLASUP-00
         goalState: { '<=': [{ var: 'actor-1.core.hunger' }, 30] },
       };
 
-      // Mock simulation failure
       mockEffectsSimulator.simulateEffects.mockReturnValue({
         success: false,
         error: 'Invalid operation',
       });
 
-      const result = planner.testTaskReducesDistance(task, currentState, goal, 'actor-1');
+      let thrownError;
+      try {
+        planner.testTaskReducesDistance(task, currentState, goal, 'actor-1');
+      } catch (error) {
+        thrownError = error;
+      }
 
-      expect(result).toBe(false);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'Effect simulation failed for distance check',
-        expect.objectContaining({
-          taskId: 'test:invalid_action',
-          error: 'Invalid operation',
-        })
-      );
-      // Should not calculate heuristics if simulation fails
+      expect(thrownError).toBeDefined();
+      expect(thrownError.code).toBe(GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION);
+      expect(thrownError.message).toContain('Invalid operation');
       expect(mockHeuristicRegistry.calculate).not.toHaveBeenCalled();
     });
 
-    it('should handle non-finite distance values', () => {
-      // Heuristic calculation returns Infinity or NaN
-      // Should return false and log warning
+    it('throws and records telemetry when effect simulation throws', () => {
+      const task = {
+        id: 'test:invalid_action',
+        planningEffects: [{ operation: 'INVALID' }],
+        boundParams: {},
+      };
 
+      const currentState = {
+        'actor-1:core:hunger': 50,
+      };
+
+      const goal = {
+        id: 'reduce-hunger',
+        goalState: { '<=': [{ var: 'actor-1.core.hunger' }, 30] },
+      };
+
+      const simulationError = new Error('Parameter resolution failed');
+      mockEffectsSimulator.simulateEffects.mockImplementation(() => {
+        throw simulationError;
+      });
+
+      let thrownError;
+      try {
+        planner.testTaskReducesDistance(task, currentState, goal, 'actor-1');
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeDefined();
+      expect(thrownError.code).toBe(GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION);
+      expect(thrownError.message).toContain('Parameter resolution failed');
+      expect(mockHeuristicRegistry.calculate).not.toHaveBeenCalled();
+      expect(mockLogger.error).not.toHaveBeenCalled();
+
+      const telemetry = planner.getEffectFailureTelemetry('actor-1');
+      expect(telemetry).toBeTruthy();
+      expect(telemetry.totalFailures).toBe(1);
+      expect(telemetry.failures[0]).toEqual(
+        expect.objectContaining({
+          taskId: 'test:invalid_action',
+          goalId: 'reduce-hunger',
+          phase: 'distance-check',
+          message: 'Parameter resolution failed',
+        })
+      );
+    });
+
+    it('bypasses numeric guard when distance heuristics become non-finite', () => {
       const task = {
         id: 'test:action',
         planningEffects: [],
@@ -359,27 +399,30 @@ describe('GoapPlanner - Action Applicability with Numeric Goals (MODCOMPLASUP-00
         state: {},
       });
 
-      // Mock non-finite distances
       mockHeuristicRegistry.calculate.mockReturnValueOnce(Infinity);
       mockHeuristicRegistry.calculate.mockReturnValueOnce(10);
 
       const result = planner.testTaskReducesDistance(task, currentState, goal, 'actor-1');
 
-      expect(result).toBe(false);
+      expect(result).toBe(true);
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        'Non-finite distance values',
+        'Heuristic produced invalid value',
+        expect.objectContaining({
+          actorId: 'actor-1',
+          heuristicId: 'goal-distance',
+          phase: 'distance-check:current',
+        })
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Heuristic distance invalid, bypassing guard',
         expect.objectContaining({
           taskId: 'test:action',
-          currentDistance: Infinity,
-          nextDistance: 10,
+          currentSanitized: true,
         })
       );
     });
 
-    it('should handle errors in heuristic calculation', () => {
-      // Heuristic.calculate throws error
-      // Should catch, log error, return false
-
+    it('recovers when heuristic calculation throws by sanitizing the result', () => {
       const task = {
         id: 'test:action',
         planningEffects: [],
@@ -394,20 +437,23 @@ describe('GoapPlanner - Action Applicability with Numeric Goals (MODCOMPLASUP-00
         state: {},
       });
 
-      // Mock heuristic error
       mockHeuristicRegistry.calculate.mockImplementation(() => {
         throw new Error('Heuristic calculation failed');
       });
 
       const result = planner.testTaskReducesDistance(task, currentState, goal, 'actor-1');
 
-      expect(result).toBe(false);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'Failed to check distance reduction',
+      expect(result).toBe(true);
+      const warningCalls = mockLogger.warn.mock.calls.filter(
+        ([message]) => message === 'Heuristic produced invalid value'
+      );
+      expect(warningCalls).toHaveLength(1);
+      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Heuristic distance invalid, bypassing guard',
         expect.objectContaining({
           taskId: 'test:action',
           goalId: 'test-goal',
-          error: 'Heuristic calculation failed',
         })
       );
     });
@@ -478,6 +524,44 @@ describe('GoapPlanner - Action Applicability with Numeric Goals (MODCOMPLASUP-00
           actorId: 'actor-123',
           parameters: { target: 'item-1' },
         }
+      );
+    });
+
+    it('logs when unexpected errors bubble out of the distance guard', () => {
+      const task = {
+        id: 'test:distance_guard_failure',
+        planningEffects: [],
+        boundParams: {},
+      };
+
+      const currentState = { 'actor-1:core:hunger': 80 };
+      const goal = {
+        id: 'reduce-hunger',
+        goalState: { '<=': [{ var: 'actor-1.core.hunger' }, 30] },
+      };
+
+      mockEffectsSimulator.simulateEffects.mockReturnValue({
+        success: true,
+        state: { 'actor-1:core:hunger': 20 },
+      });
+
+      mockHeuristicRegistry.calculate.mockReturnValueOnce(50);
+      mockHeuristicRegistry.calculate.mockReturnValueOnce(0);
+
+      mockLogger.debug.mockImplementationOnce(() => {
+        throw new Error('logger failure');
+      });
+
+      const result = planner.testTaskReducesDistance(task, currentState, goal, 'actor-1');
+
+      expect(result).toBe(false);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to check distance reduction',
+        expect.objectContaining({
+          taskId: 'test:distance_guard_failure',
+          goalId: 'reduce-hunger',
+          error: 'logger failure',
+        })
       );
     });
   });

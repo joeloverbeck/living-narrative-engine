@@ -49,6 +49,15 @@ Tests should import `createGoapPlannerMock` + `expectGoapPlannerMock` from `test
 
 `GoapController` exposes `getDiagnosticsContractVersion()` so `GOAPDebugger` can enforce the shared diagnostics contract described in `docs/goap/debugging-tools.md#diagnostics-contract`. Any time you add or remove diagnostics sections (task library, planning state, future additions), bump the contract version and update the debugger/GoapController tests to acknowledge the change. This keeps instrumentation in lockstep with the runtime planner API and prevents silent drift.
 
+### Distance guard & telemetry contract
+
+`GoapPlanner.testTaskReducesDistance` is the only place distance guards run, and its behavior is fully observable via logger breadcrumbs and GOAPDebugger telemetry:
+
+- **Guard activation**: `goalHasPureNumericRoot(goal)` must return `true` (root operator is `<`, `<=`, `>`, or `>=` without boolean siblings). Mixed logic trees report **Numeric Heuristic: BYPASSED** inside GOAPDebugger and the guard never runs.
+- **Heuristic sanitization**: Any `NaN`, `Infinity`, negative value, or thrown heuristic calculation results in `Heuristic produced invalid value` (warn) followed by `Heuristic distance invalid, bypassing guard` (debug). Sanitized heuristics always cause the guard to return `true` so instrumentation faults do not prune the task list.
+- **Effect failures**: If `planningEffectsSimulator` throws or returns `{ success: false }`, `testTaskReducesDistance` records Effect Failure Telemetry and throws via `#failForInvalidEffect` with `code = GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION`. Resume execution only after fixing the bad task definition; the guard never treats these as `false`.
+- **Debugger surface**: GOAPDebugger lists these entries under **Effect Failure Telemetry**, showing `{ taskId, goalId, phase: 'distance-check', message }` tuples plus the failure code so QA/content teams know a fatal effect definition caused the planner abort rather than a numeric guard decision.
+
 ## Clean split: planning-tasks vs primitive-actions
 
 ### A. Primitive / executable actions (what we have now)

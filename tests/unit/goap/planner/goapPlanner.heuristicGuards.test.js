@@ -7,6 +7,16 @@ const TEST_ACTOR_ID = 'actor-heuristic';
 const HUNGER_KEY = `${TEST_ACTOR_ID}:core:hunger`;
 
 /**
+ *
+ * @param logger
+ * @param level
+ * @param message
+ */
+function getLogCount(logger, level, message) {
+  return logger[level].mock.calls.filter(([loggedMessage]) => loggedMessage === message).length;
+}
+
+/**
  * Build a planning state snapshot with a specific hunger value.
  *
  * @param {number} hungerValue - Desired hunger meter value for the actor state.
@@ -122,18 +132,26 @@ describe('GoapPlanner - Heuristic Guards', () => {
     expect(bypassLogs.length).toBeGreaterThan(0);
   });
 
-  it('recovers when heuristics throw once and continues planning', () => {
-    let callCount = 0;
-    mockHeuristicRegistry.calculate.mockImplementation((_heuristicId, state) => {
-      callCount += 1;
-      if (callCount === 1) {
+  it('recovers when a non-initial heuristic throws once and continues planning', () => {
+    mockHeuristicRegistry.calculate
+      // First call seeds the initial node successfully
+      .mockImplementationOnce((_heuristicId, state) => {
+        if (typeof state?.[HUNGER_KEY] === 'number') {
+          return state[HUNGER_KEY];
+        }
+        return 0;
+      })
+      // Second call simulates a successor/state guard throwing once
+      .mockImplementationOnce(() => {
         throw new Error('boom');
-      }
-      if (typeof state?.[HUNGER_KEY] === 'number') {
-        return state[HUNGER_KEY];
-      }
-      return 0;
-    });
+      })
+      // Remaining calls behave normally
+      .mockImplementation((_heuristicId, state) => {
+        if (typeof state?.[HUNGER_KEY] === 'number') {
+          return state[HUNGER_KEY];
+        }
+        return 0;
+      });
 
     const goal = createNumericGoal();
     const initialState = createState(60);
@@ -145,5 +163,57 @@ describe('GoapPlanner - Heuristic Guards', () => {
 
     const warningCalls = mockLogger.warn.mock.calls.filter(([message]) => message === 'Heuristic produced invalid value');
     expect(warningCalls).toHaveLength(1);
+  });
+
+  it('bypasses the numeric guard when either estimate is Infinity and logs only once', () => {
+    mockHeuristicRegistry.calculate.mockImplementation(() => Number.POSITIVE_INFINITY);
+
+    const goal = createNumericGoal();
+    const currentState = createState(50);
+    const task = { id: 'core:reduce_hunger', planningEffects: [] };
+
+    const result = planner.testTaskReducesDistance(task, currentState, goal, TEST_ACTOR_ID);
+
+    expect(result).toBe(true);
+    expect(getLogCount(mockLogger, 'warn', 'Heuristic produced invalid value')).toBe(1);
+    expect(getLogCount(mockLogger, 'debug', 'Heuristic distance invalid, bypassing guard')).toBe(1);
+  });
+
+  it('bypasses the numeric guard when current distance sanitizes due to negative outputs', () => {
+    mockHeuristicRegistry.calculate.mockImplementation((_heuristicId, state) => {
+      if (state?.[HUNGER_KEY] > 0) {
+        return -5;
+      }
+      return 0;
+    });
+
+    const goal = createNumericGoal();
+    const currentState = createState(70);
+    const task = { id: 'core:reduce_hunger', planningEffects: [] };
+
+    const result = planner.testTaskReducesDistance(task, currentState, goal, TEST_ACTOR_ID);
+
+    expect(result).toBe(true);
+    expect(getLogCount(mockLogger, 'warn', 'Heuristic produced invalid value')).toBe(1);
+    expect(getLogCount(mockLogger, 'debug', 'Heuristic distance invalid, bypassing guard')).toBe(1);
+  });
+
+  it('still bypasses when only the next estimate sanitizes', () => {
+    mockHeuristicRegistry.calculate.mockImplementation((_heuristicId, state) => {
+      if (state?.[HUNGER_KEY] === 0) {
+        return Number.POSITIVE_INFINITY;
+      }
+      return state?.[HUNGER_KEY] ?? 0;
+    });
+
+    const goal = createNumericGoal();
+    const currentState = createState(20);
+    const task = { id: 'core:reduce_hunger', planningEffects: [] };
+
+    const result = planner.testTaskReducesDistance(task, currentState, goal, TEST_ACTOR_ID);
+
+    expect(result).toBe(true);
+    expect(getLogCount(mockLogger, 'warn', 'Heuristic produced invalid value')).toBe(1);
+    expect(getLogCount(mockLogger, 'debug', 'Heuristic distance invalid, bypassing guard')).toBe(1);
   });
 });

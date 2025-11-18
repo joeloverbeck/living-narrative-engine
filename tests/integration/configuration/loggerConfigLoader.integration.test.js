@@ -9,9 +9,21 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-import http from 'node:http';
 import { LoggerConfigLoader } from '../../../src/configuration/loggerConfigLoader.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+
+const baseUrl = 'http://logger-config.test';
+const nativeFetch = global.fetch;
+const jsonHeaders = { 'Content-Type': 'application/json' };
+
+function jsonResponse(payload, init = {}) {
+  const body =
+    typeof payload === 'string' ? payload : JSON.stringify(payload ?? {});
+  return new Response(body, {
+    status: init.status ?? 200,
+    headers: { ...jsonHeaders, ...(init.headers || {}) },
+  });
+}
 
 class RecordingSafeEventDispatcher {
   constructor() {
@@ -53,42 +65,46 @@ function createRecordingLogger() {
 }
 
 describe('LoggerConfigLoader integration', () => {
-  /** @type {http.Server} */
-  let server;
-  /** @type {string} */
-  let baseUrl;
-  /** @type {(req: http.IncomingMessage, res: http.ServerResponse) => void | Promise<void>} */
+  /** @type {(req: { method: string, url: URL, body?: string }) => Promise<Response> | Response} */
   let currentHandler;
+  let fetchMock;
 
-  beforeEach(async () => {
+  beforeEach(() => {
     currentHandler = () => {
       throw new Error('Test server handler not configured.');
     };
-    server = http.createServer((req, res) => {
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      if (req.method === 'OPTIONS') {
-        res.writeHead(204);
-        res.end();
-        return;
+
+    fetchMock = jest.fn(async (input, init = {}) => {
+      if (!nativeFetch) {
+        throw new Error('Global fetch is not available for testing.');
       }
-      Promise.resolve(currentHandler(req, res)).catch((error) => {
-        res.statusCode = 500;
-        res.setHeader('Content-Type', 'application/json');
-        res.end(
-          JSON.stringify({
-            error: 'Unhandled test server error',
-            message: error.message,
-          })
-        );
-      });
+
+      const urlString =
+        typeof input === 'string'
+          ? input
+          : input?.url ?? (input instanceof URL ? input.href : null);
+
+      if (!urlString || !urlString.startsWith(baseUrl)) {
+        return nativeFetch(input, init);
+      }
+
+      const method = (init.method || 'GET').toUpperCase();
+      const url = new URL(urlString);
+      const body =
+        typeof init.body === 'string'
+          ? init.body
+          : init.body
+          ? JSON.stringify(init.body)
+          : undefined;
+
+      return currentHandler({ method, url, body });
     });
-    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-    const address = /** @type {import('node:net').AddressInfo} */ (server.address());
-    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    global.fetch = fetchMock;
   });
 
-  afterEach(async () => {
-    await new Promise((resolve) => server.close(resolve));
+  afterEach(() => {
+    global.fetch = nativeFetch;
   });
 
   const createLoader = () => {
@@ -103,17 +119,13 @@ describe('LoggerConfigLoader integration', () => {
   };
 
   it('retrieves logger configuration objects over HTTP', async () => {
-    currentHandler = (req, res) => {
+    currentHandler = (req) => {
       expect(req.method).toBe('GET');
-      expect(req.url).toBe('/config/logger-config.json');
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(
-        JSON.stringify({
-          logLevel: 'debug',
-          sinks: ['console'],
-        })
-      );
+      expect(req.url.pathname).toBe('/config/logger-config.json');
+      return jsonResponse({
+        logLevel: 'debug',
+        sinks: ['console'],
+      });
     };
 
     const { loader, safeEventDispatcher, logger } = createLoader();
@@ -126,11 +138,12 @@ describe('LoggerConfigLoader integration', () => {
 
   it('rejects non-object payloads returned by the endpoint', async () => {
     const nonObjectPath = `${baseUrl}/invalid.json`;
-    currentHandler = (req, res) => {
-      expect(req.url).toBe('/invalid.json');
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.end('"not-an-object"');
+    currentHandler = (req) => {
+      expect(req.url.pathname).toBe('/invalid.json');
+      return new Response('"not-an-object"', {
+        status: 200,
+        headers: jsonHeaders,
+      });
     };
 
     const { loader, safeEventDispatcher } = createLoader();
@@ -148,11 +161,12 @@ describe('LoggerConfigLoader integration', () => {
 
   it('classifies malformed JSON responses as parse failures', async () => {
     const malformedPath = `${baseUrl}/malformed.json`;
-    currentHandler = (req, res) => {
-      expect(req.url).toBe('/malformed.json');
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.end('{"incomplete": true');
+    currentHandler = (req) => {
+      expect(req.url.pathname).toBe('/malformed.json');
+      return new Response('{"incomplete": true', {
+        status: 200,
+        headers: jsonHeaders,
+      });
     };
 
     const { loader, safeEventDispatcher, logger } = createLoader();
@@ -170,11 +184,9 @@ describe('LoggerConfigLoader integration', () => {
   });
 
   it('returns an empty configuration object when the file has no keys', async () => {
-    currentHandler = (req, res) => {
-      expect(req.url).toBe('/config/logger-config.json');
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.end('{}');
+    currentHandler = (req) => {
+      expect(req.url.pathname).toBe('/config/logger-config.json');
+      return jsonResponse({});
     };
 
     const { loader, safeEventDispatcher } = createLoader();
@@ -186,11 +198,9 @@ describe('LoggerConfigLoader integration', () => {
 
   it('treats null payloads as validation errors', async () => {
     const nullPath = `${baseUrl}/null.json`;
-    currentHandler = (req, res) => {
-      expect(req.url).toBe('/null.json');
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.end('null');
+    currentHandler = (req) => {
+      expect(req.url.pathname).toBe('/null.json');
+      return new Response('null', { status: 200, headers: jsonHeaders });
     };
 
     const { loader } = createLoader();
@@ -207,11 +217,9 @@ describe('LoggerConfigLoader integration', () => {
 
   it('validates non-string logLevel values', async () => {
     const invalidLogLevelPath = `${baseUrl}/invalid-log-level.json`;
-    currentHandler = (req, res) => {
-      expect(req.url).toBe('/invalid-log-level.json');
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.end('{"logLevel": 123}');
+    currentHandler = (req) => {
+      expect(req.url.pathname).toBe('/invalid-log-level.json');
+      return jsonResponse({ logLevel: 123 });
     };
 
     const { loader, safeEventDispatcher } = createLoader();
@@ -230,12 +238,10 @@ describe('LoggerConfigLoader integration', () => {
   it('retries transient errors and surfaces fetch failures with dispatched events', async () => {
     const failingPath = `${baseUrl}/fail.json`;
     let requestCount = 0;
-    currentHandler = (req, res) => {
+    currentHandler = (req) => {
       requestCount += 1;
-      expect(req.url).toBe('/fail.json');
-      res.statusCode = 500;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ message: 'upstream failure' }));
+      expect(req.url.pathname).toBe('/fail.json');
+      return jsonResponse({ message: 'upstream failure' }, { status: 500 });
     };
 
     const { loader, safeEventDispatcher } = createLoader();
@@ -291,11 +297,12 @@ describe('LoggerConfigLoader integration', () => {
 
   it('falls back to console logging when logger methods are missing', async () => {
     const malformedPath = `${baseUrl}/non-object.json`;
-    currentHandler = (req, res) => {
-      expect(req.url).toBe('/non-object.json');
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.end('"plain-text"');
+    currentHandler = (req) => {
+      expect(req.url.pathname).toBe('/non-object.json');
+      return new Response('"plain-text"', {
+        status: 200,
+        headers: jsonHeaders,
+      });
     };
 
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});

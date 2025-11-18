@@ -162,5 +162,8 @@ describe('GOAP dual-format goal path integration', () => {
       totalViolations: expect.any(Number),
     });
     expect(diagnostics.entries[0].violations[0].path).toBe('state.actor.core_needs.hunger');
+
+    const effectTelemetry = setup.controller.getEffectFailureTelemetry(actor.id);
+    expect(effectTelemetry).toBeNull();
   });
 });

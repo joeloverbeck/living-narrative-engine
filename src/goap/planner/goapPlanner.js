@@ -755,6 +755,7 @@ class GoapPlanner {
   }) {
     let value;
     let warningReason = null;
+    let capturedError = null;
 
     try {
       value = this.#heuristicRegistry.calculate(
@@ -764,6 +765,7 @@ class GoapPlanner {
         taskLibrary
       );
     } catch (error) {
+      capturedError = error;
       warningReason = `threw during calculation: ${error.message}`;
       value = SAFE_HEURISTIC_MAX_COST;
     }
@@ -788,6 +790,7 @@ class GoapPlanner {
     return {
       estimate: value,
       sanitized: Boolean(warningReason),
+      error: capturedError,
     };
   }
 
@@ -819,21 +822,42 @@ class GoapPlanner {
       const effectContext = {
         actor: actorId, // For parameter resolution (entity_ref: 'actor')
         actorId,
-        parameters: task.boundParams || {}
+        parameters: task.boundParams || {},
       };
+      const goalId = goal?.id ?? null;
 
-      // Simulate applying task effects
-      const simulationResult = this.#effectsSimulator.simulateEffects(
-        currentState,
-        task.planningEffects || [],
-        effectContext
-      );
+      let simulationResult;
+      try {
+        // Simulate applying task effects
+        simulationResult = this.#effectsSimulator.simulateEffects(
+          currentState,
+          task.planningEffects || [],
+          effectContext
+        );
+      } catch (simulationError) {
+        const thrownMessage =
+          simulationError?.message ||
+          'PlanningEffectsSimulator threw during distance check';
+        this.#recordEffectFailureTelemetry(actorId, {
+          taskId: task.id,
+          goalId,
+          phase: 'distance-check',
+          message: thrownMessage,
+          errorType: simulationError?.name || 'Error',
+        });
+        this.#failForInvalidEffect(task.id, thrownMessage, {
+          phase: 'distance-check',
+          actorId,
+          goalId,
+          errorStack: simulationError?.stack,
+        });
+      }
 
       // Check simulation success
       if (!simulationResult.success) {
         this.#recordEffectFailureTelemetry(actorId, {
           taskId: task.id,
-          goalId: goal?.id ?? null,
+          goalId,
           phase: 'distance-check',
           message:
             simulationResult.error ||
@@ -845,6 +869,7 @@ class GoapPlanner {
           {
             phase: 'distance-check',
             actorId,
+            goalId,
           }
         );
       }
@@ -894,14 +919,14 @@ class GoapPlanner {
           goalId: goal.id,
           currentDistance,
           nextDistance,
-          reduction: currentDistance - nextDistance
+          reduction: currentDistance - nextDistance,
         });
       } else {
         this.#logger.debug('Task does not reduce distance', {
           taskId: task.id,
           currentDistance,
           nextDistance,
-          change: nextDistance - currentDistance
+          change: nextDistance - currentDistance,
         });
       }
 
@@ -914,7 +939,7 @@ class GoapPlanner {
         taskId: task.id,
         goalId: goal.id,
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
       return false; // Treat as not applicable on error
     }
@@ -1394,7 +1419,7 @@ class GoapPlanner {
     }
 
     // 3. Calculate initial heuristic
-    const { estimate: initialHeuristic } = this.#safeHeuristicEstimate({
+    const initialHeuristicResult = this.#safeHeuristicEstimate({
       heuristicId: heuristic,
       state: initialState,
       goal,
@@ -1404,11 +1429,39 @@ class GoapPlanner {
       phase: 'initial-node',
     });
 
+    if (initialHeuristicResult.error) {
+      const failureDetails = {
+        actorId,
+        goalId: goal?.id ?? null,
+        heuristicId: heuristic,
+        nodesExpanded: 0,
+        closedSetSize: 0,
+        failureStats: { ...failureStats },
+      };
+
+      this.#recordFailure(
+        GOAP_PLANNER_FAILURES.INITIAL_HEURISTIC_FAILED,
+        'Initial heuristic calculation failed',
+        failureDetails
+      );
+
+      this.#logger.error(
+        'Initial heuristic calculation failed',
+        initialHeuristicResult.error,
+        {
+          ...failureDetails,
+          failureCode: GOAP_PLANNER_FAILURES.INITIAL_HEURISTIC_FAILED,
+        }
+      );
+
+      return null;
+    }
+
     // 4. Create start node
     const startNode = new PlanningNode({
       state: initialState,
       gScore: 0,
-      hScore: initialHeuristic,
+      hScore: initialHeuristicResult.estimate,
       parent: null,
       task: null,
       taskParameters: null,
