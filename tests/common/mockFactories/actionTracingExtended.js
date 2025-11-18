@@ -7,7 +7,177 @@ import { jest } from '@jest/globals';
 import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
-import http from 'http';
+
+const originalFetch = globalThis.fetch;
+const fetchInterceptorState = {
+  installed: false,
+  servers: new Map(),
+  counter: 0,
+};
+
+function extractRequestUrl(input) {
+  if (typeof input === 'string') {
+    return input;
+  }
+  if (typeof URL !== 'undefined' && input instanceof URL) {
+    return input.href;
+  }
+  if (
+    typeof Request !== 'undefined' &&
+    input instanceof Request &&
+    typeof input.url === 'string'
+  ) {
+    return input.url;
+  }
+  if (input && typeof input.url === 'string') {
+    return input.url;
+  }
+  return null;
+}
+
+async function readRequestBody(input, init = {}) {
+  if (typeof Request !== 'undefined' && input instanceof Request) {
+    const clone = input.clone();
+    return clone.text();
+  }
+  if (!init.body) {
+    return '';
+  }
+  if (typeof init.body === 'string') {
+    return init.body;
+  }
+  if (Buffer.isBuffer(init.body)) {
+    return init.body.toString();
+  }
+  if (init.body instanceof URLSearchParams) {
+    return init.body.toString();
+  }
+  if (typeof init.body === 'object') {
+    try {
+      return JSON.stringify(init.body);
+    } catch {
+      return '';
+    }
+  }
+  return String(init.body);
+}
+
+function normalizeHeaders(rawHeaders = {}) {
+  if (rawHeaders instanceof Headers) {
+    const headersObj = {};
+    rawHeaders.forEach((value, key) => {
+      headersObj[key.toLowerCase()] = value;
+    });
+    return headersObj;
+  }
+  if (Array.isArray(rawHeaders)) {
+    return rawHeaders.reduce((acc, entry) => {
+      if (Array.isArray(entry) && entry.length === 2) {
+        acc[String(entry[0]).toLowerCase()] = String(entry[1]);
+      }
+      return acc;
+    }, {});
+  }
+  if (typeof rawHeaders === 'object') {
+    return Object.entries(rawHeaders).reduce((acc, [key, value]) => {
+      acc[String(key).toLowerCase()] = value;
+      return acc;
+    }, {});
+  }
+  return {};
+}
+
+function createJsonResponse(payload, status = 200) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+function ensureFetchInterceptor() {
+  if (fetchInterceptorState.installed) {
+    return;
+  }
+
+  if (typeof originalFetch !== 'function') {
+    throw new Error(
+      'Global fetch must be available for action tracing integration tests.'
+    );
+  }
+
+  globalThis.fetch = async function interceptedFetch(input, init) {
+    const url = extractRequestUrl(input);
+    const serverEntry = findServerForUrl(url);
+    if (serverEntry) {
+      return serverEntry.handleRequest(input, init, url);
+    }
+    return originalFetch(input, init);
+  };
+
+  fetchInterceptorState.installed = true;
+}
+
+function restoreFetchIfIdle() {
+  if (
+    fetchInterceptorState.servers.size === 0 &&
+    fetchInterceptorState.installed &&
+    typeof originalFetch === 'function'
+  ) {
+    globalThis.fetch = originalFetch;
+    fetchInterceptorState.installed = false;
+  }
+}
+
+function findServerForUrl(url) {
+  if (!url) {
+    return null;
+  }
+  for (const entry of fetchInterceptorState.servers.values()) {
+    if (url.startsWith(entry.baseUrl)) {
+      return entry;
+    }
+  }
+  return null;
+}
+
+function registerInMemoryServer(handler) {
+  ensureFetchInterceptor();
+  const id = ++fetchInterceptorState.counter;
+  const baseUrl = `http://trace-server-${id}.local`;
+
+  const entry = {
+    baseUrl,
+    active: true,
+    async handleRequest(input, init, url) {
+      if (!this.active) {
+        return createJsonResponse(
+          { success: false, error: 'Server stopped' },
+          503
+        );
+      }
+      const body = await readRequestBody(input, init);
+      const method = (init?.method || input?.method || 'GET').toUpperCase();
+      const requestUrl = new URL(url);
+      const headers = normalizeHeaders(init?.headers || input?.headers);
+
+      return handler({
+        url,
+        pathname: requestUrl.pathname,
+        method,
+        headers,
+        body,
+      });
+    },
+    async stop() {
+      this.active = false;
+      fetchInterceptorState.servers.delete(baseUrl);
+      restoreFetchIfIdle();
+    },
+  };
+
+  fetchInterceptorState.servers.set(baseUrl, entry);
+  return entry;
+}
 
 /**
  * Create temporary directory for testing
@@ -123,102 +293,88 @@ export function createMockActionExecutionTrace(options = {}) {
  * @returns {Promise<object>} Server instance with url and stop method
  */
 export async function startTestLlmProxyServer(options = {}) {
-  const { port = 0, traceOutputDirectory, onRequest } = options;
+  const { traceOutputDirectory, onRequest, handler } = options;
 
-  return new Promise((resolve) => {
-    const server = http.createServer(async (req, res) => {
-      // Handle CORS
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  const serverEntry = registerInMemoryServer(async (request) => {
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { status: 200 });
+    }
 
-      if (req.method === 'OPTIONS') {
-        res.writeHead(200);
-        res.end();
-        return;
+    if (typeof handler === 'function') {
+      return handler(request);
+    }
+
+    if (
+      request.method !== 'POST' ||
+      request.pathname !== '/api/traces/write'
+    ) {
+      return new Response('Not Found', { status: 404 });
+    }
+
+    if (onRequest) {
+      const maybePromise = onRequest(request);
+      if (maybePromise && typeof maybePromise.then === 'function') {
+        await maybePromise;
       }
+    }
 
-      if (req.method === 'POST' && req.url === '/api/traces/write') {
-        // Handle request delay if onRequest returns a promise
-        if (onRequest) {
-          const delayPromise = onRequest(req);
-          if (delayPromise && typeof delayPromise.then === 'function') {
-            await delayPromise;
-          }
+    let requestData;
+    try {
+      requestData = request.body ? JSON.parse(request.body) : {};
+    } catch (error) {
+      return createJsonResponse(
+        { success: false, error: 'Invalid JSON body' },
+        400
+      );
+    }
+
+    let traces;
+    if (Array.isArray(requestData.traces)) {
+      traces = requestData.traces;
+    } else if (
+      requestData.traceData &&
+      typeof requestData.fileName === 'string'
+    ) {
+      traces = [
+        { content: requestData.traceData, fileName: requestData.fileName },
+      ];
+    } else {
+      return createJsonResponse(
+        { success: false, error: 'Invalid request format' },
+        400
+      );
+    }
+
+    const results = [];
+    if (traceOutputDirectory) {
+      for (const trace of traces) {
+        if (!trace.fileName) {
+          return createJsonResponse(
+            { success: false, error: 'Trace missing fileName' },
+            400
+          );
         }
-        let body = '';
-        req.on('data', (chunk) => {
-          body += chunk.toString();
+        const filePath = path.join(traceOutputDirectory, trace.fileName);
+        await fs.writeFile(filePath, trace.content, 'utf-8');
+        results.push({
+          fileName: trace.fileName,
+          filePath,
+          size: trace.content.length,
         });
-
-        req.on('end', async () => {
-          try {
-            const requestData = JSON.parse(body);
-            let traces;
-
-            // Handle both single trace and multi-trace formats
-            if (requestData.traces) {
-              traces = requestData.traces; // Multi-trace format
-            } else if (requestData.traceData && requestData.fileName) {
-              traces = [
-                {
-                  content: requestData.traceData,
-                  fileName: requestData.fileName,
-                },
-              ]; // Single trace format
-            } else {
-              throw new Error('Invalid request format');
-            }
-
-            const results = [];
-            if (traceOutputDirectory) {
-              for (const trace of traces) {
-                const filePath = path.join(
-                  traceOutputDirectory,
-                  trace.fileName
-                );
-                await fs.writeFile(filePath, trace.content, 'utf-8');
-                results.push({
-                  fileName: trace.fileName,
-                  filePath,
-                  size: trace.content.length,
-                });
-              }
-            }
-
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(
-              JSON.stringify({
-                success: true,
-                files: results,
-                totalFiles: traces.length,
-              })
-            );
-          } catch (error) {
-            res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(
-              JSON.stringify({
-                success: false,
-                error: error.message,
-              })
-            );
-          }
-        });
-      } else {
-        res.writeHead(404);
-        res.end('Not Found');
       }
-    });
+    }
 
-    server.listen(port, () => {
-      const actualPort = server.address().port;
-      resolve({
-        url: `http://localhost:${actualPort}`,
-        port: actualPort,
-        stop: () => new Promise((stopResolve) => server.close(stopResolve)),
-      });
+    return createJsonResponse({
+      success: true,
+      files: results,
+      totalFiles: traces.length,
     });
   });
+
+  return {
+    url: serverEntry.baseUrl,
+    stop: () => serverEntry.stop(),
+  };
 }
 
 /**
@@ -228,72 +384,43 @@ export async function startTestLlmProxyServer(options = {}) {
  * @returns {Promise<object>} Server instance with url and stop method
  */
 export async function startFlakyTestServer(options = {}) {
-  const { port = 0, failureRate = 0.5, onRequest } = options;
+  const { failuresBeforeSuccess = 2, onRequest } = options;
   let requestCount = 0;
 
-  return new Promise((resolve) => {
-    const server = http.createServer((req, res) => {
-      requestCount++;
-      if (onRequest) onRequest(requestCount);
+  const serverEntry = registerInMemoryServer(async (request) => {
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { status: 200 });
+    }
+    if (
+      request.method !== 'POST' ||
+      request.pathname !== '/api/traces/write'
+    ) {
+      return new Response('Not Found', { status: 404 });
+    }
 
-      // Handle CORS
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    requestCount += 1;
+    if (onRequest) {
+      onRequest(requestCount);
+    }
 
-      if (req.method === 'OPTIONS') {
-        res.writeHead(200);
-        res.end();
-        return;
-      }
+    if (requestCount <= failuresBeforeSuccess) {
+      return createJsonResponse(
+        { success: false, error: 'Simulated server failure' },
+        500
+      );
+    }
 
-      if (req.method === 'POST' && req.url === '/api/traces/write') {
-        // Simulate intermittent failures - more deterministic approach
-        // Fail the first few requests, then succeed
-        const shouldFail = requestCount <= 2; // Fail first 2 requests, succeed on 3rd
-        if (shouldFail) {
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(
-            JSON.stringify({
-              success: false,
-              error: 'Simulated server failure',
-            })
-          );
-          return;
-        }
-
-        // Consume request body
-        let body = '';
-        req.on('data', (chunk) => {
-          body += chunk.toString();
-        });
-
-        req.on('end', () => {
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(
-            JSON.stringify({
-              success: true,
-              filePath: '/mock/path/trace.json',
-              size: 100,
-            })
-          );
-        });
-      } else {
-        res.writeHead(404);
-        res.end('Not Found');
-      }
-    });
-
-    server.listen(port, () => {
-      const actualPort = server.address().port;
-      resolve({
-        url: `http://localhost:${actualPort}`,
-        port: actualPort,
-        requestCount: () => requestCount,
-        stop: () => new Promise((stopResolve) => server.close(stopResolve)),
-      });
+    return createJsonResponse({
+      success: true,
+      filePath: '/mock/path/trace.json',
+      size: 100,
     });
   });
+
+  return {
+    url: serverEntry.baseUrl,
+    stop: () => serverEntry.stop(),
+  };
 }
 
 /**

@@ -5,10 +5,10 @@
 
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
-import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs/promises';
-import os from 'os';
+import { pathToFileURL } from 'url';
+import { format as utilFormat } from 'util';
 
 const MODS_DIR = path.join(process.cwd(), 'data', 'mods');
 const TEST_MOD_PATTERN = /^integration_test_mod_\d+$/;
@@ -46,6 +46,7 @@ async function cleanupIntegrationTestMods() {
  * @type {Map<string, Promise<{stdout: string, stderr: string, exitCode: number}>>}
  */
 const cliResultCache = new Map();
+const TEST_EXIT_SIGNAL = Symbol.for('validateMods.test.exit');
 
 /**
  * @description Helper function to run the validateMods CLI script.
@@ -61,41 +62,178 @@ function runCLI(args = [], options = {}) {
     return cliResultCache.get(cacheKey);
   }
 
-  const runPromise = new Promise((resolve) => {
-    // Use process.cwd() to get the project root
+  const runPromise = (async () => {
     const projectRoot = process.cwd();
     const scriptPath = path.join(projectRoot, 'scripts', 'validateMods.js');
+    const cliModule = await loadCliModule(scriptPath);
 
-    // Create env without NODE_ENV=test (which blocks script execution)
-    const env = { ...process.env, ...envOverrides };
-    delete env.NODE_ENV; // Remove NODE_ENV entirely so the script will run
+    const restoreStdIO = interceptStdIO();
+    const restoreEnv = applyEnvOverrides(envOverrides);
+    const restoreArgv = overrideProcessArgv(scriptPath, args);
+    const originalExit = process.exit;
+    let exitCode = 0;
 
-    const child = spawn('node', [scriptPath, ...args], {
-      env,
-      cwd: projectRoot
-    });
+    process.exit = (code = 0) => {
+      exitCode = typeof code === 'number' ? code : parseInt(code, 10) || 0;
+      throw TEST_EXIT_SIGNAL;
+    };
 
-    let stdout = '';
-    let stderr = '';
+    try {
+      await cliModule.main();
+    } catch (error) {
+      if (error !== TEST_EXIT_SIGNAL) {
+        throw error;
+      }
+    } finally {
+      process.exit = originalExit;
+      restoreArgv();
+      restoreEnv();
+    }
 
-    child.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
-
-    child.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
-
-    child.on('close', (exitCode) => {
-      resolve({ stdout, stderr, exitCode });
-    });
-  });
+    const { stdout, stderr } = restoreStdIO();
+    return { stdout, stderr, exitCode };
+  })();
 
   if (useCache) {
     cliResultCache.set(cacheKey, runPromise);
   }
 
   return runPromise;
+}
+
+/**
+ *
+ */
+function interceptStdIO() {
+  const originalStdoutWrite = process.stdout.write;
+  const originalStderrWrite = process.stderr.write;
+  const originalLog = console.log;
+  const originalInfo = console.info;
+  const originalWarn = console.warn;
+  const originalError = console.error;
+
+  let stdout = '';
+  let stderr = '';
+
+  const appendStdout = (value) => {
+    stdout += value;
+  };
+  const appendStderr = (value) => {
+    stderr += value;
+  };
+
+  process.stdout.write = createWriteInterceptor(appendStdout);
+  process.stderr.write = createWriteInterceptor(appendStderr);
+
+  console.log = createConsoleInterceptor(appendStdout);
+  console.info = createConsoleInterceptor(appendStdout);
+  console.warn = createConsoleInterceptor(appendStderr);
+  console.error = createConsoleInterceptor(appendStderr);
+
+  return () => {
+    process.stdout.write = originalStdoutWrite;
+    process.stderr.write = originalStderrWrite;
+    console.log = originalLog;
+    console.info = originalInfo;
+    console.warn = originalWarn;
+    console.error = originalError;
+    return { stdout, stderr };
+  };
+}
+
+/**
+ *
+ * @param collector
+ */
+function createWriteInterceptor(collector) {
+  return (chunk, encoding, callback) => {
+    collector(normalizeChunk(chunk, encoding));
+    if (typeof callback === 'function') {
+      callback();
+    }
+    return true;
+  };
+}
+
+/**
+ *
+ * @param collector
+ */
+function createConsoleInterceptor(collector) {
+  return (...args) => {
+    collector(utilFormat(...args) + '\n');
+    return undefined;
+  };
+}
+
+/**
+ *
+ * @param chunk
+ * @param encoding
+ */
+function normalizeChunk(chunk, encoding) {
+  if (typeof chunk === 'string') {
+    return chunk;
+  }
+  if (!chunk) {
+    return '';
+  }
+  const enc = typeof encoding === 'string' ? encoding : undefined;
+  return chunk.toString(enc);
+}
+
+/**
+ *
+ * @param envOverrides
+ */
+function applyEnvOverrides(envOverrides) {
+  const snapshot = new Map();
+  snapshot.set('NODE_ENV', process.env.NODE_ENV);
+
+  for (const [key, value] of Object.entries(envOverrides)) {
+    if (!snapshot.has(key)) {
+      snapshot.set(key, process.env[key]);
+    }
+    process.env[key] = value;
+  }
+
+  delete process.env.NODE_ENV;
+
+  return () => {
+    for (const [key, value] of snapshot.entries()) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  };
+}
+
+/**
+ *
+ * @param scriptPath
+ * @param args
+ */
+function overrideProcessArgv(scriptPath, args) {
+  const originalArgv = process.argv;
+  process.argv = [originalArgv[0], scriptPath, ...args];
+  return () => {
+    process.argv = originalArgv;
+  };
+}
+
+const cliModuleCache = new Map();
+/**
+ *
+ * @param scriptPath
+ */
+async function loadCliModule(scriptPath) {
+  if (!cliModuleCache.has(scriptPath)) {
+    const moduleUrl = pathToFileURL(scriptPath).href;
+    cliModuleCache.set(scriptPath, import(moduleUrl));
+  }
+  return cliModuleCache.get(scriptPath);
 }
 
 describe('ValidateMods CLI Integration', () => {
@@ -150,12 +288,11 @@ describe('ValidateMods CLI Integration', () => {
       concurrency: ['--mod', testModName, '--concurrency', '5', '--quiet']
     };
 
-    const entries = await Promise.all(
-      Object.entries(fastCommands).map(async ([key, args]) => {
-        const result = await runCLI(args, { env: FAST_ENV });
-        return [key, result];
-      })
-    );
+    const entries = [];
+    for (const [key, args] of Object.entries(fastCommands)) {
+      const result = await runCLI(args, { env: FAST_ENV });
+      entries.push([key, result]);
+    }
 
     fastResults = Object.fromEntries(entries);
   });

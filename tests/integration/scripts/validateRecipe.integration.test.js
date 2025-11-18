@@ -9,7 +9,6 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll, jest } from '@jest/globals';
-import { execSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
@@ -20,39 +19,18 @@ import fs from 'fs';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(__dirname, '../../..');
 const scriptPath = path.join(projectRoot, 'scripts/validate-recipe.js');
-
-/**
- * Execute the CLI and return results (used only for smoke test)
- *
- * @param {Array<string>} args - CLI arguments
- * @returns {object} Execution results with stdout, stderr, exitCode
- */
-function executeCLI(args) {
-  try {
-    // Create env without NODE_ENV=test (which blocks script execution)
-    const env = { ...process.env };
-    delete env.NODE_ENV; // Remove NODE_ENV entirely so the script will run
-
-    const stdout = execSync(`node ${scriptPath} ${args.join(' ')}`, {
-      cwd: projectRoot,
-      encoding: 'utf-8',
-      stdio: 'pipe',
-      env,
-    });
-
-    return {
-      stdout,
-      stderr: '',
-      exitCode: 0,
-    };
-  } catch (error) {
-    return {
-      stdout: error.stdout || '',
-      stderr: error.stderr || '',
-      exitCode: error.status || 1,
-    };
-  }
-}
+const chalkStub = {
+  blue: (text) => text,
+  red: (text) => text,
+  yellow: (text) => text,
+  green: (text) => text,
+  bold: (text) => text,
+};
+jest.mock('chalk', () => ({
+  __esModule: true,
+  default: chalkStub,
+}));
+let runValidation;
 
 /**
  * Load a recipe file from disk
@@ -72,6 +50,7 @@ describe('validate-recipe CLI integration tests', () => {
   let originalFetch;
 
   beforeAll(async () => {
+    ({ runValidation } = await import('../../../scripts/validate-recipe-v2.js'));
     // Mock fetch to read from filesystem
     originalFetch = global.fetch;
     global.fetch = jest.fn((url) => {
@@ -125,13 +104,25 @@ describe('validate-recipe CLI integration tests', () => {
 
   describe('CLI smoke test', () => {
     // Single end-to-end CLI test to verify it works
-    it('should execute CLI successfully for valid recipe', () => {
+    it('should execute CLI successfully for valid recipe', async () => {
       const recipePath = 'data/mods/anatomy/recipes/human_male.recipe.json';
-      const result = executeCLI([recipePath]);
+      const capturedOutput = [];
+      const mockConsole = {
+        log: (...args) => capturedOutput.push(args.join(' ')),
+        error: (...args) => capturedOutput.push(args.join(' ')),
+        warn: (...args) => capturedOutput.push(args.join(' ')),
+      };
+
+      const result = await runValidation(['node', scriptPath, recipePath], {
+        exitOnCompletion: false,
+        console: mockConsole,
+        chalk: chalkStub,
+      });
 
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('anatomy:human_male');
-      expect(result.stdout).toContain('Validation PASSED');
+      const combinedOutput = capturedOutput.join('\n');
+      expect(combinedOutput).toContain('anatomy:human_male');
+      expect(combinedOutput).toContain('Validation PASSED');
     });
   });
 

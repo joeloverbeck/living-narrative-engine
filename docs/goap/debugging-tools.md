@@ -55,7 +55,9 @@ debugger.stopTrace('actor-123');
 - Any `GOAP_DEPENDENCY_WARN` log means a mock bypassed the factory or a dependency is missing methods. CI greps for this string to fail builds before the regression spreads.
 - GOAP integration harnesses should call `setup.registerPlanningActor(actor)`, `setup.buildPlanningState(actor)`, and `setup.registerPlanningStateSnapshot(state)` instead of wiring the entity manager manually. This keeps `SimpleEntityManager`, the dual-format planning state, and the new task validation guardrails perfectly in sync.
 - Set `GOAP_GOAL_PATH_LINT=1` (or run `npm run validate:goals`) to lint JSON Logic goals for canonical `actor.components.*` paths. When the planner encounters a bare `actor.hp` reference it aborts with `GOAP_PLANNER_FAILURES.INVALID_GOAL_PATH` and GOAPDebugger links to the offending variable.
-- `GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION` now powers the **Effect Failure Telemetry** section in GOAPDebugger. Any `{ success: false }` result from `planningEffectsSimulator` is fatal—surface the missing precondition instead of relying on simulator failures.
+- Distance guards only activate when `goalHasPureNumericRoot(goal)` returns `true` (i.e., the root operator is `<`, `<=`, `>`, or `>=` without mixed `and`/`or` siblings). If you wrap numeric comparisons inside boolean trees, GOAPDebugger prints **Numeric Heuristic: BYPASSED** and the planner skips `#taskReducesDistance` entirely by design.
+- When the numeric guard does run, heuristic sanitation is authoritative: any `NaN`, `Infinity`, negative value, or thrown calculation triggers `Heuristic produced invalid value` (warn) once per `(actorId, goalId, heuristicId)` and the guard logs `Heuristic distance invalid, bypassing guard` (debug) before returning `true`. Tests under `tests/unit/goap/planner/goapPlanner.heuristicGuards.test.js` already pin this behavior—docs should never imply sanitized heuristics can block a task.
+- `GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION` powers the **Effect Failure Telemetry** section in GOAPDebugger. Both `{ success: false }` simulator results and thrown `simulateEffects` errors are fatal: `testTaskReducesDistance` records telemetry via `#recordEffectFailureTelemetry`, throws through `#failForInvalidEffect`, and GOAPDebugger lists each `{ taskId, goalId, phase, message }` entry so QA can fix the bad effect definition rather than guessing from guard logs.
 
 ### Test Integration
 
@@ -734,6 +736,8 @@ console.log(plan);
 - Events: `src/goap/events/goapEvents.js`
 - Controller: `src/goap/controllers/goapController.js`
 - Spec: `specs/goap-system-specs.md`
+- Distance Guard Spec (archived): `archive/GOADISGUAROB/goap-distance-guard-robustness.md`
 - Multi-Action Debugging: [`docs/goap/debugging-multi-action.md`](./debugging-multi-action.md)
 - Multi-Action Planning: [`docs/goap/multi-action-planning.md`](./multi-action-planning.md)
 - Parent Ticket: `tickets/GOAPIMPL-025-goap-debugging-tools.md`
+- GOAPDebugger Telemetry: [`docs/goap/goapDebugger.md`](./goapDebugger.md)

@@ -43,6 +43,9 @@ try {
   }
 }
 
+// Shared symbol used to signal tests that intercept process.exit
+const TEST_EXIT_SIGNAL = Symbol.for('validateMods.test.exit');
+
 // CLI configuration
 const CLI_VERSION = '1.0.0';
 const DEFAULT_CONFIG = {
@@ -227,6 +230,10 @@ async function main() {
     process.exit(exitCode);
 
   } catch (error) {
+    if (error === TEST_EXIT_SIGNAL) {
+      // Testing harness intercepted process.exit; rethrow so tests can capture output
+      throw error;
+    }
     console.error('❌ Validation failed:', error.message);
     if (args.includes('--verbose') || args.includes('-v')) {
       console.error(error.stack);

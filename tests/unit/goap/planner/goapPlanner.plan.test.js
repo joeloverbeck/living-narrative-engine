@@ -871,7 +871,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
   });
 
   describe('13. Planner logging and instrumentation coverage', () => {
-    it('should abort search when initial heuristic calculation throws', () => {
+    it('should abort search and record failure when initial heuristic calculation throws', () => {
       mockRepository.get.mockReturnValue({
         core: {
           'core:noop': { id: 'core:noop', cost: 1, planningEffects: [] },
@@ -897,8 +897,100 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       expect(plan).toBeNull();
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Initial heuristic calculation failed',
-        expect.any(Error)
+        expect.any(Error),
+        expect.objectContaining({
+          actorId: TEST_ACTOR_ID,
+          goalId: 'satiate',
+          heuristicId: 'goal-distance',
+          nodesExpanded: 0,
+          closedSetSize: 0,
+          failureStats: {
+            depthLimitHit: false,
+            numericGuardBlocked: false,
+            nodesWithoutApplicableTasks: 0,
+            costLimitHit: false,
+            actionLimitHit: false,
+          },
+          failureCode: GOAP_PLANNER_FAILURES.INITIAL_HEURISTIC_FAILED,
+        })
       );
+
+      const lastFailure = planner.getLastFailure();
+      expect(lastFailure).toEqual({
+        code: GOAP_PLANNER_FAILURES.INITIAL_HEURISTIC_FAILED,
+        reason: 'Initial heuristic calculation failed',
+        details: {
+          actorId: TEST_ACTOR_ID,
+          goalId: 'satiate',
+          heuristicId: 'goal-distance',
+          nodesExpanded: 0,
+          closedSetSize: 0,
+          failureStats: {
+            depthLimitHit: false,
+            numericGuardBlocked: false,
+            nodesWithoutApplicableTasks: 0,
+            costLimitHit: false,
+            actionLimitHit: false,
+          },
+        },
+      });
+    });
+
+    it('should warn (not abort) when distance-check heuristic returns invalid value', () => {
+      mockRepository.get.mockReturnValue({
+        core: {
+          'core:reduce_value': {
+            id: 'core:reduce_value',
+            cost: 1,
+            planningEffects: [{ op: 'set', path: 'actor:value', value: 0 }],
+          },
+        },
+      });
+
+      const initialState = buildState({ 'actor:value': 10 });
+      const goal = buildPlanningGoal(
+        { '<=': [{ var: 'actor.components.value' }, 0] },
+        { id: 'reduce-value' }
+      );
+
+      mockJsonLogicService.evaluateCondition
+        .mockReturnValueOnce(false)
+        .mockReturnValueOnce(true);
+
+      let callIndex = 0;
+      mockHeuristicRegistry.calculate.mockImplementation(() => {
+        callIndex += 1;
+        if (callIndex === 1) {
+          return 5; // Initial heuristic succeeds
+        }
+        if (callIndex === 2) {
+          return NaN; // Invalid distance-check value triggers warning
+        }
+        return 0;
+      });
+
+      mockEffectsSimulator.simulateEffects.mockReturnValue({
+        success: true,
+        state: applyStatePatch(initialState, { 'actor:value': 0 }),
+      });
+
+      const plan = planner.plan(TEST_ACTOR_ID, goal, initialState);
+
+      expect(plan).not.toBeNull();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Heuristic produced invalid value',
+        expect.objectContaining({
+          actorId: TEST_ACTOR_ID,
+          goalId: 'reduce-value',
+          heuristicId: 'goal-distance',
+          phase: 'distance-check:current',
+        })
+      );
+      expect(mockLogger.error).not.toHaveBeenCalledWith(
+        'Initial heuristic calculation failed',
+        expect.anything()
+      );
+      expect(planner.getLastFailure()).toBeNull();
     });
 
     it('should log search progress each time 100 nodes are expanded', () => {

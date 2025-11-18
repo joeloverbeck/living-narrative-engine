@@ -6,7 +6,6 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { promises as fs } from 'fs';
 import path from 'path';
-import http from 'http';
 import {
   createTempDirectory,
   cleanupTempDirectory,
@@ -14,45 +13,17 @@ import {
   startFlakyTestServer,
 } from '../../../common/mockFactories/actionTracingExtended.js';
 
-// Helper to make HTTP requests in Node.js environment
-/**
- *
- * @param url
- * @param options
- */
-function makeHttpRequest(url, options = {}) {
-  return new Promise((resolve, reject) => {
-    const { method = 'GET', headers = {}, body } = options;
-    const urlObj = new URL(url);
-
-    const reqOptions = {
-      hostname: urlObj.hostname,
-      port: urlObj.port,
-      path: urlObj.pathname,
-      method,
-      headers,
-    };
-
-    const req = http.request(reqOptions, (res) => {
-      let data = '';
-      res.on('data', (chunk) => (data += chunk));
-      res.on('end', () => {
-        resolve({
-          ok: res.statusCode >= 200 && res.statusCode < 300,
-          status: res.statusCode,
-          data,
-        });
-      });
-    });
-
-    req.on('error', reject);
-
-    if (body) {
-      req.write(body);
-    }
-
-    req.end();
+async function postTraces(server, traces) {
+  const response = await fetch(`${server.url}/api/traces/write`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ traces }),
   });
+  return {
+    ok: response.ok,
+    status: response.status,
+    data: await response.text(),
+  };
 }
 
 describe('Server Endpoint Integration', () => {
@@ -113,15 +84,7 @@ describe('Server Endpoint Integration', () => {
         },
       ];
 
-      // Send HTTP request to server endpoint
-      const response = await makeHttpRequest(
-        `${testServer.url}/api/traces/write`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ traces: formattedTraces }),
-        }
-      );
+      const response = await postTraces(testServer, formattedTraces);
 
       const result = response.ok;
 
@@ -193,14 +156,7 @@ describe('Server Endpoint Integration', () => {
       };
 
       const startTime = performance.now();
-      const response = await makeHttpRequest(
-        `${testServer.url}/api/traces/write`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ traces: [largeTrace] }),
-        }
-      );
+      const response = await postTraces(testServer, [largeTrace]);
       const endTime = performance.now();
 
       const result = response.ok;
@@ -236,13 +192,10 @@ describe('Server Endpoint Integration', () => {
 
       // Send all requests concurrently
       const results = await Promise.all(
-        concurrentTraces.map((trace) =>
-          makeHttpRequest(`${testServer.url}/api/traces/write`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ traces: [trace] }),
-          }).then((response) => response.ok)
-        )
+        concurrentTraces.map(async (trace) => {
+          const response = await postTraces(testServer, [trace]);
+          return response.ok;
+        })
       );
 
       // All requests should succeed
@@ -295,11 +248,10 @@ describe('Server Endpoint Integration', () => {
 
       let result = false;
       try {
-        const response = await makeHttpRequest(`${serverUrl}/api/traces/write`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ traces: formattedTraces }),
-        });
+        const response = await postTraces(
+          { url: serverUrl },
+          formattedTraces
+        );
         result = response.ok;
       } catch (error) {
         result = false;
@@ -330,14 +282,7 @@ describe('Server Endpoint Integration', () => {
         let result = false;
         for (let i = 0; i < 5; i++) {
           try {
-            const response = await makeHttpRequest(
-              `${flakyServer.url}/api/traces/write`,
-              {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ traces: formattedTraces }),
-              }
-            );
+            const response = await postTraces(flakyServer, formattedTraces);
             if (response.ok) {
               result = true;
               break;
@@ -382,11 +327,7 @@ describe('Server Endpoint Integration', () => {
         try {
           // Reduced timeout from 1000ms to 150ms
           const response = await Promise.race([
-            makeHttpRequest(`${slowServer.url}/api/traces/write`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ traces: formattedTraces }),
-            }),
+            postTraces(slowServer, formattedTraces),
             new Promise((_, reject) =>
               setTimeout(() => reject(new Error('Timeout')), 150)
             ),
@@ -407,27 +348,19 @@ describe('Server Endpoint Integration', () => {
     }, 5000); // Account for server creation/teardown overhead
 
     it('should handle malformed server responses', async () => {
-      // Create a server that returns invalid responses
-      const malformedServer = await new Promise((resolve) => {
-        const http = require('http');
-        const server = http.createServer((req, res) => {
-          if (req.method === 'POST' && req.url === '/api/traces/write') {
-            // Return malformed JSON
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end('{ invalid json response');
-          } else {
-            res.writeHead(404);
-            res.end('Not Found');
+      const malformedServer = await startTestLlmProxyServer({
+        handler: async (request) => {
+          if (
+            request.method === 'POST' &&
+            request.pathname === '/api/traces/write'
+          ) {
+            return new Response('{ invalid json response', {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            });
           }
-        });
-
-        server.listen(0, () => {
-          const port = server.address().port;
-          resolve({
-            url: `http://localhost:${port}`,
-            stop: () => new Promise((stopResolve) => server.close(stopResolve)),
-          });
-        });
+          return new Response('Not Found', { status: 404 });
+        },
       });
 
       try {
@@ -437,14 +370,7 @@ describe('Server Endpoint Integration', () => {
 
         let result = false;
         try {
-          const response = await makeHttpRequest(
-            `${malformedServer.url}/api/traces/write`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ traces: formattedTraces }),
-            }
-          );
+          const response = await postTraces(malformedServer, formattedTraces);
 
           // For malformed response test, we should try to parse the JSON response
           // A real client would do this and fail on malformed JSON
@@ -487,14 +413,7 @@ describe('Server Endpoint Integration', () => {
         },
       ];
 
-      const response = await makeHttpRequest(
-        `${testServer.url}/api/traces/write`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ traces: formattedTraces }),
-        }
-      );
+      const response = await postTraces(testServer, formattedTraces);
 
       const result = response.ok;
 
@@ -535,14 +454,7 @@ describe('Server Endpoint Integration', () => {
         },
       ];
 
-      const response = await makeHttpRequest(
-        `${testServer.url}/api/traces/write`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ traces: formattedTraces }),
-        }
-      );
+      const response = await postTraces(testServer, formattedTraces);
 
       const result = response.ok;
 

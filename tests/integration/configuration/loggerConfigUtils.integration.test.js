@@ -2,15 +2,7 @@
  * @file Integration tests for loadAndApplyLoggerConfig interacting with real logger configuration loader.
  * @jest-environment node
  */
-import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-  beforeEach,
-} from '@jest/globals';
-import http from 'node:http';
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
 import { loadAndApplyLoggerConfig } from '../../../src/configuration/utils/loggerConfigUtils.js';
 import { LoggerConfigLoader } from '../../../src/configuration/loggerConfigLoader.js';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
@@ -121,12 +113,8 @@ function createProviderEnvironment(logger) {
 }
 
 describe('loadAndApplyLoggerConfig integration', () => {
-  const routeHandlers = new Map();
-  let server;
-  let baseUrl;
   const consoleSpies = [];
   const originalFetch = globalThis.fetch;
-  const { Request } = globalThis;
 
   beforeAll(async () => {
     ['debug', 'info', 'warn', 'error', 'groupCollapsed', 'groupEnd', 'table'].forEach(
@@ -136,83 +124,45 @@ describe('loadAndApplyLoggerConfig integration', () => {
         }
       }
     );
-
-    server = http.createServer((req, res) => {
-      if (req.method === 'OPTIONS') {
-        res.statusCode = 204;
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-        res.end();
-        return;
-      }
-
-      res.setHeader('Access-Control-Allow-Origin', '*');
-
-      const handler = routeHandlers.get(req.url || '');
-      if (handler) {
-        handler(req, res);
-        return;
-      }
-
-      res.statusCode = 404;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ error: 'Not Found', path: req.url }));
-    });
-
-    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-    const address = server.address();
-    if (!address || typeof address !== 'object') {
-      throw new Error('Failed to determine server address for logger config tests');
-    }
-    baseUrl = `http://127.0.0.1:${address.port}/`;
-
-    globalThis.fetch = (input, init) => {
-      if (typeof input === 'string') {
-        const resolved = input.startsWith('http')
-          ? input
-          : new URL(input, baseUrl).toString();
-        return originalFetch(resolved, init);
-      }
-      if (input instanceof URL) {
-        const resolvedUrl = input.href.startsWith('http')
-          ? input.href
-          : new URL(input.href, baseUrl).toString();
-        return originalFetch(resolvedUrl, init);
-      }
-      if (Request && input instanceof Request) {
-        const resolved = input.url.startsWith('http')
-          ? input.url
-          : new URL(input.url, baseUrl).toString();
-        const clonedRequest = new Request(resolved, input);
-        return originalFetch(clonedRequest, init);
-      }
-      return originalFetch(input, init);
-    };
   });
 
   afterAll(async () => {
-    routeHandlers.clear();
-    if (server) {
-      await new Promise((resolve) => server.close(resolve));
-    }
     globalThis.fetch = originalFetch;
     consoleSpies.forEach((spy) => spy.mockRestore());
   });
 
   beforeEach(() => {
-    routeHandlers.clear();
+    globalThis.fetch = originalFetch;
   });
 
+  /**
+   *
+   * @param body
+   * @param init
+   */
+  function createJsonResponse(body, init = {}) {
+    return new Response(JSON.stringify(body), {
+      status: init.status ?? 200,
+      statusText: init.statusText,
+      headers: { 'Content-Type': 'application/json', ...(init.headers || {}) },
+    });
+  }
+
+  /**
+   *
+   * @param handler
+   */
+  function mockFetch(handler) {
+    const fetchMock = jest.fn().mockImplementation(handler);
+    globalThis.fetch = fetchMock;
+    return fetchMock;
+  }
+
   it('applies string log levels from remote configuration', async () => {
-    routeHandlers.set('/config/logger-config.json', (req, res) => {
-      expect(req.method).toBe('GET');
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(
-        JSON.stringify({
-          logLevel: 'DEBUG',
-        })
-      );
+    const fetchMock = mockFetch(async (input, init) => {
+      expect(input).toBe('config/logger-config.json');
+      expect(init?.method).toBe('GET');
+      return createJsonResponse({ logLevel: 'DEBUG' });
     });
 
     const logger = createRecordingLogger('INFO');
@@ -220,6 +170,7 @@ describe('loadAndApplyLoggerConfig integration', () => {
 
     await loadAndApplyLoggerConfig(container, logger, tokens, 'IntegrationTest');
 
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(logger.setLogLevelCalls).toEqual(['DEBUG']);
     expect(logger.warnLogs).toHaveLength(0);
     expect(logger.debugLogs.some((entry) => entry.message.includes('Attempting to load logger configuration'))).toBe(true);
@@ -227,21 +178,14 @@ describe('loadAndApplyLoggerConfig integration', () => {
   });
 
   it('warns when the resolved log level is not a string', async () => {
-    routeHandlers.set('/config/logger-config.json', (req, res) => {
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(
-        JSON.stringify({
-          logLevel: 42,
-        })
-      );
-    });
+    const fetchMock = mockFetch(async () => createJsonResponse({ logLevel: 42 }));
 
     const logger = createRecordingLogger('INFO');
     const { container, dispatchedEvents } = createProviderEnvironment(logger);
 
     await loadAndApplyLoggerConfig(container, logger, tokens, 'IntegrationTest');
 
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(logger.setLogLevelCalls).toHaveLength(0);
     expect(
       logger.warnLogs.some((entry) =>
@@ -252,18 +196,16 @@ describe('loadAndApplyLoggerConfig integration', () => {
   });
 
   it('warns and dispatches a system error when loading the file fails after retries', async () => {
-    routeHandlers.set('/config/logger-config.json', (req, res) => {
-      res.statusCode = 503;
-      res.statusMessage = 'Service Unavailable';
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ error: 'unavailable' }));
-    });
+    const fetchMock = mockFetch(async () =>
+      createJsonResponse({ error: 'unavailable' }, { status: 503, statusText: 'Service Unavailable' })
+    );
 
     const logger = createRecordingLogger('INFO');
     const { container, dispatchedEvents } = createProviderEnvironment(logger);
 
     await loadAndApplyLoggerConfig(container, logger, tokens, 'IntegrationTest');
 
+    expect(fetchMock).toHaveBeenCalled();
     expect(logger.setLogLevelCalls).toHaveLength(0);
     expect(
       logger.warnLogs.some((entry) =>
@@ -321,17 +263,14 @@ describe('loadAndApplyLoggerConfig integration', () => {
   });
 
   it('logs diagnostic information when the configuration file has no log level', async () => {
-    routeHandlers.set('/config/logger-config.json', (req, res) => {
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ otherSetting: true }));
-    });
+    const fetchMock = mockFetch(async () => createJsonResponse({ otherSetting: true }));
 
     const logger = createRecordingLogger('INFO');
     const { container, dispatchedEvents } = createProviderEnvironment(logger);
 
     await loadAndApplyLoggerConfig(container, logger, tokens, 'IntegrationTest');
 
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(logger.setLogLevelCalls).toHaveLength(0);
     expect(
       logger.debugLogs.some((entry) =>

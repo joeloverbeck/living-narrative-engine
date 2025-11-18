@@ -56,7 +56,11 @@ Tasks can be reused multiple times in a single plan:
 - **Distance Reduction Check**: Each task application must reduce the distance to goal
   - Calculated via heuristics (goal-distance or RPG)
   - If `distance(after) >= distance(before)`, task is not applicable
-  
+  - The numeric guard only runs when the goal's root operator is a pure comparator (`<`, `<=`, `>`, or `>=`). This is the same `goalHasPureNumericRoot(goal)` helper used inside `GoapPlanner`; wrap numeric checks inside `and`/`or` trees and the guard is bypassed entirely.
+  - When either heuristic calculation sanitizes (NaN, Infinity, negative output, or a thrown error), the planner logs `Heuristic produced invalid value` once per `(actorId, goalId, heuristicId)` and immediately prints `Heuristic distance invalid, bypassing guard` before returning `true`. Sanitized heuristics are treated as instrumentation failures, not guard rejections.
+  - If `planningEffectsSimulator` reports `{ success: false }` or throws while preparing the successor state, `testTaskReducesDistance` records Effect Failure Telemetry and throws `GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION`. The guard never returns `false` for these cases—bad effects are fatal rather than "distance didn't shrink" noise.
+  - Historical rationale and edge-case catalog: `archive/GOADISGUAROB/goap-distance-guard-robustness.md`.
+
 - **Reuse Limits**: Tasks have optional `maxReuse` configuration
   - Default: 10 (prevents infinite loops)
   - Can be overridden per task
