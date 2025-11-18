@@ -5,6 +5,10 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import { HasComponentOperator } from '../../../../src/logic/operators/hasComponentOperator.js';
+import {
+  clearPlanningStateDiagnostics,
+  getPlanningStateDiagnostics,
+} from '../../../../src/goap/planner/planningStateDiagnostics.js';
 
 describe('HasComponentOperator', () => {
   let testBed;
@@ -19,6 +23,7 @@ describe('HasComponentOperator', () => {
       'hasComponent',
       'getComponentData',
     ]);
+    clearPlanningStateDiagnostics();
 
     operator = new HasComponentOperator({
       entityManager: mockEntityManager,
@@ -28,6 +33,7 @@ describe('HasComponentOperator', () => {
 
   afterEach(() => {
     testBed.cleanup();
+    clearPlanningStateDiagnostics();
   });
 
   describe('Constructor', () => {
@@ -266,17 +272,45 @@ describe('HasComponentOperator', () => {
         expect(mockEntityManager.hasComponent).not.toHaveBeenCalled();
       });
 
-      it('should fall back to entity manager when planning state entry is missing', () => {
+      it('should treat missing planning state entries as absent without hitting entity manager', () => {
         const context = {
           state: {},
         };
 
-        mockEntityManager.hasComponent.mockReturnValue(true);
-
         const result = operator.evaluate(['entity-1', 'core:armed'], context);
 
-        expect(result).toBe(true);
-        expect(mockEntityManager.hasComponent).toHaveBeenCalledWith('entity-1', 'core:armed');
+        expect(result).toBe(false);
+        expect(mockEntityManager.hasComponent).not.toHaveBeenCalled();
+      });
+
+      it('logs structured planning-state unknown diagnostics and records telemetry counters on misses', () => {
+        const context = {
+          state: {
+            actor: { id: 'actor-telemetry' },
+          },
+        };
+
+        expect(operator.evaluate(['entity-telemetry', 'core:armed'], context)).toBe(false);
+
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'has_component:planning_state_unknown',
+          expect.objectContaining({
+            entityId: 'entity-telemetry',
+            componentId: 'core:armed',
+            actorId: 'actor-telemetry',
+          })
+        );
+
+        const diagnostics = getPlanningStateDiagnostics('actor-telemetry');
+        expect(diagnostics.telemetry).toEqual(
+          expect.objectContaining({
+            totalLookups: 1,
+            unknownStatuses: 1,
+            fallbacks: 0,
+            cacheHits: 0,
+          })
+        );
+        expect(mockEntityManager.hasComponent).not.toHaveBeenCalled();
       });
     });
   });

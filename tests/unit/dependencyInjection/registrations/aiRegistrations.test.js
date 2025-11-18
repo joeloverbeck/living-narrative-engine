@@ -750,11 +750,13 @@ describe('aiRegistrations', () => {
       );
       await goapCall[1](
         createFactoryContext({
+          [tokens.IGoapController]: { controller: true },
           [tokens.ILogger]: logger,
           [tokens.ISafeEventDispatcher]: { dispatcher: true },
         })
       );
       expect(GoapDecisionProviderMock).toHaveBeenCalledWith({
+        goapController: { controller: true },
         logger,
         safeEventDispatcher: { dispatcher: true },
       });

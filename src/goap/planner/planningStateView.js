@@ -1,5 +1,13 @@
 import jsonLogic from 'json-logic-js';
-import { recordPlanningStateMiss } from './planningStateDiagnostics.js';
+import {
+  recordPlanningStateMiss,
+  recordPlanningStateLookup,
+} from './planningStateDiagnostics.js';
+import {
+  PLANNING_STATE_COMPONENT_REASONS,
+  PLANNING_STATE_COMPONENT_SOURCES,
+  PLANNING_STATE_COMPONENT_STATUSES,
+} from './planningStateTypes.js';
 
 const viewCache = new WeakMap();
 
@@ -88,42 +96,74 @@ export class PlanningStateView {
   }
 
   hasComponent(entityId, componentId, options = {}) {
-    const normalizedEntityId = entityId ? String(entityId) : null;
-    const normalizedComponentId = componentId ? String(componentId) : null;
+    const normalizedEntityId =
+      entityId === undefined || entityId === null ? null : String(entityId);
+    const normalizedComponentId =
+      typeof componentId === 'string'
+        ? componentId.trim()
+        : componentId === undefined || componentId === null
+          ? null
+          : String(componentId);
+    const metadata =
+      options.metadata && typeof options.metadata === 'object'
+        ? { ...options.metadata }
+        : {};
+
+    recordPlanningStateLookup({
+      actorId: metadata.actorId || this.getActorId(),
+      entityId: normalizedEntityId,
+      componentId: normalizedComponentId,
+      origin:
+        metadata.origin ||
+        this.#metadata.origin ||
+        'PlanningStateView.hasComponent',
+    });
 
     if (!normalizedEntityId || !normalizedComponentId) {
+      const reason = PLANNING_STATE_COMPONENT_REASONS.INVALID_LOOKUP;
       this.#recordMiss('component', {
         entityId: normalizedEntityId,
         componentId: normalizedComponentId,
-        reason: 'invalid-component-lookup',
-        ...options.metadata,
+        reason,
+        ...metadata,
+        metadata,
       });
-      return { status: 'unknown', value: false };
+      return this.#buildUnknownResult(reason);
     }
 
     const entry = this.#entityIndex.get(normalizedEntityId);
     if (!entry) {
+      const reason = PLANNING_STATE_COMPONENT_REASONS.ENTITY_MISSING;
       this.#recordMiss('component', {
         entityId: normalizedEntityId,
         componentId: normalizedComponentId,
-        reason: 'entity-missing',
-        ...options.metadata,
+        reason,
+        ...metadata,
+        metadata,
       });
-      return { status: 'unknown', value: false };
+      return this.#buildUnknownResult(reason);
     }
 
-    if (entry.components.has(normalizedComponentId)) {
-      const value = entry.values.get(normalizedComponentId);
-      return {
-        status: 'present',
-        value: typeof value === 'object' ? true : Boolean(value),
-      };
+    if (entry.values.has(normalizedComponentId)) {
+      const payload = entry.values.get(normalizedComponentId);
+      const normalizedValue = this.#normalizeComponentValue(payload?.value);
+      return this.#buildPresentResult(payload?.source || null, normalizedValue);
     }
 
-    return { status: 'absent', value: false };
+    const reason = PLANNING_STATE_COMPONENT_REASONS.COMPONENT_MISSING;
+    this.#recordMiss('component', {
+      entityId: normalizedEntityId,
+      componentId: normalizedComponentId,
+      reason,
+      ...metadata,
+      metadata,
+    });
+    return this.#buildAbsentResult(entry);
   }
 
   assertPath(path, metadata = {}) {
+    const metadataClone =
+      metadata && typeof metadata === 'object' ? { ...metadata } : {};
     if (!path || typeof path !== 'string') {
       return undefined;
     }
@@ -134,7 +174,8 @@ export class PlanningStateView {
         this.#recordMiss('path', {
           path,
           reason: 'unresolved-path',
-          ...metadata,
+          ...metadataClone,
+          metadata: metadataClone,
         });
         return undefined;
       }
@@ -143,10 +184,65 @@ export class PlanningStateView {
       this.#recordMiss('path', {
         path,
         reason: err?.message || 'path-resolution-error',
-        ...metadata,
+        ...metadataClone,
+        metadata: metadataClone,
       });
       return undefined;
     }
+  }
+
+  #buildUnknownResult(reason) {
+    return {
+      status: PLANNING_STATE_COMPONENT_STATUSES.UNKNOWN,
+      value: false,
+      source: null,
+      reason,
+    };
+  }
+
+  #buildPresentResult(source, value) {
+    return {
+      status: PLANNING_STATE_COMPONENT_STATUSES.PRESENT,
+      value,
+      source,
+      reason: null,
+    };
+  }
+
+  #buildAbsentResult(entry) {
+    return {
+      status: PLANNING_STATE_COMPONENT_STATUSES.ABSENT,
+      value: false,
+      source: this.#resolvePrimarySource(entry),
+      reason: PLANNING_STATE_COMPONENT_REASONS.COMPONENT_MISSING,
+    };
+  }
+
+  #normalizeComponentValue(value) {
+    if (value === null || value === undefined) {
+      return false;
+    }
+    if (typeof value === 'object') {
+      return true;
+    }
+    return Boolean(value);
+  }
+
+  #resolvePrimarySource(entry) {
+    if (!entry?.sources || entry.sources.size === 0) {
+      return null;
+    }
+    if (entry.sources.has(PLANNING_STATE_COMPONENT_SOURCES.ACTOR)) {
+      return PLANNING_STATE_COMPONENT_SOURCES.ACTOR;
+    }
+    if (entry.sources.has(PLANNING_STATE_COMPONENT_SOURCES.STATE)) {
+      return PLANNING_STATE_COMPONENT_SOURCES.STATE;
+    }
+    if (entry.sources.has(PLANNING_STATE_COMPONENT_SOURCES.FLAT)) {
+      return PLANNING_STATE_COMPONENT_SOURCES.FLAT;
+    }
+    const [firstSource] = entry.sources;
+    return firstSource || null;
   }
 
   #buildEvaluationContext() {
@@ -173,7 +269,7 @@ export class PlanningStateView {
   #buildEntityIndex() {
     const index = new Map();
 
-    const register = (entityId, componentId, value) => {
+    const register = (entityId, componentId, value, source = null) => {
       if (!entityId || !componentId) {
         return;
       }
@@ -181,11 +277,18 @@ export class PlanningStateView {
         index.set(entityId, {
           components: new Set(),
           values: new Map(),
+          sources: new Set(),
         });
       }
       const entry = index.get(entityId);
       entry.components.add(componentId);
-      entry.values.set(componentId, value);
+      entry.values.set(componentId, {
+        value,
+        source,
+      });
+      if (source) {
+        entry.sources.add(source);
+      }
     };
 
     for (const [key, value] of Object.entries(this.#state)) {
@@ -194,7 +297,12 @@ export class PlanningStateView {
       }
       const [entityId, ...componentParts] = key.split(':');
       const componentId = componentParts.join(':');
-      register(entityId, componentId, value);
+      register(
+        entityId,
+        componentId,
+        value,
+        PLANNING_STATE_COMPONENT_SOURCES.FLAT
+      );
     }
 
     const nested = this.#state.state;
@@ -213,7 +321,12 @@ export class PlanningStateView {
           if (componentId.includes('_') && componentsObject[componentId.replace(/_/g, ':')]) {
             continue; // Skip flattened aliases when colon key exists
           }
-          register(entityId, componentId, componentValue);
+          register(
+            entityId,
+            componentId,
+            componentValue,
+            PLANNING_STATE_COMPONENT_SOURCES.STATE
+          );
         }
       }
     }
@@ -225,7 +338,12 @@ export class PlanningStateView {
         if (componentId.includes('_') && this.#actorSnapshot.components[componentId.replace(/_/g, ':')]) {
           continue;
         }
-        register(this.#actorId, componentId, componentValue);
+        register(
+          this.#actorId,
+          componentId,
+          componentValue,
+          PLANNING_STATE_COMPONENT_SOURCES.ACTOR
+        );
       }
     }
 
@@ -313,10 +431,25 @@ export class PlanningStateView {
     }
 
     if (process.env.GOAP_STATE_ASSERT === '1') {
+      const jsonLogicExpression =
+        (payload.metadata && payload.metadata.jsonLogicExpression) ||
+        payload.path ||
+        null;
+      const errorDetails = {
+        type,
+        reason: payload.reason,
+        actorId: payload.actorId || undefined,
+        entityId: payload.entityId || undefined,
+        componentId: payload.componentId || undefined,
+        jsonLogicExpression,
+      };
+      const remediation =
+        'Ensure the planning state hydrates this entity/component or disable GOAP_STATE_ASSERT to collect diagnostics.';
       const error = new Error(
-        `[GOAP_STATE_MISS] PlanningStateView missing ${type}: ${payload.path || payload.componentId || 'unknown'}`
+        `[GOAP_STATE_MISS] Missing ${type} data. ${remediation} Details: ${JSON.stringify(errorDetails)}`
       );
       error.code = 'GOAP_STATE_MISS';
+      error.details = errorDetails;
       throw error;
     }
   }
