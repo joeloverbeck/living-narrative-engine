@@ -33,6 +33,9 @@ class InMemoryDataFetcher {
 
 const SCHEMA_ID = 'schema://living-narrative-engine/llm-configs.schema.json';
 
+/**
+ *
+ */
 function createTestLogger() {
   return {
     debug: jest.fn(),
@@ -42,6 +45,11 @@ function createTestLogger() {
   };
 }
 
+/**
+ *
+ * @param fixtures
+ * @param overrides
+ */
 function createLoaderWithFixtures(fixtures, overrides = {}) {
   return new LlmConfigLoader({
     logger: overrides.logger ?? createTestLogger(),

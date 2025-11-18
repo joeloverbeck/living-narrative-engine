@@ -198,6 +198,9 @@ export class PerformanceTestFixture {
 
   /**
    * Creates a mock rule that will execute the specified actions.
+   *
+   * @param ruleId
+   * @param actions
    */
   createMockRule(ruleId, actions) {
     const rule = {
@@ -211,6 +214,9 @@ export class PerformanceTestFixture {
 
   /**
    * Creates standard actor-target entities for testing.
+   *
+   * @param names
+   * @param options
    */
   createStandardActorTarget(names = ['Alice', 'Bob'], options = {}) {
     const [actorName, targetName] = names;
@@ -238,6 +244,10 @@ export class PerformanceTestFixture {
 
   /**
    * Creates multiple entities for large-scale testing.
+   *
+   * @param count
+   * @param namePrefix
+   * @param componentTemplate
    */
   createEntitySet(count, namePrefix = 'Entity', componentTemplate = {}) {
     const entities = [];
@@ -258,6 +268,11 @@ export class PerformanceTestFixture {
   /**
    * Simulates action execution by directly calling handlers.
    * This bypasses the heavy rule engine for pure performance testing.
+   *
+   * @param actionId
+   * @param actorId
+   * @param targetId
+   * @param ruleActions
    */
   async executeAction(actionId, actorId, targetId, ruleActions) {
     // Dispatch the initial attempt action event
@@ -292,6 +307,8 @@ export class PerformanceTestFixture {
 
   /**
    * Executes multiple actions in sequence for batch testing.
+   *
+   * @param actions
    */
   async executeBatchActions(actions) {
     const results = [];
@@ -344,6 +361,8 @@ export class PerformanceTestFixture {
 
 /**
  * Creates a performance test fixture with commonly used mock configurations.
+ *
+ * @param options
  */
 export function createPerformanceTestFixture(options = {}) {
   return new PerformanceTestFixture(options);
@@ -355,6 +374,10 @@ export function createPerformanceTestFixture(options = {}) {
 export class PerformanceTestScenarios {
   /**
    * Creates a simple action execution scenario.
+   *
+   * @param fixture
+   * @param actorName
+   * @param targetName
    */
   static createSimpleActionScenario(
     fixture,
@@ -383,6 +406,10 @@ export class PerformanceTestScenarios {
 
   /**
    * Creates a complex action execution scenario with multiple operations.
+   *
+   * @param fixture
+   * @param actorName
+   * @param targetName
    */
   static createComplexActionScenario(
     fixture,
@@ -432,6 +459,9 @@ export class PerformanceTestScenarios {
 
   /**
    * Creates a large event generation scenario for stress testing.
+   *
+   * @param fixture
+   * @param eventCount
    */
   static createLargeEventScenario(fixture, eventCount = 20) {
     const { actor, target } = fixture.createStandardActorTarget();

@@ -4,6 +4,10 @@ const GLOBAL_ACTOR_ID = 'global';
 const DEFAULT_MAX_EVENTS_PER_ACTOR = 100;
 const DEFAULT_MAX_GLOBAL_EVENTS = 250;
 
+/**
+ *
+ * @param actorId
+ */
 function normalizeActorId(actorId) {
   if (typeof actorId === 'string') {
     const trimmed = actorId.trim();
@@ -14,6 +18,10 @@ function normalizeActorId(actorId) {
   return GLOBAL_ACTOR_ID;
 }
 
+/**
+ *
+ * @param payload
+ */
 function clonePayload(payload) {
   if (!payload || typeof payload !== 'object') {
     return {};
@@ -34,6 +42,10 @@ function clonePayload(payload) {
   }
 }
 
+/**
+ *
+ * @param event
+ */
 function cloneEvent(event) {
   return {
     type: event.type,

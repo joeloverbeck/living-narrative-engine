@@ -4,6 +4,7 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.
 
 /**
  * Creates a logger that records every call without mocking any dependencies.
+ *
  * @returns {{logger: import('../../../src/interfaces/coreServices.js').ILogger, entries: Record<string, any[][]>}}
  */
 function createRecordingLogger() {

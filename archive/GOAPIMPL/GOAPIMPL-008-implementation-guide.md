@@ -36,6 +36,35 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Implementation order and dependencies documented
 - [ ] Code examples for key components
 
+## Implementation Assessment (2025-02)
+
+> Remaining documentation scope is now tracked by [`goapimpl__residual__refinement-implementation-guide.md`](./goapimpl__residual__refinement-implementation-guide.md).
+
+### Already implemented & tested (3-5 bullets)
+
+- `RefinementEngine` orchestrates method selection, fallback handling, state-scoped step execution, and GOAP event emission (`src/goap/refinement/refinementEngine.js:22-592`) with unit coverage for success/failure flows (`tests/unit/goap/refinement/refinementEngine.test.js:113-185`) and integration tests that exercise the full pipeline.
+- Method selection, JSON-logic applicability checks, and diagnostics are provided by the shipped `MethodSelectionService` (`src/goap/refinement/methodSelectionService.js:1-160`), so developers already rely on its contract instead of a theoretical `MethodSelector` class.
+- Primitive and conditional execution layers manage target binding, `storeResultAs`, nested conditionals, and `onFailure` semantics (`src/goap/refinement/steps/primitiveActionStepExecutor.js:12-200`, `src/goap/refinement/steps/conditionalStepExecutor.js:12-200`) with integration coverage around state isolation and error handling (`tests/integration/goap/primitiveActionExecution.integration.test.js:203-280`).
+- Parameter resolution, refinement state snapshots, and context assembly utilities are implemented and tested (`src/goap/services/parameterResolutionService.js:12-210`, `src/goap/refinement/refinementStateManager.js:1-210`, `tests/integration/goap/parameterResolution.integration.test.js:239-334`).
+- Refinement authoring docs already cover parameter binding, condition context, action references, and event-based debugging traces (`docs/goap/refinement-parameter-binding.md:1-50`, `docs/goap/refinement-condition-context.md:1-60`, `docs/goap/refinement-action-references.md:1-55`, `docs/goap/debugging-tools.md:240-305`).
+
+### Superseded by design changes
+
+- Component names now differ from the pre-implementation plan: we ship `MethodSelectionService`, `PrimitiveActionStepExecutor`, `ConditionalStepExecutor`, and `ParameterResolutionService` rather than abstract `MethodSelector`, `StepExecutor`, `ParameterResolver`, and `ConditionEvaluator` types, so the guide must reference the actual classes (`src/goap/refinement/refinementEngine.js:22`, `src/goap/refinement/methodSelectionService.js:60`, `src/goap/refinement/steps/primitiveActionStepExecutor.js:26`).
+- Condition evaluation is handled via the shared `JsonLogicEvaluationService` that the conditional executor and method selection both consume, so a standalone `ConditionEvaluator` component section would duplicate code that does not exist.
+- Scope DSL integration is not part of refinement runtime today; world snapshots returned by `ContextAssemblyService` intentionally stub out location/time data (`src/goap/services/contextAssemblyService.js:334-377`), so the guide should instead document context assembly and parameter binding constraints.
+- Documentation has moved to modular guides referenced from `docs/goap/README.md:133-138`, meaning the single giant walkthrough originally described never got written; the new residual spec covers finishing that deliverable instead of redefining runtime work.
+
+### Still missing or under-specified
+
+- There is no `docs/goap/implementing-refinement-engine.md` despite being the primary acceptance criterion; contributors must manually glean architecture details from code and scattered docs (`docs/goap/README.md:133-138`).
+- No guide explains how `GoapController` hands work to `RefinementEngine`, what events are emitted, or how fallback behaviors propagate back into planner retries (`src/goap/controllers/goapController.js:1-220`).
+- The promised architecture diagram, pseudocode, and implementation order remain undocumented even though the system exists; the new residual spec focuses on capturing that knowledge while linking to the tests that demonstrate behavior.
+
+### Next steps
+
+- Finish the residual spec deliverable above by writing the consolidated implementation guide, then consider moving this ticket into `archive/` with a note that runtime work shipped earlier and only documentation remained.
+
 ## Document Structure
 
 ```markdown
@@ -48,10 +77,11 @@ Create a comprehensive implementation guide for developers that translates the r
 
 ## 2. Component Design
    - RefinementEngine
-   - MethodSelector
-   - StepExecutor
-   - ParameterResolver
-   - ConditionEvaluator
+   - MethodSelectionService
+   - PrimitiveActionStepExecutor
+   - ConditionalStepExecutor
+   - ParameterResolutionService
+   - JSON Logic evaluation & diagnostics
 
 ## 3. Refinement Execution Algorithm
    - High-level flow (pseudocode)
@@ -63,8 +93,8 @@ Create a comprehensive implementation guide for developers that translates the r
    - GOAP planner integration
    - Action executor integration
    - Event bus integration
-   - Scope DSL integration
-   - json-logic integration
+   - Context assembly & parameter resolution integration
+   - JSON-logic integration
 
 ## 5. Implementation Order
    - Phase 1: Core infrastructure
@@ -94,14 +124,14 @@ Create a comprehensive implementation guide for developers that translates the r
 ## Tasks
 
 ### 1. Write Architecture Overview
-- [ ] Create component diagram (RefinementEngine, MethodSelector, StepExecutor, etc.)
+- [ ] Create component diagram (RefinementEngine, MethodSelectionService, PrimitiveActionStepExecutor, ConditionalStepExecutor, ParameterResolutionService, ContextAssemblyService, JsonLogicEvaluationService)
 - [ ] Describe data flow from task selection to primitive execution
 - [ ] Map components to existing codebase structure
 - [ ] Document dependencies between components
 - [ ] Specify component responsibilities (single responsibility principle)
 - [ ] Reference existing architectural patterns in codebase
 
-### 2. Design RefinementEngine Component
+### 2. Document RefinementEngine Component
 - [ ] Define RefinementEngine class interface
 - [ ] Specify constructor dependencies (logger, eventBus, methodRegistry, etc.)
 - [ ] Document `refine(task, context)` method signature
@@ -110,39 +140,46 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Provide implementation skeleton code
 - [ ] Reference similar components (e.g., action executor)
 
-### 3. Design MethodSelector Component
-- [ ] Define MethodSelector class interface
-- [ ] Specify `selectMethod(task, methods, context)` signature
+### 3. Document MethodSelectionService Component
+- [ ] Define MethodSelectionService contract
+- [ ] Specify `selectMethod(taskId, actorId, params, options)` signature
 - [ ] Document applicability condition evaluation
 - [ ] Specify fallback behavior when no method matches
 - [ ] Document method priority/ordering
 - [ ] Provide implementation skeleton code
 
-### 4. Design StepExecutor Component
-- [ ] Define StepExecutor class interface
-- [ ] Specify `executeStep(step, context)` signature
-- [ ] Document step type dispatching (primitive_action, conditional, etc.)
-- [ ] Specify state accumulation mechanism
-- [ ] Document failure propagation
+### 4. Document PrimitiveActionStepExecutor Component
+- [ ] Define PrimitiveActionStepExecutor dependencies and contract
+- [ ] Specify `execute(step, context, stepIndex)` signature and parameters
+- [ ] Document action lookup, target binding, and parameter merging flow
+- [ ] Specify how `storeResultAs` uses RefinementStateManager
+- [ ] Document failure propagation and result schema
 - [ ] Provide implementation skeleton code
 
-### 5. Design ParameterResolver Component
-- [ ] Define ParameterResolver class interface
-- [ ] Specify `resolve(expression, context)` signature
-- [ ] Document json-logic expression evaluation
-- [ ] Specify variable scope management
-- [ ] Document performance optimization (caching)
+### 5. Document ConditionalStepExecutor Component
+- [ ] Define ConditionalStepExecutor dependencies and contract
+- [ ] Specify `execute(step, context, stepIndex, currentDepth)` signature
+- [ ] Document nesting limits, branch selection, and reuse of primitive executor
+- [ ] Specify `onFailure` handling and `replanRequested` signaling
+- [ ] Document diagnostic logging expectations
 - [ ] Provide implementation skeleton code
 
-### 6. Design ConditionEvaluator Component
-- [ ] Define ConditionEvaluator class interface
-- [ ] Specify `evaluate(condition, context)` signature
-- [ ] Document json-logic integration
-- [ ] Specify custom operators (if needed)
-- [ ] Document error handling for undefined variables
+### 6. Document ParameterResolutionService Component
+- [ ] Define ParameterResolutionService responsibilities and constructor requirements
+- [ ] Specify `resolve(reference, context, options)` signature
+- [ ] Document supported reference formats and scope (task.params, refinement.localState, actor, world)
+- [ ] Specify caching/clearing behavior and entity validation safeguards
+- [ ] Document common error cases and logging expectations
 - [ ] Provide implementation skeleton code
 
-### 7. Document Refinement Execution Algorithm
+### 7. Document JSON Logic Evaluation Integration
+- [ ] Define how JsonLogicEvaluationService is wired into method selection and conditional execution
+- [ ] Specify `evaluate(condition, context)` expectations and diagnostics
+- [ ] Document available custom operators / safe access helpers
+- [ ] Specify error handling for undefined variables or malformed expressions
+- [ ] Provide implementation skeleton or pseudo-API usage examples
+
+### 8. Document Refinement Execution Algorithm
 - [ ] Write high-level algorithm pseudocode
 - [ ] Document method selection process
 - [ ] Specify step execution loop
@@ -151,7 +188,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Show execution flow diagram
 - [ ] Provide annotated code example
 
-### 8. Document Integration with GOAP Planner
+### 9. Document Integration with GOAP Planner
 - [ ] Specify where refinement is triggered in planning flow
 - [ ] Document task-to-method lookup mechanism
 - [ ] Specify parameter passing from planner to refinement
@@ -159,7 +196,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Show integration sequence diagram
 - [ ] Reference `goapDecisionProvider.js` integration points
 
-### 9. Document Integration with Action Executor
+### 10. Document Integration with Action Executor
 - [ ] Specify how primitives are queued for execution
 - [ ] Document action parameter binding
 - [ ] Specify target resolution from refinement context
@@ -167,7 +204,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Show integration sequence diagram
 - [ ] Reference existing action executor code
 
-### 10. Document Integration with Event Bus
+### 11. Document Integration with Event Bus
 - [ ] List all events dispatched by refinement engine:
   - REFINEMENT_STARTED
   - REFINEMENT_METHOD_SELECTED
@@ -178,7 +215,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Document event listeners (for debugging, logging)
 - [ ] Reference existing event bus patterns
 
-### 11. Define Implementation Order
+### 12. Define Implementation Order
 - [ ] Phase 1: Core infrastructure (loaders, registry, basic components)
 - [ ] Phase 2: Basic execution (simple sequential methods)
 - [ ] Phase 3: Conditionals and state (branching, storeResultAs)
@@ -187,7 +224,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Document dependencies between phases
 - [ ] Provide milestone checklist
 
-### 12. Create Testing Strategy
+### 13. Create Testing Strategy
 - [ ] Unit test guidelines (mock dependencies, test components in isolation)
 - [ ] Integration test guidelines (test component interactions)
 - [ ] E2E test guidelines (test complete refinement flow)
@@ -195,7 +232,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Provide test case examples for each level
 - [ ] Reference existing test patterns (`tests/common/`)
 
-### 13. Write Debugging Section
+### 14. Write Debugging Section
 - [ ] List common implementation issues:
   - Method not found
   - Condition evaluation failure
@@ -206,7 +243,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Specify debug events to dispatch
 - [ ] Provide troubleshooting flowchart
 
-### 14. Create Code Examples
+### 15. Create Code Examples
 - [ ] Example: RefinementEngine implementation
 - [ ] Example: MethodSelector implementation
 - [ ] Example: Conditional step execution

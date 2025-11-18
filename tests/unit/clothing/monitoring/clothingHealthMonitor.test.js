@@ -14,6 +14,9 @@ jest.mock('../../../../src/utils/dependencyUtils.js', () => ({
   validateDependency: jest.fn(),
 }));
 
+/**
+ *
+ */
 function createLogger() {
   return {
     info: jest.fn(),

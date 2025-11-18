@@ -1,11 +1,22 @@
 import { isPlainObject } from '../../utils/objectUtils.js';
 
+/**
+ *
+ * @param value
+ * @param label
+ */
 function assertNonEmptyString(value, label) {
   if (typeof value !== 'string' || value.trim().length === 0) {
     throw new Error(`${label} must be a non-empty string.`);
   }
 }
 
+/**
+ *
+ * @param target
+ * @param key
+ * @param value
+ */
 function normalizeContextField(target, key, value) {
   if (typeof value !== 'string' || value.trim().length === 0) {
     return;
@@ -16,6 +27,12 @@ function normalizeContextField(target, key, value) {
   target[key] = value;
 }
 
+/**
+ *
+ * @param eventType
+ * @param payload
+ * @param context
+ */
 export function createGoapEventPayload(eventType, payload = {}, context = {}) {
   assertNonEmptyString(eventType, 'GOAP event type');
 
@@ -40,6 +57,13 @@ export function createGoapEventPayload(eventType, payload = {}, context = {}) {
   return enriched;
 }
 
+/**
+ *
+ * @param dispatcher
+ * @param eventType
+ * @param payload
+ * @param context
+ */
 export function emitGoapEvent(dispatcher, eventType, payload, context) {
   if (!dispatcher || typeof dispatcher.dispatch !== 'function') {
     throw new Error('emitGoapEvent requires a dispatcher with a dispatch method.');

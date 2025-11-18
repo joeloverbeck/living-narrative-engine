@@ -22,6 +22,7 @@ import ActionCategorizationService from '../../../../src/entities/utils/ActionCa
 
 /**
  * Create a minimal logger that satisfies the validation requirements.
+ *
  * @returns {{info: jest.Mock, warn: jest.Mock, error: jest.Mock, debug: jest.Mock}}
  */
 function createMockLogger() {

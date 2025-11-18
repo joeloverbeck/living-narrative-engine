@@ -3,6 +3,7 @@ import { resolveConditionRefs } from '../../../src/utils/conditionRefResolver.js
 
 /**
  * Helper for creating a fake repository that returns definitions by ID.
+ *
  * @param {Record<string, any>} definitions
  */
 function createRepository(definitions) {

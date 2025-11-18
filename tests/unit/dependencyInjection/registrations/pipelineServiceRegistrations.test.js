@@ -30,6 +30,9 @@ describe('registerPipelineServices', () => {
   let registrations;
   let resolvedMap;
 
+  /**
+   *
+   */
   function createContainer() {
     return {
       register: jest.fn((token, factory, options) => {

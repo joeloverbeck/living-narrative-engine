@@ -8,8 +8,9 @@ import BaseError from './baseError.js';
 
 /**
  * Base error class for mod validation errors with context and recovery information
+ *
  * @class
- * @extends {BaseError}
+ * @augments {BaseError}
  */
 export class ModValidationError extends BaseError {
   /**
@@ -18,7 +19,7 @@ export class ModValidationError extends BaseError {
    * @param {string} message - The error message describing the validation failure
    * @param {string} code - Error code for classification (e.g., 'SECURITY_VIOLATION', 'FILE_CORRUPTION')
    * @param {object} context - Context information about where/how the error occurred
-   * @param {boolean} [recoverable=true] - Whether the error is recoverable
+   * @param {boolean} [recoverable] - Whether the error is recoverable
    */
   constructor(message, code, context, recoverable = true) {
     const baseContext = { ...context, originalCode: code, originalRecoverable: recoverable };
@@ -59,6 +60,7 @@ export class ModValidationError extends BaseError {
   
   /**
    * Serializes the error for logging or reporting
+   *
    * @returns {object} Serialized error object
    */
   toJSON() {
@@ -75,6 +77,7 @@ export class ModValidationError extends BaseError {
   
   /**
    * Creates a formatted string representation of the error
+   *
    * @returns {string} Formatted error string
    */
   toString() {

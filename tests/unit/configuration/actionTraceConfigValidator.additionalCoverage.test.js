@@ -5,6 +5,9 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import ActionTraceConfigValidator from '../../../src/configuration/actionTraceConfigValidator.js';
 
+/**
+ *
+ */
 function createSchemaValidator() {
   return {
     validate: jest.fn().mockResolvedValue({ valid: true, errors: [] }),
@@ -13,6 +16,10 @@ function createSchemaValidator() {
   };
 }
 
+/**
+ *
+ * @param overrides
+ */
 function createLogger(overrides = {}) {
   return {
     info: jest.fn(),

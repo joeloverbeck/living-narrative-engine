@@ -16,6 +16,7 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 /**
  * Creates a logger instance recognised by ensureValidLogger.
+ *
  * @returns {import('../../../src/interfaces/coreServices.js').ILogger}
  */
 function createTestLogger() {

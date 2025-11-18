@@ -1,5 +1,10 @@
 import { GOAP_PLANNER_FAILURES } from '../../../src/goap/planner/goapPlannerFailureReasons.js';
 
+/**
+ *
+ * @param planner
+ * @param taskId
+ */
 export function expectInvalidEffectFailure(planner, taskId) {
   const failure =
     typeof planner.getLastFailure === 'function'

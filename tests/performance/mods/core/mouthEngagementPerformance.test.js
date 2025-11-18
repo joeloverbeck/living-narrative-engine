@@ -77,6 +77,11 @@ describe('Mouth Engagement - Performance Tests', () => {
   });
 
   // Helper function to create test actor with mouth
+  /**
+   *
+   * @param id
+   * @param name
+   */
   async function createTestActorWithMouth(id, name = 'Test Actor') {
     await entityManager.createEntity(id);
     await entityManager.addComponent(id, NAME_COMPONENT_ID, { text: name });
@@ -113,10 +118,11 @@ describe('Mouth Engagement - Performance Tests', () => {
 
   /**
    * Create a batch of actors with mouths concurrently.
+   *
    * @param {number} count - Number of actors to create
    * @param {object} [options] - Configuration for IDs and names
-   * @param {string} [options.idPrefix='actor'] - Prefix for generated IDs
-   * @param {string} [options.namePrefix='Actor'] - Prefix for generated names
+   * @param {string} [options.idPrefix] - Prefix for generated IDs
+   * @param {string} [options.namePrefix] - Prefix for generated names
    * @returns {Promise<Array<{id: string, mouthId: string}>>} Created actors
    */
   async function createActorBatch(count, options = {}) {

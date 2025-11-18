@@ -19,6 +19,9 @@ let localStorageStore;
 let originalWindowLocalStorage;
 const DROPDOWN_STATE_KEY = 'thematic-directions-dropdown-state';
 
+/**
+ *
+ */
 function defaultDropdownFactory() {
   return {
     loadItems: jest.fn().mockResolvedValue(undefined),
@@ -30,6 +33,9 @@ function defaultDropdownFactory() {
 
 let mockEditorFactory = defaultEditorFactory;
 
+/**
+ *
+ */
 function defaultEditorFactory() {
   return {
     destroy: jest.fn(),

@@ -167,6 +167,10 @@ export class HasComponentOperator {
         jsonLogicExpression,
       });
     } catch (error) {
+      if (error && error.code === 'GOAP_STATE_MISS') {
+        // Allow GOAP assertions to surface so stale planning snapshots fail fast
+        throw error;
+      }
       this.#logger.error(
         `${this.#operatorName}: Error during evaluation`,
         error
@@ -219,6 +223,8 @@ export class HasComponentOperator {
    * @param {string|number} entityId - The entity ID
    * @param {string} componentId - The component ID to check for
    * @param {object} context - Evaluation context (may contain planning state)
+   * @param {object} [options] - Additional metadata
+   * @param {string|null} [options.jsonLogicExpression] - Serialized entity lookup expression
    * @returns {boolean} True if the entity has the specified component
    */
   #evaluateInternal(entityId, componentId, context = {}, options = {}) {
@@ -265,7 +271,7 @@ export class HasComponentOperator {
       }
 
       if (isUnknownComponent(lookup)) {
-        this.#logger.debug('has_component:planning_state_unknown', {
+        this.#logger.debug('has_component.planning_state_unknown', {
           entityId,
           componentId,
           reason: lookup.reason || 'planning-state-unknown',
@@ -301,7 +307,7 @@ export class HasComponentOperator {
     if (typeof expression === 'object') {
       try {
         return JSON.stringify(expression);
-      } catch (_) {
+      } catch {
         return '[unserializable-expression]';
       }
     }

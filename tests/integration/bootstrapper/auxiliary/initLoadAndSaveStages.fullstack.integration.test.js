@@ -190,6 +190,9 @@ class RecordingSaveGameUI {
 
 class PassiveProcessingIndicatorController {}
 
+/**
+ *
+ */
 function createStageEnvironment() {
   const container = new AppContainer();
   const logger = new RecordingLogger();

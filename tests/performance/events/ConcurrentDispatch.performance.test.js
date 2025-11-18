@@ -2,7 +2,6 @@
  * @file Concurrent Event Dispatch Performance Test
  * @description Performance benchmarks for concurrent event dispatch scenarios in the Living Narrative Engine.
  * Tests throughput, latency, and scalability under concurrent load.
- *
  * @jest-environment jsdom
  */
 

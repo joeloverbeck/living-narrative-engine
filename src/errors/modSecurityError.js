@@ -7,6 +7,7 @@ import { ModValidationError } from './modValidationError.js';
 
 /**
  * Security levels for categorizing severity
+ *
  * @enum {string}
  */
 export const SecurityLevel = {
@@ -18,8 +19,9 @@ export const SecurityLevel = {
 
 /**
  * Error thrown when security violations are detected during mod validation
+ *
  * @class
- * @extends {ModValidationError}
+ * @augments {ModValidationError}
  */
 export class ModSecurityError extends ModValidationError {
   /**
@@ -53,6 +55,7 @@ export class ModSecurityError extends ModValidationError {
 
   /**
    * Determines if this is a critical security violation requiring immediate action
+   *
    * @returns {boolean} True if critical or high severity
    */
   isCritical() {
@@ -62,6 +65,7 @@ export class ModSecurityError extends ModValidationError {
   
   /**
    * Generates a security incident report
+   *
    * @returns {object} Security incident details
    */
   generateIncidentReport() {
@@ -78,6 +82,7 @@ export class ModSecurityError extends ModValidationError {
   
   /**
    * Gets recommended actions based on security level
+   *
    * @private
    * @returns {string[]} List of recommended actions
    */

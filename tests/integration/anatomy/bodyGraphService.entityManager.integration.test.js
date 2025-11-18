@@ -18,6 +18,7 @@ import {
 
 /**
  * Registers a component definition in the provided registry.
+ *
  * @param {InMemoryDataRegistry} registry
  * @param {string} id
  * @param {object} dataSchema
@@ -28,6 +29,7 @@ const registerComponentDefinition = (registry, id, dataSchema) => {
 
 /**
  * Registers an entity definition in the registry.
+ *
  * @param {InMemoryDataRegistry} registry
  * @param {string} id
  * @param {Record<string, any>} components

@@ -17,6 +17,9 @@ import * as contextAssembler from '../../../src/logic/contextAssembler.js';
 import * as actionSequenceModule from '../../../src/logic/actionSequence.js';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 
+/**
+ *
+ */
 function createLogger() {
   return {
     debug: jest.fn(),
@@ -26,6 +29,11 @@ function createLogger() {
   };
 }
 
+/**
+ *
+ * @param rules
+ * @param options
+ */
 function createInterpreterWithRules(rules, options = {}) {
   const logger = options.logger ?? createLogger();
   const eventBus = options.eventBus ?? new EventBus({ logger });
@@ -98,6 +106,11 @@ function createInterpreterWithRules(rules, options = {}) {
   };
 }
 
+/**
+ *
+ * @param mockFn
+ * @param substring
+ */
 function expectLogContains(mockFn, substring) {
   const messages = mockFn.mock.calls.map((call) => call[0]);
   expect(

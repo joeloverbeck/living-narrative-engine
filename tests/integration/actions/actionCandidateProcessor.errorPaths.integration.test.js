@@ -113,6 +113,13 @@ class NoopEventDispatcher {
   }
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.prerequisiteImpl
+ * @param root0.targetImpl
+ * @param root0.logger
+ */
 function createProcessor({
   prerequisiteImpl,
   targetImpl,

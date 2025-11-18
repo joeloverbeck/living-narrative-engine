@@ -149,6 +149,7 @@ class PlanInspector {
    *
    * @private
    * @param {object} plan - Active plan
+   * @param numericDiagnostics
    * @returns {string} Formatted text
    */
   #formatPlan(plan, numericDiagnostics) {

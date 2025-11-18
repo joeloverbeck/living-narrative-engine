@@ -32,6 +32,7 @@ export default class ValidationPhase extends LoaderPhase {
 
   /**
    * Executes the validation phase
+   *
    * @param {import('../LoadContext.js').LoadContext} ctx - The load context
    * @returns {Promise<import('../LoadContext.js').LoadContext>}
    * @throws {ModsLoaderPhaseError} When validation fails

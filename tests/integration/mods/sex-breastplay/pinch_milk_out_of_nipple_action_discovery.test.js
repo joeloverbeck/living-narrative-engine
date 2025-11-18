@@ -76,9 +76,9 @@ describe('sex-breastplay:pinch_milk_out_of_nipple action discovery', () => {
   /**
    * @description Builds scenario entities for lactation tease discovery tests.
    * @param {object} [options] - Scenario customization options.
-   * @param {boolean} [options.includeBreasts=true] - Whether the actor should possess breast anatomy.
-   * @param {boolean} [options.coverBreasts=false] - Whether the actor's chest should be covered by clothing.
-   * @param {boolean} [options.includeLactation=true] - Whether the actor includes the lactation marker component.
+   * @param {boolean} [options.includeBreasts] - Whether the actor should possess breast anatomy.
+   * @param {boolean} [options.coverBreasts] - Whether the actor's chest should be covered by clothing.
+   * @param {boolean} [options.includeLactation] - Whether the actor includes the lactation marker component.
    * @returns {{ entities: Array<object>, actorId: string }} Entities ready to load into the test environment and the actor id.
    */
   function buildScenario(options = {}) {

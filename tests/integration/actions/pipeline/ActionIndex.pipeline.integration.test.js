@@ -53,6 +53,9 @@ class SimpleMultiTargetResolutionStage extends PipelineStage {
   }
 }
 
+/**
+ *
+ */
 function createLogger() {
   return {
     debug: jest.fn(),
@@ -62,6 +65,13 @@ function createLogger() {
   };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.actions
+ * @param root0.actorComponents
+ * @param root0.preBuild
+ */
 function createOrchestratorScenario({ actions, actorComponents, preBuild }) {
   const logger = createLogger();
 

@@ -153,7 +153,6 @@ export function createPositioningScenario(
 
 /**
  * @description Convenience helper for creating configurable sitting arrangements.
- *
  * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createSittingArrangement
  * @returns {object} Scenario details for seated, standing, and kneeling actors
  */
@@ -163,7 +162,6 @@ export function createSittingArrangement(options = {}) {
 
 /**
  * @description Convenience helper for creating seated actor pairs.
- *
  * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createSittingPair
  * @returns {object} Scenario details for the seated pair
  */
@@ -173,7 +171,6 @@ export function createSittingPair(options = {}) {
 
 /**
  * @description Convenience helper for creating single actor sitting arrangements.
- *
  * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createSoloSitting
  * @returns {object} Scenario details for the solo sitter
  */
@@ -183,7 +180,6 @@ export function createSoloSitting(options = {}) {
 
 /**
  * @description Convenience helper for sitting scenarios with nearby standing actors.
- *
  * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createStandingNearSitting
  * @returns {object} Scenario details with seated and standing actors
  */
@@ -193,7 +189,6 @@ export function createStandingNearSitting(options = {}) {
 
 /**
  * @description Convenience helper for scenarios where actors use different furniture.
- *
  * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createSeparateFurnitureArrangement
  * @returns {object} Scenario details with multiple furniture instances
  */
@@ -203,7 +198,6 @@ export function createSeparateFurnitureArrangement(options = {}) {
 
 /**
  * @description Convenience helper for scenarios with kneeling actors positioned near seated actors.
- *
  * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createKneelingBeforeSitting
  * @returns {object} Scenario details with seated and kneeling actors
  */

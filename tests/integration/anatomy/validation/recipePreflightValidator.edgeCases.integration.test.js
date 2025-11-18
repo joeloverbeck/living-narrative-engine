@@ -77,6 +77,9 @@ class ThrowingBlueprintRepository extends AnatomyBlueprintRepository {
   }
 }
 
+/**
+ *
+ */
 function createLogger() {
   return {
     info: jest.fn(),
@@ -98,6 +101,10 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
   /** @type {SlotGenerator} */
   let slotGenerator;
 
+  /**
+   *
+   * @param overrides
+   */
   function createValidator(overrides = {}) {
     const entityMatcherService = new EntityMatcherService({
       logger,
@@ -115,6 +122,9 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
     });
   }
 
+  /**
+   *
+   */
   function seedCommonComponents() {
     dataRegistry.store('components', 'core:muscle', {
       id: 'core:muscle',
@@ -126,6 +136,12 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
     });
   }
 
+  /**
+   *
+   * @param root0
+   * @param root0.blueprintId
+   * @param root0.rootId
+   */
   function seedBlueprintWithRoot({ blueprintId = 'test:blueprint', rootId = 'test:root' } = {}) {
     dataRegistry.store('anatomyBlueprints', blueprintId, {
       id: blueprintId,

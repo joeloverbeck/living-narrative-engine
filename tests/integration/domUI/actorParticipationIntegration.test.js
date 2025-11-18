@@ -103,6 +103,12 @@ describe('ActorParticipationController - Integration Tests', () => {
     jest.clearAllMocks();
   });
 
+  /**
+   *
+   * @param id
+   * @param name
+   * @param participating
+   */
   async function createTestActor(id, name, participating = null) {
     // Add actor component with name
     await entityManager.addComponent(id, ACTOR_COMPONENT_ID, {});
@@ -116,6 +122,9 @@ describe('ActorParticipationController - Integration Tests', () => {
     return id; // Return the entity ID
   }
 
+  /**
+   *
+   */
   async function flushMicrotasks() {
     await Promise.resolve();
     await Promise.resolve();

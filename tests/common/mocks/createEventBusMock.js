@@ -7,6 +7,10 @@ const LEGACY_SIGNATURE_ERROR =
  * Creates a contract-enforcing event bus mock for GOAP tests.
  * The mock records dispatches (bounded by maxEvents), exposes helpers for assertions,
  * and rejects the legacy signature.
+ *
+ * @param root0
+ * @param root0.captureLegacyCalls
+ * @param root0.maxEvents
  */
 export function createEventBusMock({ captureLegacyCalls = false, maxEvents = 500 } = {}) {
   const listeners = new Map();

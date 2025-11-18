@@ -55,10 +55,22 @@ class FakeContainer {
   }
 }
 
+/**
+ *
+ * @param container
+ * @param token
+ * @param instance
+ */
 function registerInstance(container, token, instance) {
   container.register(token, instance, { lifecycle: 'singleton', isInstance: true });
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.withValidation
+ * @param root0.failValidationImport
+ */
 async function importModuleWithMocks({ withValidation = false, failValidationImport = false } = {}) {
   const consoleLoggerInstance = { log: jest.fn() };
   const ConsoleLoggerMock = jest.fn(() => consoleLoggerInstance);

@@ -121,7 +121,7 @@ describe('formatActionTypedefs module', () => {
   it('prevents runtime reassignment of the sentinel export', () => {
     expect(() => {
       // @ts-expect-error - intentionally attempting to mutate an import binding.
-      // eslint-disable-next-line no-import-assign, no-global-assign
+      // eslint-disable-next-line no-import-assign
       __formatActionTypedefs = false;
     }).toThrow(/read-only/i);
   });

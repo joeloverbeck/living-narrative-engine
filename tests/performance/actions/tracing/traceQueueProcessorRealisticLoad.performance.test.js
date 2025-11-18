@@ -8,7 +8,6 @@
  * - Trace capture overhead: <1ms
  * - Memory usage: <2MB heap increase under load
  * - Throughput: >100 traces/second
- *
  * @see src/actions/tracing/traceQueueProcessor.js
  * @see reports/actions-tracing-architecture-analysis.md
  */
@@ -119,6 +118,7 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
 
   /**
    * Create a pool of pre-generated traces
+   *
    * @param {number} count - Number of traces to create
    * @returns {Array} Array of trace objects
    */
@@ -377,8 +377,9 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
 
   /**
    * Validate batch processing performance for a given scenario
+   *
    * @param {object} scenario - Performance scenario configuration
-   * @param {boolean} [allowHigherLatency=false] - Whether to allow higher latency thresholds
+   * @param {boolean} [allowHigherLatency] - Whether to allow higher latency thresholds
    * @returns {Promise<object>} Performance validation results
    */
   async function validateBatchProcessingPerformance(
@@ -454,6 +455,7 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
 
   /**
    * Create a TraceQueueProcessor with custom configuration
+   *
    * @param {object} config - Configuration options
    * @returns {TraceQueueProcessor} Configured processor instance
    */
@@ -475,6 +477,7 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
 
   /**
    * Create performance traces for testing (uses pre-generated pools)
+   *
    * @param {number} count - Number of traces to create
    * @returns {Array} Array of trace objects
    */
@@ -517,6 +520,7 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
 
   /**
    * Create traces with mixed priority levels
+   *
    * @param {number} count - Number of traces to create
    * @returns {Array} Array of objects with trace and priority
    */
@@ -537,7 +541,8 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
 
   /**
    * Wait for processing with timeout
-   * @param {number} [timeout=1000] - Timeout in milliseconds
+   *
+   * @param {number} [timeout] - Timeout in milliseconds
    * @returns {Promise} Promise that resolves after timeout
    */
   function waitForProcessing(timeout = 1000) {
@@ -546,9 +551,10 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
 
   /**
    * Wait for processing completion with polling (optimized)
+   *
    * @param {object} processor - The processor instance
    * @param {number} expectedCount - Expected number of items to process
-   * @param {number} [maxWait=500] - Maximum wait time in milliseconds
+   * @param {number} [maxWait] - Maximum wait time in milliseconds
    * @returns {Promise} Promise that resolves when processing is complete or timeout
    */
   async function waitForProcessingCompletion(processor, expectedCount, maxWait = 500) {

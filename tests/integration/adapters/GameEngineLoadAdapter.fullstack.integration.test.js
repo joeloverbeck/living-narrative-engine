@@ -141,6 +141,9 @@ class ConfigurableGamePersistenceService {
   }
 }
 
+/**
+ *
+ */
 function createAdapterEnvironment() {
   const container = new AppContainer();
   const logger = new RecordingLogger();

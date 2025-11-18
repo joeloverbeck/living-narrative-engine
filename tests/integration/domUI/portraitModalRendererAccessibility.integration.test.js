@@ -12,6 +12,9 @@ import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
 import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
 
+/**
+ *
+ */
 function createRegistryMocks() {
   return {
     getWorldDefinition: jest.fn(),
@@ -47,6 +50,10 @@ function createRegistryMocks() {
   };
 }
 
+/**
+ *
+ * @param logger
+ */
 function createValidatedDispatcher(logger) {
   const eventBus = new EventBus({ logger });
   const registry = createRegistryMocks();
@@ -95,6 +102,13 @@ function createValidatedDispatcher(logger) {
   return { dispatcher, eventBus, registry, schemaValidator };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.includeImage
+ * @param root0.includeSpinner
+ * @param root0.includeStatus
+ */
 function setupModalDom({
   includeImage = true,
   includeSpinner = true,
@@ -168,6 +182,10 @@ function setupModalDom({
   };
 }
 
+/**
+ *
+ * @param options
+ */
 function buildRenderer(options = {}) {
   const logger = createMockLogger();
   const {

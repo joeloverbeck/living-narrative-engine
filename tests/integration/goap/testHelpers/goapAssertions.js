@@ -4,6 +4,7 @@
 
 /**
  * Validates action hint structure
+ *
  * @param {object} actionHint - Action hint to validate
  * @returns {boolean} True if valid
  */
@@ -23,6 +24,7 @@ export function isValidActionHint(actionHint) {
 
 /**
  * Validates plan structure
+ *
  * @param {object} plan - Plan to validate
  * @returns {boolean} True if valid
  */
@@ -40,6 +42,7 @@ export function isValidPlan(plan) {
 
 /**
  * Validates event payload
+ *
  * @param {object} event - Event to validate
  * @param {string[]} requiredFields - Required payload fields
  * @returns {boolean} True if valid

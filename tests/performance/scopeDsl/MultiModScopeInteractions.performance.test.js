@@ -43,6 +43,10 @@ describe('Multi-Mod Scope Interactions Performance', () => {
   /**
    * Performance-optimized helper to create test mods using in-memory system
    * Eliminates file I/O overhead for 60-70% performance improvement
+   *
+   * @param modId
+   * @param modContent
+   * @param dependencies
    */
   function createTestMod(modId, modContent = {}, dependencies = []) {
     return modSystem.createMod(modId, modContent, dependencies);
@@ -51,6 +55,9 @@ describe('Multi-Mod Scope Interactions Performance', () => {
   /**
    * Performance-optimized scope loading using in-memory system
    * Eliminates file I/O and uses cached AST parsing
+   *
+   * @param modId
+   * @param scopeFiles
    */
   function loadScopesFromMod(modId, scopeFiles) {
     return modSystem.loadScopesFromMod(modId, scopeFiles, dslParser, logger);

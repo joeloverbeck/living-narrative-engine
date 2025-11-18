@@ -9,6 +9,7 @@ import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
 
 /**
  * Creates an EntityConfigProvider wired with the real logger and environment provider.
+ *
  * @param {object} [options]
  * @param {object} [options.userConfig]
  * @param {ProcessEnvironmentProvider} [options.environmentProvider]

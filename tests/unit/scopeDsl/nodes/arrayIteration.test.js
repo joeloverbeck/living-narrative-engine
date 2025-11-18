@@ -335,7 +335,7 @@ describe('ArrayIterationResolver', () => {
     it('should avoid console diagnostics when debug logging is unavailable', async () => {
       const originalDebug = console.debug;
       // Ensure console.debug is not treated as a function so the fallback branch executes
-      // eslint-disable-next-line no-console
+       
       delete console.debug;
 
       try {

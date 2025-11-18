@@ -10,16 +10,16 @@ import { ModEntityBuilder } from '../ModEntityBuilder.js';
  * Builds a complete scenario for testing lick_testicles_lying_close action.
  * Creates two characters (Ava and Nolan) lying on the same bed with proper components.
  *
- * @param {Object} options - Configuration options
- * @param {boolean} [options.coverLeftTesticle=false] - If true, covers target's left testicle with clothing
- * @param {boolean} [options.coverRightTesticle=false] - If true, covers target's right testicle with clothing
- * @param {boolean} [options.includeActorLying=true] - If false, omits actor's lying_down component
- * @param {boolean} [options.includePrimaryLying=true] - If false, omits primary's lying_down component
- * @param {boolean} [options.includeCloseness=true] - If false, omits mutual closeness components
- * @param {boolean} [options.useDifferentFurniture=false] - If true, places participants on different furniture
- * @param {boolean} [options.actorGivingBlowjob=false] - If true, adds giving_blowjob component to actor
- * @param {boolean} [options.targetFuckingActor=false] - If true, adds fucking_vaginally component to target
- * @returns {Object} Scenario data with entities, IDs, and metadata
+ * @param {object} options - Configuration options
+ * @param {boolean} [options.coverLeftTesticle] - If true, covers target's left testicle with clothing
+ * @param {boolean} [options.coverRightTesticle] - If true, covers target's right testicle with clothing
+ * @param {boolean} [options.includeActorLying] - If false, omits actor's lying_down component
+ * @param {boolean} [options.includePrimaryLying] - If false, omits primary's lying_down component
+ * @param {boolean} [options.includeCloseness] - If false, omits mutual closeness components
+ * @param {boolean} [options.useDifferentFurniture] - If true, places participants on different furniture
+ * @param {boolean} [options.actorGivingBlowjob] - If true, adds giving_blowjob component to actor
+ * @param {boolean} [options.targetFuckingActor] - If true, adds fucking_vaginally component to target
+ * @returns {object} Scenario data with entities, IDs, and metadata
  */
 export function buildLickTesticlesLyingCloseScenario(options = {}) {
   const {

@@ -56,6 +56,9 @@ describe('StartupErrorHandler integration', () => {
   /** @type {JsdomDomAdapter} */
   let domAdapter;
 
+  /**
+   *
+   */
   function createLogger() {
     return {
       info: jest.fn(),
@@ -65,6 +68,9 @@ describe('StartupErrorHandler integration', () => {
     };
   }
 
+  /**
+   *
+   */
   function setupUi() {
     document.body.innerHTML = `
       <main>

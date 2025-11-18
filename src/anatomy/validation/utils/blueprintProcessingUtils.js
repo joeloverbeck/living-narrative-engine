@@ -4,7 +4,6 @@
 
 /**
  * @description Ensures a blueprint has generated slots when using structure templates.
- *
  * @param {object} params - Processing parameters.
  * @param {object} params.blueprint - Raw blueprint definition that may require processing.
  * @param {import('../../../interfaces/coreServices.js').IDataRegistry} params.dataRegistry - Registry for structure templates.

@@ -158,14 +158,14 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
   /**
    * @description Builds entities for discovery scenarios with configurable positioning and state.
    * @param {object} [options] - Scenario configuration options.
-   * @param {boolean} [options.includeCloseness=true] - Whether both entities share closeness.
-   * @param {boolean} [options.targetFacingAway=false] - Whether the target faces away from the actor.
-   * @param {boolean} [options.coverPenis=false] - Whether clothing covers the target's penis.
-   * @param {boolean} [options.coverVagina=false] - Whether clothing covers the actor's vagina.
-   * @param {boolean} [options.includePenis=true] - Whether to include a penis anatomy part for the target.
-   * @param {boolean} [options.includeVagina=true] - Whether to include a vagina anatomy part for the actor.
-   * @param {boolean} [options.actorSitting=false] - Whether the actor is sitting on furniture.
-   * @param {boolean} [options.actorBeingFucked=false] - Whether the actor starts with the penetration state component.
+   * @param {boolean} [options.includeCloseness] - Whether both entities share closeness.
+   * @param {boolean} [options.targetFacingAway] - Whether the target faces away from the actor.
+   * @param {boolean} [options.coverPenis] - Whether clothing covers the target's penis.
+   * @param {boolean} [options.coverVagina] - Whether clothing covers the actor's vagina.
+   * @param {boolean} [options.includePenis] - Whether to include a penis anatomy part for the target.
+   * @param {boolean} [options.includeVagina] - Whether to include a vagina anatomy part for the actor.
+   * @param {boolean} [options.actorSitting] - Whether the actor is sitting on furniture.
+   * @param {boolean} [options.actorBeingFucked] - Whether the actor starts with the penetration state component.
    * @returns {Array<object>} Entities to load into the test environment.
    */
   function buildScenario(options = {}) {

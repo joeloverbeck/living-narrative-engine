@@ -25,6 +25,9 @@ describe('BodyGraphService integration with real anatomy collaborators', () => {
     error: jest.fn(),
   });
 
+  /**
+   *
+   */
   async function seedAnatomy() {
     await entityManager.addComponent(torsoId, 'anatomy:part', { subType: 'torso' });
     await entityManager.addComponent(torsoId, 'core:name', { text: 'Torso' });

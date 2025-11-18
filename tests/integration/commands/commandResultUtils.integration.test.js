@@ -12,6 +12,10 @@ import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';
 import systemErrorEventDefinition from '../../../data/mods/core/events/system_error_occurred.event.json';
 
+/**
+ *
+ * @param label
+ */
 function createRecordingLogger(label = 'integration-logger') {
   const entries = {
     debug: [],
@@ -38,6 +42,9 @@ function createRecordingLogger(label = 'integration-logger') {
   return { logger, entries };
 }
 
+/**
+ *
+ */
 async function createDispatcherEnvironment() {
   const recording = createRecordingLogger('dispatcher');
   const registry = new InMemoryDataRegistry({ logger: recording.logger });

@@ -86,6 +86,9 @@ describe('LoggerStrategy - Bootstrap Warnings Integration', () => {
     const mockConsoleLogger = testBed.createMockLogger();
 
     // Act - Simulate container configuration stage where eventBus isn't registered yet
+    /**
+     *
+     */
     function simulateContainerConfigurationStage() {
       // This simulates the state during early bootstrap
       const dependencies = {

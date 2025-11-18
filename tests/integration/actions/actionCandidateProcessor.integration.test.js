@@ -107,6 +107,9 @@ describe('ActionCandidateProcessor - integration coverage', () => {
     restoreActorPositions();
   });
 
+  /**
+   *
+   */
   function restoreActorPositions() {
     if (!originalPositions) {
       return;
@@ -123,6 +126,10 @@ describe('ActionCandidateProcessor - integration coverage', () => {
     }
   }
 
+  /**
+   *
+   * @param actorId
+   */
   function getActorLocationId(actorId) {
     const position = entityManager.getComponentData(
       actorId,
@@ -131,6 +138,11 @@ describe('ActionCandidateProcessor - integration coverage', () => {
     return position?.locationId ?? null;
   }
 
+  /**
+   *
+   * @param actor
+   * @param overrides
+   */
   function createDiscoveryContext(actor, overrides = {}) {
     const baseLocation = getActorLocationId(actor.id);
     return {
@@ -142,6 +154,10 @@ describe('ActionCandidateProcessor - integration coverage', () => {
     };
   }
 
+  /**
+   *
+   * @param overrides
+   */
   function createProcessor(overrides = {}) {
     const wrappedPrereqService = {
       evaluate: (...args) => {
@@ -184,6 +200,11 @@ describe('ActionCandidateProcessor - integration coverage', () => {
     });
   }
 
+  /**
+   *
+   * @param actionId
+   * @param overrides
+   */
   function cloneActionDefinition(actionId, overrides = {}) {
     const definition = registry.get('actions', actionId);
     if (!definition) {
@@ -194,6 +215,10 @@ describe('ActionCandidateProcessor - integration coverage', () => {
     return { ...cloned, ...overrides };
   }
 
+  /**
+   *
+   * @param prereqs
+   */
   function expandPrerequisites(prereqs = []) {
     return prereqs.map((entry) => {
       if (typeof entry === 'string') {
@@ -220,6 +245,10 @@ describe('ActionCandidateProcessor - integration coverage', () => {
     });
   }
 
+  /**
+   *
+   * @param logicNode
+   */
   function normalizePrerequisiteLogic(logicNode) {
     if (Array.isArray(logicNode)) {
       return logicNode.map((node) => normalizePrerequisiteLogic(node));
@@ -242,6 +271,10 @@ describe('ActionCandidateProcessor - integration coverage', () => {
     return logicNode;
   }
 
+  /**
+   *
+   * @param actor
+   */
   async function ensureIsolatedLocation(actor) {
     const isolatedLocationId = 'integration:isolated_room';
     if (!registry.get('entityDefinitions', isolatedLocationId)) {

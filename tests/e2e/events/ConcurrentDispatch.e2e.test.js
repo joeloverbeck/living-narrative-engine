@@ -10,7 +10,6 @@
  * - Handler execution safety
  * - Resource contention handling
  * - Performance under concurrent load
- * 
  * @jest-environment jsdom
  */
 
@@ -63,6 +62,10 @@ class ConcurrentTestCoordinator {
 
   /**
    * Create multiple event dispatchers that will fire simultaneously
+   *
+   * @param count
+   * @param eventType
+   * @param payloadGenerator
    */
   createConcurrentDispatchers(count, eventType, payloadGenerator) {
     const dispatchers = [];
@@ -79,6 +82,8 @@ class ConcurrentTestCoordinator {
 
   /**
    * Execute dispatchers concurrently and measure results
+   *
+   * @param dispatchers
    */
   async executeConcurrently(dispatchers) {
     const startTime = performance.now();
@@ -100,6 +105,8 @@ class ConcurrentTestCoordinator {
 
   /**
    * Setup handlers that modify shared state (for race condition testing)
+   *
+   * @param eventType
    */
   setupRaceConditionHandlers(eventType) {
     // Counter increment handler
@@ -146,6 +153,8 @@ class ConcurrentTestCoordinator {
 
   /**
    * Setup handlers with varying execution times
+   *
+   * @param eventType
    */
   setupVariableTimeHandlers(eventType) {
     const handlerTypes = ['fast', 'medium', 'slow', 'async', 'sync'];

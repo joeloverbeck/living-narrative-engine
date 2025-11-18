@@ -3,6 +3,9 @@ import { readFile } from 'fs/promises';
 import path from 'path';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
 
+/**
+ *
+ */
 function createRecordingLogger() {
   const logs = {
     debug: [],
@@ -37,6 +40,10 @@ function createRecordingLogger() {
   };
 }
 
+/**
+ *
+ * @param relativePath
+ */
 async function loadSchema(relativePath) {
   const filePath = path.join('data', 'schemas', relativePath);
   const fileContents = await readFile(filePath, 'utf8');

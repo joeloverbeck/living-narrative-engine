@@ -41,6 +41,12 @@ class InMemoryGameDataRepository {
   }
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.extraActions
+ * @param root0.extraEntities
+ */
 function createHarness({ extraActions = [], extraEntities = [] } = {}) {
   const logger = new RecordingLogger();
   const defaultEntities = [

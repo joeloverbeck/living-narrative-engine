@@ -45,6 +45,11 @@ class EventBusDispatcher {
   }
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.includeDispatcher
+ */
 function createIntegrationEnvironment({ includeDispatcher = true } = {}) {
   const logger = new RecordingLogger();
   const eventBus = new EventBus({ logger });

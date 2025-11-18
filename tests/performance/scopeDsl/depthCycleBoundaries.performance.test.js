@@ -88,6 +88,10 @@ describe('Depth and Cycle Boundaries Performance', () => {
 
   /**
    * Helper to create depth test mod structure
+   *
+   * @param baseDir
+   * @param modId
+   * @param scopes
    */
   async function createDepthTestMod(baseDir, modId, scopes) {
     const modDir = path.join(baseDir, 'data', 'mods', modId);
@@ -118,6 +122,9 @@ describe('Depth and Cycle Boundaries Performance', () => {
 
   /**
    * Helper to load scopes from mod
+   *
+   * @param modId
+   * @param scopeFiles
    */
   async function loadScopesFromMod(modId, scopeFiles) {
     const modDir = path.join(tempDir, 'data', 'mods', modId);

@@ -1,3 +1,8 @@
+/**
+ *
+ * @param input
+ * @param options
+ */
 export function buildPlanningState(input, options = {}) {
   if (input && typeof input === 'object' && input.id && input.components) {
     return buildStateFromActor(input);
@@ -5,19 +10,36 @@ export function buildPlanningState(input, options = {}) {
   return buildStateFromFragments(input || {}, options);
 }
 
+/**
+ *
+ * @param actor
+ */
 export function buildDualFormatState(actor) {
   return buildPlanningState(actor);
 }
 
+/**
+ *
+ * @param componentId
+ */
 export function flattenComponentId(componentId) {
   return componentId.replace(/:/g, '_');
 }
 
+/**
+ *
+ * @param componentId
+ * @param field
+ */
 export function buildComponentFieldPath(componentId, field) {
   const flattenedId = flattenComponentId(componentId);
   return `state.actor.components.${flattenedId}.${field}`;
 }
 
+/**
+ *
+ * @param actor
+ */
 function buildStateFromActor(actor) {
   const state = {
     actor: {
@@ -37,6 +59,11 @@ function buildStateFromActor(actor) {
   return state;
 }
 
+/**
+ *
+ * @param fragments
+ * @param options
+ */
 function buildStateFromFragments(fragments, options = {}) {
   const state = {};
   const sourceEntries = Object.entries(fragments);
@@ -73,6 +100,10 @@ function buildStateFromFragments(fragments, options = {}) {
   return state;
 }
 
+/**
+ *
+ * @param entries
+ */
 function inferActorIdFromFragments(entries) {
   if (!Array.isArray(entries) || entries.length === 0) {
     return null;
@@ -85,6 +116,11 @@ function inferActorIdFromFragments(entries) {
   return null;
 }
 
+/**
+ *
+ * @param entityId
+ * @param actorId
+ */
 function normalizeEntityId(entityId, actorId) {
   if (entityId === 'actor') {
     return actorId;
@@ -92,6 +128,10 @@ function normalizeEntityId(entityId, actorId) {
   return entityId;
 }
 
+/**
+ *
+ * @param value
+ */
 function cloneValue(value) {
   if (value === null || value === undefined) {
     return value;

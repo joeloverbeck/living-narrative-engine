@@ -27,9 +27,9 @@ class ActivityCacheManager {
   #eventUnsubscribers = [];
 
   /**
-   * @param {Object} params
-   * @param {Object} params.logger - Logger instance (ILogger interface)
-   * @param {Object} [params.eventBus] - Optional event bus for automatic invalidation events
+   * @param {object} params
+   * @param {object} params.logger - Logger instance (ILogger interface)
+   * @param {object} [params.eventBus] - Optional event bus for automatic invalidation events
    */
   constructor({ logger, eventBus = null }) {
     validateDependency(logger, 'ILogger', console, {
@@ -58,8 +58,9 @@ class ActivityCacheManager {
 
   /**
    * Register a new named cache with specific configuration
+   *
    * @param {string} cacheName - Unique identifier for the cache
-   * @param {Object} config - Cache configuration
+   * @param {object} config - Cache configuration
    * @param {number} config.ttl - Time-to-live in milliseconds (default: 60000)
    * @param {number} config.maxSize - Maximum entries before pruning (default: 1000)
    */
@@ -81,6 +82,7 @@ class ActivityCacheManager {
 
   /**
    * Get value from cache with TTL validation
+   *
    * @param {string} cacheName - Name of the cache
    * @param {string} key - Cache key
    * @returns {*} Cached value or undefined if expired/missing
@@ -113,6 +115,7 @@ class ActivityCacheManager {
 
   /**
    * Set value in cache with expiration timestamp
+   *
    * @param {string} cacheName - Name of the cache
    * @param {string} key - Cache key
    * @param {*} value - Value to cache
@@ -146,6 +149,7 @@ class ActivityCacheManager {
 
   /**
    * Invalidate specific cache entry
+   *
    * @param {string} cacheName - Name of the cache
    * @param {string} key - Cache key to invalidate
    */
@@ -167,6 +171,7 @@ class ActivityCacheManager {
 
   /**
    * Invalidate all cache entries for a specific entity
+   *
    * @param {string} entityId - Entity ID to invalidate across all caches
    */
   invalidateAll(entityId) {
@@ -210,6 +215,7 @@ class ActivityCacheManager {
 
   /**
    * Subscribe to entity change events for automatic cache invalidation
+   *
    * @private
    */
   #subscribeToInvalidationEvents() {
@@ -278,6 +284,7 @@ class ActivityCacheManager {
 
   /**
    * Setup periodic cleanup of expired cache entries
+   *
    * @private
    */
   #setupPeriodicCleanup() {
@@ -290,6 +297,7 @@ class ActivityCacheManager {
 
   /**
    * Remove expired entries from all caches
+   *
    * @private
    */
   #cleanupAllCaches() {
@@ -321,6 +329,7 @@ class ActivityCacheManager {
 
   /**
    * Prune cache using LRU strategy when maxSize is exceeded
+   *
    * @private
    * @param {string} cacheName - Name of cache being pruned
    * @param {Map} cache - Cache map to prune
@@ -352,6 +361,7 @@ class ActivityCacheManager {
   /**
    * TEST ONLY: Get internal cache Map for a specific cache name
    * This method is for testing purposes only and should not be used in production code
+   *
    * @param {string} cacheName - Name of the cache to retrieve
    * @returns {Map} Internal cache Map with {value, expiresAt} entries
    * @private

@@ -11,7 +11,7 @@ import { BaseCharacterBuilderControllerTestBase } from '../../characterBuilder/c
  * Render the DOM structure required for the thematic direction controller
  *
  * @param {object} [options]
- * @param {boolean} [options.includeBackButton=true]
+ * @param {boolean} [options.includeBackButton]
  * @returns {void}
  */
 function renderControllerLayout({ includeBackButton = true } = {}) {

@@ -58,7 +58,7 @@ describe('persistenceErrors module', () => {
   it('gracefully skips stack capture when the runtime does not support it', () => {
     const originalCapture = Error.captureStackTrace;
     try {
-      // eslint-disable-next-line no-global-assign -- intentionally simulating runtimes without captureStackTrace.
+       
       // @ts-ignore - deleting built-in for test coverage purposes.
       delete Error.captureStackTrace;
 
@@ -74,7 +74,7 @@ describe('persistenceErrors module', () => {
       if (originalCapture) {
         Error.captureStackTrace = originalCapture;
       } else {
-        // eslint-disable-next-line no-global-assign -- restoring previous value when it was absent.
+         
         // @ts-ignore
         delete Error.captureStackTrace;
       }

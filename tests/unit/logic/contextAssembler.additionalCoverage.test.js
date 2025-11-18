@@ -33,6 +33,7 @@ function createLoggerMock() {
 
 /**
  * Creates a mock entity manager with optional behaviour overrides.
+ *
  * @param {object} overrides
  */
 function createEntityManagerMock(overrides = {}) {

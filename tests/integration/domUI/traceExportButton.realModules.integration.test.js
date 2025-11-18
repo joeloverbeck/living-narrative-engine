@@ -121,6 +121,9 @@ class TestActionTraceOutputService {
   }
 }
 
+/**
+ *
+ */
 async function flushMicrotasks() {
   await Promise.resolve();
   await Promise.resolve();

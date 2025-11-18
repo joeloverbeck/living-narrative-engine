@@ -3,6 +3,9 @@ import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import { DEFAULT_TEST_WORLD } from '../../common/constants.js';
 
+/**
+ *
+ */
 function createLogger() {
   return {
     debug: jest.fn(),
@@ -12,6 +15,12 @@ function createLogger() {
   };
 }
 
+/**
+ *
+ * @param resolutionMap
+ * @param root0
+ * @param root0.isRegistered
+ */
 function createContainer(resolutionMap, { isRegistered = () => false } = {}) {
   return {
     resolve: jest.fn((token) => {
@@ -24,6 +33,9 @@ function createContainer(resolutionMap, { isRegistered = () => false } = {}) {
   };
 }
 
+/**
+ *
+ */
 function installFailingCauseSetter() {
   const originalDescriptor = Object.getOwnPropertyDescriptor(
     Error.prototype,

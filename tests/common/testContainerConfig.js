@@ -34,6 +34,7 @@ const ERROR_SEVERITY = Object.freeze({
 
 /**
  * Creates a lightweight container configuration optimized for testing
+ *
  * @param {object} options - Configuration options
  * @param {boolean} options.enableLogging - Whether to enable detailed logging (default: false)
  * @param {object} options.mockServices - Additional mock services to register
@@ -206,6 +207,10 @@ export async function createTestContainer(options = {}) {
   return container;
 }
 
+/**
+ *
+ * @param container
+ */
 export function resolveControllerDependencies(container) {
   return {
     schemaValidator: container.resolve(tokens.ISchemaValidator),
@@ -224,6 +229,7 @@ export function resolveControllerDependencies(container) {
 
 /**
  * Creates a mock character builder service with fast async operations
+ *
  * @param {object} options - Mock service options
  * @param {Array} options.existingConcepts - Pre-existing concepts to return
  * @returns {object} Mock character builder service
@@ -303,6 +309,7 @@ export function createMockCharacterBuilderService(options = {}) {
 
 /**
  * Creates a fast-resolving IndexedDB mock for testing
+ *
  * @returns {object} Mock IndexedDB implementation
  */
 export function createFastIndexedDBMock() {
@@ -376,6 +383,7 @@ export function createFastIndexedDBMock() {
 
 /**
  * Creates a minimal DOM setup for modal testing
+ *
  * @param {object} options - DOM setup options
  * @param {boolean} options.includeSearchElements - Include search-related elements
  * @param {boolean} options.includeStatsElements - Include statistics elements
@@ -447,6 +455,7 @@ export function createMinimalModalDOM(options = {}) {
 
 /**
  * Sets up fast form validation with reduced debounce for testing
+ *
  * @param {number} debounceMs - Debounce delay in milliseconds (default: 50)
  * @returns {object} Mock form validation helper
  */

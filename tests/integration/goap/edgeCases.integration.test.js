@@ -16,7 +16,7 @@ import { expectInvalidEffectFailure } from '../../common/goap/plannerTestUtils.j
  * The runtime stores tasks by mod namespace, so tests must mirror that layout.
  *
  * @param {Array<object>} taskList - Task definitions to register
- * @param {string} [modId='test'] - Optional namespace identifier
+ * @param {string} [modId] - Optional namespace identifier
  * @returns {object} Task registry keyed by namespace and task id
  */
 function createTaskRegistry(taskList, modId = 'test') {

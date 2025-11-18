@@ -95,6 +95,9 @@ const createEventDispatcher = () => ({
   dispatch: jest.fn().mockResolvedValue(undefined),
 });
 
+/**
+ *
+ */
 function buildEnvironment() {
   const entityManager = new InMemoryEntityManager();
   const logger = createLogger();

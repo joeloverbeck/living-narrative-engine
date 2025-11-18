@@ -31,7 +31,7 @@ export default class EntityConfigProvider {
    * @param {ILogger} deps.logger - Logger instance
    * @param {IEnvironmentProvider} [deps.environmentProvider] - Environment provider
    * @param {object} [deps.userConfig] - User configuration overrides
-   * @param {boolean} [deps.autoInitialize=true] - Whether to initialize immediately
+   * @param {boolean} [deps.autoInitialize] - Whether to initialize immediately
    */
   constructor({
     logger,

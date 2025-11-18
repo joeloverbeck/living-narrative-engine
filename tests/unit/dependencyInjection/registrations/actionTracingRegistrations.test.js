@@ -153,6 +153,10 @@ jest.mock(
   })
 );
 
+/**
+ *
+ * @param baseMap
+ */
 function createContainer(baseMap) {
   const base = new Map(baseMap);
   const registrations = new Map();

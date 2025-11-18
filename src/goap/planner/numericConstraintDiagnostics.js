@@ -1,6 +1,10 @@
 const MAX_RECENT_FALLBACKS = 5;
 const diagnosticsByActor = new Map();
 
+/**
+ *
+ * @param entry
+ */
 function clone(entry) {
   if (!entry) {
     return null;
@@ -12,6 +16,10 @@ function clone(entry) {
   };
 }
 
+/**
+ *
+ * @param actorId
+ */
 function getOrCreateEntry(actorId) {
   const key = actorId || 'unknown';
   if (!diagnosticsByActor.has(key)) {
@@ -24,6 +32,10 @@ function getOrCreateEntry(actorId) {
   return diagnosticsByActor.get(key);
 }
 
+/**
+ *
+ * @param payload
+ */
 export function recordNumericConstraintFallback(payload = {}) {
   const actorId = payload.actorId || 'unknown';
   const entry = getOrCreateEntry(actorId);
@@ -44,6 +56,10 @@ export function recordNumericConstraintFallback(payload = {}) {
   return clone(entry);
 }
 
+/**
+ *
+ * @param actorId
+ */
 export function getNumericConstraintDiagnostics(actorId) {
   if (!actorId) {
     return null;
@@ -51,10 +67,17 @@ export function getNumericConstraintDiagnostics(actorId) {
   return clone(diagnosticsByActor.get(actorId) || diagnosticsByActor.get('unknown'));
 }
 
+/**
+ *
+ */
 export function getAllNumericConstraintDiagnostics() {
   return Array.from(diagnosticsByActor.values()).map((entry) => clone(entry));
 }
 
+/**
+ *
+ * @param actorId
+ */
 export function clearNumericConstraintDiagnostics(actorId) {
   if (actorId) {
     diagnosticsByActor.delete(actorId);

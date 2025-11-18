@@ -24,6 +24,7 @@ import {
 
 /**
  * Helper that creates a unique IndexedDB storage adapter for each test.
+ *
  * @param {ConsoleLogger} logger
  * @param {typeof IndexedDBStorageAdapter} AdapterClass
  * @param {object} options
@@ -47,6 +48,10 @@ async function createStorageAdapter(
   return { adapter, dbName, storeName };
 }
 
+/**
+ *
+ * @param dbName
+ */
 async function deleteDatabase(dbName) {
   await new Promise((resolve, reject) => {
     const request = indexedDB.deleteDatabase(dbName);
@@ -128,6 +133,12 @@ class ThrowingWaitTimerService extends TestTimerService {
   }
 }
 
+/**
+ *
+ * @param processor
+ * @param timerService
+ * @param maxAttempts
+ */
 async function waitForProcessingToDrain(processor, timerService, maxAttempts = 25) {
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     if (timerService.hasPending()) {

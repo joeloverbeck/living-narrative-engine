@@ -35,6 +35,7 @@ class TestGameDataRepository {
 
 /**
  * Builds a fully wired UnifiedErrorHandler with real collaborators.
+ *
  * @returns {{
  *   handler: UnifiedErrorHandler,
  *   actionErrorContextBuilder: ActionErrorContextBuilder,

@@ -185,6 +185,9 @@ describe('Anatomy Memory Stress Testing', () => {
         // Comprehensive state clearing before each batch
         await clearAllInternalState();
         
+        /**
+         *
+         */
         function clearAllInternalState() {
           // Clear all Jest mock call histories
           if (testBed.logger && testBed.logger.info) {
@@ -269,6 +272,9 @@ describe('Anatomy Memory Stress Testing', () => {
         const heapMB = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
         console.log(`  Batch ${batch + 1}/${batches} complete. Heap: ${heapMB}MB`);
         
+        /**
+         *
+         */
         async function forceCompleteCleanup() {
           // Force complete EntityManager cleanup
           if (testBed.entityManager && testBed.entityManager.clearAll) {
@@ -387,6 +393,8 @@ describe('Anatomy Memory Stress Testing', () => {
 
   /**
    * Helper to generate large anatomy (moved to top level for accessibility)
+   *
+   * @param partCount
    */
   async function generateLargeAnatomy(partCount) {
     const blueprint = dataGenerator.generateLargeAnatomyBlueprint(partCount);

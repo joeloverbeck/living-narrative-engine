@@ -46,6 +46,11 @@ import { ACTION_DECIDED } from '../../../src/constants/eventIds.js';
 
 /**
  * Creates handlers needed for straddling rules.
+ *
+ * @param entityManager
+ * @param eventBus
+ * @param logger
+ * @param gameDataRepository
  */
 function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
   const safeDispatcher = {
@@ -121,6 +126,11 @@ function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
 
 /**
  * Helper to create an actor
+ *
+ * @param entityManager
+ * @param id
+ * @param name
+ * @param locationId
  */
 function createActor(entityManager, id, name, locationId) {
   entityManager.addComponent(id, ACTOR_COMPONENT_ID, {});
@@ -135,6 +145,10 @@ function createActor(entityManager, id, name, locationId) {
 
 /**
  * Helper to create a location
+ *
+ * @param entityManager
+ * @param id
+ * @param name
  */
 function createLocation(entityManager, id, name) {
   entityManager.addComponent(id, 'core:location', {});
@@ -150,6 +164,11 @@ function createLocation(entityManager, id, name) {
 
 /**
  * Helper to create furniture with seating
+ *
+ * @param entityManager
+ * @param id
+ * @param name
+ * @param locationId
  */
 function createChair(entityManager, id, name, locationId) {
   entityManager.addComponent(id, 'furniture:seating', {

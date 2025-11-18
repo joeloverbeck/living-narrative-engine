@@ -20,8 +20,9 @@ export class ValidationCLIError extends Error {
 
 /**
  * Handles and displays CLI errors with helpful suggestions
+ *
  * @param {Error} error - Error to handle
- * @param {Object} config - CLI configuration for context
+ * @param {object} config - CLI configuration for context
  */
 export function handleCLIError(error, config = {}) {
   console.error(chalk.red('❌ Error:'), error.message);
@@ -49,6 +50,9 @@ export function handleCLIError(error, config = {}) {
 
 /**
  * Shows contextual help based on error type
+ *
+ * @param errorType
+ * @param config
  */
 function showContextualHelp(errorType, config) {
   const contextHelp = {
@@ -171,6 +175,7 @@ export async function validateEnvironment() {
 
 /**
  * Creates a user-friendly error message from validation issues
+ *
  * @param {Array} issues - Array of validation issues
  * @returns {string} Formatted error message
  */
@@ -199,8 +204,9 @@ export function formatEnvironmentIssues(issues) {
 
 /**
  * Wraps an async function with error handling
+ *
  * @param {Function} fn - Async function to wrap
- * @param {Object} config - Configuration for error handling
+ * @param {object} config - Configuration for error handling
  * @returns {Function} Wrapped function
  */
 export function withErrorHandling(fn, config = {}) {
@@ -216,8 +222,9 @@ export function withErrorHandling(fn, config = {}) {
 
 /**
  * Creates a progress reporter for long-running operations
- * @param {Object} options - Progress reporter options
- * @returns {Object} Progress reporter interface
+ *
+ * @param {object} options - Progress reporter options
+ * @returns {object} Progress reporter interface
  */
 export function createProgressReporter(options = {}) {
   const { quiet = false, verbose = false } = options;
@@ -270,7 +277,8 @@ export function createProgressReporter(options = {}) {
 
 /**
  * Formats validation statistics for display
- * @param {Object} stats - Validation statistics
+ *
+ * @param {object} stats - Validation statistics
  * @returns {string} Formatted statistics
  */
 export function formatValidationStats(stats) {

@@ -40,13 +40,13 @@ describe('unknownIds constants', () => {
   it('treats the sentinel exports as immutable runtime constants', () => {
     expect(() => {
       // @ts-expect-error - intentionally verifying the binding is read-only.
-      // eslint-disable-next-line no-import-assign, no-global-assign
+      // eslint-disable-next-line no-import-assign
       UNKNOWN_ACTOR_ID = 'actor-override';
     }).toThrow(/read-only/i);
 
     expect(() => {
       // @ts-expect-error - intentionally verifying the binding is read-only.
-      // eslint-disable-next-line no-import-assign, no-global-assign
+      // eslint-disable-next-line no-import-assign
       UNKNOWN_ENTITY_ID = 'entity-override';
     }).toThrow(/read-only/i);
   });

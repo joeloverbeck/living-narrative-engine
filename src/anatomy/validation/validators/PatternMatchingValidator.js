@@ -27,7 +27,6 @@ export class PatternMatchingValidator extends BaseValidator {
 
   /**
    * @description Creates a new pattern matching validator instance.
-   *
    * @param {object} params - Constructor parameters.
    * @param {import('../../../interfaces/coreServices.js').ILogger} params.logger - Logger implementation.
    * @param {import('../../../interfaces/coreServices.js').IDataRegistry} params.dataRegistry - Data registry for templates.
@@ -75,7 +74,6 @@ export class PatternMatchingValidator extends BaseValidator {
 
   /**
    * @description Executes pattern matching validation for the provided recipe.
-   *
    * @param {object} recipe - Recipe definition containing patterns.
    * @param {object} _options - Validation options (unused placeholder).
    * @param {import('../core/ValidationResultBuilder.js').default} builder - Result builder instance.
@@ -154,7 +152,6 @@ export class PatternMatchingValidator extends BaseValidator {
 
 /**
  * @description Validates that recipe patterns have matching slots (dry-run).
- *
  * @param {object} recipe - Recipe to validate.
  * @param {object} blueprint - Blueprint with slots from structure template.
  * @param {import('../../../interfaces/coreServices.js').IDataRegistry} dataRegistry - Data registry for templates.
@@ -216,7 +213,6 @@ export function validatePatternMatching(
 
 /**
  * @description Finds slots matching pattern matchers.
- *
  * @param {object} pattern - Pattern definition (v1 or v2).
  * @param {object} blueprint - Blueprint with slots.
  * @param {import('../../../interfaces/coreServices.js').IDataRegistry} dataRegistry - Data registry for templates.
@@ -310,7 +306,6 @@ export function findMatchingSlots(
 
 /**
  * @description Helper to get pattern description for logging.
- *
  * @param {object} pattern - Pattern definition.
  * @returns {string} Human-readable pattern description.
  */
@@ -327,7 +322,6 @@ export function getPatternDescription(pattern) {
 
 /**
  * @description Extracts matcher information for display.
- *
  * @param {object} pattern - Pattern definition.
  * @returns {object} Formatted matcher info.
  */
@@ -349,7 +343,6 @@ export function extractMatcherInfo(pattern) {
 
 /**
  * @description Identifies which matcher is blocking slot matches.
- *
  * @param {object} pattern - Pattern definition.
  * @param {object} result - Match result from findMatchingSlots.
  * @param {object} blueprint - Blueprint being validated.
@@ -388,7 +381,6 @@ export function identifyBlockingMatcher(pattern, result, blueprint) {
 
 /**
  * @description Suggests how to fix pattern matching issue.
- *
  * @param {object} pattern - Pattern definition.
  * @param {object} result - Match result from findMatchingSlots.
  * @param {object} blueprint - Blueprint being validated.

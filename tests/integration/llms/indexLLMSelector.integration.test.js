@@ -9,7 +9,7 @@ const ORIGINAL_FETCH = global.fetch;
 
 const waitFor = async (checkFn, { timeout = 15000, interval = 50 } = {}) => {
   const start = Date.now();
-  // eslint-disable-next-line no-constant-condition
+   
   while (true) {
     try {
       const result = await checkFn();
@@ -24,7 +24,7 @@ const waitFor = async (checkFn, { timeout = 15000, interval = 50 } = {}) => {
     if (Date.now() - start >= timeout) {
       throw new Error('waitFor timeout exceeded');
     }
-    // eslint-disable-next-line no-await-in-loop
+     
     await new Promise((resolve) => setTimeout(resolve, interval));
   }
 };

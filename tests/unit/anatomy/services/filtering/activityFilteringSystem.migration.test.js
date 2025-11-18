@@ -9,7 +9,6 @@
  *
  * Original tests: activityDescriptionService.characterization.test.js lines 520-803
  * Migration batch: Batch 1 (17 tests)
- *
  * @see workflows/ACTDESSERREF-010-migrate-test-suite.md
  */
 
@@ -20,6 +19,8 @@ import ActivityConditionValidator from '../../../../../src/anatomy/services/vali
 /**
  * Helper: Create standard test entity
  * Matches the structure from activityDescriptionServiceTestHelpers.js
+ *
+ * @param config
  */
 function createStandardEntity(config = {}) {
   const {
@@ -65,6 +66,8 @@ function createMockLogger() {
 
 /**
  * Helper: Create mock JSON logic evaluation service
+ *
+ * @param returnValue
  */
 function createMockJsonLogic(returnValue = true) {
   return {
@@ -74,6 +77,8 @@ function createMockJsonLogic(returnValue = true) {
 
 /**
  * Helper: Create mock entity manager
+ *
+ * @param entityMap
  */
 function createMockEntityManager(entityMap = new Map()) {
   return {

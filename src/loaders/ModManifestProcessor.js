@@ -117,9 +117,9 @@ export class ModManifestProcessor {
    *
    * @param {string[]} requestedIds - IDs of mods requested by the game config.
    * @param {string} worldName - The name of the world being loaded.
-   * @param {Object} [options] - Optional validation options
-   * @param {boolean} [options.validateCrossReferences=false] - Whether to perform cross-reference validation
-   * @param {boolean} [options.strictMode=false] - Whether to fail on validation warnings
+   * @param {object} [options] - Optional validation options
+   * @param {boolean} [options.validateCrossReferences] - Whether to perform cross-reference validation
+   * @param {boolean} [options.strictMode] - Whether to fail on validation warnings
    * @returns {Promise<{loadedManifestsMap: Map<string, ModManifest>, finalModOrder: string[], incompatibilityCount: number, validationWarnings?: string[]}>}
    * Object containing the loaded manifests, resolved order and incompatibility count.
    * @throws {ModDependencyError|Error} Propagates validation errors.

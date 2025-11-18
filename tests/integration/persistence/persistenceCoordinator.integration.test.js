@@ -173,6 +173,17 @@ class LoadFailureHandler {
   }
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.saveHandler
+ * @param root0.loadHandler
+ * @param root0.engineInitialized
+ * @param root0.includePersistenceService
+ * @param root0.prepareBehavior
+ * @param root0.finalizeBehavior
+ * @param root0.loadFailureHandler
+ */
 function createEnvironment({
   saveHandler,
   loadHandler,

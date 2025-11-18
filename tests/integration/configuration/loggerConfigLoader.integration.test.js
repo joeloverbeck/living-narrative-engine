@@ -30,6 +30,9 @@ class RecordingSafeEventDispatcher {
   }
 }
 
+/**
+ *
+ */
 function createRecordingLogger() {
   const logs = { debug: [], info: [], warn: [], error: [] };
   return {

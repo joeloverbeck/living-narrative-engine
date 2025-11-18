@@ -156,6 +156,9 @@ class LifecycleTestController extends BaseCharacterBuilderController {
   }
 }
 
+/**
+ *
+ */
 function setupDOM() {
   document.body.innerHTML = `
     <div class="cb-app">
@@ -169,6 +172,9 @@ function setupDOM() {
   `;
 }
 
+/**
+ *
+ */
 function createControllerDependencies() {
   const logger = new ConsoleLogger('DEBUG');
   logger.setLogLevel('DEBUG');
@@ -243,6 +249,11 @@ function createControllerDependencies() {
   };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.cacheElements
+ */
 function setupController({ cacheElements = true } = {}) {
   setupDOM();
   const dependencies = createControllerDependencies();

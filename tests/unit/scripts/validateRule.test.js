@@ -4,6 +4,7 @@ const SCRIPT_PATH = '../../../validate-rule.js';
 
 /**
  * Helper to load the script with mocked dependencies.
+ *
  * @param {object} options
  * @param {boolean} options.valid - Whether the mocked Ajv validation should pass.
  * @param {Array<object>} [options.errors] - Errors to expose on the Ajv instance when validation fails.

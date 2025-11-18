@@ -41,6 +41,11 @@ describe('Coverage Blocking Performance Benchmarks', () => {
   let coverageAnalyzer;
 
   // Helper function to create large wardrobes - defined at the top level
+  /**
+   *
+   * @param entityId
+   * @param itemCount
+   */
   function createLargeWardrobe(entityId, itemCount = 50) {
     // Create entity
     const entity = entityManager.createEntity(entityId);

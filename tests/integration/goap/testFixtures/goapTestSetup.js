@@ -4,6 +4,7 @@
  * Based on pattern from aStarPlanning.integration.test.js
  */
 
+import { jest } from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import SimpleEntityManager from '../../../common/entities/simpleEntityManager.js';
 import GoapController from '../../../../src/goap/controllers/goapController.js';
@@ -36,6 +37,11 @@ const GOAP_SETUP_ERRORS = {
 
 const DEFAULT_TASK_NAMESPACE = 'test';
 
+/**
+ *
+ * @param code
+ * @param message
+ */
 function throwSetupError(code, message) {
   const error = new Error(
     `${code}: ${message} (see specs/goap-system-specs.md#Planner Interface Contract)`
@@ -44,6 +50,10 @@ function throwSetupError(code, message) {
   throw error;
 }
 
+/**
+ *
+ * @param components
+ */
 function mirrorActorComponents(components = {}) {
   const normalized = {};
   for (const [componentId, data] of Object.entries(components)) {
@@ -57,6 +67,12 @@ function mirrorActorComponents(components = {}) {
   return normalized;
 }
 
+/**
+ *
+ * @param rawTasks
+ * @param root0
+ * @param root0.logger
+ */
 function normalizeTasksPayload(rawTasks, { logger }) {
   const warnings = [];
   if (!rawTasks) {
@@ -122,6 +138,12 @@ function normalizeTasksPayload(rawTasks, { logger }) {
   return { tasks: normalized, warnings };
 }
 
+/**
+ *
+ * @param entityManager
+ * @param planningState
+ * @param options
+ */
 export async function registerPlanningStateSnapshot(entityManager, planningState, options = {}) {
   if (!planningState || typeof planningState !== 'object') {
     throw new Error('registerPlanningStateSnapshot requires a planning state object');
@@ -170,6 +192,12 @@ export async function registerPlanningStateSnapshot(entityManager, planningState
   };
 }
 
+/**
+ *
+ * @param taskDef
+ * @param warnings
+ * @param logger
+ */
 function normalizeSingleTask(taskDef, warnings, logger) {
   if (!taskDef || typeof taskDef !== 'object') {
     throwSetupError(
@@ -213,6 +241,14 @@ function normalizeSingleTask(taskDef, warnings, logger) {
   return normalizedTask;
 }
 
+/**
+ *
+ * @param effect
+ * @param taskId
+ * @param index
+ * @param warnings
+ * @param logger
+ */
 function validatePlanningEffect(effect, taskId, index, warnings, logger) {
   if (!effect || typeof effect !== 'object') {
     throwSetupError(
@@ -277,6 +313,7 @@ function validatePlanningEffect(effect, taskId, index, warnings, logger) {
 
 /**
  * Creates mock spatial index manager for scope engine
+ *
  * @returns {object} Mock spatial index manager
  */
 function createMockSpatialIndexManager() {
@@ -291,6 +328,7 @@ function createMockSpatialIndexManager() {
 
 /**
  * Creates mock data registry for GOAP goals
+ *
  * @returns {object} Mock data registry with goal storage
  */
 function createMockDataRegistry() {
@@ -324,6 +362,7 @@ function createMockDataRegistry() {
 
 /**
  * Creates mock game data repository for tasks
+ *
  * @param {object} tasksData - Task definitions by namespace
  * @returns {object} Mock game data repository
  */
@@ -349,6 +388,7 @@ function createMockGameDataRepository(tasksData = {}) {
 
 /**
  * Creates test scope AST (mock scope definition)
+ *
  * @param {string} scopeId - Scope identifier
  * @returns {object} Scope AST
  */
@@ -362,6 +402,7 @@ function createTestScopeAst(scopeId) {
 
 /**
  * Creates mock method selection service for refinement engine
+ *
  * @param {object} methodsData - Method definitions
  * @returns {object} Mock method selection service
  */
@@ -376,6 +417,7 @@ function createMockMethodSelectionService(methodsData = {}) {
 
 /**
  * Creates mock primitive action step executor
+ *
  * @returns {object} Mock step executor
  */
 function createMockPrimitiveActionStepExecutor() {
@@ -392,6 +434,7 @@ function createMockPrimitiveActionStepExecutor() {
 
 /**
  * Creates mock conditional step executor
+ *
  * @returns {object} Mock conditional executor
  */
 function createMockConditionalStepExecutor() {
@@ -407,6 +450,7 @@ function createMockConditionalStepExecutor() {
 
 /**
  * Creates complete GOAP system for integration testing
+ *
  * @param {object} config - Configuration options
  * @param {object} config.tasks - Task definitions by namespace
  * @param {object} config.methods - Refinement method definitions by task ID
@@ -565,8 +609,9 @@ export async function createGoapTestSetup(config = {}) {
   });
 
   // 8. Create GOAP Planner
+  const plannerLogger = testBed.createMockLogger();
   const planner = new GoapPlanner({
-    logger: testBed.createMockLogger(),
+    logger: plannerLogger,
     jsonLogicEvaluationService: jsonLogicService,
     gameDataRepository,
     entityManager,
@@ -756,6 +801,7 @@ export async function createGoapTestSetup(config = {}) {
     attachEventTraceProbe,
     bootstrapEventTraceProbe,
     defaultEventTraceProbe: defaultEventTraceProbeInstance,
+    plannerLogger,
     // Helper methods
     createActor,
     registerGoal,

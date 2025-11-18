@@ -15,6 +15,16 @@ import { GOAP_EVENTS } from '../../../../src/goap/events/goapEvents.js';
 import { createGoapPlannerMock } from '../../../common/mocks/createGoapPlannerMock.js';
 import { expectGoapPlannerMock } from '../../../common/mocks/expectGoapPlannerMock.js';
 
+const createDeferred = () => {
+  let resolve;
+  let reject;
+  const promise = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+};
+
 describe('GoapController - Event Dispatching (GOAPIMPL-021-08)', () => {
   let mockLogger;
   let mockGoapPlanner;
@@ -377,6 +387,67 @@ describe('GoapController - Event Dispatching (GOAPIMPL-021-08)', () => {
       expect(goalSelectedCall[1]).toHaveProperty('actorId', 'actor_1');
       expect(goalSelectedCall[1]).toHaveProperty('goalId', 'goal:test_goal');
       expect(goalSelectedCall[1]).toHaveProperty('priority', 5);
+    });
+  });
+
+  describe('Multi-actor isolation', () => {
+    it('should dispatch planning completed events for each actor even when turns overlap', async () => {
+      const actorSlow = { id: 'actor_slow' };
+      const actorFast = { id: 'actor_fast' };
+      const world = { state: {} };
+      const goal = {
+        id: 'goal:test_goal',
+        priority: 10,
+        relevance: null,
+      };
+
+      mockDataRegistry.getAll.mockReturnValue([goal]);
+      mockGoapPlanner.plan.mockReturnValue({
+        tasks: [{ taskId: 'task_1', params: {} }],
+      });
+
+      const deferred = createDeferred();
+      mockRefinementEngine.refine.mockImplementation((taskId, actorId) => {
+        if (actorId === actorSlow.id) {
+          return deferred.promise;
+        }
+        return Promise.resolve({
+          success: true,
+          methodId: 'method_1',
+          stepResults: [{ actionId: 'action_1' }],
+        });
+      });
+
+      mockDataRegistry.get.mockReturnValue({
+        id: 'method_1',
+        steps: [
+          {
+            stepType: 'primitive_action',
+            actionId: 'action_1',
+            targetBindings: {},
+          },
+        ],
+      });
+      mockParameterResolutionService.resolve.mockResolvedValue({});
+
+      const slowTurn = controller.decideTurn(actorSlow, world);
+      await controller.decideTurn(actorFast, world);
+
+      deferred.resolve({
+        success: true,
+        methodId: 'method_1',
+        stepResults: [{ actionId: 'action_1' }],
+      });
+      await slowTurn;
+
+      const planningCompletedCalls = mockEventBus.dispatch.mock.calls.filter(
+        (call) => call[0] === GOAP_EVENTS.PLANNING_COMPLETED
+      );
+
+      const actorIds = planningCompletedCalls.map((call) => call[1].actorId);
+      expect(actorIds).toEqual(
+        expect.arrayContaining([actorSlow.id, actorFast.id])
+      );
     });
   });
 });

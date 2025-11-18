@@ -17,6 +17,10 @@ const ENTITY_INSTANCE = {
   componentTypeIds: ['items:item'],
 };
 
+/**
+ *
+ * @param overrides
+ */
 function createCommonContext(overrides = {}) {
   return {
     actorEntity: { ...ACTOR_ENTITY },
@@ -27,6 +31,10 @@ function createCommonContext(overrides = {}) {
   };
 }
 
+/**
+ *
+ * @param overrides
+ */
 function createCommonDeps(overrides = {}) {
   const logicEval =
     overrides.logicEval ||

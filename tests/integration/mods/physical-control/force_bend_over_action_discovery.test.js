@@ -22,13 +22,13 @@ const SURFACE_ID = 'test:surface';
  *
  * @param {ModTestFixture} fixture - Active test fixture.
  * @param {object} [options] - Scenario configuration.
- * @param {boolean} [options.includeCloseness=true] - Whether actors start close together.
- * @param {boolean} [options.includeSurface=true] - Whether to include any bending-ready surface.
- * @param {boolean} [options.surfaceAllowsBending=true] - Whether the primary surface permits bending over.
- * @param {string} [options.surfaceLocation='room1'] - Location identifier for the surface.
- * @param {object} [options.actorComponents={}] - Additional actor components.
- * @param {object} [options.primaryComponents={}] - Additional primary target components.
- * @param {Array<object>} [options.extraSurfaces=[]] - Additional surface entity definitions.
+ * @param {boolean} [options.includeCloseness] - Whether actors start close together.
+ * @param {boolean} [options.includeSurface] - Whether to include any bending-ready surface.
+ * @param {boolean} [options.surfaceAllowsBending] - Whether the primary surface permits bending over.
+ * @param {string} [options.surfaceLocation] - Location identifier for the surface.
+ * @param {object} [options.actorComponents] - Additional actor components.
+ * @param {object} [options.primaryComponents] - Additional primary target components.
+ * @param {Array<object>} [options.extraSurfaces] - Additional surface entity definitions.
  */
 function setupScenario(
   fixture,

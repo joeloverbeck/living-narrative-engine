@@ -1,5 +1,9 @@
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 
+/**
+ *
+ * @param name
+ */
 function mockCreateClass(name) {
   return jest.fn().mockImplementation(function MockedClass(args) {
     this.__mockName = name;

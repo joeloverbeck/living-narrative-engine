@@ -10,7 +10,7 @@ import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.j
 
 /**
  * @class InventoryTestFacade
- * @extends BaseFacade
+ * @augments BaseFacade
  * @description Test facade that exercises cacheable inventory operations.
  */
 class InventoryTestFacade extends BaseFacade {
@@ -50,7 +50,7 @@ class InventoryTestFacade extends BaseFacade {
 
 /**
  * @class MovementTestFacade
- * @extends BaseFacade
+ * @augments BaseFacade
  * @description Test facade that uses resilience helpers for movement operations.
  */
 class MovementTestFacade extends BaseFacade {
@@ -71,7 +71,7 @@ class MovementTestFacade extends BaseFacade {
 
 /**
  * @class BrokenFacade
- * @extends BaseFacade
+ * @augments BaseFacade
  * @description Test facade that intentionally throws during construction.
  */
 class BrokenFacade extends BaseFacade {

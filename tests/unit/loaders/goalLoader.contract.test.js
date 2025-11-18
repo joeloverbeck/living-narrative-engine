@@ -9,6 +9,9 @@ import {
 
 const PRIMARY_SCHEMA_ID = 'schema://living-narrative-engine/goal.schema.json';
 
+/**
+ *
+ */
 function createContractLoader() {
   const config = {
     getModsBasePath: jest.fn(),

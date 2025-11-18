@@ -21,7 +21,7 @@ import { parseScopeDefinitions } from '../../src/scopeDsl/scopeDefinitionParser.
  */
 class ModReferenceExtractor {
   _logger;
-  // eslint-disable-next-line no-unused-private-class-members
+   
   _ajvValidator; // Reserved for future schema validation in MODDEPVAL-002
 
   /**
@@ -83,7 +83,7 @@ class ModReferenceExtractor {
    * Extension of existing extractReferences to include file locations
    *
    * @param {string} modPath - Path to mod directory
-   * @returns {Promise<Map<string, Array<{componentId: string, contexts: Array<Object>}>>>}
+   * @returns {Promise<Map<string, Array<{componentId: string, contexts: Array<object>}>>>}
    * References with file context information
    */
   async extractReferencesWithFileContext(modPath) {
@@ -1045,7 +1045,7 @@ class ModReferenceExtractor {
    * @param {string} modPath - Path to mod directory
    * @param {string} modId - Target mod ID to find
    * @param {string} componentId - Target component ID to find
-   * @returns {Promise<Array<Object>>} Array of context objects with file, line, column, snippet, type
+   * @returns {Promise<Array<object>>} Array of context objects with file, line, column, snippet, type
    */
   async _findReferenceContexts(modPath, modId, componentId) {
     const contexts = [];
@@ -1077,7 +1077,7 @@ class ModReferenceExtractor {
    * @private
    * @param {string} dirPath - Directory to scan
    * @param {string} targetReference - The mod:component reference to find
-   * @param {Array<Object>} contexts - Array to populate with contexts
+   * @param {Array<object>} contexts - Array to populate with contexts
    * @param {string} basePath - Base path for relative file paths
    */
   async _scanDirectoryForContext(dirPath, targetReference, contexts, basePath) {
@@ -1110,7 +1110,7 @@ class ModReferenceExtractor {
    * @private
    * @param {string} filePath - File to process
    * @param {string} targetReference - The mod:component reference to find
-   * @param {Array<Object>} contexts - Array to populate with contexts
+   * @param {Array<object>} contexts - Array to populate with contexts
    * @param {string} basePath - Base path for relative file paths
    */
   async _extractContextFromFile(filePath, targetReference, contexts, basePath) {

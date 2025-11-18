@@ -105,6 +105,10 @@ describe('entityHelpers integration coverage', () => {
     clearEntityCache();
   });
 
+  /**
+   *
+   * @param overrides
+   */
   function createRuntimeContext(overrides = {}) {
     return {
       entityManager,
@@ -117,6 +121,9 @@ describe('entityHelpers integration coverage', () => {
     };
   }
 
+  /**
+   *
+   */
   async function createActorAndItem() {
     const location = await entityManager.createEntityInstance('test:location');
     const actor = await entityManager.createEntityInstance('test:actor');

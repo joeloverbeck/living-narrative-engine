@@ -17,6 +17,10 @@ const ACTOR_TORSO_ID = `${ACTOR_ID}_torso`;
 const ACTOR_GROIN_ID = `${ACTOR_ID}_groin`;
 const ACTOR_PENIS_ID = `${ACTOR_GROIN_ID}_penis`;
 
+/**
+ *
+ * @param actorName
+ */
 function buildRuleReadyEntities(actorName = 'Nikolai') {
   const room = ModEntityScenarios.createRoom(ROOM_ID, 'Test Room');
 

@@ -6,6 +6,9 @@ import { LocationRenderer } from '../../../../src/domUI/locationRenderer.js';
 import { renderLocationLists } from '../../../../src/domUI/location/renderLocationLists.js';
 import { ACTOR_COMPONENT_ID } from '../../../../src/constants/componentIds.js';
 
+/**
+ *
+ */
 function createMockEventDispatcher() {
   const handlers = new Map();
   return {
@@ -39,6 +42,9 @@ function createMockEventDispatcher() {
   };
 }
 
+/**
+ *
+ */
 function setupDomContainer() {
   const container = document.createElement('section');
   container.id = 'location-container';
@@ -83,6 +89,11 @@ function setupDomContainer() {
   };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.testBed
+ */
 function createRenderer({ testBed }) {
   const domElements = setupDomContainer();
 

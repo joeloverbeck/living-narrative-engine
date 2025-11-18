@@ -14,6 +14,8 @@ import { createTestTask } from '../../integration/goap/testFixtures/testTaskFact
 
 /**
  * Helper to build dual-format state for GOAP planning
+ *
+ * @param actor
  */
 function buildDualFormatState(actor) {
   const state = {
@@ -64,12 +66,18 @@ function getHeapUsed() {
   return process.memoryUsage().heapUsed;
 }
 
+/**
+ *
+ * @param ms
+ */
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
  * Sample heap usage multiple times to smooth out GC noise
+ *
+ * @param options
  */
 async function measureStableHeapUsage(options = {}) {
   const {

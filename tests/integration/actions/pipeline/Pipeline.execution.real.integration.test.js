@@ -9,6 +9,7 @@ import { PipelineResult } from '../../../../src/actions/pipeline/PipelineResult.
 
 /**
  * Helper factory for creating a logger compatible with the pipeline.
+ *
  * @returns {{debug: jest.Mock, warn: jest.Mock, error: jest.Mock}}
  */
 function createLogger() {

@@ -160,15 +160,15 @@ describe('sex-vaginal-penetration:slide_penis_along_labia action discovery', () 
   /**
    * @description Builds entities for discovery scenarios with configurable positioning.
    * @param {object} [options] - Scenario configuration options.
-   * @param {boolean} [options.targetFacingAway=false] - Whether the target faces away from the actor.
-   * @param {boolean} [options.includeCloseness=true] - Whether both entities share closeness.
-   * @param {boolean} [options.coverVagina=false] - Whether clothing covers the target's vagina.
-   * @param {boolean} [options.includePenis=true] - Whether to include a penis anatomy part for the actor.
-   * @param {boolean} [options.coverPenis=false] - Whether clothing covers the actor's penis.
-   * @param {boolean} [options.actorKneeling=false] - Whether the actor kneels before the target.
-   * @param {boolean} [options.targetKneeling=false] - Whether the target kneels before the actor.
-   * @param {boolean} [options.targetSitting=false] - Whether the target is sitting on furniture.
-   * @param {boolean} [options.includeVagina=true] - Whether to include a vagina anatomy part.
+   * @param {boolean} [options.targetFacingAway] - Whether the target faces away from the actor.
+   * @param {boolean} [options.includeCloseness] - Whether both entities share closeness.
+   * @param {boolean} [options.coverVagina] - Whether clothing covers the target's vagina.
+   * @param {boolean} [options.includePenis] - Whether to include a penis anatomy part for the actor.
+   * @param {boolean} [options.coverPenis] - Whether clothing covers the actor's penis.
+   * @param {boolean} [options.actorKneeling] - Whether the actor kneels before the target.
+   * @param {boolean} [options.targetKneeling] - Whether the target kneels before the actor.
+   * @param {boolean} [options.targetSitting] - Whether the target is sitting on furniture.
+   * @param {boolean} [options.includeVagina] - Whether to include a vagina anatomy part.
    * @returns {Array<object>} Entities to load into the test environment.
    */
   function buildScenario(options = {}) {

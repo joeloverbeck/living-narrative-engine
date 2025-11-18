@@ -16,6 +16,7 @@ import { isNonBlankString } from '../../../utils/textUtils.js';
  * This is used when an entity has thoughts (and possibly notes) but no speech.
  *
  * @param {DecisionMeta} decisionMeta - Metadata from the actor decision.
+ * @param entityId
  * @returns {{entityId: string, thoughts: string, notes?: *}|null} The sanitized payload, or null if thoughts are absent/invalid.
  */
 export function buildThoughtPayload(decisionMeta, entityId) {

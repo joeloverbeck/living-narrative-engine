@@ -4,6 +4,10 @@ import NoOpLogger from '../../../src/logging/noOpLogger.js';
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ *
+ * @param config
+ */
 function createLfuCache(config = {}) {
   const logger = new NoOpLogger();
   return new UnifiedCache(

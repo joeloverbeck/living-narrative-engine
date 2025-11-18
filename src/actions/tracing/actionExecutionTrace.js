@@ -204,11 +204,7 @@ export class ActionExecutionTrace {
     // End current phase and start completion phase
     if (this.#timingEnabled && this.#phaseTimer) {
       // End whichever phase is currently active (initialization or payload_creation)
-      const currentPhases = this.#phaseTimer.getAllPhases();
-      const activePhase = currentPhases.find((p) => p.endTime === null);
-      if (activePhase) {
-        this.#phaseTimer.endPhase(activePhase.name);
-      }
+      this.#phaseTimer.endActivePhase();
       this.#phaseTimer.startPhase('completion', {
         success: Boolean(result.success),
       });

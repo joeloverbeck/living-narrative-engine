@@ -131,6 +131,7 @@ export class ValidationPipeline {
 
   /**
    * Exposes the total number of registered validators for diagnostics.
+   *
    * @returns {number} Count of validators registered with the pipeline.
    */
   getValidatorCount() {

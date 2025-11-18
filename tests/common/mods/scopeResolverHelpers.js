@@ -1086,8 +1086,8 @@ export class ScopeResolverHelpers {
    * @param {string} modId - The mod containing the scope
    * @param {string} scopeName - The scope name (without .scope extension)
    * @param {object} [options] - Configuration options
-   * @param {boolean} [options.loadConditions=true] - Whether to automatically load condition dependencies
-   * @param {number} [options.maxDepth=5] - Maximum recursion depth for transitive dependency discovery
+   * @param {boolean} [options.loadConditions] - Whether to automatically load condition dependencies
+   * @param {number} [options.maxDepth] - Maximum recursion depth for transitive dependency discovery
    * @returns {Promise<void>}
    * @throws {Error} If scope file not found, parsing fails, or referenced conditions are missing
    * @example
@@ -1097,7 +1097,6 @@ export class ScopeResolverHelpers {
    *   'sex-anal-penetration',
    *   'actors_with_exposed_asshole_accessible_from_behind'
    * );
-   *
    * @example
    * // Register a scope without loading conditions
    * await ScopeResolverHelpers.registerCustomScope(

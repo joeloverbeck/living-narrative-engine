@@ -107,6 +107,7 @@ export async function configureMinimalContainer(container, options = {}) {
 
 /**
  * Registers validation services needed by CLI tools
+ *
  * @param {AppContainer} container
  * @param {ILogger} logger
  */

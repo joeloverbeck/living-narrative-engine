@@ -29,8 +29,8 @@ import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationSe
  * - Minimal DOM element requirements
  *
  * @param {object} [options] - Configuration options
- * @param {boolean} [options.enableTracing=false] - Enable scope resolution tracing
- * @param {LogLevel} [options.logLevel=LogLevel.WARN] - Logger level for tests
+ * @param {boolean} [options.enableTracing] - Enable scope resolution tracing
+ * @param {LogLevel} [options.logLevel] - Logger level for tests
  * @returns {Promise<object>} Configured container with core services
  */
 export async function createMinimalTestContainer(options = {}) {

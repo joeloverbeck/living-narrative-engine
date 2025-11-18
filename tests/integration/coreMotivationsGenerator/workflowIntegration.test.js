@@ -227,6 +227,9 @@ describe('Core Motivations Workflow Integration', () => {
   });
 });
 
+/**
+ *
+ */
 function setupControllerDOM() {
   document.body.innerHTML = `
     <div id="empty-state"></div>
@@ -253,6 +256,13 @@ function setupControllerDOM() {
   `;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.logger
+ * @param root0.eventBus
+ * @param root0.schemaValidator
+ */
 function createControllerDependencies({ logger, eventBus, schemaValidator }) {
   const controllerLifecycleOrchestrator = new ControllerLifecycleOrchestrator({
     logger,

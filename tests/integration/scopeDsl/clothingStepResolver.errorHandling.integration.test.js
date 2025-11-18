@@ -11,6 +11,9 @@ import ScopeDslErrorHandler from '../../../src/scopeDsl/core/scopeDslErrorHandle
 import { ErrorCodes } from '../../../src/scopeDsl/constants/errorCodes.js';
 import { ScopeDslError } from '../../../src/scopeDsl/errors/scopeDslError.js';
 
+/**
+ *
+ */
 function createLogger() {
   return {
     error: jest.fn(),
@@ -36,6 +39,9 @@ describe('ClothingStepResolver error handling integration', () => {
     };
   });
 
+  /**
+   *
+   */
   function createErrorHandler() {
     const handler = new ScopeDslErrorHandler({
       logger,
@@ -45,6 +51,10 @@ describe('ClothingStepResolver error handling integration', () => {
     return handler;
   }
 
+  /**
+   *
+   * @param field
+   */
   function createNode(field = 'topmost_clothing') {
     return {
       type: 'Step',
@@ -53,6 +63,11 @@ describe('ClothingStepResolver error handling integration', () => {
     };
   }
 
+  /**
+   *
+   * @param results
+   * @param options
+   */
   function createContext(results, options = {}) {
     const { shouldThrowDuringResolve = false } = options;
 

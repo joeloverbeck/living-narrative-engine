@@ -7,8 +7,9 @@ import { ModValidationError } from './modValidationError.js';
 
 /**
  * Error thrown when file corruption is detected during mod validation
+ *
  * @class
- * @extends {ModValidationError}
+ * @augments {ModValidationError}
  */
 export class ModCorruptionError extends ModValidationError {
   /**
@@ -42,6 +43,7 @@ export class ModCorruptionError extends ModValidationError {
 
   /**
    * Attempts to detect the type of corruption based on error details
+   *
    * @private
    * @param {string} message - Error message
    * @param {object} context - Error context
@@ -68,6 +70,7 @@ export class ModCorruptionError extends ModValidationError {
   
   /**
    * Checks if partial recovery is possible
+   *
    * @private
    * @param {object} context - Error context
    * @returns {boolean} True if partial recovery might be possible
@@ -88,6 +91,7 @@ export class ModCorruptionError extends ModValidationError {
   
   /**
    * Generates a corruption report for debugging
+   *
    * @returns {object} Corruption details
    */
   generateCorruptionReport() {
@@ -103,6 +107,7 @@ export class ModCorruptionError extends ModValidationError {
   
   /**
    * Gets suggested actions for handling the corruption
+   *
    * @private
    * @returns {string[]} List of suggested actions
    */

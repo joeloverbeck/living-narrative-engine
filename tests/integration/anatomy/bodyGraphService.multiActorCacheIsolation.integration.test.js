@@ -57,6 +57,11 @@ class MinimalValidatedEventDispatcher {
   }
 }
 
+/**
+ *
+ * @param entityManager
+ * @param ids
+ */
 async function seedActorAlpha(entityManager, ids) {
   await entityManager.addComponent(ids.actorAlpha, 'anatomy:body', {
     recipeId: 'alpha:base',
@@ -119,6 +124,11 @@ async function seedActorAlpha(entityManager, ids) {
   });
 }
 
+/**
+ *
+ * @param entityManager
+ * @param ids
+ */
 async function seedActorBeta(entityManager, ids) {
   await entityManager.addComponent(ids.actorBeta, 'anatomy:body', {
     recipeId: 'beta:base',
@@ -156,6 +166,9 @@ async function seedActorBeta(entityManager, ids) {
   });
 }
 
+/**
+ *
+ */
 async function createEnvironment() {
   const logger = new RecordingLogger();
   const eventBus = new EventBus({ logger });

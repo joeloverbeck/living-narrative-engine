@@ -11,7 +11,6 @@
  *   - minLatency: Updated from Infinity (can become 0)
  *   - maxLatency: Updated from 0
  *   - avgLatency: Calculated as totalLatency/totalProcessed
- *
  * @see src/actions/tracing/traceQueueProcessor.js
  */
 

@@ -437,6 +437,9 @@ describe('Anatomy Error Recovery E2E Tests', () => {
   });
 
   describe('Cache Invalidation and Recovery Tests', () => {
+    /**
+     *
+     */
     async function generateBasicAnatomy() {
       const mockEntity = testBed.createMockEntity();
       const entityId = mockEntity.id;

@@ -77,6 +77,7 @@ class MethodSelectionService {
    * @param {IGameDataRepository} dependencies.gameDataRepository - Game data access
    * @param {IContextAssemblyService} dependencies.contextAssemblyService - Context assembly
    * @param {JsonLogicEvaluationService} dependencies.jsonLogicService - JSON Logic evaluation
+   * @param dependencies.jsonLogicEvaluationService
    * @param {ILogger} dependencies.logger - Logging service
    */
   constructor({

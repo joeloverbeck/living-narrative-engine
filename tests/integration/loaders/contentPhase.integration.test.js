@@ -19,6 +19,11 @@ import {
   ModsLoaderPhaseError,
 } from '../../../src/errors/modsLoaderPhaseError.js';
 
+/**
+ *
+ * @param pathToResponse
+ * @param ManagerClass
+ */
 function buildContentPhaseEnv(pathToResponse, ManagerClass = ContentLoadManager) {
   const logger = createMockLogger();
   const configuration = createMockConfiguration();

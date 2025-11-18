@@ -328,6 +328,44 @@ describe('GoapPlanner - State Management Helpers', () => {
 
       expect(result).toBe(false); // Coerced to boolean
     });
+
+    it('normalizes actor paths once per actor/goal and continues evaluation', () => {
+      const state = {
+        'actor:core': { health: 50 },
+      };
+
+      const goal = {
+        id: 'core:maintain_health',
+        goalState: {
+          '==': [{ var: 'actor.core.health' }, 50],
+        },
+      };
+
+      mockJsonLogicService.evaluateCondition.mockReturnValue(true);
+
+      const firstResult = planner.testGoalSatisfied(state, goal);
+      const secondResult = planner.testGoalSatisfied(state, goal);
+
+      expect(firstResult).toBe(true);
+      expect(secondResult).toBe(true);
+
+      expect(mockJsonLogicService.evaluateCondition).toHaveBeenCalledTimes(2);
+
+      const evaluationArgs = mockJsonLogicService.evaluateCondition.mock.calls.map(
+        (call) => call[0]
+      );
+      expect(evaluationArgs[0]).toEqual({
+        '==': [{ var: 'state.actor.components.core.health' }, 50],
+      });
+      expect(evaluationArgs[1]).toEqual({
+        '==': [{ var: 'state.actor.components.core.health' }, 50],
+      });
+
+      const goalPathWarns = mockLogger.warn.mock.calls.filter(([, details]) =>
+        details?.code === 'GOAP_INVALID_GOAL_PATH'
+      );
+      expect(goalPathWarns).toHaveLength(1);
+    });
   });
 
   describe('#buildEvaluationContext', () => {

@@ -12,6 +12,9 @@ import { DescriptorCoverageValidator } from '../../../../src/anatomy/validation/
 import { LoadFailureValidator } from '../../../../src/anatomy/validation/validators/LoadFailureValidator.js';
 import { RecipeUsageValidator } from '../../../../src/anatomy/validation/validators/RecipeUsageValidator.js';
 
+/**
+ *
+ */
 function createLogger() {
   return {
     info: jest.fn(),

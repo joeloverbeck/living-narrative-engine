@@ -389,6 +389,10 @@ async function detectRecipeUsageMods(recipeIds = []) {
   return Array.from(referencingMods);
 }
 
+/**
+ *
+ * @param targetPath
+ */
 async function directoryExists(targetPath) {
   try {
     const stats = await fs.stat(targetPath);
@@ -456,6 +460,12 @@ function normalizeFormat(value) {
 /**
  * @description Creates the validator and supporting services.
  * @param {object} params - Bootstrap parameters.
+ * @param params.verbose
+ * @param params.configPath
+ * @param params.overrides
+ * @param params.recipePaths
+ * @param params.inferredMods
+ * @param params.runtimeOverrides
  * @returns {Promise<{validator: RecipeValidationRunner, config: object}>} Context payload.
  */
 async function createValidationContext({
@@ -575,6 +585,10 @@ async function registerNodeFetchers(container) {
 /**
  * @description Loads mods using the configured DI container.
  * @param {object} params - Loader parameters.
+ * @param params.container
+ * @param params.requestedMods
+ * @param params.verbose
+ * @param params.logger
  * @returns {Promise<{loadFailures: object}>} Load metadata.
  */
 async function loadModsFromContainer({ container, requestedMods, verbose, logger }) {
@@ -613,6 +627,7 @@ async function loadModsFromContainer({ container, requestedMods, verbose, logger
  * @description Derives mod list from configuration and recipe paths.
  * @param {object} modConfig - Configuration mods block.
  * @param {Array<string>} recipePaths - Recipe paths provided via CLI.
+ * @param inferredMods
  * @returns {Array<string>} Ordered mod names.
  */
 function deriveMods(modConfig = {}, recipePaths = [], inferredMods = []) {

@@ -213,7 +213,7 @@ export class ScopeTestUtilities {
    * @param {object} dependencies.entityManager - Entity manager service
    * @param {object} dependencies.registry - Data registry service
    * @param {object} [options] - Additional options
-   * @param {boolean} [options.reuseDefinitions=true] - Reuse entity definitions for performance
+   * @param {boolean} [options.reuseDefinitions] - Reuse entity definitions for performance
    * @returns {Promise<Array>} Created test entities
    */
   static async createMockEntityDataset(

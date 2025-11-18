@@ -30,6 +30,9 @@ const DB_NAME = 'CharacterBuilder';
 let conceptSchemaData;
 let thematicDirectionSchemaData;
 
+/**
+ *
+ */
 function createTestLogger() {
   return {
     debug: jest.fn(),
@@ -39,6 +42,9 @@ function createTestLogger() {
   };
 }
 
+/**
+ *
+ */
 async function clearDatabase() {
   await new Promise((resolve, reject) => {
     const request = indexedDB.deleteDatabase(DB_NAME);
@@ -71,6 +77,14 @@ class FlakyCharacterDatabase extends CharacterDatabase {
   }
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.logger
+ * @param root0.schemaValidator
+ * @param root0.DatabaseClass
+ * @param root0.initialized
+ */
 async function createStorageService({
   logger,
   schemaValidator,

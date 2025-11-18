@@ -1,6 +1,9 @@
 import { BodyGraphService, LIMB_DETACHED_EVENT_ID } from '../../../src/anatomy/bodyGraphService.js';
 import { SimpleEntityManager } from '../../common/entities/index.js';
 
+/**
+ *
+ */
 function createRecordingLogger() {
   const entries = [];
   const record = (level) => (message, ...details) => {
@@ -16,6 +19,9 @@ function createRecordingLogger() {
   };
 }
 
+/**
+ *
+ */
 function createRecordingDispatcher() {
   const events = [];
   return {

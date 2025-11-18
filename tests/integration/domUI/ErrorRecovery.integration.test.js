@@ -12,12 +12,19 @@ import { AnatomyStateError } from '../../../src/errors/anatomyStateError.js';
 
 const waitForEventLoop = () => new Promise((resolve) => setTimeout(resolve, 0));
 
+/**
+ *
+ */
 function createLogger() {
   const logger = new ConsoleLogger('DEBUG');
   logger.setLogLevel('DEBUG');
   return logger;
 }
 
+/**
+ *
+ * @param options
+ */
 function createErrorRecovery(options = {}) {
   const logger = createLogger();
   const eventDispatcher = new EventBus({ logger });

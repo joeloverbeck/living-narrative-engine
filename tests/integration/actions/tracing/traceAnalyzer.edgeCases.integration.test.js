@@ -9,7 +9,6 @@ import Span from '../../../../src/actions/tracing/span.js';
 
 /**
  * @description Advances the mocked performance clock by the specified amount.
- *
  * @param {Clock} clock
  * @param {number} ms
  * @returns {void}
@@ -25,7 +24,6 @@ function advanceTime(clock, ms) {
 class SyntheticTrace {
   /**
    * @description Creates a synthetic structured trace implementation for testing.
-   *
    * @param {Span[]} spans
    * @param {string[]} criticalPath
    * @returns {void}
@@ -37,7 +35,6 @@ class SyntheticTrace {
 
   /**
    * @description Returns the spans available in this synthetic trace.
-   *
    * @returns {Span[]}
    */
   getSpans() {
@@ -46,7 +43,6 @@ class SyntheticTrace {
 
   /**
    * @description Provides a minimal hierarchical view for dependency validation.
-   *
    * @returns {{ spans: Span[] }}
    */
   getHierarchicalView() {
@@ -55,7 +51,6 @@ class SyntheticTrace {
 
   /**
    * @description Supplies the precomputed critical path operations for this trace.
-   *
    * @returns {string[]}
    */
   getCriticalPath() {

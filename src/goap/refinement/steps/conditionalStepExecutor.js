@@ -44,6 +44,7 @@ class ConditionalStepExecutor {
    * @param {object} dependencies.primitiveActionStepExecutor - Executes primitive action steps
    * @param {object} dependencies.conditionalStepExecutor - Self-reference for nested conditionals
    * @param {object} dependencies.jsonLogicService - Evaluates JSON Logic expressions
+   * @param dependencies.jsonLogicEvaluationService
    * @param {object} dependencies.logger - Logger instance
    */
   constructor({

@@ -46,6 +46,10 @@ const BASE_CONFIG = Object.freeze({
 
 const GAME_SUMMARY = 'The scout studies the cavern before reporting back.';
 
+/**
+ *
+ * @param loggerOverrides
+ */
 function createServerEnvironment(loggerOverrides = {}) {
   const envLogger = createEnhancedMockLogger(loggerOverrides);
   return {

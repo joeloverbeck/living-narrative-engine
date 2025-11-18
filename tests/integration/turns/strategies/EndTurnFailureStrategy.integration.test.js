@@ -8,6 +8,9 @@ import { ServiceSetup } from '../../../../src/utils/serviceInitializerUtils.js';
 import { requireContextActor } from '../../../../src/turns/strategies/strategyHelpers.js';
 
 describe('EndTurnFailureStrategy integration', () => {
+  /**
+   *
+   */
   function createActor() {
     const definition = new EntityDefinition('integration:actor', {
       description: 'Integration actor',
@@ -19,6 +22,9 @@ describe('EndTurnFailureStrategy integration', () => {
     return new Entity(instance);
   }
 
+  /**
+   *
+   */
   function createRecordingLogger() {
     const entries = {
       debug: [],
@@ -37,6 +43,10 @@ describe('EndTurnFailureStrategy integration', () => {
     return { logger, entries };
   }
 
+  /**
+   *
+   * @param serviceName
+   */
   function createTurnContext(serviceName = 'EndTurnFailureStrategyIntegration') {
     const actor = createActor();
     const { logger: baseLogger, entries } = createRecordingLogger();

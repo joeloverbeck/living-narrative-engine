@@ -25,7 +25,8 @@ describe('TurnOrderService - addEntity queue failure handling', () => {
   let mockLogger;
   /** @type {TurnOrderService} */
   let service;
-  /** @type {{
+  /**
+   * @type {{
    *   add: jest.Mock;
    *   clear: jest.Mock;
    *   peek: jest.Mock;
@@ -34,7 +35,7 @@ describe('TurnOrderService - addEntity queue failure handling', () => {
    *   getNext: jest.Mock;
    *   remove: jest.Mock;
    *   size: jest.Mock;
-   * }} */
+    }} */
   let mockQueueInstance;
   const initialEntities = [{ id: 'alpha' }];
 

@@ -8,6 +8,7 @@ import { ModEntityBuilder } from '../ModEntityBuilder.js';
 
 /**
  * Identifier for the pull head to clothed crotch action.
+ *
  * @type {string}
  */
 export const PULL_HEAD_TO_CLOTHED_CROTCH_ACTION_ID =
@@ -15,24 +16,28 @@ export const PULL_HEAD_TO_CLOTHED_CROTCH_ACTION_ID =
 
 /**
  * Default actor identifier for clothed crotch teasing scenarios.
+ *
  * @type {string}
  */
 export const PULL_HEAD_TO_CLOTHED_CROTCH_ACTOR_ID = 'dante';
 
 /**
  * Default primary partner identifier for clothed crotch teasing scenarios.
+ *
  * @type {string}
  */
 export const PULL_HEAD_TO_CLOTHED_CROTCH_PRIMARY_ID = 'mira';
 
 /**
  * Default room identifier used for seated teasing scenarios.
+ *
  * @type {string}
  */
 export const PULL_HEAD_TO_CLOTHED_CROTCH_ROOM_ID = 'velvet_lounge';
 
 /**
  * Default furniture identifier for the shared seat.
+ *
  * @type {string}
  */
 export const PULL_HEAD_TO_CLOTHED_CROTCH_FURNITURE_ID = 'velvet_loveseat';

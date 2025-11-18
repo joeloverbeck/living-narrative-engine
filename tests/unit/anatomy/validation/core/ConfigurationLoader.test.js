@@ -6,6 +6,9 @@ import ConfigurationLoader from '../../../../../src/anatomy/validation/core/Conf
 
 const SCHEMA_SUCCESS = { isValid: true, errors: [] };
 
+/**
+ *
+ */
 function createLoggerMock() {
   return {
     info: jest.fn(),

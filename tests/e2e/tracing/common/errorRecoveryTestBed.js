@@ -73,6 +73,8 @@ export class ErrorRecoveryTestBed {
 
   /**
    * Initialize the error recovery test bed
+   *
+   * @param customConfig
    */
   async initialize(customConfig = {}) {
     // Always merge custom config, even if already initialized
@@ -127,6 +129,7 @@ export class ErrorRecoveryTestBed {
 
   /**
    * Initialize error recovery components
+   *
    * @private
    */
   #initializeErrorComponents() {
@@ -161,6 +164,7 @@ export class ErrorRecoveryTestBed {
 
   /**
    * Initialize trace components
+   *
    * @private
    */
   #initializeTraceComponents() {
@@ -171,6 +175,7 @@ export class ErrorRecoveryTestBed {
 
   /**
    * Setup error injection capabilities
+   *
    * @private
    */
   #setupErrorInjection() {
@@ -211,6 +216,7 @@ export class ErrorRecoveryTestBed {
 
   /**
    * Setup monitoring and tracking
+   *
    * @private
    */
   #setupMonitoring() {
@@ -283,6 +289,9 @@ export class ErrorRecoveryTestBed {
 
   /**
    * Create a resilient wrapper for a service
+   *
+   * @param serviceName
+   * @param service
    */
   createResilientService(serviceName, service) {
     const wrapper = new ResilientServiceWrapper({
@@ -298,6 +307,9 @@ export class ErrorRecoveryTestBed {
 
   /**
    * Execute an action with error recovery
+   *
+   * @param action
+   * @param context
    */
   async executeActionWithRecovery(action, context = {}) {
     // Reduced timeout for E2E tests - faster failure detection
@@ -310,6 +322,9 @@ export class ErrorRecoveryTestBed {
 
   /**
    * Internal implementation without timeout wrapper
+   *
+   * @param action
+   * @param context
    * @private
    */
   async #executeActionWithRecoveryInternal(action, context = {}) {
@@ -398,6 +413,9 @@ export class ErrorRecoveryTestBed {
 
   /**
    * Simulate an error storm
+   *
+   * @param errors
+   * @param delayBetween
    */
   async simulateErrorStorm(errors, delayBetween = 0) {
     // Optimized timeout for E2E tests - much faster execution
@@ -411,6 +429,9 @@ export class ErrorRecoveryTestBed {
 
   /**
    * Internal error storm simulation without timeout wrapper
+   *
+   * @param errors
+   * @param delayBetween
    * @private
    */
   async #simulateErrorStormInternal(errors, delayBetween) {
@@ -443,6 +464,8 @@ export class ErrorRecoveryTestBed {
 
   /**
    * Check if circuit breaker is open for a component
+   *
+   * @param componentName
    */
   isCircuitBreakerOpen(componentName) {
     return this.recoveryManager.isCircuitOpen(componentName);
@@ -450,6 +473,8 @@ export class ErrorRecoveryTestBed {
 
   /**
    * Check if component is disabled
+   *
+   * @param componentName
    */
   isComponentDisabled(componentName) {
     return this.errorHandler.shouldDisableComponent(componentName);
@@ -506,6 +531,8 @@ export class ErrorRecoveryTestBed {
 
   /**
    * Calculate average of an array of numbers
+   *
+   * @param numbers
    * @private
    */
   #calculateAverage(numbers) {
@@ -515,6 +542,9 @@ export class ErrorRecoveryTestBed {
 
   /**
    * Wait for circuit breaker to reset
+   *
+   * @param componentName
+   * @param maxWait
    */
   async waitForCircuitBreakerReset(componentName, maxWait = 5000) {
     // Add timeout protection to prevent infinite waiting
@@ -526,6 +556,9 @@ export class ErrorRecoveryTestBed {
 
   /**
    * Internal circuit breaker reset waiting without timeout wrapper
+   *
+   * @param componentName
+   * @param maxWait
    * @private
    */
   async #waitForCircuitBreakerResetInternal(componentName, maxWait) {
@@ -543,6 +576,8 @@ export class ErrorRecoveryTestBed {
 
   /**
    * Jest-compatible delay implementation optimized for E2E tests
+   *
+   * @param ms
    * @private
    */
   #waitForDelay(ms) {
@@ -580,6 +615,9 @@ export class ErrorRecoveryTestBed {
 
   /**
    * Add metric with bounds to prevent memory leaks
+   *
+   * @param metricName
+   * @param value
    * @private
    */
   #addBoundedMetric(metricName, value) {
@@ -597,6 +635,7 @@ export class ErrorRecoveryTestBed {
 
   /**
    * Clear any pending timers to prevent hangs
+   *
    * @private
    */
   #clearPendingTimers() {
@@ -606,6 +645,9 @@ export class ErrorRecoveryTestBed {
 
   /**
    * Wrap a promise with a timeout to prevent hanging
+   *
+   * @param promise
+   * @param timeoutMs
    * @private
    */
   #withTimeout(promise, timeoutMs) {

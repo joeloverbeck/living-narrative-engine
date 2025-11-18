@@ -148,6 +148,9 @@ class StubSchemaValidator {
   }
 }
 
+/**
+ *
+ */
 function createDispatcherEnvironment() {
   const logger = new RecordingLogger();
   const registry = new StubRegistry();
@@ -180,6 +183,10 @@ function createDispatcherEnvironment() {
   };
 }
 
+/**
+ *
+ * @param responder
+ */
 async function startServer(responder) {
   const requests = [];
   let callIndex = 0;
@@ -216,6 +223,11 @@ async function startServer(responder) {
   };
 }
 
+/**
+ *
+ * @param url
+ * @param options
+ */
 function nodeFetch(url, options = {}) {
   const target = new URL(url);
   const { method = 'GET', headers = {}, body } = options;

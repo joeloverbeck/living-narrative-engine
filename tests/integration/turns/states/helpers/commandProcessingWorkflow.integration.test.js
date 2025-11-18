@@ -288,6 +288,14 @@ class StateChangingDirectiveStrategy extends EndTurnSuccessStrategy {
 
 const createActor = () => ({ id: 'actor-1', type: 'test:actor' });
 
+/**
+ *
+ * @param root0
+ * @param root0.logger
+ * @param root0.dispatcher
+ * @param root0.onEndTurn
+ * @param root0.actor
+ */
 function createTurnContextEnvironment({
   logger,
   dispatcher,
@@ -335,6 +343,19 @@ describe('CommandProcessingWorkflow integration', () => {
     jest.restoreAllMocks();
   });
 
+  /**
+   *
+   * @param root0
+   * @param root0.commandProcessorImpl
+   * @param root0.interpreterImpl
+   * @param root0.strategyMap
+   * @param root0.commandDispatcher
+   * @param root0.resultInterpreter
+   * @param root0.directiveExecutor
+   * @param root0.mutateHandler
+   * @param root0.exceptionHandler
+   * @param root0.useDefaultExceptionHandler
+   */
   function buildWorkflow({
     commandProcessorImpl,
     interpreterImpl,

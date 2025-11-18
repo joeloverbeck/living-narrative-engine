@@ -93,6 +93,12 @@ const createEventDispatcher = () => ({
   dispatch: jest.fn().mockResolvedValue(true),
 });
 
+/**
+ *
+ * @param root0
+ * @param root0.useCustomQueryCache
+ * @param root0.autoBuildCache
+ */
 async function createBodyGraphFixture({
   useCustomQueryCache = false,
   autoBuildCache = true,

@@ -262,7 +262,7 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
     const performanceStrategy = recoveryStrategyManager.registerStrategy.mock.calls.find(
       ([name]) => name === 'PerformanceError'
     )[1];
-    const performanceFallback = performanceStrategy.fallback(new Error('perf')); // eslint-disable-line new-cap
+    const performanceFallback = performanceStrategy.fallback(new Error('perf'));  
     expect(performanceFallback).toEqual({ totalOperations: 0, averageTime: 0, maxTime: 0 });
 
     const circuitStrategy = recoveryStrategyManager.registerStrategy.mock.calls.find(

@@ -11,6 +11,9 @@ import pullPenisOutOfVaginaAction from '../../../../data/mods/sex-vaginal-penetr
 describe('sex-vaginal-penetration:pull_penis_out_of_vagina - Action Discovery', () => {
   let testFixture;
 
+  /**
+   *
+   */
   function configureActionDiscovery() {
     testFixture.testEnv.actionIndex.buildIndex([pullPenisOutOfVaginaAction]);
   }

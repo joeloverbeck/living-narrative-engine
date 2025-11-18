@@ -325,7 +325,7 @@ describe('Game Loading Batch Mode Integration', () => {
       expect(batchModeCall[1].context).toBe('game-initialization');
     });
 
-    it('should properly coordinate with existing batch operations', () => {
+    it('should properly coordinate with existing batch operations', async () => {
       // This test verifies that SafeErrorLogger's withGameLoadingMode
       // works correctly for coordinating batch mode across operations
 
@@ -348,7 +348,7 @@ describe('Game Loading Batch Mode Integration', () => {
       );
 
       // Assert
-      expect(promise).resolves.toBe('success');
+      await expect(promise).resolves.toBe('success');
       expect(mockSafeEventDispatcher.setBatchMode).toHaveBeenCalledWith(true, {
         maxRecursionDepth: 25,
         maxGlobalRecursion: 200,

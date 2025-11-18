@@ -44,9 +44,9 @@ export class CacheInvalidationManager extends BaseService {
    * @param {ILogger} deps.logger
    * @param {IValidatedEventDispatcher} deps.validatedEventDispatcher
    * @param {object} [config] - Invalidation configuration
-   * @param {boolean} [config.enableDependencyTracking=true] - Enable dependency-based invalidation
-   * @param {boolean} [config.enableEventIntegration=true] - Enable event bus integration
-   * @param {number} [config.batchInvalidationDelay=100] - Delay for batching invalidations (ms)
+   * @param {boolean} [config.enableDependencyTracking] - Enable dependency-based invalidation
+   * @param {boolean} [config.enableEventIntegration] - Enable event bus integration
+   * @param {number} [config.batchInvalidationDelay] - Delay for batching invalidations (ms)
    */
   constructor({ logger, validatedEventDispatcher }, config = {}) {
     super();
@@ -123,9 +123,8 @@ export class CacheInvalidationManager extends BaseService {
 
   /**
    * @description Emit an event to any listeners registered through the manager
-   *
    * @param {string} eventType - Event type to emit
-   * @param {object} [event={}] - Event payload wrapper
+   * @param {object} [event] - Event payload wrapper
    * @returns {number} Number of handlers invoked
    */
   emitEvent(eventType, event = {}) {

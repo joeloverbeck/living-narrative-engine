@@ -48,6 +48,9 @@ class NoopSchemaValidator {
   }
 }
 
+/**
+ *
+ */
 function createDispatcher() {
   const logger = new TestLogger();
   const eventBus = new EventBus({ logger });

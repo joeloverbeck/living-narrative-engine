@@ -19,8 +19,9 @@ const ACTION_ID = 'seduction:grab_crotch_draw_attention';
  *
  * @param {ModTestFixture} fixture - Active mod test fixture.
  * @param {object} options - Scenario options.
- * @param {boolean} [options.includePenis=true] - Whether the actor should include a penis anatomy part.
- * @param {boolean} [options.includeTorsoLowerClothing=true] - Whether the actor should wear clothing in the torso_lower slot.
+ * @param {boolean} [options.includePenis] - Whether the actor should include a penis anatomy part.
+ * @param {boolean} [options.includeTorsoLowerClothing] - Whether the actor should wear clothing in the torso_lower slot.
+ * @param options.includeHugging
  * @returns {{ actorId: string }} Actor identifiers for discovery checks.
  */
 function loadScenario(

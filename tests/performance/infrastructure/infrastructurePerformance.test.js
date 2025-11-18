@@ -65,6 +65,7 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
 
   /**
    * Performance measurement utility
+   *
    * @param {Function} fn - Function to measure
    * @param {string} operation - Operation name for logging
    * @returns {Promise<{result: any, duration: number}>}
@@ -80,9 +81,10 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
 
   /**
    * Performance test wrapper with statistical analysis
+   *
    * @param {Function} fn - Function to test
-   * @param {Object} options - Test options
-   * @returns {Promise<Object>} Performance statistics
+   * @param {object} options - Test options
+   * @returns {Promise<object>} Performance statistics
    */
   async function performanceTest(fn, options = {}) {
     const {
@@ -139,6 +141,13 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
     id: 'test:mock_condition',
   };
 
+  /**
+   *
+   * @param root0
+   * @param root0.ruleContent
+   * @param root0.conditionContent
+   * @param root0.failInitialRuleReads
+   */
   function configureMockModFiles({
     ruleContent = defaultRuleContent,
     conditionContent = defaultConditionContent,

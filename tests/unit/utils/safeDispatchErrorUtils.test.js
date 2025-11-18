@@ -287,6 +287,9 @@ describe('additional coverage', () => {
 
   it('uses the function name when normalizing callable diagnostics', async () => {
     const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+    /**
+     *
+     */
     function diagnosticProbe() {}
 
     await safeDispatchError(dispatcher, 'function detail', diagnosticProbe);

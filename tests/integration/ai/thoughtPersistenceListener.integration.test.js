@@ -42,6 +42,10 @@ describe('ThoughtPersistenceListener integration with real services', () => {
     jest.restoreAllMocks();
   });
 
+  /**
+   *
+   * @param overrides
+   */
   async function createActor(overrides = {}) {
     return await testBed.createActorEntity({
       instanceId: ACTOR_ID,

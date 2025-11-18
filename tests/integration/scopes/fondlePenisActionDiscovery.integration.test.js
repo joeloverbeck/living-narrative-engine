@@ -246,6 +246,7 @@ describe('Fondle Penis Action Discovery Integration Tests', () => {
     /**
      *
      * @param targetClothingConfig
+     * @param actorAdditionalComponents
      */
     function setupEntities(
       targetClothingConfig = {},

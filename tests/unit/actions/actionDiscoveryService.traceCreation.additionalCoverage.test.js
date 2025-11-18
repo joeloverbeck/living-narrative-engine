@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
 
+/**
+ *
+ */
 function createLogger() {
   return {
     debug: jest.fn(),
@@ -10,6 +13,10 @@ function createLogger() {
   };
 }
 
+/**
+ *
+ * @param overrides
+ */
 function createDependencies(overrides = {}) {
   const logger = overrides.logger ?? createLogger();
   const entityManager =

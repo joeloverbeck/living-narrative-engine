@@ -2,6 +2,10 @@ import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals
 import TargetResolutionResultBuilder from '../../../../../../src/actions/pipeline/services/implementations/TargetResolutionResultBuilder.js';
 import { InvalidArgumentError } from '../../../../../../src/errors/invalidArgumentError.js';
 
+/**
+ *
+ * @param overrides
+ */
 function createMockContext(overrides = {}) {
   return {
     actor: { id: 'actor-1', name: 'Test Actor' },
@@ -11,6 +15,10 @@ function createMockContext(overrides = {}) {
   };
 }
 
+/**
+ *
+ * @param overrides
+ */
 function createMockActionDef(overrides = {}) {
   return {
     id: 'test:action',
@@ -22,6 +30,10 @@ function createMockActionDef(overrides = {}) {
   };
 }
 
+/**
+ *
+ * @param overrides
+ */
 function createMockResolvedTargets(overrides = {}) {
   const base = {
     primary: [
@@ -34,17 +46,27 @@ function createMockResolvedTargets(overrides = {}) {
   return { ...base, ...overrides };
 }
 
+/**
+ *
+ * @param overrides
+ */
 function createMockTargetContexts(overrides = []) {
   const base = [{ targetKey: 'primary', candidates: ['target-1', 'target-2'] }];
   return overrides.length > 0 ? overrides : base;
 }
 
+/**
+ *
+ */
 function createMockEntityManager() {
   return {
     getEntityInstance: jest.fn((id) => ({ id, name: `Entity ${id}` })),
   };
 }
 
+/**
+ *
+ */
 function createMockLogger() {
   return {
     info: jest.fn(),

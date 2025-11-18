@@ -73,6 +73,10 @@ class TestOpenRouterStrategy extends BaseOpenRouterStrategy {
   }
 }
 
+/**
+ *
+ * @param loggerOverrides
+ */
 function createServerEnvironment(loggerOverrides = {}) {
   const envLogger = createEnhancedMockLogger(loggerOverrides);
   return {
@@ -85,6 +89,10 @@ function createServerEnvironment(loggerOverrides = {}) {
   };
 }
 
+/**
+ *
+ * @param proxyUrl
+ */
 function createClientEnvironment(proxyUrl = 'https://proxy.lne.test/llm') {
   const envLogger = createEnhancedMockLogger();
   return {

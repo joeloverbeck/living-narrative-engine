@@ -5,7 +5,6 @@
  *
  * Tests simulate LLM behavior to validate prompt effectiveness in achieving >95%
  * categorization accuracy, particularly for temporal and epistemic distinctions.
- *
  * @see data/prompts/corePromptText.json
  * @see src/constants/subjectTypes.js
  * @see workflows/NOTARCENH-002-enhance-llm-prompt-instructions.md

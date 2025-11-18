@@ -272,6 +272,7 @@ export default class MonitoringCoordinator {
 
   /**
    * Sets up bi-directional error integration.
+   *
    * @private
    */
   #setupErrorIntegration() {
@@ -314,6 +315,7 @@ export default class MonitoringCoordinator {
 
   /**
    * Tracks error metrics.
+   *
    * @private
    * @param {object} errorInfo - Error information
    */
@@ -874,6 +876,7 @@ export default class MonitoringCoordinator {
 
   /**
    * Calculates overall system health.
+   *
    * @private
    * @param {object} monitoringStats - Base monitoring statistics
    * @param {object} errorStats - Error statistics

@@ -107,6 +107,9 @@ class InstrumentedEntityManager {
   }
 }
 
+/**
+ *
+ */
 function createEntityManagerWithHumanoid() {
   const manager = new InstrumentedEntityManager();
 
@@ -155,6 +158,11 @@ function createEntityManagerWithHumanoid() {
   return manager;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.useCustomQueryCache
+ */
 function createServiceEnvironment({ useCustomQueryCache = false } = {}) {
   const entityManager = createEntityManagerWithHumanoid();
   const logger = new RecordingLogger();

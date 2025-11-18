@@ -191,6 +191,9 @@ class ConfigurablePersistenceService {
   }
 }
 
+/**
+ *
+ */
 function createLoadAdapterEnvironment() {
   const container = new AppContainer();
   const logger = new RecordingLogger();

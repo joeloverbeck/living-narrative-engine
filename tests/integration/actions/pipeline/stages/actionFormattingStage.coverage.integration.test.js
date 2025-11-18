@@ -64,6 +64,9 @@ class TestActionIndex {
   }
 }
 
+/**
+ *
+ */
 function createEntityManager() {
   return new SimpleEntityManager([
     {
@@ -82,6 +85,9 @@ function createEntityManager() {
   ]);
 }
 
+/**
+ *
+ */
 function createStageFixture() {
   const logger = new TestLogger();
   const entityManager = createEntityManager();
@@ -117,6 +123,11 @@ function createStageFixture() {
   return { stage, logger, entityManager };
 }
 
+/**
+ *
+ * @param id
+ * @param overrides
+ */
 function createActionDefinition(id, overrides = {}) {
   const base = {
     id,
@@ -135,6 +146,12 @@ function createActionDefinition(id, overrides = {}) {
   return { ...base, ...overrides };
 }
 
+/**
+ *
+ * @param id
+ * @param root0
+ * @param root0.visual
+ */
 function createActionWithTargets(id, { visual } = {}) {
   const actionDef = createActionDefinition(id, { visual });
   return {

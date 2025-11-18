@@ -70,12 +70,23 @@ class FileSystemDataFetcher {
   }
 }
 
+/**
+ *
+ * @param baseDir
+ * @param segments
+ * @param filename
+ * @param data
+ */
 function writeJsonFile(baseDir, segments, filename, data) {
   const targetDir = path.join(baseDir, ...segments);
   fs.mkdirSync(targetDir, { recursive: true });
   fs.writeFileSync(path.join(targetDir, filename), JSON.stringify(data, null, 2));
 }
 
+/**
+ *
+ * @param baseDir
+ */
 async function createTestEnvironment(baseDir) {
   const container = new AppContainer();
   const logger = new TestLogger();

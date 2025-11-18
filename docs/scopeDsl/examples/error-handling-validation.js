@@ -15,6 +15,12 @@ import { ErrorCodes } from '../../../src/scopeDsl/constants/errorCodes.js';
  *
  * This resolver demonstrates various validation techniques with appropriate
  * error codes and messages for different validation failures.
+ *
+ * @param root0
+ * @param root0.logger
+ * @param root0.errorHandler
+ * @param root0.entityManager
+ * @param root0.componentRegistry
  */
 export default function createValidationResolver({
   logger,
@@ -43,6 +49,9 @@ export default function createValidationResolver({
 
   /**
    * Validate entity exists and has required structure
+   *
+   * @param entityId
+   * @param ctx
    */
   function validateEntity(entityId, ctx) {
     // Check entity ID format
@@ -78,6 +87,9 @@ export default function createValidationResolver({
 
   /**
    * Validate component ID format and existence
+   *
+   * @param componentId
+   * @param ctx
    */
   function validateComponentId(componentId, ctx) {
     // Check format (must be namespace:component)
@@ -112,6 +124,9 @@ export default function createValidationResolver({
 
   /**
    * Validate node structure for resolution
+   *
+   * @param node
+   * @param ctx
    */
   function validateNode(node, ctx) {
     // Node must exist
@@ -195,6 +210,8 @@ export default function createValidationResolver({
 
   /**
    * Validate resolution context
+   *
+   * @param ctx
    */
   function validateContext(ctx) {
     // Must have context object
@@ -276,6 +293,10 @@ export default function createValidationResolver({
 
   /**
    * Validate data types and ranges
+   *
+   * @param data
+   * @param schema
+   * @param ctx
    */
   function validateData(data, schema, ctx) {
     // Basic type validation

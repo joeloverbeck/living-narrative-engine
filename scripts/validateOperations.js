@@ -139,6 +139,8 @@ function scanOperationSchemas() {
 
 /**
  * Check that all schemas are referenced in operation.schema.json
+ *
+ * @param operations
  */
 function checkSchemaReferences(operations) {
   try {
@@ -176,6 +178,8 @@ function checkSchemaReferences(operations) {
 
 /**
  * Check that all operation types are in KNOWN_OPERATION_TYPES whitelist
+ *
+ * @param operations
  */
 function checkPreValidationWhitelist(operations) {
   try {
@@ -219,6 +223,8 @@ function checkPreValidationWhitelist(operations) {
 
 /**
  * Check that all operations have DI tokens defined
+ *
+ * @param operations
  */
 function checkDITokens(operations) {
   try {
@@ -262,6 +268,8 @@ function checkDITokens(operations) {
 
 /**
  * Check that all handlers are registered in handlerFactories array
+ *
+ * @param operations
  */
 function checkHandlerRegistrations(operations) {
   try {
@@ -311,6 +319,8 @@ function checkHandlerRegistrations(operations) {
 
 /**
  * Check that all operations are mapped to tokens in interpreterRegistrations.js
+ *
+ * @param operations
  */
 function checkOperationMappings(operations) {
   try {
@@ -367,6 +377,8 @@ function checkOperationMappings(operations) {
 
 /**
  * Check that all handler files exist
+ *
+ * @param operations
  */
 function checkHandlerFiles(operations) {
   let missingFiles = 0;
@@ -397,6 +409,8 @@ function checkHandlerFiles(operations) {
 
 /**
  * Check naming consistency across all files
+ *
+ * @param operations
  */
 function checkNamingConsistency(operations) {
   let inconsistencies = 0;
@@ -443,6 +457,8 @@ function checkNamingConsistency(operations) {
 /**
  * Convert operation type to token name
  * IMPORTANT: Operation handler tokens do NOT use "I" prefix (unlike service interfaces)
+ *
+ * @param operationType
  * @example 'DRINK_FROM' -> 'DrinkFromHandler'
  */
 function toTokenName(operationType) {
@@ -454,6 +470,8 @@ function toTokenName(operationType) {
 
 /**
  * Convert operation type to handler file name
+ *
+ * @param operationType
  * @example 'DRINK_FROM' -> 'drinkFromHandler.js'
  */
 function toHandlerFileName(operationType) {
@@ -465,6 +483,8 @@ function toHandlerFileName(operationType) {
 
 /**
  * Convert operation type to schema file name
+ *
+ * @param operationType
  * @example 'DRINK_FROM' -> 'drinkFrom.schema.json'
  */
 function toSchemaFileName(operationType) {

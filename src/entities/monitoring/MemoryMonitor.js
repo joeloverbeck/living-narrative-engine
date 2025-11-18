@@ -65,13 +65,13 @@ export default class MemoryMonitor extends BaseService {
    * @param {object} deps - Dependencies
    * @param {ILogger} deps.logger - Logger instance
    * @param {IEventBus} deps.eventBus - Event bus for dispatching alerts
-   * @param {boolean} [deps.enabled=true] - Whether monitoring is enabled
-   * @param {number} [deps.heapWarning=0.7] - Heap warning threshold (70%)
-   * @param {number} [deps.heapCritical=0.85] - Heap critical threshold (85%)
+   * @param {boolean} [deps.enabled] - Whether monitoring is enabled
+   * @param {number} [deps.heapWarning] - Heap warning threshold (70%)
+   * @param {number} [deps.heapCritical] - Heap critical threshold (85%)
    * @param {number} [deps.rssWarning] - RSS warning threshold in bytes
    * @param {number} [deps.rssCritical] - RSS critical threshold in bytes
-   * @param {number} [deps.samplingInterval=5000] - Sampling interval in ms
-   * @param {number} [deps.maxHistorySize=1000] - Maximum history entries
+   * @param {number} [deps.samplingInterval] - Sampling interval in ms
+   * @param {number} [deps.maxHistorySize] - Maximum history entries
    * @param {object} [deps.leakDetectionConfig] - Leak detection configuration
    */
   constructor({
@@ -142,6 +142,7 @@ export default class MemoryMonitor extends BaseService {
 
   /**
    * Validate threshold configuration
+   *
    * @private
    */
   #validateThresholds() {
@@ -227,6 +228,7 @@ export default class MemoryMonitor extends BaseService {
 
   /**
    * Take a memory snapshot
+   *
    * @private
    */
   #takeSnapshot() {
@@ -248,6 +250,7 @@ export default class MemoryMonitor extends BaseService {
 
   /**
    * Get current memory usage (browser-compatible)
+   *
    * @private
    * @returns {MemorySnapshot}
    */
@@ -299,6 +302,7 @@ export default class MemoryMonitor extends BaseService {
 
   /**
    * Check memory thresholds and trigger alerts
+   *
    * @private
    */
   #checkThresholds() {
@@ -362,6 +366,10 @@ export default class MemoryMonitor extends BaseService {
 
   /**
    * Trigger a memory alert
+   *
+   * @param level
+   * @param type
+   * @param value
    * @private
    */
   #triggerAlert(level, type, value) {
@@ -399,6 +407,7 @@ export default class MemoryMonitor extends BaseService {
 
   /**
    * Check for memory leaks
+   *
    * @private
    */
   #checkForLeaks() {
@@ -426,6 +435,7 @@ export default class MemoryMonitor extends BaseService {
 
   /**
    * Get current memory usage
+   *
    * @returns {MemorySnapshot|null}
    */
   getCurrentUsage() {
@@ -434,6 +444,7 @@ export default class MemoryMonitor extends BaseService {
 
   /**
    * Get memory history
+   *
    * @param {number} [duration] - Duration in milliseconds to retrieve
    * @returns {MemorySnapshot[]}
    */
@@ -448,6 +459,7 @@ export default class MemoryMonitor extends BaseService {
 
   /**
    * Register a threshold alert handler
+   *
    * @param {string} level - Alert level (warning, critical, leak)
    * @param {Function} handler - Handler function
    */
@@ -466,7 +478,8 @@ export default class MemoryMonitor extends BaseService {
 
   /**
    * Detect memory leak based on growth patterns
-   * @param {string} [sensitivity='medium'] - Detection sensitivity
+   *
+   * @param {string} [sensitivity] - Detection sensitivity
    * @returns {LeakDetectionResult}
    */
   detectMemoryLeak(sensitivity) {
@@ -555,6 +568,7 @@ export default class MemoryMonitor extends BaseService {
 
   /**
    * Analyze memory growth patterns
+   *
    * @returns {object} Growth analysis
    */
   analyzeGrowthPattern() {
@@ -603,6 +617,7 @@ export default class MemoryMonitor extends BaseService {
 
   /**
    * Predict time until out of memory
+   *
    * @returns {number|null} Minutes until OOM, or null if not applicable
    */
   predictOutOfMemory() {
@@ -627,6 +642,7 @@ export default class MemoryMonitor extends BaseService {
 
   /**
    * Get current memory pressure level
+   *
    * @returns {string} Pressure level (normal, warning, critical)
    */
   getPressureLevel() {
@@ -635,6 +651,7 @@ export default class MemoryMonitor extends BaseService {
 
   /**
    * Get monitoring configuration
+   *
    * @returns {object} Current configuration
    */
   getConfiguration() {
@@ -649,6 +666,7 @@ export default class MemoryMonitor extends BaseService {
 
   /**
    * Update thresholds dynamically
+   *
    * @param {MemoryThresholds} thresholds - New thresholds
    */
   updateThresholds(thresholds) {

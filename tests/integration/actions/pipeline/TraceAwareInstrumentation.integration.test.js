@@ -27,6 +27,9 @@ import { MultiTargetActionFormatter } from '../../../../src/actions/formatters/M
 import { ActionErrorContextBuilder } from '../../../../src/actions/errors/actionErrorContextBuilder.js';
 import EntityDefinition from '../../../../src/entities/entityDefinition.js';
 
+/**
+ *
+ */
 function createTraceRecorder() {
   const recorder = {
     events: [],
@@ -111,6 +114,9 @@ describe('TraceAwareInstrumentation integration', () => {
     await testBed.cleanup();
   });
 
+  /**
+   *
+   */
   async function createActorAndTargets() {
     const actorDefinition = new EntityDefinition('test:actor', {
       description: 'Test actor entity',

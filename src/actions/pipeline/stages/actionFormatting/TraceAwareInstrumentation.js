@@ -25,7 +25,7 @@ import { ActionFormattingInstrumentation } from './ActionFormattingInstrumentati
 
 /**
  * @class TraceAwareInstrumentation
- * @extends ActionFormattingInstrumentation
+ * @augments ActionFormattingInstrumentation
  * @description Emits structured trace payloads that mirror the behaviour currently provided by {@link ActionFormattingStage}.
  */
 export class TraceAwareInstrumentation extends ActionFormattingInstrumentation {

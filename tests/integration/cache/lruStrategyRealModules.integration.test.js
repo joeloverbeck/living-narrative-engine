@@ -2,6 +2,10 @@ import { describe, it, expect } from '@jest/globals';
 import { UnifiedCache, EvictionPolicy } from '../../../src/cache/UnifiedCache.js';
 import NoOpLogger from '../../../src/logging/noOpLogger.js';
 
+/**
+ *
+ * @param config
+ */
 function createLruCache(config = {}) {
   const logger = new NoOpLogger();
   return new UnifiedCache(

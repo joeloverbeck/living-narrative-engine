@@ -30,7 +30,7 @@ function createStage(implementation) {
  * Builds a structured trace mock with span hooks so tests can assert instrumentation behaviour.
  *
  * @param {object} [options] - Optional overrides for the span mock.
- * @param {boolean} [options.includeAttributeFn=true] - Whether the span exposes setAttribute.
+ * @param {boolean} [options.includeAttributeFn] - Whether the span exposes setAttribute.
  * @returns {{ trace: object, span: object }}
  */
 function createStructuredTraceMock({ includeAttributeFn = true } = {}) {

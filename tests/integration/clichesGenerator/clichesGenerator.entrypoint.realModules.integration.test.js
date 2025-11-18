@@ -16,7 +16,7 @@ jest.setTimeout(DEFAULT_TIMEOUT_MS);
  * Wait until a condition evaluates to true or throw after a timeout.
  *
  * @param {() => boolean} condition - Predicate evaluated on every polling interval.
- * @param {number} [timeout=DEFAULT_TIMEOUT_MS] - Maximum time to wait in milliseconds.
+ * @param {number} [timeout] - Maximum time to wait in milliseconds.
  * @returns {Promise<void>} Resolves when the condition becomes true.
  */
 async function waitForCondition(condition, timeout = DEFAULT_TIMEOUT_MS) {

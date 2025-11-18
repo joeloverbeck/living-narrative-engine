@@ -102,6 +102,8 @@ export function createMalformedLLMResponse() {
 
 /**
  * Creates mock dependencies for SpeechPatternsGeneratorController
+ *
+ * @param overrides
  */
 export function createMockControllerDependencies(overrides = {}) {
   const mockLogger = {

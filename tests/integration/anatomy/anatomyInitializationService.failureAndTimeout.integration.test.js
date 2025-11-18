@@ -65,6 +65,9 @@ class TestSchemaValidator {
   }
 }
 
+/**
+ *
+ */
 async function createService() {
   const testBed = new AnatomyIntegrationTestBed();
   await testBed.loadAnatomyModData();

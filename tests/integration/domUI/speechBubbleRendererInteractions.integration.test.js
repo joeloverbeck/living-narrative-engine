@@ -26,6 +26,9 @@ import {
 } from '../../../src/constants/componentIds.js';
 import { PORTRAIT_CLICKED } from '../../../src/constants/eventIds.js';
 
+/**
+ *
+ */
 function createLoggerMock() {
   return {
     debug: jest.fn(),
@@ -35,6 +38,14 @@ function createLoggerMock() {
   };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.id
+ * @param root0.definitionId
+ * @param root0.components
+ * @param root0.overrides
+ */
 function buildEntity({ id, definitionId, components, overrides }) {
   const definition = new EntityDefinition(definitionId, {
     components,
@@ -101,6 +112,10 @@ describe('SpeechBubbleRenderer integration coverage', () => {
     jest.restoreAllMocks();
   });
 
+  /**
+   *
+   * @param config
+   */
   function registerEntity(config) {
     const entity = buildEntity(config);
     entityStore.set(config.id, entity);

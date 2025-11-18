@@ -24,9 +24,10 @@ const SUCCESS_TEMPLATE =
  * Builds entities that satisfy or challenge the squeeze breasts action prerequisites.
  *
  * @param {object} [options] - Scenario customisation flags.
- * @param {string} [options.actorName='Nadia'] - Actor display name for interpolation assertions.
- * @param {boolean} [options.coverBreasts=false] - Whether the actor's breasts are covered by clothing.
- * @param {boolean} [options.includeHugging=false] - Whether the actor is currently hugging another entity.
+ * @param {string} [options.actorName] - Actor display name for interpolation assertions.
+ * @param {boolean} [options.coverBreasts] - Whether the actor's breasts are covered by clothing.
+ * @param {boolean} [options.includeHugging] - Whether the actor is currently hugging another entity.
+ * @param options.actorSuffix
  * @returns {{ actorId: string, entities: Array<object> }} Prepared entity list and actor identifier.
  */
 function buildScenario({

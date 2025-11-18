@@ -68,6 +68,11 @@ describe('Mouth Engagement - Stress Tests', () => {
   });
 
   // Optimized: Batch entity creation
+  /**
+   *
+   * @param id
+   * @param name
+   */
   async function createTestActorWithMouth(id, name = 'Test Actor') {
     await entityManager.createEntity(id);
     const mouthId = `${id}_mouth`;
@@ -102,6 +107,11 @@ describe('Mouth Engagement - Stress Tests', () => {
   }
 
   // Helper to process operations in batches
+  /**
+   *
+   * @param operations
+   * @param batchSize
+   */
   async function processBatch(operations, batchSize = 50) {
     const results = [];
     for (let i = 0; i < operations.length; i += batchSize) {

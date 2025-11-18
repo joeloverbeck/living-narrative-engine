@@ -43,6 +43,9 @@ const defaultSnapshot = {
   shouldSkipAction: () => false,
 };
 
+/**
+ *
+ */
 async function buildResolutionFixture() {
   const logger = createLogger();
   const entityTestBed = new EntityManagerTestBed();
@@ -758,6 +761,10 @@ describe('TargetComponentValidationStage items action regression', () => {
     await entityTestBed.cleanup();
   });
 
+  /**
+   *
+   * @param actionDef
+   */
   async function runValidationForAction(actionDef) {
     const actionContext = {
       currentLocation: 'test:room',

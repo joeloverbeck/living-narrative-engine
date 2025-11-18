@@ -594,6 +594,10 @@ describe('TargetResolutionTracingOrchestrator', () => {
   });
 });
 
+/**
+ *
+ * @param capabilities
+ */
 function createMockTrace(capabilities = {}) {
   const trace = {};
 
@@ -620,6 +624,9 @@ function createMockTrace(capabilities = {}) {
   return trace;
 }
 
+/**
+ *
+ */
 function createMockLogger() {
   return {
     info: jest.fn(),

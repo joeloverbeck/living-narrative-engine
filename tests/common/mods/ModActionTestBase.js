@@ -352,7 +352,7 @@ export class ModActionTestBase {
    * @param {boolean} [options.includeRuleSelectivity] - Include rule selectivity test (default: true)
    * @param {boolean} [options.includeMissingEntity] - Include missing entity test (default: true)
    * @param {boolean} [options.includeMultiActor] - Include multi-actor test (default: true)
-   * @param {Array<function>} [options.customTests] - Additional custom test functions
+   * @param {Array<Function>} [options.customTests] - Additional custom test functions
    */
   runStandardTests(options = {}) {
     const {

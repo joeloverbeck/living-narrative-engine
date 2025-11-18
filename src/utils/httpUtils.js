@@ -72,6 +72,8 @@ function _computeRetryDelay(response, attempt, baseDelayMs, maxDelayMs) {
  * @param {number} maxDelayMs Maximum delay in milliseconds between retries.
  * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} safeEventDispatcher Dispatcher for error events.
  * @param {import('../interfaces/coreServices.js').ILogger} logger Logger for debug/warn messages.
+ * @param root0
+ * @param root0.includeResponse
  * @returns {Promise<{retry: boolean, data?: any}>} Object describing whether a retry should occur and the parsed data when successful.
  * @throws {Error} When a non-retryable HTTP error is encountered.
  * @private
@@ -208,7 +210,7 @@ async function _handleResponse(
  * errors and specific HTTP status codes. It implements an exponential backoff
  * strategy with added jitter.
  * @param {string} url The URL to fetch.
- * @param {object} [options={}] The options object for the fetch call (method, headers, body, etc.).
+ * @param {object} [options] The options object for the fetch call (method, headers, body, etc.).
  * @param {number} maxRetries Maximum number of attempts before failing.
  * @param {number} baseDelayMs Initial delay in milliseconds for the first retry.
  * @param {number} maxDelayMs Maximum delay in milliseconds between retries, capping the exponential backoff.

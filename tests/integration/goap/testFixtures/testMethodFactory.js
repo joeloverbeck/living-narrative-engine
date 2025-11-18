@@ -5,6 +5,7 @@
 
 /**
  * Creates a basic test refinement method
+ *
  * @param {object} overrides - Method property overrides
  * @returns {object} Refinement method definition
  */
@@ -27,6 +28,7 @@ export function createTestMethod(overrides = {}) {
 
 /**
  * Creates a consume food refinement method
+ *
  * @returns {object} Consume method definition
  */
 export function createConsumeMethod() {
@@ -47,6 +49,7 @@ export function createConsumeMethod() {
 
 /**
  * Creates a multi-step method (move, pickup, consume)
+ *
  * @returns {object} Multi-step method definition
  */
 export function createMultiStepMethod() {
@@ -81,6 +84,7 @@ export function createMultiStepMethod() {
 
 /**
  * Creates a method that will fail (for testing failure recovery)
+ *
  * @returns {object} Failing method definition
  */
 export function createFailingMethod() {
@@ -99,6 +103,7 @@ export function createFailingMethod() {
 
 /**
  * Creates a conditional method with branching logic
+ *
  * @returns {object} Conditional method definition
  */
 export function createConditionalMethod() {

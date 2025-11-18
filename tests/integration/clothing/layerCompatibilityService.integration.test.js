@@ -42,6 +42,13 @@ class ThrowingEntityManager extends SimpleEntityManager {
   }
 }
 
+/**
+ *
+ * @param id
+ * @param layer
+ * @param primarySlot
+ * @param extras
+ */
 function buildWearable(id, layer, primarySlot, extras = {}) {
   const wearable = {
     layer,
@@ -62,6 +69,13 @@ function buildWearable(id, layer, primarySlot, extras = {}) {
   };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.equipment
+ * @param root0.wearables
+ * @param root0.entityManagerFactory
+ */
 function createServiceEnvironment({
   equipment,
   wearables = [],

@@ -93,6 +93,7 @@ export function createOptimizedDOMSetup(containerId = 'test-app') {
 
   /**
    * Setup DOM elements efficiently
+   *
    * @param {object} elementMap - Map of element IDs to selectors/configs
    * @returns {object} Created elements
    */
@@ -233,6 +234,7 @@ export class OptimizedMockFactory {
 
   /**
    * Get or create a mock service with specified methods
+   *
    * @param {string} serviceName - Name of service for caching
    * @param {string[]} methods - Required methods
    * @returns {object} Mock service
@@ -273,6 +275,7 @@ export function waitForNextTick() {
 
 /**
  * Fast event simulation that properly triggers both inline handlers and event listeners
+ *
  * @param {HTMLElement} element - Target element
  * @param {string} eventType - Event type (input, click, blur, etc.)
  * @param {object} eventData - Additional event data

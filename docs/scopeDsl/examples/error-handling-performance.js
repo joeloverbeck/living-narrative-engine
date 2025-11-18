@@ -11,6 +11,11 @@ import { ErrorCodes } from '../../../src/scopeDsl/constants/errorCodes.js';
  *
  * This resolver demonstrates techniques to minimize error handling overhead
  * while maintaining comprehensive error reporting.
+ *
+ * @param root0
+ * @param root0.logger
+ * @param root0.errorHandler
+ * @param root0.metricsCollector
  */
 export default function createPerformanceResolver({
   logger,
@@ -51,6 +56,8 @@ export default function createPerformanceResolver({
 
   /**
    * Get error code with optimized lookup
+   *
+   * @param message
    */
   function getErrorCode(message) {
     const lowerMessage = message.toLowerCase();
@@ -67,6 +74,9 @@ export default function createPerformanceResolver({
 
   /**
    * Create minimal context for production
+   *
+   * @param ctx
+   * @param includeFields
    */
   function createMinimalContext(ctx, includeFields = []) {
     const minimal = {};
@@ -88,6 +98,11 @@ export default function createPerformanceResolver({
 
   /**
    * Lightweight error handling for hot paths
+   *
+   * @param message
+   * @param ctx
+   * @param resolverName
+   * @param errorCode
    */
   function handleErrorFast(message, ctx, resolverName, errorCode) {
     // Skip expensive operations in production
@@ -223,6 +238,8 @@ export default function createPerformanceResolver({
 
   /**
    * Get or create circuit breaker for operation
+   *
+   * @param operation
    */
   function getCircuitBreaker(operation) {
     if (!circuitBreakers.has(operation)) {
@@ -273,6 +290,10 @@ export default function createPerformanceResolver({
 
   /**
    * Cached validation
+   *
+   * @param value
+   * @param validatorKey
+   * @param validator
    */
   function validateWithCache(value, validatorKey, validator) {
     const cacheKey = `${validatorKey}:${JSON.stringify(value)}`;
@@ -298,6 +319,10 @@ export default function createPerformanceResolver({
    * Optimized depth check with early exit
    */
   const MAX_DEPTH = 10;
+  /**
+   *
+   * @param ctx
+   */
   function checkDepth(ctx) {
     const depth = ctx.depth || 0;
 
@@ -365,6 +390,9 @@ export default function createPerformanceResolver({
 
   /**
    * Performance metrics tracking
+   *
+   * @param operation
+   * @param fn
    */
   function trackPerformance(operation, fn) {
     return function tracked(...args) {
@@ -512,6 +540,8 @@ export default function createPerformanceResolver({
 
 /**
  * Create optimized error handler for production
+ *
+ * @param logger
  */
 export function createProductionErrorHandler(logger) {
   return new Proxy(

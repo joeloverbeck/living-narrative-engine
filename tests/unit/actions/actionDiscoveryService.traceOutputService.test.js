@@ -5,6 +5,9 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
 
+/**
+ *
+ */
 function createLoggerMock() {
   return {
     debug: jest.fn(),
@@ -14,6 +17,10 @@ function createLoggerMock() {
   };
 }
 
+/**
+ *
+ * @param overrides
+ */
 function createBaseDependencies(overrides = {}) {
   const defaults = {
     entityManager: {},

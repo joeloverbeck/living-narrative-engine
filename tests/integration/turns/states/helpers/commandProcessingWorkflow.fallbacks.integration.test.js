@@ -189,6 +189,14 @@ class TestDirectiveResolver {
   }
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.logger
+ * @param root0.dispatcher
+ * @param root0.actor
+ * @param root0.onEndTurn
+ */
 function createTurnContextEnvironment({ logger, dispatcher, actor, onEndTurn }) {
   const entityManager = new TestEntityManager(actor);
   const turnEndPort = new TestTurnEndPort();
@@ -217,6 +225,17 @@ function createTurnContextEnvironment({ logger, dispatcher, actor, onEndTurn }) 
   return { turnContext, handler, turnEndPort };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.commandProcessorImpl
+ * @param root0.interpreterImpl
+ * @param root0.strategyMap
+ * @param root0.commandDispatcher
+ * @param root0.resultInterpreter
+ * @param root0.directiveExecutor
+ * @param root0.onAfterCreate
+ */
 function buildWorkflow({
   commandProcessorImpl = async () => ({ success: true }),
   interpreterImpl = async () => TurnDirective.END_TURN_SUCCESS,

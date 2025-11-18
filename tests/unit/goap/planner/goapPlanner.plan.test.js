@@ -1005,6 +1005,12 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
   });
 
   describe('13. Depth semantics and telemetry instrumentation', () => {
+    /**
+     *
+     * @param root0
+     * @param root0.stepValue
+     * @param root0.targetHp
+     */
     function setupHighCostHealingScenario({ stepValue = 10, targetHp = 100 } = {}) {
       mockRepository.get.mockReturnValue({
         core: {
@@ -1133,6 +1139,44 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       expect(diagnostics).not.toBeNull();
       expect(diagnostics.totalViolations).toBeGreaterThan(0);
       expect(diagnostics.entries[0].violations[0].path).toBe('actor.hp');
+      goalPathValidator.setGoalPathLintOverride(null);
+      if (previousFlag === undefined) {
+        delete process.env.GOAP_GOAL_PATH_LINT;
+      } else {
+        process.env.GOAP_GOAL_PATH_LINT = previousFlag;
+      }
+    });
+
+    it('rejects literal actor IDs inside has_component when linting is enabled', () => {
+      const previousFlag = process.env.GOAP_GOAL_PATH_LINT;
+      process.env.GOAP_GOAL_PATH_LINT = '1';
+      goalPathValidator.setGoalPathLintOverride(true);
+      mockRepository.get.mockReturnValue({
+        core: {
+          'core:noop': { id: 'core:noop', cost: 1, planningEffects: [] },
+        },
+      });
+      mockHeuristicRegistry.calculate.mockReturnValue(0);
+      mockJsonLogicService.evaluateCondition.mockReturnValue(false);
+      mockEffectsSimulator.simulateEffects.mockReturnValue({
+        success: true,
+        state: buildState(),
+      });
+
+      const invalidGoal = buildPlanningGoal(
+        { '!': { has_component: ['actor_1', 'test:hungry'] } },
+        { id: 'goal:literal-actor' }
+      );
+
+      const plan = planner.plan('actor-123', invalidGoal, buildState());
+
+      expect(plan).toBeNull();
+      const failure = planner.getLastFailure();
+      expect(failure).toEqual(
+        expect.objectContaining({ code: GOAP_PLANNER_FAILURES.INVALID_GOAL_PATH })
+      );
+      expect(failure.details.goalPathViolations).toContain('actor_1');
+
       goalPathValidator.setGoalPathLintOverride(null);
       if (previousFlag === undefined) {
         delete process.env.GOAP_GOAL_PATH_LINT;

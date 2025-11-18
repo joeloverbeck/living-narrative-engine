@@ -18,6 +18,7 @@ const noopLogger = Object.freeze({
 
 /**
  * Utility for building a logger mock that records error payloads.
+ *
  * @returns {{ error: jest.Mock }}
  */
 function createLoggerMock() {

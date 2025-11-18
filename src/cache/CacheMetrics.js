@@ -31,9 +31,9 @@ export class CacheMetrics extends BaseService {
    * @param {object} deps
    * @param {ILogger} deps.logger
    * @param {object} [config] - Metrics configuration
-   * @param {number} [config.collectionInterval=60000] - Metrics collection interval in ms
-   * @param {boolean} [config.enableAutoCollection=true] - Enable automatic metrics collection
-   * @param {number} [config.historyRetention=24] - Hours to retain metrics history
+   * @param {number} [config.collectionInterval] - Metrics collection interval in ms
+   * @param {boolean} [config.enableAutoCollection] - Enable automatic metrics collection
+   * @param {number} [config.historyRetention] - Hours to retain metrics history
    */
   constructor({ logger }, config = {}) {
     super();
@@ -203,7 +203,7 @@ export class CacheMetrics extends BaseService {
    * Get metrics history for a specific cache
    *
    * @param {string} cacheId - Cache identifier
-   * @param {number} [hours=1] - Number of hours of history to return
+   * @param {number} [hours] - Number of hours of history to return
    * @returns {object[]|null} Array of historical metrics or null if cache not found
    */
   getCacheHistory(cacheId, hours = 1) {

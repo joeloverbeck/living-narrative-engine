@@ -185,6 +185,46 @@ describe('createGoapEventDispatcher', () => {
       dispatcher.dispatch('goap:test_event', { actorId: 'actor-1' })
     ).toThrow(/must return a Promise or void/);
   });
+
+  it('tracks planning completion/failure counters per actor without mutation', async () => {
+    const dispatcher = createGoapEventDispatcher(eventBus, logger);
+
+    await dispatcher.dispatch(GOAP_EVENTS.PLANNING_COMPLETED, { actorId: 'actor-A' });
+    await dispatcher.dispatch(GOAP_EVENTS.PLANNING_FAILED, { actorId: 'actor-B' });
+    await dispatcher.dispatch(GOAP_EVENTS.PLANNING_FAILED, { actorId: 'actor-A' });
+
+    const planningSnapshot = dispatcher.getPlanningComplianceSnapshot();
+    expect(planningSnapshot.global).toMatchObject({
+      planningCompleted: 1,
+      planningFailed: 2,
+      totalPlanningEvents: 3,
+    });
+
+    const actorA = planningSnapshot.actors.find((entry) => entry.actorId === 'actor-A');
+    const actorB = planningSnapshot.actors.find((entry) => entry.actorId === 'actor-B');
+    expect(actorA).toMatchObject({ planningCompleted: 1, planningFailed: 1, totalPlanningEvents: 2 });
+    expect(actorB).toMatchObject({ planningCompleted: 0, planningFailed: 1, totalPlanningEvents: 1 });
+
+    actorA.planningCompleted = 999;
+    const freshSnapshot = dispatcher.getPlanningComplianceSnapshot();
+    const freshActorA = freshSnapshot.actors.find((entry) => entry.actorId === 'actor-A');
+    expect(freshActorA.planningCompleted).toBe(1);
+  });
+
+  it('warns and only increments global planning stats when actorId is missing', async () => {
+    const dispatcher = createGoapEventDispatcher(eventBus, logger);
+
+    await dispatcher.dispatch(GOAP_EVENTS.PLANNING_COMPLETED, {});
+
+    const planningSnapshot = dispatcher.getPlanningComplianceSnapshot();
+    expect(planningSnapshot.global).toMatchObject({ planningCompleted: 1, planningFailed: 0 });
+    expect(planningSnapshot.actors).toHaveLength(0);
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      'GOAP planning telemetry missing actorId',
+      expect.objectContaining({ eventType: GOAP_EVENTS.PLANNING_COMPLETED })
+    );
+  });
 });
 
 describe('validateEventBusContract', () => {

@@ -60,6 +60,9 @@ class MinimalValidatedEventDispatcher {
   }
 }
 
+/**
+ *
+ */
 function createEnvironment() {
   const logger = new RecordingLogger();
   const eventBus = new EventBus({ logger });

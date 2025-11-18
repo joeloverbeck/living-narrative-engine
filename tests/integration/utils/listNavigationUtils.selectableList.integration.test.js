@@ -129,10 +129,18 @@ describe('setupRadioListNavigation integration via SelectableListDisplayComponen
     document.body.innerHTML = '';
   });
 
+  /**
+   *
+   */
   function getItems() {
     return Array.from(container.querySelectorAll('[role="radio"]'));
   }
 
+  /**
+   *
+   * @param target
+   * @param key
+   */
   function dispatchKey(target, key) {
     const event = new KeyboardEvent('keydown', {
       key,

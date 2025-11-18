@@ -42,6 +42,8 @@ Welcome to the GOAP (Goal-Oriented Action Planning) system documentation. This d
 
 ### Refinement System
 
+- **[Implementing the Refinement Engine](./implementing-refinement-engine.md)**
+  - Component responsibilities, invocation flow, diagnostics, and testing checklist
 - **[Refinement: Parameter Binding](./refinement-parameter-binding.md)**
   - How parameters are bound during refinement
   - Scope resolution

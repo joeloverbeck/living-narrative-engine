@@ -7,6 +7,9 @@ import { LocationNotFoundError } from '../../../../src/errors/locationNotFoundEr
 import { DEFAULT_LOCATION_NAME } from '../../../../src/domUI/uiDefaults.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
 
+/**
+ *
+ */
 function createMockEventDispatcher() {
   const handlers = new Map();
   return {
@@ -46,6 +49,11 @@ function createMockEventDispatcher() {
   };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.includePortraitImage
+ */
 function setupDomContainer({ includePortraitImage = true } = {}) {
   const container = document.createElement('section');
   container.id = 'location-container';
@@ -93,6 +101,14 @@ function setupDomContainer({ includePortraitImage = true } = {}) {
   };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.testBed
+ * @param root0.includePortraitImage
+ * @param root0.entityManagerOverrides
+ * @param root0.entityDisplayOverrides
+ */
 function createRenderer({
   testBed,
   includePortraitImage = true,

@@ -68,6 +68,10 @@ class TestValidatedEventDispatcher {
   }
 }
 
+/**
+ *
+ * @param existingNotes
+ */
 function createEntity(existingNotes = []) {
   return {
     id: 'actor-1',
@@ -115,6 +119,10 @@ describe('NotesPersistenceListener integration', () => {
     };
   });
 
+  /**
+   *
+   * @param overrides
+   */
   function createListener(overrides = {}) {
     return new NotesPersistenceListener({
       logger,

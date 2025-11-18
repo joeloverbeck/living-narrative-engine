@@ -36,6 +36,9 @@ describe('RecipeValidationRunner - Failure mode integration coverage', () => {
   /** @type {SlotGenerator} */
   let slotGenerator;
 
+  /**
+   *
+   */
   function createLogger() {
     return {
       info: jest.fn(),
@@ -45,6 +48,10 @@ describe('RecipeValidationRunner - Failure mode integration coverage', () => {
     };
   }
 
+  /**
+   *
+   * @param overrides
+   */
   function createValidator(overrides = {}) {
     const entityMatcherService = new EntityMatcherService({
       logger,
@@ -62,6 +69,9 @@ describe('RecipeValidationRunner - Failure mode integration coverage', () => {
     });
   }
 
+  /**
+   *
+   */
   function seedCoreComponents() {
     dataRegistry.store('components', 'core:muscle', {
       id: 'core:muscle',

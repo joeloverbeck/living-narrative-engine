@@ -55,6 +55,11 @@ const sitDownAction = {
 
 /**
  * Creates handlers needed for furniture sitting rules.
+ *
+ * @param entityManager
+ * @param eventBus
+ * @param logger
+ * @param gameDataRepository
  */
 function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
   const safeDispatcher = {

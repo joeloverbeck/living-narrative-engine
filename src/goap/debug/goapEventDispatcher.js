@@ -14,6 +14,10 @@ export const GOAP_EVENT_TRACE_LOG_CODES = {
 
 const warnedEventBuses = new WeakSet();
 
+/**
+ *
+ * @param payload
+ */
 function clonePayloadForProbe(payload) {
   if (!payload || typeof payload !== 'object') {
     return {};
@@ -34,6 +38,10 @@ function clonePayloadForProbe(payload) {
   }
 }
 
+/**
+ *
+ * @param actorId
+ */
 function normalizeActorId(actorId) {
   if (typeof actorId === 'string') {
     const trimmed = actorId.trim();
@@ -49,6 +57,12 @@ function normalizeActorId(actorId) {
  * @property {(event: { type: string, payload: object, actorId?: string, violation?: boolean, timestamp: number }) => void} record
  */
 
+/**
+ *
+ * @param eventBus
+ * @param logger
+ * @param options
+ */
 export function validateEventBusContract(eventBus, logger, options = {}) {
   const safeLogger = ensureValidLogger(logger, 'GoapEventDispatcher');
   const context = options.context || 'GoapEventDispatcher';
@@ -79,15 +93,25 @@ export function validateEventBusContract(eventBus, logger, options = {}) {
   return eventBus;
 }
 
+/**
+ *
+ * @param actorId
+ */
 function createComplianceEntry(actorId) {
   return {
     actorId,
     totalEvents: 0,
     missingPayloads: 0,
+    planningCompleted: 0,
+    planningFailed: 0,
     lastViolation: null,
   };
 }
 
+/**
+ *
+ * @param entry
+ */
 function cloneComplianceEntry(entry) {
   if (!entry) {
     return null;
@@ -96,7 +120,27 @@ function cloneComplianceEntry(entry) {
     actorId: entry.actorId,
     totalEvents: entry.totalEvents,
     missingPayloads: entry.missingPayloads,
+    planningCompleted: entry.planningCompleted,
+    planningFailed: entry.planningFailed,
     lastViolation: entry.lastViolation ? { ...entry.lastViolation } : null,
+  };
+}
+
+/**
+ *
+ * @param entry
+ */
+function clonePlanningEntry(entry) {
+  if (!entry) {
+    return null;
+  }
+  const planningCompleted = entry.planningCompleted || 0;
+  const planningFailed = entry.planningFailed || 0;
+  return {
+    actorId: entry.actorId,
+    planningCompleted,
+    planningFailed,
+    totalPlanningEvents: planningCompleted + planningFailed,
   };
 }
 
@@ -112,6 +156,7 @@ function cloneComplianceEntry(entry) {
  * @returns {{
  *   dispatch(eventType: string, payload?: object, options?: { allowEmptyPayload?: boolean, actorIdOverride?: string }): Promise<void> | void,
  *   getComplianceSnapshot(): { global: object|null, actors: object[] },
+ *   getPlanningComplianceSnapshot(): { global: object|null, actors: object[] },
  *   getComplianceForActor(actorId: string): object|null,
  *   registerProbe(probe: IGoapEventProbe): () => void,
  *   getProbeDiagnostics(): { totalRegistered: number, totalAttachedEver: number, totalDetached: number, lastAttachedAt: number|null, lastDetachedAt: number|null, hasProbes: boolean }
@@ -248,6 +293,34 @@ export function createGoapEventDispatcher(eventBus, logger, options = {}) {
     }
   };
 
+  const isPlanningEventType = (eventType) => {
+    return (
+      eventType === GOAP_EVENTS.PLANNING_COMPLETED ||
+      eventType === GOAP_EVENTS.PLANNING_FAILED
+    );
+  };
+
+  const recordPlanningOutcome = (eventType, actorId, hasActorId) => {
+    const globalEntry = complianceByActor.get(GLOBAL_ACTOR_ID);
+    const field = eventType === GOAP_EVENTS.PLANNING_COMPLETED ? 'planningCompleted' : 'planningFailed';
+    globalEntry[field] += 1;
+
+    if (!hasActorId) {
+      safeLogger.warn('GOAP planning telemetry missing actorId', {
+        eventType,
+        context: context || 'GoapEventDispatcher',
+      });
+      return;
+    }
+
+    const actorEntry =
+      actorId === GLOBAL_ACTOR_ID ? complianceByActor.get(GLOBAL_ACTOR_ID) : getOrCreateEntry(actorId);
+    if (!actorEntry || actorEntry === globalEntry) {
+      return;
+    }
+    actorEntry[field] += 1;
+  };
+
   const recordViolation = ({ actorId, eventType, reason, code }) => {
     const violation = {
       actorId: normalizeActorId(actorId),
@@ -355,9 +428,13 @@ export function createGoapEventDispatcher(eventBus, logger, options = {}) {
         actorIdOverride
       );
 
-      const actorId = actorIdOverride || normalizedPayload?.actorId;
+      const actorId = actorIdOverride ?? normalizedPayload?.actorId;
+      const hasExplicitActorId = typeof actorId === 'string' && actorId.trim().length > 0;
       const normalizedActorId = normalizeActorId(actorId);
       recordEventDispatch(normalizedActorId);
+      if (isPlanningEventType(validatedType)) {
+        recordPlanningOutcome(validatedType, normalizedActorId, hasExplicitActorId);
+      }
       emitToProbes(validatedType, normalizedPayload, {
         actorId: normalizedActorId,
         timestamp: normalizedPayload?.timestamp,
@@ -391,6 +468,15 @@ export function createGoapEventDispatcher(eventBus, logger, options = {}) {
         actors: Array.from(complianceByActor.values())
           .filter((entry) => entry.actorId !== GLOBAL_ACTOR_ID)
           .map((entry) => cloneComplianceEntry(entry)),
+      };
+    },
+
+    getPlanningComplianceSnapshot() {
+      return {
+        global: clonePlanningEntry(complianceByActor.get(GLOBAL_ACTOR_ID)),
+        actors: Array.from(complianceByActor.values())
+          .filter((entry) => entry.actorId !== GLOBAL_ACTOR_ID)
+          .map((entry) => clonePlanningEntry(entry)),
       };
     },
 

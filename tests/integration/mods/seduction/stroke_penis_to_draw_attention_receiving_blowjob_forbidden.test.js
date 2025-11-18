@@ -21,9 +21,9 @@ const ACTION_ID = 'seduction:stroke_penis_to_draw_attention';
  *
  * @param {ModTestFixture} fixture - Active mod test fixture.
  * @param {object} options - Scenario options.
- * @param {boolean} [options.includePenis=true] - Whether the actor should include a penis anatomy part.
- * @param {boolean} [options.penisCovered=false] - Whether the penis is covered by clothing.
- * @param {boolean} [options.includeReceivingBlowjob=false] - Whether the actor is receiving a blowjob.
+ * @param {boolean} [options.includePenis] - Whether the actor should include a penis anatomy part.
+ * @param {boolean} [options.penisCovered] - Whether the penis is covered by clothing.
+ * @param {boolean} [options.includeReceivingBlowjob] - Whether the actor is receiving a blowjob.
  * @returns {{ actorId: string }} Actor identifiers for discovery checks.
  */
 function loadScenario(

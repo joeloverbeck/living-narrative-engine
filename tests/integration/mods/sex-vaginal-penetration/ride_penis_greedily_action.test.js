@@ -36,6 +36,10 @@ describe('sex-vaginal-penetration:ride_penis_greedily action integration', () =>
     }
   });
 
+  /**
+   *
+   * @param additionalOptions
+   */
   async function performAction(additionalOptions = {}) {
     await testFixture.executeAction(
       STRADDLING_MILKING_ACTOR_ID,

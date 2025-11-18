@@ -7,6 +7,9 @@ import { StructuredTrace } from '../../../src/actions/tracing/structuredTrace.js
 import { ErrorCodes } from '../../../src/scopeDsl/constants/errorCodes.js';
 import { ScopeDslError } from '../../../src/scopeDsl/errors/scopeDslError.js';
 
+/**
+ *
+ */
 function createLoggerDouble() {
   return {
     error: jest.fn(),
@@ -48,6 +51,11 @@ describe('slotAccessResolver integration recovery paths', () => {
     });
   });
 
+  /**
+   *
+   * @param entityId
+   * @param equipment
+   */
   function createClothingAccess(entityId, equipment) {
     entityManager.addComponent(entityId, 'clothing:equipment', equipment);
 

@@ -273,6 +273,7 @@ export class CharacterDataFormatter {
 
   /**
    * Format motivations section
+   *
    * @param {string} motivationsText - Core psychological motivations
    * @returns {string} Markdown formatted motivations section
    */
@@ -299,6 +300,7 @@ ${trimmedText}
 
   /**
    * Format internal tensions section
+   *
    * @param {string} tensionsText - Internal conflicts and competing desires
    * @returns {string} Markdown formatted tensions section
    */
@@ -325,6 +327,7 @@ ${trimmedText}
 
   /**
    * Format core dilemmas section
+   *
    * @param {string} dilemmasText - Fundamental questions the character grapples with
    * @returns {string} Markdown formatted dilemmas section
    */

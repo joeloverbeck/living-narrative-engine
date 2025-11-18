@@ -52,6 +52,15 @@ class StubConfigLoader {
   }
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.initiallyInitialized
+ * @param root0.initialOperational
+ * @param root0.operationalAfterInit
+ * @param root0.provideOperational
+ * @param root0.initThrows
+ */
 function createAdapter({
   initiallyInitialized = false,
   initialOperational = true,

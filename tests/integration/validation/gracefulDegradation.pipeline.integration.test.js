@@ -150,6 +150,9 @@ class ValidationIntegrationPipeline {
   }
 }
 
+/**
+ *
+ */
 function createHarness() {
   const logger = new MemoryLogger();
   const eventBus = new RecordingEventBus(logger);

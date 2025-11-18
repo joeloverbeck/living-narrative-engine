@@ -4,6 +4,9 @@ import OperationInterpreter from '../../../../src/logic/operationInterpreter.js'
 import { executeActionSequence } from '../../../../src/logic/actionSequence.js';
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
 
+/**
+ *
+ */
 function createTestLogger() {
   const entries = [];
   const logger = {
@@ -15,6 +18,11 @@ function createTestLogger() {
   return { logger, entries };
 }
 
+/**
+ *
+ * @param logger
+ * @param contextOverrides
+ */
 function buildExecutionContext(logger, contextOverrides) {
   const evaluationContext = {
     event: { type: 'test:event', payload: null },

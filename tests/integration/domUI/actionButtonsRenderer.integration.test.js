@@ -19,6 +19,7 @@ const UPDATE_AVAILABLE_ACTIONS_EVENT = 'core:update_available_actions';
 
 /**
  * Helper to pause for a given duration
+ *
  * @param {number} ms milliseconds to wait
  * @returns {Promise<void>}
  */

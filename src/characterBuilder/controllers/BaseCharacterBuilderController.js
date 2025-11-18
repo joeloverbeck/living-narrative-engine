@@ -1080,7 +1080,7 @@ export class BaseCharacterBuilderController {
    * Show a cached DOM element using the configured DOMElementManager
    *
    * @param {string} elementName - Name of the cached element
-   * @param {string} [displayType='block'] - Display value to apply
+   * @param {string} [displayType] - Display value to apply
    * @returns {boolean} True when the element was shown
    * @protected
    */

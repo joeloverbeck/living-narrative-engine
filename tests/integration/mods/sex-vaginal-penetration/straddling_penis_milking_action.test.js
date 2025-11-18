@@ -36,6 +36,10 @@ describe('sex-vaginal-penetration:straddling_penis_milking action integration', 
     }
   });
 
+  /**
+   *
+   * @param additionalOptions
+   */
   async function performAction(additionalOptions = {}) {
     await testFixture.executeAction(STRADDLING_MILKING_ACTOR_ID, STRADDLING_MILKING_PRIMARY_ID, {
       additionalPayload: {

@@ -8,7 +8,6 @@
  * - Proper cleanup of processed traces
  * - Queue size limits enforcement
  * - Garbage collection efficiency
- *
  * @see src/actions/tracing/traceQueueProcessor.js
  * @see reports/actions-tracing-architecture-analysis.md
  */
@@ -552,6 +551,7 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
 
   /**
    * Execute a memory test scenario over multiple cycles
+   *
    * @param {object} scenario - Memory test scenario configuration
    * @param {string} scenarioName - Name of the scenario for logging
    * @returns {Promise<void>} Completes when scenario execution is done
@@ -581,6 +581,7 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
 
   /**
    * Analyze memory usage patterns from snapshots
+   *
    * @returns {object} Memory analysis results
    */
   function analyzeMemoryUsage() {
@@ -640,6 +641,7 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
 
   /**
    * Take a memory snapshot with current heap usage
+   *
    * @param {string} phase - Description of the current phase
    * @returns {void}
    */
@@ -675,6 +677,7 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
 
   /**
    * Create a TraceQueueProcessor with custom configuration
+   *
    * @param {object} config - Configuration options
    * @returns {TraceQueueProcessor} Configured processor instance
    */
@@ -695,6 +698,7 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
 
   /**
    * Create memory test traces with varied data structures
+   *
    * @param {number} count - Number of traces to create
    * @returns {Array} Array of trace objects
    */
@@ -732,6 +736,7 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
 
   /**
    * Generate varied trace data to test different memory patterns
+   *
    * @param {number} index - Index for data variation
    * @returns {object} Varied data structure
    */
@@ -768,6 +773,7 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
 
   /**
    * Format memory size in human-readable format
+   *
    * @param {number} bytes - Size in bytes
    * @returns {string} Formatted size string
    */
@@ -779,7 +785,8 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
 
   /**
    * Wait for processing with timeout
-   * @param {number} [timeout=1000] - Timeout in milliseconds
+   *
+   * @param {number} [timeout] - Timeout in milliseconds
    * @returns {Promise} Promise that resolves after timeout
    */
   function waitForProcessing(timeout = 1000) {

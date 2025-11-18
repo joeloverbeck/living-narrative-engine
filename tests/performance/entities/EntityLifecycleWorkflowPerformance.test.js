@@ -267,40 +267,50 @@ describe('Entity Lifecycle Workflow Performance', () => {
       await testBed.createTestEntitiesBatch(warmupConfigs);
 
       const scalingSizes = [5, 10]; // Reduced from [5, 10, 15] to [5, 10]
-      const results = [];
+      const samplesPerSize = 3; // Take multiple samples per size and compare medians
+      const aggregatedResults = [];
 
       // Act - Test performance at different scales
       for (const size of scalingSizes) {
-        const entityConfigs = Array.from({ length: size }, (_, i) => ({
-          definitionId,
-          instanceId: `scale_test_${size}_${i}`,
-        }));
+        const sampleTimings = [];
 
-        const startTime = performance.now();
-        const entities = await testBed.createTestEntitiesBatch(entityConfigs);
-        const endTime = performance.now();
+        for (let sample = 0; sample < samplesPerSize; sample++) {
+          const entityConfigs = Array.from({ length: size }, (_, i) => ({
+            definitionId,
+            instanceId: `scale_test_${size}_${sample}_${i}`,
+          }));
 
-        const timePerEntity = (endTime - startTime) / size;
-        results.push({
+          const startTime = performance.now();
+          const entities = await testBed.createTestEntitiesBatch(entityConfigs);
+          const endTime = performance.now();
+
+          const timePerEntity = (endTime - startTime) / size;
+          sampleTimings.push(timePerEntity);
+
+          expect(entities).toHaveLength(size);
+        }
+
+        // Use median to minimize impact from single noisy samples
+        const sortedSamples = [...sampleTimings].sort((a, b) => a - b);
+        const medianSample = sortedSamples[Math.floor(sortedSamples.length / 2)];
+
+        aggregatedResults.push({
           size,
-          totalTime: endTime - startTime,
-          timePerEntity,
-          entities: entities.length,
+          medianTimePerEntity: medianSample,
         });
-
-        expect(entities).toHaveLength(size);
       }
 
       // Assert performance doesn't degrade significantly with scale
       // Time per entity should remain relatively stable (within 5x variance)
-      const baseTimePerEntity = results[0].timePerEntity;
+      const baseTimePerEntity = aggregatedResults[0].medianTimePerEntity;
 
       // Ensure baseline is meaningful (at least 0.1ms per entity to avoid division issues)
       const minBaseline = 0.1;
       const effectiveBaseline = Math.max(baseTimePerEntity, minBaseline);
 
-      for (let i = 1; i < results.length; i++) {
-        const scalabilityFactor = results[i].timePerEntity / effectiveBaseline;
+      for (let i = 1; i < aggregatedResults.length; i++) {
+        const scalabilityFactor =
+          aggregatedResults[i].medianTimePerEntity / effectiveBaseline;
         // Allow up to 5x degradation to account for shared runner variance
         expect(scalabilityFactor).toBeLessThan(5);
       }

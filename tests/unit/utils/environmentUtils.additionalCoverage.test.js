@@ -31,6 +31,9 @@ const GLOBAL_KEYS = [
   'require',
 ];
 
+/**
+ *
+ */
 function snapshotGlobals() {
   const snapshot = new Map();
   for (const key of GLOBAL_KEYS) {
@@ -39,6 +42,10 @@ function snapshotGlobals() {
   return snapshot;
 }
 
+/**
+ *
+ * @param snapshot
+ */
 function restoreGlobals(snapshot) {
   for (const key of GLOBAL_KEYS) {
     if (snapshot.get(key) === undefined) {

@@ -15,6 +15,9 @@ import {
 
 const GOAL_SCHEMA_ERROR_CODE = 'GOAL_SCHEMA_VALIDATION_FAILED';
 
+/**
+ *
+ */
 function isPermissiveGoalLoaderMode() {
   const raw = process.env.GOAL_LOADER_ALLOW_DEFAULTS;
   if (typeof raw !== 'string') {
@@ -24,6 +27,9 @@ function isPermissiveGoalLoaderMode() {
   return normalized === '1' || normalized === 'true';
 }
 
+/**
+ *
+ */
 function isNormalizationDiagnosticsEnabled() {
   const raw = process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS;
   if (typeof raw !== 'string') {
@@ -39,6 +45,11 @@ function isNormalizationDiagnosticsEnabled() {
   return true;
 }
 
+/**
+ *
+ * @param modId
+ * @param registryKey
+ */
 function createNormalizationDiagnosticsState(modId = null, registryKey = null) {
   return {
     modId: modId || null,
@@ -60,6 +71,10 @@ function createNormalizationDiagnosticsState(modId = null, registryKey = null) {
   };
 }
 
+/**
+ *
+ * @param state
+ */
 function cloneNormalizationDiagnostics(state) {
   if (!state) {
     return null;
@@ -67,6 +82,10 @@ function cloneNormalizationDiagnostics(state) {
   return JSON.parse(JSON.stringify(state));
 }
 
+/**
+ *
+ * @param mutations
+ */
 function countAutoFilledFields(mutations) {
   if (!Array.isArray(mutations) || mutations.length === 0) {
     return 0;
@@ -80,10 +99,19 @@ function countAutoFilledFields(mutations) {
   return autoFilled;
 }
 
+/**
+ *
+ * @param segment
+ */
 function decodePointerSegment(segment) {
   return segment.replace(/~1/g, '/').replace(/~0/g, '~');
 }
 
+/**
+ *
+ * @param data
+ * @param pointer
+ */
 function getValueAtPointer(data, pointer) {
   if (!pointer) {
     return data;
@@ -110,6 +138,10 @@ function getValueAtPointer(data, pointer) {
   return current;
 }
 
+/**
+ *
+ * @param value
+ */
 function formatDataSnippet(value) {
   if (typeof value === 'undefined') {
     return undefined;

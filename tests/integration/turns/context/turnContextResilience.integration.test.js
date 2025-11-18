@@ -79,6 +79,9 @@ let consoleInfoSpy;
 let consoleWarnSpy;
 let consoleErrorSpy;
 
+/**
+ *
+ */
 function clearConsoleSpies() {
   consoleDebugSpy.mockClear();
   consoleInfoSpy.mockClear();
@@ -86,12 +89,19 @@ function clearConsoleSpies() {
   consoleErrorSpy.mockClear();
 }
 
+/**
+ *
+ */
 function createLogger() {
   const logger = new ConsoleLogger(LogLevel.DEBUG);
   clearConsoleSpies();
   return logger;
 }
 
+/**
+ *
+ * @param overrides
+ */
 function createTurnContext(overrides = {}) {
   const logger = overrides.logger ?? createLogger();
   const handlerInstance = overrides.handlerInstance ?? new RecordingHandler();
@@ -117,6 +127,11 @@ function createTurnContext(overrides = {}) {
   return { context, logger, handlerInstance };
 }
 
+/**
+ *
+ * @param spy
+ * @param substring
+ */
 function consoleCallIncludes(spy, substring) {
   return spy.mock.calls.some(([message]) =>
     typeof message === 'string' && message.includes(substring)

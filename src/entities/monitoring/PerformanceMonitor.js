@@ -206,7 +206,7 @@ export default class PerformanceMonitor {
    * @param {string} operation - Operation name
    * @param {number} duration - Duration in milliseconds
    * @param {string} [context] - Optional context information
-  */
+   */
   #recordOperation(operation, duration, context = '') {
     // Update operation counts
     this.#operationCounts[operation] =

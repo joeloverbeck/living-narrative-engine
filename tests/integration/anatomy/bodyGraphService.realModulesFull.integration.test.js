@@ -111,6 +111,9 @@ class TestEntityManager {
   }
 }
 
+/**
+ *
+ */
 function createEntityManagerWithAnatomy() {
   const manager = new TestEntityManager();
 
@@ -159,6 +162,11 @@ function createEntityManagerWithAnatomy() {
   return manager;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.queryCache
+ */
 function createService({ queryCache } = {}) {
   const entityManager = createEntityManagerWithAnatomy();
   const logger = new RecordingLogger();

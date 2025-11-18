@@ -6,9 +6,10 @@ import {
 
 /**
  * Create a canonical GOAP planner mock that satisfies the runtime contract.
+ *
  * @param {object} [options]
- * @param {*} [options.planResult={ tasks: [] }] - Default plan result when plan() is invoked.
- * @param {*} [options.lastFailure=null] - Default value returned by getLastFailure().
+ * @param {*} [options.planResult] - Default plan result when plan() is invoked.
+ * @param {*} [options.lastFailure] - Default value returned by getLastFailure().
  * @param {Function} [options.planImplementation] - Custom plan implementation.
  * @returns {object} Planner mock instance with helper mutators.
  */
@@ -28,6 +29,7 @@ export function createGoapPlannerMock(options = {}) {
     getLastFailure: jest.fn().mockImplementation(() => state.lastFailure),
     /**
      * Helper to override the next value returned by plan().
+     *
      * @param {*} result - Plan result payload
      * @returns {object} mock instance
      */
@@ -37,6 +39,7 @@ export function createGoapPlannerMock(options = {}) {
     },
     /**
      * Helper to replace plan() implementation entirely.
+     *
      * @param {Function} impl - New plan implementation
      * @returns {object} mock instance
      */
@@ -48,6 +51,7 @@ export function createGoapPlannerMock(options = {}) {
     },
     /**
      * Helper to control getLastFailure() payloads.
+     *
      * @param {*} failure - Failure object or null
      * @returns {object} mock instance
      */
@@ -57,6 +61,7 @@ export function createGoapPlannerMock(options = {}) {
     },
     /**
      * Reset failure payload to null.
+     *
      * @returns {object} mock instance
      */
     clearFailure() {

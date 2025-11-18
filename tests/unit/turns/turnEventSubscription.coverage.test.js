@@ -56,6 +56,9 @@ function createLoggerMock() {
   };
 }
 
+/**
+ *
+ */
 function createCapturingSchedulerMock() {
   const scheduler = {
     capturedError: undefined,

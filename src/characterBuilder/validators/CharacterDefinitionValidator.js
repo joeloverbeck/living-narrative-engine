@@ -533,6 +533,7 @@ export class CharacterDefinitionValidator {
 
   /**
    * Register custom semantic validation rule
+   *
    * @description Allows dynamic registration of additional semantic validation rules for extensibility and testing.
    * @param {SemanticValidationRule} rule - Rule to register
    * @returns {void}
@@ -572,6 +573,7 @@ export class CharacterDefinitionValidator {
 
   /**
    * Register custom quality assessment metric
+   *
    * @description Allows dynamic registration of quality metrics for extensibility and focused testing scenarios.
    * @param {QualityMetric} metric - Metric definition to register
    * @returns {void}

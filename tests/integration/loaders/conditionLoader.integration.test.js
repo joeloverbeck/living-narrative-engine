@@ -18,7 +18,7 @@ const CONDITION_SCHEMA_ID =
 class TestConfiguration {
   /**
    * @description Creates a new test configuration instance.
-   * @param {string} [schemaId=CONDITION_SCHEMA_ID] - Schema identifier for conditions.
+   * @param {string} [schemaId] - Schema identifier for conditions.
    */
   constructor(schemaId = CONDITION_SCHEMA_ID) {
     this._schemaId = schemaId;

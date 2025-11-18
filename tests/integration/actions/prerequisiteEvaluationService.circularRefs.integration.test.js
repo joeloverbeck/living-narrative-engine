@@ -40,6 +40,12 @@ class InMemoryConditionRepository {
   }
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.actorComponents
+ * @param root0.conditionDefinitions
+ */
 function createServiceEnvironment({ actorComponents, conditionDefinitions }) {
   const logger = new RecordingLogger();
   const entityManager = new SimpleEntityManager([

@@ -129,7 +129,7 @@ class ErrorReporter {
 
   /**
    * @description Resolve the current URL from provided globals.
-   * @param {object} [globals=globalThis] - Execution context that may include window/location.
+   * @param {object} [globals] - Execution context that may include window/location.
    * @returns {string|undefined} Current href when available.
    */
   static resolveCurrentUrl(globals) {
@@ -521,6 +521,7 @@ class ErrorReporter {
   /**
    * Collect environment information
    *
+   * @param globals
    * @private
    * @returns {Promise<object>} Environment information
    */

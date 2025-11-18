@@ -37,6 +37,7 @@ class PrimitiveActionStepExecutor {
    * @param {object} dependencies - Service dependencies
    * @param {object} dependencies.parameterResolutionService - Resolves parameter references
    * @param {object} dependencies.container - DI container for lazy resolution of transient services
+   * @param dependencies.appContainer
    * @param {object} dependencies.operationInterpreter - Executes operations
    * @param {object} dependencies.actionIndex - Registry of action definitions
    * @param {object} dependencies.gameDataRepository - Access to game data

@@ -38,6 +38,10 @@ describe('ProcessingIndicatorController', () => {
   /** @type {ReturnType<typeof setupController>} */
   let testContext;
 
+  /**
+   *
+   * @param overrides
+   */
   function createDomElementFactory(overrides = {}) {
     return {
       create: jest.fn((tag, options) => {
@@ -71,6 +75,10 @@ describe('ProcessingIndicatorController', () => {
     };
   }
 
+  /**
+   *
+   * @param selectorMap
+   */
   function createDocumentContext(selectorMap) {
     return {
       query: jest.fn((selector) => {
@@ -84,6 +92,10 @@ describe('ProcessingIndicatorController', () => {
     };
   }
 
+  /**
+   *
+   * @param options
+   */
   function setupController(options = {}) {
     const outputDiv = options.outputDiv ?? document.createElement('div');
     outputDiv.id = 'outputDiv';

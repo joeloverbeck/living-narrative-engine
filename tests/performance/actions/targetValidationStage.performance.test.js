@@ -14,6 +14,12 @@ const createLogger = () => ({
   error: jest.fn(),
 });
 
+/**
+ *
+ * @param root0
+ * @param root0.snapshot
+ * @param root0.logger
+ */
 function buildStage({ snapshot, logger }) {
   const componentValidator = {
     validateTargetComponents: jest.fn(() => ({ valid: true })),
@@ -49,6 +55,10 @@ function buildStage({ snapshot, logger }) {
   });
 }
 
+/**
+ *
+ * @param count
+ */
 function buildActionsWithTargets(count) {
   return Array.from({ length: count }, (_, index) => ({
     actionDef: {

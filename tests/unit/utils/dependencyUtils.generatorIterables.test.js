@@ -57,6 +57,9 @@ describe('dependencyUtils generator and type edge cases', () => {
     const logger = { error: jest.fn() };
     const iterationOrder = [];
 
+    /**
+     *
+     */
     function* dependencySpecs() {
       iterationOrder.push('first');
       yield {

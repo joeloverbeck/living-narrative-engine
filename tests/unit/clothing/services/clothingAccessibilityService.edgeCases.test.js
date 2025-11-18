@@ -2,6 +2,9 @@ import { describe, it, expect, jest, afterEach } from '@jest/globals';
 import { ClothingAccessibilityService } from '../../../../src/clothing/services/clothingAccessibilityService.js';
 import { PRIORITY_CONFIG } from '../../../../src/scopeDsl/prioritySystem/priorityConstants.js';
 
+/**
+ *
+ */
 function createMocks() {
   return {
     logger: {

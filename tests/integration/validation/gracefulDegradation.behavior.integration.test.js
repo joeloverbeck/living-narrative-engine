@@ -33,6 +33,10 @@ class MemoryLogger {
 
 const originalRegisterStrategy = GracefulDegradationClass.prototype.registerStrategy;
 
+/**
+ *
+ * @param dependencies
+ */
 function createBareInstance(dependencies) {
   GracefulDegradationClass.prototype.registerStrategy = function registerStrategyStub() {
     return undefined;

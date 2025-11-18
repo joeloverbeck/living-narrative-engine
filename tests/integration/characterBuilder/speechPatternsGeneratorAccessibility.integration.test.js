@@ -23,6 +23,7 @@ const activeControllers = new Set();
 class ExportAwareSpeechPatternsGeneratorController extends SpeechPatternsGeneratorController {
   /**
    * Ensure export controls are cached for the tests.
+   *
    * @protected
    */
   _cacheElements() {
@@ -36,6 +37,7 @@ class ExportAwareSpeechPatternsGeneratorController extends SpeechPatternsGenerat
 
   /**
    * Provide a predictable requestAnimationFrame fallback for jsdom tests.
+   *
    * @protected
    * @param {Function} callback
    * @returns {number}
@@ -49,6 +51,7 @@ class ExportAwareSpeechPatternsGeneratorController extends SpeechPatternsGenerat
 
   /**
    * Provide a cancelAnimationFrame fallback for jsdom tests.
+   *
    * @protected
    * @param {number} handle
    * @returns {void}
@@ -59,6 +62,9 @@ class ExportAwareSpeechPatternsGeneratorController extends SpeechPatternsGenerat
   }
 }
 
+/**
+ *
+ */
 function ensureAnimationFramePolyfill() {
   if (!global.requestAnimationFrame) {
     global.requestAnimationFrame = (callback) => setTimeout(() => callback(Date.now()), 16);
@@ -66,6 +72,10 @@ function ensureAnimationFramePolyfill() {
   }
 }
 
+/**
+ *
+ * @param includeExportControls
+ */
 function setupDom(includeExportControls = true) {
   ensureAnimationFramePolyfill();
 
@@ -105,11 +115,18 @@ function setupDom(includeExportControls = true) {
   `;
 }
 
+/**
+ *
+ * @param event
+ */
 function dispatchFromBody(event) {
   const target = document.body || document;
   target.dispatchEvent(event);
 }
 
+/**
+ *
+ */
 function createLogger() {
   return {
     debug: jest.fn(),
@@ -119,6 +136,9 @@ function createLogger() {
   };
 }
 
+/**
+ *
+ */
 function createSchemaValidator() {
   return {
     validate: jest.fn().mockReturnValue({ isValid: true, errors: [] }),
@@ -126,6 +146,9 @@ function createSchemaValidator() {
   };
 }
 
+/**
+ *
+ */
 function createCharacterBuilderService() {
   return {
     initialize: jest.fn().mockResolvedValue(),
@@ -139,6 +162,9 @@ function createCharacterBuilderService() {
   };
 }
 
+/**
+ *
+ */
 function createEventBus() {
   const subscriptions = new Map();
   return {
@@ -183,6 +209,10 @@ function createEventBus() {
   };
 }
 
+/**
+ *
+ * @param logger
+ */
 function createLifecycleOrchestrator(logger) {
   const hooks = new Map();
   const orchestrator = {
@@ -290,6 +320,13 @@ function createLifecycleOrchestrator(logger) {
   return orchestrator;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.speechPatternsGenerator
+ * @param root0.schemaValidator
+ * @param root0.displayEnhancer
+ */
 function createDependencies({
   speechPatternsGenerator,
   schemaValidator,
@@ -356,6 +393,9 @@ function createDependencies({
   };
 }
 
+/**
+ *
+ */
 function createDisplayEnhancerStub() {
   return {
     enhanceForDisplay: jest.fn((patterns) => {
@@ -390,6 +430,9 @@ function createDisplayEnhancerStub() {
   };
 }
 
+/**
+ *
+ */
 function createValidCharacterDefinition() {
   const background = 'An academic with a passion for linguistics and storytelling.'.repeat(2);
   return {
@@ -407,6 +450,9 @@ function createValidCharacterDefinition() {
   };
 }
 
+/**
+ *
+ */
 function createSuccessfulResult() {
   return {
     characterName: 'Professor Ada Lovette',
@@ -431,6 +477,11 @@ function createSuccessfulResult() {
   };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.useFakeTimers
+ */
 async function enterValidCharacterDefinition({ useFakeTimers = false } = {}) {
   const textarea = document.getElementById('character-definition');
   textarea.value = JSON.stringify(createValidCharacterDefinition(), null, 2);
@@ -447,6 +498,12 @@ async function enterValidCharacterDefinition({ useFakeTimers = false } = {}) {
   textarea.dispatchEvent(new Event('blur', { bubbles: true }));
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.duration
+ * @param root0.useFakeTimers
+ */
 async function waitForGeneration({ duration = 650, useFakeTimers = false } = {}) {
   if (useFakeTimers) {
     await jest.advanceTimersByTimeAsync(duration);

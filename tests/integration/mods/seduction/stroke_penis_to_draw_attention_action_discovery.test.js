@@ -23,6 +23,14 @@ const ACTOR_GROIN_ID = `${ACTOR_ID}_groin`;
 const ACTOR_PENIS_ID = `${ACTOR_GROIN_ID}_penis`;
 const ACTOR_CLOTHING_ID = `${ACTOR_ID}_slacks`;
 
+/**
+ *
+ * @param fixture
+ * @param root0
+ * @param root0.hasPenis
+ * @param root0.penisCovered
+ * @param root0.includeHugging
+ */
 function loadScenario(
   fixture,
   { hasPenis = true, penisCovered = false, includeHugging = false } = {}

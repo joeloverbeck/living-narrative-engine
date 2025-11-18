@@ -9,6 +9,9 @@ import { LogLevel } from '../../../src/logging/consoleLogger.js';
 import { ActionTestUtilities } from '../../common/actions/actionTestUtilities.js';
 import { createMinimalTestContainer } from '../../common/scopeDsl/minimalTestContainer.js';
 
+/**
+ *
+ */
 async function buildRealTargetResolutionHarness() {
   const containerHandle = await createMinimalTestContainer({
     enableTracing: true,

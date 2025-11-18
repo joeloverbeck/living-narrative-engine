@@ -29,10 +29,10 @@ function createTestLogger() {
 /**
  * @description Builds a fully wired filter resolver and the supporting runtime context.
  * @param {object} [options] - Optional overrides for the resolver dependencies.
- * @param {boolean} [options.includeErrorHandler=true] - Whether to provide the Scope DSL error handler.
+ * @param {boolean} [options.includeErrorHandler] - Whether to provide the Scope DSL error handler.
  * @param {Array<object>} [options.entities] - Seed entities for the SimpleEntityManager.
  * @param {{evaluate: Function}} [options.logicEvalOverride] - Custom logic evaluator used instead of the default.
- * @param {boolean} [options.omitErrorHandlerProperty=false] - Whether to omit the error handler parameter entirely.
+ * @param {boolean} [options.omitErrorHandlerProperty] - Whether to omit the error handler parameter entirely.
  * @returns {{
  *   filterResolver: { resolve: Function, canResolve: Function },
  *   errorHandler: ScopeDslErrorHandler|null,

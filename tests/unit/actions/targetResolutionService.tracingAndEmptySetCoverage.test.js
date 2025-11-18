@@ -36,6 +36,11 @@ describe('TargetResolutionService tracing and empty result handling', () => {
     };
   });
 
+  /**
+   *
+   * @param root0
+   * @param root0.useDefaultSetup
+   */
   function createService({ useDefaultSetup = false } = {}) {
     const deps = {
       unifiedScopeResolver: mockResolver,

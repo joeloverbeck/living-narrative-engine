@@ -34,6 +34,10 @@ const SEVERITY_RULES = [
   },
 ];
 
+/**
+ *
+ * @param dirPath
+ */
 function walkDirectory(dirPath) {
   const entries = fs.readdirSync(dirPath, { withFileTypes: true });
   let files = [];
@@ -52,11 +56,18 @@ function walkDirectory(dirPath) {
   return files;
 }
 
+/**
+ *
+ * @param filePath
+ */
 function determineSeverity(filePath) {
   const matchedRule = SEVERITY_RULES.find(rule => rule.test(filePath));
   return matchedRule || SEVERITY_RULES[SEVERITY_RULES.length - 1];
 }
 
+/**
+ *
+ */
 function collectReferences() {
   const files = walkDirectory(SRC_DIR);
   const results = Object.fromEntries(MODS_TO_AUDIT.map(mod => [mod.id, []]));
@@ -91,6 +102,10 @@ function collectReferences() {
   return results;
 }
 
+/**
+ *
+ * @param results
+ */
 function buildSummaryStats(results) {
   const stats = {};
   MODS_TO_AUDIT.forEach(mod => {
@@ -112,6 +127,11 @@ function buildSummaryStats(results) {
   return stats;
 }
 
+/**
+ *
+ * @param results
+ * @param stats
+ */
 function renderAuditMarkdown(results, stats) {
   const totalViolations = MODS_TO_AUDIT.reduce((sum, mod) => sum + stats[mod.id].total, 0);
   let markdown = '# Hardcoded Mod References - Complete Audit\n\n';
@@ -173,6 +193,10 @@ function renderAuditMarkdown(results, stats) {
   return markdown;
 }
 
+/**
+ *
+ * @param stats
+ */
 function renderSummaryMarkdown(stats) {
   let markdown = '# Hardcoded Mod References - Summary\n\n';
   markdown += `**Generated:** ${new Date().toISOString()}\n\n`;
@@ -186,18 +210,29 @@ function renderSummaryMarkdown(stats) {
   return markdown;
 }
 
+/**
+ *
+ */
 function ensureDocsDirectory() {
   if (!fs.existsSync(DOCS_DIR)) {
     fs.mkdirSync(DOCS_DIR, { recursive: true });
   }
 }
 
+/**
+ *
+ * @param auditMarkdown
+ * @param summaryMarkdown
+ */
 function writeAuditFiles(auditMarkdown, summaryMarkdown) {
   ensureDocsDirectory();
   fs.writeFileSync(AUDIT_DOC_PATH, auditMarkdown);
   fs.writeFileSync(SUMMARY_DOC_PATH, summaryMarkdown);
 }
 
+/**
+ *
+ */
 function main() {
   const results = collectReferences();
   const stats = buildSummaryStats(results);

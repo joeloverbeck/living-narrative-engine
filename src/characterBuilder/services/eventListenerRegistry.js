@@ -88,9 +88,9 @@ export class EventListenerRegistry {
    * @param {object} [options] - Listener options.
    * @param {string} [options.id] - Explicit listener id.
    * @param {Function} [options.originalHandler] - Original handler before binding/wrapping.
-   * @param {boolean} [options.capture=false] - Capture phase flag.
-   * @param {boolean} [options.once=false] - Single-fire flag.
-   * @param {boolean} [options.passive=true] - Passive flag.
+   * @param {boolean} [options.capture] - Capture phase flag.
+   * @param {boolean} [options.once] - Single-fire flag.
+   * @param {boolean} [options.passive] - Passive flag.
    * @returns {string|null} Listener identifier or null when target missing.
    */
   addEventListener(element, event, handler, options = {}) {
@@ -522,6 +522,11 @@ export class EventListenerRegistry {
   /**
    * Register wrapped listeners that require cleanup.
    *
+   * @param element
+   * @param event
+   * @param handler
+   * @param options
+   * @param cleanup
    * @private
    */
   #registerWrappedListener(element, event, handler, options, cleanup) {

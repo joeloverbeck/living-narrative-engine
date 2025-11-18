@@ -187,6 +187,11 @@ describe('Recipe usage detection', () => {
   });
 });
 
+/**
+ *
+ * @param recipePath
+ * @param options
+ */
 async function performComparison(recipePath, options = {}) {
   let capturedValidator = null;
   const transformValidatorDeps = options.transformValidatorDeps;
@@ -223,12 +228,20 @@ async function performComparison(recipePath, options = {}) {
   return { cliReport, validatorReport };
 }
 
+/**
+ *
+ * @param relativePath
+ */
 async function loadRecipe(relativePath) {
   const absolutePath = path.resolve(process.cwd(), relativePath);
   const contents = await fs.readFile(absolutePath, 'utf-8');
   return JSON.parse(contents);
 }
 
+/**
+ *
+ * @param report
+ */
 function normalizeReport(report) {
   const payload =
     typeof report?.toJSON === 'function' ? report.toJSON() : structuredClone(report);
@@ -251,6 +264,10 @@ function normalizeReport(report) {
   return sanitized;
 }
 
+/**
+ *
+ * @param collection
+ */
 function sortIssues(collection = []) {
   if (!Array.isArray(collection)) {
     return [];
@@ -265,6 +282,10 @@ function sortIssues(collection = []) {
     });
 }
 
+/**
+ *
+ * @param collection
+ */
 function sortPassedChecks(collection = []) {
   if (!Array.isArray(collection)) {
     return [];
@@ -279,6 +300,10 @@ function sortPassedChecks(collection = []) {
     });
 }
 
+/**
+ *
+ * @param value
+ */
 function toPosix(value) {
   if (!value) {
     return value;
@@ -286,6 +311,9 @@ function toPosix(value) {
   return value.split(path.sep).join('/');
 }
 
+/**
+ *
+ */
 function createSilentConsole() {
   return {
     log: jest.fn(),
@@ -294,6 +322,11 @@ function createSilentConsole() {
   };
 }
 
+/**
+ *
+ * @param existingFailures
+ * @param newFailure
+ */
 function mergeLoadFailures(existingFailures = {}, newFailure) {
   const failures = [
     ...((existingFailures.entityDefinitions?.failures || []).map((failure) => ({
@@ -314,6 +347,10 @@ function mergeLoadFailures(existingFailures = {}, newFailure) {
   };
 }
 
+/**
+ *
+ * @param baseMatcher
+ */
 function createForwardingMatcher(baseMatcher) {
   return {
     findMatchingEntities: jest.fn((...args) =>
@@ -328,6 +365,10 @@ function createForwardingMatcher(baseMatcher) {
   };
 }
 
+/**
+ *
+ * @param recipeData
+ */
 async function captureRuntimeError(recipeData) {
   const testBed = new AnatomyIntegrationTestBed();
   await testBed.loadAnatomyModData();
@@ -346,6 +387,10 @@ async function captureRuntimeError(recipeData) {
   }
 }
 
+/**
+ *
+ * @param value
+ */
 function removeTimestamps(value) {
   if (Array.isArray(value)) {
     return value.map((item) => removeTimestamps(item));

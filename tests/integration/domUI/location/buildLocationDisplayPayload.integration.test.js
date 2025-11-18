@@ -10,6 +10,9 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js'
 const DEFAULT_ACTOR_ID = 'entity:hero';
 const DEFAULT_LOCATION_ID = 'location:atrium';
 
+/**
+ *
+ */
 function createMockEventDispatcher() {
   const handlers = new Map();
   return {
@@ -44,6 +47,9 @@ function createMockEventDispatcher() {
   };
 }
 
+/**
+ *
+ */
 function setupDomContainer() {
   const container = document.createElement('section');
   container.id = 'location-container';
@@ -88,6 +94,17 @@ function setupDomContainer() {
   };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.testBed
+ * @param root0.locationDetails
+ * @param root0.portraitData
+ * @param root0.characterInfoById
+ * @param root0.actorId
+ * @param root0.locationId
+ * @param root0.extraEntities
+ */
 function setupRenderer({
   testBed,
   locationDetails,

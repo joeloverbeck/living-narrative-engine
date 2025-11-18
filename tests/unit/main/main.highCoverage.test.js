@@ -60,6 +60,9 @@ jest.mock('../../../src/dependencyInjection/containerConfig.js', () => ({
   configureContainer: jest.fn(),
 }));
 
+/**
+ *
+ */
 function buildUIElements() {
   return {
     outputDiv: document.getElementById('outputDiv'),
@@ -69,6 +72,11 @@ function buildUIElements() {
   };
 }
 
+/**
+ *
+ * @param logger
+ * @param gameEngine
+ */
 function primeSuccessfulStages(logger, gameEngine) {
   mockEnsure.mockImplementation(async (doc, { createUIBootstrapper }) => {
     if (typeof createUIBootstrapper === 'function') {

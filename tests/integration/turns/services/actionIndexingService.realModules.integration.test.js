@@ -74,6 +74,7 @@ class TraceProbe {
 
 /**
  * Builds a discovered action payload from an action definition for indexing.
+ *
  * @param {object} actionDefinition
  * @param {number} index
  * @returns {object}

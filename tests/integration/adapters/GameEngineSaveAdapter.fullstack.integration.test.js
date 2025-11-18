@@ -140,6 +140,9 @@ class ConfigurableGamePersistenceService {
   }
 }
 
+/**
+ *
+ */
 function createSaveAdapterEnvironment() {
   const container = new AppContainer();
   const logger = new RecordingLogger();
@@ -173,6 +176,11 @@ function createSaveAdapterEnvironment() {
   };
 }
 
+/**
+ *
+ * @param env
+ * @param worldName
+ */
 async function bootstrapInitializedEngine(env, worldName = 'Sanctuary') {
   await env.engine.startNewGame(worldName);
   env.safeEventDispatcher.events = [];

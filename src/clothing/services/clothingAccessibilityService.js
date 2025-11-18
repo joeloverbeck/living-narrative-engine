@@ -59,7 +59,7 @@ export class ClothingAccessibilityService {
    * @param {IEntitiesGateway} [deps.entitiesGateway] - Optional entities gateway for coverage analysis
    * @param {Function} [deps.coverageAnalyzerFactory] - Optional factory used to create the coverage analyzer
    * @param {object} [deps.priorityConfig] - Optional priority configuration overrides
-   * @param {number} [deps.maxCacheSize=500] - Maximum number of cache entries for query results
+   * @param {number} [deps.maxCacheSize] - Maximum number of cache entries for query results
    */
   constructor({
     logger,

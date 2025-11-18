@@ -80,7 +80,6 @@ export { extractContextPath } from './placeholderPathResolver.js';
  * `executionContext.evaluationContext.context` when resolving placeholders. Those
  * scenarios are treated as debug-level noise by higher level callers and should not
  * surface as warnings during placeholder resolution.
- *
  * @param {import('../interfaces/coreServices.js').ILogger} baseLogger - Logger to wrap.
  * @returns {import('../interfaces/coreServices.js').ILogger} Logger with filtered warnings.
  */

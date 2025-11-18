@@ -897,13 +897,19 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
       id: 'test_actor',
       components: {
         'core:armed': { equipped: true },
+        'core:needs': { hunger: 55 },
       },
     };
     setup.registerPlanningActor(actor);
 
     const goal = createTestGoal({
       id: 'test:be_armed-runtime',
-      goalState: { has_component: ['actor', 'core:armed'] },
+      goalState: {
+        and: [
+          { has_component: ['actor', 'core:armed'] },
+          { has_component: ['actor', 'core:needs'] },
+        ],
+      },
       relevance: { '==': [true, true] },
       priority: 10,
     });
@@ -930,12 +936,16 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
     expect(planningCompleted.payload.planLength).toBeGreaterThan(0);
 
     const stateMissEvents = setup.eventBus.getEvents(GOAP_EVENTS.STATE_MISS);
-    expect(stateMissEvents.length).toBeGreaterThan(0);
-    expect(
-      stateMissEvents.some(
-        (event) => event.payload?.componentId === 'core:armed'
-      )
-    ).toBe(true);
+    expect(stateMissEvents.length).toBeGreaterThan(1);
+
+    const missedComponents = new Set(
+      stateMissEvents
+        .map((event) => event.payload?.componentId)
+        .filter(Boolean)
+    );
+
+    expect(missedComponents.has('core:armed')).toBe(true);
+    expect(missedComponents.has('core:needs')).toBe(true);
   });
 
   it('should handle mixed component + numeric goals', async () => {

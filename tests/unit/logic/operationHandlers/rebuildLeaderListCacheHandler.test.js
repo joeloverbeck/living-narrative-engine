@@ -39,6 +39,7 @@ const makeMockLogger = () => ({
  *
  * @param {string} id - The entity ID.
  * @param {object} [components] - A map of component IDs to their data.
+ * @param options
  * @returns {{ id: string, getComponentData: jest.Mock, hasComponent: jest.Mock }}
  */
 const makeMockEntity = (id, components = {}, options = {}) => {

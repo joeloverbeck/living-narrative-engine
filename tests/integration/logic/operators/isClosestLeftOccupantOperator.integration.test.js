@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it } from '@jest/globals';
 import { IsClosestLeftOccupantOperator } from '../../../../src/logic/operators/isClosestLeftOccupantOperator.js';
 import { SimpleEntityManager } from '../../../common/entities/index.js';
 
+/**
+ *
+ */
 function createTestLogger() {
   const logs = { debug: [], info: [], warn: [], error: [] };
   return {

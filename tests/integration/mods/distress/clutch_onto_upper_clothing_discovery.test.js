@@ -12,6 +12,10 @@ import eventIsActionClutchOntoUpperClothing from '../../../../data/mods/distress
 
 const ACTION_ID = 'distress:clutch_onto_upper_clothing';
 
+/**
+ *
+ * @param slot
+ */
 function extractGarmentIdsFromSlot(slot) {
   if (!slot) {
     return [];

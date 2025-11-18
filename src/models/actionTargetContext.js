@@ -19,9 +19,9 @@ export class ActionTargetContext {
    * @param {ActionTargetType} type - The type of the target.
    * @param {object} [options] - Additional options based on type.
    * @param {string} [options.entityId] - Required if type is 'entity'. Must be a non-empty string.
-   * @param {string|null} [options.placeholder=null] - Template placeholder associated with the target.
-   * @param {string|null} [options.displayName=null] - Preferred display name for formatted output.
-   * @param {string|null} [options.contextFromId=null] - Originating primary target identifier when dependent.
+   * @param {string|null} [options.placeholder] - Template placeholder associated with the target.
+   * @param {string|null} [options.displayName] - Preferred display name for formatted output.
+   * @param {string|null} [options.contextFromId] - Originating primary target identifier when dependent.
    * @throws {Error} If required options for the given type are missing or invalid.
    */
   constructor(

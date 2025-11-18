@@ -206,6 +206,7 @@ describe('High Concurrency E2E', () => {
 
   /**
    * Wraps a promise with a timeout to prevent indefinite hanging
+   *
    * @param {Promise} promise - The promise to wrap
    * @param {number} timeoutMs - Timeout in milliseconds
    * @param {string} operationName - Name of the operation for error messages

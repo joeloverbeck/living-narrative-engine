@@ -50,7 +50,9 @@ class NumericConstraintEvaluator {
    *
    * @param {object} params - Constructor parameters
    * @param {object} params.jsonLogicEvaluator - Service to evaluate JSON Logic expressions
+   * @param params.jsonLogicEvaluationService
    * @param {object} params.logger - Logger instance
+   * @param params.goapEventDispatcher
    */
   constructor({
     jsonLogicEvaluator,
@@ -105,6 +107,7 @@ class NumericConstraintEvaluator {
    *
    * @param {object} constraint - JSON Logic numeric constraint
    * @param {object} context - Current state context
+   * @param options
    * @returns {number|null} Distance value or null if not numeric
    * @example
    * // Current hunger is 80, goal is <= 30

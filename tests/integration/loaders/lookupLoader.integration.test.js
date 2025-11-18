@@ -18,7 +18,7 @@ const LOOKUP_SCHEMA_ID =
 class TestConfiguration {
   /**
    * @description Creates a new test configuration instance.
-   * @param {string} [schemaId=LOOKUP_SCHEMA_ID] - Schema identifier for lookups.
+   * @param {string} [schemaId] - Schema identifier for lookups.
    */
   constructor(schemaId = LOOKUP_SCHEMA_ID) {
     this._schemaId = schemaId;

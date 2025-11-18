@@ -84,6 +84,9 @@ export function createMockCacheStrategy(options = {}) {
  */
 let sharedCacheInstance = null;
 
+/**
+ *
+ */
 export function getSharedMockCacheStrategy() {
   if (!sharedCacheInstance) {
     sharedCacheInstance = createMockCacheStrategy({ enableSpies: false });

@@ -19,7 +19,6 @@
  * - Multi-action numeric goals (e.g., reduce hunger 100 → 0)
  * - Simple goals with independent conditions
  * - Fast planning with reasonable accuracy
- *
  * @see src/goap/planner/relaxedPlanningGraphHeuristic.js - More accurate alternative
  * @see docs/goap/multi-action-planning.md#heuristic-enhancement
  */
@@ -80,6 +79,7 @@ class GoalDistanceHeuristic {
    *
    * @param {object} params - Constructor parameters
    * @param {object} params.jsonLogicEvaluator - Service to evaluate JSON Logic conditions
+   * @param params.jsonLogicEvaluationService
    * @param {object} params.numericConstraintEvaluator - Service to evaluate numeric constraints
    * @param {object} params.planningEffectsSimulator - Service to simulate task effects
    * @param {object} params.logger - Logger instance
@@ -126,7 +126,9 @@ class GoalDistanceHeuristic {
    * Calculate distance for goalState format (single condition)
    *
    * @param {object} state - Current planning state
+   * @param adapter
    * @param {object} goalState - Goal condition (JSON Logic expression)
+   * @param metadata
    * @returns {number} Distance to goal (0 if satisfied, numeric distance if numeric constraint, 1 otherwise)
    * @private
    */
@@ -185,6 +187,7 @@ class GoalDistanceHeuristic {
    * This provides better A* guidance than raw distance alone.
    *
    * @param {object} state - Current planning state
+   * @param adapter
    * @param {object} goalState - Goal condition (JSON Logic expression)
    * @param {Array<object>} tasks - Available tasks for multi-action estimation
    * @param {object} goal - Full goal object (for logging)
@@ -243,6 +246,7 @@ class GoalDistanceHeuristic {
    * @param {Array<object>} tasks - Available tasks from task library
    * @param {PlanningStateView} stateView - Planning state view helper
    * @param {object} goal - Goal being planned for
+   * @param adapter
    * @returns {object|null} Best task or null if none reduce distance
    * @private
    */
@@ -268,6 +272,7 @@ class GoalDistanceHeuristic {
    * @param {object} task - Task to estimate (must have planningEffects)
    * @param {PlanningStateView} stateView - Planning state helper
    * @param {object} goal - Goal being planned for
+   * @param adapter
    * @returns {number} Distance reduced per action (>= 0)
    * @private
    */
@@ -372,6 +377,7 @@ class GoalDistanceHeuristic {
    * Calculate distance for conditions array format (legacy)
    *
    * @param {object} state - Current planning state
+   * @param stateView
    * @param {Array} conditions - Array of condition objects
    * @returns {number} Count of unsatisfied conditions
    * @private

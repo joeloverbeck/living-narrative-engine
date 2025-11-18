@@ -34,6 +34,12 @@ class InMemoryStorageAdapter {
   }
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.beforeImport
+ * @param root0.disableQueueProcessor
+ */
 async function loadService({ beforeImport, disableQueueProcessor = false } = {}) {
   jest.resetModules();
 

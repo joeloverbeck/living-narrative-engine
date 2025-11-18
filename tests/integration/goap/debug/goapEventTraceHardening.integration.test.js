@@ -8,6 +8,11 @@ import { createConsumeTask } from '../testFixtures/testTaskFactory.js';
 import { createHungerGoal } from '../testFixtures/testGoalFactory.js';
 import { createGoapEventTraceProbe } from '../../../../src/goap/debug/goapEventTraceProbe.js';
 
+/**
+ *
+ * @param setup
+ * @param logger
+ */
 function buildPlanInspector(setup, logger) {
   return new PlanInspector({
     goapController: setup.controller,
@@ -18,10 +23,19 @@ function buildPlanInspector(setup, logger) {
   });
 }
 
+/**
+ *
+ * @param logger
+ */
 function buildStateDiffViewer(logger) {
   return new StateDiffViewer({ logger });
 }
 
+/**
+ *
+ * @param setup
+ * @param logger
+ */
 function buildRefinementTracer(setup, logger) {
   return new RefinementTracer({
     eventBus: setup.eventBus,

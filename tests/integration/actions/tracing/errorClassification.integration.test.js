@@ -5,6 +5,9 @@ import {
   RECOVERY_POTENTIAL,
 } from '../../../../src/actions/tracing/errorClassification.js';
 
+/**
+ *
+ */
 function createIntegrationLogger() {
   const logger = {
     debug: jest.fn(),

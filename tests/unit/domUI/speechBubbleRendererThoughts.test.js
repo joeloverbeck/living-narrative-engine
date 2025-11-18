@@ -61,6 +61,10 @@ jest.mock('../../../src/domUI/helpers/buildSpeechMeta.js', () => ({
 import { buildSpeechMeta } from '../../../src/domUI/helpers/buildSpeechMeta.js';
 
 // Helper function to create mock elements
+/**
+ *
+ * @param tag
+ */
 function createMockElement(tag) {
   return {
     appendChild: jest.fn(),

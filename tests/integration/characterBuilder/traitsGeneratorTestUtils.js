@@ -181,6 +181,11 @@ class TestCharacterBuilderService {
   }
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.includeResultsContainer
+ */
 function createTraitsGeneratorDOM({ includeResultsContainer = true } = {}) {
   document.body.innerHTML = `
     <div id="traits-generator-root">
@@ -227,6 +232,16 @@ function createTraitsGeneratorDOM({ includeResultsContainer = true } = {}) {
   `;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.directions
+ * @param root0.motivations
+ * @param root0.cliches
+ * @param root0.traitsResolver
+ * @param root0.includeResultsContainer
+ * @param root0.traitsDisplayEnhancerFactory
+ */
 function createControllerSetup({
   directions = [defaultDirectionItem],
   motivations = new Map([[defaultDirectionItem.direction.id, defaultMotivations]]),
@@ -466,17 +481,27 @@ function createControllerSetup({
   return { controller, logger, eventBus, schemaValidator, service };
 }
 
+/**
+ *
+ */
 async function flushMicrotasksOnly() {
   await Promise.resolve();
   await Promise.resolve();
 }
 
+/**
+ *
+ */
 async function flushAsyncOperations() {
   await flushMicrotasksOnly();
   jest.runOnlyPendingTimers();
   await flushMicrotasksOnly();
 }
 
+/**
+ *
+ * @param controller
+ */
 async function initializeAndSettle(controller) {
   await controller.initialize();
   await flushAsyncOperations();

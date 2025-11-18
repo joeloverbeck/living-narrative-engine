@@ -86,6 +86,9 @@ const createDispatcher = () => ({
   dispatch: jest.fn().mockResolvedValue(undefined),
 });
 
+/**
+ *
+ */
 async function createFixture() {
   const entityManager = new IntegrationEntityManager();
   const logger = createLogger();

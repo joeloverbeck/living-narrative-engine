@@ -93,6 +93,10 @@ describe('integration: loadModsFromGameConfig', () => {
     }
   });
 
+  /**
+   *
+   * @param session
+   */
   function createHarness(session) {
     const logger = createMockLogger();
     const registry = new InMemoryDataRegistry({ logger });

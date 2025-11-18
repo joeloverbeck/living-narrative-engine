@@ -1,6 +1,5 @@
 /**
  * @file Comprehensive integration flow exercising dependencyUtils helpers.
- *
  * @description
  *  This suite wires together several production modules that rely on
  *  dependencyUtils for runtime validation. By constructing the modules with

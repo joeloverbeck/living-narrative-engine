@@ -2,6 +2,10 @@ import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import { ActionFormattingStage } from '../../../../../src/actions/pipeline/stages/ActionFormattingStage.js';
 import ActionCommandFormatter from '../../../../../src/actions/actionFormatter.js';
 
+/**
+ *
+ * @param baseCommandFormatterOverrides
+ */
 function createStageWithFallback(baseCommandFormatterOverrides = {}) {
   const baseFormatter = new ActionCommandFormatter();
   const commandFormatter = {
@@ -49,6 +53,10 @@ describe('ActionFormattingStage legacy fallback for rub over clothes actions', (
     stage = createStageWithFallback();
   });
 
+  /**
+   *
+   * @param template
+   */
   function buildContext(template) {
     return {
       actor: { id: 'alice' },

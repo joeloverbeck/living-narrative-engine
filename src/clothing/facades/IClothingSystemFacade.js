@@ -81,6 +81,7 @@ class IClothingSystemFacade extends BaseFacade {
 
   /**
    * Get all accessible clothing items for an entity
+   *
    * @param {string} entityId - Entity identifier
    * @param {QueryOptions} [options] - Query options
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').QueryResponse>}
@@ -117,6 +118,7 @@ class IClothingSystemFacade extends BaseFacade {
 
   /**
    * Get currently equipped items for an entity
+   *
    * @param {string} entityId - Entity identifier
    * @param {QueryOptions} [options] - Query options
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').QueryResponse>}
@@ -153,6 +155,7 @@ class IClothingSystemFacade extends BaseFacade {
 
   /**
    * Get items equipped in a specific slot
+   *
    * @param {string} entityId - Entity identifier
    * @param {string} slot - Slot identifier
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').ItemResponse>}
@@ -181,6 +184,7 @@ class IClothingSystemFacade extends BaseFacade {
 
   /**
    * Check if an item is compatible with a slot for an entity
+   *
    * @param {string} entityId - Entity identifier
    * @param {string} itemId - Item identifier
    * @param {string} slot - Slot identifier
@@ -224,6 +228,7 @@ class IClothingSystemFacade extends BaseFacade {
 
   /**
    * Equip an item to a specific slot
+   *
    * @param {string} entityId - Entity identifier
    * @param {string} itemId - Item identifier
    * @param {string} slot - Slot identifier
@@ -285,6 +290,7 @@ class IClothingSystemFacade extends BaseFacade {
 
   /**
    * Unequip an item from an entity
+   *
    * @param {string} entityId - Entity identifier
    * @param {string} itemId - Item identifier
    * @param {ModificationOptions} [options] - Modification options
@@ -334,6 +340,7 @@ class IClothingSystemFacade extends BaseFacade {
 
   /**
    * Swap two items between slots or entities
+   *
    * @param {string} entityId - Entity identifier
    * @param {string} itemId1 - First item identifier
    * @param {string} itemId2 - Second item identifier
@@ -386,6 +393,7 @@ class IClothingSystemFacade extends BaseFacade {
 
   /**
    * Clear all items from a specific slot
+   *
    * @param {string} entityId - Entity identifier
    * @param {string} slot - Slot identifier
    * @param {ModificationOptions} [options] - Modification options
@@ -445,6 +453,7 @@ class IClothingSystemFacade extends BaseFacade {
 
   /**
    * Validate all equipped items for an entity
+   *
    * @param {string} entityId - Entity identifier
    * @param {ValidationOptions} [options] - Validation options
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').ValidationResponse>}
@@ -471,6 +480,7 @@ class IClothingSystemFacade extends BaseFacade {
 
   /**
    * Get slots that are blocked by current equipment
+   *
    * @param {string} entityId - Entity identifier
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').ItemResponse>}
    */
@@ -497,6 +507,7 @@ class IClothingSystemFacade extends BaseFacade {
 
   /**
    * Get layer conflicts for current equipment
+   *
    * @param {string} entityId - Entity identifier
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').ItemResponse>}
    */
@@ -527,6 +538,7 @@ class IClothingSystemFacade extends BaseFacade {
 
   /**
    * Equip multiple items at once
+   *
    * @param {string} entityId - Entity identifier
    * @param {object[]} items - Array of {itemId, slot} objects
    * @param {BulkOptions} [options] - Bulk operation options
@@ -605,6 +617,7 @@ class IClothingSystemFacade extends BaseFacade {
 
   /**
    * Unequip multiple items at once
+   *
    * @param {string} entityId - Entity identifier
    * @param {string[]} itemIds - Array of item identifiers
    * @param {BulkOptions} [options] - Bulk operation options
@@ -683,6 +696,7 @@ class IClothingSystemFacade extends BaseFacade {
 
   /**
    * Transfer equipment between entities
+   *
    * @param {string} fromEntityId - Source entity identifier
    * @param {string} toEntityId - Target entity identifier
    * @param {TransferOptions} [options] - Transfer options

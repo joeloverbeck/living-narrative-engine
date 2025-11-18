@@ -659,6 +659,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
 
   /**
    * Create realistic traces for testing scenarios
+   *
    * @param {object} scenario - Test scenario configuration
    * @returns {Array} Array of trace objects
    */
@@ -701,6 +702,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
 
   /**
    * Create realistic traces with controlled error scenarios
+   *
    * @param {object} scenario - Test scenario configuration
    * @returns {Array} Array of trace objects with error scenarios
    */
@@ -753,6 +755,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
 
   /**
    * Determine priority based on distribution and index
+   *
    * @param {number} index - Index of the trace
    * @param {object} distribution - Priority distribution configuration
    * @returns {string} Selected priority level
@@ -773,7 +776,9 @@ describe('Queue Processing Under Realistic Load E2E', () => {
 
   /**
    * Wait for processing with timeout
+   *
    * @param {number} timeout - Timeout in milliseconds (default: 1000)
+   * @param processor
    * @returns {Promise} Promise that resolves after timeout
    */
   async function waitForProcessing(timeout = 1000, processor = queueProcessor) {

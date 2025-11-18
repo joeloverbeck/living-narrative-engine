@@ -5,7 +5,6 @@ import { safeStringify } from './safeStringify.js';
 
 /**
  * @description Determines whether the provided metadata value is a plain object.
- *
  * @param {unknown} metadata - Candidate metadata value.
  * @returns {metadata is Record<string, any>} True when `metadata` is a non-null object.
  */
@@ -15,7 +14,6 @@ function isMetadataObject(metadata) {
 
 /**
  * @description Retrieves a usable identifier string from metadata or falls back to the file name.
- *
  * @param {unknown} metadata - Parsed metadata object or primitive.
  * @param {string} fileName - Manual save file name for context.
  * @returns {string} Identifier suitable for logging and fallback metadata.
@@ -38,7 +36,6 @@ function getMetadataIdentifier(metadata, fileName) {
 
 /**
  * @description Builds a fallback save name when the metadata is incomplete.
- *
  * @param {string} fileName - Manual save file name for context.
  * @returns {string} Fallback save name with a "Bad Metadata" suffix.
  */

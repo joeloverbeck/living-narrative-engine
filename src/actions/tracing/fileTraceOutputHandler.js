@@ -36,7 +36,7 @@ class FileTraceOutputHandler {
    * @param {boolean} dependencies.testMode - Enable test mode to disable network calls
    * @param {object} [dependencies.queueImplementation] - Optional custom queue implementation
    * @param {Function} [dependencies.batchWriter] - Optional batch writer override
-  */
+   */
   constructor({
     outputDirectory,
     traceDirectoryManager,

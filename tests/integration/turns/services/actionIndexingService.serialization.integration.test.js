@@ -27,6 +27,9 @@ class RecordingLogger {
   }
 }
 
+/**
+ *
+ */
 function createTrickyParams() {
   let accessCount = 0;
   const params = {
@@ -41,6 +44,9 @@ function createTrickyParams() {
   return params;
 }
 
+/**
+ *
+ */
 function buildComplexParams() {
   const symbolKey = Symbol('sigil');
   const helperFn = function helperTransform() {};
@@ -73,6 +79,9 @@ function buildComplexParams() {
   };
 }
 
+/**
+ *
+ */
 function buildComplexVisual() {
   return {
     palette: ['crimson', 'cobalt'],

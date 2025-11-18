@@ -5,6 +5,9 @@ import {
   hasValidPlanArity,
 } from '../../src/goap/planner/goapPlannerContractDefinition.js';
 
+/**
+ *
+ */
 function createPlannerDependencies() {
   const logger = {
     info: jest.fn(),

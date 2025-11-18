@@ -44,6 +44,10 @@ const BASE_ACTIVITY_COMPONENTS = {
   },
 };
 
+/**
+ *
+ * @param id
+ */
 function createGenericActivityDefinition(id) {
   return {
     id,
@@ -88,10 +92,22 @@ export const ACTIVITY_COMPONENTS = GENERIC_COMPONENT_IDS.reduce(
   { ...BASE_ACTIVITY_COMPONENTS }
 );
 
+/**
+ *
+ * @param testBed
+ */
 export function registerActivityComponents(testBed) {
   testBed.loadComponents(ACTIVITY_COMPONENTS);
 }
 
+/**
+ *
+ * @param entityManager
+ * @param root0
+ * @param root0.id
+ * @param root0.name
+ * @param root0.gender
+ */
 export async function createActor(entityManager, { id, name, gender }) {
   const entity = await entityManager.createEntityInstance('core:actor', {
     instanceId: id,
@@ -108,6 +124,18 @@ export async function createActor(entityManager, { id, name, gender }) {
   return entity;
 }
 
+/**
+ *
+ * @param entityManager
+ * @param actorId
+ * @param componentId
+ * @param root0
+ * @param root0.targetId
+ * @param root0.template
+ * @param root0.priority
+ * @param root0.grouping
+ * @param root0.targetRole
+ */
 export function addInlineActivity(
   entityManager,
   actorId,
@@ -143,6 +171,11 @@ export const DEFAULT_ACTIVITY_FORMATTING_CONFIG = {
   },
 };
 
+/**
+ *
+ * @param formattingService
+ * @param overrides
+ */
 export function configureActivityFormatting(formattingService, overrides = {}) {
   formattingService.getActivityIntegrationConfig = () => {
     const baseConfig = {

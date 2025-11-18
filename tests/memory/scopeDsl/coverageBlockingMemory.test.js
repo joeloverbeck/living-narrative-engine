@@ -51,6 +51,11 @@ describe('Coverage Blocking Memory Tests', () => {
   let coverageAnalyzer;
 
   // Helper function to create large wardrobes
+  /**
+   *
+   * @param entityId
+   * @param itemCount
+   */
   function createLargeWardrobe(entityId, itemCount = 50) {
     // Create entity
     const entity = entityManager.createEntity(entityId);

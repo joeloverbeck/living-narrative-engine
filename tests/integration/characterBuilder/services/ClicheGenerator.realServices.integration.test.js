@@ -108,6 +108,12 @@ class TestLLMConfigManager {
   }
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.tropesCount
+ * @param root0.categoryItemCount
+ */
 function buildValidResponse({ tropesCount = 5, categoryItemCount = 3 } = {}) {
   const makeItems = (prefix) =>
     Array.from(

@@ -12,6 +12,7 @@ import {
 
 /**
  * Creates a minimal mock data registry holding entity definitions.
+ *
  * @param {object[]} definitions - Definitions to return from the registry
  * @returns {{get: jest.Mock, getAll: jest.Mock}} Mock registry
  */

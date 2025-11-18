@@ -22,13 +22,13 @@ const FURNITURE_ID = 'test:furniture';
  *
  * @param {ModTestFixture} fixture - Active test fixture.
  * @param {object} [options] - Scenario configuration.
- * @param {boolean} [options.includeCloseness=true] - Whether actors start close together.
- * @param {boolean} [options.includeFurniture=true] - Whether to include any lying furniture.
- * @param {boolean} [options.furnitureAllowsLying=true] - Whether the primary furniture permits lying.
- * @param {string} [options.furnitureLocation='room1'] - Location identifier for the furniture.
- * @param {object} [options.actorComponents={}] - Additional actor components.
- * @param {object} [options.targetComponents={}] - Additional target components.
- * @param {Array<object>} [options.extraFurniture=[]] - Additional furniture entity definitions.
+ * @param {boolean} [options.includeCloseness] - Whether actors start close together.
+ * @param {boolean} [options.includeFurniture] - Whether to include any lying furniture.
+ * @param {boolean} [options.furnitureAllowsLying] - Whether the primary furniture permits lying.
+ * @param {string} [options.furnitureLocation] - Location identifier for the furniture.
+ * @param {object} [options.actorComponents] - Additional actor components.
+ * @param {object} [options.targetComponents] - Additional target components.
+ * @param {Array<object>} [options.extraFurniture] - Additional furniture entity definitions.
  */
 function setupScenario(
   fixture,

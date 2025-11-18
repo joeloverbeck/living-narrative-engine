@@ -21,6 +21,7 @@ describe('ActivityContextBuildingSystem - Migrated Characterization Tests', () =
 
   /**
    * Create a mock entity with optional component data
+   *
    * @param {string} id - Entity ID
    * @param {Map} components - Map of componentId -> componentData
    * @returns {object} Mock entity instance
@@ -36,6 +37,7 @@ describe('ActivityContextBuildingSystem - Migrated Characterization Tests', () =
 
   /**
    * Create a mock activity object with defaults
+   *
    * @param {object} overrides - Properties to override defaults
    * @returns {object} Activity object
    */
@@ -49,6 +51,7 @@ describe('ActivityContextBuildingSystem - Migrated Characterization Tests', () =
 
   /**
    * Create a mock EntityManager that returns entities from a map
+   *
    * @param {Map<string, object>} entityMap - Map of entityId -> entity
    * @returns {object} Mock EntityManager
    */
@@ -60,6 +63,7 @@ describe('ActivityContextBuildingSystem - Migrated Characterization Tests', () =
 
   /**
    * Create a mock NLG system with standard behavior
+   *
    * @returns {object} Mock NLG system
    */
   function createMockNLGSystem() {
@@ -72,6 +76,7 @@ describe('ActivityContextBuildingSystem - Migrated Characterization Tests', () =
 
   /**
    * Create a standard mock logger
+   *
    * @returns {object} Mock logger
    */
   function createMockLogger() {

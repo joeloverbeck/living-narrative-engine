@@ -5,6 +5,7 @@
 
 /**
  * Flushes all pending promises and DOM updates
+ *
  * @returns {Promise<void>}
  */
 export async function flushPromises() {
@@ -17,6 +18,7 @@ export async function flushPromises() {
 
 /**
  * Waits for a DOM element to have a specific style property value
+ *
  * @param {HTMLElement} element - Element to observe
  * @param {string} property - CSS property to check
  * @param {string} expectedValue - Expected value
@@ -60,6 +62,7 @@ export function waitForElementStyle(
 
 /**
  * Waits for a modal to be displayed (display: flex or block)
+ *
  * @param {HTMLElement} modal - Modal element
  * @param {number} timeout - Maximum wait time in ms (default: 500)
  * @returns {Promise<void>}
@@ -70,6 +73,7 @@ export function waitForModalOpen(modal, timeout = 500) {
 
 /**
  * Waits for a modal to be hidden (display: none)
+ *
  * @param {HTMLElement} modal - Modal element
  * @param {number} timeout - Maximum wait time in ms (default: 500)
  * @returns {Promise<void>}
@@ -80,6 +84,7 @@ export function waitForModalClose(modal, timeout = 500) {
 
 /**
  * Waits for an element to have a specific attribute value
+ *
  * @param {HTMLElement} element - Element to observe
  * @param {string} attribute - Attribute name
  * @param {string|boolean} expectedValue - Expected value
@@ -127,6 +132,7 @@ export function waitForElementAttribute(
 
 /**
  * Waits for form validation to complete by monitoring button disabled state
+ *
  * @param {HTMLElement} submitButton - Submit button element
  * @param {boolean} expectedDisabledState - Expected disabled state
  * @param {number} timeout - Maximum wait time in ms (default: 500)
@@ -147,6 +153,7 @@ export function waitForValidation(
 
 /**
  * Waits for an event to be dispatched on an element or object
+ *
  * @param {EventTarget} target - Event target
  * @param {string} eventType - Event type to wait for
  * @param {number} timeout - Maximum wait time in ms (default: 1000)
@@ -171,6 +178,7 @@ export function waitForEvent(target, eventType, timeout = 1000) {
 
 /**
  * Waits for multiple events to be captured in an array
+ *
  * @param {Array} eventArray - Array where events are captured
  * @param {function} filterFn - Filter function to find specific events
  * @param {number} expectedCount - Expected number of matching events
@@ -213,6 +221,7 @@ export function waitForCapturedEvents(
 
 /**
  * Waits for IndexedDB operations to complete by flushing microtasks
+ *
  * @returns {Promise<void>}
  */
 export async function waitForIndexedDB() {
@@ -223,6 +232,7 @@ export async function waitForIndexedDB() {
 
 /**
  * Waits for a form input to be populated with a specific value
+ *
  * @param {HTMLInputElement|HTMLTextAreaElement} input - Input element
  * @param {string} expectedValue - Expected value
  * @param {number} timeout - Maximum wait time in ms (default: 500)

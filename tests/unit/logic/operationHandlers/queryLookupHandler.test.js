@@ -32,7 +32,7 @@ const createMockDataRegistry = (lookups = {}) => ({
  * Note: Does not set a logger property so that the handler uses
  * the logger passed to its constructor.
  *
- * @param {object} [contextData={}] - Initial context variables
+ * @param {object} [contextData] - Initial context variables
  * @returns {object} Mock execution context
  */
 function buildExecutionContext(contextData = {}) {

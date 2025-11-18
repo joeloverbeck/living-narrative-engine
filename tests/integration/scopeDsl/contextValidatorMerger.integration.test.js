@@ -5,6 +5,7 @@ import createDepthGuard from '../../../src/scopeDsl/core/depthGuard.js';
 
 /**
  * Creates a base scope resolution context with all required critical properties.
+ *
  * @param {Partial<Record<string, any>>} overrides
  * @returns {Record<string, any>}
  */

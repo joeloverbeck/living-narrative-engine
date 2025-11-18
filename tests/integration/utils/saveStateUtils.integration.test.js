@@ -5,6 +5,9 @@ import {
   PersistenceErrorCodes,
 } from '../../../src/persistence/persistenceErrors.js';
 
+/**
+ *
+ */
 function createTestLogger() {
   return {
     info: jest.fn(),

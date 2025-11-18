@@ -3,6 +3,9 @@ import { createGoapTestSetup } from '../testFixtures/goapTestSetup.js';
 import GOAPDebugger from '../../../../src/goap/debug/goapDebugger.js';
 import { createPlanningStateView } from '../../../../src/goap/planner/planningStateView.js';
 
+/**
+ *
+ */
 function createStubPlanInspector() {
   return {
     inspect: jest.fn().mockReturnValue(''),
@@ -10,6 +13,9 @@ function createStubPlanInspector() {
   };
 }
 
+/**
+ *
+ */
 function createStubStateDiffViewer() {
   return {
     diff: jest.fn(() => ({})),
@@ -18,6 +24,9 @@ function createStubStateDiffViewer() {
   };
 }
 
+/**
+ *
+ */
 function createStubRefinementTracer() {
   return {
     startCapture: jest.fn(),

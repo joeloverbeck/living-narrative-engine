@@ -27,6 +27,13 @@ const HIGH_VOLUME_CONTEXTS = new Set([
   'game-loading',
 ]);
 
+/**
+ *
+ * @param root0
+ * @param root0.logger
+ * @param root0.safeEventDispatcher
+ * @param root0.eventBus
+ */
 export function createSafeErrorLogger({
   logger,
   safeEventDispatcher,
@@ -54,7 +61,8 @@ export function createSafeErrorLogger({
   let outermostStartTime = null;
   /**
    * Tracks nested loading contexts so we can restore configuration when exiting.
-   * @type {Array<{options: {context: string, timeoutMs: number}, config: {maxRecursionDepth: number, maxGlobalRecursion: number, timeoutMs: number, context: string}}>} */
+   *
+    @type {Array<{options: {context: string, timeoutMs: number}, config: {maxRecursionDepth: number, maxGlobalRecursion: number, timeoutMs: number, context: string}}>} */
   const loadingContextStack = [];
 
   /**
@@ -175,8 +183,8 @@ export function createSafeErrorLogger({
    * Enables game loading mode which automatically manages EventBus batch mode.
    *
    * @param {object} [options] - Loading configuration
-   * @param {string} [options.context='game-load'] - Context description
-   * @param {number} [options.timeoutMs=60000] - Auto-disable timeout
+   * @param {string} [options.context] - Context description
+   * @param {number} [options.timeoutMs] - Auto-disable timeout
    */
   function enableGameLoadingMode(options = {}) {
     const defaultOptions = {
@@ -239,6 +247,10 @@ export function createSafeErrorLogger({
 
   /**
    * Disables game loading mode and EventBus batch mode.
+   *
+   * @param root0
+   * @param root0.force
+   * @param root0.reason
    */
   function disableGameLoadingMode({ force = false, reason = 'manual' } = {}) {
     if (!isGameLoading) {

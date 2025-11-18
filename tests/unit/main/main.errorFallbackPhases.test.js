@@ -62,17 +62,26 @@ jest.mock('../../../src/engine/gameEngine.js', () => ({
 
 let importedMainModule;
 
+/**
+ *
+ */
 async function importMainModule() {
   importedMainModule = await import('../../../src/main.js');
   return importedMainModule;
 }
 
+/**
+ *
+ */
 function resetStageMocks() {
   Object.values(mockStageImplementations).forEach((mockFn) => {
     mockFn.mockReset();
   });
 }
 
+/**
+ *
+ */
 function createUiElements() {
   return {
     outputDiv: document.getElementById('outputDiv'),

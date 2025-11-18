@@ -174,6 +174,10 @@ describe('Pump Penis Action Discovery Integration Tests', () => {
   });
 
   // Helper to create action discovery service with custom mock
+  /**
+   *
+   * @param shouldFindActions
+   */
   function createActionDiscoveryService(shouldFindActions = true) {
     const stage = shouldFindActions
       ? createMockMultiTargetResolutionStage()
@@ -241,6 +245,11 @@ describe('Pump Penis Action Discovery Integration Tests', () => {
   });
 
   describe('socket coverage tests', () => {
+    /**
+     *
+     * @param targetClothingConfig
+     * @param actorAdditionalComponents
+     */
     function setupEntities(
       targetClothingConfig = {},
       actorAdditionalComponents = {}

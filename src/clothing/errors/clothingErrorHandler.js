@@ -63,6 +63,7 @@ export class ClothingErrorHandler {
 
   /**
    * Generate unique error ID
+   *
    * @private
    * @returns {string} Error ID
    */
@@ -72,6 +73,7 @@ export class ClothingErrorHandler {
 
   /**
    * Handle clothing-related errors with appropriate recovery strategy
+   *
    * @param {Error} error - The error to handle
    * @param {object} context - Additional context for error handling
    * @returns {Promise<object>} Recovery result with fallback data if applicable
@@ -98,6 +100,7 @@ export class ClothingErrorHandler {
 
   /**
    * Synchronous error handling
+   *
    * @param {Error} error - The error to handle
    * @param {object} context - Additional context for error handling
    * @returns {object} Recovery result with fallback data if applicable
@@ -124,6 +127,9 @@ export class ClothingErrorHandler {
 
   /**
    * Local handling for backward compatibility
+   *
+   * @param error
+   * @param context
    * @private
    */
   #handleLocally(error, context) {
@@ -151,6 +157,10 @@ export class ClothingErrorHandler {
 
   /**
    * Log error with context
+   *
+   * @param error
+   * @param context
+   * @param errorId
    * @private
    */
   #logError(error, context, errorId) {
@@ -181,6 +191,9 @@ export class ClothingErrorHandler {
 
   /**
    * Attempt to recover from error
+   *
+   * @param error
+   * @param context
    * @private
    */
   #attemptLocalRecovery(error, context) {
@@ -210,6 +223,7 @@ export class ClothingErrorHandler {
 
   /**
    * Register clothing-specific strategies with central system
+   *
    * @private
    */
   #registerWithCentralHandler() {
@@ -277,6 +291,7 @@ export class ClothingErrorHandler {
 
   /**
    * Initialize recovery strategies for different error types
+   *
    * @private
    */
   #initializeRecoveryStrategies() {
@@ -311,6 +326,8 @@ export class ClothingErrorHandler {
 
   /**
    * Fallback to legacy clothing logic
+   *
+   * @param context
    * @private
    */
   #fallbackToLegacyClothingLogic(context) {
@@ -321,6 +338,8 @@ export class ClothingErrorHandler {
 
   /**
    * Fallback to layer-only priority calculation
+   *
+   * @param context
    * @private
    */
   #fallbackToLayerPriorityOnly(context) {
@@ -331,6 +350,8 @@ export class ClothingErrorHandler {
 
   /**
    * Fallback to default priority values
+   *
+   * @param context
    * @private
    */
   #fallbackToDefaultPriorities(context) {
@@ -349,6 +370,9 @@ export class ClothingErrorHandler {
 
   /**
    * Sanitize data and retry operation
+   *
+   * @param error
+   * @param context
    * @private
    */
   #sanitizeAndRetry(error, context) {
@@ -364,6 +388,8 @@ export class ClothingErrorHandler {
 
   /**
    * Fallback to simple accessibility check
+   *
+   * @param context
    * @private
    */
   #fallbackToSimpleAccessibility(context) {
@@ -377,6 +403,10 @@ export class ClothingErrorHandler {
 
   /**
    * Dispatch error event to event bus
+   *
+   * @param error
+   * @param context
+   * @param errorId
    * @private
    */
   #dispatchErrorEvent(error, context, errorId) {
@@ -394,6 +424,8 @@ export class ClothingErrorHandler {
 
   /**
    * Update error metrics
+   *
+   * @param error
    * @private
    */
   #updateErrorMetrics(error) {
@@ -408,6 +440,7 @@ export class ClothingErrorHandler {
 
   /**
    * Get error metrics for monitoring
+   *
    * @returns {object} Error metrics by type
    */
   getErrorMetrics() {

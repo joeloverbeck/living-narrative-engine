@@ -27,6 +27,7 @@ describe('SlotGenerator - Performance Tests', () => {
 
   /**
    * Helper function to create structure template for testing
+   *
    * @param {number} limbSetCount - Number of limb sets
    * @param {number} slotsPerLimbSet - Number of slots per limb set
    * @param {string} arrangement - Arrangement type (bilateral, radial, indexed, custom)
@@ -56,6 +57,7 @@ describe('SlotGenerator - Performance Tests', () => {
 
   /**
    * Helper to create template with appendages
+   *
    * @param {number} appendageCount - Number of appendages
    * @param {boolean} optional - Whether appendages are optional
    * @returns {object} Structure template with appendages

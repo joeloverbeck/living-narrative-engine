@@ -23,7 +23,6 @@ export class RecipeBodyDescriptorValidator extends BaseValidator {
 
   /**
    * @description Creates a new recipe body descriptor validator.
-   *
    * @param {object} params - Constructor parameters.
    * @param {import('../../../interfaces/coreServices.js').ILogger} params.logger - Logger service.
    * @param {import('../../../interfaces/coreServices.js').IDataRegistry} params.dataRegistry - Registry service for anatomy data.
@@ -51,7 +50,6 @@ export class RecipeBodyDescriptorValidator extends BaseValidator {
 
   /**
    * @description Validates the bodyDescriptors object for a recipe.
-   *
    * @param {object} recipe - Recipe being validated.
    * @param {object} _options - Validation options (unused placeholder).
    * @param {import('../core/ValidationResultBuilder.js').default} builder - Validation result builder.
@@ -115,7 +113,6 @@ export class RecipeBodyDescriptorValidator extends BaseValidator {
 
   /**
    * @description Loads descriptors schema from anatomy:body component definition.
-   *
    * @returns {object|null} Descriptors schema or null if unavailable.
    * @private
    */
@@ -144,7 +141,6 @@ export class RecipeBodyDescriptorValidator extends BaseValidator {
 
   /**
    * @description Validates a single descriptor against the schema.
-   *
    * @param {string} descriptorName - Descriptor field name.
    * @param {*} descriptorValue - Descriptor value from recipe.
    * @param {Record<string, object>} descriptorProperties - Schema property map for descriptors.

@@ -162,6 +162,11 @@ function registerCharacterBuilderInfrastructure(registrar, logger) {
   );
 }
 
+/**
+ *
+ * @param registrar
+ * @param logger
+ */
 function registerCharacterBuilderStorage(registrar, logger) {
   registrar.singletonFactory(tokens.CharacterDatabase, (c) => {
     return new CharacterDatabase({
@@ -376,6 +381,9 @@ export function registerCharacterBuilder(container) {
   logger.debug('Character Builder Registration: All registrations complete.');
 }
 
+/**
+ *
+ */
 function getDocumentFallback() {
   return {
     body: { contains: () => false },
@@ -384,10 +392,16 @@ function getDocumentFallback() {
   };
 }
 
+/**
+ *
+ */
 function getPerformanceFallback() {
   return { now: () => Date.now() };
 }
 
+/**
+ *
+ */
 function getAsyncToolkitConfig() {
   const defaults = { defaultWait: 100, logTimerEvents: false };
 
@@ -403,6 +417,9 @@ function getAsyncToolkitConfig() {
   };
 }
 
+/**
+ *
+ */
 function getPerformanceThreshold() {
   if (typeof process === 'undefined' || !process?.env) {
     return 200;

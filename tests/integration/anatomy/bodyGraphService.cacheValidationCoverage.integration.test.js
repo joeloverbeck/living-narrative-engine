@@ -94,6 +94,9 @@ const createLogger = () => ({
   error: () => {},
 });
 
+/**
+ *
+ */
 async function createBodyGraphFixture() {
   const entityManager = new InMemoryEntityManager();
 

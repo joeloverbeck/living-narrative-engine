@@ -1,6 +1,9 @@
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
 import EntityInstanceData from '../../../src/entities/entityInstanceData.js';
 
+/**
+ *
+ */
 function createTestLogger() {
   return {
     info: jest.fn(),

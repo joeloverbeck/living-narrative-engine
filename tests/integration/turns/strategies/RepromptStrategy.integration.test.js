@@ -45,6 +45,9 @@ class InMemoryValidatedEventDispatcher {
   }
 }
 
+/**
+ *
+ */
 function createLogger() {
   return {
     debug: jest.fn(),
@@ -54,6 +57,10 @@ function createLogger() {
   };
 }
 
+/**
+ *
+ * @param logger
+ */
 function createServices(logger) {
   const validatedEventDispatcher = new InMemoryValidatedEventDispatcher();
   const safeEventDispatcher = new SafeEventDispatcher({
@@ -72,6 +79,11 @@ function createServices(logger) {
   };
 }
 
+/**
+ *
+ * @param logger
+ * @param overrides
+ */
 function createHandler(logger, overrides = {}) {
   const handler = {
     _isDestroyed: false,
@@ -91,6 +103,11 @@ function createHandler(logger, overrides = {}) {
   return { ...handler, ...overrides };
 }
 
+/**
+ *
+ * @param context
+ * @param handler
+ */
 function attachLegacyRequestTransition(context, handler) {
   context.requestTransition = jest.fn(async (StateClass, args = []) => {
     if (StateClass !== AwaitingActorDecisionState) {
@@ -104,6 +121,14 @@ function attachLegacyRequestTransition(context, handler) {
   });
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.logger
+ * @param root0.actorId
+ * @param root0.handlerOverrides
+ * @param root0.ContextClass
+ */
 function createTurnContextFixture({
   logger,
   actorId = 'actor-123',

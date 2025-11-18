@@ -82,6 +82,9 @@ describe('Positioning Actions - Mouth Availability Integration', () => {
 
   /**
    * Helper function to create test actors with mouth anatomy
+   *
+   * @param id
+   * @param name
    */
   async function createTestActorWithMouth(id, name) {
     await entityManager.createEntity(id);
@@ -127,6 +130,9 @@ describe('Positioning Actions - Mouth Availability Integration', () => {
 
   /**
    * Helper function to create actor without mouth
+   *
+   * @param id
+   * @param name
    */
   async function createTestActorWithoutMouth(id, name) {
     await entityManager.createEntity(id);
@@ -148,6 +154,9 @@ describe('Positioning Actions - Mouth Availability Integration', () => {
 
   /**
    * Helper function to setup mock body graph service for an actor
+   *
+   * @param actorId
+   * @param hasMouth
    */
   function setupMockBodyGraphService(actorId, hasMouth = true) {
     const bodyRoot = `${actorId}_body_root`;

@@ -66,7 +66,6 @@ class HeuristicRegistry {
    *
    * @param {string} name - Heuristic identifier ('goal-distance', 'rpg', 'zero')
    * @returns {object} Heuristic with calculate(state, goal, tasks) method
-   *
    * @example
    * const heuristic = registry.get('rpg');
    * const h = heuristic.calculate(state, goal, tasks);
@@ -97,7 +96,6 @@ class HeuristicRegistry {
    * @param {object} goal - Goal conditions to satisfy
    * @param {Array} tasks - Available task library (optional for some heuristics)
    * @returns {number} Heuristic estimate (admissible, >= 0)
-   *
    * @example
    * const h = registry.calculate('rpg', state, goal, tasks);
    * // Returns: estimated minimum actions to reach goal

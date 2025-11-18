@@ -7,6 +7,7 @@ import { validateDependency } from '../utils/dependencyUtils.js';
 
 /**
  * Circuit breaker states
+ *
  * @enum {string}
  */
 export const CircuitBreakerState = {
@@ -77,6 +78,7 @@ class FileOperationCircuitBreaker {
   
   /**
    * Gets the current state of the circuit breaker
+   *
    * @returns {string} Current state
    */
   get state() {
@@ -85,8 +87,9 @@ class FileOperationCircuitBreaker {
   
   /**
    * Gets circuit breaker statistics
+   *
    * @returns {object} Statistics
-  */
+   */
   getStats() {
     const now = Date.now();
     const timeUntilRetry = this.#getTimeUntilRetry();
@@ -172,6 +175,7 @@ class FileOperationCircuitBreaker {
   
   /**
    * Manually opens the circuit breaker
+   *
    * @param {string} [reason] - Reason for opening
    */
   open(reason = 'Manual open') {

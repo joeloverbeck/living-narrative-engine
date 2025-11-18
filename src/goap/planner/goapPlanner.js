@@ -13,7 +13,6 @@
  * - Configurable cost and task limits (maxCost, maxActions in goal definition)
  * - Multi-action planning with task reusability (maxReuse per task)
  * - Admissible heuristics for A* optimality
- *
  * @see planningNode.js - Planning state representation
  * @see planningEffectsSimulator.js - Task effect simulation
  * @see heuristicRegistry.js - Distance estimation functions
@@ -34,6 +33,8 @@ import { createPlanningStateView } from './planningStateView.js';
 import { createGoalEvaluationContextAdapter } from './goalEvaluationContextAdapter.js';
 import { normalizePlanningPreconditions } from '../utils/planningPreconditionUtils.js';
 import { validateGoalPaths, shouldEnforceGoalPathLint } from './goalPathValidator.js';
+
+const SAFE_HEURISTIC_MAX_COST = Number.MAX_SAFE_INTEGER;
 
 /**
  * GOAP Planner - A* search for task-level planning
@@ -110,6 +111,12 @@ class GoapPlanner {
   /** @type {Map<string, object>} */
   #effectFailureTelemetry;
 
+  /** @type {Map<string, { signature: string, normalizedGoalState: object|null, violations: Array, hasLoggedViolations: boolean }>} */
+  #goalPathNormalizationCache;
+
+  /** @type {Set<string>} */
+  #heuristicWarningCache;
+
   /**
    * Create new GOAP planner instance
    *
@@ -173,6 +180,8 @@ class GoapPlanner {
     this.#externalTaskLibraryDiagnostics = null;
     this.#goalPathDiagnostics = new Map();
     this.#effectFailureTelemetry = new Map();
+    this.#goalPathNormalizationCache = new Map();
+    this.#heuristicWarningCache = new Set();
   }
 
   /**
@@ -246,22 +255,18 @@ class GoapPlanner {
       const stateView = adapter.getStateView();
       const actorId = stateView.getActorId();
 
-      const validation = validateGoalPaths(goal.goalState, {
-        actorId,
-        goalId: goal?.id ?? null,
-      });
-
-      if (validation.violations.length > 0) {
-        this.#handleGoalPathViolations(actorId, goal, validation.violations);
-        return false;
-      }
+      const normalizationEntry = this.#getGoalNormalizationEntry(actorId, goal);
+      this.#maybeHandleCachedGoalPathViolations(actorId, goal, normalizationEntry);
 
       // Build evaluation context from state
       const context = adapter.getEvaluationContext();
 
+      const normalizedGoalState =
+        normalizationEntry.normalizedGoalState ?? goal.goalState;
+
       // Evaluate goal condition
       const result = this.#jsonLogicService.evaluateCondition(
-        goal.goalState,
+        normalizedGoalState,
         context
       );
 
@@ -288,6 +293,7 @@ class GoapPlanner {
    * Enables conditions like { 'var': 'actor.core.hungry' } to resolve correctly.
    *
    * @param {object} state - Planning state hash
+   * @param metadata
    * @returns {object} Evaluation context
    * @private
    * @example
@@ -723,6 +729,68 @@ class GoapPlanner {
     return goalHasPureNumericRoot(goal);
   }
 
+  #warnOnceForHeuristic({ actorId, goalId, heuristicId, phase, reason }) {
+    const key = `${actorId || 'unknown'}::${goalId || 'unknown'}::${heuristicId}`;
+    if (this.#heuristicWarningCache.has(key)) {
+      return;
+    }
+    this.#heuristicWarningCache.add(key);
+    this.#logger.warn('Heuristic produced invalid value', {
+      actorId,
+      goalId,
+      heuristicId,
+      phase,
+      reason,
+    });
+  }
+
+  #safeHeuristicEstimate({
+    heuristicId,
+    state,
+    goal,
+    taskLibrary = [],
+    actorId,
+    goalId,
+    phase,
+  }) {
+    let value;
+    let warningReason = null;
+
+    try {
+      value = this.#heuristicRegistry.calculate(
+        heuristicId,
+        state,
+        goal,
+        taskLibrary
+      );
+    } catch (error) {
+      warningReason = `threw during calculation: ${error.message}`;
+      value = SAFE_HEURISTIC_MAX_COST;
+    }
+
+    if (!Number.isFinite(value) || value < 0) {
+      const serializedValue = typeof value === 'number' ? value : String(value);
+      warningReason =
+        warningReason || `returned invalid heuristic value: ${serializedValue}`;
+      value = SAFE_HEURISTIC_MAX_COST;
+    }
+
+    if (warningReason) {
+      this.#warnOnceForHeuristic({
+        actorId,
+        goalId,
+        heuristicId,
+        phase,
+        reason: warningReason,
+      });
+    }
+
+    return {
+      estimate: value,
+      sanitized: Boolean(warningReason),
+    };
+  }
+
   /**
    * Check if task reduces distance to goal
    *
@@ -784,29 +852,38 @@ class GoapPlanner {
       const nextState = simulationResult.state;
 
       // Calculate distances
-      const currentDistance = this.#heuristicRegistry.calculate(
-        'goal-distance',
-        currentState,
+      const currentDistanceResult = this.#safeHeuristicEstimate({
+        heuristicId: 'goal-distance',
+        state: currentState,
         goal,
-        [] // task library not needed for distance calculation
-      );
+        taskLibrary: [],
+        actorId,
+        goalId: goal?.id ?? null,
+        phase: 'distance-check:current',
+      });
 
-      const nextDistance = this.#heuristicRegistry.calculate(
-        'goal-distance',
-        nextState,
+      const nextDistanceResult = this.#safeHeuristicEstimate({
+        heuristicId: 'goal-distance',
+        state: nextState,
         goal,
-        []
-      );
+        taskLibrary: [],
+        actorId,
+        goalId: goal?.id ?? null,
+        phase: 'distance-check:next',
+      });
 
-      // Validate distance values
-      if (!Number.isFinite(currentDistance) || !Number.isFinite(nextDistance)) {
-        this.#logger.warn('Non-finite distance values', {
+      if (currentDistanceResult.sanitized || nextDistanceResult.sanitized) {
+        this.#logger.debug('Heuristic distance invalid, bypassing guard', {
           taskId: task.id,
-          currentDistance,
-          nextDistance
+          goalId: goal?.id ?? null,
+          currentSanitized: currentDistanceResult.sanitized,
+          nextSanitized: nextDistanceResult.sanitized,
         });
-        return false;
+        return true;
       }
+
+      const currentDistance = currentDistanceResult.estimate;
+      const nextDistance = nextDistanceResult.estimate;
 
       // Action is applicable if it reduces distance (or achieves goal)
       const reduces = nextDistance < currentDistance;
@@ -970,13 +1047,100 @@ class GoapPlanner {
     }
   }
 
+  #buildGoalNormalizationCacheKey(actorId, goal) {
+    const safeActorId = actorId || 'unknown';
+    const goalId = goal?.id || goal?.name || 'unknown-goal';
+    return `${safeActorId}::${goalId}`;
+  }
+
+  #serializeGoalStateSignature(goalState) {
+    if (goalState === undefined) {
+      return '__undefined__';
+    }
+
+    if (goalState === null) {
+      return '__null__';
+    }
+
+    try {
+      return JSON.stringify(goalState);
+    } catch (error) {
+      this.#logger.warn('Failed to serialize goal state for normalization cache', {
+        error,
+      });
+      return `__nonserializable__:${Date.now()}`;
+    }
+  }
+
+  #getGoalNormalizationEntry(actorId, goal) {
+    const cacheKey = this.#buildGoalNormalizationCacheKey(actorId, goal);
+    const sourceGoalState = goal?.goalState ?? null;
+    const signature = this.#serializeGoalStateSignature(sourceGoalState);
+    const cachedEntry = this.#goalPathNormalizationCache.get(cacheKey);
+    if (cachedEntry && cachedEntry.signature === signature) {
+      return cachedEntry;
+    }
+
+    const validation = validateGoalPaths(sourceGoalState, {
+      actorId,
+      goalId: goal?.id ?? null,
+    });
+
+    const entry = {
+      cacheKey,
+      signature,
+      normalizedGoalState: validation.normalizedGoalState ?? sourceGoalState,
+      violations: validation.violations,
+      hasLoggedViolations: false,
+    };
+
+    this.#goalPathNormalizationCache.set(cacheKey, entry);
+    return entry;
+  }
+
+  #maybeHandleCachedGoalPathViolations(actorId, goal, entry) {
+    if (!entry || !Array.isArray(entry.violations) || entry.violations.length === 0) {
+      return;
+    }
+
+    const lintEnforced = shouldEnforceGoalPathLint();
+    if (!lintEnforced && entry.hasLoggedViolations) {
+      return;
+    }
+
+    this.#handleGoalPathViolations(actorId, goal, entry.violations);
+    if (!lintEnforced) {
+      entry.hasLoggedViolations = true;
+    }
+  }
+
   #handleGoalPathViolations(actorId, goal, violations) {
     this.#recordGoalPathViolation(actorId, goal, violations);
 
-    const paths = violations.map((violation) => violation.path).join(', ');
     const docHint = 'See docs/goap/debugging-tools.md#Planner Contract Checklist for remediation steps.';
     const goalLabel = goal?.id || goal?.name || 'unknown-goal';
-    const reason = `Goal "${goalLabel}" referenced actor.* paths without actor.components.*: ${paths}`;
+    const missingPrefix = violations
+      .filter((violation) => violation.reason === 'missing-components-prefix')
+      .map((violation) => violation.path);
+    const literalActorIds = violations
+      .filter((violation) => violation.reason === 'literal-actor-id')
+      .map((violation) => violation.path);
+
+    const summaryParts = [];
+    if (missingPrefix.length > 0) {
+      summaryParts.push(
+        `referenced actor.* paths without actor.components.*: ${missingPrefix.join(', ')}`
+      );
+    }
+
+    if (literalActorIds.length > 0) {
+      summaryParts.push(
+        `referenced literal actor ID(s) inside has_component: ${literalActorIds.join(', ')}`
+      );
+    }
+
+    const summary = summaryParts.join(' and ') || 'failed goal path validation';
+    const reason = `Goal "${goalLabel}" ${summary}`;
 
     if (shouldEnforceGoalPathLint()) {
       this.#recordFailure(
@@ -1038,7 +1202,7 @@ class GoapPlanner {
    *
    * @param {string} taskId - Task identifier
    * @param {string} message - Base error message
-   * @param {object} [context={}] - Additional diagnostic data
+   * @param {object} [context] - Additional diagnostic data
    * @private
    */
   #failForInvalidEffect(taskId, message, context = {}) {
@@ -1074,7 +1238,7 @@ class GoapPlanner {
    * @param {string} actorId - Acting entity ID (UUID format)
    * @param {object} goal - Goal definition with goalState JSON Logic condition
    * @param {object} initialState - Starting world state (symbolic facts hash)
-   * @param {object} [options={}] - Search configuration
+   * @param {object} [options] - Search configuration
    * @param {string} options.heuristic - Heuristic name (default: 'goal-distance')
    * @param {number} options.maxNodes - Max nodes to explore (default: 1000)
    * @param {number} options.maxTime - Max time in ms (default: 5000)
@@ -1098,10 +1262,13 @@ class GoapPlanner {
     const maxTime = planningOptions.maxTime || 5000;
     const maxDepth = planningOptions.maxDepth || 20;
     this.#lastFailure = null;
+    this.#heuristicWarningCache.clear();
     const failureStats = {
       depthLimitHit: false,
       numericGuardBlocked: false,
       nodesWithoutApplicableTasks: 0,
+      costLimitHit: false,
+      actionLimitHit: false,
     };
 
     const abortForInvalidEffect = (error) => {
@@ -1130,14 +1297,13 @@ class GoapPlanner {
       return false;
     };
 
-    const upfrontGoalPathCheck = validateGoalPaths(goal.goalState, {
-      goalId: goal?.id ?? null,
-      actorId,
-    });
+    const goalNormalizationEntry = this.#getGoalNormalizationEntry(actorId, goal);
+    const normalizedGoalState =
+      goalNormalizationEntry.normalizedGoalState ?? goal.goalState;
 
-    if (upfrontGoalPathCheck.violations.length > 0) {
+    if (goalNormalizationEntry.violations.length > 0) {
       try {
-        this.#handleGoalPathViolations(actorId, goal, upfrontGoalPathCheck.violations);
+        this.#maybeHandleCachedGoalPathViolations(actorId, goal, goalNormalizationEntry);
       } catch (error) {
         if (abortForInvalidGoalPath(error)) {
           return null;
@@ -1154,6 +1320,14 @@ class GoapPlanner {
         : Number(rawCostLimit);
     const hasCostLimit = Number.isFinite(normalizedCostLimit);
     const maxCostLimit = hasCostLimit ? normalizedCostLimit : Infinity;
+    const rawMaxActions = goal?.maxActions;
+    const normalizedMaxActions =
+      rawMaxActions === undefined || rawMaxActions === null
+        ? 20
+        : Number(rawMaxActions);
+    const maxActionsLimit = Number.isFinite(normalizedMaxActions)
+      ? normalizedMaxActions
+      : 20;
 
     this.#logger.info('Starting A* search', {
       actorId,
@@ -1182,44 +1356,53 @@ class GoapPlanner {
     // 2.1 Quick feasibility check (if maxCost is set)
     if (hasCostLimit) {
       // Only check if a limit is set
-      const estimatedCost = this.#heuristicRegistry.calculate(
-        'goal-distance',
-        initialState,
+      const { estimate: estimatedCost } = this.#safeHeuristicEstimate({
+        heuristicId: 'goal-distance',
+        state: initialState,
         goal,
-        taskLibrary // Pass task library array directly
-      );
+        taskLibrary,
+        actorId,
+        goalId: goal?.id ?? null,
+        phase: 'cost-limit-check',
+      });
 
       if (estimatedCost > maxCostLimit) {
-        this.#logger.warn('Goal estimated cost exceeds limit', {
+        const failureDetails = {
+          actorId,
+          goalId: goal.id,
           estimatedCost,
           maxCost: maxCostLimit,
-          goalId: goal.id,
-          actorId,
-        });
+          maxActions: maxActionsLimit,
+          nodesExpanded: 0,
+          closedSetSize: 0,
+          failureStats: { ...failureStats },
+        };
 
-        // Return null - caller (GoapController) will dispatch PLANNING_FAILED event
         this.#recordFailure(
           GOAP_PLANNER_FAILURES.ESTIMATED_COST_EXCEEDS_LIMIT,
           'Estimated planning cost exceeds goal maxCost',
-          { actorId, goalId: goal.id, estimatedCost, maxCost: maxCostLimit }
+          failureDetails
         );
+
+        this.#logger.warn('Goal estimated cost exceeds limit', {
+          ...failureDetails,
+          failureCode: GOAP_PLANNER_FAILURES.ESTIMATED_COST_EXCEEDS_LIMIT,
+          message: 'Estimated planning cost exceeds goal maxCost',
+        });
         return null;
       }
     }
 
     // 3. Calculate initial heuristic
-    let initialHeuristic;
-    try {
-      initialHeuristic = this.#heuristicRegistry.calculate(
-        heuristic,
-        initialState,
-        goal,
-        taskLibrary
-      );
-    } catch (err) {
-      this.#logger.error('Initial heuristic calculation failed', err);
-      return null;
-    }
+    const { estimate: initialHeuristic } = this.#safeHeuristicEstimate({
+      heuristicId: heuristic,
+      state: initialState,
+      goal,
+      taskLibrary,
+      actorId,
+      goalId: goal?.id ?? null,
+      phase: 'initial-node',
+    });
 
     // 4. Create start node
     const startNode = new PlanningNode({
@@ -1241,36 +1424,54 @@ class GoapPlanner {
     const startTime = Date.now();
     let nodesExpanded = 0;
 
+    const buildStoppingCriteriaDetails = (overrides = {}) => ({
+      actorId,
+      goalId: goal?.id ?? null,
+      nodesExpanded,
+      closedSetSize: closedSet.size,
+      maxCost: maxCostLimit,
+      maxActions: maxActionsLimit,
+      failureStats: { ...failureStats },
+      ...overrides,
+    });
+
+    const logStoppingCriteriaFailure = ({
+      logMessage,
+      failureCode,
+      failureReason,
+      overrides = {},
+    }) => {
+      const details = buildStoppingCriteriaDetails(overrides);
+      this.#recordFailure(failureCode, failureReason, details);
+      this.#logger.warn(logMessage, {
+        ...details,
+        failureCode,
+        message: failureReason,
+      });
+      return null;
+    };
+
     // 7. Main A* loop
     while (!openList.isEmpty()) {
       // 7.1 Check time limit
       const elapsed = Date.now() - startTime;
       if (elapsed > maxTime) {
-        this.#logger.warn('Search timeout', {
-          elapsed,
-          maxTime,
-          nodesExpanded,
+        return logStoppingCriteriaFailure({
+          logMessage: 'Search timeout',
+          failureCode: GOAP_PLANNER_FAILURES.TIME_LIMIT_EXCEEDED,
+          failureReason: 'Planner exceeded time limit',
+          overrides: { elapsed, maxTime },
         });
-        this.#recordFailure(
-          GOAP_PLANNER_FAILURES.TIME_LIMIT_EXCEEDED,
-          'Planner exceeded time limit',
-          { actorId, goalId: goal.id, elapsed, maxTime, nodesExpanded }
-        );
-        return null;
       }
 
       // 7.2 Check node limit
       if (nodesExpanded >= maxNodes) {
-        this.#logger.warn('Node limit reached', {
-          nodesExpanded,
-          maxNodes,
+        return logStoppingCriteriaFailure({
+          logMessage: 'Node limit reached',
+          failureCode: GOAP_PLANNER_FAILURES.NODE_LIMIT_REACHED,
+          failureReason: 'Planner explored maximum nodes without success',
+          overrides: { maxNodes },
         });
-        this.#recordFailure(
-          GOAP_PLANNER_FAILURES.NODE_LIMIT_REACHED,
-          'Planner explored maximum nodes without success',
-          { actorId, goalId: goal.id, nodesExpanded, maxNodes }
-        );
-        return null;
       }
 
       // 7.3 Get node with lowest fScore
@@ -1327,6 +1528,7 @@ class GoapPlanner {
 
       // 7.4.1 Cost limit check
       if (hasCostLimit && current.gScore > maxCostLimit) {
+        failureStats.costLimitHit = true;
         this.#logger.debug('Node exceeds cost limit, skipping', {
           currentCost: current.gScore,
           maxCost: maxCostLimit,
@@ -1336,12 +1538,12 @@ class GoapPlanner {
       }
 
       // 7.4.2 Action count limit check
-      const maxActions = goal.maxActions || 20; // Default: prevent runaway plans
-      if (currentPathLength >= maxActions) {
+      if (currentPathLength >= maxActionsLimit) {
         // Structural gate: number of abstract tasks, cost is handled separately by goal.maxCost
+        failureStats.actionLimitHit = true;
         this.#logger.debug('Node exceeds action count limit, skipping', {
           actionCount: currentPathLength,
-          maxActions,
+          maxActions: maxActionsLimit,
           currentCost: current.gScore,
         });
         continue; // Skip this node, try other paths
@@ -1443,38 +1645,59 @@ class GoapPlanner {
           const successorGScore = current.gScore + taskCost;
 
           // 7.7.5 Calculate heuristic
-          let successorHScore;
-          try {
-            successorHScore = this.#heuristicRegistry.calculate(
-              heuristic,
-              successorState,
-              goal,
-              taskLibrary
-            );
-          } catch (err) {
-            this.#logger.warn('Heuristic calculation failed, using Infinity', {
-              error: err.message,
-            });
-            successorHScore = Infinity; // Inadmissible - will be deprioritized
-          }
+          const { estimate: successorHScore } = this.#safeHeuristicEstimate({
+            heuristicId: heuristic,
+            state: successorState,
+            goal,
+            taskLibrary,
+            actorId,
+            goalId: goal?.id ?? null,
+            phase: 'successor-expansion',
+          });
 
           // 7.7.5.5 Check if task is reusable (AFTER simulation and heuristic calculation)
           // Calculate distances for reusability check (use goal-distance heuristic, not general heuristic)
-          const currentDistance = this.#heuristicRegistry.calculate(
-            'goal-distance',
-            current.state,
+          const currentDistanceResult = this.#safeHeuristicEstimate({
+            heuristicId: 'goal-distance',
+            state: current.state,
             goal,
-            [] // Empty task library for distance-only calculation
-          );
+            taskLibrary: [],
+            actorId,
+            goalId: goal?.id ?? null,
+            phase: 'reuse-distance:current',
+          });
 
-          const successorDistance = this.#heuristicRegistry.calculate(
-            'goal-distance',
-            successorState,
+          const successorDistanceResult = this.#safeHeuristicEstimate({
+            heuristicId: 'goal-distance',
+            state: successorState,
             goal,
-            [] // Empty task library for distance-only calculation
-          );
+            taskLibrary: [],
+            actorId,
+            goalId: goal?.id ?? null,
+            phase: 'reuse-distance:successor',
+          });
 
-          const isReusable = this.#isTaskReusable(task, current, successorState, successorDistance, currentDistance, goal);
+          const reuseGuardBypassed =
+            currentDistanceResult.sanitized || successorDistanceResult.sanitized;
+
+          if (reuseGuardBypassed) {
+            this.#logger.debug('Heuristic distance invalid, allowing reuse', {
+              taskId: task.id,
+              goalId: goal?.id ?? null,
+            });
+          }
+
+          const isReusable = reuseGuardBypassed
+            ? true
+            : this.#isTaskReusable(
+                task,
+                current,
+                successorState,
+                successorDistanceResult.estimate,
+                currentDistanceResult.estimate,
+                goal,
+                normalizedGoalState
+              );
 
           // 7.7.3 Skip if already in closed set (UNLESS task is reusable)
           if (closedSet.has(successorHash) && !isReusable) {
@@ -1539,6 +1762,12 @@ class GoapPlanner {
     if (failureStats.numericGuardBlocked) {
       failureCode = GOAP_PLANNER_FAILURES.DISTANCE_GUARD_BLOCKED;
       failureReason = 'Distance guard rejected all numeric goal tasks';
+    } else if (failureStats.costLimitHit) {
+      failureCode = GOAP_PLANNER_FAILURES.COST_LIMIT_REACHED;
+      failureReason = 'Cost limit pruned all remaining nodes';
+    } else if (failureStats.actionLimitHit) {
+      failureCode = GOAP_PLANNER_FAILURES.ACTION_LIMIT_REACHED;
+      failureReason = 'Action limit prevented further expansion';
     } else if (failureStats.depthLimitHit) {
       failureCode = GOAP_PLANNER_FAILURES.DEPTH_LIMIT_REACHED;
       failureReason = 'Depth limit reached before satisfying goal';
@@ -1547,26 +1776,12 @@ class GoapPlanner {
       failureReason = 'No applicable tasks available after filtering';
     }
 
-    const failureDetails = {
-      actorId,
-      goalId: goal.id,
-      nodesExpanded,
-      closedSetSize: closedSet.size,
-      maxCost: goal.maxCost,
-      maxActions: goal.maxActions,
-      failureStats,
-    };
-
-    this.#recordFailure(failureCode, failureReason, failureDetails);
-
-    this.#logger.warn('Goal unsolvable - open list exhausted', {
-      ...failureDetails,
-      failureCode,
-      message: failureReason,
-    });
-
     // Note: No event bus dispatch - GoapController handles PLANNING_FAILED event
-    return null;
+    return logStoppingCriteriaFailure({
+      logMessage: 'Goal unsolvable - open list exhausted',
+      failureCode,
+      failureReason,
+    });
   }
 
   /**
@@ -1585,14 +1800,24 @@ class GoapPlanner {
    * @param {number} successorDistance - Distance to goal from successor state (already calculated)
    * @param {number} currentDistance - Distance to goal from current state
    * @param {object} goal - Goal being planned for (used for diagnostic logging)
+   * @param normalizedGoalState
    * @returns {boolean} True if task can be reused
    * @private
    */
-  #isTaskReusable(task, currentNode, _successorState, successorDistance, currentDistance, goal) {
+  #isTaskReusable(
+    task,
+    currentNode,
+    _successorState,
+    successorDistance,
+    currentDistance,
+    goal,
+    normalizedGoalState
+  ) {
     // 1. Check if distance reduced (same check as #taskReducesDistance)
     if (successorDistance >= currentDistance) {
-      const goalType = detectGoalType(goal.goalState);
-      const overshootAllowed = allowsOvershoot(goal.goalState);
+      const goalStateForReuse = normalizedGoalState ?? goal?.goalState ?? null;
+      const goalType = detectGoalType(goalStateForReuse);
+      const overshootAllowed = allowsOvershoot(goalStateForReuse);
 
       this.#logger.debug('Task does not reduce distance, not reusable', {
         taskId: task.id,

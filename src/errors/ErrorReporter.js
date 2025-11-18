@@ -90,7 +90,7 @@ class ErrorReporter {
 
   /**
    * @description Resolves the current URL from the provided global-like object.
-   * @param {object} [globals=globalThis] - Execution context providing window/location data.
+   * @param {object} [globals] - Execution context providing window/location data.
    * @returns {string|undefined} Detected href string when available.
    */
   static resolveCurrentUrl(globals = globalThis) {
@@ -105,7 +105,7 @@ class ErrorReporter {
 
   /**
    * @description Resolves the user agent string from the provided global-like object.
-   * @param {object} [globals=globalThis] - Execution context containing navigator information.
+   * @param {object} [globals] - Execution context containing navigator information.
    * @returns {string} Detected user agent or the default server identifier.
    */
   static resolveUserAgent(globals = globalThis) {

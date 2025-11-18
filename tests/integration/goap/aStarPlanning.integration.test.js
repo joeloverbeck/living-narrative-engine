@@ -361,7 +361,7 @@ describe('GOAP A* Planner - Integration', () => {
       const goal = {
         id: 'test_goal_not_hungry',
         description: 'Not hungry',
-        goalState: { '!': { has_component: [actorId, 'test:hungry'] } },
+        goalState: { '!': { has_component: ['actor', 'test:hungry'] } },
       };
 
       const initialState = {
@@ -411,7 +411,7 @@ describe('GOAP A* Planner - Integration', () => {
       const goal = {
         id: 'test_goal_not_hungry',
         description: 'Not hungry',
-        goalState: { '!': { has_component: [actorId, 'test:hungry'] } },
+        goalState: { '!': { has_component: ['actor', 'test:hungry'] } },
       };
 
       const initialState = {
@@ -469,7 +469,7 @@ describe('GOAP A* Planner - Integration', () => {
       const goal = {
         id: 'test_goal_not_hungry',
         description: 'Not hungry',
-        goalState: { '!': { has_component: [actorId, 'test:hungry'] } },
+        goalState: { '!': { has_component: ['actor', 'test:hungry'] } },
       };
 
       const initialState = {
@@ -537,7 +537,7 @@ describe('GOAP A* Planner - Integration', () => {
       const goal = {
         id: 'test_goal_not_hungry',
         description: 'Not hungry',
-        goalState: { '!': { has_component: [actorId, 'test:hungry'] } },
+        goalState: { '!': { has_component: ['actor', 'test:hungry'] } },
       };
 
       const initialState = {
@@ -576,7 +576,7 @@ describe('GOAP A* Planner - Integration', () => {
       const goal = {
         id: 'test_goal_not_hungry',
         description: 'Not hungry',
-        goalState: { '!': { has_component: [actorId, 'test:hungry'] } },
+        goalState: { '!': { has_component: ['actor', 'test:hungry'] } },
       };
 
       const initialState = {
@@ -635,7 +635,7 @@ describe('GOAP A* Planner - Integration', () => {
       const goal = {
         id: 'test_goal_not_hungry',
         description: 'Not hungry',
-        goalState: { '!': { has_component: [actorId, 'test:hungry'] } },
+        goalState: { '!': { has_component: ['actor', 'test:hungry'] } },
       };
 
       const initialState = {
@@ -690,8 +690,8 @@ describe('GOAP A* Planner - Integration', () => {
         description: 'Healthy',
         goalState: {
           and: [
-            { '!': { has_component: [actorId, 'test:hungry'] } },
-            { '!': { has_component: [actorId, 'test:wounded'] } },
+            { '!': { has_component: ['actor', 'test:hungry'] } },
+            { '!': { has_component: ['actor', 'test:wounded'] } },
           ],
         },
       };
@@ -741,7 +741,7 @@ describe('GOAP A* Planner - Integration', () => {
       const goal = {
         id: 'test_goal_not_hungry',
         description: 'Not hungry',
-        goalState: { '!': { has_component: [actorId, 'test:hungry'] } },
+        goalState: { '!': { has_component: ['actor', 'test:hungry'] } },
       };
 
       const initialState = {

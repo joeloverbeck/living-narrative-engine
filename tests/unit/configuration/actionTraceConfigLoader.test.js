@@ -456,7 +456,7 @@ describe('ActionTraceConfigLoader', () => {
 
       try {
         for (let i = 0; i < 5; i += 1) {
-          // eslint-disable-next-line no-await-in-loop -- sequential loads required for timing simulation
+           
           await perfLoader.loadConfig();
         }
       } finally {

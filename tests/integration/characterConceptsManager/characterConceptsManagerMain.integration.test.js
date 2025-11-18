@@ -3,6 +3,10 @@ import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals
 const MAIN_MODULE_PATH = '../../../src/character-concepts-manager-main.js';
 const BOOTSTRAP_PATH = '../../../src/characterBuilder/CharacterBuilderBootstrap.js';
 
+/**
+ *
+ * @param bootstrapImplementation
+ */
 async function loadMainModuleWithBootstrap(bootstrapImplementation) {
   let moduleUnderTest;
   let bootstrapSpy;

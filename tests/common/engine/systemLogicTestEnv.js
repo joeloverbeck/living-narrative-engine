@@ -54,7 +54,7 @@ import ScopeEngine from '../../../src/scopeDsl/engine.js';
  * @param {object} [options.scopes] - Scope definitions for scope resolution
  * @param {object} [options.lookups] - Lookup definitions for QUERY_LOOKUP operations
  * @param {boolean} [options.debugPrerequisites] - Enable debug mode for enhanced prerequisite error messages
- * @param {boolean} [options.useAdapterEntityManager=true] - Use TestEntityManagerAdapter for production API compatibility
+ * @param {boolean} [options.useAdapterEntityManager] - Use TestEntityManagerAdapter for production API compatibility
  * @returns {{
  *   eventBus: import('../../../src/events/eventBus.js').default,
  *   events: any[],

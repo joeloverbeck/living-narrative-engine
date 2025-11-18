@@ -687,7 +687,7 @@ export class SpeechPatternsGenerator {
    * Schedule automatic circuit breaker reset
    *
    * @private
-  */
+   */
   #scheduleCircuitReset() {
     this.#circuitResetTimer = setTimeout(() => {
       this.#logger.info('Attempting automatic circuit breaker reset');

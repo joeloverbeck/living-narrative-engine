@@ -140,6 +140,10 @@ describe('entityRefUtils integration with real execution context', () => {
     };
   });
 
+  /**
+   *
+   * @param customPayload
+   */
   function createExecutionContext(customPayload = baseEvent.payload) {
     const event = { ...baseEvent, payload: { ...customPayload } };
     return createNestedExecutionContext(

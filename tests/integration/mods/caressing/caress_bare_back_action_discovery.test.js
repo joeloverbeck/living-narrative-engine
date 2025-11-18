@@ -11,6 +11,10 @@ import caressBareBackAction from '../../../../data/mods/caressing/actions/caress
 const ACTION_ID = 'caressing:caress_bare_back';
 const BACK_SOCKETS = ['upper_back', 'lower_back'];
 
+/**
+ *
+ * @param entity
+ */
 function ensureBackSlotMetadata(entity) {
   entity.components['clothing:slot_metadata'] = {
     slotMappings: {
@@ -22,6 +26,12 @@ function ensureBackSlotMetadata(entity) {
   };
 }
 
+/**
+ *
+ * @param entity
+ * @param root0
+ * @param root0.covered
+ */
 function setBackCoverage(entity, { covered } = { covered: false }) {
   ensureBackSlotMetadata(entity);
 

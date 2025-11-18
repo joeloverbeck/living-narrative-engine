@@ -127,6 +127,9 @@ class DeterministicTokenEstimator {
   }
 }
 
+/**
+ *
+ */
 function createTestLogger() {
   return {
     debug: jest.fn(),
@@ -136,6 +139,11 @@ function createTestLogger() {
   };
 }
 
+/**
+ *
+ * @param seed
+ * @param minLength
+ */
 function createLongText(seed, minLength) {
   let output = seed.trim();
   while (output.length < minLength) {
@@ -144,6 +152,9 @@ function createLongText(seed, minLength) {
   return output;
 }
 
+/**
+ *
+ */
 function buildValidTraitsResponse() {
   const profileText = createLongText(
     'He keeps meticulous journals that chronicle every strategic insight, emotional setback, and fragile victory, revisiting them nightly to ensure he never repeats the mistakes that once cost him his command.',
@@ -255,6 +266,9 @@ function buildValidTraitsResponse() {
   };
 }
 
+/**
+ *
+ */
 function buildQualityIssueResponse() {
   const base = buildValidTraitsResponse();
   return {
@@ -266,6 +280,9 @@ function buildQualityIssueResponse() {
   };
 }
 
+/**
+ *
+ */
 function buildConcept() {
   return {
     id: 'concept-heroic-redemption',
@@ -274,6 +291,9 @@ function buildConcept() {
   };
 }
 
+/**
+ *
+ */
 function buildDirection() {
   return {
     id: 'direction-path-of-restoration',
@@ -284,6 +304,9 @@ function buildDirection() {
   };
 }
 
+/**
+ *
+ */
 function buildUserInputs() {
   return {
     coreMotivation: 'To protect every ally who places trust in them.',
@@ -293,6 +316,9 @@ function buildUserInputs() {
   };
 }
 
+/**
+ *
+ */
 function buildCliches() {
   return {
     categories: {
@@ -302,6 +328,13 @@ function buildCliches() {
   };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.responses
+ * @param root0.tokenEstimator
+ * @param root0.configManagerOptions
+ */
 async function createTraitsGeneratorHarness({
   responses,
   tokenEstimator,
@@ -383,6 +416,9 @@ async function createTraitsGeneratorHarness({
   };
 }
 
+/**
+ *
+ */
 async function waitForDispatchResolution() {
   await new Promise((resolve) => setImmediate(resolve));
 }

@@ -139,6 +139,8 @@ export class PropertySchemaValidationRule extends ValidationRule {
    *
    * @private
    * @param {object} recipe - Recipe definition
+   * @param recipeId
+   * @param recipePath
    * @returns {Array} Array of issues found
    */
   #validateRecipeProperties(recipe, recipeId, recipePath) {

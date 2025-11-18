@@ -6,6 +6,7 @@ import { ClothingServiceError } from '../errors/clothingErrors.js';
 
 /**
  * Circuit breaker states
+ *
  * @enum {string}
  */
 export const CircuitBreakerState = {
@@ -56,6 +57,7 @@ export class CircuitBreaker {
 
   /**
    * Execute operation with circuit breaker protection
+   *
    * @param {Function} operation - Async operation to execute
    * @param {Function} fallback - Optional fallback function
    * @returns {Promise<*>} Operation result or fallback result
@@ -92,6 +94,7 @@ export class CircuitBreaker {
 
   /**
    * Handle successful operation
+   *
    * @private
    */
   #onSuccess() {
@@ -111,6 +114,7 @@ export class CircuitBreaker {
 
   /**
    * Handle failed operation
+   *
    * @private
    * @param {Error} error - The error that occurred
    */
@@ -133,6 +137,7 @@ export class CircuitBreaker {
 
   /**
    * Handle open circuit
+   *
    * @private
    * @param {Function} fallback - Fallback function
    * @returns {*} Fallback result
@@ -159,6 +164,7 @@ export class CircuitBreaker {
 
   /**
    * Check if circuit should attempt reset
+   *
    * @private
    * @returns {boolean} Whether to attempt reset
    */
@@ -169,6 +175,7 @@ export class CircuitBreaker {
 
   /**
    * Transition to CLOSED state
+   *
    * @private
    */
   #transitionToClosed() {
@@ -180,6 +187,7 @@ export class CircuitBreaker {
 
   /**
    * Transition to OPEN state
+   *
    * @private
    */
   #transitionToOpen() {
@@ -190,6 +198,7 @@ export class CircuitBreaker {
 
   /**
    * Transition to HALF_OPEN state
+   *
    * @private
    */
   #transitionToHalfOpen() {
@@ -200,6 +209,7 @@ export class CircuitBreaker {
 
   /**
    * Get current circuit breaker state
+   *
    * @returns {object} State information
    */
   getState() {
@@ -241,6 +251,7 @@ export class CircuitBreaker {
 
   /**
    * Check if circuit is currently open
+   *
    * @returns {boolean} Whether circuit is open
    */
   isOpen() {
@@ -249,6 +260,7 @@ export class CircuitBreaker {
 
   /**
    * Check if circuit is currently closed
+   *
    * @returns {boolean} Whether circuit is closed
    */
   isClosed() {
@@ -257,6 +269,7 @@ export class CircuitBreaker {
 
   /**
    * Check if circuit is currently half-open
+   *
    * @returns {boolean} Whether circuit is half-open
    */
   isHalfOpen() {

@@ -8,7 +8,6 @@
  * - Memory growth stabilizes (no continuous leaks)
  * - Efficient cleanup of processed traces
  * - Queue size management prevents unbounded growth
- *
  * @see src/actions/tracing/traceQueueProcessor.js
  */
 
@@ -334,6 +333,7 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
 
   /**
    * Create a TraceQueueProcessor with custom configuration
+   *
    * @param {object} config - Configuration options
    * @returns {TraceQueueProcessor} Configured processor instance
    */
@@ -355,6 +355,7 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
 
   /**
    * Create performance traces for testing with proper API usage
+   *
    * @param {number} count - Number of traces to create
    * @returns {Array} Array of trace objects
    */
@@ -388,8 +389,9 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
 
   /**
    * Wait for processing to complete with smart polling
-   * @param {number} [maxWait=1000] - Maximum timeout in milliseconds
-   * @param {number} [pollInterval=20] - Polling interval in milliseconds
+   *
+   * @param {number} [maxWait] - Maximum timeout in milliseconds
+   * @param {number} [pollInterval] - Polling interval in milliseconds
    * @returns {Promise} Promise that resolves when queue is empty or timeout
    */
   async function waitForProcessing(maxWait = 1000, pollInterval = 20) {

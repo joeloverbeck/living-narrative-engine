@@ -49,13 +49,14 @@ class BaseFacade {
 
   /**
    * Execute an operation with resilience patterns (circuit breaker, fallback)
+   *
    * @protected
    * @param {string} operationName - Name of the operation for logging and metrics
    * @param {Function} operation - The operation to execute
    * @param {Function} [fallback] - Optional fallback function if operation fails
    * @param {object} [options] - Options for resilience behavior
-   * @param {number} [options.timeout=5000] - Timeout in milliseconds
-   * @param {number} [options.retries=0] - Number of retries
+   * @param {number} [options.timeout] - Timeout in milliseconds
+   * @param {number} [options.retries] - Number of retries
    * @returns {Promise<*>} Operation result or fallback result
    */
   async executeWithResilience(operationName, operation, fallback, options = {}) {
@@ -117,12 +118,13 @@ class BaseFacade {
 
   /**
    * Execute a cacheable operation with automatic cache management
+   *
    * @protected
    * @param {string} cacheKey - Cache key for storing/retrieving results
    * @param {Function} operation - The operation to execute if not cached
    * @param {object} [options] - Caching options
    * @param {number} [options.ttl] - Time to live for cache entry
-   * @param {boolean} [options.forceRefresh=false] - Skip cache lookup and refresh
+   * @param {boolean} [options.forceRefresh] - Skip cache lookup and refresh
    * @returns {Promise<*>} Cached result or fresh operation result
    */
   async cacheableOperation(cacheKey, operation, options = {}) {
@@ -166,6 +168,7 @@ class BaseFacade {
 
   /**
    * Dispatch an event through the event bus
+   *
    * @protected
    * @param {string} eventType - Type of event to dispatch
    * @param {object} payload - Event payload data
@@ -194,6 +197,7 @@ class BaseFacade {
 
   /**
    * Log an operation with consistent formatting
+   *
    * @protected
    * @param {string} level - Log level (info, warn, error, debug)
    * @param {string} message - Log message
@@ -221,9 +225,10 @@ class BaseFacade {
 
   /**
    * Invalidate cache entries by pattern or specific key
+   *
    * @protected
    * @param {string} keyOrPattern - Cache key or pattern to invalidate
-   * @param {boolean} [isPattern=false] - Whether the key is a pattern
+   * @param {boolean} [isPattern] - Whether the key is a pattern
    */
   async invalidateCache(keyOrPattern, isPattern = false) {
     try {
@@ -252,6 +257,7 @@ class BaseFacade {
 
   /**
    * Execute operation with timeout and retry logic
+   *
    * @private
    * @param {Function} operation - Operation to execute
    * @param {number} timeout - Timeout in milliseconds

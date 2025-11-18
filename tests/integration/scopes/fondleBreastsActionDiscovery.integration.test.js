@@ -267,6 +267,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
     /**
      *
      * @param targetClothingConfig
+     * @param options
      */
     function setupEntities(targetClothingConfig = {}, options = {}) {
       const { targetFacingAway = false, actorFacingAway = false } = options;

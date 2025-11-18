@@ -105,6 +105,14 @@ class TestShutdownableSystem {
   }
 }
 
+/**
+ *
+ * @param container
+ * @param root0
+ * @param root0.logger
+ * @param root0.turnManager
+ * @param root0.systems
+ */
 function registerCommonDependencies(container, { logger, turnManager, systems }) {
   container.register('ILogger', logger, { lifecycle: 'singleton' });
   container.register(tokens.ITurnManager, () => turnManager, {

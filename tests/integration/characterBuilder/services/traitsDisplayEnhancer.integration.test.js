@@ -11,6 +11,9 @@ import ConsoleLogger, {
   LogLevel,
 } from '../../../../src/logging/consoleLogger.js';
 
+/**
+ *
+ */
 function createConsoleSpies() {
   return {
     debug: jest.spyOn(console, 'debug').mockImplementation(() => {}),
@@ -32,11 +35,17 @@ describe('TraitsDisplayEnhancer integration', () => {
     jest.restoreAllMocks();
   });
 
+  /**
+   *
+   */
   function createEnhancer() {
     const logger = new ConsoleLogger(LogLevel.DEBUG);
     return new TraitsDisplayEnhancer({ logger });
   }
 
+  /**
+   *
+   */
   function createComprehensiveTraitsData() {
     return {
       id: 'traits-001',

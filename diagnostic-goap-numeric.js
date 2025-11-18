@@ -8,6 +8,10 @@ import { createTestGoal } from './tests/integration/goap/testFixtures/testGoalFa
 import { createTestTask } from './tests/integration/goap/testFixtures/testTaskFactory.js';
 import { GOAP_EVENTS } from './src/goap/events/goapEvents.js';
 
+/**
+ *
+ * @param actor
+ */
 function addFlattenedAliases(actor) {
   const modifiedComponents = { ...actor.components };
   Object.keys(actor.components).forEach((componentId) => {
@@ -22,6 +26,10 @@ function addFlattenedAliases(actor) {
   };
 }
 
+/**
+ *
+ * @param actor
+ */
 function buildDualFormatState(actor) {
   const state = {
     actor: {
@@ -42,6 +50,9 @@ function buildDualFormatState(actor) {
   return state;
 }
 
+/**
+ *
+ */
 async function runDiagnostic() {
   console.log('\n=== GOAP Numeric Goal Planning Diagnostic ===\n');
 

@@ -15,6 +15,7 @@ import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 
 /**
  * Factory configuration for facade creation
+ *
  * @typedef {object} FacadeConfig
  * @property {string} name - Facade name/identifier
  * @property {Function} constructor - Facade constructor function
@@ -54,6 +55,7 @@ class FacadeFactory {
 
   /**
    * Register facade with the registry (delegates to registry)
+   *
    * @param {object} config - Facade configuration including metadata
    */
   registerFacade(config) {
@@ -77,6 +79,7 @@ class FacadeFactory {
 
   /**
    * Create a facade instance by name
+   *
    * @param {string} facadeName - Name of the facade to create
    * @param {object} [overrideOptions] - Override options for this instance
    * @returns {BaseFacade} Configured facade instance
@@ -114,6 +117,7 @@ class FacadeFactory {
 
   /**
    * Create or retrieve a singleton facade instance
+   *
    * @param {string} facadeName - Name of the facade
    * @param {object} [overrideOptions] - Override options for initial creation
    * @returns {BaseFacade} Facade instance (singleton)
@@ -146,6 +150,7 @@ class FacadeFactory {
 
   /**
    * Clear singleton cache for specific facade or all facades
+   *
    * @param {string} [facadeName] - Name of facade to clear, or all if not specified
    */
   clearSingletonCache(facadeName) {
@@ -169,6 +174,7 @@ class FacadeFactory {
 
   /**
    * Check if a facade is registered in the container
+   *
    * @param {string} facadeName - Name of the facade to check
    * @returns {boolean} True if facade is registered
    */
@@ -183,6 +189,7 @@ class FacadeFactory {
 
   /**
    * Check if a singleton instance exists for a facade
+   *
    * @param {string} facadeName - Name of the facade to check
    * @param {object} [options] - Options to match
    * @returns {boolean} True if singleton exists
@@ -194,6 +201,7 @@ class FacadeFactory {
 
   /**
    * Get names of all cached facade instances
+   *
    * @returns {string[]} Array of facade names with cached instances
    */
   getCachedFacadeNames() {
@@ -207,6 +215,7 @@ class FacadeFactory {
 
   /**
    * Generate cache key for singleton instances based on facade name and options
+   *
    * @private
    * @param {string} facadeName - Name of the facade
    * @param {object} options - Options object
@@ -224,6 +233,7 @@ class FacadeFactory {
 
   /**
    * Resolve core dependencies required by all facades
+   *
    * @private
    * @returns {object} Core dependencies object
    */

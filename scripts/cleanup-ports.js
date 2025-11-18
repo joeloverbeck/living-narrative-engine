@@ -15,6 +15,7 @@ const PORTS = {
 
 /**
  * Find process ID using a specific port
+ *
  * @param {number} port - Port number to check
  * @returns {string|null} Process ID or null if not found
  */
@@ -29,6 +30,7 @@ function findProcessOnPort(port) {
 
 /**
  * Get detailed process information
+ *
  * @param {string} pid - Process ID
  * @returns {string|null} Process information or null if not found
  */
@@ -43,6 +45,7 @@ function getProcessInfo(pid) {
 
 /**
  * Kill a process by PID
+ *
  * @param {string} pid - Process ID to kill
  * @returns {boolean} True if successful
  */

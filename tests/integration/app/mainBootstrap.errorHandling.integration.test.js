@@ -18,6 +18,9 @@ const domWithoutErrorDiv = `
   <input id="speech-input" />
 `;
 
+/**
+ *
+ */
 function createLogger() {
   return {
     debug: jest.fn(),
@@ -27,6 +30,13 @@ function createLogger() {
   };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.stageMocks
+ * @param root0.tokensOverride
+ * @param root0.uiFactory
+ */
 function registerBaseMocks({ stageMocks, tokensOverride, uiFactory }) {
   const tokens = tokensOverride ?? {
     ILogger: Symbol('ILogger'),

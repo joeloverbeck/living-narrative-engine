@@ -83,6 +83,8 @@ class EventSystemTestBed extends IntegrationTestBed {
 
   /**
    * Creates a complex game state with specified number of entities
+   *
+   * @param entityCount
    */
   async createComplexGameState(entityCount = 100) {
     const entities = [];
@@ -135,6 +137,9 @@ class EventSystemTestBed extends IntegrationTestBed {
 
   /**
    * Verifies event sequence and counts
+   *
+   * @param expectedEntityCount
+   * @param expectedComponentsPerEntity
    */
   verifyEventSequence(expectedEntityCount, expectedComponentsPerEntity = 3.5) {
     const entityCreatedEvents = this.capturedEvents.filter(e => e.type === ENTITY_CREATED_ID);

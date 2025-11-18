@@ -53,6 +53,9 @@ class PassthroughSchemaValidator {
   }
 }
 
+/**
+ *
+ */
 function createInfrastructure() {
   const logger = new TestLogger();
   const eventBus = new EventBus({ logger });
@@ -86,6 +89,10 @@ describe('ClientApiKeyProvider integration with real event infrastructure', () =
     infra = createInfrastructure();
   });
 
+  /**
+   *
+   * @param overrides
+   */
   function createClientContext(overrides = {}) {
     return new EnvironmentContext({
       logger: infra.logger,
@@ -95,6 +102,10 @@ describe('ClientApiKeyProvider integration with real event infrastructure', () =
     });
   }
 
+  /**
+   *
+   * @param overrides
+   */
   function createServerContext(overrides = {}) {
     return new EnvironmentContext({
       logger: infra.logger,

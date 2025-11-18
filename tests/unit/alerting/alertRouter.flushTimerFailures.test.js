@@ -5,6 +5,9 @@ import {
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../../../src/constants/eventIds.js';
 
+/**
+ *
+ */
 function createDispatcher() {
   const handlers = new Map();
   const dispatcher = {

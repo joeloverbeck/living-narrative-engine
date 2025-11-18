@@ -195,6 +195,7 @@ class ResourceMonitor {
       
       /**
        * Checks if operation is still valid
+       *
        * @returns {boolean} True if operation is still active
        */
       isActive: () => {
@@ -203,6 +204,7 @@ class ResourceMonitor {
       
       /**
        * Gets operation duration
+       *
        * @returns {number} Duration in milliseconds
        */
       getDuration: () => {

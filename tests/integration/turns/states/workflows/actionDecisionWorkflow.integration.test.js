@@ -74,6 +74,9 @@ class RecordingTurnHandler {
   async requestAwaitingExternalTurnEndStateTransition() {}
 }
 
+/**
+ *
+ */
 function createEntityManager() {
   return {
     getComponentData: () => null,
@@ -81,6 +84,10 @@ function createEntityManager() {
   };
 }
 
+/**
+ *
+ * @param id
+ */
 function createActor(id = 'actor-42') {
   return {
     id,
@@ -90,6 +97,11 @@ function createActor(id = 'actor-42') {
   };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.decideAction
+ */
 function createEnvironment({ decideAction }) {
   const contextLogger = new RecordingLogger('context');
   const handlerLogger = new RecordingLogger('handler');

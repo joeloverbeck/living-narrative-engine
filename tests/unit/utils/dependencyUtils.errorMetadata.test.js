@@ -153,6 +153,9 @@ describe('dependencyUtils error metadata', () => {
       const logger = { error: jest.fn() };
       const sequence = [];
 
+      /**
+       *
+       */
       function* specs() {
         sequence.push('first');
         yield { dependency: { start: jest.fn() }, name: 'Startable', methods: ['start'] };

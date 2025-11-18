@@ -176,7 +176,7 @@ export class DOMElementManager {
    *
    * @param {string} key - Cache key.
    * @param {string} selector - Selector or ID.
-   * @param {boolean} [required=true] - Whether element is required.
+   * @param {boolean} [required] - Whether element is required.
    * @returns {HTMLElement|null} Cached element.
    */
   cacheElement(key, selector, required = true) {
@@ -420,7 +420,7 @@ export class DOMElementManager {
    * Show element by key.
    *
    * @param {string} key - Cache key.
-   * @param {string} [displayType='block'] - Display value.
+   * @param {string} [displayType] - Display value.
    * @returns {boolean} True if shown.
    */
   showElement(key, displayType = 'block') {
@@ -470,7 +470,7 @@ export class DOMElementManager {
    * Enable or disable element.
    *
    * @param {string} key - Cache key.
-   * @param {boolean} [enabled=true] - Enable flag.
+   * @param {boolean} [enabled] - Enable flag.
    * @returns {boolean} True if changed.
    */
   setElementEnabled(key, enabled = true) {

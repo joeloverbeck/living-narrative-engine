@@ -9,7 +9,8 @@ import { ErrorCodes } from '../../src/scopeDsl/constants/errorCodes.js';
 
 /**
  * Create a mock error handler with common methods
- * @returns {Object} Mock error handler
+ *
+ * @returns {object} Mock error handler
  */
 export function createMockErrorHandler() {
   return {
@@ -28,6 +29,7 @@ export function createMockErrorHandler() {
 
 /**
  * Create a test error with configurable properties
+ *
  * @param {string} type - Error type name
  * @param {boolean} recoverable - Whether error is recoverable
  * @param {string} severity - Error severity level
@@ -47,8 +49,9 @@ export function createTestError(type = 'TestError', recoverable = true, severity
 
 /**
  * Simulate a burst of errors for load testing
+ *
  * @param {number} count - Number of errors to generate
- * @param {Object} options - Configuration options
+ * @param {object} options - Configuration options
  * @returns {BaseError[]} Array of test errors
  */
 export function simulateErrorBurst(count = 100, options = {}) {
@@ -74,7 +77,8 @@ export function simulateErrorBurst(count = 100, options = {}) {
 
 /**
  * Create a mock recovery strategy manager
- * @returns {Object} Mock recovery strategy manager
+ *
+ * @returns {object} Mock recovery strategy manager
  */
 export function createMockRecoveryStrategyManager() {
   return {
@@ -92,7 +96,8 @@ export function createMockRecoveryStrategyManager() {
 
 /**
  * Create a mock error reporter
- * @returns {Object} Mock error reporter
+ *
+ * @returns {object} Mock error reporter
  */
 export function createMockErrorReporter() {
   return {
@@ -112,6 +117,7 @@ export function createMockErrorReporter() {
 
 /**
  * Create a chain of errors with cause relationships
+ *
  * @param {number} depth - Depth of error chain
  * @returns {BaseError} Root error with nested causes
  */
@@ -138,7 +144,8 @@ export function createErrorChain(depth = 3) {
 
 /**
  * Create various domain-specific errors for testing
- * @returns {Object} Map of domain errors
+ *
+ * @returns {object} Map of domain errors
  */
 export function createDomainErrors() {
   // Create ClothingServiceError equivalent
@@ -188,8 +195,9 @@ export function createDomainErrors() {
 
 /**
  * Helper to verify error context
+ *
  * @param {BaseError} error - Error to verify
- * @param {Object} expectedContext - Expected context values
+ * @param {object} expectedContext - Expected context values
  */
 export function verifyErrorContext(error, expectedContext) {
   for (const [key, value] of Object.entries(expectedContext)) {
@@ -203,7 +211,8 @@ export function verifyErrorContext(error, expectedContext) {
 
 /**
  * Create a mock monitoring coordinator
- * @returns {Object} Mock monitoring coordinator
+ *
+ * @returns {object} Mock monitoring coordinator
  */
 export function createMockMonitoringCoordinator() {
   const mockCircuitBreaker = {
@@ -234,6 +243,7 @@ export function createMockMonitoringCoordinator() {
 
 /**
  * Wait for async operations to complete
+ *
  * @param {number} ms - Milliseconds to wait
  * @returns {Promise} Promise that resolves after delay
  */
@@ -243,8 +253,9 @@ export function waitFor(ms = 0) {
 
 /**
  * Create a test error with specific error code
+ *
  * @param {string} code - Error code from ErrorCodes
- * @param {Object} context - Error context
+ * @param {object} context - Error context
  * @returns {BaseError} Error with specified code
  */
 export function createErrorWithCode(code, context = {}) {
@@ -257,8 +268,9 @@ export function createErrorWithCode(code, context = {}) {
 
 /**
  * Verify error metrics match expectations
- * @param {Object} actual - Actual metrics
- * @param {Object} expected - Expected metrics
+ *
+ * @param {object} actual - Actual metrics
+ * @param {object} expected - Expected metrics
  * @returns {boolean} True if metrics match
  */
 export function verifyMetrics(actual, expected) {

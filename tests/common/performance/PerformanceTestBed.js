@@ -15,19 +15,22 @@ import EntityDefinition from '../../../src/entities/entityDefinition.js';
 export class PerformanceTestBed {
   /**
    * Static container instance shared across tests
+   *
    * @type {AppContainer|null}
    */
   static #sharedContainer = null;
 
   /**
    * Entity definition cache to avoid recreation
+   *
    * @type {Map<string, EntityDefinition>}
    */
   static #entityCache = new Map();
 
   /**
    * DOM elements cache
-   * @type {Object|null}
+   *
+   * @type {object | null}
    */
   static #domElements = null;
 
@@ -78,7 +81,7 @@ export class PerformanceTestBed {
   /**
    * Create minimal DOM elements required for container
    *
-   * @returns {Object} DOM elements
+   * @returns {object} DOM elements
    */
   static createMinimalDOMElements() {
     const outputDiv = document.createElement('div');
@@ -145,8 +148,8 @@ export class PerformanceTestBed {
    * More efficient than individual creation
    *
    * @param {Array<EntityDefinition>} definitions - Entity definitions
-   * @param {Object} registry - Data registry service
-   * @param {Object} entityManager - Entity manager service
+   * @param {object} registry - Data registry service
+   * @param {object} entityManager - Entity manager service
    * @returns {Promise<Array>} Created entity instances
    */
   static async batchCreateEntities(definitions, registry, entityManager) {
@@ -173,8 +176,8 @@ export class PerformanceTestBed {
    * Create a large test dataset optimized for performance
    *
    * @param {number} actorCount - Number of actors to create
-   * @param {Object} services - Container services
-   * @returns {Promise<Object>} Test dataset
+   * @param {object} services - Container services
+   * @returns {Promise<object>} Test dataset
    */
   static async createOptimizedTestDataset(actorCount, services) {
     const { registry, entityManager } = services;

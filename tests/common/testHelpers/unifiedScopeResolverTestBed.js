@@ -21,6 +21,7 @@ export class UnifiedScopeResolverTestBed {
 
   /**
    * Creates core mock dependencies for UnifiedScopeResolver
+   *
    * @returns {object} Object containing all mocked dependencies
    */
   #createCoreMocks() {
@@ -103,6 +104,7 @@ export class UnifiedScopeResolverTestBed {
 
   /**
    * Initializes the test bed with optional custom mocks
+   *
    * @param {object} customMocks - Optional custom mock overrides
    * @returns {UnifiedScopeResolverTestBed} This instance for chaining
    */
@@ -117,6 +119,7 @@ export class UnifiedScopeResolverTestBed {
 
   /**
    * Creates a UnifiedScopeResolver with cache strategy
+   *
    * @param {object} cacheStrategy - Optional custom cache strategy
    * @returns {UnifiedScopeResolver} Resolver instance with cache
    */
@@ -131,6 +134,7 @@ export class UnifiedScopeResolverTestBed {
 
   /**
    * Creates a trace context mock for tracing tests
+   *
    * @param {object} overrides - Optional trace method overrides
    * @returns {object} Mock trace context
    */
@@ -146,6 +150,7 @@ export class UnifiedScopeResolverTestBed {
 
   /**
    * Creates a basic actor entity for testing
+   *
    * @param {object} overrides - Optional actor property overrides
    * @returns {object} Mock actor entity
    */
@@ -160,6 +165,7 @@ export class UnifiedScopeResolverTestBed {
 
   /**
    * Creates a basic resolution context for testing
+   *
    * @param {object} overrides - Optional context property overrides
    * @returns {object} Mock resolution context
    */
@@ -219,6 +225,7 @@ export class UnifiedScopeResolverTestBed {
 
 /**
  * Factory function to create a new test bed instance
+ *
  * @returns {UnifiedScopeResolverTestBed} New test bed instance
  */
 export function createUnifiedScopeResolverTestBed() {

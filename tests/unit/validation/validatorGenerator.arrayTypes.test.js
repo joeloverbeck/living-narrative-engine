@@ -31,6 +31,8 @@ describe('ValidatorGenerator - Array Type Handling', () => {
 
   /**
    * Helper function to create a component schema with validation enabled
+   *
+   * @param dataSchema
    */
   const createComponentSchema = (dataSchema) => ({
     id: 'test:component',

@@ -52,6 +52,7 @@ describe('ActionCommandFormatter default dependency fallbacks', () => {
 
   /**
    * Creates a baseline action definition for tests.
+   *
    * @param {Partial<import('../../../src/data/gameDataRepository.js').ActionDefinition>} overrides
    */
   function createAction(overrides = {}) {
@@ -64,6 +65,7 @@ describe('ActionCommandFormatter default dependency fallbacks', () => {
 
   /**
    * Creates a standard target context representing an entity target.
+   *
    * @param {Partial<import('../../../src/models/actionTargetContext.js').ActionTargetContext>} overrides
    */
   function createTargetContext(overrides = {}) {
@@ -75,7 +77,10 @@ describe('ActionCommandFormatter default dependency fallbacks', () => {
     };
   }
 
-  /** @returns {{ getEntityInstance: jest.Mock }} */
+  /**
+   * @param entityOverrides
+   * @returns {{ getEntityInstance: jest.Mock }}
+   */
   function createEntityManager(entityOverrides = {}) {
     return {
       getEntityInstance: jest.fn(() => ({ id: 'npc-42', ...entityOverrides })),
@@ -84,6 +89,8 @@ describe('ActionCommandFormatter default dependency fallbacks', () => {
 
   /**
    * Generates the shared options object for the formatter call.
+   *
+   * @param overrides
    */
   function createOptions(overrides = {}) {
     return {

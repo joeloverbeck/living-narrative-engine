@@ -47,6 +47,9 @@ class NoopSchemaValidator {
   }
 }
 
+/**
+ *
+ */
 function createAlertRouterEnvironment() {
   const logger = new RecordingLogger();
   const eventBus = new EventBus({ logger });

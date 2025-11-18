@@ -5,6 +5,9 @@ import { ERROR_PHASES } from '../../../src/actions/errors/actionErrorTypes.js';
 const baseActor = { id: 'actor-integration', name: 'Integration Actor' };
 const baseContext = { actorId: baseActor.id, locationId: 'integration-location' };
 
+/**
+ *
+ */
 function createProcessorWithIncompleteErrorContext() {
   const logger = {
     debug: jest.fn(),

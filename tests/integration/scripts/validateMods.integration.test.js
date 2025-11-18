@@ -10,8 +10,39 @@ import path from 'path';
 import fs from 'fs/promises';
 import os from 'os';
 
+const MODS_DIR = path.join(process.cwd(), 'data', 'mods');
+const TEST_MOD_PATTERN = /^integration_test_mod_\d+$/;
+
+/**
+ *
+ */
+async function cleanupIntegrationTestMods() {
+  try {
+    const entries = await fs.readdir(MODS_DIR, { withFileTypes: true });
+    await Promise.all(
+      entries
+        .filter((entry) => entry.isDirectory() && TEST_MOD_PATTERN.test(entry.name))
+        .map(async (entry) => {
+          const modPath = path.join(MODS_DIR, entry.name);
+          try {
+            await fs.rm(modPath, { recursive: true, force: true });
+          } catch (error) {
+             
+            console.warn(`Failed to remove leftover integration test mod ${entry.name}:`, error.message);
+          }
+        })
+    );
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+       
+      console.warn('Failed to inspect mods directory during cleanup:', error.message);
+    }
+  }
+}
+
 /**
  * Cache of CLI invocation promises to avoid repeated expensive runs.
+ *
  * @type {Map<string, Promise<{stdout: string, stderr: string, exitCode: number}>>}
  */
 const cliResultCache = new Map();
@@ -75,9 +106,11 @@ describe('ValidateMods CLI Integration', () => {
   let fastResults;
 
   beforeAll(async () => {
+    await cleanupIntegrationTestMods();
+
     testModName = `integration_test_mod_${Date.now()}`;
     // Use absolute path to ensure cleanup works regardless of working directory
-    tempModPath = path.join(process.cwd(), 'data', 'mods', testModName);
+    tempModPath = path.join(MODS_DIR, testModName);
 
     await fs.mkdir(path.join(tempModPath, 'components'), { recursive: true });
 
@@ -136,15 +169,7 @@ describe('ValidateMods CLI Integration', () => {
   });
 
   afterAll(async () => {
-    // Clean up temporary test mods
-    if (tempModPath) {
-      try {
-        await fs.rm(tempModPath, { recursive: true, force: true });
-      } catch (error) {
-        // Log cleanup errors for debugging, but don't fail the test
-        console.error(`Failed to clean up test mod at ${tempModPath}:`, error.message);
-      }
-    }
+    await cleanupIntegrationTestMods();
   });
 
   describe('Real Mod Validation', () => {

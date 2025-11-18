@@ -137,6 +137,7 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
    * Helper to set up test entities
    *
    * @param targetClothingConfig
+   * @param options
    */
   function setupEntities(targetClothingConfig = {}, options = {}) {
     const { targetFacingAway = false, actorFacingAway = false } = options;

@@ -8,6 +8,7 @@ import { installBareBreastsScopeOverride } from './nuzzleBareBreastsFixtures.js'
 
 /**
  * Identifier for the latch and drink milk action.
+ *
  * @type {string}
  */
 export const LATCH_AND_DRINK_MILK_ACTION_ID =
@@ -15,6 +16,7 @@ export const LATCH_AND_DRINK_MILK_ACTION_ID =
 
 /**
  * Identifier for the scope used by the latch and drink milk action.
+ *
  * @type {string}
  */
 export const LATCH_AND_DRINK_MILK_SCOPE_ID =
@@ -22,18 +24,21 @@ export const LATCH_AND_DRINK_MILK_SCOPE_ID =
 
 /**
  * Default actor identifier in latch and drink milk scenarios.
+ *
  * @type {string}
  */
 export const LATCH_AND_DRINK_MILK_ACTOR_ID = 'selene';
 
 /**
  * Default target identifier in latch and drink milk scenarios.
+ *
  * @type {string}
  */
 export const LATCH_AND_DRINK_MILK_TARGET_ID = 'mira';
 
 /**
  * Default room identifier for lactation-focused intimacy scenes.
+ *
  * @type {string}
  */
 export const LATCH_AND_DRINK_MILK_ROOM_ID = 'nursing_den';
@@ -148,6 +153,7 @@ export function buildLatchAndDrinkMilkScenario(options = {}) {
 
 /**
  * Expected narration emitted by the latch and drink milk rule.
+ *
  * @type {string}
  */
 export const LATCH_AND_DRINK_MILK_NARRATION =

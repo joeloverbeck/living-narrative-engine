@@ -5,6 +5,9 @@ import BaseError from '../../../src/errors/baseError.js';
 /**
  * Helper to assert that two arrays contain the same members in the same order.
  * Using toStrictEqual directly makes intent clearer in coverage assertions.
+ *
+ * @param actual
+ * @param expected
  */
 const expectArrayEqual = (actual, expected) => {
   expect(actual).toHaveLength(expected.length);

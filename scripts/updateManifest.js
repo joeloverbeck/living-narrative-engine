@@ -295,9 +295,10 @@ async function getAllModNames() {
 
 /**
  * Main manifest update function with integrated validation
+ *
  * @param {string} modName - Name of the mod to update
- * @param {Object} options - Update and validation options
- * @returns {Promise<Object>} Update result with validation information
+ * @param {object} options - Update and validation options
+ * @returns {Promise<object>} Update result with validation information
  */
 async function updateModManifest(modName, options = {}) {
   const opts = { ...DEFAULT_OPTIONS, ...options };
@@ -513,11 +514,12 @@ async function updateModManifest(modName, options = {}) {
 
 /**
  * Enhanced manifest update logic with validation context
+ *
  * @param {string} modName - Mod name
  * @param {string} modPath - Mod directory path
  * @param {string} manifestPath - Manifest file path
- * @param {Object} opts - Options
- * @returns {Promise<Object>} Update results
+ * @param {object} opts - Options
+ * @returns {Promise<object>} Update results
  */
 async function performManifestUpdate(modName, modPath, manifestPath, opts) {
   // Load existing manifest
@@ -594,10 +596,11 @@ async function performManifestUpdate(modName, modPath, manifestPath, opts) {
 
 /**
  * Scans mod directory and processes content (consolidates existing logic)
+ *
  * @param {string} modPath - Mod directory path
- * @param {Object} manifest - Current manifest
- * @param {Object} opts - Options
- * @returns {Promise<Object>} Scan results
+ * @param {object} manifest - Current manifest
+ * @param {object} opts - Options
+ * @returns {Promise<object>} Scan results
  */
 async function scanModDirectory(modPath, manifest, opts) {
   const result = {
@@ -654,11 +657,12 @@ async function scanModDirectory(modPath, manifest, opts) {
 
 /**
  * Processes a specific content type directory (consolidates existing logic)
+ *
  * @param {string} modPath - Mod path
  * @param {string} contentType - Content type to process
- * @param {Object} manifest - Manifest object
- * @param {Object} opts - Options
- * @returns {Promise<Object>} Processing results
+ * @param {object} manifest - Manifest object
+ * @param {object} opts - Options
+ * @returns {Promise<object>} Processing results
  */
 async function processContentType(modPath, contentType, manifest, opts) {
   const result = {
@@ -745,9 +749,10 @@ async function processContentType(modPath, contentType, manifest, opts) {
 
 /**
  * Processes entities directory with nested structure (existing logic)
+ *
  * @param {string} modPath - Mod path
- * @param {Object} manifest - Manifest object
- * @param {Object} result - Result accumulator
+ * @param {object} manifest - Manifest object
+ * @param {object} result - Result accumulator
  */
 async function processEntitiesDirectory(modPath, manifest, result) {
   const entitiesDirPath = path.join(modPath, 'entities');
@@ -808,11 +813,12 @@ async function processEntitiesDirectory(modPath, manifest, result) {
 
 /**
  * Runs comprehensive validation for a mod
- * @param {Object} validationOrchestrator - Validation orchestrator instance
- * @param {Object} violationReporter - Violation reporter instance
+ *
+ * @param {object} validationOrchestrator - Validation orchestrator instance
+ * @param {object} violationReporter - Violation reporter instance
  * @param {string} modName - Mod name to validate
- * @param {Object} opts - Validation options
- * @returns {Promise<Object>} Validation results
+ * @param {object} opts - Validation options
+ * @returns {Promise<object>} Validation results
  */
 async function runValidation(validationOrchestrator, violationReporter, modName, opts) {
   const timeoutPromise = new Promise((_, reject) => {
@@ -854,9 +860,10 @@ async function runValidation(validationOrchestrator, violationReporter, modName,
 
 /**
  * Outputs validation report in specified format
- * @param {Object} violationReporter - Reporter instance
- * @param {Object} validationResult - Validation results
- * @param {Object} opts - Output options
+ *
+ * @param {object} violationReporter - Reporter instance
+ * @param {object} validationResult - Validation results
+ * @param {object} opts - Output options
  * @param {string} modName - Mod name for context
  */
 async function outputValidationReport(violationReporter, validationResult, opts, modName) {
@@ -890,8 +897,9 @@ async function outputValidationReport(violationReporter, validationResult, opts,
 
 /**
  * Outputs summary of update and validation results
- * @param {Object} result - Complete result object
- * @param {Object} opts - Options for output formatting
+ *
+ * @param {object} result - Complete result object
+ * @param {object} opts - Options for output formatting
  */
 function outputSummary(result, opts) {
   console.log('\n📋 Summary:');
@@ -935,8 +943,9 @@ function outputSummary(result, opts) {
 
 /**
  * Enhanced batch manifest updates with validation
- * @param {Object} options - Batch processing options
- * @returns {Promise<Object>} Batch results
+ *
+ * @param {object} options - Batch processing options
+ * @returns {Promise<object>} Batch results
  */
 async function updateAllManifests(options = {}) {
   const opts = { ...DEFAULT_OPTIONS, ...options };
@@ -1056,8 +1065,9 @@ async function updateAllManifests(options = {}) {
 
 /**
  * Enhanced command line argument parsing with validation options
+ *
  * @param {string[]} args - Command line arguments
- * @returns {Object} Parsed options
+ * @returns {object} Parsed options
  */
 function parseCommandLineOptions(args) {
   const options = {
@@ -1108,6 +1118,7 @@ function parseCommandLineOptions(args) {
 
 /**
  * Utility to get command line argument values
+ *
  * @param {string[]} args - Arguments array
  * @param {string} flag - Flag to find value for
  * @returns {string|null} Argument value or null
@@ -1225,9 +1236,10 @@ function printUsage() {
 
 /**
  * Backward compatibility function - maintains existing API
+ *
  * @param {string} modName - Mod name
- * @param {Object} legacyOptions - Legacy options format
- * @returns {Promise<Object>} Legacy result format
+ * @param {object} legacyOptions - Legacy options format
+ * @returns {Promise<object>} Legacy result format
  */
 async function updateManifestLegacy(modName, legacyOptions = {}) {
   // Map legacy options to new format
