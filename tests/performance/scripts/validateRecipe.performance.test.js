@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from '@jest/globals';
-import { execSync } from 'child_process';
+import { spawnSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -21,27 +21,19 @@ const scriptPath = path.join(projectRoot, 'scripts/validate-recipe.js');
 function executeCLI(args) {
   const startTime = Date.now();
 
-  try {
-    const stdout = execSync(`node ${scriptPath} ${args.join(' ')}`, {
-      cwd: projectRoot,
-      encoding: 'utf-8',
-      stdio: 'pipe',
-    });
+  const result = spawnSync(process.execPath, [scriptPath, ...args], {
+    cwd: projectRoot,
+    encoding: 'utf-8',
+    stdio: 'pipe',
+    shell: false,
+  });
 
-    return {
-      stdout,
-      stderr: '',
-      exitCode: 0,
-      duration: Date.now() - startTime,
-    };
-  } catch (error) {
-    return {
-      stdout: error.stdout || '',
-      stderr: error.stderr || '',
-      exitCode: error.status || 1,
-      duration: Date.now() - startTime,
-    };
-  }
+  return {
+    stdout: result.stdout || '',
+    stderr: result.stderr || '',
+    exitCode: typeof result.status === 'number' ? result.status : 1,
+    duration: Date.now() - startTime,
+  };
 }
 
 describe('validate-recipe CLI performance tests', () => {

@@ -8,6 +8,8 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GoalLoader from '../../../src/loaders/goalLoader.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import { DuplicateContentError } from '../../../src/errors/duplicateContentError.js';
+import { ModValidationError } from '../../../src/errors/modValidationError.js';
+import { createGoalFixture } from '../../fixtures/goals/createGoalFixture.js';
 
 const GOAL_SCHEMA_ID = 'schema://living-narrative-engine/goal.schema.json';
 
@@ -181,7 +183,7 @@ describe('GoalLoader integration', () => {
     const fileMap = new Map([
       [
         '/virtual-mods/modAlpha/goals/defend_base.goal.json',
-        {
+        createGoalFixture({
           $schema: GOAL_SCHEMA_ID,
           id: 'modAlpha:defend_base',
           description: 'Defend the base from intruders.',
@@ -192,11 +194,11 @@ describe('GoalLoader integration', () => {
               '==': [{ var: 'world.baseThreatLevel' }, 'none'],
             },
           },
-        },
+        }),
       ],
       [
         '/virtual-mods/modAlpha/goals/rest.goal.json',
-        {
+        createGoalFixture({
           id: 'modAlpha:rest',
           description: 'Recover stamina when fatigued.',
           priority: 10,
@@ -206,7 +208,7 @@ describe('GoalLoader integration', () => {
               '<=': [{ var: 'actor.fatigue' }, 1],
             },
           },
-        },
+        }),
       ],
     ]);
 
@@ -288,21 +290,21 @@ describe('GoalLoader integration', () => {
     const fileMap = new Map([
       [
         '/virtual-mods/modAlpha/goals/original.goal.json',
-        {
+        createGoalFixture({
           id: 'modAlpha:shared_goal',
           priority: 30,
           relevance: { logic: { '!!': { var: 'actor.alert' } } },
           goalState: { logic: { '==': [{ var: 'actor.alert' }, false] } },
-        },
+        }),
       ],
       [
         '/virtual-mods/modAlpha/goals/duplicate.goal.json',
-        {
+        createGoalFixture({
           id: 'modAlpha:shared_goal',
           priority: 80,
           relevance: { logic: { '!!': { var: 'actor.alert' } } },
           goalState: { logic: { '==': [{ var: 'actor.alert' }, true] } },
-        },
+        }),
       ],
     ]);
 
@@ -336,5 +338,127 @@ describe('GoalLoader integration', () => {
     });
 
     expect(schemaValidator.validate).toHaveBeenCalledTimes(2);
+  });
+
+  it('records a structured ModValidationError when schema validation fails in strict mode', async () => {
+    const originalFlag = process.env.GOAL_LOADER_ALLOW_DEFAULTS;
+    delete process.env.GOAL_LOADER_ALLOW_DEFAULTS;
+
+    const fileMap = new Map([
+      [
+        '/virtual-mods/modAlpha/goals/broken.goal.json',
+        createGoalFixture({
+          id: 'modAlpha:broken_goal',
+          priority: -1,
+          relevance: { logic: { '!!': { var: 'actor.alert' } } },
+          goalState: { logic: { '==': [{ var: 'actor.alert' }, true] } },
+        }),
+      ],
+    ]);
+
+    const schemaValidator = new StrictSchemaValidator({
+      [GOAL_SCHEMA_ID]: () => ({
+        isValid: false,
+        errors: [
+          {
+            instancePath: '/priority',
+            schemaPath: '#/properties/priority/minimum',
+            keyword: 'minimum',
+            message: 'must be >= 0',
+          },
+        ],
+      }),
+    });
+
+    const { loader } = createGoalLoader(fileMap, { schemaValidator });
+
+    try {
+      const result = await loader.loadItemsForMod(
+        'modAlpha',
+        { content: { goals: ['broken.goal.json'] } },
+        'goals',
+        'goals',
+        'goals'
+      );
+
+      expect(result.errors).toBe(1);
+      expect(result.failures).toHaveLength(1);
+      const failure = result.failures[0];
+      expect(failure.error).toBeInstanceOf(ModValidationError);
+      expect(failure.error.code).toBe('GOAL_SCHEMA_VALIDATION_FAILED');
+      expect(failure.error.context).toMatchObject({
+        modId: 'modAlpha',
+        filename: 'broken.goal.json',
+        schemaPath: '#/properties/priority/minimum',
+        instancePath: '/priority',
+        dataSnippet: -1,
+      });
+    } finally {
+      if (typeof originalFlag === 'undefined') {
+        delete process.env.GOAL_LOADER_ALLOW_DEFAULTS;
+      } else {
+        process.env.GOAL_LOADER_ALLOW_DEFAULTS = originalFlag;
+      }
+    }
+  });
+
+  it('logs a warning and continues when GOAL_LOADER_ALLOW_DEFAULTS permits schema failures', async () => {
+    const originalFlag = process.env.GOAL_LOADER_ALLOW_DEFAULTS;
+    process.env.GOAL_LOADER_ALLOW_DEFAULTS = '1';
+
+    const fileMap = new Map([
+      [
+        '/virtual-mods/modAlpha/goals/incomplete.goal.json',
+        createGoalFixture({
+          id: 'modAlpha:incomplete_goal',
+          priority: 5,
+          relevance: { logic: { '!!': { var: 'actor.alert' } } },
+          goalState: null,
+        }),
+      ],
+    ]);
+
+    const schemaValidator = new StrictSchemaValidator({
+      [GOAL_SCHEMA_ID]: () => ({
+        isValid: false,
+        errors: [
+          {
+            instancePath: '/goalState',
+            schemaPath: '#/properties/goalState/type',
+            keyword: 'type',
+            message: 'must be object',
+          },
+        ],
+      }),
+    });
+
+    const { loader, registry, logger } = createGoalLoader(fileMap, {
+      schemaValidator,
+    });
+
+    try {
+      const result = await loader.loadItemsForMod(
+        'modAlpha',
+        { content: { goals: ['incomplete.goal.json'] } },
+        'goals',
+        'goals',
+        'goals'
+      );
+
+      expect(result).toEqual({ count: 1, overrides: 0, errors: 0, failures: [] });
+      const storedGoal = registry.get('goals', 'modAlpha:incomplete_goal');
+      expect(storedGoal).toBeDefined();
+      expect(
+        logger.warn.mock.calls.find(([message]) =>
+          message.includes('GOAL_LOADER_ALLOW_DEFAULTS is enabled')
+        )
+      ).toBeTruthy();
+    } finally {
+      if (typeof originalFlag === 'undefined') {
+        delete process.env.GOAL_LOADER_ALLOW_DEFAULTS;
+      } else {
+        process.env.GOAL_LOADER_ALLOW_DEFAULTS = originalFlag;
+      }
+    }
   });
 });

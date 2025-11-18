@@ -19,6 +19,7 @@ import { mock } from 'jest-mock-extended';
 // System Under Test (SUT)
 import GoalLoader from '../../../src/loaders/goalLoader.js';
 import * as processHelper from '../../../src/loaders/helpers/processAndStoreItem.js';
+import { createGoalFixture } from '../../fixtures/goals/createGoalFixture.js';
 
 // Mocks for constructor dependencies
 const mockConfig = mock();
@@ -129,7 +130,7 @@ describe('GoalLoader', () => {
       const modId = 'test-mod';
       const filename = 'goal1.json';
       const resolvedPath = '/mods/test-mod/goals/goal1.json';
-      const goalData = { id: 'goal-1', description: 'Test goal' };
+      const goalData = createGoalFixture({ id: 'goal-1', description: 'Test goal' });
       const registryKey = 'goals';
 
       // Act: Call the method with the full set of 5 arguments, as the base class does.
@@ -166,11 +167,10 @@ describe('GoalLoader', () => {
           goals: ['my_first_goal.json'],
         },
       };
-      const goalData = {
+      const goalData = createGoalFixture({
         id: 'alpha_goal_1',
         description: 'Achieve alpha state',
-        conditions: [],
-      };
+      });
       const resolvedPath = `/fake/path/mods/${modId}/goals/my_first_goal.json`;
       const qualifiedId = `${modId}:${goalData.id}`;
 

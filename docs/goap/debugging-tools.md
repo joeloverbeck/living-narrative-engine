@@ -144,6 +144,13 @@ Failure Tracking:
 - When the controller returns `null`, GOAPDebugger now emits a single `GOAP_DEBUGGER_DIAGNOSTICS_MISSING` warning per actor/section and annotates the report with an empty state so downstream tooling can alert on missing instrumentation.
 - `generateReportJSON()` exposes a `diagnosticsMeta.taskLibrary` object that includes `{ available, stale, lastUpdated }` so dashboards can render freshness indicators alongside the raw payload.
 
+### Goal Normalization Telemetry
+
+- `GoalLoader` now emits per-mutation debug logs whenever `normalizeGoalData` mutates incoming content. Each entry uses the `goal-normalization.mutation` (or `.warning`) tag and includes `{ modId, filename, mutation, allowDefaults }`, so you can grep logs for specific files or extension output.
+- Set `GOAL_LOADER_NORMALIZATION_DIAGNOSTICS=0` in your environment to suppress the per-mutation chatter when fuzzing data locally. The loader still counts mutations internally and emits a single `goal-normalization.summary` log at `info` with `{ goalsProcessed, goalsWithMutations, goalsRejected, totalMutations, fieldsAutoFilled, warningsEmitted }` plus timing metadata.
+- CI/integration harnesses can call `goalLoader.getNormalizationDiagnosticsSnapshot()` after `loadItemsForMod()` to retrieve the same summary payload without parsing logs. Use it to fail builds when `goalsRejected` spikes or when the ratio of `fieldsAutoFilled` to `goalsProcessed` exceeds the thresholds in `validate:ecosystem`.
+- When `GOAL_LOADER_ALLOW_DEFAULTS=1` is set, each diagnostic log also includes `allowDefaults: true` so dashboards can distinguish deliberate permissive-mode fixes from unexpected coercions.
+
 ### State Diff Viewer
 
 **Purpose**: Visualize changes to planning state during task simulation.

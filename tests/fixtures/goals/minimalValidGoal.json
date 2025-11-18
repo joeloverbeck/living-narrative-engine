@@ -1,0 +1,10 @@
+{
+  "id": "tests:minimal_goal",
+  "priority": 1,
+  "relevance": {
+    "==": [1, 1]
+  },
+  "goalState": {
+    "==": [1, 1]
+  }
+}

@@ -194,6 +194,7 @@ class GoalDistanceHeuristic {
   #calculateDistanceForGoalStateEnhanced(adapter, goalState, tasks, goal) {
     const metadata = { goalId: goal?.id, origin: 'GoalDistanceHeuristic' };
     const baseDistance = this.#calculateDistanceForGoalState(adapter, goalState, metadata);
+    const stateView = adapter.getStateView();
 
     // If goal already satisfied or no tasks available, return base distance
     if (baseDistance === 0 || tasks.length === 0) {
@@ -206,7 +207,7 @@ class GoalDistanceHeuristic {
     }
 
     // Find task that best reduces distance
-    const bestTask = this.#findBestTaskForGoal(tasks, adapter.getStateView(), goal, adapter);
+    const bestTask = this.#findBestTaskForGoal(tasks, stateView, goal, adapter);
 
     if (!bestTask) {
       return baseDistance;

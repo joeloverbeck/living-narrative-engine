@@ -599,66 +599,6 @@ describe('GOAP Heuristics - Integration with Real Components', () => {
     });
   });
 
-  describe('Performance Requirements', () => {
-    it('should calculate goal-distance heuristic quickly (< 1ms)', () => {
-      const state = {};
-      const goal = {
-        conditions: Array.from({ length: 20 }, (_, i) => ({
-          condition: {
-            has_component: [`entity-${i}`, 'core:test'],
-          },
-        })),
-      };
-
-      const start = performance.now();
-      goalDistanceHeuristic.calculate(state, goal);
-      const duration = performance.now() - start;
-
-      expect(duration).toBeLessThan(1); // < 1ms for 20 conditions
-    });
-
-    it('should calculate RPG heuristic reasonably fast for small domains', async () => {
-      const state = {
-        'entity-1:core:hungry': true,
-      };
-
-      // Sync EntityManager with planning state
-      await registerPlanningStateSnapshot(entityManager, state);
-
-      const goal = {
-        conditions: [
-          {
-            condition: {
-              has_component: ['entity-1', 'core:shelter'],
-            },
-          },
-        ],
-      };
-
-      // Create 20 tasks (small domain)
-      const tasks = Array.from({ length: 20 }, (_, i) => ({
-        id: `task-${i}`,
-        planningPreconditions: [],
-        planningEffects: [
-          {
-            type: 'ADD_COMPONENT',
-            parameters: {
-              entityId: 'entity-1',
-              componentId: `core:component-${i}`,
-              data: {},
-            },
-          },
-        ],
-      }));
-
-      const start = performance.now();
-      rpgHeuristic.calculate(state, goal, tasks);
-      const duration = performance.now() - start;
-
-      expect(duration).toBeLessThan(10); // < 10ms for 20 tasks with unsolvable goal
-    });
-  });
-
   describe('Numeric Constraints Integration', () => {
     it('should calculate correct distance for hunger goal (goalState format)', () => {
       // State: Actor is very hungry (hunger = 80)

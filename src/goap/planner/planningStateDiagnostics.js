@@ -4,6 +4,28 @@ import { emitGoapEvent } from '../events/goapEventFactory.js';
 const diagnosticsByActor = new Map();
 let eventBus = null;
 
+function resolveActorId(rawId) {
+  if (rawId === undefined || rawId === null || rawId === '') {
+    return 'unknown';
+  }
+  return String(rawId);
+}
+
+function createTelemetry(actorId) {
+  return {
+    actorId,
+    totalLookups: 0,
+    unknownStatuses: 0,
+    fallbacks: 0,
+    cacheHits: 0,
+    lastUpdated: null,
+  };
+}
+
+function touchTelemetry(telemetry) {
+  telemetry.lastUpdated = Date.now();
+}
+
 /**
  * Register the GOAP event bus so diagnostics can emit structured events.
  * @param {import('../../interfaces/IEventBus.js').IEventBus|null} bus
@@ -18,15 +40,59 @@ function clone(entry) {
   return JSON.parse(JSON.stringify(entry));
 }
 
+function recordTelemetry(actorId, updater) {
+  const normalizedActorId = resolveActorId(actorId);
+  const entry = getOrCreateEntry(normalizedActorId);
+  const telemetry = entry.telemetry;
+  updater(telemetry);
+  touchTelemetry(telemetry);
+  return entry;
+}
+
+/**
+ * Record a planning-state lookup attempt for telemetry.
+ * @param {object} payload
+ */
+export function recordPlanningStateLookup(payload = {}) {
+  recordTelemetry(payload.actorId, (telemetry) => {
+    telemetry.totalLookups += 1;
+  });
+}
+
+/**
+ * Record that the runtime fell back to the EntityManager due to planning-state miss.
+ * @param {object} payload
+ */
+export function recordPlanningStateFallback(payload = {}) {
+  recordTelemetry(payload.actorId, (telemetry) => {
+    telemetry.fallbacks += 1;
+  });
+}
+
+/**
+ * Record that a cached fallback answer was used.
+ * @param {object} payload
+ */
+export function recordPlanningStateCacheHit(payload = {}) {
+  recordTelemetry(payload.actorId, (telemetry) => {
+    telemetry.cacheHits += 1;
+  });
+}
+
 function getOrCreateEntry(actorId) {
   if (!diagnosticsByActor.has(actorId)) {
     diagnosticsByActor.set(actorId, {
       actorId,
       totalMisses: 0,
       lastMisses: [],
+      telemetry: createTelemetry(actorId),
     });
   }
-  return diagnosticsByActor.get(actorId);
+  const entry = diagnosticsByActor.get(actorId);
+  if (!entry.telemetry) {
+    entry.telemetry = createTelemetry(actorId);
+  }
+  return entry;
 }
 
 /**
@@ -34,9 +100,13 @@ function getOrCreateEntry(actorId) {
  * @param {object} payload
  */
 export function recordPlanningStateMiss(payload) {
-  const actorId = (payload?.actorId && String(payload.actorId)) || 'unknown';
+  const actorId = resolveActorId(payload?.actorId);
   const entry = getOrCreateEntry(actorId);
   entry.totalMisses += 1;
+  if (entry.telemetry) {
+    entry.telemetry.unknownStatuses += 1;
+    touchTelemetry(entry.telemetry);
+  }
   const miss = {
     timestamp: Date.now(),
     path: payload?.path || null,

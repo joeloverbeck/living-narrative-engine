@@ -1,6 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createPlanningStateView } from '../../../../src/goap/planner/planningStateView.js';
 import {
+  PLANNING_STATE_COMPONENT_REASONS,
+  PLANNING_STATE_COMPONENT_SOURCES,
+  PLANNING_STATE_COMPONENT_STATUSES,
+} from '../../../../src/goap/planner/planningStateTypes.js';
+import {
   clearPlanningStateDiagnostics,
   getPlanningStateDiagnostics,
 } from '../../../../src/goap/planner/planningStateDiagnostics.js';
@@ -40,26 +45,54 @@ describe('PlanningStateView', () => {
     expect(context.state['actor-1:core:needs'].hunger).toBe(90);
   });
 
-  it('returns tri-state component lookups and logs unknowns', () => {
+  it('returns discriminated union results and logs unknowns', () => {
     const view = createPlanningStateView(createState(), { metadata: { goalId: 'goal-test' } });
 
     const present = view.hasComponent('actor-1', 'core:needs');
-    expect(present.status).toBe('present');
-    expect(present.value).toBe(true);
+    expect(present).toEqual({
+      status: PLANNING_STATE_COMPONENT_STATUSES.PRESENT,
+      value: true,
+      source: PLANNING_STATE_COMPONENT_SOURCES.ACTOR,
+      reason: null,
+    });
 
     const absent = view.hasComponent('actor-1', 'core:thirst');
-    expect(absent.status).toBe('absent');
-    expect(absent.value).toBe(false);
+    expect(absent).toEqual({
+      status: PLANNING_STATE_COMPONENT_STATUSES.ABSENT,
+      value: false,
+      source: PLANNING_STATE_COMPONENT_SOURCES.ACTOR,
+      reason: PLANNING_STATE_COMPONENT_REASONS.COMPONENT_MISSING,
+    });
 
     const unknown = view.hasComponent('ghost', 'core:needs');
-    expect(unknown.status).toBe('unknown');
-    expect(unknown.value).toBe(false);
+    expect(unknown).toEqual({
+      status: PLANNING_STATE_COMPONENT_STATUSES.UNKNOWN,
+      value: false,
+      source: null,
+      reason: PLANNING_STATE_COMPONENT_REASONS.ENTITY_MISSING,
+    });
 
     const diagnostics = getPlanningStateDiagnostics('actor-1');
     expect(diagnostics).not.toBeNull();
     expect(diagnostics.totalMisses).toBeGreaterThan(0);
     const lastMiss = diagnostics.lastMisses[diagnostics.lastMisses.length - 1];
     expect(lastMiss.componentId).toBe('core:needs');
+    expect(lastMiss.reason).toBe(PLANNING_STATE_COMPONENT_REASONS.ENTITY_MISSING);
+  });
+
+  it('records telemetry counters for lookups and misses', () => {
+    const view = createPlanningStateView(createState());
+
+    view.hasComponent('actor-1', 'core:needs');
+    view.hasComponent('ghost', 'core:needs');
+
+    const diagnostics = getPlanningStateDiagnostics('actor-1');
+    expect(diagnostics.telemetry).toEqual(
+      expect.objectContaining({
+        totalLookups: 2,
+        unknownStatuses: 1,
+      })
+    );
   });
 
   it('assertPath records diagnostics for missing variables', () => {
@@ -77,6 +110,25 @@ describe('PlanningStateView', () => {
     const view = createPlanningStateView(createState());
 
     expect(() => view.hasComponent('ghost', 'core:needs')).toThrow(/GOAP_STATE_MISS/);
+  });
+
+  it('includes json logic metadata in GOAP_STATE_ASSERT errors when provided', () => {
+    process.env.GOAP_STATE_ASSERT = '1';
+    const view = createPlanningStateView(createState());
+
+    try {
+      view.hasComponent('ghost', 'core:needs', {
+        metadata: { jsonLogicExpression: '{"var":"entity.blocker"}' },
+      });
+      throw new Error('Expected GOAP_STATE_MISS but lookup succeeded');
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect(error.details).toEqual(
+        expect.objectContaining({
+          jsonLogicExpression: '{"var":"entity.blocker"}',
+        })
+      );
+    }
   });
 
   it('returns cloned actor snapshot', () => {

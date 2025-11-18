@@ -36,6 +36,8 @@ import {
  * @param {boolean} [context.appendErrorDetails] - Whether to append formatted error details to the thrown error.
  * @param {string} [context.filePath] - Optional file path for enhanced error reporting in pre-validation.
  * @param {boolean} [context.skipPreValidation] - When true, skips pre-validation checks and runs only AJV validation.
+ * @param {(payload: {errors: import('ajv').ErrorObject[] | null | undefined, schemaId: string, data: any, errorDetails: string}) => void} [context.onValidationFailure]
+ *   - Optional callback invoked before throwing when validation fails. Receives raw AJV errors, schema ID, the offending data, and the formatted error string.
  * @returns {ValidationResult} Result of the validation. If skipping due to unloaded schema, returns `{isValid: true, errors: null}`.
  * @throws {Error} When the schema is missing (and skipping disabled), no validator function exists, or validation fails.
  */
@@ -58,6 +60,7 @@ export function validateAgainstSchema(
     appendErrorDetails = true,
     filePath,
     skipPreValidation = false,
+    onValidationFailure,
   } = context;
 
   if (!validator.isSchemaLoaded(schemaId)) {
@@ -127,6 +130,23 @@ export function validateAgainstSchema(
         ? failureMessage(validationResult.errors ?? [])
         : failureMessage;
     const errorDetails = formatAjvErrorsEnhanced(validationResult.errors, data);
+    if (typeof onValidationFailure === 'function') {
+      try {
+        onValidationFailure({
+          errors: validationResult.errors ?? [],
+          schemaId,
+          data,
+          errorDetails,
+        });
+      } catch (hookError) {
+        logger.warn(
+          `Schema validation failure hook threw while processing '${schemaId}': ${hookError instanceof Error ? hookError.message : String(hookError)}`,
+          {
+            schemaId,
+          }
+        );
+      }
+    }
     if (computedFailureMsg) {
       logger.error(computedFailureMsg, {
         ...failureContext,

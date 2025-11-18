@@ -9,6 +9,10 @@ import {
   hasValidEntityId,
 } from '../utils/entityPathResolver.js';
 import { createPlanningStateView } from '../../goap/planner/planningStateView.js';
+import {
+  isKnownComponent,
+  isUnknownComponent,
+} from '../../goap/planner/planningStateTypes.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
@@ -65,6 +69,7 @@ export class HasComponentOperator {
       }
 
       let [entityPath, componentId] = params;
+      const jsonLogicExpression = this.#serializeExpressionForMetadata(entityPath);
 
       // If entityPath is a JSON Logic expression (e.g., {"var": "entity.blocker"}),
       // evaluate it using the context to get the actual value
@@ -158,7 +163,9 @@ export class HasComponentOperator {
         return false;
       }
 
-      return this.#evaluateInternal(entityId, componentId, context);
+      return this.#evaluateInternal(entityId, componentId, context, {
+        jsonLogicExpression,
+      });
     } catch (error) {
       this.#logger.error(
         `${this.#operatorName}: Error during evaluation`,
@@ -214,23 +221,61 @@ export class HasComponentOperator {
    * @param {object} context - Evaluation context (may contain planning state)
    * @returns {boolean} True if the entity has the specified component
    */
-  #evaluateInternal(entityId, componentId, context = {}) {
+  #evaluateInternal(entityId, componentId, context = {}, options = {}) {
+    const { jsonLogicExpression = null } = options;
     // Check if we're in planning mode (context has a 'state' object).
     // During planning, the symbolic planning state is the source of truth.
-    if (context.state && typeof context.state === 'object') {
+    const hasPlanningState =
+      context.state && typeof context.state === 'object';
+    let planningActorId = null;
+
+    if (hasPlanningState) {
       const stateView = createPlanningStateView(context.state, {
         logger: this.#logger,
         metadata: { origin: 'HasComponentOperator' },
       });
+      planningActorId =
+        typeof stateView.getActorId === 'function'
+          ? stateView.getActorId()
+          : null;
+      const lookupMetadata = {
+        entityId,
+        componentId,
+        origin: 'HasComponentOperator',
+        jsonLogicExpression,
+      };
       const lookup = stateView.hasComponent(entityId, componentId, {
-        metadata: { entityId, componentId },
+        metadata: lookupMetadata,
       });
 
       this.#logger.debug(
-        `${this.#operatorName}: [Planning Mode] Entity ${entityId} ${lookup.value ? 'has' : 'does not have'} component ${componentId} (status=${lookup.status})`
+        `${this.#operatorName}: [Planning Mode] Lookup result`,
+        {
+          entityId,
+          componentId,
+          status: lookup.status,
+          value: lookup.value,
+          reason: lookup.reason,
+          source: lookup.source,
+        }
       );
 
-      return lookup.value;
+      if (isKnownComponent(lookup)) {
+        return lookup.value;
+      }
+
+      if (isUnknownComponent(lookup)) {
+        this.#logger.debug('has_component:planning_state_unknown', {
+          entityId,
+          componentId,
+          reason: lookup.reason || 'planning-state-unknown',
+          actorId: planningActorId,
+          jsonLogicExpression,
+          origin: 'HasComponentOperator',
+        });
+      }
+
+      return false;
     }
 
     // Normal runtime mode: check EntityManager
@@ -240,10 +285,27 @@ export class HasComponentOperator {
     );
 
     this.#logger.debug(
-      `${this.#operatorName}: Entity ${entityId} ${hasComponent ? 'has' : 'does not have'} component ${componentId}`
+      `${this.#operatorName}: Entity ${entityId} ${hasComponent ? 'has' : 'does not have'} component ${componentId}${hasPlanningState ? ' (runtime fallback)' : ''}`
     );
 
     return hasComponent;
+  }
+
+  #serializeExpressionForMetadata(expression) {
+    if (expression === undefined || expression === null) {
+      return null;
+    }
+    if (typeof expression === 'string' || typeof expression === 'number') {
+      return String(expression);
+    }
+    if (typeof expression === 'object') {
+      try {
+        return JSON.stringify(expression);
+      } catch (_) {
+        return '[unserializable-expression]';
+      }
+    }
+    return null;
   }
 
 }
