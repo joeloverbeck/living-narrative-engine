@@ -17,6 +17,7 @@ export const GOAP_PLANNER_CONTRACT = {
 
 /**
  * Return a copy of the required planner methods.
+ *
  * @returns {string[]}
  */
 export function getRequiredPlannerMethods() {
@@ -25,6 +26,7 @@ export function getRequiredPlannerMethods() {
 
 /**
  * Collect all enumerable method names for a dependency instance, traversing prototypes.
+ *
  * @param {object} dependency - The planner instance or mock.
  * @returns {string[]} Sorted unique method names detected.
  */
@@ -52,6 +54,7 @@ export function collectMethodNames(dependency) {
 
 /**
  * Build a snapshot describing the planner dependency contract at runtime.
+ *
  * @param {object} dependency - Planner instance or mock.
  * @returns {object} Snapshot with required/provided metadata.
  */
@@ -72,6 +75,7 @@ export function createPlannerContractSnapshot(dependency) {
 
 /**
  * Assert the planner plan signature matches expectations.
+ *
  * @param {Function} planFn - Planner plan function reference.
  * @returns {boolean} true when signature matches.
  */

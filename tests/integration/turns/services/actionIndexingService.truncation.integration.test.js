@@ -44,6 +44,11 @@ class InMemoryEntityManager {
   }
 }
 
+/**
+ *
+ * @param actionDefinition
+ * @param index
+ */
 function buildDiscoveredAction(actionDefinition, index) {
   return {
     id: actionDefinition.id,

@@ -293,7 +293,7 @@ describe('HasComponentOperator', () => {
         expect(operator.evaluate(['entity-telemetry', 'core:armed'], context)).toBe(false);
 
         expect(mockLogger.debug).toHaveBeenCalledWith(
-          'has_component:planning_state_unknown',
+          'has_component.planning_state_unknown',
           expect.objectContaining({
             entityId: 'entity-telemetry',
             componentId: 'core:armed',
@@ -311,6 +311,24 @@ describe('HasComponentOperator', () => {
           })
         );
         expect(mockEntityManager.hasComponent).not.toHaveBeenCalled();
+      });
+
+      it('rethrows planning-state misses when GOAP_STATE_ASSERT=1', () => {
+        const previousFlag = process.env.GOAP_STATE_ASSERT;
+        process.env.GOAP_STATE_ASSERT = '1';
+
+        try {
+          expect(() =>
+            operator.evaluate(['entity-assert', 'core:armed'], { state: {} })
+          ).toThrow(/GOAP_STATE_MISS/);
+          expect(mockEntityManager.hasComponent).not.toHaveBeenCalled();
+        } finally {
+          if (previousFlag === undefined) {
+            delete process.env.GOAP_STATE_ASSERT;
+          } else {
+            process.env.GOAP_STATE_ASSERT = previousFlag;
+          }
+        }
       });
     });
   });

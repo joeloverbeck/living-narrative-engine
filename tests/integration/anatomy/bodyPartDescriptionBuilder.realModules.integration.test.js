@@ -12,6 +12,7 @@ const FINAL_MOD_ORDER_ID = 'final_mod_order';
 
 /**
  * Helper to create a fully initialized AnatomyFormattingService with test data.
+ *
  * @param {object} [options]
  * @param {string[]} [options.descriptorOrder]
  * @param {string[]} [options.descriptorValueKeys]
@@ -54,6 +55,7 @@ function createFormattingService({
 
 /**
  * Builds a BodyPartDescriptionBuilder with a fully initialized formatting service.
+ *
  * @param {object} [options]
  * @param {string[]} [options.descriptorOrder]
  * @param {string[]} [options.descriptorValueKeys]
@@ -75,6 +77,7 @@ function createBuilderWithService(options = {}) {
 /**
  * Creates an entity that exposes data through getComponentData to exercise
  * the private extraction helper.
+ *
  * @param {string} id
  * @param {Record<string, any>} componentMap
  * @param {string[]} [throwOn]

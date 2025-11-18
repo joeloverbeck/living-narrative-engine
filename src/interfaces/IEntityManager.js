@@ -18,24 +18,24 @@ export class IEntityManager {
   }
 
   /**
-    * Retrieves summary information for an entity by ID.
-    * Alias kept for subsystems that expect `getEntity` rather than
-    * `getEntityInstance` (e.g. GOAP parameter resolution).
-    *
-    * @param {string} entityId The ID of the entity to retrieve.
-    * @returns {Entity | undefined} The entity if present, otherwise undefined.
-    */
+   * Retrieves summary information for an entity by ID.
+   * Alias kept for subsystems that expect `getEntity` rather than
+   * `getEntityInstance` (e.g. GOAP parameter resolution).
+   *
+   * @param {string} entityId The ID of the entity to retrieve.
+   * @returns {Entity | undefined} The entity if present, otherwise undefined.
+   */
   getEntity(entityId) {
     throw new Error('IEntityManager.getEntity not implemented.');
   }
 
   /**
-    * Indicates whether an entity with the provided ID exists.
-    * Used by GOAP planning to validate references resolved at runtime.
-    *
-    * @param {string} entityId The ID to check.
-    * @returns {boolean} True if the entity exists.
-    */
+   * Indicates whether an entity with the provided ID exists.
+   * Used by GOAP planning to validate references resolved at runtime.
+   *
+   * @param {string} entityId The ID to check.
+   * @returns {boolean} True if the entity exists.
+   */
   hasEntity(entityId) {
     throw new Error('IEntityManager.hasEntity not implemented.');
   }

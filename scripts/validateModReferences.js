@@ -39,8 +39,9 @@ let tokens;
 
 /**
  * Parse command line arguments
+ *
  * @param {string[]} args - Command line arguments
- * @returns {Object} Parsed options
+ * @returns {object} Parsed options
  */
 function parseCommandLineArgs(args) {
   const options = {
@@ -146,8 +147,9 @@ async function loadDependencies() {
 
 /**
  * Format validation results for console output
- * @param {Object} results - Validation results
- * @param {Object} options - Formatting options
+ *
+ * @param {object} results - Validation results
+ * @param {object} options - Formatting options
  * @returns {string} Formatted output
  */
 function formatConsoleOutput(results, options) {
@@ -294,7 +296,8 @@ function formatConsoleOutput(results, options) {
 
 /**
  * Format validation results as JSON
- * @param {Object} results - Validation results
+ *
+ * @param {object} results - Validation results
  * @param {boolean} pretty - Pretty print JSON
  * @returns {string} JSON string
  */
@@ -321,7 +324,8 @@ function formatJsonOutput(results, pretty = false) {
 
 /**
  * Format validation results as Markdown
- * @param {Object} results - Validation results
+ *
+ * @param {object} results - Validation results
  * @returns {string} Markdown string
  */
 function formatMarkdownOutput(results) {

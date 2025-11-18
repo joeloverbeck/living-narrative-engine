@@ -538,6 +538,7 @@ class EntityManager extends IEntityManager {
 
   /**
    * Compatibility alias consumed by GOAP context builders.
+   *
    * @param {string} instanceId
    * @param {string} componentTypeId
    */

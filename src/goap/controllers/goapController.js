@@ -83,10 +83,6 @@ class GoapController {
   /** @type {Logger} */
   #logger;
 
-  /** @type {object|null} Active plan with goal, tasks, and current step */
-   
-  #activePlan;
-
   /** @type {Map<string, object>} Active plans keyed by actorId */
   #activePlans;
 
@@ -126,8 +122,10 @@ class GoapController {
    * @param {PlanInvalidationDetector} deps.planInvalidationDetector - Plan invalidation detector
    * @param {ContextAssemblyService} deps.contextAssemblyService - Context assembly service
    * @param {JsonLogicEvaluationService} deps.jsonLogicService - JSON Logic evaluation service
+   * @param deps.jsonLogicEvaluationService
    * @param {IDataRegistry} deps.dataRegistry - Data registry for goals and tasks
    * @param {IEventBus} deps.eventBus - Event bus
+   * @param deps.goapEventDispatcher
    * @param {Logger} deps.logger - Logger instance
    * @param {IParameterResolutionService} deps.parameterResolutionService - Parameter resolution service
    */
@@ -210,7 +208,6 @@ class GoapController {
     this.#eventDispatcher =
       goapEventDispatcher ?? createGoapEventDispatcher(validatedEventBus, this.#logger);
     this.#parameterResolutionService = parameterResolutionService;
-    this.#activePlan = null;
     this.#activePlans = new Map();
     this.#dependencyDiagnostics = new Map();
     this.#taskLibraryDiagnostics = new Map();
@@ -233,6 +230,23 @@ class GoapController {
     registerPlanningStateDiagnosticsEventBus(this.#eventDispatcher);
   }
 
+  #getActorPlan(actorId) {
+    assertNonBlankString(actorId, 'actorId', 'GoapController.#getActorPlan', this.#logger);
+    return this.#activePlans.get(actorId) || null;
+  }
+
+  #setActorPlan(actorId, plan) {
+    assertNonBlankString(actorId, 'actorId', 'GoapController.#setActorPlan', this.#logger);
+    assertPresent(plan, 'Plan cannot be null when assigning to actor');
+    this.#activePlans.set(actorId, plan);
+    return plan;
+  }
+
+  #deleteActorPlan(actorId) {
+    assertNonBlankString(actorId, 'actorId', 'GoapController.#deleteActorPlan', this.#logger);
+    this.#activePlans.delete(actorId);
+  }
+
   /**
    * Dispatch GOAP lifecycle event
    *
@@ -241,6 +255,7 @@ class GoapController {
    *
    * @param {string} eventType - Event type from GOAP_EVENTS
    * @param {object} payload - Event payload (NO timestamp - handled by EventBus)
+   * @param context
    * @private
    */
   #dispatchEvent(eventType, payload = {}, context) {
@@ -369,6 +384,7 @@ class GoapController {
 
   /**
    * Record dependency diagnostics for debugger + telemetry.
+   *
    * @param {object} snapshot - Output of createPlannerContractSnapshot
    */
   #recordDependencyDiagnostics(snapshot) {
@@ -431,8 +447,8 @@ class GoapController {
       this.#parameterResolutionService.clearCache();
     }
 
-    // Align actor-scoped plan pointer with the actor invoking decideTurn
-    this.#activePlan = this.#activePlans.get(actor.id) || null;
+    // Track actor-scoped plan reference derived from the shared map
+    let activePlan = this.#getActorPlan(actor.id);
 
     try {
       // Store current actor/world for recursive decideTurn calls (GOAPIMPL-021-05)
@@ -443,9 +459,9 @@ class GoapController {
       }
 
       // 1. Check if we have active plan
-      if (this.#activePlan) {
+      if (activePlan) {
         // 2. Validate plan still applicable
-        const validation = this.#validateActivePlan(world);
+        const validation = this.#validateActivePlan(actor.id, world);
 
         if (!validation.valid) {
           // 3. Plan invalidated → clear and replan
@@ -453,23 +469,24 @@ class GoapController {
           this.#dispatchEvent(
             GOAP_EVENTS.REPLANNING_STARTED,
             {
-              goalId: this.#activePlan.goal.id,
-              previousStep: this.#activePlan.currentStep,
+              goalId: activePlan.goal.id,
+              previousStep: activePlan.currentStep,
             },
             {
               actorId: actor.id,
-              goalId: this.#activePlan.goal.id,
+              goalId: activePlan.goal.id,
             }
           );
 
-          this.#clearPlan(`Invalidated: ${validation.reason}`);
+          this.#clearPlan(actor.id, `Invalidated: ${validation.reason}`);
+          activePlan = null;
 
           // Will trigger replanning in next iteration
         }
       }
 
       // 4. Need new plan?
-      if (!this.#activePlan) {
+      if (!activePlan) {
         // 5. Select goal (implemented in GOAPIMPL-021-02)
         const goal = this.#selectGoal(actor, world);
 
@@ -556,19 +573,22 @@ class GoapController {
         }
 
         // 8. Create and store plan
-        this.#activePlan = this.#createPlan(goal, planResult.tasks, actor.id);
-        this.#activePlans.set(actor.id, this.#activePlan);
+        activePlan = this.#setActorPlan(
+          actor.id,
+          this.#createPlan(goal, planResult.tasks, actor.id)
+        );
       }
 
       // 9. Get current task
-      const task = this.#getCurrentTask();
+      const task = this.#getCurrentTask(actor.id);
 
       if (!task) {
         // Plan exhausted but still active → shouldn't happen
         this.#logger.error('Active plan has no current task', {
-          plan: this.#activePlan,
+          plan: activePlan,
         });
-        this.#clearPlan('No current task');
+        this.#clearPlan(actor.id, 'No current task');
+        activePlan = null;
         return null;
       }
 
@@ -581,7 +601,8 @@ class GoapController {
           taskId: task.taskId,
           reason: refinementResult.error,
         });
-        this.#clearPlan('Refinement requested replan');
+        this.#clearPlan(actor.id, 'Refinement requested replan');
+        activePlan = null;
         return null; // Will trigger replanning next turn
       }
 
@@ -590,9 +611,10 @@ class GoapController {
         this.#logger.info('Task skipped, advancing to next task', {
           taskId: task.taskId,
         });
-        const planContinues = this.#advancePlan();
+        const planContinues = this.#advancePlan(actor.id);
         if (!planContinues) {
-          this.#clearPlan('Goal achieved (last task skipped)');
+          this.#clearPlan(actor.id, 'Goal achieved (last task skipped)');
+          activePlan = null;
         }
         return null; // Retry next turn with next task
       }
@@ -613,13 +635,18 @@ class GoapController {
         },
         {
           actorId: actor.id,
-          goalId: this.#activePlan?.goal?.id,
+          goalId: activePlan?.goal?.id,
           taskId: task.taskId,
         }
       );
 
       // 14. Extract action hint from refinement result
-      const actionHint = await this.#extractActionHint(refinementResult, task, actor);
+      const actionHint = await this.#extractActionHint(
+        refinementResult,
+        task,
+        actor,
+        activePlan?.goal?.id
+      );
 
       if (!actionHint) {
         this.#logger.error('Failed to extract action hint', {
@@ -630,11 +657,12 @@ class GoapController {
       }
 
       // 15. Advance plan for next turn
-      const planContinues = this.#advancePlan();
+      const planContinues = this.#advancePlan(actor.id);
 
       if (!planContinues) {
         // 16. Plan complete → clear plan (event already dispatched in #advancePlan)
-        this.#clearPlan('Goal achieved');
+        this.#clearPlan(actor.id, 'Goal achieved');
+        activePlan = null;
       }
 
       // 17. Return action hint for GoapDecisionProvider
@@ -806,76 +834,72 @@ class GoapController {
   /**
    * Get current task from active plan
    *
+   * @param {string} actorId - Actor owning the plan
    * @returns {object|null} Current task or null if no plan
    * @private
    */
-  #getCurrentTask() {
-    if (!this.#activePlan) {
+  #getCurrentTask(actorId) {
+    const plan = this.#getActorPlan(actorId);
+    if (!plan) {
       return null;
     }
 
-    if (this.#activePlan.currentStep >= this.#activePlan.tasks.length) {
+    if (plan.currentStep >= plan.tasks.length) {
       return null;
     }
 
-    return this.#activePlan.tasks[this.#activePlan.currentStep];
+    return plan.tasks[plan.currentStep];
   }
 
   /**
    * Validate current active plan against world state
    *
+   * @param {string} actorId - Actor owning the plan
    * @param {object} world - Current world state (contains state hash)
    * @returns {object} Validation result { valid: boolean, invalidatedAt?, task?, reason?, diagnostics? }
    * @private
    */
-   
-  #validateActivePlan(world) {
-    if (!this.#activePlan) {
+  #validateActivePlan(actorId, world) {
+    const plan = this.#getActorPlan(actorId);
+    if (!plan) {
       return { valid: false, reason: 'No active plan' };
     }
 
-    // Extract state hash from world object
-    // NOTE: World structure TBD - fallback if world IS the state
     const currentState = world.state || world;
-
-    // Build context with required actorId
     const context = {
-      actorId: this.#activePlan.actorId,
+      actorId: plan.actorId,
     };
 
-    // Use plan invalidation detector with correct signature
     const validation = this.#invalidationDetector.checkPlanValidity(
-      this.#activePlan, // Plan with tasks array
-      currentState, // Symbolic state hash
-      context, // { actorId: string }
-      'strict' // Check all tasks
+      plan,
+      currentState,
+      context,
+      'strict'
     );
 
-    // Update validation timestamp if still valid
     if (validation.valid) {
-      this.#activePlan.lastValidated = Date.now();
+      plan.lastValidated = Date.now();
     } else {
-      // Dispatch plan invalidated event
       this.#dispatchEvent(
         GOAP_EVENTS.PLAN_INVALIDATED,
         {
-          goalId: this.#activePlan.goal.id,
+          goalId: plan.goal.id,
           reason: validation.reason,
-          currentStep: this.#activePlan.currentStep,
-          totalSteps: this.#activePlan.tasks.length,
+          currentStep: plan.currentStep,
+          totalSteps: plan.tasks.length,
         },
         {
-          actorId: this.#activePlan.actorId,
-          goalId: this.#activePlan.goal.id,
+          actorId: plan.actorId,
+          goalId: plan.goal.id,
         }
       );
 
       this.#logger.warn('Plan invalidated', {
-        goalId: this.#activePlan.goal.id,
+        goalId: plan.goal.id,
         invalidatedAt: validation.invalidatedAt,
         task: validation.task,
         reason: validation.reason,
-        currentStep: this.#activePlan.currentStep,
+        currentStep: plan.currentStep,
       });
     }
 
@@ -892,44 +916,45 @@ class GoapController {
   /**
    * Advance plan to next task
    *
+   * @param {string} actorId - Actor owning the plan
    * @returns {boolean} True if plan continues, false if complete
    * @private
    */
-   
-  #advancePlan() {
-    if (!this.#activePlan) {
+  #advancePlan(actorId) {
+    const plan = this.#getActorPlan(actorId);
+    if (!plan) {
       throw new Error('Cannot advance: no active plan');
     }
 
-    this.#activePlan.currentStep++;
+    plan.currentStep++;
 
-    const isComplete =
-      this.#activePlan.currentStep >= this.#activePlan.tasks.length;
+    const isComplete = plan.currentStep >= plan.tasks.length;
 
     if (isComplete) {
-      // Dispatch goal achieved event
       this.#dispatchEvent(
         GOAP_EVENTS.GOAL_ACHIEVED,
         {
-          goalId: this.#activePlan.goal.id,
-          totalSteps: this.#activePlan.tasks.length,
-          duration: Date.now() - this.#activePlan.createdAt,
+          goalId: plan.goal.id,
+          totalSteps: plan.tasks.length,
+          duration: Date.now() - plan.createdAt,
         },
         {
-          actorId: this.#activePlan.actorId,
-          goalId: this.#activePlan.goal.id,
+          actorId: plan.actorId,
+          goalId: plan.goal.id,
         }
       );
 
       this.#logger.info('Plan completed', {
-        goalId: this.#activePlan.goal.id,
-        totalSteps: this.#activePlan.tasks.length,
+        actorId: plan.actorId,
+        goalId: plan.goal.id,
+        totalSteps: plan.tasks.length,
       });
     } else {
       this.#logger.debug('Plan advanced', {
-        goalId: this.#activePlan.goal.id,
-        currentStep: this.#activePlan.currentStep,
-        totalSteps: this.#activePlan.tasks.length,
+        actorId: plan.actorId,
+        goalId: plan.goal.id,
+        currentStep: plan.currentStep,
+        totalSteps: plan.tasks.length,
       });
     }
 
@@ -950,24 +975,26 @@ class GoapController {
    * @private
    */
    
-  #clearPlan(reason) {
-    if (!this.#activePlan) {
+  #clearPlan(actorId, reason) {
+    assertNonBlankString(actorId, 'actorId', 'GoapController.#clearPlan', this.#logger);
+
+    const plan = this.#getActorPlan(actorId);
+    if (!plan) {
       return;
     }
 
-    const goalId = this.#activePlan.goal.id;
-    const actorId = this.#activePlan.actorId;
+    const goalId = plan.goal.id;
 
     this.#logger.info('Plan cleared', {
+      actorId,
       goalId,
       reason,
-      stepsCompleted: this.#activePlan.currentStep,
-      totalSteps: this.#activePlan.tasks.length,
+      stepsCompleted: plan.currentStep,
+      totalSteps: plan.tasks.length,
     });
 
     this.#cleanupActorDiagnostics(actorId);
-    this.#activePlans.delete(actorId);
-    this.#activePlan = null;
+    this.#deleteActorPlan(actorId);
   }
 
   #cleanupActorDiagnostics(actorId) {
@@ -1049,6 +1076,7 @@ class GoapController {
    * @param {object} stepBindings - Target bindings from refinement method step
    * @param {object} task - Task from plan
    * @param {object} actor - Actor entity
+   * @param {string|null} planGoalId - Goal id for event context (optional)
    * @returns {Promise<object>} Resolved bindings (placeholder values replaced with entity IDs)
    * @private
    */
@@ -1101,10 +1129,11 @@ class GoapController {
    * @param {object} refinementResult - Result from refinement engine
    * @param {object} task - Task from plan
    * @param {object} actor - Actor entity
+   * @param planGoalId
    * @returns {Promise<object|null>} Action hint or null if extraction fails
    * @private
    */
-  async #extractActionHint(refinementResult, task, actor) {
+  async #extractActionHint(refinementResult, task, actor, planGoalId = null) {
     assertPresent(refinementResult, 'Refinement result is required');
     assertPresent(task, 'Task is required');
     assertPresent(actor, 'Actor is required');
@@ -1168,7 +1197,7 @@ class GoapController {
         {
           actorId: actor.id,
           taskId: task.taskId,
-          goalId: this.#activePlan?.goal?.id,
+          goalId: planGoalId,
         }
       );
 
@@ -1190,7 +1219,7 @@ class GoapController {
         {
           actorId: actor.id,
           taskId: task.taskId,
-          goalId: this.#activePlan?.goal?.id,
+          goalId: planGoalId,
         }
       );
 
@@ -1204,6 +1233,7 @@ class GoapController {
    *
    * @param {string} goalId - Goal ID that failed
    * @param {string} reason - Failure reason
+   * @param code
    * @returns {boolean} True if max failures reached (≥3 recent attempts)
    * @private
    */
@@ -1255,6 +1285,7 @@ class GoapController {
    *
    * @param {string} taskId - Task ID that failed
    * @param {string} reason - Failure reason
+   * @param code
    * @returns {boolean} True if max failures reached (≥3 recent attempts)
    * @private
    */
@@ -1308,6 +1339,7 @@ class GoapController {
    * Next turn will attempt to select a different goal or retry after expiry.
    *
    * @param {object} goal - Goal that failed to plan
+   * @param failureInfo
    * @returns {null} Returns null to idle this turn
    * @private
    */
@@ -1362,6 +1394,9 @@ class GoapController {
   async #handleRefinementFailure(task, refinementResult) {
     const fallbackBehavior = refinementResult.fallbackBehavior || 'replan';
     const reason = refinementResult.error || 'Refinement failed';
+    const actorId = this.#currentActor;
+    const plan = actorId ? this.#getActorPlan(actorId) : null;
+    const planGoalId = plan?.goal?.id;
 
     this.#logger.info('Handling refinement failure', {
       taskId: task.taskId,
@@ -1382,19 +1417,23 @@ class GoapController {
       {
         actorId: this.#currentActor,
         taskId: task.taskId,
-        goalId: this.#activePlan?.goal?.id,
+        goalId: planGoalId,
       }
     );
 
     switch (fallbackBehavior) {
       case 'replan': {
         // Default: Clear plan and track goal failure
-        this.#trackFailedGoal(
-          this.#activePlan.goal.id,
-          `Task failed: ${reason}`,
-          'REFINEMENT_FAILURE_REPLAN'
-        );
-        this.#clearPlan(`Refinement failed: ${reason}`);
+        if (planGoalId) {
+          this.#trackFailedGoal(
+            planGoalId,
+            `Task failed: ${reason}`,
+            'REFINEMENT_FAILURE_REPLAN'
+          );
+        }
+        if (actorId) {
+          this.#clearPlan(actorId, `Refinement failed: ${reason}`);
+        }
         return null; // Will replan next turn
       }
 
@@ -1408,17 +1447,23 @@ class GoapController {
             taskId: task.taskId,
             recursionDepth: this.#recursionDepth,
           });
-          this.#clearPlan('Too many consecutive task failures');
+          if (actorId) {
+            this.#clearPlan(actorId, 'Too many consecutive task failures');
+          }
           this.#recursionDepth = 0;
           return null;
         }
 
         // Advance to next task
-        const planContinues = this.#advancePlan();
+        if (!actorId) {
+          this.#logger.error('Missing actor context during continue fallback');
+          return null;
+        }
+        const planContinues = this.#advancePlan(actorId);
 
         if (!planContinues) {
           // No more tasks → goal achieved (all remaining tasks were skippable failures)
-          this.#clearPlan('Goal achieved (remaining tasks failed but skippable)');
+          this.#clearPlan(actorId, 'Goal achieved (remaining tasks failed but skippable)');
           this.#recursionDepth = 0;
           return null;
         }
@@ -1435,19 +1480,25 @@ class GoapController {
 
       case 'fail': {
         // Critical failure → track goal and clear plan
-        this.#trackFailedGoal(
-          this.#activePlan.goal.id,
-          `Task failed critically: ${reason}`,
-          'REFINEMENT_FAILURE_CRITICAL'
-        );
+        if (planGoalId) {
+          this.#trackFailedGoal(
+            planGoalId,
+            `Task failed critically: ${reason}`,
+            'REFINEMENT_FAILURE_CRITICAL'
+          );
+        }
         this.#trackFailedTask(task.taskId, reason, 'REFINEMENT_FAILURE_CRITICAL');
-        this.#clearPlan(`Critical task failure: ${reason}`);
+        if (actorId) {
+          this.#clearPlan(actorId, `Critical task failure: ${reason}`);
+        }
         return null;
       }
 
       case 'idle': {
         // Just clear plan without tracking (transient failure)
-        this.#clearPlan(`Temporary task failure: ${reason}`);
+        if (actorId) {
+          this.#clearPlan(actorId, `Temporary task failure: ${reason}`);
+        }
         return null;
       }
 
@@ -1457,12 +1508,16 @@ class GoapController {
           fallbackBehavior,
           taskId: task.taskId,
         });
-        this.#trackFailedGoal(
-          this.#activePlan.goal.id,
-          `Task failed: ${reason}`,
-          'REFINEMENT_FAILURE_UNKNOWN'
-        );
-        this.#clearPlan(`Refinement failed: ${reason}`);
+        if (planGoalId) {
+          this.#trackFailedGoal(
+            planGoalId,
+            `Task failed: ${reason}`,
+            'REFINEMENT_FAILURE_UNKNOWN'
+          );
+        }
+        if (actorId) {
+          this.#clearPlan(actorId, `Refinement failed: ${reason}`);
+        }
         return null;
       }
     }
@@ -1580,6 +1635,7 @@ class GoapController {
 
   /**
    * Expose dependency diagnostics captured during construction.
+   *
    * @returns {Array<object>} Snapshot entries per dependency.
    */
   getDependencyDiagnostics() {
@@ -1593,6 +1649,7 @@ class GoapController {
 
   /**
    * Report the diagnostics contract version consumed by the controller + debugger.
+   *
    * @returns {string}
    */
   getDiagnosticsContractVersion() {
@@ -1655,6 +1712,7 @@ class GoapController {
 
   /**
    * Return planning-state diagnostics captured via PlanningStateView instrumentation.
+   *
    * @param {string} actorId
    * @returns {object|null}
    */
@@ -1708,9 +1766,18 @@ class GoapController {
       return null;
     }
 
+    let planningDiagnostics = null;
+    if (
+      this.#eventDispatcher &&
+      typeof this.#eventDispatcher.getPlanningComplianceSnapshot === 'function'
+    ) {
+      planningDiagnostics = this.#eventDispatcher.getPlanningComplianceSnapshot();
+    }
+
     return {
       actor: actorDiagnostics,
       global: globalDiagnostics,
+      planning: planningDiagnostics,
     };
   }
 

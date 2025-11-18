@@ -165,6 +165,11 @@ const baseFixtureConfig = {
   },
 };
 
+/**
+ *
+ * @param fixtures
+ * @param overrides
+ */
 function createLoaderWithFixtures(fixtures, overrides = {}) {
   return new LlmConfigLoader({
     logger: overrides.logger ?? new TestLogger('Loader'),
@@ -187,6 +192,16 @@ function createLoaderWithFixtures(fixtures, overrides = {}) {
   });
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.fixtureConfig
+ * @param root0.httpResponder
+ * @param root0.apiKeys
+ * @param root0.initialLlmId
+ * @param root0.executionEnvironment
+ * @param root0.overrides
+ */
 function createAdapterDependencies({
   fixtureConfig = baseFixtureConfig,
   httpResponder,
@@ -291,6 +306,10 @@ function createAdapterDependencies({
   };
 }
 
+/**
+ *
+ * @param options
+ */
 function createAdapterHarness(options = {}) {
   const {
     loader,

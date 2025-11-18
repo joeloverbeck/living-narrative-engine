@@ -38,6 +38,10 @@ class MassiveClothingService {
   }
 }
 
+/**
+ *
+ * @param results
+ */
 function createDispatcher(results) {
   return {
     resolve() {

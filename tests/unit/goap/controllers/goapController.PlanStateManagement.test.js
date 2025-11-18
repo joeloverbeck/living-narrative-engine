@@ -8,6 +8,16 @@ import GoapController from '../../../../src/goap/controllers/goapController.js';
 import { createGoapPlannerMock } from '../../../common/mocks/createGoapPlannerMock.js';
 import { expectGoapPlannerMock } from '../../../common/mocks/expectGoapPlannerMock.js';
 
+const createDeferred = () => {
+  let resolve;
+  let reject;
+  const promise = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+};
+
 describe('GoapController - Plan State Management', () => {
   let mockLogger;
   let mockGoapPlanner;
@@ -294,6 +304,66 @@ describe('GoapController - Plan State Management', () => {
         { hunger: 90 },
         {}
       );
+    });
+
+    it('should isolate plan progress for multiple actors when their turns overlap', async () => {
+      const actorSlow = { id: 'actor_slow' };
+      const actorFast = { id: 'actor_fast' };
+      const world = { state: {} };
+      const goal = { id: 'goal:shared', priority: 5 };
+      const tasks = [
+        { taskId: 'task:alpha', parameters: {} },
+        { taskId: 'task:beta', parameters: {} },
+      ];
+
+      mockDataRegistry.getAll.mockReturnValue([goal]);
+      mockContextAssemblyService.assemblePlanningContext.mockReturnValue({});
+      mockJsonLogicService.evaluate.mockReturnValue(true);
+      mockGoapPlanner.plan.mockReturnValue({ tasks });
+
+      const deferred = createDeferred();
+      mockRefinementEngine.refine.mockImplementation((_, actorId) => {
+        if (actorId === actorSlow.id) {
+          return deferred.promise;
+        }
+        return Promise.resolve({
+          success: true,
+          methodId: 'method_multi',
+          stepResults: [{ actionId: 'action_fast' }],
+        });
+      });
+
+      mockDataRegistry.get.mockReturnValue({
+        id: 'method_multi',
+        steps: [
+          {
+            stepType: 'primitive_action',
+            actionId: 'action_fast',
+            targetBindings: {},
+          },
+        ],
+      });
+      mockParameterResolutionService.resolve.mockResolvedValue({});
+
+      const slowTurnPromise = controller.decideTurn(actorSlow, world);
+      await controller.decideTurn(actorFast, world);
+
+      deferred.resolve({
+        success: true,
+        methodId: 'method_multi',
+        stepResults: [{ actionId: 'action_fast' }],
+      });
+      await slowTurnPromise;
+
+      const slowPlan = controller.getActivePlan(actorSlow.id);
+      const fastPlan = controller.getActivePlan(actorFast.id);
+
+      expect(slowPlan).not.toBeNull();
+      expect(fastPlan).not.toBeNull();
+      expect(slowPlan?.currentStep).toBe(1);
+      expect(fastPlan?.currentStep).toBe(1);
+      expect(slowPlan?.actorId).toBe(actorSlow.id);
+      expect(fastPlan?.actorId).toBe(actorFast.id);
     });
   });
 

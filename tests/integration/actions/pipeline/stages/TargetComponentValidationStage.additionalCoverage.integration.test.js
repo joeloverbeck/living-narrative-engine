@@ -93,11 +93,18 @@ class ErroringTrace extends RecordingTrace {
 
 const defaultConfigSnapshot = JSON.parse(JSON.stringify(actionPipelineConfig));
 
+/**
+ *
+ */
 function restoreConfig() {
   const snapshot = JSON.parse(JSON.stringify(defaultConfigSnapshot));
   Object.assign(actionPipelineConfig, snapshot);
 }
 
+/**
+ *
+ * @param overrides
+ */
 function applyTargetValidationOverrides(overrides) {
   Object.assign(actionPipelineConfig.targetValidation, overrides);
 

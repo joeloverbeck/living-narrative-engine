@@ -17,7 +17,6 @@ const DEFAULT_CONTAINER_CAPACITY = { maxWeight: 50, maxItems: 5 };
 
 /**
  * @description Merges provided capacity data with defaults for inventory or container helpers.
- *
  * @param {object|undefined} providedCapacity - Optional caller-specified capacity configuration
  * @param {object} fallbackCapacity - Default capacity values when fields are omitted
  * @returns {object} Normalized capacity configuration with both maxWeight and maxItems populated
@@ -702,21 +701,20 @@ export class ModEntityScenarios {
 
   /**
    * @description Creates a configurable sitting arrangement with seated, standing, and kneeling actors.
-   *
    * @param {object} [options] - Configuration overrides for the scenario
-   * @param {string} [options.locationId='room1'] - Location where all entities are placed
-   * @param {boolean} [options.includeRoom=true] - Whether to include a room entity in the output
+   * @param {string} [options.locationId] - Location where all entities are placed
+   * @param {boolean} [options.includeRoom] - Whether to include a room entity in the output
    * @param {string} [options.roomId] - Identifier for the optional room entity
-   * @param {string} [options.roomName='Test Room'] - Display name for the optional room entity
-   * @param {string} [options.furnitureId='couch1'] - Identifier for the primary furniture entity
-   * @param {string} [options.furnitureName='Comfy Couch'] - Display name for the primary furniture entity
+   * @param {string} [options.roomName] - Display name for the optional room entity
+   * @param {string} [options.furnitureId] - Identifier for the primary furniture entity
+   * @param {string} [options.furnitureName] - Display name for the primary furniture entity
    * @param {string} [options.furnitureLocationId] - Location identifier for the primary furniture entity
    * @param {object} [options.furnitureAllowsSitting] - Additional data merged into positioning:allows_sitting for the primary furniture
    * @param {Array<object>} [options.additionalFurniture] - Extra furniture definitions with optional allows_sitting overrides
    * @param {Array<object>} [options.seatedActors] - Actor definitions for seated occupants (id, name, spotIndex, furnitureId, closeTo)
    * @param {Array<object>} [options.standingActors] - Actor definitions for standing occupants (id, name, behindTargetId, closeTo, standingData)
    * @param {Array<object>} [options.kneelingActors] - Actor definitions for kneeling occupants (id, name, targetId, closeTo)
-   * @param {boolean} [options.closeSeatedActors=true] - Whether seated actors default to being close to one another when sharing furniture
+   * @param {boolean} [options.closeSeatedActors] - Whether seated actors default to being close to one another when sharing furniture
    * @returns {object} Scenario details with entities ready for fixture.reset
    */
   static createSittingArrangement(options = {}) {
@@ -999,7 +997,6 @@ export class ModEntityScenarios {
 
   /**
    * @description Creates a default two-person sitting scenario with shared furniture.
-   *
    * @param {object} [options] - Scenario overrides passed to createSittingArrangement
    * @returns {object} Scenario details containing seated actors and furniture
    */
@@ -1023,7 +1020,6 @@ export class ModEntityScenarios {
 
   /**
    * @description Creates a solo sitting scenario for a single actor and furniture.
-   *
    * @param {object} [options] - Scenario overrides passed to createSittingArrangement
    * @returns {object} Scenario details for the solo sitter
    */
@@ -1046,7 +1042,6 @@ export class ModEntityScenarios {
 
   /**
    * @description Creates a sitting scenario with at least one seated actor and nearby standing actors.
-   *
    * @param {object} [options] - Scenario overrides passed to createSittingArrangement
    * @returns {object} Scenario details with seated and standing actors
    */
@@ -1102,7 +1097,6 @@ export class ModEntityScenarios {
 
   /**
    * @description Creates a scenario where actors occupy different furniture entities in the same room.
-   *
    * @param {object} [options] - Scenario overrides passed to createSittingArrangement
    * @returns {object} Scenario details with separate furniture instances
    */
@@ -1154,7 +1148,6 @@ export class ModEntityScenarios {
 
   /**
    * @description Creates a scenario with a seated actor and kneeling actors positioned nearby.
-   *
    * @param {object} [options] - Scenario overrides passed to createSittingArrangement
    * @returns {object} Scenario details with seated and kneeling actors
    */

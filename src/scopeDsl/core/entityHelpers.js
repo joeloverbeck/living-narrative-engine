@@ -90,6 +90,13 @@ export function setupEntityCacheInvalidation(eventBus) {
   });
 }
 
+/**
+ *
+ * @param handler
+ * @param type
+ * @param key
+ * @param logger
+ */
 function notifyCacheEvent(handler, type, key, logger) {
   if (typeof handler !== 'function') {
     return;
@@ -109,6 +116,11 @@ function notifyCacheEvent(handler, type, key, logger) {
   }
 }
 
+/**
+ *
+ * @param cacheEventsHandler
+ * @param logger
+ */
 function evictCacheEntries(cacheEventsHandler, logger) {
   if (entityCache.size < CACHE_SIZE_LIMIT) {
     return;
@@ -124,6 +136,11 @@ function evictCacheEntries(cacheEventsHandler, logger) {
   }
 }
 
+/**
+ *
+ * @param entityId
+ * @param runtimeContext
+ */
 function warnSyntheticLookupFallback(entityId, runtimeContext) {
   if (!entityId) {
     return;
@@ -150,6 +167,10 @@ function warnSyntheticLookupFallback(entityId, runtimeContext) {
   }
 }
 
+/**
+ *
+ * @param result
+ */
 function unwrapGatewayComponents(result) {
   if (
     result &&

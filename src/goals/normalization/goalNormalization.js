@@ -6,10 +6,18 @@ const GOAL_NORMALIZATION_ERROR_CODE = 'GOAL_NORMALIZATION_FAILED';
 /** @type {Set<Function>} */
 const normalizationHooks = new Set();
 
+/**
+ *
+ * @param value
+ */
 function isPlainObject(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+/**
+ *
+ * @param candidate
+ */
 function unwrapLogicContainer(candidate) {
   if (
     isPlainObject(candidate) &&
@@ -22,6 +30,10 @@ function unwrapLogicContainer(candidate) {
   return candidate;
 }
 
+/**
+ *
+ * @param value
+ */
 function isConditionLike(value) {
   if (isPlainObject(value)) {
     if (
@@ -35,6 +47,11 @@ function isConditionLike(value) {
   return false;
 }
 
+/**
+ *
+ * @param context
+ * @param extra
+ */
 function buildErrorContext(context, extra = {}) {
   return {
     modId: context?.modId || null,
@@ -43,6 +60,13 @@ function buildErrorContext(context, extra = {}) {
   };
 }
 
+/**
+ *
+ * @param context
+ * @param warnings
+ * @param message
+ * @param details
+ */
 function warn(context, warnings, message, details = {}) {
   warnings.push({ message, details });
   const logger = context?.logger;
@@ -60,12 +84,23 @@ function warn(context, warnings, message, details = {}) {
   }
 }
 
+/**
+ *
+ * @param mutations
+ * @param mutation
+ */
 function recordMutation(mutations, mutation) {
   if (mutation) {
     mutations.push(mutation);
   }
 }
 
+/**
+ *
+ * @param context
+ * @param message
+ * @param extra
+ */
 function throwNormalizationError(context, message, extra = {}) {
   throw new ModValidationError(
     message,
@@ -75,6 +110,13 @@ function throwNormalizationError(context, message, extra = {}) {
   );
 }
 
+/**
+ *
+ * @param normalized
+ * @param context
+ * @param warnings
+ * @param mutations
+ */
 function coercePriority(normalized, context, warnings, mutations) {
   const { priority } = normalized;
   if (typeof priority === 'number' && Number.isFinite(priority)) {
@@ -121,6 +163,15 @@ function coercePriority(normalized, context, warnings, mutations) {
   });
 }
 
+/**
+ *
+ * @param normalized
+ * @param field
+ * @param fallbackBuilder
+ * @param context
+ * @param warnings
+ * @param mutations
+ */
 function ensureConditionField(
   normalized,
   field,
@@ -171,6 +222,13 @@ function ensureConditionField(
   });
 }
 
+/**
+ *
+ * @param normalized
+ * @param context
+ * @param warnings
+ * @param mutations
+ */
 function runNormalizationHooks(normalized, context, warnings, mutations) {
   for (const hook of normalizationHooks) {
     try {
@@ -218,6 +276,11 @@ function runNormalizationHooks(normalized, context, warnings, mutations) {
   }
 }
 
+/**
+ *
+ * @param data
+ * @param context
+ */
 export function normalizeGoalData(data, context = {}) {
   if (!isPlainObject(data)) {
     throw new TypeError('Goal data must be a plain object.');
@@ -242,6 +305,10 @@ export function normalizeGoalData(data, context = {}) {
   return { data, warnings, mutations };
 }
 
+/**
+ *
+ * @param extension
+ */
 export function registerGoalNormalizationExtension(extension) {
   if (typeof extension !== 'function') {
     throw new TypeError('Goal normalization extension must be a function.');
@@ -250,10 +317,16 @@ export function registerGoalNormalizationExtension(extension) {
   return () => normalizationHooks.delete(extension);
 }
 
+/**
+ *
+ */
 export function clearGoalNormalizationExtensions() {
   normalizationHooks.clear();
 }
 
+/**
+ *
+ */
 export function getGoalNormalizationExtensions() {
   return Array.from(normalizationHooks);
 }

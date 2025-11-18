@@ -28,6 +28,12 @@ Every planner/heuristic/operator now consumes the same dual-format snapshot via 
 
 When you write new goals or tasks, prefer the `actor.components.core_stats.health` style paths; `PlanningStateView` automatically maps those to the colonized component IDs stored inside the planner. Never access `context.state` manually—ask the helper instead so diagnostics stay accurate.
 
+### Stale snapshot diagnostics
+
+- Every `PlanningStateView.hasComponent()` miss triggers `recordPlanningStateMiss`, which dispatches `GOAP_EVENTS.STATE_MISS` with `{ actorId, entityId, componentId, origin, reason }`. Treat that emission as authoritative evidence the symbolic snapshot is stale.
+- Turning on `GOAP_STATE_ASSERT=1` (unit or integration harnesses) escalates the miss into a thrown error so CI catches divergence before runtime fallbacks hide it.
+- `HasComponentOperator` must never fall back to the runtime `EntityManager` whenever `context.state` exists; refresh or rebuild the planning snapshot instead of bypassing the diagnostics pipeline.
+
 ## Planner Interface Contract
 
 `GoapController` validates the planner against a shared contract defined in `src/goap/planner/goapPlannerContractDefinition.js`. Every runtime implementation and test double must expose the following API:

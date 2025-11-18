@@ -46,6 +46,9 @@ class DependencyProbeController extends BaseCharacterBuilderController {
   }
 }
 
+/**
+ *
+ */
 function createLoggerMock() {
   return {
     debug: jest.fn(),
@@ -55,6 +58,10 @@ function createLoggerMock() {
   };
 }
 
+/**
+ *
+ * @param logger
+ */
 function createCharacterBuilderServiceMock(logger) {
   const noop = async () => ({ logger });
   return {
@@ -69,6 +76,9 @@ function createCharacterBuilderServiceMock(logger) {
   };
 }
 
+/**
+ *
+ */
 function createEventBusMock() {
   return {
     dispatch: jest.fn(),
@@ -77,6 +87,9 @@ function createEventBusMock() {
   };
 }
 
+/**
+ *
+ */
 function createSchemaValidatorMock() {
   return {
     validate: jest.fn(() => ({ isValid: true })),

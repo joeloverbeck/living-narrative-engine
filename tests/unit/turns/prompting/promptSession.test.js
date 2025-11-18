@@ -356,7 +356,7 @@ describe('PromptSession', () => {
   describe('#settle scheduling', () => {
     it('falls back to setTimeout when setImmediate is unavailable', async () => {
       const originalSetImmediate = globalThis.setImmediate;
-      // eslint-disable-next-line no-global-assign
+       
       globalThis.setImmediate = undefined;
       jest.useFakeTimers();
 
@@ -380,7 +380,7 @@ describe('PromptSession', () => {
         expect(error.code).toBe('PROMPT_CANCELLED');
       } finally {
         jest.useRealTimers();
-        // eslint-disable-next-line no-global-assign
+         
         globalThis.setImmediate = originalSetImmediate;
       }
     });

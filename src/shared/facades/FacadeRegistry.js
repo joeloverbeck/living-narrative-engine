@@ -17,6 +17,7 @@ import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 
 /**
  * Facade metadata for registry management
+ *
  * @typedef {object} FacadeMetadata
  * @property {string} name - Facade name/identifier
  * @property {string} category - Facade category (e.g., 'clothing', 'anatomy', 'core')
@@ -66,6 +67,7 @@ class FacadeRegistry {
 
   /**
    * Register a facade with metadata
+   *
    * @param {FacadeMetadata} metadata - Facade metadata
    * @param {object} facadeConfig - Facade configuration for factory
    * @throws {InvalidArgumentError} If registration fails
@@ -122,6 +124,7 @@ class FacadeRegistry {
 
   /**
    * Get a facade instance by name
+   *
    * @param {string} facadeName - Name of the facade
    * @param {object} [options] - Options for facade creation
    * @returns {*} Facade instance
@@ -183,6 +186,7 @@ class FacadeRegistry {
 
   /**
    * Check if a facade is registered
+   *
    * @param {string} facadeName - Name of the facade
    * @returns {boolean} True if facade is registered
    */
@@ -192,6 +196,7 @@ class FacadeRegistry {
 
   /**
    * Get facade metadata
+   *
    * @param {string} facadeName - Name of the facade
    * @returns {FacadeMetadata|null} Facade metadata or null if not found
    */
@@ -201,6 +206,7 @@ class FacadeRegistry {
 
   /**
    * Get all registered facades
+   *
    * @returns {FacadeMetadata[]} Array of all facade metadata
    */
   getAllFacades() {
@@ -209,6 +215,7 @@ class FacadeRegistry {
 
   /**
    * Get registered facades (alias for getAllFacades for test compatibility)
+   *
    * @returns {FacadeMetadata[]} Array of all facade metadata
    */
   getRegisteredFacades() {
@@ -217,6 +224,7 @@ class FacadeRegistry {
 
   /**
    * Get facades by category
+   *
    * @param {string} category - Facade category
    * @returns {FacadeMetadata[]} Array of facades in the category
    */
@@ -229,8 +237,9 @@ class FacadeRegistry {
 
   /**
    * Search facades by tags
+   *
    * @param {string[]} tags - Array of tags to search for
-   * @param {boolean} [matchAll=false] - Whether to match all tags or any tag
+   * @param {boolean} [matchAll] - Whether to match all tags or any tag
    * @returns {FacadeMetadata[]} Array of matching facades
    */
   searchByTags(tags, matchAll = false) {
@@ -258,6 +267,7 @@ class FacadeRegistry {
 
   /**
    * Get available categories
+   *
    * @returns {string[]} Array of available categories
    */
   getCategories() {
@@ -266,6 +276,7 @@ class FacadeRegistry {
 
   /**
    * Get facade capabilities
+   *
    * @param {string} facadeName - Name of the facade
    * @returns {string[]} Array of facade capabilities or empty array if not found
    */
@@ -276,6 +287,7 @@ class FacadeRegistry {
 
   /**
    * Get facade tags
+   *
    * @param {string} facadeName - Name of the facade
    * @returns {string[]} Array of facade tags or empty array if not found
    */
@@ -286,6 +298,7 @@ class FacadeRegistry {
 
   /**
    * Get complete facade information
+   *
    * @param {string} facadeName - Name of the facade
    * @returns {FacadeMetadata|null} Complete facade metadata or null if not found
    */
@@ -308,6 +321,7 @@ class FacadeRegistry {
 
   /**
    * Find facades with specific capabilities
+   *
    * @param {string[]|string} requiredCapabilities - Required capabilities array or single capability
    * @returns {FacadeMetadata[]} Array of facades with matching capabilities
    */
@@ -338,6 +352,7 @@ class FacadeRegistry {
 
   /**
    * Clear a singleton instance
+   *
    * @param {string} facadeName - Name of the facade
    */
   clearSingleton(facadeName) {
@@ -375,6 +390,7 @@ class FacadeRegistry {
 
   /**
    * Unregister a facade
+   *
    * @param {string} facadeName - Name of the facade to unregister
    */
   unregister(facadeName) {
@@ -424,6 +440,7 @@ class FacadeRegistry {
 
   /**
    * Get registry statistics
+   *
    * @returns {object} Registry statistics
    */
   getStatistics() {
@@ -444,6 +461,7 @@ class FacadeRegistry {
 
   /**
    * Update category index when registering facade
+   *
    * @private
    * @param {string} facadeName - Name of the facade
    * @param {string} category - Category name
@@ -461,6 +479,7 @@ class FacadeRegistry {
 
   /**
    * Remove facade from category index
+   *
    * @private
    * @param {string} facadeName - Name of the facade
    * @param {string} category - Category name
@@ -482,6 +501,7 @@ class FacadeRegistry {
 
   /**
    * Validate facade metadata
+   *
    * @private
    * @param {FacadeMetadata} metadata - Metadata to validate
    * @throws {InvalidArgumentError} If metadata is invalid

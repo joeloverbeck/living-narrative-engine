@@ -2,6 +2,9 @@ import { createPlanningStateView } from './planningStateView.js';
 
 const DEFAULT_ORIGIN = 'GoalEvaluationContextAdapter';
 
+/**
+ *
+ */
 export function isGoalEvaluationAdapterEnabled() {
   return process.env.GOAP_NUMERIC_ADAPTER === '1';
 }
@@ -56,6 +59,10 @@ export class GoalEvaluationContextAdapter {
   }
 }
 
+/**
+ *
+ * @param options
+ */
 export function createGoalEvaluationContextAdapter(options) {
   return new GoalEvaluationContextAdapter(options);
 }

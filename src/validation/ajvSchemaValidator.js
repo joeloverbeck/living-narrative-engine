@@ -738,6 +738,7 @@ class AjvSchemaValidator {
 
   /**
    * Validates data using AJV
+   *
    * @private
    * @param {string} schemaId - Schema identifier
    * @param {any} data - Data to validate
@@ -789,10 +790,11 @@ class AjvSchemaValidator {
 
   /**
    * Validates data using generated validator
+   *
    * @private
    * @param {string} schemaId - Schema identifier (component schema ID)
    * @param {*} data - Data to validate
-   * @returns {Object|null} Validation result or null if no validator
+   * @returns {object | null} Validation result or null if no validator
    */
   #validateWithGenerated(schemaId, data) {
     // Enhanced validation disabled
@@ -839,9 +841,10 @@ class AjvSchemaValidator {
   /**
    * Merges validation results from AJV and generated validator
    * Prefers generated validator errors over AJV errors for better messages
+   *
    * @private
    * @param {ValidationResult} ajvResult - Result from AJV validation
-   * @param {Object} generatedResult - Result from generated validator
+   * @param {object} generatedResult - Result from generated validator
    * @returns {ValidationResult} Merged validation result
    */
   #mergeValidationResults(ajvResult, generatedResult) {
@@ -1126,7 +1129,6 @@ class AjvSchemaValidator {
   /**
    * @description Overrides the internal Ajv instance. This is intended solely for test scenarios
    * that need to simulate Ajv unavailability in order to exercise error handling paths.
-   *
    * @param {import('ajv').default | null | undefined} ajvInstance - Ajv instance to assign or
    *   {@link null} to clear the reference.
    * @returns {void}

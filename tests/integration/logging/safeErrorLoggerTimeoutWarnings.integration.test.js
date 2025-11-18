@@ -166,6 +166,9 @@ describe('SafeErrorLogger - Timeout Warnings Integration', () => {
 
     // Simulate the exact scenario from the logs:
     // gameEngine.js:329 → safeErrorLogger.js:172 → startNewGame → 60000ms timeout
+    /**
+     *
+     */
     function simulateGameInitializationTimeout() {
       return new Promise((resolve, reject) => {
         const timeoutId = setTimeout(() => {

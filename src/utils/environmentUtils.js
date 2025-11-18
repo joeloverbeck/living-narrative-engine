@@ -458,6 +458,7 @@ export function getMemoryUsagePercent() {
 
 /**
  * Determine whether DOM-specific auto initialization should run.
+ *
  * @returns {boolean}
  */
 export function shouldAutoInitializeDom() {

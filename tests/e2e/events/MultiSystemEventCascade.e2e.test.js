@@ -10,7 +10,6 @@
  * - Cascade interruption and recovery scenarios
  * - Event flow performance under multi-system load
  * - Inter-system event dependencies and blocking behavior
- * 
  * @jest-environment jsdom
  */
 
@@ -871,6 +870,10 @@ describe('Multi-System Event Cascade E2E Test', () => {
 
 /**
  * Utility function to wait for a condition with timeout
+ *
+ * @param condition
+ * @param timeoutMs
+ * @param errorMessage
  */
 async function waitForCondition(condition, timeoutMs = 5000, errorMessage = 'Condition not met') {
   const startTime = Date.now();

@@ -8,7 +8,8 @@ import { createStrictProxy } from './strictObjectProxy.js';
 /**
  * Wrap discovered actions in strict proxies for property access validation
  * Only enabled in test/development environments
- * @param {Array<Object>} actions - Discovered actions
+ *
+ * @param {Array<object>} actions - Discovered actions
  * @returns {Array<Proxy>} Actions wrapped in strict proxies
  */
 export function wrapActionsWithStrictValidation(actions) {
@@ -63,7 +64,8 @@ export function wrapActionsWithStrictValidation(actions) {
 
 /**
  * Wrap entity objects in strict proxies
- * @param {Object} entity - Entity to wrap
+ *
+ * @param {object} entity - Entity to wrap
  * @returns {Proxy} Wrapped entity
  */
 export function wrapEntityWithStrictValidation(entity) {

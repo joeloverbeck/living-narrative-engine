@@ -8,24 +8,28 @@ import { ModEntityBuilder } from '../ModEntityBuilder.js';
 
 /**
  * Identifier for the rub penis against penis action.
+ *
  * @type {string}
  */
 export const RUB_PENIS_AGAINST_PENIS_ACTION_ID = 'sex-dry-intimacy:rub_penis_against_penis';
 
 /**
  * Default actor identifier used in the penis rubbing scenarios.
+ *
  * @type {string}
  */
 export const RUB_PENIS_AGAINST_PENIS_ACTOR_ID = 'alex';
 
 /**
  * Default primary partner identifier used in the penis rubbing scenarios.
+ *
  * @type {string}
  */
 export const RUB_PENIS_AGAINST_PENIS_PRIMARY_ID = 'blake';
 
 /**
  * Default room identifier for the penis rubbing scenarios.
+ *
  * @type {string}
  */
 export const RUB_PENIS_AGAINST_PENIS_ROOM_ID = 'room1';

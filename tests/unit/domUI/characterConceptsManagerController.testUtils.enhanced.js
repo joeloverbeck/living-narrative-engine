@@ -239,6 +239,7 @@ export class CharacterConceptsManagerTestBase extends BaseCharacterBuilderContro
   /**
    * Create controller instance with proper dependencies
    *
+   * @param additionalDeps
    * @returns {CharacterConceptsManagerController}
    */
   createController(additionalDeps = {}) {

@@ -4,6 +4,10 @@ import { emitGoapEvent } from '../events/goapEventFactory.js';
 const diagnosticsByActor = new Map();
 let eventBus = null;
 
+/**
+ *
+ * @param rawId
+ */
 function resolveActorId(rawId) {
   if (rawId === undefined || rawId === null || rawId === '') {
     return 'unknown';
@@ -11,6 +15,10 @@ function resolveActorId(rawId) {
   return String(rawId);
 }
 
+/**
+ *
+ * @param actorId
+ */
 function createTelemetry(actorId) {
   return {
     actorId,
@@ -22,12 +30,17 @@ function createTelemetry(actorId) {
   };
 }
 
+/**
+ *
+ * @param telemetry
+ */
 function touchTelemetry(telemetry) {
   telemetry.lastUpdated = Date.now();
 }
 
 /**
  * Register the GOAP event bus so diagnostics can emit structured events.
+ *
  * @param {import('../../interfaces/IEventBus.js').IEventBus|null} bus
  */
 export function registerPlanningStateDiagnosticsEventBus(bus) {
@@ -36,10 +49,19 @@ export function registerPlanningStateDiagnosticsEventBus(bus) {
   }
 }
 
+/**
+ *
+ * @param entry
+ */
 function clone(entry) {
   return JSON.parse(JSON.stringify(entry));
 }
 
+/**
+ *
+ * @param actorId
+ * @param updater
+ */
 function recordTelemetry(actorId, updater) {
   const normalizedActorId = resolveActorId(actorId);
   const entry = getOrCreateEntry(normalizedActorId);
@@ -51,6 +73,7 @@ function recordTelemetry(actorId, updater) {
 
 /**
  * Record a planning-state lookup attempt for telemetry.
+ *
  * @param {object} payload
  */
 export function recordPlanningStateLookup(payload = {}) {
@@ -61,6 +84,7 @@ export function recordPlanningStateLookup(payload = {}) {
 
 /**
  * Record that the runtime fell back to the EntityManager due to planning-state miss.
+ *
  * @param {object} payload
  */
 export function recordPlanningStateFallback(payload = {}) {
@@ -71,6 +95,7 @@ export function recordPlanningStateFallback(payload = {}) {
 
 /**
  * Record that a cached fallback answer was used.
+ *
  * @param {object} payload
  */
 export function recordPlanningStateCacheHit(payload = {}) {
@@ -79,6 +104,10 @@ export function recordPlanningStateCacheHit(payload = {}) {
   });
 }
 
+/**
+ *
+ * @param actorId
+ */
 function getOrCreateEntry(actorId) {
   if (!diagnosticsByActor.has(actorId)) {
     diagnosticsByActor.set(actorId, {
@@ -97,6 +126,7 @@ function getOrCreateEntry(actorId) {
 
 /**
  * Record a planning-state miss and emit GOAP telemetry.
+ *
  * @param {object} payload
  */
 export function recordPlanningStateMiss(payload) {
@@ -150,6 +180,7 @@ export function recordPlanningStateMiss(payload) {
 
 /**
  * Get diagnostics for a single actor.
+ *
  * @param {string} actorId
  * @returns {object|null}
  */
@@ -163,6 +194,7 @@ export function getPlanningStateDiagnostics(actorId) {
 
 /**
  * Get diagnostics for every actor.
+ *
  * @returns {Array<object>}
  */
 export function getAllPlanningStateDiagnostics() {
@@ -171,6 +203,7 @@ export function getAllPlanningStateDiagnostics() {
 
 /**
  * Clear diagnostics for a single actor or for everyone when actorId omitted.
+ *
  * @param {string} [actorId]
  */
 export function clearPlanningStateDiagnostics(actorId) {

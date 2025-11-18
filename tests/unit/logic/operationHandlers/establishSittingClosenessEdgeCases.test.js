@@ -28,6 +28,9 @@ jest.mock('../../../../src/errors/invalidArgumentError.js');
 jest.mock('../../../../src/logic/services/closenessCircleService.js');
 
 // Test helper to create valid execution context
+/**
+ *
+ */
 function createExecutionContext() {
   return {
     evaluationContext: {
@@ -37,6 +40,10 @@ function createExecutionContext() {
 }
 
 // Helper to setup entity manager with realistic data
+/**
+ *
+ * @param scenario
+ */
 function setupEntityManager(scenario) {
   const mockEntityManager = {
     getComponentData: jest.fn(),

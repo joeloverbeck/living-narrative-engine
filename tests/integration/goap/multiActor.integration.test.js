@@ -12,18 +12,22 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createGoapTestSetup } from './testFixtures/goapTestSetup.js';
 import { createTestGoal } from './testFixtures/testGoalFactory.js';
 import { createTestTask } from './testFixtures/testTaskFactory.js';
+import { createMultiActorCompletionTracker } from './testHelpers/multiActorCompletionTracker.js';
 import { GOAP_EVENTS } from '../../../src/goap/events/goapEvents.js';
 
 describe('GOAP Multi-Actor Coordination - Integration', () => {
   let setup;
+  let completionTracker;
 
   beforeEach(async () => {
     setup = await createGoapTestSetup({
       mockRefinement: true,
     });
+    completionTracker = createMultiActorCompletionTracker(setup.eventBus);
   });
 
   afterEach(() => {
+    completionTracker?.teardown();
     if (setup?.testBed) {
       setup.testBed.cleanup();
     }
@@ -603,6 +607,130 @@ describe('GOAP Multi-Actor Coordination - Integration', () => {
 
       // Verify: No state conflicts (each plan independent)
       expect(new Set(actorIds).size).toBe(3); // All unique
+    });
+  });
+
+  describe('Diagnostics Coverage', () => {
+    it('should emit terminal planning events per actor per turn and preserve actor-scoped plans', async () => {
+      /**
+       * The completion tracker lets us assert that every actor produces exactly
+       * one planning terminal event per simulated turn. This guards against
+       * regressions where an actor silently skips planning.
+       */
+      const actors = [
+        { id: 'actor_alpha', components: {} },
+        { id: 'actor_beta', components: {} },
+        { id: 'actor_gamma', components: {} },
+      ];
+
+      actors.forEach((actor) => setup.entityManager.addEntity(actor));
+
+      const goal = createTestGoal({
+        id: 'test:multi_actor_goal',
+        relevance: { '==': [true, true] },
+        goalState: {
+          has_component: ['actor', 'test:completed'],
+        },
+      });
+      setup.dataRegistry.register('goals', goal.id, goal);
+
+      const task = createTestTask({
+        id: 'test:complete_goal',
+        cost: 5,
+        planningEffects: [
+          {
+            type: 'ADD_COMPONENT',
+            parameters: {
+              entityId: 'actor',
+              componentId: 'test:completed',
+              componentData: {},
+            },
+          },
+        ],
+        effects: [
+          {
+            type: 'ADD_COMPONENT',
+            parameters: {
+              entityId: 'actor',
+              componentId: 'test:completed',
+              componentData: {},
+            },
+          },
+        ],
+      });
+
+      setup.gameDataRepository.get = jest.fn((key) => {
+        if (key === 'tasks') {
+          return { test: { [task.id]: task } };
+        }
+        return null;
+      });
+      setup.gameDataRepository.getTask = jest.fn((taskId) =>
+        taskId === task.id ? task : null
+      );
+
+      const world = {
+        state: {},
+        entities: {},
+      };
+
+      const resetActorProgress = () => {
+        for (const actor of actors) {
+          delete actor.components['test:completed'];
+          delete world.state[`${actor.id}:test:completed`];
+        }
+      };
+
+      const runTurn = async (label, actorOrder) => {
+        const actorIds = actorOrder.map((actor) => actor.id);
+        completionTracker.startTurn({ label, actors: actorIds });
+
+        for (const actor of actorOrder) {
+          const snapshotHandle = await setup.registerPlanningStateSnapshot(
+            {},
+            {
+              actorId: actor.id,
+              origin: `multi_actor:${label}`,
+            }
+          );
+
+          try {
+            await setup.controller.decideTurn(actor, world);
+            actor.components['test:completed'] = { turn: label };
+            world.state[`${actor.id}:test:completed`] = { turn: label };
+          } finally {
+            snapshotHandle.cleanup?.();
+          }
+        }
+
+        return completionTracker.endTurn({ actors: actorIds });
+      };
+
+      const turnOneSummary = await runTurn('turn-one', actors);
+      for (const actor of actors) {
+        const event = turnOneSummary.byActor.get(actor.id);
+        expect(event).toBeDefined();
+        expect(event.type).toBe(GOAP_EVENTS.PLANNING_COMPLETED);
+        expect(event.payload.actorId).toBe(actor.id);
+      }
+
+      resetActorProgress();
+
+      const turnTwoOrder = [actors[2], actors[0], actors[1]];
+      const turnTwoSummary = await runTurn('turn-two', turnTwoOrder);
+      for (const actor of turnTwoOrder) {
+        const event = turnTwoSummary.byActor.get(actor.id);
+        expect(event).toBeDefined();
+        expect(event.type).toBe(GOAP_EVENTS.PLANNING_COMPLETED);
+        expect(event.payload.actorId).toBe(actor.id);
+      }
+
+      const totals = actors.map((actor) =>
+        completionTracker.getActorTotals(actor.id)
+      );
+      totals.forEach((summary) => {
+        expect(summary).toEqual({ completed: 2, failed: 0 });
+      });
     });
   });
 });

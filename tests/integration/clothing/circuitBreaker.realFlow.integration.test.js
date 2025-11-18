@@ -4,6 +4,9 @@ import { ClothingServiceError } from '../../../src/clothing/errors/clothingError
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ *
+ */
 function createRecordingLogger() {
   const entries = [];
   return {

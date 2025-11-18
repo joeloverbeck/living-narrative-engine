@@ -12,8 +12,9 @@ const __dirname = path.dirname(__filename);
 
 /**
  * Loads configuration from various sources
- * @param {Object} cliConfig - CLI-provided configuration
- * @returns {Promise<Object>} Merged configuration
+ *
+ * @param {object} cliConfig - CLI-provided configuration
+ * @returns {Promise<object>} Merged configuration
  */
 export async function loadConfiguration(cliConfig = {}) {
   const configs = [];
@@ -133,8 +134,9 @@ async function loadLocalConfig() {
 
 /**
  * Merges multiple configuration objects
- * @param {Object[]} configs - Configuration objects to merge
- * @returns {Object} Merged configuration
+ *
+ * @param {object[]} configs - Configuration objects to merge
+ * @returns {object} Merged configuration
  */
 function mergeConfigurations(configs) {
   return configs.reduce((merged, config) => {
@@ -144,6 +146,9 @@ function mergeConfigurations(configs) {
 
 /**
  * Deep merge utility for configuration objects
+ *
+ * @param target
+ * @param source
  */
 function deepMerge(target, source) {
   const result = { ...target };
@@ -165,7 +170,8 @@ function deepMerge(target, source) {
 
 /**
  * Saves configuration to file
- * @param {Object} config - Configuration to save
+ *
+ * @param {object} config - Configuration to save
  * @param {string} filePath - Path to save configuration
  * @returns {Promise<void>}
  */
@@ -176,6 +182,7 @@ export async function saveConfiguration(config, filePath) {
 
 /**
  * Creates a default configuration file
+ *
  * @param {string} type - Type of config file to create ('project' | 'global' | 'local')
  * @returns {Promise<void>}
  */
@@ -219,8 +226,9 @@ export async function createDefaultConfigFile(type = 'project') {
 
 /**
  * Validates a configuration object
- * @param {Object} config - Configuration to validate
- * @returns {Object} Validation result with errors array
+ *
+ * @param {object} config - Configuration to validate
+ * @returns {object} Validation result with errors array
  */
 export function validateConfig(config) {
   const errors = [];

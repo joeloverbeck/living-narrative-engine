@@ -11,6 +11,10 @@ import {
 } from '../../common/mockFactories/loggerMocks.js';
 
 // Utility to build a comprehensive dependency graph for InitializationService
+/**
+ *
+ * @param overrides
+ */
 function createInitializationConfig(overrides = {}) {
   const logger = overrides.log?.logger ?? createMockLogger();
 

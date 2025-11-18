@@ -174,6 +174,13 @@ const defaultEntities = [
   { id: 'friend-2', components: {} },
 ];
 
+/**
+ *
+ * @param root0
+ * @param root0.scopeDefinitions
+ * @param root0.scopeResolutions
+ * @param root0.entities
+ */
 function createStageTestBed({
   scopeDefinitions = defaultScopeDefinitions,
   scopeResolutions = defaultScopeResolutions,

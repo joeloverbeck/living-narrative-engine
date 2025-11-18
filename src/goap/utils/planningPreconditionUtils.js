@@ -26,6 +26,7 @@ const LEGACY_PRECONDITION_ASSERTION_CODE = 'GOAP_LEGACY_PRECONDITIONS_ASSERTION'
  *
  * @param {object} task - Task definition
  * @param {import('../../logging/logger.js').default} logger - Logger for warnings
+ * @param options
  * @returns {Array<{description: string, condition: object}>} Normalized preconditions
  */
 export function normalizePlanningPreconditions(task, logger, options = {}) {
@@ -122,6 +123,12 @@ export function normalizePlanningPreconditions(task, logger, options = {}) {
   return normalized;
 }
 
+/**
+ *
+ * @param entry
+ * @param index
+ * @param taskId
+ */
 function normalizePreconditionEntry(entry, index, taskId) {
   if (!entry) {
     return {
@@ -158,11 +165,21 @@ function normalizePreconditionEntry(entry, index, taskId) {
   };
 }
 
+/**
+ *
+ * @param index
+ * @param taskId
+ */
 function buildDescription(index, taskId) {
   const suffix = taskId ? ` for ${taskId}` : '';
   return `Precondition ${index + 1}${suffix}`;
 }
 
+/**
+ *
+ * @param task
+ * @param logger
+ */
 function normalizeRequiresEntries(task, logger) {
   if (!task || task.requires === undefined || task.requires === null) {
     return [];
@@ -186,6 +203,10 @@ function normalizeRequiresEntries(task, logger) {
   return requiresField.filter((entry) => entry !== undefined && entry !== null);
 }
 
+/**
+ *
+ * @param entry
+ */
 function buildRequiresCondition(entry) {
   if (typeof entry === 'string') {
     const rewritten = rewriteActorPath(entry);
@@ -195,6 +216,12 @@ function buildRequiresCondition(entry) {
   return entry;
 }
 
+/**
+ *
+ * @param task
+ * @param normalizedEntries
+ * @param context
+ */
 function recordPreconditionNormalization(task, normalizedEntries, context = {}) {
   const diagnostics = context.diagnostics;
   if (!diagnostics) {

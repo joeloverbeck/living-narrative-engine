@@ -48,6 +48,8 @@ let globalScopeDefinitions = null;
 
 /**
  * Register required component schemas for memory testing
+ *
+ * @param validator
  */
 async function registerMemoryTestComponentSchemas(validator) {
   // Register core:stats schema
@@ -354,6 +356,8 @@ describe('High Concurrency Memory Management', () => {
 
   /**
    * Creates global entity pool once for all tests
+   *
+   * @param services
    */
   async function createGlobalEntityPool(services) {
     const poolSize = 25; // Optimized pool size

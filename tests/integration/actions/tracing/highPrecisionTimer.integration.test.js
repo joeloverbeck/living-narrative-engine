@@ -26,6 +26,9 @@ describe('HighPrecisionTimer integration', () => {
     console.debug = originalConsoleDebug;
   });
 
+  /**
+   *
+   */
   function restorePerformance() {
     if (originalPerformanceDescriptor) {
       Object.defineProperty(
@@ -38,6 +41,10 @@ describe('HighPrecisionTimer integration', () => {
     }
   }
 
+  /**
+   *
+   * @param value
+   */
   function overridePerformance(value) {
     Object.defineProperty(globalThis, 'performance', {
       value,

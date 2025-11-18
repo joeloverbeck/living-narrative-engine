@@ -42,6 +42,9 @@ describe('Complete Clothing Removal Workflow - E2E', () => {
 
   /**
    * Helper to create test entities with proper registration
+   *
+   * @param entityId
+   * @param components
    */
   async function createTestEntity(entityId, components = {}) {
     const definition = createEntityDefinition(entityId, components);
@@ -290,6 +293,9 @@ describe('Multi-Actor Clothing Removal - E2E', () => {
 
   /**
    * Helper to create test entities with proper registration
+   *
+   * @param entityId
+   * @param components
    */
   async function createTestEntity(entityId, components = {}) {
     const definition = createEntityDefinition(entityId, components);

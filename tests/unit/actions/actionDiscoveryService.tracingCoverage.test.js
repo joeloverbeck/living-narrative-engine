@@ -2,6 +2,9 @@ import { describe, it, expect, jest } from '@jest/globals';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
 import { InvalidActorEntityError } from '../../../src/errors/invalidActorEntityError.js';
 
+/**
+ *
+ */
 function createLogger() {
   return {
     debug: jest.fn(),
@@ -11,6 +14,10 @@ function createLogger() {
   };
 }
 
+/**
+ *
+ * @param overrides
+ */
 function createService(overrides = {}) {
   const logger = overrides.logger ?? createLogger();
   const entityManager = overrides.entityManager ?? { getEntityInstance: jest.fn() };

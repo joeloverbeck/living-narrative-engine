@@ -19,6 +19,7 @@ import WorkspaceDataFetcher from '../../../src/data/workspaceDataFetcher.js';
 
 /**
  * Helper to start an HTTP server with predefined routes used in these tests.
+ *
  * @returns {Promise<{ close: () => Promise<void>, baseUrl: string }>} server controls
  */
 async function startWorkspaceServer() {

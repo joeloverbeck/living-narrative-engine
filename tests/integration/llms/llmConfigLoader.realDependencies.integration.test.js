@@ -11,6 +11,9 @@ import NodeDataFetcher from '../../../cli/data/nodeDataFetcher.js';
 
 const projectRoot = process.cwd();
 
+/**
+ *
+ */
 function createTestLogger() {
   return {
     debug: jest.fn(),
@@ -20,6 +23,10 @@ function createTestLogger() {
   };
 }
 
+/**
+ *
+ * @param logger
+ */
 async function createSchemaValidator(logger) {
   const schemaValidator = new AjvSchemaValidator({ logger });
   const schemaPath = path.resolve(
@@ -34,12 +41,19 @@ async function createSchemaValidator(logger) {
   return schemaValidator;
 }
 
+/**
+ *
+ */
 function createSafeEventDispatcher() {
   return {
     dispatch: jest.fn().mockResolvedValue(true),
   };
 }
 
+/**
+ *
+ * @param overrides
+ */
 async function createLoader(overrides = {}) {
   const logger = overrides.logger ?? createTestLogger();
   const schemaValidator =
@@ -56,6 +70,10 @@ async function createLoader(overrides = {}) {
   return { loader, logger, schemaValidator };
 }
 
+/**
+ *
+ * @param contents
+ */
 async function createTempFile(contents) {
   const tempDir = await fs.mkdtemp(
     path.join(os.tmpdir(), 'llm-config-loader-integration-')

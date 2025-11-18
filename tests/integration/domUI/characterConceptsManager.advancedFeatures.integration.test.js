@@ -59,6 +59,9 @@ class RecordingBroadcastChannel {
 
 let originalRequestAnimationFrame;
 
+/**
+ *
+ */
 function setupConceptsManagerDOM() {
   document.body.innerHTML = createMinimalModalDOM();
   const resultsElement = document.getElementById('concepts-results');

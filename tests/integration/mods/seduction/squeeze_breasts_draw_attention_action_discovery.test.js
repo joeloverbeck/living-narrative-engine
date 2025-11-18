@@ -26,11 +26,11 @@ const TARGET_ID = 'audience_member';
  *
  * @param {ModTestFixture} fixture - Active test fixture.
  * @param {object} [options] - Scenario customization.
- * @param {boolean} [options.includeLeftBreast=true] - Whether the actor includes a left breast part.
- * @param {boolean} [options.includeRightBreast=true] - Whether the actor includes a right breast part.
- * @param {boolean} [options.coverLeftBreast=false] - Whether clothing covers the left breast socket.
- * @param {boolean} [options.coverRightBreast=false] - Whether clothing covers the right breast socket.
- * @param {boolean} [options.includeHugging=false] - Whether the actor is currently hugging another entity.
+ * @param {boolean} [options.includeLeftBreast] - Whether the actor includes a left breast part.
+ * @param {boolean} [options.includeRightBreast] - Whether the actor includes a right breast part.
+ * @param {boolean} [options.coverLeftBreast] - Whether clothing covers the left breast socket.
+ * @param {boolean} [options.coverRightBreast] - Whether clothing covers the right breast socket.
+ * @param {boolean} [options.includeHugging] - Whether the actor is currently hugging another entity.
  * @returns {{ actorId: string }} Actor identifier for discovery checks.
  */
 function loadScenario(

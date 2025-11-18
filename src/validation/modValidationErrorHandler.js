@@ -11,6 +11,7 @@ import { ModAccessError } from '../errors/modAccessError.js';
 
 /**
  * Error types for classification
+ *
  * @enum {string}
  */
 export const ErrorType = {
@@ -25,6 +26,7 @@ export const ErrorType = {
 
 /**
  * Recovery strategies
+ *
  * @enum {string}
  */
 export const RecoveryStrategy = {

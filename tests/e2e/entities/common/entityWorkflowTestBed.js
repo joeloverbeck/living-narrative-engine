@@ -686,11 +686,11 @@ export class EntityWorkflowTestBed extends BaseTestBed {
    * Validate repository consistency after entity operations
    *
    * @param {object} [options] - Validation options
-   * @param {boolean} [options.skipIfSimple=true] - Skip full validation for simple scenarios
-   * @param {number} [options.simpleThreshold=3] - Entity count threshold for "simple" tests
-   * @param {boolean} [options.quickCheck=false] - Perform only basic validation
-   * @param {boolean} [options.forceFullValidation=false] - Force full validation regardless of complexity
-   * @param {boolean} [options.logPerformance=false] - Emit performance logs for consistency checks
+   * @param {boolean} [options.skipIfSimple] - Skip full validation for simple scenarios
+   * @param {number} [options.simpleThreshold] - Entity count threshold for "simple" tests
+   * @param {boolean} [options.quickCheck] - Perform only basic validation
+   * @param {boolean} [options.forceFullValidation] - Force full validation regardless of complexity
+   * @param {boolean} [options.logPerformance] - Emit performance logs for consistency checks
    * @returns {object} Consistency validation results
    */
   async validateRepositoryConsistency(options = {}) {

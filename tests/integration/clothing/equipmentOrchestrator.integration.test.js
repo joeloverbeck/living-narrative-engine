@@ -79,6 +79,15 @@ describe('EquipmentOrchestrator integration', () => {
     });
   });
 
+  /**
+   *
+   * @param clothingItemId
+   * @param root0
+   * @param root0.layer
+   * @param root0.primarySlot
+   * @param root0.secondarySlots
+   * @param root0.additionalProps
+   */
   async function addWearable(
     clothingItemId,
     {
@@ -98,6 +107,10 @@ describe('EquipmentOrchestrator integration', () => {
     });
   }
 
+  /**
+   *
+   * @param slotId
+   */
   function getEquipped(slotId) {
     const equipment = entityManager.getComponentData(
       actorId,

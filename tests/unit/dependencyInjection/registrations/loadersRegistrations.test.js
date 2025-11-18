@@ -18,7 +18,7 @@ function createLoggerMock() {
 
 /**
  * @description Configures a container with essential dependencies and executes loader registration.
- * @param {AppContainer} [container=new AppContainer()] - Container instance to configure.
+ * @param {AppContainer} [container] - Container instance to configure.
  * @returns {Promise<{ container: AppContainer, logger: ReturnType<typeof createLoggerMock> }>} Initialized container and logger.
  */
 async function setupContainer(container = new AppContainer()) {

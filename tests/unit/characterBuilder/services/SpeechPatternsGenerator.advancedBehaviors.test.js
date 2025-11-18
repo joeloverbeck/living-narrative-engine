@@ -5,6 +5,9 @@ import { CHARACTER_BUILDER_EVENTS } from '../../../../src/characterBuilder/servi
 import { createMockLLMResponse } from '../../../common/characterBuilder/speechPatternsTestHelpers.js';
 import { SpeechPatternsResponseProcessor } from '../../../../src/characterBuilder/services/SpeechPatternsResponseProcessor.js';
 
+/**
+ *
+ */
 function createValidCharacterData() {
   return {
     'core:name': { name: 'Advanced Tester' },
@@ -24,6 +27,10 @@ function createValidCharacterData() {
   };
 }
 
+/**
+ *
+ * @param overrides
+ */
 function createGenerator(overrides = {}) {
   const testBed = createTestBed();
   const logger = testBed.createMockLogger();
@@ -233,7 +240,7 @@ describe('SpeechPatternsGenerator advanced behaviours', () => {
     };
 
     for (let i = 0; i < 5; i++) {
-      // eslint-disable-next-line no-await-in-loop
+       
       await expect(
         generator.generateSpeechPatterns(character, failingOptions)
       ).rejects.toThrow(

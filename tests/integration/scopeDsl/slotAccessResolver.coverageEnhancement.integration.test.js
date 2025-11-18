@@ -6,6 +6,9 @@ import { StructuredTrace } from '../../../src/actions/tracing/structuredTrace.js
 import { ScopeDslError } from '../../../src/scopeDsl/errors/scopeDslError.js';
 import { ErrorCodes } from '../../../src/scopeDsl/constants/errorCodes.js';
 
+/**
+ *
+ */
 function createLogger() {
   return {
     error: jest.fn(),
@@ -200,6 +203,11 @@ describe('slotAccessResolver integration coverage enhancement', () => {
     const slotAccessResolver = createSlotAccessResolver({ entitiesGateway });
     const parent = { type: 'Step', field: 'topmost_clothing' };
 
+    /**
+     *
+     * @param parentResults
+     * @param field
+     */
     function resolveWith(parentResults, field = 'torso_upper') {
       const dispatcher = { resolve: () => parentResults };
       return slotAccessResolver.resolve(

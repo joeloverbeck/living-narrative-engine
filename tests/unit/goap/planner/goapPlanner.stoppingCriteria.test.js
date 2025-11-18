@@ -6,7 +6,9 @@
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import GoapPlanner from '../../../../src/goap/planner/goapPlanner.js';
-import { createTestBed } from '../../../common/testBed.js';
+import { GOAP_PLANNER_FAILURES } from '../../../../src/goap/planner/goapPlannerFailureReasons.js';
+import { createTestBed, buildPlanningGoal } from '../../../common/testBed.js';
+import { buildPlanningState } from '../../../common/goap/planningStateTestUtils.js';
 
 describe('GoapPlanner - Stopping Criteria', () => {
   let testBed;
@@ -20,6 +22,61 @@ describe('GoapPlanner - Stopping Criteria', () => {
   let mockSpatialIndexManager;
   let mockEffectsSimulator;
   let mockHeuristicRegistry;
+  const TEST_ACTOR_ID = 'actor-123';
+
+  const buildState = (fragments = {}) =>
+    buildPlanningState(fragments, { actorId: TEST_ACTOR_ID });
+
+  const applyStatePatch = (state, patch = {}) => {
+    const nextState = { ...state, ...patch };
+    if (nextState.actor?.components) {
+      for (const [key, value] of Object.entries(patch)) {
+        if (typeof key !== 'string' || !key.includes(':')) {
+          continue;
+        }
+        const [entityId, ...componentParts] = key.split(':');
+        const normalizedEntity = entityId === 'actor' ? TEST_ACTOR_ID : entityId;
+        if (normalizedEntity !== TEST_ACTOR_ID) {
+          continue;
+        }
+        const componentId = componentParts.join(':');
+        nextState.actor.components[componentId] = value;
+        nextState.actor.components[componentId.replace(/:/g, '_')] = value;
+      }
+    }
+    return nextState;
+  };
+
+  const findWarnPayload = (message) => {
+    const entry = mockLogger?.warn?.mock?.calls.find(
+      ([logMessage]) => logMessage === message
+    );
+    return entry ? entry[1] : null;
+  };
+
+  const expectStoppingCriteriaLog = (message, matcher = {}) => {
+    const payload = findWarnPayload(message);
+    expect(payload).toBeDefined();
+
+    const { goalId, maxCost, maxActions, failureStats, ...restMatcher } =
+      matcher;
+
+    expect(payload).toMatchObject({
+      actorId: TEST_ACTOR_ID,
+      goalId: goalId ?? expect.any(String),
+      nodesExpanded: expect.any(Number),
+      closedSetSize: expect.any(Number),
+      maxCost: maxCost ?? expect.any(Number),
+      maxActions: maxActions ?? expect.any(Number),
+      failureStats:
+        failureStats === undefined
+          ? expect.objectContaining({})
+          : failureStats,
+      ...restMatcher,
+    });
+
+    return payload;
+  };
 
   beforeEach(() => {
     testBed = createTestBed();
@@ -41,9 +98,12 @@ describe('GoapPlanner - Stopping Criteria', () => {
 
     // Default mock implementations
     mockEntityManager.getEntityInstance.mockReturnValue({
-      id: 'actor-123',
+      id: TEST_ACTOR_ID,
       components: {},
     });
+
+    // Provide safe default heuristic for any additional calls
+    mockHeuristicRegistry.calculate.mockReturnValue(0);
 
     planner = new GoapPlanner({
       logger: mockLogger,
@@ -71,22 +131,31 @@ describe('GoapPlanner - Stopping Criteria', () => {
         },
       });
 
-      const initialState = { 'actor:hunger': 100 };
-      const goal = {
-        id: 'reduce-hunger',
-        goalState: { '<=': [{ var: 'actor.hunger' }, 0] },
-        maxCost: 50, // Cost limit
-      };
+      const initialState = buildState({ 'actor:hunger': 100 });
+      const goal = buildPlanningGoal(
+        { '==': [{ var: 'actor.hunger' }, 0] },
+        {
+          id: 'reduce-hunger',
+          maxCost: 50, // Cost limit
+        }
+      );
 
       // Initial state: goal not satisfied
       mockJsonLogicService.evaluateCondition.mockReturnValue(false);
 
-      // Heuristic: distance never reaches 0
-      mockHeuristicRegistry.calculate.mockReturnValue(100);
+      // Heuristic: scales with hunger so cost-limit check passes but guard stays active
+      mockHeuristicRegistry.calculate.mockImplementation((_heuristic, state) => {
+        const hunger = state['actor:hunger'];
+        return typeof hunger === 'number' ? hunger / 10 : 0;
+      });
 
-      mockEffectsSimulator.simulateEffects.mockReturnValue({
-        success: true,
-        state: { 'actor:hunger': 80 },
+      mockEffectsSimulator.simulateEffects.mockImplementation((state) => {
+        const current = state['actor:hunger'] ?? 0;
+        const clampedNext = Math.max(current - 10, 0);
+        return {
+          success: true,
+          state: applyStatePatch(state, { 'actor:hunger': clampedNext }),
+        };
       });
 
       const plan = planner.plan('actor-123', goal, initialState);
@@ -94,19 +163,16 @@ describe('GoapPlanner - Stopping Criteria', () => {
       // Should fail because total cost (20 * 6 = 120) exceeds maxCost (50)
       expect(plan).toBeNull();
 
-      // Verify that cost limit was checked (either during pre-planning or A* loop)
-      const warnCalls = mockLogger.warn.mock.calls.map(call => call[0]);
-      const debugCalls = mockLogger.debug.mock.calls.map(call => call[0]);
-      const allCalls = [...warnCalls, ...debugCalls];
-
-      expect(
-        allCalls.some(
-          msg =>
-            msg === 'Goal estimated cost exceeds limit' ||
-            msg === 'Node exceeds cost limit, skipping' ||
-            msg === 'Goal unsolvable - open list exhausted'
-        )
-      ).toBe(true);
+      expectStoppingCriteriaLog('Goal unsolvable - open list exhausted', {
+        goalId: 'reduce-hunger',
+        failureCode: GOAP_PLANNER_FAILURES.COST_LIMIT_REACHED,
+        maxCost: 50,
+        maxActions: 20,
+        message: 'Cost limit pruned all remaining nodes',
+        failureStats: expect.objectContaining({
+          costLimitHit: true,
+        }),
+      });
     });
 
     it('should allow plans within cost limit', () => {
@@ -121,27 +187,27 @@ describe('GoapPlanner - Stopping Criteria', () => {
         },
       });
 
-      const initialState = { 'actor:hunger': 100 };
-      const goal = {
-        id: 'reduce-hunger',
-        goalState: { '==': [{ var: 'actor.hunger' }, 0] },
-        maxCost: 50, // Cost limit allows 5 actions at cost 10
-      };
+      const initialState = buildState({ 'actor:hunger': 100 });
+      const goal = buildPlanningGoal(
+        { '==': [{ var: 'actor.hunger' }, 0] },
+        {
+          id: 'reduce-hunger',
+          maxCost: 50, // Cost limit allows 5 actions at cost 10
+        }
+      );
 
       // Initial state check, then goal satisfied after task
       mockJsonLogicService.evaluateCondition
         .mockReturnValueOnce(false) // Initial
         .mockReturnValueOnce(true); // After task
 
-      mockHeuristicRegistry.calculate
-        .mockReturnValueOnce(1) // Initial heuristic
-        .mockReturnValueOnce(100) // Distance check - current
-        .mockReturnValueOnce(0) // Distance check - next (reduces!)
-        .mockReturnValueOnce(0); // After task (at goal)
+      mockHeuristicRegistry.calculate.mockImplementation((_heuristic, state) => {
+        return state['actor:hunger'] === 0 ? 0 : 10;
+      });
 
       mockEffectsSimulator.simulateEffects.mockReturnValue({
         success: true,
-        state: { 'actor:hunger': 0 },
+        state: applyStatePatch(initialState, { 'actor:hunger': 0 }),
       });
 
       const plan = planner.plan('actor-123', goal, initialState);
@@ -163,12 +229,14 @@ describe('GoapPlanner - Stopping Criteria', () => {
         },
       });
 
-      const initialState = { 'actor:hunger': 100 };
-      const goal = {
-        id: 'reduce-hunger',
-        goalState: { '<=': [{ var: 'actor.hunger' }, 0] },
-        maxCost: 50, // Very low limit
-      };
+      const initialState = buildState({ 'actor:hunger': 100 });
+      const goal = buildPlanningGoal(
+        { '<=': [{ var: 'actor.hunger' }, 0] },
+        {
+          id: 'reduce-hunger',
+          maxCost: 50, // Very low limit
+        }
+      );
 
       // Estimated cost = 100 (exceeds limit of 50)
       mockHeuristicRegistry.calculate.mockReturnValue(100);
@@ -177,13 +245,18 @@ describe('GoapPlanner - Stopping Criteria', () => {
 
       // Should fail before A* search
       expect(plan).toBeNull();
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'Goal estimated cost exceeds limit',
-        expect.objectContaining({
-          estimatedCost: 100,
-          maxCost: 50,
-        })
-      );
+      expectStoppingCriteriaLog('Goal estimated cost exceeds limit', {
+        goalId: 'reduce-hunger',
+        failureCode: GOAP_PLANNER_FAILURES.ESTIMATED_COST_EXCEEDS_LIMIT,
+        estimatedCost: 100,
+        maxCost: 50,
+        maxActions: 20,
+        message: 'Estimated planning cost exceeds goal maxCost',
+        failureStats: expect.objectContaining({
+          costLimitHit: false,
+          actionLimitHit: false,
+        }),
+      });
     });
   });
 
@@ -200,22 +273,30 @@ describe('GoapPlanner - Stopping Criteria', () => {
         },
       });
 
-      const initialState = { 'actor:hunger': 100 };
-      const goal = {
-        id: 'reduce-hunger',
-        goalState: { '<=': [{ var: 'actor.hunger' }, 0] },
-        maxActions: 5, // Action count limit
-      };
+      const initialState = buildState({ 'actor:hunger': 100 });
+      const goal = buildPlanningGoal(
+        { '==': [{ var: 'actor.hunger' }, 0] },
+        {
+          id: 'reduce-hunger',
+          maxActions: 5, // Action count limit
+        }
+      );
 
       // Never satisfied
       mockJsonLogicService.evaluateCondition.mockReturnValue(false);
 
-      // Distance never reaches 0
-      mockHeuristicRegistry.calculate.mockReturnValue(50);
+      // Distance mirrors hunger so tasks reduce numeric goal distance
+      mockHeuristicRegistry.calculate.mockImplementation((_heuristic, state) => {
+        const hunger = state['actor:hunger'];
+        return typeof hunger === 'number' ? hunger : 0;
+      });
 
-      mockEffectsSimulator.simulateEffects.mockReturnValue({
-        success: true,
-        state: { 'actor:hunger': 90 },
+      mockEffectsSimulator.simulateEffects.mockImplementation((state) => {
+        const current = state['actor:hunger'] ?? 0;
+        return {
+          success: true,
+          state: applyStatePatch(state, { 'actor:hunger': Math.max(current - 1, 0) }),
+        };
       });
 
       const plan = planner.plan('actor-123', goal, initialState);
@@ -223,18 +304,16 @@ describe('GoapPlanner - Stopping Criteria', () => {
       // Should fail because would need > 5 actions
       expect(plan).toBeNull();
 
-      // Verify that action limit was enforced
-      const debugCalls = mockLogger.debug.mock.calls.map(call => call[0]);
-      const warnCalls = mockLogger.warn.mock.calls.map(call => call[0]);
-      const allCalls = [...debugCalls, ...warnCalls];
-
-      expect(
-        allCalls.some(
-          msg =>
-            msg === 'Node exceeds action count limit, skipping' ||
-            msg === 'Goal unsolvable - open list exhausted'
-        )
-      ).toBe(true);
+      expectStoppingCriteriaLog('Goal unsolvable - open list exhausted', {
+        goalId: 'reduce-hunger',
+        failureCode: GOAP_PLANNER_FAILURES.ACTION_LIMIT_REACHED,
+        maxActions: 5,
+        maxCost: Infinity,
+        message: 'Action limit prevented further expansion',
+        failureStats: expect.objectContaining({
+          actionLimitHit: true,
+        }),
+      });
     });
 
     it('should use default limit of 20 when not specified', () => {
@@ -249,22 +328,30 @@ describe('GoapPlanner - Stopping Criteria', () => {
         },
       });
 
-      const initialState = { 'actor:hunger': 100 };
-      const goal = {
-        id: 'reduce-hunger',
-        goalState: { '<=': [{ var: 'actor.hunger' }, 0] },
-        // No maxActions specified - should use default of 20
-      };
+      const initialState = buildState({ 'actor:hunger': 100 });
+      const goal = buildPlanningGoal(
+        { '==': [{ var: 'actor.hunger' }, 0] },
+        {
+          id: 'reduce-hunger',
+          // No maxActions specified - should use default of 20
+        }
+      );
 
       // Never satisfied
       mockJsonLogicService.evaluateCondition.mockReturnValue(false);
 
-      // Distance stays high
-      mockHeuristicRegistry.calculate.mockReturnValue(100);
+      // Distance mirrors hunger progression to keep guard active
+      mockHeuristicRegistry.calculate.mockImplementation((_heuristic, state) => {
+        const hunger = state['actor:hunger'];
+        return typeof hunger === 'number' ? hunger : 0;
+      });
 
-      mockEffectsSimulator.simulateEffects.mockReturnValue({
-        success: true,
-        state: { 'actor:hunger': 99 },
+      mockEffectsSimulator.simulateEffects.mockImplementation((state) => {
+        const current = state['actor:hunger'] ?? 0;
+        return {
+          success: true,
+          state: applyStatePatch(state, { 'actor:hunger': Math.max(current - 1, 0) }),
+        };
       });
 
       const plan = planner.plan('actor-123', goal, initialState);
@@ -272,18 +359,16 @@ describe('GoapPlanner - Stopping Criteria', () => {
       // Should fail with default limit of 20
       expect(plan).toBeNull();
 
-      // Verify default limit was applied
-      const debugCalls = mockLogger.debug.mock.calls.map(call => call[0]);
-      const warnCalls = mockLogger.warn.mock.calls.map(call => call[0]);
-      const allCalls = [...debugCalls, ...warnCalls];
-
-      expect(
-        allCalls.some(
-          msg =>
-            msg === 'Node exceeds action count limit, skipping' ||
-            msg === 'Goal unsolvable - open list exhausted'
-        )
-      ).toBe(true);
+      expectStoppingCriteriaLog('Goal unsolvable - open list exhausted', {
+        goalId: 'reduce-hunger',
+        failureCode: GOAP_PLANNER_FAILURES.ACTION_LIMIT_REACHED,
+        maxActions: 20,
+        maxCost: Infinity,
+        message: 'Action limit prevented further expansion',
+        failureStats: expect.objectContaining({
+          actionLimitHit: true,
+        }),
+      });
     });
   });
 
@@ -300,11 +385,11 @@ describe('GoapPlanner - Stopping Criteria', () => {
         },
       });
 
-      const initialState = { 'actor:hunger': 100 };
-      const goal = {
-        id: 'reduce-hunger',
-        goalState: { '<=': [{ var: 'actor.hunger' }, 0] },
-      };
+      const initialState = buildState({ 'actor:hunger': 100 });
+      const goal = buildPlanningGoal(
+        { '<=': [{ var: 'actor.hunger' }, 0] },
+        { id: 'reduce-hunger' }
+      );
 
       // Never satisfied
       mockJsonLogicService.evaluateCondition.mockReturnValue(false);
@@ -314,7 +399,7 @@ describe('GoapPlanner - Stopping Criteria', () => {
 
       mockEffectsSimulator.simulateEffects.mockReturnValue({
         success: true,
-        state: { 'actor:hunger': 100 }, // No change
+        state: applyStatePatch(initialState, { 'actor:hunger': 100 }), // No change
       });
 
       const plan = planner.plan('actor-123', goal, initialState);
@@ -336,45 +421,50 @@ describe('GoapPlanner - Stopping Criteria', () => {
         },
       });
 
-      const initialState = { 'actor:hunger': 100 };
-      const goal = {
-        id: 'reduce-hunger',
-        goalState: { '<=': [{ var: 'actor.hunger' }, 10] },
-        maxCost: 100,
-        maxActions: 10,
-      };
+      const initialState = buildState({ 'actor:hunger': 100 });
+      const goal = buildPlanningGoal(
+        { '<=': [{ var: 'actor.hunger' }, 10] },
+        {
+          id: 'reduce-hunger',
+          maxCost: Infinity,
+          maxActions: 10,
+        }
+      );
 
       // Never satisfied
       mockJsonLogicService.evaluateCondition.mockReturnValue(false);
 
       // Distance increases (wrong direction)
-      mockHeuristicRegistry.calculate
-        .mockReturnValueOnce(90) // Initial heuristic
-        .mockReturnValueOnce(90) // Current distance
-        .mockReturnValueOnce(140); // Next distance (INCREASES!)
+      mockHeuristicRegistry.calculate.mockImplementation((_heuristic, state) => {
+        const hunger = state['actor:hunger'];
+        if (hunger >= 150) {
+          return 140;
+        }
+        if (hunger <= 10) {
+          return 0;
+        }
+        return 90;
+      });
 
       mockEffectsSimulator.simulateEffects.mockReturnValue({
         success: true,
-        state: { 'actor:hunger': 150 },
+        state: applyStatePatch(initialState, { 'actor:hunger': 150 }),
       });
 
       const plan = planner.plan('actor-123', goal, initialState);
 
       expect(plan).toBeNull();
 
-      // Verify diagnostic information in log
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'Goal unsolvable - open list exhausted',
-        expect.objectContaining({
-          nodesExpanded: expect.any(Number),
-          closedSetSize: expect.any(Number),
-          goalId: 'reduce-hunger',
-          actorId: 'actor-123',
-          maxCost: 100,
-          maxActions: 10,
-          message: 'No valid plan found within constraints',
-        })
-      );
+      expectStoppingCriteriaLog('Goal unsolvable - open list exhausted', {
+        goalId: 'reduce-hunger',
+        maxCost: Infinity,
+        maxActions: 10,
+        message: 'Distance guard rejected all numeric goal tasks',
+        failureCode: GOAP_PLANNER_FAILURES.DISTANCE_GUARD_BLOCKED,
+        failureStats: expect.objectContaining({
+          numericGuardBlocked: true,
+        }),
+      });
     });
   });
 
@@ -390,26 +480,26 @@ describe('GoapPlanner - Stopping Criteria', () => {
         },
       });
 
-      const initialState = { 'actor:hunger': 100 };
-      const goal = {
-        id: 'reduce-hunger',
-        goalState: { '==': [{ var: 'actor.hunger' }, 0] },
-        maxCost: Infinity, // No limit
-      };
+      const initialState = buildState({ 'actor:hunger': 100 });
+      const goal = buildPlanningGoal(
+        { '==': [{ var: 'actor.hunger' }, 0] },
+        {
+          id: 'reduce-hunger',
+          maxCost: Infinity, // No limit
+        }
+      );
 
       mockJsonLogicService.evaluateCondition
         .mockReturnValueOnce(false)
         .mockReturnValueOnce(true);
 
-      mockHeuristicRegistry.calculate
-        .mockReturnValueOnce(1)
-        .mockReturnValueOnce(100)
-        .mockReturnValueOnce(0)
-        .mockReturnValueOnce(0);
+      mockHeuristicRegistry.calculate.mockImplementation((_heuristic, state) => {
+        return state['actor:hunger'] === 0 ? 0 : 1;
+      });
 
       mockEffectsSimulator.simulateEffects.mockReturnValue({
         success: true,
-        state: { 'actor:hunger': 0 },
+        state: applyStatePatch(initialState, { 'actor:hunger': 0 }),
       });
 
       const plan = planner.plan('actor-123', goal, initialState);
@@ -429,12 +519,14 @@ describe('GoapPlanner - Stopping Criteria', () => {
         },
       });
 
-      const initialState = { 'actor:hunger': 100 };
-      const goal = {
-        id: 'reduce-hunger',
-        goalState: { '<=': [{ var: 'actor.hunger' }, 0] },
-        maxCost: 0, // Zero limit
-      };
+      const initialState = buildState({ 'actor:hunger': 100 });
+      const goal = buildPlanningGoal(
+        { '<=': [{ var: 'actor.hunger' }, 0] },
+        {
+          id: 'reduce-hunger',
+          maxCost: 0, // Zero limit
+        }
+      );
 
       // Estimated cost is always > 0
       mockHeuristicRegistry.calculate.mockReturnValue(10);
@@ -444,16 +536,18 @@ describe('GoapPlanner - Stopping Criteria', () => {
       // Should immediately fail
       expect(plan).toBeNull();
 
-      // Verify failure was logged (either pre-planning check or search exhaustion)
-      const warnCalls = mockLogger.warn.mock.calls.map(call => call[0]);
-      expect(
-        warnCalls.some(
-          msg =>
-            msg === 'Goal estimated cost exceeds limit' ||
-            msg === 'Goal unsolvable - open list exhausted' ||
-            msg === 'Node limit reached'
-        )
-      ).toBe(true);
+      expectStoppingCriteriaLog('Goal estimated cost exceeds limit', {
+        goalId: 'reduce-hunger',
+        failureCode: GOAP_PLANNER_FAILURES.ESTIMATED_COST_EXCEEDS_LIMIT,
+        estimatedCost: 10,
+        maxCost: 0,
+        maxActions: 20,
+        message: 'Estimated planning cost exceeds goal maxCost',
+        failureStats: expect.objectContaining({
+          costLimitHit: false,
+          actionLimitHit: false,
+        }),
+      });
     });
   });
 });

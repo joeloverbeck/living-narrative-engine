@@ -7,6 +7,7 @@ import { ModEntityBuilder } from '../ModEntityBuilder.js';
 
 /**
  * Identifier for the nuzzle bare breasts action.
+ *
  * @type {string}
  */
 export const NUZZLE_BARE_BREASTS_ACTION_ID =
@@ -14,18 +15,21 @@ export const NUZZLE_BARE_BREASTS_ACTION_ID =
 
 /**
  * Identifier for the lick breasts action.
+ *
  * @type {string}
  */
 export const LICK_BREASTS_ACTION_ID = 'sex-breastplay:lick_breasts';
 
 /**
  * Default actor identifier used in breast nuzzling scenarios.
+ *
  * @type {string}
  */
 export const NUZZLE_BARE_BREASTS_ACTOR_ID = 'selene';
 
 /**
  * Scope used to discover bare breast nuzzling partners.
+ *
  * @type {string}
  */
 export const NUZZLE_BARE_BREASTS_SCOPE_ID =
@@ -33,12 +37,14 @@ export const NUZZLE_BARE_BREASTS_SCOPE_ID =
 
 /**
  * Default target identifier used in breast nuzzling scenarios.
+ *
  * @type {string}
  */
 export const NUZZLE_BARE_BREASTS_TARGET_ID = 'mira';
 
 /**
  * Default room identifier for intimate breastplay scenes.
+ *
  * @type {string}
  */
 export const NUZZLE_BARE_BREASTS_ROOM_ID = 'velvet_suite';

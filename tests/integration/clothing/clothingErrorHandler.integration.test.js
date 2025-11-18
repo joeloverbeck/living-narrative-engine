@@ -12,6 +12,9 @@ import CentralErrorHandler from '../../../src/errors/CentralErrorHandler.js';
 import RecoveryStrategyManager from '../../../src/errors/RecoveryStrategyManager.js';
 import MonitoringCoordinator from '../../../src/entities/monitoring/MonitoringCoordinator.js';
 
+/**
+ *
+ */
 function createTestLogger() {
   const logs = [];
   const makeRecorder = (level) => (...args) => {
@@ -26,6 +29,11 @@ function createTestLogger() {
   };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.includeCentral
+ */
 function createHarness({ includeCentral = false } = {}) {
   const logger = createTestLogger();
   const eventBus = new EventBus({ logger });

@@ -128,6 +128,11 @@ class NonShutdownSystem {
   }
 }
 
+/**
+ *
+ * @param container
+ * @param systems
+ */
 function registerShutdownSystems(container, systems) {
   systems.forEach((system, index) => {
     container.register(
@@ -213,6 +218,15 @@ describe('ShutdownService constructor validation integration', () => {
   });
 });
 
+/**
+ *
+ * @param root0
+ * @param root0.logger
+ * @param root0.dispatcher
+ * @param root0.turnManager
+ * @param root0.systems
+ * @param root0.configureContainer
+ */
 function createServiceHarness({
   logger = new RecordingLogger(),
   dispatcher = new RecordingDispatcher(),

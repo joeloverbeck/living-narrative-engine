@@ -14,9 +14,9 @@ export class FIFOStrategy {
 
   /**
    * @param {object} config - Cache configuration
-   * @param {number} [config.maxSize=1000] - Maximum number of entries
-   * @param {number} [config.ttl=300000] - Time to live in milliseconds
-   * @param {boolean} [config.updateAgeOnGet=true] - Reset TTL on access
+   * @param {number} [config.maxSize] - Maximum number of entries
+   * @param {number} [config.ttl] - Time to live in milliseconds
+   * @param {boolean} [config.updateAgeOnGet] - Reset TTL on access
    * @param {number} [config.maxMemoryUsage] - Maximum memory usage in bytes
    */
   constructor(config = {}) {
@@ -263,7 +263,7 @@ export class FIFOStrategy {
   /**
    * Prune expired entries
    *
-   * @param {boolean} [aggressive=false] - Whether to prune aggressively
+   * @param {boolean} [aggressive] - Whether to prune aggressively
    * @returns {number} Number of entries pruned
    */
   prune(aggressive = false) {

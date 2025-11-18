@@ -13,7 +13,7 @@ import MonitoringCoordinator from '../../../../src/entities/monitoring/Monitorin
 import { EntityRepositoryAdapter } from '../../../../src/entities/services/entityRepositoryAdapter.js';
 import { EntityNotFoundError } from '../../../../src/errors/entityNotFoundError.js';
 
-// eslint-disable-next-line max-lines-per-function
+ 
 describe('Entity performance monitoring integration', () => {
   let performanceSpy;
   let dateSpy;

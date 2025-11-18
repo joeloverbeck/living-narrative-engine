@@ -2,6 +2,11 @@ import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals
 import KeyboardShortcutsManager from '../../../src/logging/keyboardShortcutsManager.js';
 import NoOpLogger from '../../../src/logging/noOpLogger.js';
 
+/**
+ *
+ * @param target
+ * @param overrides
+ */
 function createKeydownEvent(target, overrides = {}) {
   const event = new window.CustomEvent('keydown', {
     bubbles: true,

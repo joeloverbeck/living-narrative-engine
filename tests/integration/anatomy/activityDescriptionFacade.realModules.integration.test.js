@@ -160,6 +160,11 @@ class FacadeNLGAdapter {
   }
 }
 
+/**
+ *
+ * @param id
+ * @param properties
+ */
 function createComponentDefinition(id, properties = {}) {
   return {
     id,
@@ -171,6 +176,11 @@ function createComponentDefinition(id, properties = {}) {
   };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.includeEventBus
+ */
 async function buildFacadeEnvironment({ includeEventBus = true } = {}) {
   const testBed = new AnatomyIntegrationTestBed();
   testBed.loadCoreTestData();

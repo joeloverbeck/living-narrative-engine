@@ -70,6 +70,11 @@ describe('Mouth Engagement - Edge Cases', () => {
     }
   });
 
+  /**
+   *
+   * @param id
+   * @param name
+   */
   async function createTestActorWithMouth(id, name = 'Test Actor') {
     await entityManager.createEntity(id);
     await entityManager.addComponent(id, NAME_COMPONENT_ID, { text: name });

@@ -5,6 +5,7 @@
 
 /**
  * Creates a basic test task
+ *
  * @param {object} overrides - Task property overrides
  * @returns {object} GOAP task definition
  */
@@ -32,6 +33,7 @@ export function createTestTask(overrides = {}) {
 
 /**
  * Creates a consume nourishing item task
+ *
  * @returns {object} Consume task definition
  */
 export function createConsumeTask() {
@@ -63,6 +65,7 @@ export function createConsumeTask() {
 
 /**
  * Creates a gather resources task
+ *
  * @returns {object} Gather task definition
  */
 export function createGatherTask() {
@@ -88,6 +91,7 @@ export function createGatherTask() {
 
 /**
  * Creates a build shelter task
+ *
  * @returns {object} Build task definition
  */
 export function createBuildShelterTask() {
@@ -120,6 +124,7 @@ export function createBuildShelterTask() {
 
 /**
  * Creates a task with replan fallback behavior
+ *
  * @returns {object} Task with replan fallback
  */
 export function createReplanTask() {
@@ -136,6 +141,7 @@ export function createReplanTask() {
 
 /**
  * Creates a task with fail fallback behavior
+ *
  * @returns {object} Task with fail fallback
  */
 export function createFailTask() {
@@ -152,6 +158,7 @@ export function createFailTask() {
 
 /**
  * Creates a task with continue fallback behavior
+ *
  * @returns {object} Task with continue fallback
  */
 export function createContinueTask() {

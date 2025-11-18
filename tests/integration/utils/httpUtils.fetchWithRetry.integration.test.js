@@ -14,6 +14,9 @@ const noopSchemaValidator = {
   validate: () => ({ isValid: true, errors: [] }),
 };
 
+/**
+ *
+ */
 function createIntegrationEnvironment() {
   const logger = new ConsoleLogger('DEBUG');
   const eventBus = new EventBus({ logger });
@@ -39,6 +42,15 @@ function createIntegrationEnvironment() {
   };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.ok
+ * @param root0.status
+ * @param root0.statusText
+ * @param root0.body
+ * @param root0.headers
+ */
 function createResponse({
   ok,
   status,

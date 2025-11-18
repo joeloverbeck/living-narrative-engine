@@ -69,6 +69,10 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
     return { actor, targetGiving, targetNormal, room };
   }
 
+  /**
+   *
+   * @param testEnv
+   */
   function setupScopeResolver(testEnv) {
     const scopeResolver = testEnv.unifiedScopeResolver;
     const originalResolve = scopeResolver.resolveSync.bind(scopeResolver);

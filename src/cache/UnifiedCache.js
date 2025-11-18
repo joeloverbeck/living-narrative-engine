@@ -45,12 +45,12 @@ export class UnifiedCache extends BaseService {
    * @param {object} deps
    * @param {ILogger} deps.logger
    * @param {object} [config] - Cache configuration
-   * @param {number} [config.maxSize=1000] - Maximum number of entries
-   * @param {number} [config.ttl=300000] - Default TTL in milliseconds (5 minutes)
-   * @param {boolean} [config.updateAgeOnGet=true] - Reset TTL on access
+   * @param {number} [config.maxSize] - Maximum number of entries
+   * @param {number} [config.ttl] - Default TTL in milliseconds (5 minutes)
+   * @param {boolean} [config.updateAgeOnGet] - Reset TTL on access
    * @param {number} [config.maxMemoryUsage] - Maximum memory usage in bytes
-   * @param {string} [config.evictionPolicy='lru'] - Eviction policy (lru, lfu, fifo)
-   * @param {boolean} [config.enableMetrics=true] - Enable statistics collection
+   * @param {string} [config.evictionPolicy] - Eviction policy (lru, lfu, fifo)
+   * @param {boolean} [config.enableMetrics] - Enable statistics collection
    */
   constructor({ logger }, config = {}) {
     super();
@@ -284,7 +284,7 @@ export class UnifiedCache extends BaseService {
   /**
    * Prune expired or excess entries
    *
-   * @param {boolean} [aggressive=false] - Whether to prune aggressively
+   * @param {boolean} [aggressive] - Whether to prune aggressively
    * @returns {number} Number of entries pruned
    */
   prune(aggressive = false) {
@@ -363,7 +363,7 @@ export class UnifiedCache extends BaseService {
    * Get cache entries (for debugging)
    * Warning: This can be memory intensive for large caches
    *
-   * @param {number} [limit=100] - Maximum number of entries to return
+   * @param {number} [limit] - Maximum number of entries to return
    * @returns {Array<[string, *]>} Array of key-value pairs
    */
   getEntries(limit = 100) {
@@ -382,7 +382,7 @@ export class UnifiedCache extends BaseService {
   /**
    * Get cache keys (for debugging)
    *
-   * @param {number} [limit=100] - Maximum number of keys to return
+   * @param {number} [limit] - Maximum number of keys to return
    * @returns {string[]} Array of keys
    */
   getKeys(limit = 100) {

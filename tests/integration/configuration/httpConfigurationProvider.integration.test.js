@@ -27,6 +27,9 @@ class TestSchemaValidator {
   }
 }
 
+/**
+ *
+ */
 function createLogger() {
   return {
     debug: jest.fn(),
@@ -38,6 +41,9 @@ function createLogger() {
 
 const originalFetch = globalThis.fetch;
 
+/**
+ *
+ */
 function createNodeCompatibleFetch() {
   return async function testFetch(resource, options = {}) {
     return new Promise((resolve, reject) => {
@@ -122,6 +128,9 @@ function createNodeCompatibleFetch() {
   };
 }
 
+/**
+ *
+ */
 function createProviderEnvironment() {
   const logger = createLogger();
   const eventBus = new EventBus({ logger });

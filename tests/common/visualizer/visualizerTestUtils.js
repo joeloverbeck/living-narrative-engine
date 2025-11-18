@@ -10,7 +10,7 @@ const DEFAULT_TIMEOUT_MS = 120000;
  * Waits until the provided condition evaluates to true or the timeout elapses.
  *
  * @param {() => boolean} condition - Predicate evaluated repeatedly until it returns true.
- * @param {number} [timeout=DEFAULT_TIMEOUT_MS] - Maximum wait time in milliseconds.
+ * @param {number} [timeout] - Maximum wait time in milliseconds.
  * @returns {Promise<void>} Resolves when the condition becomes true.
  * @throws {Error} If the timeout expires before the condition becomes true.
  */

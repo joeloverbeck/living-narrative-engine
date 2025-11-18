@@ -519,7 +519,7 @@ describe('environmentUtils', () => {
 
     it('detects exposed GC and triggers it', () => {
       const gcSpy = jest.fn();
-      // eslint-disable-next-line no-global-assign
+       
       global.gc = gcSpy;
 
       expect(isGarbageCollectionAvailable()).toBe(true);
@@ -528,7 +528,7 @@ describe('environmentUtils', () => {
     });
 
     it('returns false when GC is not available', () => {
-      // eslint-disable-next-line no-global-assign
+       
       global.gc = undefined;
 
       expect(isGarbageCollectionAvailable()).toBe(false);

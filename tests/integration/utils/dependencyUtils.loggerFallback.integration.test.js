@@ -23,7 +23,7 @@ function createLoggerWithoutError(setup, baseLogger, serviceName) {
   const prefixed = setup.createLogger(serviceName, baseLogger);
   // Simulate an unexpected runtime mutation that strips the error method
   // (observed in some mod integration environments).
-  // eslint-disable-next-line no-param-reassign
+   
   prefixed.error = undefined;
   return prefixed;
 }

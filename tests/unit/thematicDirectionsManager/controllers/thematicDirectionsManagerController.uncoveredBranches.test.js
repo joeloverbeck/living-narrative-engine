@@ -21,6 +21,9 @@ let mockEditorFactory = defaultEditorFactory;
 let originalWindowLocalStorage;
 let localStorageStore;
 
+/**
+ *
+ */
 function defaultDropdownFactory() {
   return {
     loadItems: jest.fn().mockResolvedValue(undefined),
@@ -30,6 +33,9 @@ function defaultDropdownFactory() {
   };
 }
 
+/**
+ *
+ */
 function defaultEditorFactory() {
   return {
     destroy: jest.fn(),

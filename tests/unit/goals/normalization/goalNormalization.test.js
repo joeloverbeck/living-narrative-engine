@@ -13,6 +13,9 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
+/**
+ *
+ */
 function createBaseGoal() {
   return {
     priority: 10,

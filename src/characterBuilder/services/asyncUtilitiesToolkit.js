@@ -63,7 +63,7 @@ export class AsyncUtilitiesToolkit {
    * Debounce a handler.
    *
    * @param {Function} fn - Handler to debounce.
-   * @param {number} [delay=this.#config.defaultWait] - Debounce delay.
+   * @param {number} [delay] - Debounce delay.
    * @param {{ leading?: boolean, trailing?: boolean, maxWait?: number }} [options] - Debounce options.
    * @returns {Function} Debounced handler with cancel/flush helpers.
    */
@@ -320,7 +320,7 @@ export class AsyncUtilitiesToolkit {
    * Schedule a timeout.
    *
    * @param {Function} callback - Callback to execute.
-   * @param {number} [delay=this.#config.defaultWait] - Delay in milliseconds.
+   * @param {number} [delay] - Delay in milliseconds.
    * @returns {number} Timer ID.
    */
   setTimeout(callback, delay = this.#config.defaultWait) {
@@ -363,7 +363,7 @@ export class AsyncUtilitiesToolkit {
    * Schedule an interval.
    *
    * @param {Function} callback - Callback to execute.
-   * @param {number} [delay=this.#config.defaultWait] - Delay in milliseconds.
+   * @param {number} [delay] - Delay in milliseconds.
    * @returns {number} Interval ID.
    */
   setInterval(callback, delay = this.#config.defaultWait) {

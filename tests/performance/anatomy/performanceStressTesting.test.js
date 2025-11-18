@@ -85,6 +85,8 @@ describe('Anatomy Performance Stress Testing', () => {
   /**
    * Generate a complex anatomy with specified number of parts
    * Defined at test suite level to be accessible across all tests
+   *
+   * @param partCount
    */
   const generateLargeAnatomy = async (partCount) => {
       const blueprint = dataGenerator.generateLargeAnatomyBlueprint(partCount);
@@ -290,6 +292,8 @@ describe('Anatomy Performance Stress Testing', () => {
   describe('Test 5.2: Deep Nesting Hierarchies', () => {
     /**
      * Generate deeply nested anatomy hierarchy
+     *
+     * @param depth
      */
     const generateDeepHierarchy = async (depth) => {
       const blueprint = dataGenerator.generateDeepHierarchyBlueprint(depth);

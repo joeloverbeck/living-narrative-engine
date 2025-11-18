@@ -74,7 +74,7 @@ export function buildStageMessage(stage, progress) {
  * @param {object} params - Calculation parameters.
  * @param {string} params.currentStage - Stage identifier.
  * @param {number} params.startTime - Timestamp captured at generation start.
- * @param {number} [params.progress=0] - Progress percentage between 0-100.
+ * @param {number} [params.progress] - Progress percentage between 0-100.
  * @param {Function} [params.now] - Function returning the current high-resolution timestamp.
  * @returns {{elapsed: number, remaining: number, total: number, confidence: number}} Time estimate information.
  */

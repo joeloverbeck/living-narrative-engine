@@ -30,6 +30,7 @@ describe('Template Expansion - Integration Performance Tests', () => {
 
   /**
    * Helper function to create complete structure template with both limbSets and appendages
+   *
    * @param {number} limbSetCount - Number of limb sets
    * @param {number} itemsPerLimbSet - Number of items per limb set
    * @param {number} appendageCount - Number of appendages
@@ -65,6 +66,7 @@ describe('Template Expansion - Integration Performance Tests', () => {
 
   /**
    * Helper to perform complete blueprint expansion
+   *
    * @param {object} template - Structure template
    * @returns {object} Generated sockets and slots
    */
@@ -93,6 +95,7 @@ describe('Template Expansion - Integration Performance Tests', () => {
 
   /**
    * Measure expansion performance with optional synchronization validation.
+   *
    * @param {object} template - Template to expand
    * @param {ExpansionPerformanceOptions} [options] - Measurement configuration
    * @returns {ExpansionPerformanceResult} Measured performance metrics
@@ -130,6 +133,7 @@ describe('Template Expansion - Integration Performance Tests', () => {
 
   /**
    * Helper to validate socket-slot synchronization
+   *
    * @param {Array} sockets - Generated sockets
    * @param {object} slots - Generated slots
    * @returns {boolean} True if synchronized

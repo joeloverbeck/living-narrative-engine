@@ -95,6 +95,17 @@ class TestTurnHandler {
   }
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.commandString
+ * @param root0.initialAction
+ * @param root0.contextAction
+ * @param root0.decisionMeta
+ * @param root0.processThrows
+ * @param root0.processHook
+ * @param root0.autoFinishProcessing
+ */
 function createProcessingTestEnvironment({
   commandString = 'perform-wave',
   initialAction = {

@@ -60,7 +60,7 @@ function deduplicateActions(discovered) {
 /**
  * @description Produce a deterministic string representation for composite key generation.
  * @param {*} value - The value to serialize in a stable manner.
- * @param {WeakSet<object>} [seen=new WeakSet()] - Tracks objects already visited to prevent cycles.
+ * @param {WeakSet<object>} [seen] - Tracks objects already visited to prevent cycles.
  * @returns {string} Stable string representation suitable for map keys.
  */
 function stableSerializeForKey(value, seen = new WeakSet()) {
@@ -162,6 +162,7 @@ function stableSerializeForKey(value, seen = new WeakSet()) {
  * @description Build a unique key for an action using its identifier and parameters.
  * @param {string} actionId - The action definition identifier.
  * @param {*} params - Parameters associated with the action.
+ * @param commandString
  * @returns {string} Deterministic composite key for deduplication.
  */
 function createActionKey(actionId, params, commandString) {
@@ -310,6 +311,10 @@ function cloneAndFreezeValue(value) {
   return value;
 }
 
+/**
+ *
+ * @param uniqueArr
+ */
 function truncateActions(uniqueArr) {
   if (uniqueArr.length > MAX_AVAILABLE_ACTIONS_PER_TURN) {
     const truncatedCount = uniqueArr.length - MAX_AVAILABLE_ACTIONS_PER_TURN;

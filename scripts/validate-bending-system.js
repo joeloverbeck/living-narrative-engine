@@ -32,6 +32,8 @@ const RULE_SCHEMA = 'schema://living-narrative-engine/rule.schema.json';
 
 /**
  * Load and parse JSON file
+ *
+ * @param filePath
  */
 async function loadJsonFile(filePath) {
   try {
@@ -44,6 +46,8 @@ async function loadJsonFile(filePath) {
 
 /**
  * Check if file exists
+ *
+ * @param filePath
  */
 async function fileExists(filePath) {
   try {
@@ -56,6 +60,11 @@ async function fileExists(filePath) {
 
 /**
  * Validate a file against its schema
+ *
+ * @param validator
+ * @param filePath
+ * @param schemaId
+ * @param category
  */
 async function validateFile(validator, filePath, schemaId, category) {
   const relativePath = path.relative(path.join(__dirname, '..'), filePath);
@@ -95,6 +104,8 @@ async function validateFile(validator, filePath, schemaId, category) {
 
 /**
  * Validate scope file (DSL syntax check)
+ *
+ * @param filePath
  */
 async function validateScopeFile(filePath) {
   const relativePath = path.relative(path.join(__dirname, '..'), filePath);

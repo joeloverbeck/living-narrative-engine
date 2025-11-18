@@ -11,6 +11,10 @@ import {
 
 const viewCache = new WeakMap();
 
+/**
+ *
+ * @param options
+ */
 function toMetadata(options = {}) {
   if (!options) {
     return {};
@@ -24,6 +28,7 @@ function toMetadata(options = {}) {
 /**
  * Factory that memoizes PlanningStateView instances per state snapshot.
  * Subsequent calls update metadata/loggers before returning the cached view.
+ *
  * @param {object} state
  * @param {object} [options]
  * @returns {PlanningStateView}

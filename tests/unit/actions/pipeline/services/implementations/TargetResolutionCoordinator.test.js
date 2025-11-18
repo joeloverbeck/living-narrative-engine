@@ -2,6 +2,9 @@ import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals
 import TargetResolutionCoordinator from '../../../../../../src/actions/pipeline/services/implementations/TargetResolutionCoordinator.js';
 import { PipelineResult } from '../../../../../../src/actions/pipeline/PipelineResult.js';
 
+/**
+ *
+ */
 function createMockLogger() {
   return {
     debug: jest.fn(),
@@ -11,12 +14,19 @@ function createMockLogger() {
   };
 }
 
+/**
+ *
+ * @param order
+ */
 function createMockDependencyResolver(order = ['primary']) {
   return {
     getResolutionOrder: jest.fn(() => [...order]),
   };
 }
 
+/**
+ *
+ */
 function createMockContextBuilder() {
   return {
     buildScopeContext: jest.fn(() => ({ contextBuilt: true })),
@@ -24,6 +34,10 @@ function createMockContextBuilder() {
   };
 }
 
+/**
+ *
+ * @param resolutions
+ */
 function createMockUnifiedScopeResolver(resolutions = [['entity-1']]) {
   const queue = [...resolutions];
   return {
@@ -40,18 +54,27 @@ function createMockUnifiedScopeResolver(resolutions = [['entity-1']]) {
   };
 }
 
+/**
+ *
+ */
 function createMockEntityManager() {
   return {
     getEntityInstance: jest.fn((id) => (id ? { id, attributes: {} } : null)),
   };
 }
 
+/**
+ *
+ */
 function createMockNameResolver() {
   return {
     getEntityDisplayName: jest.fn((id) => `Entity ${id}`),
   };
 }
 
+/**
+ *
+ */
 function createMockTracingOrchestrator() {
   return {
     isActionAwareTrace: jest.fn(() => false),
@@ -60,12 +83,19 @@ function createMockTracingOrchestrator() {
   };
 }
 
+/**
+ *
+ * @param result
+ */
 function createMockResultBuilder(result = PipelineResult.success({ data: { built: true } })) {
   return {
     buildMultiTargetResult: jest.fn(() => result),
   };
 }
 
+/**
+ *
+ */
 function createMockTrace() {
   return {
     step: jest.fn(),
@@ -75,10 +105,17 @@ function createMockTrace() {
   };
 }
 
+/**
+ *
+ */
 function createMockActionContext() {
   return { currentLocation: 'loc-1' };
 }
 
+/**
+ *
+ * @param overrides
+ */
 function createMockActionDef(overrides = {}) {
   return {
     id: 'test:action',
@@ -94,6 +131,10 @@ function createMockActionDef(overrides = {}) {
   };
 }
 
+/**
+ *
+ * @param overrides
+ */
 function createPipelineContext(overrides = {}) {
   const baseActionDef = createMockActionDef(overrides.actionDef || {});
   return {
@@ -106,6 +147,10 @@ function createPipelineContext(overrides = {}) {
   };
 }
 
+/**
+ *
+ * @param overrides
+ */
 function createCoordinatorDeps(overrides = {}) {
   return {
     dependencyResolver: createMockDependencyResolver(['primary', 'secondary']),
@@ -123,6 +168,10 @@ function createCoordinatorDeps(overrides = {}) {
   };
 }
 
+/**
+ *
+ * @param overrides
+ */
 function createCoordinator(overrides = {}) {
   return new TargetResolutionCoordinator(createCoordinatorDeps(overrides));
 }
@@ -337,6 +386,11 @@ describe('TargetResolutionCoordinator - resolveWithDependencies', () => {
     jest.clearAllMocks();
   });
 
+  /**
+   *
+   * @param resolutionOrder
+   * @param overrides
+   */
   async function runResolve(resolutionOrder = ['primary', 'secondary'], overrides = {}) {
     const context = createPipelineContext();
     const actionDef = context.actionDef;

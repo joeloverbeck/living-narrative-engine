@@ -8,6 +8,9 @@ import {
 } from '@jest/globals';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
 
+/**
+ *
+ */
 function createTestLogger() {
   return {
     info: jest.fn(),

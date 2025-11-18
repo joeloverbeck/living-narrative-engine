@@ -8,6 +8,7 @@
  * empty or undefined, a placeholder message is returned.
  *
  * @param {import('ajv').ErrorObject[] | null | undefined} errors
+ * @param data
  * @returns {string} Formatted error details.
  */
 export function formatAjvErrors(errors, data = null) {

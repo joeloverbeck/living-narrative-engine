@@ -21,22 +21,20 @@ export const PLANNING_STATE_COMPONENT_REASONS = Object.freeze({
  * @typedef {'present'|'absent'|'unknown'} PlanningStateComponentStatus
  * @typedef {'flat'|'state'|'actor'} PlanningStateComponentSource
  * @typedef {'component-present'|'component-missing'|'entity-missing'|'invalid-component-lookup'} PlanningStateComponentReason
- *
  * @typedef {object} PlanningStateComponentLookupBase
  * @property {PlanningStateComponentStatus} status
  * @property {boolean} value
  * @property {PlanningStateComponentSource|null} source
  * @property {PlanningStateComponentReason|null} reason
- *
  * @typedef {PlanningStateComponentLookupBase & { status: 'present', source: PlanningStateComponentSource, reason: null }} PlanningStateComponentPresentResult
  * @typedef {PlanningStateComponentLookupBase & { status: 'absent', source: PlanningStateComponentSource, reason: 'component-missing', value: false }} PlanningStateComponentAbsentResult
  * @typedef {PlanningStateComponentLookupBase & { status: 'unknown', source: null, reason: 'entity-missing'|'invalid-component-lookup', value: false }} PlanningStateComponentUnknownResult
- *
  * @typedef {PlanningStateComponentPresentResult|PlanningStateComponentAbsentResult|PlanningStateComponentUnknownResult} PlanningStateComponentLookupResult
  */
 
 /**
  * Determine if the lookup represents a known entity/component relationship.
+ *
  * @param {PlanningStateComponentLookupResult} result
  * @returns {result is PlanningStateComponentPresentResult|PlanningStateComponentAbsentResult}
  */
@@ -50,6 +48,7 @@ export function isKnownComponent(result) {
 
 /**
  * Determine if the lookup represents an unknown/indeterminate planning-state answer.
+ *
  * @param {PlanningStateComponentLookupResult} result
  * @returns {result is PlanningStateComponentUnknownResult}
  */

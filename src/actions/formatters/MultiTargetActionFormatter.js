@@ -439,7 +439,6 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
 
   /**
    * @description Resolve a property path from a target, supporting nested properties.
-   *
    * @param {ResolvedTarget} target - Resolved target metadata.
    * @param {string} propertyPath - Property path extracted from the placeholder.
    * @param {string} defaultValue - Fallback value if the property cannot be resolved.
@@ -475,7 +474,6 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
 
   /**
    * @description Normalize the resolved placeholder value into a safe string.
-   *
    * @param {unknown} value - Raw value resolved for the placeholder.
    * @param {string} fallback - Fallback value if the raw value is unusable.
    * @returns {string} Sanitized string suitable for replacement.
@@ -495,7 +493,6 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
 
   /**
    * @description Determine fallback placeholders when target definitions omit explicit placeholders.
-   *
    * @param {string} targetKey - Target key being processed (e.g. primary, secondary).
    * @param {string[]} placeholdersInTemplate - Placeholder names extracted from the template.
    * @param {Set<string>} assignedFallbackPlaceholders - Placeholders already assigned to previous targets.
@@ -559,7 +556,6 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
 
   /**
    * @description Escape special regex characters in a placeholder name.
-   *
    * @param {string} placeholderName - Placeholder to escape for regex usage.
    * @returns {string} Escaped placeholder string.
    * @private

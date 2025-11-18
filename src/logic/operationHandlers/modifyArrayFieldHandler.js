@@ -16,8 +16,7 @@
  * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
  * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
  * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
- *
- * @extends ComponentOperationHandler
+ * @augments ComponentOperationHandler
  */
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */

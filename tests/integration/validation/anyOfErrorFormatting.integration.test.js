@@ -13,6 +13,7 @@ import {
 
 /**
  * Creates a mock logger for testing.
+ *
  * @returns {object} mock logger
  */
 function createMockLogger() {
@@ -28,7 +29,7 @@ function createMockLogger() {
  * Builds a synthetic anyOf schema with many operation branches to trigger
  * high-volume Ajv error cascades during validation.
  *
- * @param {number} [branchCount=120] - Number of decoy operation branches.
+ * @param {number} [branchCount] - Number of decoy operation branches.
  * @returns {object} JSON schema definition.
  */
 function createHighVolumeOperationSchema(branchCount = 120) {

@@ -4,6 +4,9 @@ import { ActionPipelineOrchestrator } from '../../../src/actions/actionPipelineO
 const mockPipelineExecute = jest.fn();
 const mockPipelineConstructor = jest.fn();
 
+/**
+ *
+ */
 function mockCreateClassDouble() {
   const ctor = jest.fn();
   const factory = jest.fn().mockImplementation(function (...args) {

@@ -7,6 +7,7 @@ import { ModEntityBuilder } from '../ModEntityBuilder.js';
 
 /**
  * Identifier for the squeeze breasts ardently action.
+ *
  * @type {string}
  */
 export const SQUEEZE_BREASTS_ARDENTLY_ACTION_ID =
@@ -14,12 +15,14 @@ export const SQUEEZE_BREASTS_ARDENTLY_ACTION_ID =
 
 /**
  * Default actor identifier used in ardent breast squeezing scenarios.
+ *
  * @type {string}
  */
 export const SQUEEZE_BREASTS_ARDENTLY_ACTOR_ID = 'liora';
 
 /**
  * Scope identifier used to discover eligible targets.
+ *
  * @type {string}
  */
 export const SQUEEZE_BREASTS_ARDENTLY_SCOPE_ID =
@@ -27,12 +30,14 @@ export const SQUEEZE_BREASTS_ARDENTLY_SCOPE_ID =
 
 /**
  * Default target identifier used in ardent breast squeezing scenarios.
+ *
  * @type {string}
  */
 export const SQUEEZE_BREASTS_ARDENTLY_TARGET_ID = 'nerine';
 
 /**
  * Default room identifier for ardent breastplay scenes.
+ *
  * @type {string}
  */
 export const SQUEEZE_BREASTS_ARDENTLY_ROOM_ID = 'garnet_suite';

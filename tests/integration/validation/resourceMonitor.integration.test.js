@@ -11,6 +11,7 @@ const originalPerformance = globalThis.performance;
 /**
  * Creates a memory usage mock that iterates through provided snapshots
  * and keeps returning the last value when exhausted.
+ *
  * @param {number[]} snapshotsInBytes
  */
 function createMemoryUsageMock(snapshotsInBytes) {

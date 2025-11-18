@@ -49,6 +49,11 @@ import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
 
 /**
  * Creates handlers needed for bending over rules.
+ *
+ * @param entityManager
+ * @param eventBus
+ * @param logger
+ * @param gameDataRepository
  */
 function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
   const safeDispatcher = {
@@ -124,6 +129,12 @@ function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
 
 /**
  * Helper to create a surface with bending support
+ *
+ * @param entityManager
+ * @param id
+ * @param name
+ * @param locationId
+ * @param allowsBending
  */
 function createSurface(entityManager, id, name, locationId, allowsBending = true) {
   if (allowsBending) {
@@ -144,6 +155,11 @@ function createSurface(entityManager, id, name, locationId, allowsBending = true
 
 /**
  * Helper to create an actor
+ *
+ * @param entityManager
+ * @param id
+ * @param name
+ * @param locationId
  */
 function createActor(entityManager, id, name, locationId) {
   entityManager.addComponent(id, ACTOR_COMPONENT_ID, {});
@@ -158,6 +174,10 @@ function createActor(entityManager, id, name, locationId) {
 
 /**
  * Helper to create a location
+ *
+ * @param entityManager
+ * @param id
+ * @param name
  */
 function createLocation(entityManager, id, name) {
   entityManager.addComponent(id, 'core:location', {});

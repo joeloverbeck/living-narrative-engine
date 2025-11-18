@@ -133,6 +133,10 @@ class FailingFormatter extends ActionCommandFormatter {
   }
 }
 
+/**
+ *
+ * @param logger
+ */
 function createFixSuggestionEngine(logger) {
   const gameDataRepository = {
     getComponentDefinition: () => ({ id: 'core:traits' }),
@@ -150,6 +154,10 @@ function createFixSuggestionEngine(logger) {
   });
 }
 
+/**
+ *
+ * @param options
+ */
 function createEnvironment(options = {}) {
   const logger = options.logger ?? new RecordingLogger();
   const dispatcher = options.dispatcher ?? new RecordingDispatcher();

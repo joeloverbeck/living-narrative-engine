@@ -192,10 +192,16 @@ Total Changes: 4 (1 added, 2 modified, 1 removed)
 `specs/goap-system-specs.md` calls out `GoapPlanner.#buildEvaluationContext` as the canonical hook for mirroring planner state into JSON Logic. When a `has_component` gate behaves oddly:
 
 - Use **Plan Inspector** to capture the raw planning state hash for the actor (`entityId:componentId[:field]` keys). Those hashes are the same format surfaced by the GOAP diagnostics scripts.
-- Feed the hash into the **State Diff Viewer** before/after a task to verify whether the expected `entityId:componentId` entries exist. If a key is missing, `HasComponentOperator` will intentionally fall back to the runtime `EntityManager`.
+- Feed the hash into the **State Diff Viewer** before/after a task to verify whether the expected `entityId:componentId` entries exist. When a key is missing during **planning mode** (`context.state` present), `HasComponentOperator` refuses to fall back to the runtime `EntityManager`; it emits a `GOAP_EVENTS.STATE_MISS` instead so stale snapshots fail fast. Runtime fallback only occurs when the operator runs without a planning-state context (pure execution-time lookups).
 - Inspect `state.actor.components` (and the flattened aliases with underscores) in the diff output to ensure colon-based component IDs stay mirrored—those mirrors are what allow JSON Logic expressions like `state.actor.components.core_needs.hunger` to resolve without helper glue.
 
 This workflow keeps component-aware planning observable without ad-hoc logging and reaffirms that `#buildEvaluationContext` is the extension point for any future preprocessing.
+
+### STATE_MISS workflow
+
+- `PlanningStateView.hasComponent()` publishes every miss through `recordPlanningStateMiss`, which in turn dispatches `GOAP_EVENTS.STATE_MISS` and annotates GOAPDebugger reports with the offending `{ entityId, componentId, reason }` tuple.
+- Planning-mode lookups never silently retry in the runtime; instead, run `GOAP_STATE_ASSERT=1 npm run test:integration -- --runInBand …numericGoalPlanning.integration.test.js` locally to turn these misses into hard failures while you diagnose the stale snapshot.
+- GOAPDebugger exposes the last five misses per actor under **Planning State Diagnostics**, so grab that data (and the probe transcript) before attempting runtime fallbacks—those fallbacks are explicitly prohibited whenever `context.state` exists.
 
 ### Goal Path & Effect Telemetry
 
@@ -219,7 +225,7 @@ Plan Inspector and the consolidated GOAPDebugger report now include two addition
 - Each diagnostics section includes metadata describing whether data is available, when it was last updated, and whether it is stale. Payloads older than five minutes (configurable via the contract) are tagged with `⚠️ STALE` in the text report and `diagnosticsMeta.*.stale = true` in JSON output.
 - Missing payloads emit a throttled `GOAP_DEBUGGER_DIAGNOSTICS_MISSING` warning so CI can grep for instrumentation gaps. Bumping the contract version is mandatory whenever a new diagnostics block is added or the stale threshold changes.
 
-Event contract compliance now appears alongside the task library and planning-state sections. The controller exposes `{ actor, global }` diagnostics fed by `createGoapEventDispatcher()` so every GOAP event recorded in CI shows its total dispatch count and any missing payloads. Violations carry `GOAP_EVENT_PAYLOAD_MISSING` stacks and the debugger links back to `#Planner Contract Checklist` for remediation.
+Event contract compliance now appears alongside the task library and planning-state sections. The controller exposes `{ actor, global, planning }` diagnostics fed by `createGoapEventDispatcher()`: `actor`/`global` list total dispatch counts and payload violations, while `planning` mirrors `createGoapEventDispatcher.getPlanningComplianceSnapshot()` so dashboards can compare `PLANNING_COMPLETED` vs `PLANNING_FAILED` totals per actor without parsing the raw stream. Violations carry `GOAP_EVENT_PAYLOAD_MISSING` stacks and the debugger links back to `#Planner Contract Checklist` for remediation.
 
 When you add diagnostics:
 
@@ -467,6 +473,12 @@ Per `specs/goap-system-specs.md`, the planner can legitimately return an empty p
 - No refinement or primitive actions run; GOAPDebugger's plan inspector will show no current plan for the actor on the next turn.
 
 Use the event payload and structured log to confirm a "goal satisfied" completion before assuming the planner stalled. Tooling that watches the event bus can treat `planLength: 0` completions as a telemetry signal meaning "goal already met" and skip retry logic.
+
+#### Actor alias guardrail
+
+- Reusable goal templates **must** reference the acting actor through the `'actor'` alias (or `state.actor`) inside `has_component` clauses. Hardcoding literal IDs like `actor_alpha` makes the goal unusable for any other actor and violates the Planning-State View contract.
+- `npm run validate:goals` (or setting `GOAP_GOAL_PATH_LINT=1` during planner runs) now flags these violations with `GOAP_PLANNER_FAILURES.INVALID_GOAL_PATH`. Fix the goal by replacing the literal ID with `'actor'` before rerunning suites.
+- Test helpers such as `createTestGoal` also warn when a suite overrides `has_component` with a literal ID, so treat that console warning as a regression signal and update the goal template immediately.
 
 #### 3. State diff shows unexpected changes
 

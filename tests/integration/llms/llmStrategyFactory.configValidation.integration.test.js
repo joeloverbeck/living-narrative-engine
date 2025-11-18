@@ -28,6 +28,10 @@ class StaticHttpClient {
   }
 }
 
+/**
+ *
+ * @param overrides
+ */
 function createBaseConfig(overrides = {}) {
   return {
     configId: 'test-config',

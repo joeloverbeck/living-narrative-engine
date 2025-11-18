@@ -15,7 +15,6 @@
 
 /**
  * @description Normalizes boolean-like configuration flags to actual booleans.
- *
  * @param {unknown} value - Configuration value to normalize.
  * @returns {boolean} {@code true} when the input represents an enabled flag.
  */

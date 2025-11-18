@@ -272,6 +272,10 @@ describe('validateOperations script - Validation Logic', () => {
 // Helper Functions (extracted from the script for testing)
 // ============================================================================
 
+/**
+ *
+ * @param operationType
+ */
 function convertOperationTypeToTokenName(operationType) {
   return (
     operationType
@@ -281,6 +285,10 @@ function convertOperationTypeToTokenName(operationType) {
   );
 }
 
+/**
+ *
+ * @param operationType
+ */
 function convertOperationTypeToFileName(operationType) {
   const parts = operationType.split('_');
   return (
@@ -292,6 +300,10 @@ function convertOperationTypeToFileName(operationType) {
   );
 }
 
+/**
+ *
+ * @param operationType
+ */
 function convertOperationTypeToSchemaName(operationType) {
   const parts = operationType.split('_');
   return (
@@ -303,16 +315,29 @@ function convertOperationTypeToSchemaName(operationType) {
   );
 }
 
+/**
+ *
+ * @param schemaFiles
+ */
 function filterOperationSchemas(schemaFiles) {
   return schemaFiles.filter(
     f => !f.endsWith('base-operation.schema.json') && !f.endsWith('nested-operation.schema.json')
   );
 }
 
+/**
+ *
+ * @param schema
+ */
 function extractOperationType(schema) {
   return schema.allOf?.[1]?.properties?.type?.const;
 }
 
+/**
+ *
+ * @param operations
+ * @param operationSchema
+ */
 function findMissingSchemaReferences(operations, operationSchema) {
   const referencedSchemas =
     operationSchema.$defs?.Operation?.anyOf?.map(ref => path.basename(ref.$ref)) || [];
@@ -322,16 +347,30 @@ function findMissingSchemaReferences(operations, operationSchema) {
     .map(op => op.schemaFile);
 }
 
+/**
+ *
+ * @param operations
+ * @param knownTypes
+ */
 function findMissingWhitelistEntries(operations, knownTypes) {
   return operations.filter(op => !knownTypes.includes(op.type)).map(op => op.type);
 }
 
+/**
+ *
+ * @param operations
+ * @param definedTokens
+ */
 function findMissingTokens(operations, definedTokens) {
   return operations
     .map(op => convertOperationTypeToTokenName(op.type))
     .filter(token => !definedTokens.includes(token));
 }
 
+/**
+ *
+ * @param operations
+ */
 function validateNamingConsistency(operations) {
   const errors = [];
 

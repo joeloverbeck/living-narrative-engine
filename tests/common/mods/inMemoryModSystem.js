@@ -31,10 +31,10 @@ export class InMemoryModSystem {
    *
    * @param {string} modId - Mod identifier
    * @param {object} modContent - Mod content structure
-   * @param {Array<object>} [modContent.scopes=[]] - Scope definitions
-   * @param {Array<object>} [modContent.conditions=[]] - Condition definitions
-   * @param {Array<object>} [modContent.components=[]] - Component definitions
-   * @param {Array<string>} [dependencies=[]] - Mod dependencies
+   * @param {Array<object>} [modContent.scopes] - Scope definitions
+   * @param {Array<object>} [modContent.conditions] - Condition definitions
+   * @param {Array<object>} [modContent.components] - Component definitions
+   * @param {Array<string>} [dependencies] - Mod dependencies
    * @returns {object} In-memory mod structure
    */
   createMod(modId, modContent = {}, dependencies = []) {
@@ -373,6 +373,9 @@ export class InMemoryModSystem {
   /**
    * Parses scope content using the proper parser
    *
+   * @param content
+   * @param scopeId
+   * @param dslParser
    * @private
    */
   async _parseScopeContent(content, scopeId, dslParser) {
@@ -444,6 +447,10 @@ export class InMemoryModSystem {
   /**
    * Fallback scope content parsing with line-based approach
    *
+   * @param content
+   * @param scopeId
+   * @param dslParser
+   * @param logger
    * @private
    */
   _parseScopeContentFallback(content, scopeId, dslParser, logger) {

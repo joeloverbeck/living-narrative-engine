@@ -27,12 +27,12 @@ import {
  * Helper to wait for the handler queue to drain before assertions
  *
  * @param {FileTraceOutputHandler} handler - Handler instance
- * @param {number} [timeout=1000] - Maximum wait time in milliseconds
+ * @param {number} [timeout] - Maximum wait time in milliseconds
  */
 async function waitForQueueToDrain(handler, timeout = 1000) {
   const start = Date.now();
   while (!handler.isQueueEmpty() && Date.now() - start < timeout) {
-    // eslint-disable-next-line no-await-in-loop
+     
     await new Promise((resolve) => setTimeout(resolve, 15));
   }
   await new Promise((resolve) => setTimeout(resolve, 25));

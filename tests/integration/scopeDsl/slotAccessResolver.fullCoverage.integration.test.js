@@ -5,6 +5,9 @@ import createSlotAccessResolver from '../../../src/scopeDsl/nodes/slotAccessReso
 import { StructuredTrace } from '../../../src/actions/tracing/structuredTrace.js';
 import { ErrorCodes } from '../../../src/scopeDsl/constants/errorCodes.js';
 
+/**
+ *
+ */
 function createNonThrowingErrorHandler() {
   const errors = [];
   return {

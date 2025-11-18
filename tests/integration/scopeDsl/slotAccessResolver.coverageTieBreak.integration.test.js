@@ -5,6 +5,9 @@ import createSlotAccessResolver from '../../../src/scopeDsl/nodes/slotAccessReso
 import ScopeDslErrorHandler from '../../../src/scopeDsl/core/scopeDslErrorHandler.js';
 import { StructuredTrace } from '../../../src/actions/tracing/structuredTrace.js';
 
+/**
+ *
+ */
 function createLogger() {
   return {
     error: jest.fn(),

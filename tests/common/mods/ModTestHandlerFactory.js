@@ -181,6 +181,7 @@ export class ModTestHandlerFactory {
    * @param {object} entityManager - Entity manager instance
    * @param {object} eventBus - Event bus instance
    * @param {object} logger - Logger instance
+   * @param gameDataRepository
    * @returns {object} Extended handlers object including ADD_COMPONENT handler
    * @throws {Error} If any required parameter is missing or invalid
    */
@@ -226,6 +227,7 @@ export class ModTestHandlerFactory {
    * @param {object} entityManager - Entity manager instance
    * @param {object} eventBus - Event bus instance
    * @param {object} logger - Logger instance
+   * @param gameDataRepository
    * @returns {object} Handlers object with component mutation support
    * @throws {Error} If any required parameter is missing or invalid
    */
@@ -275,6 +277,7 @@ export class ModTestHandlerFactory {
    * @param {object} entityManager - Entity manager instance
    * @param {object} eventBus - Event bus instance
    * @param {object} logger - Logger instance
+   * @param gameDataRepository
    * @returns {object} Handlers object with mouth engagement support
    * @throws {Error} If any required parameter is missing or invalid
    */
@@ -363,6 +366,7 @@ export class ModTestHandlerFactory {
    * @param {object} entityManager - Entity manager instance
    * @param {object} eventBus - Event bus instance
    * @param {object} logger - Logger instance
+   * @param gameDataRepository
    * @param {object} options - Configuration options
    * @param {boolean} options.includeAddComponent - Whether to include ADD_COMPONENT handler
    * @param {boolean} options.includeSetVariable - Whether to include SET_VARIABLE handler
@@ -648,6 +652,7 @@ export class ModTestHandlerFactory {
    * @param {object} entityManager - Entity manager instance
    * @param {object} eventBus - Event bus instance
    * @param {object} logger - Logger instance
+   * @param gameDataRepository
    * @returns {object} Handlers with ADD_PERCEPTION_LOG_ENTRY included
    * @throws {Error} If any required parameter is missing or invalid
    */

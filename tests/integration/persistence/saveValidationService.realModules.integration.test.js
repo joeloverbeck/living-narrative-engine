@@ -18,6 +18,10 @@ const defaultCrypto =
     ? globalThis.crypto
     : nodeWebcrypto;
 
+/**
+ *
+ * @param customCrypto
+ */
 function buildValidationStack(customCrypto) {
   const logger = new NoOpLogger();
   const checksumService = new ChecksumService({
@@ -32,6 +36,9 @@ function buildValidationStack(customCrypto) {
   return { validationService, serializer };
 }
 
+/**
+ *
+ */
 function makeValidSaveStructure() {
   return {
     metadata: {

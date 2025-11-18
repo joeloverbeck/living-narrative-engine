@@ -13,6 +13,9 @@ jest.mock('../../../src/logic/actionSequence.js', () => {
 
 let ActionSequenceService;
 
+/**
+ *
+ */
 function createMockLogger() {
   return {
     info: jest.fn(),

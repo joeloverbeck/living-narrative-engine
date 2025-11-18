@@ -25,6 +25,9 @@ class FaultyTraitsDisplayEnhancer extends TraitsDisplayEnhancer {
   }
 }
 
+/**
+ *
+ */
 async function selectDirectionAndProvideInputs() {
   const selector = document.getElementById('direction-selector');
   selector.value = defaultDirectionItem.direction.id;
@@ -43,6 +46,10 @@ async function selectDirectionAndProvideInputs() {
   document.getElementById('central-question-input').dispatchEvent(new Event('input'));
 }
 
+/**
+ *
+ * @param logger
+ */
 async function waitForLoggerError(logger) {
   let attempts = 0;
   while (logger.error.mock.calls.length === 0 && attempts < 5) {

@@ -7,6 +7,10 @@ import { createTestGoal } from './tests/integration/goap/testFixtures/testGoalFa
 import { createTestTask } from './tests/integration/goap/testFixtures/testTaskFactory.js';
 import { GOAP_EVENTS } from './src/goap/events/goapEvents.js';
 
+/**
+ *
+ * @param actor
+ */
 function addFlattenedAliases(actor) {
   const modifiedComponents = { ...actor.components };
   Object.keys(actor.components).forEach((componentId) => {
@@ -18,6 +22,10 @@ function addFlattenedAliases(actor) {
   return { ...actor, components: modifiedComponents };
 }
 
+/**
+ *
+ * @param actor
+ */
 function buildDualFormatState(actor) {
   const state = { actor: { id: actor.id, components: {} } };
   Object.keys(actor.components).forEach((componentId) => {
@@ -31,6 +39,9 @@ function buildDualFormatState(actor) {
   return state;
 }
 
+/**
+ *
+ */
 async function main() {
   console.log('\n=== Inspecting Planning Events ===\n');
 

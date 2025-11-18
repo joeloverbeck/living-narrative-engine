@@ -102,6 +102,11 @@ class TestSafeDispatcher {
   }
 }
 
+/**
+ *
+ * @param id
+ * @param overrides
+ */
 function createManifest(id, overrides = {}) {
   return {
     id,
@@ -111,6 +116,11 @@ function createManifest(id, overrides = {}) {
   };
 }
 
+/**
+ *
+ * @param absoluteBaseDir
+ * @param manifests
+ */
 async function writeManifests(absoluteBaseDir, manifests) {
   const modsDir = path.join(absoluteBaseDir, 'mods');
   await fs.mkdir(modsDir, { recursive: true });
@@ -126,6 +136,11 @@ async function writeManifests(absoluteBaseDir, manifests) {
   }
 }
 
+/**
+ *
+ * @param manifests
+ * @param options
+ */
 async function setupProcessor(manifests, options = {}) {
   const baseFolder = path.join('tmp', 'mod-manifest-processor-tests');
   const absoluteBaseRoot = path.join(process.cwd(), baseFolder);
@@ -195,12 +210,17 @@ describe('Integration: ModManifestProcessor', () => {
       try {
         await fs.rm(dir, { recursive: true, force: true });
       } catch (error) {
-        // eslint-disable-next-line no-console -- diagnostic cleanup warning
+         
         console.warn('Failed to clean temporary directory', error);
       }
     }
   });
 
+  /**
+   *
+   * @param manifests
+   * @param options
+   */
   async function createProcessor(manifests, options = {}) {
     const context = await setupProcessor(manifests, options);
     tempDirs.push(context.tempDir);

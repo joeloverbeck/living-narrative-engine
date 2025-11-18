@@ -47,6 +47,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Override anatomy description service with configurable mocking strategy
+   *
    * @private
    */
   _overrideDescriptionService() {
@@ -81,7 +82,8 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Generate a realistic body description that simulates production memory usage
-   * @param {Object} bodyEntity - The body entity
+   *
+   * @param {object} bodyEntity - The body entity
    * @returns {string} Realistic body description
    * @private
    */
@@ -112,7 +114,8 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Generate realistic part descriptions that simulate production memory usage
-   * @param {Object} bodyEntity - The body entity
+   *
+   * @param {object} bodyEntity - The body entity
    * @returns {Map<string, string>} Map of part IDs to descriptions
    * @private
    */
@@ -130,6 +133,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Generate a realistic part description
+   *
    * @param {string} partId - The part ID
    * @returns {string} Realistic part description
    * @private
@@ -152,6 +156,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Initialize clothing integration services
+   *
    * @private
    */
   _initializeClothingIntegration() {
@@ -215,7 +220,8 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Create a mock anatomy blueprint repository for testing
-   * @returns {Object} Mock anatomy blueprint repository
+   *
+   * @returns {object} Mock anatomy blueprint repository
    * @private
    */
   createMockAnatomyBlueprintRepository() {
@@ -230,7 +236,8 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Create a mock clothing management service for testing
-   * @returns {Object} Mock clothing management service
+   *
+   * @returns {object} Mock clothing management service
    * @private
    */
   createMockClothingManagementService() {
@@ -257,7 +264,8 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Loads complex blueprint hierarchies into the test environment
-   * @param {Object} blueprintData - Generated blueprint test data
+   *
+   * @param {object} blueprintData - Generated blueprint test data
    * @returns {Promise<void>}
    */
   async loadComplexBlueprints(blueprintData) {
@@ -297,9 +305,10 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Injects constraint violations at specific stages for testing error recovery
+   *
    * @param {string} stage - Processing stage ('blueprint_load', 'part_creation', 'constraint_eval')
    * @param {string} errorType - Type of error to inject
-   * @param {Object} errorConfig - Error configuration
+   * @param {object} errorConfig - Error configuration
    */
   injectConstraintViolation(stage, errorType, errorConfig = {}) {
     this.errorInjection.set(`${stage}_${errorType}`, {
@@ -321,9 +330,10 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Validates complex slot resolution scenarios
+   *
    * @param {string} entityId - Root entity ID
-   * @param {Object} expectedStructure - Expected anatomy structure
-   * @returns {Object} Validation results
+   * @param {object} expectedStructure - Expected anatomy structure
+   * @returns {object} Validation results
    */
   async validateSlotResolution(entityId, expectedStructure) {
     const startTime = Date.now();
@@ -393,6 +403,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Enables detailed blueprint processing tracking
+   *
    * @param {boolean} enabled - Enable/disable tracking
    */
   trackBlueprintProcessing(enabled = true) {
@@ -439,6 +450,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Gets processing log entries
+   *
    * @param {string} [actionFilter] - Filter by action type
    * @returns {Array} Processing log entries
    */
@@ -460,9 +472,10 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Validates blueprint processing performance meets thresholds
+   *
    * @param {string} operation - Operation name
-   * @param {Object} thresholds - Performance thresholds
-   * @returns {Object} Performance validation results
+   * @param {object} thresholds - Performance thresholds
+   * @returns {object} Performance validation results
    */
   validatePerformanceThresholds(operation, thresholds) {
     const metrics = this.performanceMetrics.get(operation);
@@ -499,8 +512,9 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Records performance metrics for an operation
+   *
    * @param {string} operation - Operation name
-   * @param {Object} metrics - Performance metrics
+   * @param {object} metrics - Performance metrics
    */
   recordPerformanceMetrics(operation, metrics) {
     this.performanceMetrics.set(operation, {
@@ -511,6 +525,11 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Validates structure recursively against expected pattern
+   *
+   * @param entityId
+   * @param expectedStructure
+   * @param validation
+   * @param depth
    * @private
    */
   async _validateStructureRecursive(entityId, expectedStructure, validation, depth) {
@@ -561,6 +580,9 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Validates slot conflicts in anatomy structure
+   *
+   * @param entityId
+   * @param validation
    * @private
    */
   async _validateSlotConflicts(entityId, validation) {
@@ -595,6 +617,9 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Validates constraint consistency across anatomy
+   *
+   * @param entityId
+   * @param validation
    * @private
    */
   async _validateConstraintConsistency(entityId, validation) {
@@ -605,7 +630,8 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Load clothing integration test data into the test environment
-   * @param {Object} clothingIntegrationData - Generated clothing integration test data
+   *
+   * @param {object} clothingIntegrationData - Generated clothing integration test data
    * @returns {Promise<void>}
    */
   async loadClothingIntegrationData(clothingIntegrationData) {
@@ -671,7 +697,8 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Get current cache state for validation
-   * @returns {Object} Cache state information
+   *
+   * @returns {object} Cache state information
    */
   getCacheState() {
     const state = {
@@ -712,8 +739,9 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Record performance metrics for testing
+   *
    * @param {string} metricName - Name of the metric
-   * @param {Object} metricData - Metric data
+   * @param {object} metricData - Metric data
    */
   recordMetric(metricName, metricData) {
     if (!this.performanceMetrics.has(metricName)) {
@@ -737,8 +765,9 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Get recorded performance metrics
+   *
    * @param {string} [metricName] - Optional specific metric name
-   * @returns {Object|Array} Metrics data
+   * @returns {object | Array} Metrics data
    */
   getMetrics(metricName = null) {
     if (metricName) {
@@ -754,8 +783,9 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Validate clothing integration state across systems
+   *
    * @param {string} entityId - Entity to validate
-   * @returns {Object} Integration validation results
+   * @returns {object} Integration validation results
    */
   async validateClothingIntegration(entityId) {
     const validation = {
@@ -832,6 +862,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Get processing log for debugging
+   *
    * @returns {Array} Processing log entries
    */
   getProcessingLog() {
@@ -939,7 +970,8 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Generate a simple anatomy for testing
-   * @returns {Promise<Object>} Generated anatomy with rootId
+   *
+   * @returns {Promise<object>} Generated anatomy with rootId
    */
   async generateSimpleAnatomy() {
     // For memory tests, we should reuse the same entity definition to avoid accumulation
@@ -984,8 +1016,9 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Create an anatomy part for testing
+   *
    * @param {string} partId - ID for the part
-   * @returns {Promise<Object>} Created part entity
+   * @returns {Promise<object>} Created part entity
    */
   async createAnatomyPart(partId) {
     const part = await this.entityManager.createEntityInstance('test:simple_part', {
@@ -1002,6 +1035,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Attach a part to a parent
+   *
    * @param {string} parentId - Parent entity ID
    * @param {string} childId - Child entity ID
    * @returns {Promise<void>}
@@ -1016,6 +1050,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Calculate maximum depth of an anatomy hierarchy
+   *
    * @param {string} rootId - Root entity ID
    * @returns {number} Maximum depth
    */
@@ -1047,7 +1082,8 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Clean up an entity and all its children
-   * @param {string|Object} entityInfo - Root entity ID to clean up, or object with rootId and entityDefId
+   *
+   * @param {string | object} entityInfo - Root entity ID to clean up, or object with rootId and entityDefId
    * @returns {Promise<void>}
    */
   async cleanupEntity(entityInfo) {
@@ -1098,8 +1134,9 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Create an entity with a specific component for memory testing
+   *
    * @param {string} componentType - Component type to add
-   * @returns {Promise<Object>} Created entity
+   * @returns {Promise<object>} Created entity
    */
   async createEntityWithComponent(componentType) {
     const entityId = `test_entity_${Date.now()}_${Math.random()}`;
@@ -1116,8 +1153,9 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Get minimal component data for a component type
+   *
    * @param {string} componentType - Component type
-   * @returns {Object} Minimal component data
+   * @returns {object} Minimal component data
    * @private
    */
   getMinimalComponentData(componentType) {
@@ -1134,6 +1172,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Inject a generation failure at a specific phase
+   *
    * @param {string} phase - Phase to inject failure ('validation', 'generation', 'cache', 'description')
    * @param {Error} [error] - Custom error to throw
    */
@@ -1214,6 +1253,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Simulate cache corruption
+   *
    * @param {string} corruptionType - Type of corruption ('invalidReferences', 'missingNodes', 'circularDependency')
    */
   corruptCache(corruptionType) {
@@ -1263,8 +1303,9 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Validate that rollback completed successfully
+   *
    * @param {string} entityId - Entity that was being generated
-   * @returns {Object} Validation results
+   * @returns {object} Validation results
    */
   validateRollbackCompleteness(entityId) {
     const validation = {
@@ -1320,6 +1361,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Capture the sequence of entity deletions during rollback
+   *
    * @returns {Array} Array to store deletion sequence
    */
   captureRollbackSequence() {
@@ -1353,8 +1395,9 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
   /**
    * Create a constraint violation scenario
+   *
    * @param {string} violationType - Type of violation ('missingRequired', 'exclusion', 'slotLimit')
-   * @returns {Object} Scenario configuration
+   * @returns {object} Scenario configuration
    */
   createConstraintViolationScenario(violationType) {
     const scenario = {

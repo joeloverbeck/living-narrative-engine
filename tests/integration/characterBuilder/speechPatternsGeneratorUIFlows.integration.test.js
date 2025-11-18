@@ -19,6 +19,7 @@ import { ValidationService } from '../../../src/characterBuilder/services/valida
 class ExportAwareSpeechPatternsGeneratorController extends SpeechPatternsGeneratorController {
   /**
    * Extend element caching so export-specific controls are tracked during tests.
+   *
    * @protected
    */
   _cacheElements() {
@@ -31,6 +32,10 @@ class ExportAwareSpeechPatternsGeneratorController extends SpeechPatternsGenerat
   }
 }
 
+/**
+ *
+ * @param includeExportControls
+ */
 function buildDom(includeExportControls = true) {
   document.body.innerHTML = `
     <div id="app">
@@ -67,6 +72,10 @@ function buildDom(includeExportControls = true) {
   `;
 }
 
+/**
+ *
+ * @param overrides
+ */
 function createMinimalDependencies(overrides = {}) {
   const logger =
     overrides.logger ||
@@ -217,6 +226,9 @@ function createMinimalDependencies(overrides = {}) {
   };
 }
 
+/**
+ *
+ */
 function createValidCharacterDefinition() {
   const detailedProfile = 'A character with deeply developed background and motivations '.repeat(5);
   return {
@@ -234,6 +246,10 @@ function createValidCharacterDefinition() {
   };
 }
 
+/**
+ *
+ * @param blob
+ */
 async function readBlobAsText(blob) {
   if (blob && typeof blob.text === 'function') {
     return blob.text();
@@ -260,10 +276,21 @@ async function readBlobAsText(blob) {
   return String(blob);
 }
 
+/**
+ *
+ * @param duration
+ */
 async function advanceTimersByTime(duration) {
   await jest.advanceTimersByTimeAsync(duration);
 }
 
+/**
+ *
+ * @param predicate
+ * @param root0
+ * @param root0.interval
+ * @param root0.timeout
+ */
 async function waitForCondition(predicate, { interval = 50, timeout = 2000 } = {}) {
   const attempts = Math.ceil(timeout / interval);
   for (let i = 0; i < attempts; i += 1) {

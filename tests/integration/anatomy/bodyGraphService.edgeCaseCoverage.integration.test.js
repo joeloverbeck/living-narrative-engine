@@ -2,6 +2,9 @@ import { BodyGraphService } from '../../../src/anatomy/bodyGraphService.js';
 import { SimpleEntityManager } from '../../common/entities/index.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
+/**
+ *
+ */
 function createRecordingLogger() {
   const entries = [];
   const record =
@@ -19,6 +22,9 @@ function createRecordingLogger() {
   };
 }
 
+/**
+ *
+ */
 function createRecordingDispatcher() {
   const events = [];
   return {

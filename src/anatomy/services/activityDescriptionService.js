@@ -932,7 +932,7 @@ class ActivityDescriptionService {
    * @returns {unknown|null} Cached value or null if not found/expired.
    * @private
    */
-  // eslint-disable-next-line no-unused-private-class-members
+   
   #getCacheValue(cacheName, key) { // Reserved for future direct cache access
     if (!this.#cacheManager) {
       return null;

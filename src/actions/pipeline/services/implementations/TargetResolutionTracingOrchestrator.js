@@ -320,7 +320,7 @@ export default class TargetResolutionTracingOrchestrator {
    * @param {object} messages - Log message options
    * @param {string} messages.successMessage - Message for successful capture
    * @param {string} messages.failureMessage - Message for failed capture
-   * @param {boolean} [messages.suppressLoggerOnSuccess=false] - Whether to skip debug logging on success
+   * @param {boolean} [messages.suppressLoggerOnSuccess] - Whether to skip debug logging on success
    * @returns {Promise<void>}
    */
   async #safeCaptureActionData(

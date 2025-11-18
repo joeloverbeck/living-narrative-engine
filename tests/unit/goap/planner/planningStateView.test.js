@@ -8,8 +8,13 @@ import {
 import {
   clearPlanningStateDiagnostics,
   getPlanningStateDiagnostics,
+  registerPlanningStateDiagnosticsEventBus,
 } from '../../../../src/goap/planner/planningStateDiagnostics.js';
+import { GOAP_EVENTS } from '../../../../src/goap/events/goapEvents.js';
 
+/**
+ *
+ */
 function createState() {
   return {
     actor: {
@@ -24,9 +29,25 @@ function createState() {
 }
 
 describe('PlanningStateView', () => {
+  let fakeEventBus;
+
+  /**
+   *
+   */
+  function createFakeEventBus() {
+    return {
+      events: [],
+      dispatch(eventType, payload) {
+        this.events.push({ eventType, payload });
+      },
+    };
+  }
+
   beforeEach(() => {
     delete process.env.GOAP_STATE_ASSERT;
     clearPlanningStateDiagnostics();
+    fakeEventBus = createFakeEventBus();
+    registerPlanningStateDiagnosticsEventBus(fakeEventBus);
   });
 
   afterEach(() => {
@@ -139,5 +160,56 @@ describe('PlanningStateView', () => {
 
     const freshSnapshot = view.getActorSnapshot();
     expect(freshSnapshot.components['core:needs'].hunger).toBe(90);
+  });
+
+  it('emits STATE_MISS events for entity and component misses', () => {
+    const view = createPlanningStateView(createState());
+
+    const unknown = view.hasComponent('ghost', 'core:needs');
+    expect(unknown.reason).toBe(PLANNING_STATE_COMPONENT_REASONS.ENTITY_MISSING);
+    expect(fakeEventBus.events).toHaveLength(1);
+    expect(fakeEventBus.events[0]).toEqual(
+      expect.objectContaining({
+        eventType: GOAP_EVENTS.STATE_MISS,
+        payload: expect.objectContaining({
+          actorId: 'actor-1',
+          entityId: 'ghost',
+          componentId: 'core:needs',
+          reason: PLANNING_STATE_COMPONENT_REASONS.ENTITY_MISSING,
+          timestamp: expect.any(Number),
+        }),
+      })
+    );
+
+    const absent = view.hasComponent('actor-1', 'core:thirst');
+    expect(absent.reason).toBe(PLANNING_STATE_COMPONENT_REASONS.COMPONENT_MISSING);
+    expect(fakeEventBus.events).toHaveLength(2);
+    expect(fakeEventBus.events[1]).toEqual(
+      expect.objectContaining({
+        eventType: GOAP_EVENTS.STATE_MISS,
+        payload: expect.objectContaining({
+          actorId: 'actor-1',
+          entityId: 'actor-1',
+          componentId: 'core:thirst',
+          reason: PLANNING_STATE_COMPONENT_REASONS.COMPONENT_MISSING,
+        }),
+      })
+    );
+  });
+
+  it('does not emit STATE_MISS for explicit falsy component values', () => {
+    const state = createState();
+    state['actor-1:core:stealth'] = false;
+    const view = createPlanningStateView(state);
+
+    const result = view.hasComponent('actor-1', 'core:stealth');
+    expect(result.status).toBe(PLANNING_STATE_COMPONENT_STATUSES.PRESENT);
+    expect(result.value).toBe(false);
+    expect(result.reason).toBeNull();
+    expect([
+      PLANNING_STATE_COMPONENT_SOURCES.ACTOR,
+      PLANNING_STATE_COMPONENT_SOURCES.FLAT,
+    ]).toContain(result.source);
+    expect(fakeEventBus.events).toHaveLength(0);
   });
 });

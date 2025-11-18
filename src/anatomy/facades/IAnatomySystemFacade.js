@@ -88,6 +88,7 @@ class IAnatomySystemFacade extends BaseFacade {
 
   /**
    * Get all body parts for an entity
+   *
    * @param {string} entityId - Entity identifier
    * @param {QueryOptions} [options] - Query options
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').QueryResponse>}
@@ -148,6 +149,7 @@ class IAnatomySystemFacade extends BaseFacade {
 
   /**
    * Get the complete body graph for an entity
+   *
    * @param {string} entityId - Entity identifier
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').GraphResponse>}
    */
@@ -188,6 +190,7 @@ class IAnatomySystemFacade extends BaseFacade {
 
   /**
    * Get body parts of a specific type
+   *
    * @param {string} entityId - Entity identifier
    * @param {string} partType - Type of body part to retrieve
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').QueryResponse>}
@@ -224,6 +227,7 @@ class IAnatomySystemFacade extends BaseFacade {
 
   /**
    * Get parts connected to a specific part
+   *
    * @param {string} entityId - Entity identifier
    * @param {string} partId - Part identifier
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').QueryResponse>}
@@ -264,6 +268,7 @@ class IAnatomySystemFacade extends BaseFacade {
 
   /**
    * Attach a body part to a parent part
+   *
    * @param {string} entityId - Entity identifier
    * @param {string} partId - Part identifier to attach
    * @param {string} parentPartId - Parent part identifier
@@ -336,6 +341,7 @@ class IAnatomySystemFacade extends BaseFacade {
 
   /**
    * Detach a body part from its parent
+   *
    * @param {string} entityId - Entity identifier
    * @param {string} partId - Part identifier to detach
    * @param {ModificationOptions} [options] - Modification options
@@ -394,6 +400,7 @@ class IAnatomySystemFacade extends BaseFacade {
 
   /**
    * Replace an existing body part with a new one
+   *
    * @param {string} entityId - Entity identifier
    * @param {string} oldPartId - Identifier of part to replace
    * @param {string} newPartId - Identifier of new part
@@ -460,6 +467,7 @@ class IAnatomySystemFacade extends BaseFacade {
 
   /**
    * Modify properties of an existing body part
+   *
    * @param {string} entityId - Entity identifier
    * @param {string} partId - Part identifier
    * @param {object} modifications - Modifications to apply
@@ -525,6 +533,7 @@ class IAnatomySystemFacade extends BaseFacade {
 
   /**
    * Build a complete body graph from a blueprint
+   *
    * @param {string} entityId - Entity identifier
    * @param {object} blueprint - Body blueprint definition
    * @param {ModificationOptions} [options] - Modification options
@@ -588,6 +597,7 @@ class IAnatomySystemFacade extends BaseFacade {
 
   /**
    * Validate the integrity of a body graph
+   *
    * @param {string} entityId - Entity identifier
    * @param {ValidationOptions} [options] - Validation options
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').ValidationResponse>}
@@ -618,6 +628,7 @@ class IAnatomySystemFacade extends BaseFacade {
 
   /**
    * Get graph constraints for an entity
+   *
    * @param {string} entityId - Entity identifier
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').ItemResponse>}
    */
@@ -648,6 +659,7 @@ class IAnatomySystemFacade extends BaseFacade {
 
   /**
    * Generate a description of the entity's anatomy
+   *
    * @param {string} entityId - Entity identifier
    * @param {DescriptionOptions} [options] - Description options
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').DescriptionResponse>}
@@ -694,6 +706,7 @@ class IAnatomySystemFacade extends BaseFacade {
 
   /**
    * Get description of a specific body part
+   *
    * @param {string} entityId - Entity identifier
    * @param {string} partId - Part identifier
    * @param {DescriptionOptions} [options] - Description options
@@ -747,6 +760,7 @@ class IAnatomySystemFacade extends BaseFacade {
 
   /**
    * Attach multiple parts at once
+   *
    * @param {string} entityId - Entity identifier
    * @param {object[]} parts - Array of {partId, parentPartId} objects
    * @param {BulkOptions} [options] - Bulk operation options
@@ -830,6 +844,7 @@ class IAnatomySystemFacade extends BaseFacade {
 
   /**
    * Detach multiple parts at once
+   *
    * @param {string} entityId - Entity identifier
    * @param {string[]} partIds - Array of part identifiers
    * @param {BulkOptions} [options] - Bulk operation options
@@ -908,6 +923,7 @@ class IAnatomySystemFacade extends BaseFacade {
 
   /**
    * Rebuild entity anatomy from a new blueprint
+   *
    * @param {string} entityId - Entity identifier
    * @param {object} blueprint - New blueprint definition
    * @param {ModificationOptions} [options] - Modification options
@@ -975,6 +991,7 @@ class IAnatomySystemFacade extends BaseFacade {
 
   /**
    * Apply filters to a collection of items
+   *
    * @private
    * @param {object[]} items - Items to filter
    * @param {object} filters - Filter criteria
@@ -993,10 +1010,11 @@ class IAnatomySystemFacade extends BaseFacade {
 
   /**
    * Sort items by a specific field
+   *
    * @private
    * @param {object[]} items - Items to sort
    * @param {string} sortBy - Field to sort by
-   * @param {string} [sortOrder='asc'] - Sort order
+   * @param {string} [sortOrder] - Sort order
    * @returns {object[]} Sorted items
    */
   #sortItems(items, sortBy, sortOrder = 'asc') {

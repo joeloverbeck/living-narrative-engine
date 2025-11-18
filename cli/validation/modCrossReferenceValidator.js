@@ -614,6 +614,7 @@ class ModCrossReferenceValidator {
    *
    * @param context
    * @param referencedModId
+   * @param _referencedModId
    * @private
    */
   _calculateSeverity(context, _referencedModId) {
@@ -636,6 +637,8 @@ class ModCrossReferenceValidator {
    * @param context
    * @param referencedModId
    * @param componentId
+   * @param _referencedModId
+   * @param _componentId
    * @private
    */
   _analyzeImpact(context, _referencedModId, _componentId) {

@@ -89,6 +89,10 @@ class ThrowingFormatter extends ActionCommandFormatter {
   }
 }
 
+/**
+ *
+ * @param overrides
+ */
 function createHarness(overrides = {}) {
   const logger = overrides.logger ?? new RecordingLogger();
   const dispatcher = overrides.dispatcher ?? new RecordingDispatcher();

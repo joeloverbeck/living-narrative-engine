@@ -46,12 +46,12 @@ export class TargetComponentValidationStage extends PipelineStage {
    * @param {ITargetComponentValidator} dependencies.targetComponentValidator - Validator service
    * @param {ITargetRequiredComponentsValidator} dependencies.targetRequiredComponentsValidator - Required components validator
    * @param {ILogger} dependencies.logger - Logger service
-  * @param {ActionErrorContextBuilder} dependencies.actionErrorContextBuilder - Error context builder
-  * @param {TargetCandidatePruner} [dependencies.targetCandidatePruner] - Optional candidate pruning service
-  * @param {TargetValidationConfigProvider} [dependencies.configProvider] - Optional configuration snapshot provider.
-  * @param {TargetValidationReporter} [dependencies.validationReporter] - Optional reporter for trace events.
-  * @param {ContextUpdateEmitter} [dependencies.contextUpdateEmitter] - Optional context update emitter override.
-  */
+   * @param {ActionErrorContextBuilder} dependencies.actionErrorContextBuilder - Error context builder
+   * @param {TargetCandidatePruner} [dependencies.targetCandidatePruner] - Optional candidate pruning service
+   * @param {TargetValidationConfigProvider} [dependencies.configProvider] - Optional configuration snapshot provider.
+   * @param {TargetValidationReporter} [dependencies.validationReporter] - Optional reporter for trace events.
+   * @param {ContextUpdateEmitter} [dependencies.contextUpdateEmitter] - Optional context update emitter override.
+   */
   constructor({
     targetComponentValidator,
     targetRequiredComponentsValidator,
@@ -313,7 +313,6 @@ export class TargetComponentValidationStage extends PipelineStage {
 
   /**
    * @description Validate actions through target component constraints.
-   *
    * @private
    * @param {Array<object>} items - Normalized pipeline items being validated.
    * @param {object} metadata - Stage metadata container.
@@ -479,6 +478,8 @@ export class TargetComponentValidationStage extends PipelineStage {
    * @param {Array<object>} params.validatedActionsWithTargets - Actions with per-action metadata
    * @param {Array<ActionDefinition>} params.validatedActionDefs - Validated action definitions
    * @param {object} params.context - Pipeline context
+   * @param params.format
+   * @param params.items
    * @returns {{actionsWithTargets: Array<object>, candidateActions: Array<ActionDefinition>}} Filtered results
    */
   #filterItemsMissingRequiredTargets({ format, items }) {

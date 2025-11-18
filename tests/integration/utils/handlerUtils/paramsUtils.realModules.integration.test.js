@@ -15,6 +15,7 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/systemEventI
 
 /**
  * Utility to wait for microtasks to flush when SafeEventDispatcher performs async dispatch.
+ *
  * @returns {Promise<void>}
  */
 function flushAsync() {

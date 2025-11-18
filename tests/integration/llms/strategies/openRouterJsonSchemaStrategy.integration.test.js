@@ -43,6 +43,10 @@ const BASE_CONFIG = Object.freeze({
 
 const GAME_SUMMARY = 'The hero studies the maze before choosing a path.';
 
+/**
+ *
+ * @param loggerOverrides
+ */
 function createServerEnvironment(loggerOverrides = {}) {
   const envLogger = createEnhancedMockLogger(loggerOverrides);
   return {
@@ -55,6 +59,10 @@ function createServerEnvironment(loggerOverrides = {}) {
   };
 }
 
+/**
+ *
+ * @param proxyUrl
+ */
 function createClientEnvironment(proxyUrl = 'https://proxy.lne.test/llm') {
   const envLogger = createEnhancedMockLogger();
   return {

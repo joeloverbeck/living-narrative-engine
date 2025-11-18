@@ -7,6 +7,7 @@
 
 /**
  * Base response structure for all facade operations
+ *
  * @typedef {object} BaseFacadeResponse
  * @property {boolean} success - Whether the operation was successful
  * @property {*} [data] - Operation result data (if successful)
@@ -21,6 +22,7 @@
 
 /**
  * Error information structure
+ *
  * @typedef {object} FacadeError
  * @property {string} code - Error code identifier
  * @property {string} message - Human-readable error message
@@ -32,6 +34,7 @@
 
 /**
  * Validation result structure
+ *
  * @typedef {object} ValidationResult
  * @property {boolean} valid - Whether validation passed
  * @property {object[]} [errors] - Validation errors
@@ -42,6 +45,7 @@
 
 /**
  * Query response for list operations
+ *
  * @typedef {BaseFacadeResponse} QueryResponse
  * @property {object[]} data - Array of result items
  * @property {object} pagination - Pagination information
@@ -57,6 +61,7 @@
 
 /**
  * Single item response
+ *
  * @typedef {BaseFacadeResponse} ItemResponse
  * @property {object} data - Single result item
  * @property {boolean} [cached] - Whether result was served from cache
@@ -65,6 +70,7 @@
 
 /**
  * Modification operation response
+ *
  * @typedef {BaseFacadeResponse} ModificationResponse
  * @property {object} data - Modified entity/item data
  * @property {object} [changes] - Details of changes made
@@ -78,6 +84,7 @@
 
 /**
  * Bulk operation response
+ *
  * @typedef {BaseFacadeResponse} BulkResponse
  * @property {object} data - Bulk operation results
  * @property {number} data.processed - Number of items processed
@@ -91,6 +98,7 @@
 
 /**
  * Validation operation response
+ *
  * @typedef {BaseFacadeResponse} ValidationResponse
  * @property {ValidationResult} data - Validation results
  * @property {object} [suggestions] - Suggested fixes or improvements
@@ -100,6 +108,7 @@
 
 /**
  * Description generation response
+ *
  * @typedef {BaseFacadeResponse} DescriptionResponse
  * @property {object} data - Generated description data
  * @property {string} data.description - Generated description text
@@ -112,6 +121,7 @@
 
 /**
  * Graph operation response (for anatomy system)
+ *
  * @typedef {BaseFacadeResponse} GraphResponse
  * @property {object} data - Graph data
  * @property {object[]} data.nodes - Graph nodes
@@ -123,6 +133,7 @@
 
 /**
  * Compatibility check response
+ *
  * @typedef {BaseFacadeResponse} CompatibilityResponse
  * @property {object} data - Compatibility results
  * @property {boolean} data.compatible - Whether items are compatible
@@ -134,6 +145,7 @@
 
 /**
  * Transfer operation response
+ *
  * @typedef {BaseFacadeResponse} TransferResponse
  * @property {object} data - Transfer results
  * @property {string} data.fromEntity - Source entity ID
@@ -146,6 +158,7 @@
 
 /**
  * Create a successful response
+ *
  * @param {*} data - Response data
  * @param {string} operationType - Type of operation
  * @param {object} [options] - Additional options
@@ -184,6 +197,7 @@ export function createSuccessResponse(data, operationType, options = {}) {
 
 /**
  * Create an error response
+ *
  * @param {Error|string} error - Error object or message
  * @param {string} operationType - Type of operation
  * @param {object} [options] - Additional options
@@ -242,6 +256,7 @@ export function createErrorResponse(error, operationType, options = {}) {
 
 /**
  * Create a query response with pagination
+ *
  * @param {object[]} items - Result items
  * @param {object} pagination - Pagination info
  * @param {string} operationType - Operation type
@@ -274,6 +289,7 @@ export function createQueryResponse(items, pagination, operationType, options = 
 
 /**
  * Create a modification response
+ *
  * @param {object} data - Modified data
  * @param {object} changes - Change details
  * @param {string} operationType - Operation type
@@ -302,6 +318,7 @@ export function createModificationResponse(data, changes, operationType, options
 
 /**
  * Create a bulk operation response
+ *
  * @param {object} results - Bulk operation results
  * @param {string} operationType - Operation type
  * @param {object} [options] - Additional options
@@ -323,6 +340,7 @@ export function createBulkResponse(results, operationType, options = {}) {
 
 /**
  * Create a validation response
+ *
  * @param {ValidationResult} validation - Validation results
  * @param {string} operationType - Operation type
  * @param {object} [options] - Additional options
@@ -348,6 +366,7 @@ export function createValidationResponse(validation, operationType, options = {}
 
 /**
  * Create a graph response (for anatomy system)
+ *
  * @param {object} graphData - Graph data including nodes and edges
  * @param {string} operationType - Operation type
  * @param {object} [options] - Additional options
@@ -369,6 +388,7 @@ export function createGraphResponse(graphData, operationType, options = {}) {
 
 /**
  * Create a description generation response
+ *
  * @param {object} descriptionData - Description data including text and metadata
  * @param {string} operationType - Operation type
  * @param {object} [options] - Additional options
@@ -386,6 +406,7 @@ export function createDescriptionResponse(descriptionData, operationType, option
 
 /**
  * Wrap a response with timing information
+ *
  * @param {Function} operation - Operation function to execute
  * @param {string} operationType - Operation type
  * @param {object} [options] - Additional options
@@ -422,6 +443,7 @@ export async function withTiming(operation, operationType, options = {}) {
 
 /**
  * Check if a response indicates success
+ *
  * @param {BaseFacadeResponse} response - Response to check
  * @returns {boolean} True if response indicates success
  */
@@ -431,6 +453,7 @@ export function isSuccessResponse(response) {
 
 /**
  * Check if a response indicates an error
+ *
  * @param {BaseFacadeResponse} response - Response to check
  * @returns {boolean} True if response indicates an error
  */
@@ -440,6 +463,7 @@ export function isErrorResponse(response) {
 
 /**
  * Extract error information from a response
+ *
  * @param {BaseFacadeResponse} response - Response to extract error from
  * @returns {FacadeError|null} Error information or null if no error
  */
@@ -452,6 +476,7 @@ export function getErrorInfo(response) {
 
 /**
  * Extract data from a successful response
+ *
  * @param {BaseFacadeResponse} response - Response to extract data from
  * @returns {*} Response data or null if error response
  */

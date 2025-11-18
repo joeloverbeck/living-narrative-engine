@@ -130,6 +130,10 @@ describe('registerMemoryMonitoring', () => {
     monitoringMocks.environmentMode = 'development';
   });
 
+  /**
+   *
+   * @param environment
+   */
   async function loadRegisterMemoryMonitoring(environment = 'development') {
     monitoringMocks.environmentMode = environment;
 

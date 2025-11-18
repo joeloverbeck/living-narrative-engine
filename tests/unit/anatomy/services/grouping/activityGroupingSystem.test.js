@@ -11,7 +11,6 @@
  * 5. Priority Sorting
  * 6. Edge Cases
  * 7. Test Hooks
- *
  * @see workflows/ACTDESSERREF-007-extract-activity-grouping.md
  * @see src/anatomy/services/grouping/activityGroupingSystem.js
  */
@@ -25,6 +24,8 @@ import ActivityGroupingSystem from '../../../../../src/anatomy/services/grouping
 
 /**
  * Creates a mock activity index manager
+ *
+ * @param customIndex
  */
 const createMockIndexManager = (customIndex = null) => ({
   buildIndex: jest.fn((activities) => {
@@ -69,6 +70,8 @@ const createMockLogger = () => ({
 
 /**
  * Creates a test activity
+ *
+ * @param overrides
  */
 const createActivity = (overrides = {}) => ({
   verb: 'testing',

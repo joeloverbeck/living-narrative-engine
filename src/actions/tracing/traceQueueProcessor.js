@@ -752,6 +752,7 @@ export class TraceQueueProcessor {
    *
    * @private
    * @param {object} item - Queue item to process
+   * @param isParallel
    * @returns {Promise<void>}
    */
   async #processItem(item, isParallel = false) {

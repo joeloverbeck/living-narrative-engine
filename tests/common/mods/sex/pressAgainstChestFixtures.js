@@ -7,6 +7,7 @@ import { ModEntityBuilder } from '../ModEntityBuilder.js';
 
 /**
  * Identifier for the press against chest action.
+ *
  * @type {string}
  */
 export const PRESS_AGAINST_CHEST_ACTION_ID =
@@ -14,12 +15,14 @@ export const PRESS_AGAINST_CHEST_ACTION_ID =
 
 /**
  * Default actor identifier used in press against chest scenarios.
+ *
  * @type {string}
  */
 export const PRESS_AGAINST_CHEST_ACTOR_ID = 'lyra';
 
 /**
  * Scope that resolves close partners facing each other.
+ *
  * @type {string}
  */
 export const PRESS_AGAINST_CHEST_SCOPE_ID =
@@ -27,12 +30,14 @@ export const PRESS_AGAINST_CHEST_SCOPE_ID =
 
 /**
  * Default target identifier used in press against chest scenarios.
+ *
  * @type {string}
  */
 export const PRESS_AGAINST_CHEST_TARGET_ID = 'darius';
 
 /**
  * Default room identifier for breast pressing scenes.
+ *
  * @type {string}
  */
 export const PRESS_AGAINST_CHEST_ROOM_ID = 'amethyst_suite';

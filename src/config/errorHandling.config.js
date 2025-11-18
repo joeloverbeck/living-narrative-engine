@@ -20,6 +20,7 @@ export const ErrorSeverity = {
 
 /**
  * Comprehensive error handling configuration
+ *
  * @module errorHandling.config
  */
 export const errorHandlingConfig = {
@@ -253,6 +254,7 @@ export const errorHandlingConfig = {
 
 /**
  * Get configuration for current environment
+ *
  * @returns {object} Merged configuration
  */
 export function getErrorConfig() {
@@ -266,6 +268,7 @@ export function getErrorConfig() {
 
 /**
  * Get retry configuration for specific error type
+ *
  * @param {string} errorType - Error type name
  * @returns {object} Retry configuration
  */
@@ -276,6 +279,7 @@ export function getRetryConfig(errorType) {
 
 /**
  * Get circuit breaker configuration for specific service
+ *
  * @param {string} serviceName - Service name
  * @returns {object} Circuit breaker configuration
  */
@@ -286,6 +290,7 @@ export function getCircuitBreakerConfig(serviceName) {
 
 /**
  * Get fallback value for specific operation
+ *
  * @param {string} domain - Domain name
  * @param {string} operation - Operation name
  * @returns {*} Fallback value
@@ -304,6 +309,7 @@ export function getFallbackValue(domain, operation) {
 
 /**
  * Check if error type is retriable
+ *
  * @param {string} errorType - Error type name
  * @returns {boolean} Whether error is retriable
  */
@@ -314,6 +320,7 @@ export function isRetriable(errorType) {
 
 /**
  * Deep merge utility for configuration objects
+ *
  * @private
  * @param {object} target - Target object
  * @param {object} source - Source object to merge

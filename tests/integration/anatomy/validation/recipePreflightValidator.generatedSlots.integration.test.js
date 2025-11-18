@@ -23,6 +23,9 @@ describe('RecipeValidationRunner - Generated slot integration coverage', () => {
   /** @type {SlotGenerator} */
   let slotGenerator;
 
+  /**
+   *
+   */
   function createLogger() {
     return {
       info: jest.fn(),
@@ -32,6 +35,10 @@ describe('RecipeValidationRunner - Generated slot integration coverage', () => {
     };
   }
 
+  /**
+   *
+   * @param extraOptions
+   */
   function createValidator(extraOptions = {}) {
     const entityMatcherService = new EntityMatcherService({
       logger,
@@ -62,6 +69,9 @@ describe('RecipeValidationRunner - Generated slot integration coverage', () => {
     slotGenerator = new SlotGenerator({ logger });
   });
 
+  /**
+   *
+   */
   function seedCommonComponents() {
     dataRegistry.store('components', 'core:muscle', {
       id: 'core:muscle',
@@ -95,6 +105,12 @@ describe('RecipeValidationRunner - Generated slot integration coverage', () => {
     });
   }
 
+  /**
+   *
+   * @param templateId
+   * @param root0
+   * @param root0.limbCount
+   */
   function seedStructureTemplate(templateId, { limbCount = 2 } = {}) {
     dataRegistry.store('anatomyStructureTemplates', templateId, {
       id: templateId,

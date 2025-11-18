@@ -8,6 +8,7 @@ import { ModEntityBuilder } from '../ModEntityBuilder.js';
 
 /**
  * Identifier for the seated breathe teasingly on penis action.
+ *
  * @type {string}
  */
 export const BREATHE_TEASINGLY_ON_PENIS_SITTING_CLOSE_ACTION_ID =
@@ -15,24 +16,28 @@ export const BREATHE_TEASINGLY_ON_PENIS_SITTING_CLOSE_ACTION_ID =
 
 /**
  * Default actor identifier used in seated teasing scenarios.
+ *
  * @type {string}
  */
 export const BREATHE_TEASINGLY_ON_PENIS_SITTING_CLOSE_ACTOR_ID = 'ava';
 
 /**
  * Default primary partner identifier for seated teasing scenarios.
+ *
  * @type {string}
  */
 export const BREATHE_TEASINGLY_ON_PENIS_SITTING_CLOSE_PRIMARY_ID = 'nolan';
 
 /**
  * Default room identifier for seated teasing scenarios.
+ *
  * @type {string}
  */
 export const BREATHE_TEASINGLY_ON_PENIS_SITTING_CLOSE_ROOM_ID = 'salon1';
 
 /**
  * Default furniture identifier used for the shared seat.
+ *
  * @type {string}
  */
 export const BREATHE_TEASINGLY_ON_PENIS_SITTING_CLOSE_FURNITURE_ID = 'sofa1';

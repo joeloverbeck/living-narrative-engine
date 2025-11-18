@@ -48,6 +48,9 @@ class RecordingValidatedEventDispatcher {
   }
 }
 
+/**
+ *
+ */
 function createLogger() {
   return {
     debug: jest.fn(),

@@ -123,6 +123,21 @@ export class ExecutionPhaseTimer {
   }
 
   /**
+   * End whichever phase is currently active
+   *
+   * @returns {string|null} Name of the ended phase if one was active
+   */
+  endActivePhase() {
+    if (!this.#activePhase) {
+      return null;
+    }
+
+    const phaseToEnd = this.#activePhase;
+    this.endPhase(phaseToEnd);
+    return phaseToEnd;
+  }
+
+  /**
    * Add a timing marker within a phase
    *
    * @param {string} markerName - Name of the marker

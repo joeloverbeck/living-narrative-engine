@@ -54,6 +54,9 @@ jest.mock('../../../src/dependencyInjection/containerConfig.js', () => ({
 
 const originalFetch = global.fetch;
 
+/**
+ *
+ */
 function resetStageMocks() {
   for (const mock of Object.values(mockStageImplementations)) {
     mock.mockReset();

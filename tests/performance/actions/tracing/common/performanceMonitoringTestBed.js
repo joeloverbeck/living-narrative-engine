@@ -55,6 +55,8 @@ export class PerformanceMonitoringTestBed {
 
   /**
    * Initialize the performance monitoring test bed
+   *
+   * @param options
    */
   async initialize(options = {}) {
     if (this.initialized) {
@@ -95,6 +97,7 @@ export class PerformanceMonitoringTestBed {
 
   /**
    * Sets up the tracing infrastructure
+   *
    * @private
    */
   async #setupTracingInfrastructure() {
@@ -112,6 +115,8 @@ export class PerformanceMonitoringTestBed {
 
   /**
    * Configures performance monitoring thresholds
+   *
+   * @param config
    */
   setMonitoringConfig(config) {
     if (!this.initialized) {
@@ -131,6 +136,8 @@ export class PerformanceMonitoringTestBed {
 
   /**
    * Starts performance monitoring with measurement tracking
+   *
+   * @param options
    */
   startMonitoring(options = {}) {
     if (!this.initialized) {
@@ -161,6 +168,9 @@ export class PerformanceMonitoringTestBed {
 
   /**
    * Simulates realistic gaming action execution with performance monitoring
+   *
+   * @param actionData
+   * @param options
    */
   async simulateActionExecution(actionData, options = {}) {
     if (!this.initialized) {
@@ -293,6 +303,10 @@ export class PerformanceMonitoringTestBed {
 
   /**
    * Simulates a sequence of actions for load testing
+   *
+   * @param pattern
+   * @param count
+   * @param options
    */
   async simulateActionSequence(pattern, count, options = {}) {
     const {
@@ -393,6 +407,8 @@ export class PerformanceMonitoringTestBed {
 
   /**
    * Validates performance monitoring accuracy
+   *
+   * @param options
    */
   validateMonitoringAccuracy(options = {}) {
     const {

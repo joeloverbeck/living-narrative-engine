@@ -32,6 +32,9 @@ describe('PatternMatchingValidator', () => {
     jest.restoreAllMocks();
   });
 
+  /**
+   *
+   */
   function createValidator() {
     return new PatternMatchingValidator({
       logger,

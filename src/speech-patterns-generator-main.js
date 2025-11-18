@@ -11,6 +11,7 @@ import { shouldAutoInitializeDom } from './utils/environmentUtils.js';
 
 /**
  * Update the LLM status display on the page
+ *
  * @param {object} container - Dependency injection container
  */
 async function updateLLMDisplay(container) {

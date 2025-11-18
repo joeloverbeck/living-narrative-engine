@@ -277,14 +277,15 @@ describe('RendererBase', () => {
   describe('_addDomListener', () => {
     /** @type {ConcreteRenderer} */
     let instance;
-    /** @type {{
+    /**
+     * @type {{
      *  addEventListener: jest.Mock,
      *  removeEventListener: jest.Mock,
      *  tagName: string,
      *  parentElement: null,
      *  className?: string,
      *  id?: string
-     * }} */
+      }} */
     let mockElement;
 
     beforeEach(() => {

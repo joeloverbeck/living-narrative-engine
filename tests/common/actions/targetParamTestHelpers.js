@@ -10,7 +10,6 @@
 /**
  * @description Extracts target identifiers from an action's params while supporting both legacy
  * single-target payloads and the newer multi-target structure that groups identifiers by placeholder.
- *
  * @param {object|null|undefined} params - Params object emitted by the formatting pipeline.
  * @param {ExtractOptions} [options] - Extraction options.
  * @returns {string[]} Ordered list of resolved target identifiers.
@@ -43,7 +42,6 @@ export function extractTargetIds(params, { placeholder = 'primary' } = {}) {
 
 /**
  * @description Extracts the first available target identifier for convenience.
- *
  * @param {object|null|undefined} params - Params object emitted by the formatting pipeline.
  * @param {ExtractOptions} [options] - Extraction options.
  * @returns {string|null} First resolved target identifier or null when none can be resolved.
@@ -55,7 +53,6 @@ export function getFirstTargetId(params, options) {
 
 /**
  * @description Appends normalized identifier values from a bucket into the accumulator array.
- *
  * @param {unknown} bucket - Value stored in the params payload.
  * @param {string[]} accumulator - Destination list for normalized identifiers.
  * @returns {void}

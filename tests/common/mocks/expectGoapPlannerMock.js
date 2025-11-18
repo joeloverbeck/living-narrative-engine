@@ -3,6 +3,7 @@ import { getRequiredPlannerMethods } from '../../../src/goap/planner/goapPlanner
 
 /**
  * Assert that a GOAP planner mock satisfies the runtime contract.
+ *
  * @param {object} mock - Planner mock instance
  */
 export function expectGoapPlannerMock(mock) {

@@ -112,6 +112,7 @@ export class AnatomyInitializationService {
 
   /**
    * Process the anatomy generation queue sequentially
+   *
    * @private
    */
   async #processQueue() {
@@ -319,6 +320,9 @@ export class AnatomyInitializationService {
 
   /**
    * Resolves generation promises for a completed entity
+   *
+   * @param entityId
+   * @param wasGenerated
    * @private
    */
   #resolveGenerationPromise(entityId, wasGenerated) {
@@ -331,6 +335,9 @@ export class AnatomyInitializationService {
 
   /**
    * Rejects generation promises for a failed entity
+   *
+   * @param entityId
+   * @param error
    * @private
    */
   #rejectGenerationPromise(entityId, error) {

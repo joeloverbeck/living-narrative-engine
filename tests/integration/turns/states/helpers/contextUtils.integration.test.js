@@ -81,6 +81,9 @@ class HandlerStub {
   }
 }
 
+/**
+ *
+ */
 function createEntityManager() {
   return {
     getComponentData: () => null,
@@ -88,6 +91,13 @@ function createEntityManager() {
   };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.logger
+ * @param root0.handler
+ * @param root0.dispatcher
+ */
 function createTurnContext({ logger, handler, dispatcher }) {
   return new TurnContext({
     actor: { id: 'actor-1', type: 'test:actor' },
@@ -108,6 +118,12 @@ function createTurnContext({ logger, handler, dispatcher }) {
   });
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.contextDispatcher
+ * @param root0.handlerDispatcher
+ */
 function setup({
   contextDispatcher = new RecordingDispatcher('context'),
   handlerDispatcher = new RecordingDispatcher('handler'),

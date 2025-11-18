@@ -78,6 +78,9 @@ describe('Kissing actions forbidden when targeting actor giving blowjob', () => 
   describe('Three-actor scenario: Cannot target actor giving blowjob', () => {
     /**
      * Helper to configure action discovery for kissing actions
+     *
+     * @param actionDefinition
+     * @param scopeName
      */
     const configureActionDiscovery = (actionDefinition, scopeName) => {
       const { testEnv } = testFixture;

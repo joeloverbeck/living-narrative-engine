@@ -8,7 +8,6 @@ import {
 /**
  * @description Helper to compare object keys without caring about order while
  * ensuring the exported enumerations remain complete and stable.
- *
  * @param {Record<string, string>} actual - The enumeration exported by the module under test.
  * @param {Record<string, string>} expected - The expected enumeration shape and values.
  * @returns {void}

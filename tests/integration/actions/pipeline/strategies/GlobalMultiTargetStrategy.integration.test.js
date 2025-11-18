@@ -26,6 +26,9 @@ import { EntityManagerTestBed } from '../../../../common/entities/entityManagerT
 import { ActionTargetContext } from '../../../../../src/models/actionTargetContext.js';
 import { createActionFormattingTask } from '../../../../../src/actions/pipeline/stages/actionFormatting/ActionFormattingTaskFactory.js';
 
+/**
+ *
+ */
 function createInstrumentation() {
   return {
     actionStarted: jest.fn(),

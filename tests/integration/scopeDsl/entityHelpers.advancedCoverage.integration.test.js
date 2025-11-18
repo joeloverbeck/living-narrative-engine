@@ -20,6 +20,9 @@ import {
   createMinimalTestContainer,
 } from '../../common/scopeDsl/minimalTestContainer.js';
 
+/**
+ *
+ */
 function createTestEventBus() {
   const subscriptions = new Map();
   return {
@@ -93,6 +96,10 @@ describe('entityHelpers advanced integration coverage', () => {
     clearEntityCache();
   });
 
+  /**
+   *
+   * @param overrides
+   */
   function createRuntimeContext(overrides = {}) {
     return {
       entityManager,
@@ -107,6 +114,9 @@ describe('entityHelpers advanced integration coverage', () => {
     };
   }
 
+  /**
+   *
+   */
   async function createActorItemAndLocation() {
     const location = await entityManager.createEntityInstance('test:location');
     const actor = await entityManager.createEntityInstance('test:actor');
@@ -115,6 +125,10 @@ describe('entityHelpers advanced integration coverage', () => {
     return { actor, item, location };
   }
 
+  /**
+   *
+   * @param location
+   */
   function createLocationProvider(location) {
     return { getLocation: () => location };
   }

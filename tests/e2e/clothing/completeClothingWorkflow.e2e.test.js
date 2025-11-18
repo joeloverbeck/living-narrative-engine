@@ -63,6 +63,9 @@ describe('Complete Clothing Workflow E2E', () => {
 
   /**
    * Helper function to create entities with proper definition registration
+   *
+   * @param entityId
+   * @param components
    */
   async function createTestEntity(entityId, components = {}) {
     // Create entity definition

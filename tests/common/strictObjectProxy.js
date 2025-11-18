@@ -5,9 +5,10 @@
 
 /**
  * Creates a strict proxy that throws when accessing undefined properties.
+ *
  * @param {object} target - Object to wrap.
- * @param {string} [objectName='Object'] - Name for error messages.
- * @param {string[]} [allowedUndefined=[]] - Properties allowed to be undefined.
+ * @param {string} [objectName] - Name for error messages.
+ * @param {string[]} [allowedUndefined] - Properties allowed to be undefined.
  * @returns {Proxy} Proxied object.
  */
 export function createStrictProxy(target, objectName = 'Object', allowedUndefined = []) {
@@ -55,6 +56,7 @@ export function createStrictProxy(target, objectName = 'Object', allowedUndefine
 
 /**
  * Find the most similar property name using Levenshtein distance.
+ *
  * @param {string} target - Property that was accessed.
  * @param {string[]} available - Available property names.
  * @returns {string} Most similar property name.
@@ -78,6 +80,7 @@ export function findSimilarProperty(target, available) {
 
 /**
  * Calculate Levenshtein distance between two strings.
+ *
  * @param {string} a - First string.
  * @param {string} b - Second string.
  * @returns {number} Edit distance.

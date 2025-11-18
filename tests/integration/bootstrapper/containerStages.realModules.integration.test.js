@@ -9,6 +9,9 @@ import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
 import StageError from '../../../src/bootstrapper/StageError.js';
 
+/**
+ *
+ */
 function createUiReferences() {
   document.body.innerHTML = '';
   const outputDiv = document.createElement('div');

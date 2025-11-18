@@ -14,7 +14,7 @@ import { ValidationError } from '../../../src/errors/validationError.js';
 class TestConfiguration {
   /**
    * @description Creates a new test configuration stub.
-   * @param {string} [schemaId='schema://living-narrative-engine/anatomy-recipe.schema.json']
+   * @param {string} [schemaId]
    * @returns {void}
    */
   constructor(

@@ -38,6 +38,7 @@ export class ClothingHealthMonitor {
 
   /**
    * Perform health check for all clothing services
+   *
    * @returns {Promise<Map>} Health check results
    */
   async performHealthCheck() {
@@ -84,6 +85,7 @@ export class ClothingHealthMonitor {
 
   /**
    * Get health status for specific service
+   *
    * @param {string} serviceName - Service name
    * @returns {object} Health status
    */
@@ -97,6 +99,7 @@ export class ClothingHealthMonitor {
 
   /**
    * Get overall system health
+   *
    * @returns {object} Overall health status
    */
   getOverallHealth() {
@@ -157,6 +160,7 @@ export class ClothingHealthMonitor {
 
   /**
    * Get health report
+   *
    * @returns {object} Detailed health report
    */
   getHealthReport() {
@@ -196,6 +200,7 @@ export class ClothingHealthMonitor {
 
   /**
    * Initialize health checks for services
+   *
    * @private
    */
   #initializeHealthChecks() {
@@ -291,6 +296,9 @@ export class ClothingHealthMonitor {
 
   /**
    * Perform single health check
+   *
+   * @param serviceName
+   * @param healthCheck
    * @private
    */
   async #performSingleHealthCheck(serviceName, healthCheck) {

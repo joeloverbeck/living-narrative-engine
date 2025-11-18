@@ -8,6 +8,10 @@ import { createTestGoal } from '../integration/goap/testFixtures/testGoalFactory
 import { createTestTask } from '../integration/goap/testFixtures/testTaskFactory.js';
 import { GOAP_EVENTS } from '../../src/goap/events/goapEvents.js';
 
+/**
+ *
+ * @param actor
+ */
 function addFlattenedAliases(actor) {
   const modifiedComponents = { ...actor.components };
   Object.keys(actor.components).forEach((componentId) => {
@@ -19,6 +23,10 @@ function addFlattenedAliases(actor) {
   return { ...actor, components: modifiedComponents };
 }
 
+/**
+ *
+ * @param actor
+ */
 function buildDualFormatState(actor) {
   const state = { actor: { id: actor.id, components: {} } };
   Object.keys(actor.components).forEach((componentId) => {

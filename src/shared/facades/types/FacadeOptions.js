@@ -7,6 +7,7 @@
 
 /**
  * Base options for all facade operations
+ *
  * @typedef {object} BaseFacadeOptions
  * @property {boolean} [cache=true] - Whether to use caching for this operation
  * @property {number} [timeout] - Operation timeout in milliseconds
@@ -17,6 +18,7 @@
 
 /**
  * Query operation options
+ *
  * @typedef {BaseFacadeOptions} QueryOptions
  * @property {boolean} [includeMetadata=false] - Include item/entity metadata in results
  * @property {string[]} [fields] - Specific fields to include in results
@@ -29,6 +31,7 @@
 
 /**
  * Modification operation options
+ *
  * @typedef {BaseFacadeOptions} ModificationOptions
  * @property {boolean} [force=false] - Force operation even if validation fails
  * @property {boolean} [dryRun=false] - Preview operation without making changes
@@ -40,6 +43,7 @@
 
 /**
  * Bulk operation options
+ *
  * @typedef {ModificationOptions} BulkOptions
  * @property {number} [batchSize=10] - Number of items to process per batch
  * @property {boolean} [parallel=false] - Whether to process batches in parallel
@@ -51,6 +55,7 @@
 
 /**
  * Validation operation options
+ *
  * @typedef {BaseFacadeOptions} ValidationOptions
  * @property {string} [level='strict'] - Validation level ('strict', 'moderate', 'lenient')
  * @property {boolean} [includeWarnings=false] - Include warnings in validation results
@@ -61,6 +66,7 @@
 
 /**
  * Transfer operation options (for moving items/parts between entities)
+ *
  * @typedef {ModificationOptions} TransferOptions
  * @property {boolean} [keepOriginal=false] - Keep original item/part after transfer
  * @property {object} [mapping] - Custom mapping for transferred items
@@ -71,6 +77,7 @@
 
 /**
  * Description generation options
+ *
  * @typedef {BaseFacadeOptions} DescriptionOptions
  * @property {string} [style='default'] - Description style ('default', 'detailed', 'brief')
  * @property {string} [perspective='third'] - Narrative perspective ('first', 'second', 'third')
@@ -82,6 +89,7 @@
 
 /**
  * Cache-related options
+ *
  * @typedef {object} CacheOptions
  * @property {boolean} [useCache=true] - Whether to use caching
  * @property {number} [ttl] - Cache time-to-live in milliseconds
@@ -92,6 +100,7 @@
 
 /**
  * Event options for facade operations
+ *
  * @typedef {object} EventOptions
  * @property {boolean} [dispatch=true] - Whether to dispatch events for this operation
  * @property {string[]} [suppressEvents] - Event types to suppress
@@ -101,6 +110,7 @@
 
 /**
  * Resilience options for error handling and retries
+ *
  * @typedef {object} ResilienceOptions
  * @property {number} [retries=0] - Number of retry attempts
  * @property {number} [retryDelay=1000] - Delay between retries in milliseconds
@@ -111,6 +121,7 @@
 
 /**
  * Performance monitoring options
+ *
  * @typedef {object} PerformanceOptions
  * @property {boolean} [trackPerformance=false] - Track operation performance
  * @property {string} [operationName] - Name for performance tracking
@@ -120,6 +131,7 @@
 
 /**
  * Create default options object with common settings
+ *
  * @param {object} [overrides] - Option overrides
  * @returns {BaseFacadeOptions} Default options object
  */
@@ -134,6 +146,7 @@ export function createDefaultOptions(overrides = {}) {
 
 /**
  * Create query options with defaults
+ *
  * @param {object} [overrides] - Option overrides
  * @returns {QueryOptions} Query options object
  */
@@ -148,6 +161,7 @@ export function createQueryOptions(overrides = {}) {
 
 /**
  * Create modification options with defaults
+ *
  * @param {object} [overrides] - Option overrides
  * @returns {ModificationOptions} Modification options object
  */
@@ -164,6 +178,7 @@ export function createModificationOptions(overrides = {}) {
 
 /**
  * Create bulk operation options with defaults
+ *
  * @param {object} [overrides] - Option overrides
  * @returns {BulkOptions} Bulk options object
  */
@@ -180,6 +195,7 @@ export function createBulkOptions(overrides = {}) {
 
 /**
  * Create validation options with defaults
+ *
  * @param {object} [overrides] - Option overrides
  * @returns {ValidationOptions} Validation options object
  */
@@ -195,6 +211,7 @@ export function createValidationOptions(overrides = {}) {
 
 /**
  * Create default description generation options
+ *
  * @param {object} [overrides] - Option overrides
  * @returns {object} Description options object
  */
@@ -211,6 +228,7 @@ export function createDescriptionOptions(overrides = {}) {
 
 /**
  * Merge multiple option objects with proper precedence
+ *
  * @param {...object} optionObjects - Option objects to merge (later objects override earlier ones)
  * @returns {object} Merged options object
  */
@@ -225,6 +243,7 @@ export function mergeOptions(...optionObjects) {
 
 /**
  * Validate option object against expected structure
+ *
  * @param {object} options - Options object to validate
  * @param {object} schema - Schema object defining allowed/required options
  * @returns {object} Validation result with { valid: boolean, errors: string[] }

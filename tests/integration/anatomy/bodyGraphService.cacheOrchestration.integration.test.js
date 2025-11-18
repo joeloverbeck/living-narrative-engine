@@ -129,7 +129,7 @@ class InMemoryEntityManager {
 
 /**
  * @description Creates a logger that records all messages grouped by severity.
- * @param {string} [prefix='integration'] - Label inserted into recorded log messages for easier debugging.
+ * @param {string} [prefix] - Label inserted into recorded log messages for easier debugging.
  * @returns {{ messages: Array<{ level: string, text: string }>, debug: Function, info: Function, warn: Function, error: Function }}
  */
 function createLogger(prefix = 'integration') {
@@ -151,7 +151,7 @@ function createLogger(prefix = 'integration') {
 
 /**
  * @description Builds an event dispatcher that records every dispatched payload.
- * @param {string} [name='dispatcher'] - Identifier stored alongside dispatched payloads.
+ * @param {string} [name] - Identifier stored alongside dispatched payloads.
  * @returns {{ events: Array<{ eventId: string, payload: any }>, dispatch: (eventId: string, payload: any) => Promise<boolean> }}
  */
 function createEventDispatcher(name = 'dispatcher') {
@@ -166,8 +166,8 @@ function createEventDispatcher(name = 'dispatcher') {
 
 /**
  * @description Sets up a BodyGraphService instance backed by a rich anatomy graph for integration testing.
- * @param {object} [options={}] - Optional overrides for fixture creation.
- * @param {string} [options.dispatcherName='dispatcher'] - Name assigned to the recording dispatcher.
+ * @param {object} [options] - Optional overrides for fixture creation.
+ * @param {string} [options.dispatcherName] - Name assigned to the recording dispatcher.
  * @returns {{
  *   service: BodyGraphService,
  *   entityManager: InMemoryEntityManager,

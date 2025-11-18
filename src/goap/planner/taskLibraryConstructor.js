@@ -39,6 +39,7 @@ class TaskLibraryConstructor {
    * @param {object} dependencies.entityManager - IEntityManager for actor components
    * @param {object} dependencies.contextAssembly - IContextAssemblyService for context building
    * @param {object} dependencies.jsonLogicService - IJsonLogicService for gate evaluation
+   * @param dependencies.jsonLogicEvaluationService
    * @param {object} dependencies.logger - ILogger for logging
    */
   constructor({

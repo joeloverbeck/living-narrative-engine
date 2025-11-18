@@ -18,6 +18,13 @@ jest.mock('chalk', () => ({
   },
 }));
 
+/**
+ *
+ * @param root0
+ * @param root0.recipeId
+ * @param root0.errors
+ * @param root0.warnings
+ */
 function createReport({ recipeId = 'test:recipe', errors = [], warnings = [] } = {}) {
   const base = {
     recipeId,
@@ -40,6 +47,9 @@ function createReport({ recipeId = 'test:recipe', errors = [], warnings = [] } =
   });
 }
 
+/**
+ *
+ */
 function createConsoleStub() {
   return {
     log: jest.fn(),
@@ -48,6 +58,11 @@ function createConsoleStub() {
   };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.reports
+ */
 function createRuntime({ reports = [] } = {}) {
   const consoleStub = createConsoleStub();
   const loader = {

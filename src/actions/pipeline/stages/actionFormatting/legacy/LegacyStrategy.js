@@ -105,7 +105,7 @@ export class LegacyStrategy {
    * @param {Function} deps.createError - Factory to build structured errors
    * @param {import('../TargetNormalizationService.js').TargetNormalizationService} deps.targetNormalizationService - Target normalisation service
    * @param {Function} deps.validateVisualProperties - Visual validation helper
-   * @param {ISafeEventDispatcher} [deps.safeEventDispatcher=null] - Optional dispatcher for formatter side effects
+   * @param {ISafeEventDispatcher} [deps.safeEventDispatcher] - Optional dispatcher for formatter side effects
    * @description Creates a new legacy formatting strategy.
    */
   constructor({
@@ -133,6 +133,7 @@ export class LegacyStrategy {
   /**
    * Formats actions with targets into formatted commands.
    * Automatically routes to unified formatting logic with appropriate trace handling.
+   *
    * @public
    * @param {object} params
    * @param {import('../../../../../entities/entity.js').default} params.actor - Actor performing the actions
@@ -177,6 +178,7 @@ export class LegacyStrategy {
   /**
    * Unified formatting method for all action formatting.
    * Handles both traced and standard formatting paths.
+   *
    * @private
    * @param {object} params
    * @param {import('../../../../../entities/entity.js').default} params.actor - Actor performing the actions
@@ -276,6 +278,7 @@ export class LegacyStrategy {
 
   /**
    * Creates a trace adapter for polymorphic behavior.
+   *
    * @private
    * @param {object|undefined} trace - Trace context
    * @returns {object} Adapter with captureStart, captureEnd, and incrementStat methods

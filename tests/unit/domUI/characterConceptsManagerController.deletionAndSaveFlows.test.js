@@ -13,6 +13,10 @@ import {
 import { CharacterConceptsManagerTestBase } from './characterConceptsManagerController.testUtils.enhanced.js';
 import { FormValidationHelper } from '../../../src/shared/characterBuilder/formValidationHelper.js';
 
+/**
+ *
+ * @param controller
+ */
 function setupRealConceptsResults(controller) {
   return controller._getElement('conceptsResults');
 }

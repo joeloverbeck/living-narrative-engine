@@ -15,6 +15,10 @@ import { BaseCharacterBuilderControllerTestBase } from '../../characterBuilder/c
 import { ThematicDirectionsManagerController } from '../../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js';
 
 // Helper function to get element ID mapping
+/**
+ *
+ * @param key
+ */
 function getElementId(key) {
   const mapping = {
     confirmationModal: 'confirmation-modal',

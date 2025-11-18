@@ -8,6 +8,7 @@ import { ModEntityBuilder } from '../ModEntityBuilder.js';
 
 /**
  * Identifier for the straddling penis milking action.
+ *
  * @type {string}
  */
 export const STRADDLING_MILKING_ACTION_ID =
@@ -15,6 +16,7 @@ export const STRADDLING_MILKING_ACTION_ID =
 
 /**
  * Identifier for the ride penis greedily action.
+ *
  * @type {string}
  */
 export const RIDE_PENIS_GREEDILY_ACTION_ID =
@@ -22,18 +24,21 @@ export const RIDE_PENIS_GREEDILY_ACTION_ID =
 
 /**
  * Default actor identifier used in the shared scenarios.
+ *
  * @type {string}
  */
 export const STRADDLING_MILKING_ACTOR_ID = 'selene';
 
 /**
  * Default primary partner identifier used in the shared scenarios.
+ *
  * @type {string}
  */
 export const STRADDLING_MILKING_PRIMARY_ID = 'marcus';
 
 /**
  * Default room identifier for the shared scenarios.
+ *
  * @type {string}
  */
 export const STRADDLING_MILKING_ROOM_ID = 'velvet_suite';

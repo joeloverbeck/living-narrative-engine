@@ -20,6 +20,9 @@ jest.mock('../../../../../src/utils/bootstrapperHelpers.js', () => ({
   })),
 }));
 
+/**
+ *
+ */
 function createLogger() {
   return { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
 }

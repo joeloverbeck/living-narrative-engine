@@ -16,6 +16,9 @@ function createLogger() {
   };
 }
 
+/**
+ *
+ */
 function createBaseStorageProvider() {
   return {
     ensureDirectoryExists: jest.fn().mockResolvedValue({ success: true }),
@@ -29,6 +32,10 @@ function createBaseStorageProvider() {
   };
 }
 
+/**
+ *
+ * @param message
+ */
 function createFailingCrypto(message) {
   return {
     subtle: {
@@ -39,6 +46,9 @@ function createFailingCrypto(message) {
   };
 }
 
+/**
+ *
+ */
 function buildGameState() {
   return {
     metadata: {

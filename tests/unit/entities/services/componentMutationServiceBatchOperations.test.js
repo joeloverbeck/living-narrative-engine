@@ -15,6 +15,7 @@ import { COMPONENTS_BATCH_ADDED_ID } from '../../../../src/constants/eventIds.js
 
 /**
  * Creates a mock schema validator that tracks validation calls
+ *
  * @returns {object} Mock validator with tracking
  */
 function createMockValidator() {
@@ -49,6 +50,7 @@ function createMockValidator() {
 
 /**
  * Creates a mock logger that tracks error calls
+ *
  * @returns {object} Mock logger
  */
 function createMockLogger() {
@@ -62,6 +64,7 @@ function createMockLogger() {
 
 /**
  * Creates a mock event dispatcher
+ *
  * @returns {object} Mock dispatcher
  */
 function createMockDispatcher() {
@@ -72,6 +75,7 @@ function createMockDispatcher() {
 
 /**
  * Creates a mock component cloner
+ *
  * @returns {Function} Mock cloner function
  */
 function createMockCloner() {

@@ -13,6 +13,8 @@ import { GOAP_EVENTS } from '../../../src/goap/events/goapEvents.js';
 
 /**
  * Helper to add flattened component aliases to an actor entity
+ *
+ * @param actor
  */
 function addFlattenedAliases(actor) {
   const modifiedComponents = { ...actor.components };
@@ -32,6 +34,7 @@ function addFlattenedAliases(actor) {
 
 /**
  * Builds dual-format state object for GOAP planning
+ *
  * @param {object} actor - Actor entity
  * @returns {object} State object with flat and nested component formats
  */

@@ -33,6 +33,10 @@ class TestSchemaValidator {
   }
 }
 
+/**
+ *
+ * @param initialLevel
+ */
 function createRecordingLogger(initialLevel = 'INFO') {
   const logger = new ConsoleLogger(initialLevel);
 
@@ -76,6 +80,10 @@ function createRecordingLogger(initialLevel = 'INFO') {
   return logger;
 }
 
+/**
+ *
+ * @param logger
+ */
 function createProviderEnvironment(logger) {
   const container = new AppContainer();
   const eventBus = new EventBus({ logger });

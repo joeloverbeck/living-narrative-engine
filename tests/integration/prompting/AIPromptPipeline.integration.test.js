@@ -9,6 +9,9 @@ import { GameStateValidationServiceForPrompting } from '../../../src/validation/
 import ActionCategorizationService from '../../../src/entities/utils/ActionCategorizationService.js';
 import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 
+/**
+ *
+ */
 function createLogger() {
   return {
     debug: jest.fn(),
@@ -18,6 +21,9 @@ function createLogger() {
   };
 }
 
+/**
+ *
+ */
 function createStaticContentService() {
   return {
     getCoreTaskDescriptionText: jest.fn(
@@ -35,6 +41,9 @@ function createStaticContentService() {
   };
 }
 
+/**
+ *
+ */
 function createGameStateDto() {
   return {
     actorPromptData: {
@@ -107,6 +116,9 @@ function createGameStateDto() {
   };
 }
 
+/**
+ *
+ */
 function createAvailableActions() {
   return [
     {
@@ -142,6 +154,12 @@ function createAvailableActions() {
   ];
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.currentLlmId
+ * @param root0.llmConfig
+ */
 function createPipelineSetup({
   currentLlmId = 'llm-primary',
   llmConfig = { configId: 'test-config', displayName: 'Primary LLM' },

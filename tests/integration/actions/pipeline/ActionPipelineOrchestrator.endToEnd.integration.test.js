@@ -242,6 +242,14 @@ class TestGameDataRepository {
   }
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.multiTargetStage
+ * @param root0.commandFormatter
+ * @param root0.prerequisiteService
+ * @param root0.actionsFactory
+ */
 function createOrchestratorHarness({
   multiTargetStage,
   commandFormatter,

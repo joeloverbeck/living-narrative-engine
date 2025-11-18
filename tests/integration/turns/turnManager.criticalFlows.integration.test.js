@@ -125,6 +125,13 @@ class SingleExecutionScheduler extends IScheduler {
   clearTimeout() {}
 }
 
+/**
+ *
+ * @param id
+ * @param root0
+ * @param root0.playerType
+ * @param root0.includeLegacy
+ */
 function createActorEntity(id, { playerType = 'human', includeLegacy = true } = {}) {
   const components = {
     [ACTOR_COMPONENT_ID]: {},
@@ -138,10 +145,18 @@ function createActorEntity(id, { playerType = 'human', includeLegacy = true } = 
   return { id, components };
 }
 
+/**
+ *
+ */
 async function flushMicrotasks() {
   await new Promise((resolve) => setImmediate(resolve));
 }
 
+/**
+ *
+ * @param condition
+ * @param attempts
+ */
 async function waitForCondition(condition, attempts = 20) {
   for (let i = 0; i < attempts; i += 1) {
     if (condition()) {
@@ -152,6 +167,17 @@ async function waitForCondition(condition, attempts = 20) {
   throw new Error('Condition not met within allotted attempts.');
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.handlerFactory
+ * @param root0.fixedHandler
+ * @param root0.dispatchOverrides
+ * @param root0.scheduler
+ * @param root0.dispatcherFactory
+ * @param root0.turnOrderServiceFactory
+ * @param root0.entities
+ */
 function createTurnManagerEnvironment({
   handlerFactory = null,
   fixedHandler = null,

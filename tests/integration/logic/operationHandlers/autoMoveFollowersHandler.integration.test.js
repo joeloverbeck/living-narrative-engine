@@ -91,6 +91,14 @@ class PassThroughDispatcher {
   }
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.entities
+ * @param root0.dispatcherSetup
+ * @param root0.failingMoveIds
+ * @param root0.dispatcherFactory
+ */
 function createEnvironment({
   entities,
   dispatcherSetup,

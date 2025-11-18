@@ -10,6 +10,7 @@ import { ensureValidLogger } from '../../utils/loggerUtils.js';
 
 /**
  * Lifecycle phases executed during controller initialization.
+ *
  * @readonly
  * @enum {string}
  */
@@ -26,6 +27,7 @@ export const LIFECYCLE_PHASES = Object.freeze({
 
 /**
  * Lifecycle phases executed during controller destruction.
+ *
  * @readonly
  * @enum {string}
  */
@@ -42,6 +44,7 @@ export const DESTRUCTION_PHASES = Object.freeze({
 
 /**
  * Ordered initialization sequence.
+ *
  * @type {string[]}
  */
 export const DEFAULT_INITIALIZATION_SEQUENCE = [
@@ -56,6 +59,7 @@ export const DEFAULT_INITIALIZATION_SEQUENCE = [
 
 /**
  * Ordered destruction sequence.
+ *
  * @type {string[]}
  */
 export const DEFAULT_DESTRUCTION_SEQUENCE = [
@@ -202,11 +206,21 @@ export class ControllerLifecycleOrchestrator {
    *
    * @param {object} options
    * @param {object} options.controller
+   * @param controller
    * @param {string} options.methodName
+   * @param methodName
    * @param {string} options.phaseName
+   * @param phaseName
    * @param {boolean} [options.required]
+   * @param root0
+   * @param root0.required
+   * @param phaseName.required
    * @param {boolean} [options.synchronous]
+   * @param root0.synchronous
+   * @param phaseName.synchronous
    * @param {boolean} [options.forwardArguments]
+   * @param root0.forwardArguments
+   * @param phaseName.forwardArguments
    * @returns {Function}
    */
   createControllerMethodHook(

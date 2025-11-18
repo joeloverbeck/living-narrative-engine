@@ -90,7 +90,7 @@ describe('StorageRotationManager with IndexedDBStorageAdapter', () => {
 
   beforeAll(() => {
     if (typeof window !== 'undefined' && !window.pako) {
-      // eslint-disable-next-line global-require
+       
       window.pako = require('pako');
     }
   });
@@ -108,7 +108,7 @@ describe('StorageRotationManager with IndexedDBStorageAdapter', () => {
 
     while (databases.length) {
       const name = databases.pop();
-      // eslint-disable-next-line no-await-in-loop
+       
       await deleteDatabase(name);
     }
   });

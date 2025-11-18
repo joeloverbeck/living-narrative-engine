@@ -16,6 +16,8 @@ const __dirname = path.dirname(__filename);
 
 /**
  * Load and parse JSON file
+ *
+ * @param filePath
  */
 async function loadJsonFile(filePath) {
   try {
@@ -28,6 +30,8 @@ async function loadJsonFile(filePath) {
 
 /**
  * Check if file exists
+ *
+ * @param filePath
  */
 async function fileExists(filePath) {
   try {
@@ -40,6 +44,10 @@ async function fileExists(filePath) {
 
 /**
  * Validate a JSON file structure
+ *
+ * @param filePath
+ * @param category
+ * @param requiredFields
  */
 async function validateJsonFile(filePath, category, requiredFields = []) {
   const relativePath = path.relative(path.join(__dirname, '..'), filePath);
@@ -87,6 +95,8 @@ async function validateJsonFile(filePath, category, requiredFields = []) {
 
 /**
  * Validate scope file (DSL syntax check)
+ *
+ * @param filePath
  */
 async function validateScopeFile(filePath) {
   const relativePath = path.relative(path.join(__dirname, '..'), filePath);

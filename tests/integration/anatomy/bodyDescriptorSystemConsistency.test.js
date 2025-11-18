@@ -15,6 +15,10 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 // Helper: Load JSON schema from file system
+/**
+ *
+ * @param schemaFileName
+ */
 function loadSchema(schemaFileName) {
   const schemaPath = join(process.cwd(), 'data/schemas', schemaFileName);
   const content = readFileSync(schemaPath, 'utf-8');
@@ -22,6 +26,9 @@ function loadSchema(schemaFileName) {
 }
 
 // Helper: Load formatting config from file system
+/**
+ *
+ */
 function loadFormattingConfig() {
   const configPath = join(
     process.cwd(),

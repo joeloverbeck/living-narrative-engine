@@ -68,6 +68,11 @@ class HarnessCommandProcessor {
   }
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.onDispatch
+ */
 function createCommandDispatcherHarness({ onDispatch } = {}) {
   const logger = new RecordingLogger();
 

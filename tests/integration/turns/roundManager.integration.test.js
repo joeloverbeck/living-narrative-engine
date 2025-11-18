@@ -34,6 +34,10 @@ class CapturingLogger {
   }
 }
 
+/**
+ *
+ * @param id
+ */
 function createActor(id) {
   return {
     id,

@@ -16,7 +16,8 @@ export default class ComplexBlueprintDataGenerator {
   /**
    * Generates a realistic multi-level blueprint hierarchy based on production capabilities
    * Tests basic blueprint processing with 2-3 levels: torso → arms → hands
-   * @returns {Object} Multi-level blueprint test data
+   *
+   * @returns {object} Multi-level blueprint test data
    */
   generateMultiLevelBlueprint() {
     const data = {
@@ -133,7 +134,8 @@ export default class ComplexBlueprintDataGenerator {
   /**
    * Generates blueprint with basic slot requirements  
    * Tests simple anatomy part creation without conflicts (since conflict resolution isn't implemented)
-   * @returns {Object} Simple blueprint test data
+   *
+   * @returns {object} Simple blueprint test data
    */
   generateConflictingSlotBlueprint() {
     const data = {
@@ -220,7 +222,8 @@ export default class ComplexBlueprintDataGenerator {
   /**
    * Generates blueprint with slots that test production's equipment detection heuristics
    * Tests differentiation based on socket IDs that production code recognizes as equipment
-   * @returns {Object} Mixed slot type test data
+   *
+   * @returns {object} Mixed slot type test data
    */
   generateMixedSlotTypeBlueprint() {
     const data = {
@@ -337,7 +340,8 @@ export default class ComplexBlueprintDataGenerator {
   /**
    * Generates blueprint with complex constraint scenarios
    * Tests constraint propagation through blueprint hierarchies
-   * @returns {Object} Complex constraint test data
+   *
+   * @returns {object} Complex constraint test data
    */
   generateConstraintPropagationBlueprint() {
     const data = {
@@ -429,11 +433,12 @@ export default class ComplexBlueprintDataGenerator {
 
   /**
    * Generates clothing integration test scenario
-   * @param {Object} options - Generation options
+   *
+   * @param {object} options - Generation options
    * @param {boolean} options.includeSlotMetadata - Include slot metadata generation
    * @param {boolean} options.includeClothingItems - Include clothing items
    * @param {string} options.complexityLevel - 'basic' or 'complex'
-   * @returns {Object} Clothing integration test data
+   * @returns {object} Clothing integration test data
    */
   async generateClothingIntegrationScenario(options = {}) {
     const {
@@ -683,10 +688,11 @@ export default class ComplexBlueprintDataGenerator {
 
   /**
    * Generate layer conflict test scenario
-   * @param {Object} options - Generation options
+   *
+   * @param {object} options - Generation options
    * @param {string} options.conflictType - Type of conflict to generate
    * @param {string} options.complexityLevel - Complexity level
-   * @returns {Object} Layer conflict test data
+   * @returns {object} Layer conflict test data
    */
   async generateLayerConflictScenario(options = {}) {
     const { conflictType = 'same_layer_same_slot', complexityLevel = 'basic' } = options;
@@ -723,8 +729,9 @@ export default class ComplexBlueprintDataGenerator {
 
   /**
    * Generate complex slot mapping test scenario
-   * @param {Object} options - Generation options
-   * @returns {Object} Complex slot mapping test data
+   *
+   * @param {object} options - Generation options
+   * @returns {object} Complex slot mapping test data
    */
   async generateComplexSlotMappingScenario(options = {}) {
     const {
@@ -771,8 +778,9 @@ export default class ComplexBlueprintDataGenerator {
 
   /**
    * Generate slot compatibility test scenario
-   * @param {Object} options - Generation options
-   * @returns {Object} Slot compatibility test data
+   *
+   * @param {object} options - Generation options
+   * @returns {object} Slot compatibility test data
    */
   async generateSlotCompatibilityScenario(options = {}) {
     const { includeIncompatibleItems = true, includeEdgeCases = true } = options;
@@ -827,8 +835,9 @@ export default class ComplexBlueprintDataGenerator {
 
   /**
    * Generate orientation-specific socket test scenario
-   * @param {Object} options - Generation options
-   * @returns {Object} Orientation socket test data
+   *
+   * @param {object} options - Generation options
+   * @returns {object} Orientation socket test data
    */
   async generateOrientationSocketScenario(options = {}) {
     const { includeSymmetricLimbs = true, includeAsymmetricItems = true } = options;
@@ -872,8 +881,9 @@ export default class ComplexBlueprintDataGenerator {
 
   /**
    * Generate system synchronization test scenario
-   * @param {Object} options - Generation options
-   * @returns {Object} System sync test data
+   *
+   * @param {object} options - Generation options
+   * @returns {object} System sync test data
    */
   async generateSystemSyncScenario(options = {}) {
     const {
@@ -928,8 +938,9 @@ export default class ComplexBlueprintDataGenerator {
 
   /**
    * Generate a large anatomy blueprint with many parts
+   *
    * @param {number} partCount - Target number of parts to generate
-   * @returns {Object} Large anatomy blueprint test data
+   * @returns {object} Large anatomy blueprint test data
    */
   generateLargeAnatomyBlueprint(partCount) {
     const blueprintId = `test:large_anatomy_${partCount}`;
@@ -1056,8 +1067,9 @@ export default class ComplexBlueprintDataGenerator {
 
   /**
    * Generate a deep hierarchy blueprint
+   *
    * @param {number} depth - Target hierarchy depth
-   * @returns {Object} Deep hierarchy blueprint test data
+   * @returns {object} Deep hierarchy blueprint test data
    */
   generateDeepHierarchyBlueprint(depth) {
     const blueprintId = `test:deep_hierarchy_${depth}`;
@@ -1205,8 +1217,9 @@ export default class ComplexBlueprintDataGenerator {
 
   /**
    * Gets previously generated test data by key
+   *
    * @param {string} key - Data key ('multiLevel', 'conflicting', 'mixedSlots', etc.)
-   * @returns {Object|null} Generated data or null if not found
+   * @returns {object | null} Generated data or null if not found
    */
   getGeneratedData(key) {
     return this.generatedData.get(key) || null;
@@ -1221,6 +1234,7 @@ export default class ComplexBlueprintDataGenerator {
 
   /**
    * Gets all generated data keys
+   *
    * @returns {string[]} Array of data keys
    */
   getDataKeys() {

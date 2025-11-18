@@ -181,6 +181,10 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
   });
 
   // Helper to create action discovery service with custom mock
+  /**
+   *
+   * @param shouldFindActions
+   */
   function createActionDiscoveryService(shouldFindActions = true) {
     // For this test, we need a custom mock that actually checks the scope
     const stage = shouldFindActions
@@ -351,6 +355,10 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
   });
 
   describe('socket coverage and positioning tests', () => {
+    /**
+     *
+     * @param config
+     */
     function setupEntities(config = {}) {
       const {
         targetFacingAway = true,

@@ -85,7 +85,7 @@ describe('ClichesGeneratorController error handler factory fallback', () => {
     });
 
     // Act: instantiate the controller so the constructor exercises the fallback.
-    // eslint-disable-next-line no-new
+     
     new ClichesGeneratorController(dependencies);
 
     expect(dependencies.logger.debug).toHaveBeenCalledWith(

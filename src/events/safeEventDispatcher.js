@@ -142,7 +142,7 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
    * @param {object} [context] - Additional context to include in error logs.
    * @returns {Promise<*>} The return value of `fn`, or `undefined` if an error
    * occurs.
-  */
+   */
   #executeSafely(description, fn, context = {}) {
     try {
       const result = fn();

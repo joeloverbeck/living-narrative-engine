@@ -26,7 +26,7 @@ class TestLogger {
   /**
    * @description Creates a new TestLogger instance.
    * @param {object} [options] - Logger configuration options.
-   * @param {boolean} [options.throwOnSummary=false] - Whether to throw when the summary log is emitted.
+   * @param {boolean} [options.throwOnSummary] - Whether to throw when the summary log is emitted.
    */
   constructor({ throwOnSummary = false } = {}) {
     this.throwOnSummary = throwOnSummary;
@@ -93,9 +93,9 @@ class RecordingTrace {
   /**
    * @description Creates a new RecordingTrace instance.
    * @param {object} [options] - Trace configuration.
-   * @param {boolean} [options.failMultiTargetCapture=false] - Whether to throw during multi-target capture.
-   * @param {boolean} [options.failPerformanceCapture=false] - Whether to reject during performance capture.
-   * @param {boolean} [options.failErrorCapture=false] - Whether to throw during error capture.
+   * @param {boolean} [options.failMultiTargetCapture] - Whether to throw during multi-target capture.
+   * @param {boolean} [options.failPerformanceCapture] - Whether to reject during performance capture.
+   * @param {boolean} [options.failErrorCapture] - Whether to throw during error capture.
    */
   constructor({
     failMultiTargetCapture = false,

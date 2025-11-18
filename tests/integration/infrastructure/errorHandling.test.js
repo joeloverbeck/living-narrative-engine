@@ -940,10 +940,16 @@ describe('Infrastructure Error Handling - Corrected', () => {
       });
 
       it('should preserve error context through nested calls', () => {
+        /**
+         *
+         */
         function innerFunction() {
           throw new Error('Inner error');
         }
 
+        /**
+         *
+         */
         function outerFunction() {
           try {
             innerFunction();

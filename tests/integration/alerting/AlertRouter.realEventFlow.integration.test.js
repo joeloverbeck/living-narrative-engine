@@ -55,6 +55,12 @@ class PermissiveSchemaValidator {
   }
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.dispatcherFactory
+ * @param root0.RouterClass
+ */
 function createEnvironment({
   dispatcherFactory = (deps) => new SafeEventDispatcher(deps),
   RouterClass = AlertRouter,

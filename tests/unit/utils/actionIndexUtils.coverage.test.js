@@ -10,6 +10,7 @@ jest.mock('../../../src/utils/safeDispatchErrorUtils.js', () => ({
 
 /**
  * Creates a mock logger for testing
+ *
  * @returns {object} Mock logger with jest.fn() methods
  */
 function createLogger() {

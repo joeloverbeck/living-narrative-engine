@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
 
+/**
+ *
+ */
 function createLogger() {
   return {
     debug: jest.fn(),

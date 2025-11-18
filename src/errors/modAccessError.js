@@ -7,8 +7,9 @@ import { ModValidationError } from './modValidationError.js';
 
 /**
  * Error thrown when file access fails during mod validation
+ *
  * @class
- * @extends {ModValidationError}
+ * @augments {ModValidationError}
  */
 export class ModAccessError extends ModValidationError {
   /**
@@ -44,6 +45,7 @@ export class ModAccessError extends ModValidationError {
 
   /**
    * Determines if the access error is recoverable
+   *
    * @private
    * @static
    * @param {string} message - Error message
@@ -78,6 +80,7 @@ export class ModAccessError extends ModValidationError {
   
   /**
    * Detects the type of access error
+   *
    * @private
    * @param {string} message - Error message
    * @param {object} context - Error context
@@ -110,6 +113,7 @@ export class ModAccessError extends ModValidationError {
   
   /**
    * Checks if the operation can be retried
+   *
    * @private
    * @param {object} context - Error context
    * @returns {boolean} True if retryable
@@ -131,6 +135,7 @@ export class ModAccessError extends ModValidationError {
   
   /**
    * Gets alternative actions when file access fails
+   *
    * @private
    * @param {object} context - Error context
    * @returns {string[]} List of alternative actions
@@ -169,6 +174,7 @@ export class ModAccessError extends ModValidationError {
   
   /**
    * Generates an access failure report
+   *
    * @returns {object} Access failure details
    */
   generateAccessReport() {
@@ -186,6 +192,7 @@ export class ModAccessError extends ModValidationError {
   
   /**
    * Gets suggested fixes for the access error
+   *
    * @private
    * @returns {string[]} List of suggested fixes
    */

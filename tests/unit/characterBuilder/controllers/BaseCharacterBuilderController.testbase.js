@@ -27,6 +27,7 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
 
   /**
    * Setup before each test
+   *
    * @returns {Promise<void>}
    */
   async setup() {
@@ -43,6 +44,7 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
 
   /**
    * Initialize mocks specific to character builder controllers
+   *
    * @private
    */
   _initializeCharacterBuilderMocks() {
@@ -686,6 +688,7 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
 
   /**
    * Build a character concept test fixture
+   *
    * @param {object} [overrides]
    * @returns {object}
    */
@@ -714,6 +717,7 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
 
   /**
    * Build a thematic direction test fixture
+   *
    * @param {object} [overrides]
    * @returns {object}
    */
@@ -739,6 +743,7 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
 
   /**
    * Dispatch a click event against a selector or element.
+   *
    * @param {string|Element} target
    * @returns {Element}
    */
@@ -756,6 +761,7 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
 
   /**
    * Await a simple timeout to allow async DOM flows to settle.
+   *
    * @param {number} durationMs
    * @returns {Promise<void>}
    */
@@ -765,6 +771,7 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
 
   /**
    * Assert that the UI state manager is showing the expected state.
+   *
    * @param {string} expectedState
    * @param {import('../../../../src/characterBuilder/controllers/BaseCharacterBuilderController.js').BaseCharacterBuilderController} [controller]
    */
@@ -803,6 +810,7 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
 
   /**
    * Add DOM element for testing
+   *
    * @param {string} html - HTML content to add to document
    */
   addDOMElement(html) {
@@ -814,6 +822,7 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
 
   /**
    * Cleanup after each test
+   *
    * @returns {Promise<void>}
    */
   async cleanup() {

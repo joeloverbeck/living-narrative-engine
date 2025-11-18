@@ -64,6 +64,9 @@ class InMemoryGameDataRepository {
   }
 }
 
+/**
+ *
+ */
 function createHarness() {
   const logger = new RecordingLogger();
 

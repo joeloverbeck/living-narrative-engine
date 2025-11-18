@@ -9,6 +9,9 @@ import { SimpleEntityManager } from '../../common/entities/index.js';
 
 jest.setTimeout(30000);
 
+/**
+ *
+ */
 function createLogger() {
   return {
     debug: jest.fn(),
@@ -18,12 +21,19 @@ function createLogger() {
   };
 }
 
+/**
+ *
+ */
 function createEventDispatcher() {
   return {
     dispatch: jest.fn().mockResolvedValue(true),
   };
 }
 
+/**
+ *
+ * @param entityManager
+ */
 function seedAnatomy(entityManager) {
   const actorId = 'actor-1';
   const torsoId = 'torso-1';
@@ -91,6 +101,10 @@ function seedAnatomy(entityManager) {
   };
 }
 
+/**
+ *
+ * @param entityManager
+ */
 function createBodyPartDescriptionBuilder(entityManager) {
   return {
     buildDescription(entity) {
@@ -103,6 +117,10 @@ function createBodyPartDescriptionBuilder(entityManager) {
   };
 }
 
+/**
+ *
+ * @param entityManager
+ */
 function createBodyDescriptionComposer(entityManager) {
   return {
     async composeDescription(entity) {
@@ -120,6 +138,11 @@ function createBodyDescriptionComposer(entityManager) {
   };
 }
 
+/**
+ *
+ * @param entityManager
+ * @param descriptionPersistenceService
+ */
 function createPartDescriptionGenerator(entityManager, descriptionPersistenceService) {
   const generate = (partId) => {
     const partComponent = entityManager.getComponentData(partId, 'anatomy:part');
@@ -143,6 +166,10 @@ function createPartDescriptionGenerator(entityManager, descriptionPersistenceSer
   };
 }
 
+/**
+ *
+ * @param entityManager
+ */
 function createComponentManager(entityManager) {
   return {
     addComponent: (entityId, componentId, data) => {
@@ -154,6 +181,13 @@ function createComponentManager(entityManager) {
   };
 }
 
+/**
+ *
+ * @param bodyGraphService
+ * @param entityManager
+ * @param root0
+ * @param root0.logger
+ */
 function createBodyGraphAdapter(bodyGraphService, entityManager, { logger }) {
   const ensureBodyComponent = (entityId) => {
     const existing = entityManager.getComponentData(entityId, 'anatomy:body');
@@ -399,6 +433,10 @@ function createBodyGraphAdapter(bodyGraphService, entityManager, { logger }) {
   return adapter;
 }
 
+/**
+ *
+ * @param entityManager
+ */
 function createGraphValidator(entityManager) {
   return {
     async validateAttachment(_entityId, partId, parentPartId) {
@@ -469,6 +507,11 @@ function createGraphValidator(entityManager) {
   };
 }
 
+/**
+ *
+ * @param entityManager
+ * @param bodyGraphAdapter
+ */
 function createAnatomyGenerationService(entityManager, bodyGraphAdapter) {
   return {
     async buildFromBlueprint(entityId, blueprint) {
@@ -550,6 +593,9 @@ function createAnatomyGenerationService(entityManager, bodyGraphAdapter) {
   };
 }
 
+/**
+ *
+ */
 function createBlueprintFactory() {
   return {
     async validateBlueprint(blueprint) {
@@ -577,6 +623,9 @@ function createBlueprintFactory() {
   };
 }
 
+/**
+ *
+ */
 async function createIntegrationContext() {
   const entityManager = new SimpleEntityManager();
   const logger = createLogger();

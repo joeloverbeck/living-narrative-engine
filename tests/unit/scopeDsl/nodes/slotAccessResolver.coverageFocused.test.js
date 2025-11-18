@@ -62,6 +62,10 @@ describe('slotAccessResolver targeted coverage scenarios', () => {
     };
   });
 
+  /**
+   *
+   * @param activeSpan
+   */
   function createStructuredTrace(activeSpan = null) {
     return {
       startSpan: jest.fn().mockImplementation(() => ({
@@ -73,6 +77,10 @@ describe('slotAccessResolver targeted coverage scenarios', () => {
     };
   }
 
+  /**
+   *
+   * @param field
+   */
   function createClothingNode(field = 'torso_upper') {
     return {
       type: 'Step',
@@ -81,6 +89,10 @@ describe('slotAccessResolver targeted coverage scenarios', () => {
     };
   }
 
+  /**
+   *
+   * @param overrides
+   */
   function createClothingAccess(overrides = {}) {
     return {
       __clothingSlotAccess: true,

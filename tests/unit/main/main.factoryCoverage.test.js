@@ -82,6 +82,10 @@ jest.mock('../../../src/engine/gameEngine.js', () => ({
 const originalAlert = global.alert;
 const originalConsoleError = console.error;
 
+/**
+ *
+ * @param doc
+ */
 function buildUiElements(doc) {
   return {
     outputDiv: doc.getElementById('outputDiv'),

@@ -10,6 +10,7 @@ import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 
 /**
  * Creates a penetration-ready scenario with two actors.
+ *
  * @returns {Array<object>} Entities for the test.
  */
 function createPenetrationScenario() {

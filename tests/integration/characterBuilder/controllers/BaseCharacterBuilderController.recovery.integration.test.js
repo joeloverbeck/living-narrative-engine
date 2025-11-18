@@ -161,6 +161,9 @@ class RecoveryTestController extends BaseCharacterBuilderController {
   }
 }
 
+/**
+ *
+ */
 function createControllerDependencies() {
   const logger = new ConsoleLogger('DEBUG');
   logger.setLogLevel('DEBUG');
@@ -237,6 +240,10 @@ function createControllerDependencies() {
   };
 }
 
+/**
+ *
+ * @param extra
+ */
 function mountBaseDOM(extra = '') {
   document.body.innerHTML = `
     <div id="empty-state" class="state-container"></div>
@@ -247,6 +254,10 @@ function mountBaseDOM(extra = '') {
   `;
 }
 
+/**
+ *
+ * @param extraDom
+ */
 function setupController(extraDom = '') {
   mountBaseDOM(extraDom);
   const dependencies = createControllerDependencies();

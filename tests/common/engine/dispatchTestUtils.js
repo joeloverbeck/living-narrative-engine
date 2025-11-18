@@ -79,6 +79,11 @@ export function buildSaveDispatches(saveName, filePath) {
   ];
 }
 
+/**
+ *
+ * @param saveName
+ * @param errorMessage
+ */
 export function buildFailedSaveDispatches(saveName, errorMessage) {
   return [
     [

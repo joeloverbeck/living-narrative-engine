@@ -22,13 +22,14 @@ import {
 
 /**
  * Utility to temporarily override Error.captureStackTrace for branch coverage.
+ *
  * @param {Function | undefined} replacement
  * @param {() => void | Promise<void>} callback
  */
 async function withTemporaryCaptureStackTrace(replacement, callback) {
   const original = Error.captureStackTrace;
   if (replacement === undefined) {
-    // eslint-disable-next-line no-global-assign -- intentionally removing the helper to test fallback logic.
+     
     // @ts-ignore
     delete Error.captureStackTrace;
   } else {
@@ -41,7 +42,7 @@ async function withTemporaryCaptureStackTrace(replacement, callback) {
     if (original) {
       Error.captureStackTrace = original;
     } else {
-      // eslint-disable-next-line no-global-assign -- restore absence when originally missing.
+       
       // @ts-ignore
       delete Error.captureStackTrace;
     }

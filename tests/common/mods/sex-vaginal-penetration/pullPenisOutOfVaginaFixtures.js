@@ -22,6 +22,7 @@ export const SCOPE_NAME = 'sex-vaginal-penetration:actors_being_fucked_vaginally
 
 /**
  * Builds a penetration scenario with alice penetrating beth.
+ *
  * @param {PenetrationScenarioOptions} [options] - Scenario options
  * @returns {Array<object>} Array of entities
  */
@@ -122,6 +123,7 @@ export function buildPenetrationScenario(options = {}) {
 /**
  * Resolves the actors_being_fucked_vaginally_by_me scope.
  * Filters partners from closeness who have being_fucked_vaginally with matching actorId.
+ *
  * @param {object} testFixture - Test fixture
  * @param {object} context - Scope resolution context
  * @returns {{ success: boolean, value: Set<string> }} Resolution result
@@ -162,6 +164,7 @@ function resolveBeingFuckedVaginallyScope(testFixture, context) {
 
 /**
  * Installs scope override for actors_being_fucked_vaginally_by_me.
+ *
  * @param {object} testFixture - Test fixture
  * @returns {() => void} Cleanup function to restore original resolver
  */

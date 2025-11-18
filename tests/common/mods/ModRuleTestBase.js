@@ -318,7 +318,7 @@ export class ModRuleTestBase extends ModActionTestBase {
    * @param {boolean} [options.includeErrorHandling] - Include error handling test (default: true)
    * @param {boolean} [options.includeMessages] - Include message validation test (default: true)
    * @param {boolean} [options.includeEventSequence] - Include event sequence test (default: true)
-   * @param {Array<function>} [options.customTests] - Additional custom test functions
+   * @param {Array<Function>} [options.customTests] - Additional custom test functions
    */
   runStandardRuleTests(options = {}) {
     const {

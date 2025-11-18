@@ -2,6 +2,9 @@ import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { ENGINE_STOPPED_UI } from '../../../src/constants/eventIds.js';
 
+/**
+ *
+ */
 function createLogger() {
   return {
     debug: jest.fn(),
@@ -11,6 +14,10 @@ function createLogger() {
   };
 }
 
+/**
+ *
+ * @param resolutionMap
+ */
 function createContainer(resolutionMap) {
   const resolve = jest.fn((token) => {
     if (!Object.prototype.hasOwnProperty.call(resolutionMap, token)) {

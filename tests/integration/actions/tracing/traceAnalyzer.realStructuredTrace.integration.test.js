@@ -18,6 +18,8 @@ import Span from '../../../../src/actions/tracing/span.js';
 
 /**
  * Advances the mocked performance clock
+ *
+ * @param clock
  * @param {number} ms
  */
 function advanceTime(clock, ms) {

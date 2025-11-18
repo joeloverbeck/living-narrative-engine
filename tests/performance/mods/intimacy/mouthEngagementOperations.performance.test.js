@@ -82,6 +82,9 @@ describe('Mouth Engagement Operations - Performance', () => {
 
   /**
    * Helper function to create test actors with mouth anatomy
+   *
+   * @param id
+   * @param name
    */
   async function createTestActorWithMouth(id, name) {
     await entityManager.createEntity(id);

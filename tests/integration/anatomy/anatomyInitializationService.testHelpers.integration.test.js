@@ -2,6 +2,11 @@ import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals
 import { AnatomyInitializationService } from '../../../src/anatomy/anatomyInitializationService.js';
 import { ENTITY_CREATED_ID } from '../../../src/constants/eventIds.js';
 
+/**
+ *
+ * @param root0
+ * @param root0.generationImplementation
+ */
 function createServiceFixture({ generationImplementation } = {}) {
   const logger = {
     debug: jest.fn(),

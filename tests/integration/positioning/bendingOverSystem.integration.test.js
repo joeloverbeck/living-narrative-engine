@@ -46,6 +46,7 @@ import {
 
 /**
  * Creates handlers needed for bending over rules.
+ *
  * @param {object} entityManager - Entity manager instance
  * @param {object} eventBus - Event bus instance
  * @param {object} logger - Logger instance

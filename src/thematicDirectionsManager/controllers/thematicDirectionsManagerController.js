@@ -123,7 +123,7 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
    * @protected
    * @override
    * @returns {Promise<void>}
-  */
+   */
   async _initializeAdditionalServices() {
     await super._initializeAdditionalServices();
 

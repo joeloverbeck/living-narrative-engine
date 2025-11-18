@@ -1,3 +1,6 @@
+/**
+ *
+ */
 function getEnvPreference() {
   if (typeof process === 'undefined') {
     return null;
@@ -17,6 +20,9 @@ function getEnvPreference() {
   return null;
 }
 
+/**
+ *
+ */
 function defaultEnabledOutsideProduction() {
   if (typeof process === 'undefined') {
     return false;

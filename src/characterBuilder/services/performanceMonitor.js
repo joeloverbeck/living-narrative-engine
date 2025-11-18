@@ -192,7 +192,7 @@ export class PerformanceMonitor {
   /**
    * Clear marks and measurements optionally filtered by prefix.
    *
-   * @param {string|null} [prefix=null] - Optional prefix filter
+   * @param {string|null} [prefix] - Optional prefix filter
    * @returns {void}
    */
   clearData(prefix = null) {

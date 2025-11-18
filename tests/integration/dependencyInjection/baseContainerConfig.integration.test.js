@@ -13,6 +13,9 @@ import {
 } from '../../../src/dependencyInjection/baseContainerConfig.js';
 import * as actionCategorizationRegistrations from '../../../src/dependencyInjection/registrations/actionCategorizationRegistrations.js';
 
+/**
+ *
+ */
 function setupUiDom() {
   document.body.innerHTML = `
     <h1 id="title-element">Test Game</h1>

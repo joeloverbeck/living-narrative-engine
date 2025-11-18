@@ -74,6 +74,10 @@ describe('ErrorReporter integration coverage', () => {
     jest.restoreAllMocks();
   });
 
+  /**
+   *
+   * @param overrides
+   */
   function createReporter(overrides = {}) {
     reporter = new ErrorReporter({
       logger,

@@ -22,6 +22,10 @@ import systemErrorEventDefinition from '../../../data/mods/core/events/system_er
 
 const waitForDispatch = () => new Promise((resolve) => setTimeout(resolve, 0));
 
+/**
+ *
+ * @param label
+ */
 function createRecordingLogger(label = 'logger') {
   const entries = {
     debug: [],
@@ -48,6 +52,9 @@ function createRecordingLogger(label = 'logger') {
   return { logger, entries };
 }
 
+/**
+ *
+ */
 async function createIntegrationHarness() {
   const dispatcherLog = createRecordingLogger('dispatcher');
   const registry = new InMemoryDataRegistry({ logger: dispatcherLog.logger });

@@ -12,6 +12,10 @@ import eventIsActionCaressBareBack from '../../../../data/mods/caressing/conditi
 const ACTION_ID = 'caressing:caress_bare_back';
 const BACK_SOCKETS = ['upper_back', 'lower_back'];
 
+/**
+ *
+ * @param entity
+ */
 function ensureBackUncovered(entity) {
   entity.components['clothing:slot_metadata'] = {
     slotMappings: {

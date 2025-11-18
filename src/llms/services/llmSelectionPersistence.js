@@ -12,6 +12,7 @@
 export class LLMSelectionPersistence {
   /**
    * Storage key for LLM selection
+   *
    * @constant {string}
    */
   static STORAGE_KEY = 'living-narrative-engine:selected-llm-id';

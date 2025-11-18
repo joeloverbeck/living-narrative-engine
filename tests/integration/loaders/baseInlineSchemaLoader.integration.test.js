@@ -96,10 +96,21 @@ class TestPathResolver {
   }
 }
 
+/**
+ *
+ * @param dirPath
+ */
 async function ensureDirectory(dirPath) {
   await fs.mkdir(dirPath, { recursive: true });
 }
 
+/**
+ *
+ * @param baseModsPath
+ * @param modId
+ * @param fileName
+ * @param data
+ */
 async function writeComponentFile(baseModsPath, modId, fileName, data) {
   const targetDir = path.join(baseModsPath, modId, 'components');
   await ensureDirectory(targetDir);
@@ -117,6 +128,10 @@ describe('Integration: BaseInlineSchemaLoader schema registration via ComponentL
     await fs.rm(tempModsRoot, { recursive: true, force: true });
   });
 
+  /**
+   *
+   * @param options
+   */
   function createLoaderEnvironment(options = {}) {
     const logger = options.logger ?? new RecordingLogger();
     const schemaValidator =

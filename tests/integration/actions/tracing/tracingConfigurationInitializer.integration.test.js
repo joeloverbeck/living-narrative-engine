@@ -22,6 +22,9 @@ import { createTestBed } from '../../../common/testBed.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
+/**
+ *
+ */
 async function loadTraceConfigSchema() {
   const schemaPath = path.resolve(
     __dirname,
@@ -31,6 +34,12 @@ async function loadTraceConfigSchema() {
   return JSON.parse(schemaContent);
 }
 
+/**
+ *
+ * @param initialConfig
+ * @param root0
+ * @param root0.delayMs
+ */
 function createTraceConfigLoaderStub(initialConfig, { delayMs = 0 } = {}) {
   let currentConfig = initialConfig;
   const loadConfig = jest.fn().mockImplementation(async () => {
@@ -48,6 +57,13 @@ function createTraceConfigLoaderStub(initialConfig, { delayMs = 0 } = {}) {
   };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.traceConfig
+ * @param root0.logger
+ * @param root0.delayMs
+ */
 async function createRealConfigLoader({
   traceConfig,
   logger,
@@ -68,6 +84,12 @@ async function createRealConfigLoader({
   return { configLoader, traceConfigLoader };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.logger
+ * @param root0.actionTraceFilter
+ */
 function createOutputService({ logger, actionTraceFilter }) {
   return new ActionTraceOutputService({
     logger,

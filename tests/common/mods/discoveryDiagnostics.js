@@ -34,6 +34,7 @@ export class DiscoveryDiagnostics {
 
   /**
    * Discover actions with full diagnostic output
+   *
    * @param {string} actorId - Actor to discover actions for
    * @param {string} [expectedActionId] - Optional action ID to look for
    * @returns {Array} Discovered actions (synchronous)
@@ -126,6 +127,8 @@ export class DiscoveryDiagnostics {
 
   /**
    * Format context for display
+   *
+   * @param context
    */
   _formatContext(context) {
     const parts = [];
@@ -138,6 +141,10 @@ export class DiscoveryDiagnostics {
 
   /**
    * Print comprehensive diagnostic report
+   *
+   * @param actions
+   * @param expectedActionId
+   * @param duration
    */
   _printDiagnosticReport(actions, expectedActionId, duration) {
     console.log('\n' + '-'.repeat(80));
@@ -174,6 +181,8 @@ export class DiscoveryDiagnostics {
 
   /**
    * Provide specific debugging hints based on trace analysis
+   *
+   * @param expectedActionId
    */
   _provideDiagnosticHints(expectedActionId) {
     const scopeTraces = this.trace.filter(t => t.type === 'scope_resolution');

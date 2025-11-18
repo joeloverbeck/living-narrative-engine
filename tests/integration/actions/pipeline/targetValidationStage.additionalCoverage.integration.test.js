@@ -49,6 +49,9 @@ const clone = (value) => (typeof structuredClone === 'function' ? structuredClon
 const originalBaseTargetConfig = clone(actionPipelineConfig.targetValidation);
 const originalEnvTargetConfig = clone(actionPipelineConfig.environments.test.targetValidation);
 
+/**
+ *
+ */
 function restoreTargetValidationConfig() {
   const baseClone = clone(originalBaseTargetConfig);
   Object.assign(actionPipelineConfig.targetValidation, baseClone);

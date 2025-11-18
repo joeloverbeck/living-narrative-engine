@@ -6,6 +6,9 @@ import CommandProcessor from '../../../src/commands/commandProcessor.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 import { SystemInitializationError } from '../../../src/errors/InitializationError.js';
 
+/**
+ *
+ */
 function createLogger() {
   return {
     debug: jest.fn(),

@@ -81,6 +81,10 @@ const defaultEntities = [
   },
 ];
 
+/**
+ *
+ * @param logger
+ */
 function createFixSuggestionEngine(logger) {
   const minimalRepository = {
     getComponentDefinition: () => ({ id: 'mock-component' }),
@@ -96,6 +100,10 @@ function createFixSuggestionEngine(logger) {
   });
 }
 
+/**
+ *
+ * @param overrides
+ */
 function createProcessor(overrides = {}) {
   const logger = overrides.logger ?? new RecordingLogger();
   const entityManager = overrides.entityManager ?? new SimpleEntityManager(defaultEntities);
@@ -172,6 +180,9 @@ const simpleContext = {
   locationId: 'plaza',
 };
 
+/**
+ *
+ */
 function createTraceWithoutStructuredSpan() {
   const calls = { info: [], step: [], success: [], failure: [] };
   return {

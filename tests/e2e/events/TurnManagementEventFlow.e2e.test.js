@@ -11,7 +11,6 @@
  * - Turn interruption and error event handling
  * - Elevated recursion limits for workflow events (20 normal, 25 batch mode)
  * - Event-driven turn state consistency validation
- *
  * @jest-environment jsdom
  */
 

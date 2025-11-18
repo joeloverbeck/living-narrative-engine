@@ -23,6 +23,9 @@ class InMemoryDataFetcher {
   }
 }
 
+/**
+ *
+ */
 function createLogger() {
   return {
     debug: jest.fn(),
@@ -32,6 +35,10 @@ function createLogger() {
   };
 }
 
+/**
+ *
+ * @param fixtures
+ */
 function createLoaderWithData(fixtures) {
   return new LlmConfigLoader({
     logger: createLogger(),

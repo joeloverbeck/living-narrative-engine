@@ -37,6 +37,8 @@ class GOAPDebugger {
    * @param {object} deps.planInspector - Plan inspection tool
    * @param {object} deps.stateDiffViewer - State diff tool
    * @param {object} deps.refinementTracer - Refinement tracing tool
+   * @param deps.eventTraceProbe
+   * @param deps.goapEventDispatcher
    * @param {object} deps.logger - Logger instance
    */
   constructor({
@@ -178,6 +180,7 @@ class GOAPDebugger {
 
   /**
    * Surface dependency diagnostics collected by GoapController.
+   *
    * @returns {Array<object>} Dependency snapshots
    */
   getDependencyDiagnostics() {
@@ -275,6 +278,7 @@ class GOAPDebugger {
 
   /**
    * Get the buffered GOAP event stream for an actor.
+   *
    * @param {string} actorId
    * @returns {object|null}
    */

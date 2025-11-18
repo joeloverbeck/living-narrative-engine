@@ -292,7 +292,7 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
 
   /**
    * Create DOM structure for testing
-  */
+   */
   createDOMStructure() {
     // Ensure previous test DOM does not leak into the current run
     document.body.innerHTML = '';

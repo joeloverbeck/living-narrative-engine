@@ -59,6 +59,8 @@ describe('Dynamic State Updates Performance', () => {
 
   /**
    * Register essential schemas for performance testing
+   *
+   * @param schemaValidator
    */
   async function registerTestSchemas(schemaValidator) {
     await schemaValidator.addSchema(
@@ -162,6 +164,9 @@ describe('Dynamic State Updates Performance', () => {
 
   /**
    * Creates test entity with specific components
+   *
+   * @param entityId
+   * @param components
    */
   async function createTestEntity(entityId, components) {
     const entityDefinition = createEntityDefinition(entityId, components);

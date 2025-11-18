@@ -47,6 +47,11 @@ import {
 
 /**
  * Creates handlers needed for bending over rules.
+ *
+ * @param entityManager
+ * @param eventBus
+ * @param logger
+ * @param gameDataRepository
  */
 function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
   const safeDispatcher = {
@@ -122,6 +127,11 @@ function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
 
 /**
  * Helper to create a surface with bending support
+ *
+ * @param testEnv
+ * @param id
+ * @param name
+ * @param locationId
  */
 function createSurface(testEnv, id, name, locationId) {
   testEnv.entityManager.addComponent(id, 'positioning:allows_bending_over', {});
@@ -140,6 +150,11 @@ function createSurface(testEnv, id, name, locationId) {
 
 /**
  * Helper to create an actor
+ *
+ * @param testEnv
+ * @param id
+ * @param name
+ * @param locationId
  */
 function createActor(testEnv, id, name, locationId) {
   testEnv.entityManager.addComponent(id, ACTOR_COMPONENT_ID, {});

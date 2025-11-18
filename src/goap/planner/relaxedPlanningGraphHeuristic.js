@@ -30,8 +30,9 @@ class RelaxedPlanningGraphHeuristic {
    * @param {object} params
    * @param {object} params.planningEffectsSimulator - Service for state transformation
    * @param {object} params.jsonLogicEvaluator - Service to evaluate JSON Logic conditions
+   * @param params.jsonLogicEvaluationService
    * @param {object} params.logger - Logger instance
-   * @param {number} [params.maxLayers=10] - Maximum graph layers before declaring unsolvable
+   * @param {number} [params.maxLayers] - Maximum graph layers before declaring unsolvable
    */
   constructor({
     planningEffectsSimulator,
@@ -76,7 +77,6 @@ class RelaxedPlanningGraphHeuristic {
    * @param {object} goal - Goal with conditions array to satisfy
    * @param {Array} tasks - Available task library for planning
    * @returns {number} Minimum layers to reach goal (admissible, >= 0) or Infinity if unsolvable
-   *
    * @example
    * const state = { "entity-1:core:hungry": true };
    * const goal = {
@@ -243,6 +243,7 @@ class RelaxedPlanningGraphHeuristic {
    * @private
    * @param {object} task - Task with planningPreconditions array
    * @param {object} state - Current world state
+   * @param stateView
    * @returns {boolean} True if all preconditions satisfied
    */
   #checkPreconditions(task, stateView) {

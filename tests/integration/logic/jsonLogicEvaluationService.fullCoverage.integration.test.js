@@ -51,12 +51,21 @@ describe('JsonLogicEvaluationService real module integration', () => {
     jest.restoreAllMocks();
   });
 
+  /**
+   *
+   * @param name
+   * @param impl
+   */
   function registerOperator(name, impl) {
     service.addOperation(name, impl);
     registeredOperators.push(name);
     return impl;
   }
 
+  /**
+   *
+   * @param name
+   */
   function deregisterOperator(name) {
     const index = registeredOperators.indexOf(name);
     if (index !== -1) {
@@ -65,6 +74,11 @@ describe('JsonLogicEvaluationService real module integration', () => {
     service.removeOperation(name);
   }
 
+  /**
+   *
+   * @param id
+   * @param logic
+   */
   function storeCondition(id, logic) {
     registry.store('conditions', id, {
       id,

@@ -5,6 +5,7 @@
 
 /**
  * Wait for notification to appear in DOM
+ *
  * @param {number} timeout - Maximum time to wait in milliseconds
  * @returns {Promise<HTMLElement|null>} The notification container or null if timeout
  */
@@ -29,6 +30,7 @@ export async function waitForNotification(timeout = 1000) {
 
 /**
  * Get all notification elements for testing
+ *
  * @param {Document} document - Document instance
  * @returns {object|null} Object containing all notification elements or null if not found
  */
@@ -50,6 +52,7 @@ export function getNotificationElements(document) {
 
 /**
  * Simulate user click interaction
+ *
  * @param {HTMLElement} element - Element to click
  * @returns {void}
  */
@@ -61,6 +64,7 @@ export function simulateClick(element) {
 
 /**
  * Simulate keyboard event
+ *
  * @param {Document} document - Document instance
  * @param {string} key - Key name
  * @param {object} options - Event options
@@ -86,6 +90,7 @@ export function simulateKeyboard(document, key, options = {}) {
 
 /**
  * Simulate right-click context menu
+ *
  * @param {HTMLElement} element - Element to right-click
  * @returns {void}
  */
@@ -99,6 +104,7 @@ export function simulateRightClick(element) {
 
 /**
  * Wait for DOM element to become visible or hidden
+ *
  * @param {HTMLElement} element - Element to watch
  * @param {boolean} shouldBeVisible - Whether element should be visible
  * @param {number} timeout - Maximum wait time in milliseconds
@@ -129,6 +135,7 @@ export async function waitForVisibility(
 
 /**
  * Get notification badge counts
+ *
  * @param {object} elements - Notification elements from getNotificationElements
  * @returns {object} Object with warning and error counts
  */
@@ -141,6 +148,7 @@ export function getBadgeCounts(elements) {
 
 /**
  * Get log entries from panel
+ *
  * @param {object} elements - Notification elements from getNotificationElements
  * @returns {Array<HTMLElement>} Array of log entry elements
  */

@@ -177,6 +177,10 @@ export class SharedEntityTestBed extends BaseTestBed {
 
   /**
    * Get or create a test entity from the pool
+   *
+   * @param definitionId
+   * @param options
+   * @param customDefinition
    */
   async getOrCreateTestEntity(
     definitionId,
@@ -224,6 +228,9 @@ export class SharedEntityTestBed extends BaseTestBed {
 
   /**
    * Reset entity state instead of recreating
+   *
+   * @param entity
+   * @param definitionId
    */
   async resetEntityState(entity, definitionId) {
     // Reset to definition state by removing any component overrides
@@ -250,6 +257,8 @@ export class SharedEntityTestBed extends BaseTestBed {
 
   /**
    * Lightweight entity creation for simple test cases
+   *
+   * @param definitionId
    */
   async createSimpleTestEntity(definitionId = 'test:simple_entity') {
     return this.getOrCreateTestEntity(definitionId, {
@@ -260,6 +269,9 @@ export class SharedEntityTestBed extends BaseTestBed {
 
   /**
    * Ensure an entity definition exists (with caching)
+   *
+   * @param definitionId
+   * @param customDefinition
    */
   async ensureEntityDefinitionExists(definitionId, customDefinition = null) {
     assertNonBlankString(definitionId, 'definitionId');
@@ -292,6 +304,8 @@ export class SharedEntityTestBed extends BaseTestBed {
 
   /**
    * Get component mutation events for a specific entity
+   *
+   * @param entityId
    */
   getComponentEvents(entityId) {
     return this.componentEvents.filter((event) => event.entityId === entityId);
@@ -306,6 +320,8 @@ export class SharedEntityTestBed extends BaseTestBed {
 
   /**
    * Selective repository consistency validation (only when needed)
+   *
+   * @param entityIds
    */
   async validateRepositoryConsistencySelective(entityIds = null) {
     const idsToCheck = entityIds || Array.from(this.createdEntityIds);

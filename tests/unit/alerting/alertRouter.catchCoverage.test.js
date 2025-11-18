@@ -7,6 +7,7 @@ import {
 
 /**
  * Helper to create a minimal dispatcher compatible with AlertRouter.
+ *
  * @param {Partial<import('../../../src/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher>} overrides
  */
 function createDispatcher(overrides = {}) {

@@ -19,6 +19,9 @@ const createTestLogger = () => ({
   error: jest.fn(),
 });
 
+/**
+ *
+ */
 async function createDispatcherHarness() {
   const logger = createTestLogger();
   const registry = new InMemoryDataRegistry({ logger });

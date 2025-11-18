@@ -5,12 +5,12 @@
 /**
  * Creates a fully configured DOM element for tests.
  *
- * @param {Object} config - Element configuration
+ * @param {object} config - Element configuration
  * @param {string} config.id - Element ID (required)
- * @param {string} [config.tag='div'] - HTML tag name
- * @param {Object} [config.attributes={}] - HTML attributes to set on the element
+ * @param {string} [config.tag] - HTML tag name
+ * @param {object} [config.attributes] - HTML attributes to set on the element
  * @param {string} [config.className] - CSS class names
- * @param {boolean} [config.attachToDocument=true] - Attach to document.body when true
+ * @param {boolean} [config.attachToDocument] - Attach to document.body when true
  * @param {string} [config.textContent] - Optional text content
  * @returns {HTMLElement} Fully configured element
  */
@@ -53,13 +53,13 @@ export function createTestElement(config) {
 /**
  * Creates a DOM container with child elements.
  *
- * @param {Object} options - Container configuration
+ * @param {object} options - Container configuration
  * @param {string} options.containerId - ID for the container element
- * @param {string} [options.tag='div'] - Container tag name
- * @param {Object} [options.attributes={}] - Attributes to apply to the container
+ * @param {string} [options.tag] - Container tag name
+ * @param {object} [options.attributes] - Attributes to apply to the container
  * @param {string} [options.className] - CSS classes for the container
- * @param {Array<Object>} [options.children=[]] - Child element configs passed to createTestElement
- * @param {boolean} [options.attachToDocument=true] - Attach container to document.body when true
+ * @param {Array<object>} [options.children] - Child element configs passed to createTestElement
+ * @param {boolean} [options.attachToDocument] - Attach container to document.body when true
  * @returns {{container: HTMLElement, children: Record<string, HTMLElement>}} Container and child elements
  */
 export function createTestContainer(options) {

@@ -56,6 +56,10 @@ describe('slotAccessResolver additional scenarios', () => {
     dispatcher = { resolve: jest.fn() };
   });
 
+  /**
+   *
+   * @param field
+   */
   function createNode(field = 'torso_upper') {
     return {
       type: 'Step',

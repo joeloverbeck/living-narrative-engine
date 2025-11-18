@@ -67,6 +67,9 @@ const COMMON_SCHEMA = JSON.parse(
   )
 );
 
+/**
+ *
+ */
 function createTestLogger() {
   return {
     debug: jest.fn(),
@@ -76,6 +79,11 @@ function createTestLogger() {
   };
 }
 
+/**
+ *
+ * @param seed
+ * @param minLength
+ */
 function createLongText(seed, minLength) {
   let output = seed.trim();
   while (output.length < minLength) {
@@ -84,6 +92,9 @@ function createLongText(seed, minLength) {
   return output;
 }
 
+/**
+ *
+ */
 function createSampleConcept() {
   return {
     id: 'concept-auric-mage',
@@ -94,6 +105,9 @@ function createSampleConcept() {
   };
 }
 
+/**
+ *
+ */
 function createSampleDirection() {
   return {
     id: 'direction-haunted-duty',
@@ -115,6 +129,9 @@ function createSampleDirection() {
   };
 }
 
+/**
+ *
+ */
 function createSampleCliches() {
   return {
     categories: {
@@ -138,6 +155,9 @@ function createSampleCliches() {
   };
 }
 
+/**
+ *
+ */
 function buildHighQualityResponse() {
   return {
     motivations: [
@@ -169,6 +189,9 @@ function buildHighQualityResponse() {
   };
 }
 
+/**
+ *
+ */
 function buildLowQualityResponse() {
   return {
     motivations: [
@@ -325,6 +348,13 @@ class FlakyTokenEstimator {
   }
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.responses
+ * @param root0.tokenEstimator
+ * @param root0.configManagerOptions
+ */
 async function createGeneratorHarness({
   responses,
   tokenEstimator,
@@ -404,10 +434,18 @@ async function createGeneratorHarness({
   };
 }
 
+/**
+ *
+ * @param events
+ */
 function extractEventTypes(events) {
   return events.map((event) => event.type);
 }
 
+/**
+ *
+ * @param value
+ */
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }

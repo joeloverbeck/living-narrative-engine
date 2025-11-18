@@ -4,6 +4,7 @@ import { ANATOMY_BODY_COMPONENT_ID } from '../../../src/constants/componentIds.j
 
 /**
  * Creates a logger instance that records debug/info/warn/error output.
+ *
  * @returns {{debug: jest.Mock, info: jest.Mock, warn: jest.Mock, error: jest.Mock}}
  */
 function createLogger() {

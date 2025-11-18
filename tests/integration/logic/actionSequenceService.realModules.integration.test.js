@@ -4,6 +4,9 @@ import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 
+/**
+ *
+ */
 function createTestLogger() {
   const entries = { debug: [], info: [], warn: [], error: [] };
   return {
@@ -15,6 +18,10 @@ function createTestLogger() {
   };
 }
 
+/**
+ *
+ * @param registry
+ */
 function registerDefaultOperations(registry) {
   registry.register('STORE_LOG', async (params, executionContext) => {
     const log = executionContext.evaluationContext.context.executionLog;
@@ -34,6 +41,12 @@ function registerDefaultOperations(registry) {
   });
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.items
+ * @param root0.shouldProcess
+ */
 function createEnvironment({ items = [1, 2, 3], shouldProcess = true } = {}) {
   const baseLogger = createTestLogger();
 

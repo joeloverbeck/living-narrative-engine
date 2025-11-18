@@ -48,6 +48,10 @@ class RecordingDispatcher {
   }
 }
 
+/**
+ *
+ * @param responses
+ */
 function createHttpServer(responses) {
   let callCount = 0;
   const server = createServer((req, res) => {

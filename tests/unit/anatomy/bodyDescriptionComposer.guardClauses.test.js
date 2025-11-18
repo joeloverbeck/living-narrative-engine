@@ -5,6 +5,10 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { BodyDescriptionComposer } from '../../../src/anatomy/bodyDescriptionComposer.js';
 
+/**
+ *
+ * @param overrides
+ */
 function createComposer(overrides = {}) {
   const logger =
     overrides.logger ||

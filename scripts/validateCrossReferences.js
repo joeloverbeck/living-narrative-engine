@@ -246,6 +246,8 @@ async function loadDependencies() {
 
 /**
  * Parses command line arguments into options object
+ *
+ * @param args
  */
 function parseCommandLineArgs(args) {
   const options = {
@@ -305,6 +307,8 @@ function parseCommandLineArgs(args) {
 
 /**
  * Resolves mod path from mod ID using standard project structure
+ *
+ * @param modId
  */
 function resolveModPath(modId) {
   // Use standard project structure: data/mods/<modId>

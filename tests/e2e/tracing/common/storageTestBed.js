@@ -446,6 +446,7 @@ export class StorageTestBed {
 
   /**
    * Create test logger
+   *
    * @returns {object} Mock logger
    */
   #createTestLogger() {
@@ -459,6 +460,7 @@ export class StorageTestBed {
 
   /**
    * Create mock directory manager for testing
+   *
    * @returns {object} Mock directory manager
    */
   #createMockDirectoryManager() {

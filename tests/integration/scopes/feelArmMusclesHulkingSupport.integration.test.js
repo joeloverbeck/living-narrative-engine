@@ -134,6 +134,13 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
 
   describe('Arm Build Recognition', () => {
     // Helper to create entities with anatomy
+    /**
+     *
+     * @param actorId
+     * @param targetId
+     * @param armBuild
+     * @param facingAwayConfig
+     */
     function setupEntitiesWithArms(
       actorId,
       targetId,

@@ -15,7 +15,7 @@ const DEFAULT_TIMEOUT_MS = 120000;
  * Wait until a condition returns true or the timeout elapses.
  *
  * @param {() => boolean} condition - Predicate to evaluate.
- * @param {number} [timeout=DEFAULT_TIMEOUT_MS] - Maximum wait time in milliseconds.
+ * @param {number} [timeout] - Maximum wait time in milliseconds.
  * @returns {Promise<void>} Resolves when the condition becomes true.
  */
 async function waitForCondition(condition, timeout = DEFAULT_TIMEOUT_MS) {

@@ -130,7 +130,7 @@ describe('AjvSchemaValidator targeted loader coverage', () => {
     );
 
     // Instantiate to capture the loader and preserve existing behaviour.
-    // eslint-disable-next-line no-new
+     
     new AjvSchemaValidator({ logger });
 
     expect(typeof capturedLoader).toBe('function');

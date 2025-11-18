@@ -41,11 +41,13 @@ class RefinementEngine {
    * @param {object} dependencies - Required services
    * @param {object} dependencies.methodSelectionService - IMethodSelectionService
    * @param {object} dependencies.container - AppContainer (for lazy IRefinementStateManager resolution)
+   * @param dependencies.appContainer
    * @param {object} dependencies.primitiveActionStepExecutor - IPrimitiveActionStepExecutor
    * @param {object} dependencies.conditionalStepExecutor - IConditionalStepExecutor
    * @param {object} dependencies.contextAssemblyService - IContextAssemblyService
    * @param {object} dependencies.gameDataRepository - GameDataRepository
    * @param {object} dependencies.eventBus - IEventBus
+   * @param dependencies.goapEventDispatcher
    * @param {object} dependencies.logger - ILogger
    */
   constructor({

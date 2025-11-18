@@ -20,6 +20,13 @@ import { ValidationService } from '../../../src/characterBuilder/services/valida
 import { EnhancedSpeechPatternsValidator } from '../../../src/characterBuilder/validators/EnhancedSpeechPatternsValidator.js';
 import { createTestBed } from '../../common/testBed.js';
 
+/**
+ *
+ * @param root0
+ * @param root0.logger
+ * @param root0.eventBus
+ * @param root0.schemaValidator
+ */
 function createControllerDependencies({ logger, eventBus, schemaValidator }) {
   const asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({ logger });
   const eventListenerRegistry = new EventListenerRegistry({

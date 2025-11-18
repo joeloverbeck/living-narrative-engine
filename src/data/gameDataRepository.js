@@ -146,6 +146,7 @@ export class GameDataRepository extends IGameDataRepository {
 
   /**
    * Backwards-compatible alias consumed by GOAP refinement services.
+   *
    * @returns {ActionDefinition[]}
    */
   getAllActions() {

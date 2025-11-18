@@ -43,6 +43,9 @@ class TestGameDataRepository {
   }
 }
 
+/**
+ *
+ */
 function createHandlerHarness() {
   const logger = new RecordingLogger();
 

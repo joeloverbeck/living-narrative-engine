@@ -114,6 +114,7 @@ export default function createStepResolver({
    * @param {string} entityId - ID of the entity to inspect.
    * @param {string} field - Field name requested.
    * @param {object} [trace] - Optional trace logger.
+   * @param logger
    * @returns {any} Extracted value or undefined.
    */
   function resolveEntityParentValue(entityId, field, trace, logger) {
@@ -152,6 +153,7 @@ export default function createStepResolver({
    * @description Reads the given property directly from the object.
    * @param {object} obj - Object containing the field.
    * @param {string} field - Field name to extract.
+   * @param logger
    * @returns {any} Extracted value or undefined.
    */
   function resolveObjectParentValue(obj, field, logger) {

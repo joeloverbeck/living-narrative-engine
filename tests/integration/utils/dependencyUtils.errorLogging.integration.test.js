@@ -29,6 +29,10 @@ class RecordingLogger {
   }
 }
 
+/**
+ *
+ * @param logger
+ */
 function buildInitializationServiceDeps(logger) {
   const modsLoader = { loadMods: async () => ({ loaded: true }) };
   const scopeRegistry = { initialize: async () => {} };

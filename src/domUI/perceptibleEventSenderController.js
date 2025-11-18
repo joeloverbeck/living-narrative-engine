@@ -32,7 +32,8 @@ class PerceptibleEventSenderController {
 
   /**
    * Creates a new PerceptibleEventSenderController instance.
-   * @param {Object} dependencies - Injected dependencies
+   *
+   * @param {object} dependencies - Injected dependencies
    * @param {ISafeEventDispatcher} dependencies.eventBus - Event bus for game lifecycle events
    * @param {IDocumentContext} dependencies.documentContext - Document access interface
    * @param {ILogger} dependencies.logger - Logger for debugging and errors
@@ -110,6 +111,7 @@ class PerceptibleEventSenderController {
 
   /**
    * Caches references to all DOM elements used by this controller.
+   *
    * @private
    */
   #cacheElements() {
@@ -134,6 +136,7 @@ class PerceptibleEventSenderController {
 
   /**
    * Attaches event listeners to form controls.
+   *
    * @private
    */
   #attachEventListeners() {
@@ -215,6 +218,7 @@ class PerceptibleEventSenderController {
 
   /**
    * Loads all locations from the entity system and populates the location dropdown.
+   *
    * @private
    */
   #loadLocations() {
@@ -253,6 +257,7 @@ class PerceptibleEventSenderController {
 
   /**
    * Loads all actors in the specified location and populates the actor multi-select.
+   *
    * @param {string} locationId - The ID of the location to query actors for
    * @private
    */
@@ -283,6 +288,7 @@ class PerceptibleEventSenderController {
 
   /**
    * Handles filter mode radio button changes by showing/hiding the actor selector.
+   *
    * @private
    */
   #onFilterModeChange() {
@@ -301,6 +307,7 @@ class PerceptibleEventSenderController {
 
   /**
    * Gets the currently selected filter mode from radio buttons.
+   *
    * @returns {string} The selected filter mode ('all', 'specific', or 'exclude')
    * @private
    */
@@ -319,6 +326,7 @@ class PerceptibleEventSenderController {
 
   /**
    * Gets an array of selected actor IDs from the multi-select element.
+   *
    * @returns {string[]} Array of selected actor IDs
    * @private
    */
@@ -329,6 +337,7 @@ class PerceptibleEventSenderController {
 
   /**
    * Validates the form and enables/disables the send button accordingly.
+   *
    * @private
    */
   #validateForm() {
@@ -358,7 +367,8 @@ class PerceptibleEventSenderController {
 
   /**
    * Constructs the event payload for DISPATCH_PERCEPTIBLE_EVENT operation.
-   * @returns {Object} The operation object ready for dispatch
+   *
+   * @returns {object} The operation object ready for dispatch
    * @private
    */
   #constructEventPayload() {
@@ -391,6 +401,7 @@ class PerceptibleEventSenderController {
 
   /**
    * Sends the perceptible event by executing the DISPATCH_PERCEPTIBLE_EVENT operation.
+   *
    * @private
    */
   async #sendPerceptibleEvent() {
@@ -430,6 +441,7 @@ class PerceptibleEventSenderController {
   /**
    * Displays a status message to the user with the specified type.
    * Auto-clears after 5 seconds.
+   *
    * @param {string} message - The message to display
    * @param {string} type - The message type ('success' or 'error')
    * @private
@@ -455,6 +467,7 @@ class PerceptibleEventSenderController {
 
   /**
    * Clears the form by resetting all inputs to their default state.
+   *
    * @private
    */
   #clearForm() {

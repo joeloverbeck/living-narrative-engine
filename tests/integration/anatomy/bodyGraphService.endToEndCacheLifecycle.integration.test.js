@@ -109,6 +109,9 @@ class RecordingDispatcher {
   }
 }
 
+/**
+ *
+ */
 function createLogger() {
   const entries = { debug: [], info: [], warn: [], error: [] };
 
@@ -135,6 +138,9 @@ function createLogger() {
   };
 }
 
+/**
+ *
+ */
 function createFixture() {
   const entityManager = new InMemoryEntityManager();
 

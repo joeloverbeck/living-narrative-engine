@@ -11,6 +11,12 @@ import { ErrorCodes } from '../../../src/scopeDsl/constants/errorCodes.js';
  *
  * This resolver demonstrates how to properly handle errors in async operations,
  * including promises, async/await, and parallel async operations.
+ *
+ * @param root0
+ * @param root0.logger
+ * @param root0.errorHandler
+ * @param root0.dataFetcher
+ * @param root0.cache
  */
 export default function createAsyncResolver({
   logger,
@@ -41,6 +47,9 @@ export default function createAsyncResolver({
 
   /**
    * Fetch data with proper error handling
+   *
+   * @param id
+   * @param ctx
    */
   async function fetchWithErrorHandling(id, ctx) {
     const startTime = Date.now();
@@ -95,6 +104,9 @@ export default function createAsyncResolver({
 
   /**
    * Parallel fetch with error handling for multiple items
+   *
+   * @param ids
+   * @param ctx
    */
   async function fetchMultiple(ids, ctx) {
     const results = [];
@@ -156,6 +168,10 @@ export default function createAsyncResolver({
 
   /**
    * Retry logic with exponential backoff
+   *
+   * @param id
+   * @param ctx
+   * @param maxRetries
    */
   async function fetchWithRetry(id, ctx, maxRetries = 3) {
     let lastError;
@@ -199,6 +215,9 @@ export default function createAsyncResolver({
 
   /**
    * Stream processing with error handling
+   *
+   * @param items
+   * @param ctx
    */
   async function* processStream(items, ctx) {
     for (const item of items) {
@@ -221,6 +240,9 @@ export default function createAsyncResolver({
 
   /**
    * Process single item
+   *
+   * @param item
+   * @param ctx
    */
   async function processItem(item, ctx) {
     // Simulate async processing
@@ -367,6 +389,9 @@ export default function createAsyncResolver({
 
 /**
  * Helper: Create cancellable async operation
+ *
+ * @param asyncFn
+ * @param errorHandler
  */
 export function createCancellableOperation(asyncFn, errorHandler) {
   let cancelled = false;
@@ -405,6 +430,11 @@ export function createCancellableOperation(asyncFn, errorHandler) {
 
 /**
  * Helper: Async operation with progress reporting
+ *
+ * @param asyncFn
+ * @param onProgress
+ * @param errorHandler
+ * @param ctx
  */
 export async function withProgress(asyncFn, onProgress, errorHandler, ctx) {
   try {

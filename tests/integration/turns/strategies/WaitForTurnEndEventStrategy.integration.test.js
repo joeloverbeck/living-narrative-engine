@@ -45,6 +45,9 @@ class InMemoryValidatedEventDispatcher {
   }
 }
 
+/**
+ *
+ */
 function createLogger() {
   return {
     debug: jest.fn(),
@@ -54,6 +57,10 @@ function createLogger() {
   };
 }
 
+/**
+ *
+ * @param logger
+ */
 function createServices(logger) {
   const validatedEventDispatcher = new InMemoryValidatedEventDispatcher();
   return {
@@ -69,6 +76,11 @@ function createServices(logger) {
   };
 }
 
+/**
+ *
+ * @param logger
+ * @param overrides
+ */
 function createHandler(logger, overrides = {}) {
   const baseHandler = {
     _isDestroyed: false,
@@ -88,6 +100,14 @@ function createHandler(logger, overrides = {}) {
   return { ...baseHandler, ...overrides };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.logger
+ * @param root0.actorId
+ * @param root0.handlerOverrides
+ * @param root0.ContextClass
+ */
 function createTurnContextFixture({
   logger,
   actorId = 'actor-123',

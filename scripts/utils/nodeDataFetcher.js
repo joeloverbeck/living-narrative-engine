@@ -70,7 +70,7 @@ class NodeDataFetcher {
       }
 
       // Log and re-throw other errors
-      // eslint-disable-next-line no-console
+       
       console.error(
         `NodeDataFetcher: Error reading or parsing ${identifier}:`,
         error

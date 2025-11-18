@@ -16,6 +16,9 @@ const ACTOR_ID = 'entity:actor-debug';
 const TARGET_ID = 'entity:target-debug';
 const ACTION_ID = 'action:prereq-debug';
 
+/**
+ *
+ */
 function createTestLogger() {
   return {
     debug: jest.fn(),
@@ -25,6 +28,10 @@ function createTestLogger() {
   };
 }
 
+/**
+ *
+ * @param components
+ */
 function createActor(components = {}) {
   return {
     id: ACTOR_ID,
@@ -35,6 +42,10 @@ function createActor(components = {}) {
   };
 }
 
+/**
+ *
+ * @param components
+ */
 function createTarget(components = {}) {
   return {
     id: TARGET_ID,
@@ -45,6 +56,11 @@ function createTarget(components = {}) {
   };
 }
 
+/**
+ *
+ * @param partId
+ * @param subType
+ */
 function createPart(partId, subType) {
   return {
     id: partId,
@@ -54,6 +70,11 @@ function createPart(partId, subType) {
   };
 }
 
+/**
+ *
+ * @param initialEntities
+ * @param logic
+ */
 function buildDebuggerScenario(initialEntities, logic) {
   const logger = createTestLogger();
   const entityManager = createEntityManagerAdapter({ logger, initialEntities });

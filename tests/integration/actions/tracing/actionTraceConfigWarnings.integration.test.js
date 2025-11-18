@@ -193,6 +193,9 @@ describe('ActionTraceConfig - Configuration Warnings Integration', () => {
 
     // Simulate the initialization sequence that triggers the warnings:
     // tracingConfigurationInitializer → actionTraceConfigValidator → actionTraceConfigLoader
+    /**
+     *
+     */
     async function simulateInitializationSequence() {
       const conflictingConfig = {
         logRotation: {

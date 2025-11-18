@@ -4,6 +4,9 @@ import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import ValidatorGenerator from '../../../src/validation/validatorGenerator.js';
 import StringSimilarityCalculator from '../../../src/validation/stringSimilarityCalculator.js';
 
+/**
+ *
+ */
 function createTestLogger() {
   return {
     info: jest.fn(),
@@ -13,6 +16,12 @@ function createTestLogger() {
   };
 }
 
+/**
+ *
+ * @param logger
+ * @param root0
+ * @param root0.dataRegistry
+ */
 function createEnhancedValidator(logger, { dataRegistry } = {}) {
   const registry = dataRegistry ?? new InMemoryDataRegistry({ logger });
   const similarityCalculator = new StringSimilarityCalculator({ logger });

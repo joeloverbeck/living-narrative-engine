@@ -368,6 +368,7 @@ export function createTestBed() {
 
     /**
      * Creates an AJV schema validator instance using the project's AJV validator class
+     *
      * @returns {object} AjvSchemaValidator instance
      */
     createAjvValidator() {
@@ -382,6 +383,7 @@ export function createTestBed() {
 
     /**
      * Creates a pre-configured AJV instance with test schemas loaded
+     *
      * @returns {object} AJV instance with schemas
      */
     createTestAjv() {
@@ -391,6 +393,7 @@ export function createTestBed() {
 
     /**
      * Creates a TargetRequiredComponentsValidator instance for testing
+     *
      * @returns {object} TargetRequiredComponentsValidator instance
      */
     createTargetRequiredComponentsValidator() {
@@ -405,6 +408,11 @@ export function createTestBed() {
   };
 }
 
+/**
+ *
+ * @param goalState
+ * @param overrides
+ */
 export function buildPlanningGoal(goalState, overrides = {}) {
   const normalizedGoalState = deepClone(goalState || {});
   rewriteGoalStateVars(normalizedGoalState);
@@ -423,6 +431,10 @@ export function buildPlanningGoal(goalState, overrides = {}) {
   };
 }
 
+/**
+ *
+ * @param node
+ */
 function rewriteGoalStateVars(node) {
   if (!node || typeof node !== 'object') {
     return;

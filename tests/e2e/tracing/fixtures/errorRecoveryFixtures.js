@@ -224,6 +224,8 @@ export const RECOVERY_PERFORMANCE = {
 
 /**
  * Test action that can fail in various ways
+ *
+ * @param errorScenario
  */
 export const createFailingAction = (errorScenario) => {
   return {
@@ -241,6 +243,8 @@ export const createFailingAction = (errorScenario) => {
 
 /**
  * Generate a sequence of errors for storm testing
+ *
+ * @param pattern
  */
 export const generateErrorStorm = (pattern) => {
   const storm = ERROR_STORM_PATTERNS[pattern];
@@ -263,6 +267,9 @@ export const generateErrorStorm = (pattern) => {
 
 /**
  * Validation helpers for error recovery assertions
+ *
+ * @param actual
+ * @param expected
  */
 export const validateRecoveryOutcome = (actual, expected) => {
   const validations = [];

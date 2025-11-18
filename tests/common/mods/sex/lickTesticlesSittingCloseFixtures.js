@@ -10,6 +10,7 @@ import { ModEntityBuilder } from '../ModEntityBuilder.js';
 
 /**
  * Identifier for the seated lick testicles action.
+ *
  * @type {string}
  */
 export const LICK_TESTICLES_SITTING_CLOSE_ACTION_ID =
@@ -17,24 +18,28 @@ export const LICK_TESTICLES_SITTING_CLOSE_ACTION_ID =
 
 /**
  * Default actor identifier used in seated licking scenarios.
+ *
  * @type {string}
  */
 export const LICK_TESTICLES_SITTING_CLOSE_ACTOR_ID = 'ava';
 
 /**
  * Default primary partner identifier for seated licking scenarios.
+ *
  * @type {string}
  */
 export const LICK_TESTICLES_SITTING_CLOSE_PRIMARY_ID = 'nolan';
 
 /**
  * Default room identifier for seated licking scenarios.
+ *
  * @type {string}
  */
 export const LICK_TESTICLES_SITTING_CLOSE_ROOM_ID = 'salon1';
 
 /**
  * Default furniture identifier used for the shared seat.
+ *
  * @type {string}
  */
 export const LICK_TESTICLES_SITTING_CLOSE_FURNITURE_ID = 'sofa1';

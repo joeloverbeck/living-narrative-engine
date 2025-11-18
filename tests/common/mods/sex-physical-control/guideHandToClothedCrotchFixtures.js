@@ -8,6 +8,7 @@ import { ModEntityBuilder } from '../ModEntityBuilder.js';
 
 /**
  * Identifier for the guide hand to clothed crotch action.
+ *
  * @type {string}
  */
 export const GUIDE_HAND_TO_CLOTHED_CROTCH_ACTION_ID =
@@ -15,24 +16,28 @@ export const GUIDE_HAND_TO_CLOTHED_CROTCH_ACTION_ID =
 
 /**
  * Default actor identifier for clothed crotch hand guidance scenarios.
+ *
  * @type {string}
  */
 export const GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_ID = 'marin';
 
 /**
  * Default primary partner identifier for clothed crotch hand guidance scenarios.
+ *
  * @type {string}
  */
 export const GUIDE_HAND_TO_CLOTHED_CROTCH_PRIMARY_ID = 'avery';
 
 /**
  * Default room identifier used for clothed crotch hand guidance scenarios.
+ *
  * @type {string}
  */
 export const GUIDE_HAND_TO_CLOTHED_CROTCH_ROOM_ID = 'amber_suite';
 
 /**
  * Default clothing identifier worn by the actor over their crotch.
+ *
  * @type {string}
  */
 export const GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_CLOTHING_ID =
@@ -40,6 +45,7 @@ export const GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_CLOTHING_ID =
 
 /**
  * Default groin identifier for the actor's anatomy tree.
+ *
  * @type {string}
  */
 export const GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_GROIN_ID =
@@ -47,6 +53,7 @@ export const GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_GROIN_ID =
 
 /**
  * Default penis identifier for the actor's anatomy tree.
+ *
  * @type {string}
  */
 export const GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_PENIS_ID =

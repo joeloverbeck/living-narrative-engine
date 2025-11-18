@@ -303,6 +303,10 @@ describe('validateOperations integration tests', () => {
 // Helper Functions
 // ============================================================================
 
+/**
+ *
+ * @param operationType
+ */
 function toTokenName(operationType) {
   return (
     operationType
@@ -312,6 +316,10 @@ function toTokenName(operationType) {
   );
 }
 
+/**
+ *
+ * @param operationType
+ */
 function toHandlerFileName(operationType) {
   const parts = operationType.split('_');
   return (
@@ -323,6 +331,10 @@ function toHandlerFileName(operationType) {
   );
 }
 
+/**
+ *
+ * @param operationType
+ */
 function toSchemaFileName(operationType) {
   const parts = operationType.split('_');
   return (

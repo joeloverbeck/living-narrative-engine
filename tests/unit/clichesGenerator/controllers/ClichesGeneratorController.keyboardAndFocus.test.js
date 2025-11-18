@@ -14,6 +14,9 @@ import {
   ClichesGeneratorControllerTestBed,
 } from '../../../common/clichesGeneratorControllerTestBed.js';
 
+/**
+ *
+ */
 async function setupTestBedWithDirections() {
   const testBed = new ClichesGeneratorControllerTestBed();
   testBed.setupSuccessfulDirectionLoad();

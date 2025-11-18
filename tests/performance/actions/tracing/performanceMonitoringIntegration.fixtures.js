@@ -255,6 +255,9 @@ export const LOAD_TEST_PATTERNS = {
 
 /**
  * Creates test action data with realistic gaming properties
+ *
+ * @param actionId
+ * @param pattern
  */
 export function createTestActionData(actionId, pattern = 'EXPLORATION') {
   const patternData = GAMING_ACTION_PATTERNS[pattern];
@@ -283,6 +286,9 @@ export function createTestActionData(actionId, pattern = 'EXPLORATION') {
 
 /**
  * Generates a sequence of actions for load testing
+ *
+ * @param pattern
+ * @param count
  */
 export function generateActionSequence(pattern, count) {
   const patternData = GAMING_ACTION_PATTERNS[pattern];

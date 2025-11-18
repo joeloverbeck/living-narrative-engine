@@ -1,5 +1,9 @@
 import { devOnlyAssert } from './devOnlyAssert.js';
 
+/**
+ *
+ * @param entityManager
+ */
 function describeOrderFor(entityManager) {
   if (!entityManager) {
     return [];
@@ -15,6 +19,10 @@ function describeOrderFor(entityManager) {
   return order;
 }
 
+/**
+ *
+ * @param entityManager
+ */
 function validateEntityManager(entityManager) {
   if (!entityManager) {
     return;
@@ -30,6 +38,13 @@ function validateEntityManager(entityManager) {
   );
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.trace
+ * @param root0.logger
+ * @param root0.debugConfig
+ */
 function createResolverChangeEmitter({ trace = null, logger = null, debugConfig }) {
   const debugEnabled = Boolean(debugConfig?.enabled);
   let lastResolverUsed = null;
@@ -97,6 +112,10 @@ export function createEntityLookupStrategy({
     debugConfig,
   });
 
+  /**
+   *
+   * @param entityId
+   */
   function resolve(entityId) {
     if (!entityId) {
       return undefined;
@@ -131,10 +150,17 @@ export function createEntityLookupStrategy({
     return undefined;
   }
 
+  /**
+   *
+   */
   function describeOrder() {
     return describeOrderFor(currentEntityManager);
   }
 
+  /**
+   *
+   * @param nextEntityManager
+   */
   function refreshCapabilities(nextEntityManager) {
     if (typeof nextEntityManager !== 'undefined') {
       if (nextEntityManager === null) {

@@ -77,6 +77,7 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
 
   /**
    * Creates a proper ExecutionContext object for handler testing.
+   *
    * @param {object} options - Configuration options
    * @param {string} options.actorId - Actor entity ID
    * @param {string} [options.targetId] - Target entity ID

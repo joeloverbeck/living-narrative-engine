@@ -11,6 +11,11 @@ import {
   GraphBuildingError,
 } from '../../../src/anatomy/orchestration/anatomyErrorHandler.js';
 
+/**
+ *
+ * @param root0
+ * @param root0.includeCentral
+ */
 function createHarness({ includeCentral = true } = {}) {
   const logger = new ConsoleLogger(LogLevel.NONE);
   const eventBus = new EventBus({ logger });

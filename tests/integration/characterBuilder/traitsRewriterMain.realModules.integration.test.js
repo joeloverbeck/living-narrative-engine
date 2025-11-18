@@ -13,7 +13,7 @@ jest.setTimeout(60000);
 
 const flushMicrotasks = async (cycles = 5) => {
   for (let i = 0; i < cycles; i += 1) {
-    // eslint-disable-next-line no-await-in-loop
+     
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
 };
@@ -23,7 +23,7 @@ const waitForCondition = async (checkFn, {
   interval = 50,
 } = {}) => {
   const start = Date.now();
-  // eslint-disable-next-line no-constant-condition
+   
   while (true) {
     const result = await checkFn();
     if (result) {
@@ -32,7 +32,7 @@ const waitForCondition = async (checkFn, {
     if (Date.now() - start > timeout) {
       throw new Error('Timed out waiting for condition to be met.');
     }
-    // eslint-disable-next-line no-await-in-loop
+     
     await new Promise((resolve) => setTimeout(resolve, interval));
   }
 };

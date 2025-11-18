@@ -7,6 +7,7 @@ import { validateDependency } from '../utils/dependencyUtils.js';
 
 /**
  * Degradation strategies
+ *
  * @enum {string}
  */
 export const DegradationStrategy = {

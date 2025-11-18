@@ -187,6 +187,7 @@ jest.mock('../../../src/bootstrapper/UIBootstrapper.js', () => {
 /**
  * Helper to prepare the DOM and global mocks for each scenario using the
  * existing Jest JSDOM environment.
+ *
  * @param {string} html
  */
 function setupDom(html) {

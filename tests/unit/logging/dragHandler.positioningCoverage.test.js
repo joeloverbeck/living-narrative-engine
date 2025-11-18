@@ -8,6 +8,11 @@ import {
 } from '@jest/globals';
 import DragHandler from '../../../src/logging/dragHandler.js';
 
+/**
+ *
+ * @param spy
+ * @param eventName
+ */
 function getHandler(spy, eventName) {
   const call = [...spy.mock.calls].reverse().find(([name]) => name === eventName);
   return call && call[1];
@@ -96,6 +101,11 @@ describe('DragHandler positional coverage', () => {
     jest.clearAllMocks();
   });
 
+  /**
+   *
+   * @param startX
+   * @param startY
+   */
   function startDrag(startX, startY) {
     const mousedown = getHandler(elementAddSpy, 'mousedown');
     expect(mousedown).toBeDefined();

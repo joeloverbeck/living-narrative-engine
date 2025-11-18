@@ -28,6 +28,13 @@ class InMemoryStorageAdapter {
   }
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.disableQueueProcessor
+ * @param root0.rotationManagerMock
+ * @param root0.beforeImport
+ */
 async function loadService({
   disableQueueProcessor = false,
   rotationManagerMock,

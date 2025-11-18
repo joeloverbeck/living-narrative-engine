@@ -2,6 +2,9 @@ import minimalValidGoal from './minimalValidGoal.json';
 
 const baseGoal = Object.freeze(minimalValidGoal);
 
+/**
+ *
+ */
 function cloneBaseGoal() {
   return JSON.parse(JSON.stringify(baseGoal));
 }

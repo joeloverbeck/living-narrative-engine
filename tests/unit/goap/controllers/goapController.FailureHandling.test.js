@@ -286,6 +286,62 @@ describe('GoapController - Failure Handling (GOAPIMPL-021-05)', () => {
       // Cleanup
       Date.now = originalNow;
     });
+
+    it('should only clear the failing actor plan when refinement requests replan', async () => {
+      const actorKeep = { id: 'actor_keep' };
+      const actorFail = { id: 'actor_fail' };
+      const world = { state: {} };
+      const goal = {
+        id: 'goal:test',
+        name: 'Test Goal',
+        priority: 10,
+        relevance: null,
+      };
+
+      mockDataRegistry.getAll.mockReturnValue([goal]);
+      mockGoapPlanner.plan.mockReturnValue({
+        tasks: [
+          { taskId: 'task_one' },
+          { taskId: 'task_two' },
+        ],
+      });
+
+      mockRefinementEngine.refine.mockImplementation((_, actorId) => {
+        if (actorId === actorFail.id) {
+          return Promise.resolve({
+            success: false,
+            fallbackBehavior: 'replan',
+            error: 'cannot refine',
+          });
+        }
+        return Promise.resolve({
+          success: true,
+          methodId: 'method_ok',
+          stepResults: [{ actionId: 'action_ok' }],
+        });
+      });
+
+      mockDataRegistry.get.mockReturnValue({
+        id: 'method_ok',
+        steps: [
+          {
+            stepType: 'primitive_action',
+            actionId: 'action_ok',
+            targetBindings: {},
+          },
+        ],
+      });
+      mockParameterResolutionService.resolve.mockResolvedValue({});
+
+      await controller.decideTurn(actorKeep, world);
+      await controller.decideTurn(actorFail, world);
+
+      expect(controller.getActivePlan(actorFail.id)).toBeNull();
+      const remainingPlan = controller.getActivePlan(actorKeep.id);
+      expect(remainingPlan).not.toBeNull();
+      expect(remainingPlan?.actorId).toBe(actorKeep.id);
+      expect(remainingPlan?.currentStep).toBe(1);
+    });
   });
 
   describe('Refinement Failure Handling - Replan Strategy', () => {

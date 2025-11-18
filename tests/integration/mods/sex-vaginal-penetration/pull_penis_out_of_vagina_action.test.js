@@ -11,6 +11,7 @@ const ACTION_ID = 'sex-vaginal-penetration:pull_penis_out_of_vagina';
 /**
  * Creates a test scenario with two actors in active vaginal penetration.
  * Alice is penetrating Beth's vagina.
+ *
  * @returns {Array<object>} Entities for the fixture.
  */
 function createPenetrationScenario() {

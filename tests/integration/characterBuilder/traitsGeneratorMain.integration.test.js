@@ -4,6 +4,7 @@ const MODULE_PATH = '../../../src/traits-generator-main.js';
 
 /**
  * Utility to flush pending microtasks.
+ *
  * @returns {Promise<void>}
  */
 const flushPromises = () => new Promise((resolve) => setImmediate(resolve));

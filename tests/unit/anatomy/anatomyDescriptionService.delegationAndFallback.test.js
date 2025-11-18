@@ -5,6 +5,10 @@ import {
   DESCRIPTION_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 
+/**
+ *
+ * @param overrides
+ */
 function createService(overrides = {}) {
   const defaults = {
     bodyPartDescriptionBuilder: { buildDescription: jest.fn() },

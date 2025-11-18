@@ -4,6 +4,9 @@ import {
   CacheKeyTypes,
 } from '../../../src/anatomy/cache/AnatomyClothingCache.js';
 
+/**
+ *
+ */
 function createIntegrationLogger() {
   const calls = [];
   const push = (level, message, args) => {

@@ -7,17 +7,18 @@
 const { describe, it, expect, beforeAll, afterAll } = require('@jest/globals');
 /**
  * Waits for a server readiness endpoint to respond without connection errors.
+ *
  * @param {string} url - Endpoint to poll for readiness.
  * @param {object} options - Polling configuration.
  * @param {number} options.timeoutMs - Total time to wait before failing.
- * @param {number} [options.intervalMs=100] - Delay between polls in milliseconds.
+ * @param {number} [options.intervalMs] - Delay between polls in milliseconds.
  */
 async function waitForReadiness(url, { timeoutMs, intervalMs = 100 }) {
   const deadline = Date.now() + timeoutMs;
   /** @type {Error | null} */
   let lastError = null;
 
-  // eslint-disable-next-line no-constant-condition
+   
   while (true) {
     if (Date.now() >= deadline) {
       const message =

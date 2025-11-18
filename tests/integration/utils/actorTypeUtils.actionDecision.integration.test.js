@@ -115,6 +115,13 @@ class TestTurnHandler {
 
 let actorSequence = 0;
 
+/**
+ *
+ * @param root0
+ * @param root0.baseComponents
+ * @param root0.overrides
+ * @param root0.extraProps
+ */
 function buildActor({ baseComponents = {}, overrides = {}, extraProps = {} }) {
   const actor = createEntityInstance({
     instanceId: `integration-actor-${++actorSequence}`,
@@ -125,6 +132,12 @@ function buildActor({ baseComponents = {}, overrides = {}, extraProps = {} }) {
   return actor;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.actor
+ * @param root0.extractedData
+ */
 async function runDecisionWorkflow({ actor, extractedData }) {
   const logger = new RecordingLogger();
   const dispatcher = new RecordingSafeEventDispatcher();

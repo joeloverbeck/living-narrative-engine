@@ -62,7 +62,7 @@ function createLogger() {
  * Builds a fully wired UnifiedErrorHandler harness.
  *
  * @param {object} [options]
- * @param {boolean} [options.useFaultyEntityManager=false] - Whether to use the failing entity manager implementation.
+ * @param {boolean} [options.useFaultyEntityManager] - Whether to use the failing entity manager implementation.
  * @returns {{
  *   handler: UnifiedErrorHandler,
  *   actionErrorContextBuilder: ActionErrorContextBuilder,

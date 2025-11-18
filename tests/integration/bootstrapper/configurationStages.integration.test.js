@@ -11,6 +11,9 @@ import StageError from '../../../src/bootstrapper/StageError.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 import { createEnhancedMockLogger } from '../../common/mockFactories.js';
 
+/**
+ *
+ */
 async function resetGlobalConfig() {
   const resetLogger = createEnhancedMockLogger();
   await initializeGlobalConfigStage(resetLogger);

@@ -9,6 +9,10 @@ import { SpeechPatternsResponseProcessor } from '../../../../src/characterBuilde
 import * as promptModule from '../../../../src/characterBuilder/prompts/speechPatternsPrompts.js';
 import { createMockLLMResponse } from '../../../common/characterBuilder/speechPatternsTestHelpers.js';
 
+/**
+ *
+ * @param overrides
+ */
 function createValidCharacterData(overrides = {}) {
   return {
     'core:name': { name: 'Edge Case Tester', text: 'Edge Case Tester' },
@@ -27,6 +31,10 @@ function createValidCharacterData(overrides = {}) {
   };
 }
 
+/**
+ *
+ * @param overrides
+ */
 function createGenerator(overrides = {}) {
   const testBed = createTestBed();
   const logger = testBed.createMockLogger();
@@ -78,6 +86,10 @@ function createGenerator(overrides = {}) {
   };
 }
 
+/**
+ *
+ * @param patternOverrides
+ */
 function createValidResponse(patternOverrides) {
   const basePatterns = [
     {
@@ -183,7 +195,7 @@ describe('SpeechPatternsGenerator additional coverage', () => {
     };
 
     for (let i = 0; i < 5; i += 1) {
-      // eslint-disable-next-line no-await-in-loop
+       
       await expect(
         generator.generateSpeechPatterns(character, failingOptions)
       ).rejects.toThrow('LLM request failed after 1 attempts: Service unavailable');
@@ -279,7 +291,7 @@ describe('SpeechPatternsGenerator additional coverage', () => {
 
     for (let i = 0; i < 12; i += 1) {
       llmStrategyFactory.getAIDecision.mockResolvedValueOnce(createMockLLMResponse());
-      // eslint-disable-next-line no-await-in-loop
+       
       await generator.generateSpeechPatterns(
         {
           ...baseCharacter,
