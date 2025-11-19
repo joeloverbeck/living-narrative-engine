@@ -50,6 +50,25 @@ describe('TaskLoader', () => {
       'fetchJson',
       'fetch',
     ]);
+    mockDataFetcher.fetch.mockImplementation((path) => {
+      const parts = path.split('/');
+      const contentType = parts[3];
+
+      if (contentType === 'refinement-methods') {
+        const modId = parts[2] || 'core';
+        const relativePath = parts.slice(4).join('/');
+        const segments = relativePath.split('/');
+        const taskSegment = segments[0];
+        const fileName = segments[segments.length - 1] || '';
+        const methodName = fileName.replace('.refinement.json', '');
+        return Promise.resolve({
+          id: `${modId}:${taskSegment}.${methodName}`,
+          taskId: `${modId}:${taskSegment}`,
+        });
+      }
+
+      return Promise.resolve({});
+    });
 
     mockSchemaValidator = testBed.createMock('ISchemaValidator', [
       'validate',
@@ -69,7 +88,12 @@ describe('TaskLoader', () => {
       'store',
     ]);
     mockDataRegistry.getAll.mockReturnValue([]);
-    mockDataRegistry.get.mockReturnValue(null);
+    mockDataRegistry.get.mockImplementation((category, key) => {
+      if (category === 'scopes' && key) {
+        return { id: key };
+      }
+      return null;
+    });
 
     mockLogger = testBed.createMockLogger();
 
@@ -91,155 +115,254 @@ describe('TaskLoader', () => {
   });
 
   describe('_validateTaskStructure', () => {
-    it('should accept valid namespaced scope reference', () => {
-      const data = {
-        id: 'core:test_task',
-        planningScope: 'core:known_items',
-        refinementMethods: [],
-        planningEffects: [],
-      };
-
-      expect(() => {
-        taskLoader._validateTaskStructure(data, 'core', 'test.task.json');
-      }).not.toThrow();
+    const baseTask = () => ({
+      id: 'core:test_task',
+      planningScope: 'core:items',
+      refinementMethods: [],
+      planningEffects: [],
     });
 
-    it('should accept special scope "none"', () => {
-      const data = {
-        id: 'core:test_task',
-        planningScope: 'none',
-        refinementMethods: [],
-        planningEffects: [],
-      };
+    it('should accept valid namespaced scope reference', async () => {
+      const data = baseTask();
+      data.planningScope = 'core:known_items';
 
-      expect(() => {
-        taskLoader._validateTaskStructure(data, 'core', 'test.task.json');
-      }).not.toThrow();
+      await expect(
+        taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
+      ).resolves.toBeUndefined();
     });
 
-    it('should accept special scope "self"', () => {
-      const data = {
-        id: 'core:test_task',
-        planningScope: 'self',
-        refinementMethods: [],
-        planningEffects: [],
-      };
+    it('should reject planning scope if referenced scope is missing', async () => {
+      const data = baseTask();
+      data.planningScope = 'core:unknown_scope';
 
-      expect(() => {
-        taskLoader._validateTaskStructure(data, 'core', 'test.task.json');
-      }).not.toThrow();
+      mockDataRegistry.get.mockImplementation(() => null);
+
+      await expect(
+        taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
+      ).rejects.toThrow(
+        /planningScope 'core:unknown_scope' references a scope that is not loaded/
+      );
     });
 
-    it('should reject invalid scope reference format', () => {
-      const data = {
-        id: 'core:test_task',
-        planningScope: 'invalid-scope',
-        refinementMethods: [],
-        planningEffects: [],
-      };
+    it('should accept special scope "none"', async () => {
+      const data = baseTask();
+      data.planningScope = 'none';
 
-      expect(() => {
-        taskLoader._validateTaskStructure(data, 'core', 'test.task.json');
-      }).toThrow(/planningScope.*must be a valid scope reference/);
+      await expect(
+        taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
+      ).resolves.toBeUndefined();
     });
 
-    it('should reject refinement method without methodId', () => {
-      const data = {
-        id: 'core:test_task',
-        planningScope: 'core:items',
-        refinementMethods: [{ $ref: 'some/path.json' }],
-        planningEffects: [],
-      };
+    it('should accept special scope "self"', async () => {
+      const data = baseTask();
+      data.planningScope = 'self';
 
-      expect(() => {
-        taskLoader._validateTaskStructure(data, 'core', 'test.task.json');
-      }).toThrow(/must have methodId and \$ref properties/);
+      await expect(
+        taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
+      ).resolves.toBeUndefined();
     });
 
-    it('should reject refinement method without $ref', () => {
-      const data = {
-        id: 'core:test_task',
-        planningScope: 'core:items',
-        refinementMethods: [{ methodId: 'core:test_task.method1' }],
-        planningEffects: [],
-      };
+    it('should reject invalid scope reference format', async () => {
+      const data = baseTask();
+      data.planningScope = 'invalid-scope';
 
-      expect(() => {
-        taskLoader._validateTaskStructure(data, 'core', 'test.task.json');
-      }).toThrow(/must have methodId and \$ref properties/);
+      await expect(
+        taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
+      ).rejects.toThrow(/planningScope.*must be a valid scope reference/);
     });
 
-    it('should reject refinement method with invalid ID format', () => {
-      const data = {
-        id: 'core:test_task',
-        planningScope: 'core:items',
-        refinementMethods: [
-          { methodId: 'invalid-format', $ref: 'path.json' },
-        ],
-        planningEffects: [],
-      };
+    it('should reject refinement method without methodId', async () => {
+      const data = baseTask();
+      data.refinementMethods = [
+        { $ref: 'refinement-methods/test_task/method_one.refinement.json' },
+      ];
 
-      expect(() => {
-        taskLoader._validateTaskStructure(data, 'core', 'test.task.json');
-      }).toThrow(/must follow format 'modId:task_id\.method_name'/);
+      await expect(
+        taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
+      ).rejects.toThrow(/must have methodId and \$ref properties/);
     });
 
-    it('should reject refinement method with mismatched task ID', () => {
-      const data = {
-        id: 'core:test_task',
-        planningScope: 'core:items',
-        refinementMethods: [
-          { methodId: 'core:other_task.method1', $ref: 'path.json' },
-        ],
-        planningEffects: [],
-      };
+    it('should reject refinement method without $ref', async () => {
+      const data = baseTask();
+      data.refinementMethods = [{ methodId: 'core:test_task.method1' }];
 
-      expect(() => {
-        taskLoader._validateTaskStructure(data, 'core', 'test.task.json');
-      }).toThrow(/task portion must match task ID base name/);
+      await expect(
+        taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
+      ).rejects.toThrow(/must have methodId and \$ref properties/);
     });
 
-    it('should accept valid refinement method', () => {
-      const data = {
-        id: 'core:test_task',
-        planningScope: 'core:items',
-        refinementMethods: [
-          { methodId: 'core:test_task.method1', $ref: 'path.json' },
-        ],
-        planningEffects: [],
-      };
+    it('should reject refinement method with invalid ID format', async () => {
+      const data = baseTask();
+      data.refinementMethods = [
+        {
+          methodId: 'invalid-format',
+          $ref: 'refinement-methods/test_task/method_one.refinement.json',
+        },
+      ];
 
-      expect(() => {
-        taskLoader._validateTaskStructure(data, 'core', 'test.task.json');
-      }).not.toThrow();
+      await expect(
+        taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
+      ).rejects.toThrow(/must follow format 'modId:task_id\.method_name'/);
     });
 
-    it('should reject planning effect without type', () => {
-      const data = {
-        id: 'core:test_task',
-        planningScope: 'core:items',
-        refinementMethods: [],
-        planningEffects: [{ parameters: { entityId: 'actor' } }],
-      };
+    it('should reject refinement method with mismatched task ID', async () => {
+      const data = baseTask();
+      data.refinementMethods = [
+        {
+          methodId: 'core:other_task.method1',
+          $ref: 'refinement-methods/test_task/method_one.refinement.json',
+        },
+      ];
 
-      expect(() => {
-        taskLoader._validateTaskStructure(data, 'core', 'test.task.json');
-      }).toThrow(/must have a 'type' property/);
+      await expect(
+        taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
+      ).rejects.toThrow(/task portion must match task ID base name/);
     });
 
-    it('should accept valid planning effect', () => {
-      const data = {
-        id: 'core:test_task',
-        planningScope: 'core:items',
-        refinementMethods: [],
-        planningEffects: [
-          { type: 'ADD_COMPONENT', parameters: { entityId: 'actor' } },
-        ],
-      };
+    it('should accept valid refinement method', async () => {
+      const data = baseTask();
+      data.refinementMethods = [
+        {
+          methodId: 'core:test_task.method1',
+          $ref: 'refinement-methods/test_task/method1.refinement.json',
+        },
+      ];
 
-      expect(() => {
-        taskLoader._validateTaskStructure(data, 'core', 'test.task.json');
-      }).not.toThrow();
+      await expect(
+        taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
+      ).resolves.toBeUndefined();
+    });
+
+    it('should reject refinement method paths that leave the refinement-methods folder', async () => {
+      const data = baseTask();
+      data.refinementMethods = [
+        {
+          methodId: 'core:test_task.method1',
+          $ref: '../refinement-methods/test_task/method1.refinement.json',
+        },
+      ];
+
+      await expect(
+        taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
+      ).rejects.toThrow(/must begin with 'refinement-methods\//);
+    });
+
+    it('should reject refinement method paths with traversal segments', async () => {
+      const data = baseTask();
+      data.refinementMethods = [
+        {
+          methodId: 'core:test_task.method1',
+          $ref: 'refinement-methods/../method1.refinement.json',
+        },
+      ];
+
+      await expect(
+        taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
+      ).rejects.toThrow(/contains invalid path segments/);
+    });
+
+    it('should reject refinement method paths that are not .refinement.json files', async () => {
+      const data = baseTask();
+      data.refinementMethods = [
+        {
+          methodId: 'core:test_task.method1',
+          $ref: 'refinement-methods/test_task/method1.json',
+        },
+      ];
+
+      await expect(
+        taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
+      ).rejects.toThrow(/must point to a \.refinement\.json file/);
+    });
+
+    it('should reject when referenced refinement method file is missing', async () => {
+      const data = baseTask();
+      data.refinementMethods = [
+        {
+          methodId: 'core:test_task.method1',
+          $ref: 'refinement-methods/test_task/method1.refinement.json',
+        },
+      ];
+
+      mockDataFetcher.fetch.mockRejectedValueOnce(new Error('ENOENT'));
+
+      await expect(
+        taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
+      ).rejects.toThrow(/Failed to load refinement method 'core:test_task.method1'/);
+    });
+
+    it('should reject when referenced refinement method declares a mismatched id', async () => {
+      const data = baseTask();
+      data.refinementMethods = [
+        {
+          methodId: 'core:test_task.method1',
+          $ref: 'refinement-methods/test_task/method1.refinement.json',
+        },
+      ];
+
+      mockDataFetcher.fetch.mockResolvedValueOnce({
+        id: 'core:test_task.other',
+        taskId: 'core:test_task',
+      });
+
+      await expect(
+        taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
+      ).rejects.toThrow(/declares id 'core:test_task.other'/);
+    });
+
+    it('should reject when referenced refinement method declares a mismatched taskId', async () => {
+      const data = baseTask();
+      data.refinementMethods = [
+        {
+          methodId: 'core:test_task.method1',
+          $ref: 'refinement-methods/test_task/method1.refinement.json',
+        },
+      ];
+
+      mockDataFetcher.fetch.mockResolvedValueOnce({
+        id: 'core:test_task.method1',
+        taskId: 'core:other_task',
+      });
+
+      await expect(
+        taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
+      ).rejects.toThrow(/declares taskId 'core:other_task'/);
+    });
+
+    it('should cache validated refinement methods per mod', async () => {
+      const data = baseTask();
+      data.refinementMethods = [
+        {
+          methodId: 'core:test_task.method1',
+          $ref: 'refinement-methods/test_task/method1.refinement.json',
+        },
+      ];
+
+      mockDataFetcher.fetch.mockClear();
+      await taskLoader._validateTaskStructure(data, 'core', 'file-1.task.json');
+      await taskLoader._validateTaskStructure(data, 'core', 'file-2.task.json');
+
+      expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('should reject planning effect without type', async () => {
+      const data = baseTask();
+      data.planningEffects = [{ parameters: { entityId: 'actor' } }];
+
+      await expect(
+        taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
+      ).rejects.toThrow(/must have a 'type' property/);
+    });
+
+    it('should accept valid planning effect', async () => {
+      const data = baseTask();
+      data.planningEffects = [
+        { type: 'ADD_COMPONENT', parameters: { entityId: 'actor' } },
+      ];
+
+      await expect(
+        taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
+      ).resolves.toBeUndefined();
     });
   });
 
@@ -300,7 +423,6 @@ describe('TaskLoader', () => {
       };
 
       mockSchemaValidator.validate.mockReturnValue({ valid: true });
-      mockDataRegistry.get.mockReturnValue(null); // No override
 
       await taskLoader._processFetchedItem(
         'core',
@@ -323,7 +445,6 @@ describe('TaskLoader', () => {
       };
 
       mockSchemaValidator.validate.mockReturnValue({ valid: true });
-      mockDataRegistry.get.mockReturnValue(null);
 
       await taskLoader._processFetchedItem(
         'core',
@@ -347,7 +468,6 @@ describe('TaskLoader', () => {
       };
 
       mockSchemaValidator.validate.mockReturnValue({ valid: true });
-      mockDataRegistry.get.mockReturnValue(null);
 
       await taskLoader._processFetchedItem(
         'core',
@@ -371,7 +491,6 @@ describe('TaskLoader', () => {
       };
 
       mockSchemaValidator.validate.mockReturnValue({ valid: true });
-      mockDataRegistry.get.mockReturnValue(null);
 
       await taskLoader._processFetchedItem(
         'core',

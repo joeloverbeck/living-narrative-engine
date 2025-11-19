@@ -12,6 +12,15 @@ This guide will teach you how to:
 - Structure task files correctly
 - Test and debug your tasks
 
+## Canonical Samples
+
+The core mod now ships with two complete, production-ready planning tasks you can reference while following this guide:
+
+- `data/mods/core/tasks/consume_nourishing_item.task.json` uses the knowledge-limited scope `core:known_nourishing_items` plus the `core:hungry` marker to show how structural gates, preconditions, and planning effects are tied together. Its refinement methods live under `data/mods/core/refinement-methods/consume_nourishing_item/` and demonstrate inventory-first vs. retrieval-first branching.
+- `data/mods/core/tasks/arm_self.task.json` illustrates how to plan over `core:known_armament_items`, prevent duplicate work when `core:armed` is already present, and stage different refinement behaviors (readying a carried weapon vs. picking one up).
+
+Skim those files whenever you need concrete examples of the patterns described below.
+
 ## Prerequisites
 
 Before creating tasks, you should understand:

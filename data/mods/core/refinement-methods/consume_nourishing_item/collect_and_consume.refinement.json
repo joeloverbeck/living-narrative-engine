@@ -1,0 +1,46 @@
+{
+  "$schema": "schema://living-narrative-engine/refinement-method.schema.json",
+  "id": "core:consume_nourishing_item.collect_and_consume",
+  "taskId": "core:consume_nourishing_item",
+  "description": "Retrieve the known item before consuming it.",
+  "applicability": {
+    "description": "Actor does not currently carry the target item.",
+    "condition": {
+      "or": [
+        { "!": { "var": "actor.components.items:inventory" } },
+        {
+          "!": {
+            "and": [
+              { "!!": { "var": "actor.components.items:inventory" } },
+              {
+                "in": [
+                  { "var": "task.params.target" },
+                  { "var": "actor.components.items:inventory.items" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "steps": [
+    {
+      "stepType": "primitive_action",
+      "description": "Pick up the nourishing item from the world.",
+      "actionId": "items:pick_up_item",
+      "targetBindings": {
+        "item": "task.params.target"
+      }
+    },
+    {
+      "stepType": "primitive_action",
+      "description": "Consume the retrieved item.",
+      "actionId": "items:drink_entirely",
+      "targetBindings": {
+        "primary": "task.params.target"
+      }
+    }
+  ],
+  "fallbackBehavior": "replan"
+}

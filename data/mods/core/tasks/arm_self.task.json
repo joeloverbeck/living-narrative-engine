@@ -1,0 +1,52 @@
+{
+  "$schema": "schema://living-narrative-engine/task.schema.json",
+  "id": "core:arm_self",
+  "description": "Equip yourself with a known weapon or tool so you can respond to threats.",
+  "structuralGates": {
+    "description": "Actor must be capable of movement and manipulating handheld items.",
+    "condition": {
+      "has_component": ["actor", "core:movement"]
+    }
+  },
+  "planningScope": "core:known_armament_items",
+  "planningPreconditions": [
+    {
+      "description": "Actor is not already armed",
+      "condition": {
+        "!": {
+          "has_component": ["actor", "core:armed"]
+        }
+      }
+    },
+    {
+      "description": "Actor has an inventory to stash retrieved items",
+      "condition": {
+        "has_component": ["actor", "items:inventory"]
+      }
+    }
+  ],
+  "planningEffects": [
+    {
+      "type": "ADD_COMPONENT",
+      "parameters": {
+        "entityId": "actor",
+        "componentId": "core:armed",
+        "value": {
+          "readyState": "drawn"
+        }
+      }
+    }
+  ],
+  "refinementMethods": [
+    {
+      "methodId": "core:arm_self.ready_inventory_weapon",
+      "$ref": "refinement-methods/arm_self/ready_inventory_weapon.refinement.json"
+    },
+    {
+      "methodId": "core:arm_self.retrieve_and_ready",
+      "$ref": "refinement-methods/arm_self/retrieve_and_ready.refinement.json"
+    }
+  ],
+  "cost": 18,
+  "priority": 70
+}

@@ -123,7 +123,7 @@ Create a comprehensive, accessible authoring guide that enables modders to creat
 - [ ] Use concrete game scenario examples
 
 ### 2. Write Getting Started Section
-- [ ] Document file locations (`mods/modId/tasks/refinement-methods/`)
+- [ ] Document file locations (`mods/modId/refinement-methods/`)
 - [ ] Explain file naming conventions
 - [ ] Provide minimal refinement method template
 - [ ] Walk through creating first refinement method

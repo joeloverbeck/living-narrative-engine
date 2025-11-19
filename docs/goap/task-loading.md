@@ -36,6 +36,8 @@ data/mods/[mod-id]/
         └── *.refinement.json
 ```
 
+**Canonical reference**: `data/mods/core/tasks/consume_nourishing_item.task.json` and `data/mods/core/tasks/arm_self.task.json` are real assets that now live under the core mod. Their scopes (`core:known_nourishing_items`, `core:known_armament_items`) and refinement methods (`data/mods/core/refinement-methods/...`) provide end-to-end samples for loader debugging.
+
 ## Task File Format
 
 ### Basic Structure

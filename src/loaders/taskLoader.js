@@ -5,6 +5,10 @@
 
 // --- Base Class Import ---
 import { SimpleItemLoader } from './simpleItemLoader.js';
+import { SCOPES_KEY } from '../constants/dataRegistryKeys.js';
+
+const REFINEMENT_METHODS_FOLDER = 'refinement-methods';
+const REFINEMENT_METHODS_PREFIX = `${REFINEMENT_METHODS_FOLDER}/`;
 
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
 /** @typedef {import('../interfaces/coreServices.js').IPathResolver} IPathResolver */
@@ -49,6 +53,9 @@ class TaskLoader extends SimpleItemLoader {
       dataRegistry,
       logger
     );
+
+    /** @private @type {Map<string, {id: string, taskId: string}>} */
+    this._refinementMethodCache = new Map();
   }
 
   /**
@@ -74,7 +81,7 @@ class TaskLoader extends SimpleItemLoader {
     }
 
     // Validate task-specific requirements
-    this._validateTaskStructure(data, modId, filename);
+    await this._validateTaskStructure(data, modId, filename);
 
     // Call parent implementation for standard processing
     const result = await super._processFetchedItem(
@@ -100,12 +107,9 @@ class TaskLoader extends SimpleItemLoader {
    * @param {string} filename - File name for error reporting
    * @throws {Error} If validation fails
    */
-  _validateTaskStructure(data, modId, filename) {
-    // Validate planning scope reference format
-    if (data.planningScope && !this._isValidScopeReference(data.planningScope)) {
-      throw new Error(
-        `Task ${data.id} in ${filename}: planningScope '${data.planningScope}' must be a valid scope reference (modId:scopeName)`
-      );
+  async _validateTaskStructure(data, modId, filename) {
+    if (data.planningScope) {
+      this._validatePlanningScopeReference(data, filename);
     }
 
     // Validate refinement method references
@@ -134,6 +138,13 @@ class TaskLoader extends SimpleItemLoader {
             `Task ${data.id} in ${filename}: Refinement method '${method.methodId}' task portion must match task ID base name '${taskBaseName}'`
           );
         }
+
+        await this._validateRefinementMethodReference(
+          data.id,
+          modId,
+          method,
+          filename
+        );
       }
     }
 
@@ -146,6 +157,165 @@ class TaskLoader extends SimpleItemLoader {
           );
         }
       }
+    }
+  }
+
+  /**
+   * Validate that a refinement method reference resolves to a file inside the mod's
+   * refinement-methods directory and that the file's metadata matches the task declaration.
+   *
+   * @private
+   * @async
+   * @param {string} taskId - Fully qualified task identifier.
+   * @param {string} modId - Owning mod identifier.
+   * @param {{methodId: string, $ref: string}} method - Refinement method reference.
+   * @param {string} filename - Source filename for context.
+   */
+  async _validateRefinementMethodReference(taskId, modId, method, filename) {
+    const normalizedRef = this._normalizeRefinementMethodRef(
+      method.$ref,
+      taskId,
+      filename
+    );
+
+    const cacheKey = `${modId}:${normalizedRef}`;
+    let cachedMethod = this._refinementMethodCache.get(cacheKey);
+
+    if (!cachedMethod) {
+      const relativePath = normalizedRef.slice(REFINEMENT_METHODS_PREFIX.length);
+      const resolvedPath = this._pathResolver.resolveModContentPath(
+        modId,
+        REFINEMENT_METHODS_FOLDER,
+        relativePath
+      );
+
+      let methodData;
+      try {
+        methodData = await this._dataFetcher.fetch(resolvedPath);
+      } catch (error) {
+        throw new Error(
+          `Task ${taskId} in ${filename}: Failed to load refinement method '${method.methodId}' from '${method.$ref}'. ${error?.message || ''}`.trim()
+        );
+      }
+
+      if (!methodData || typeof methodData !== 'object') {
+        throw new Error(
+          `Task ${taskId} in ${filename}: Refinement method '${method.methodId}' referenced by '${method.$ref}' did not return a JSON object`
+        );
+      }
+
+      const { id, taskId: methodTaskId } = methodData;
+      cachedMethod = { id, taskId: methodTaskId };
+      this._refinementMethodCache.set(cacheKey, cachedMethod);
+    }
+
+    if (!cachedMethod.id || typeof cachedMethod.id !== 'string') {
+      throw new Error(
+        `Task ${taskId} in ${filename}: Refinement method file '${method.$ref}' must declare an 'id'`
+      );
+    }
+
+    if (cachedMethod.id !== method.methodId) {
+      throw new Error(
+        `Task ${taskId} in ${filename}: Refinement method '${method.methodId}' points to '${method.$ref}', but the file declares id '${cachedMethod.id}'`
+      );
+    }
+
+    if (!cachedMethod.taskId || typeof cachedMethod.taskId !== 'string') {
+      throw new Error(
+        `Task ${taskId} in ${filename}: Refinement method file '${method.$ref}' must declare a taskId`
+      );
+    }
+
+    if (cachedMethod.taskId !== taskId) {
+      throw new Error(
+        `Task ${taskId} in ${filename}: Refinement method '${method.methodId}' referenced by '${method.$ref}' declares taskId '${cachedMethod.taskId}', expected '${taskId}'`
+      );
+    }
+  }
+
+  /**
+   * Normalize and validate a refinement-method $ref string.
+   *
+   * @private
+   * @param {string} refPath - Raw $ref string from the task file.
+   * @param {string} taskId - Task identifier for error context.
+   * @param {string} filename - Source filename for error context.
+   * @returns {string} Normalized path rooted at `refinement-methods/`.
+   */
+  _normalizeRefinementMethodRef(refPath, taskId, filename) {
+    if (typeof refPath !== 'string' || refPath.trim() === '') {
+      throw new Error(
+        `Task ${taskId} in ${filename}: Refinement method $ref must be a non-empty string`
+      );
+    }
+
+    let normalized = refPath.trim().replace(/\\/g, '/');
+    while (normalized.startsWith('./')) {
+      normalized = normalized.slice(2);
+    }
+
+    if (normalized.startsWith('/')) {
+      throw new Error(
+        `Task ${taskId} in ${filename}: Refinement method $ref '${refPath}' must be relative to the mod and cannot start with '/'`
+      );
+    }
+
+    normalized = normalized.replace(/\/{2,}/g, '/');
+
+    if (!normalized.startsWith(REFINEMENT_METHODS_PREFIX)) {
+      throw new Error(
+        `Task ${taskId} in ${filename}: Refinement method $ref '${refPath}' must begin with '${REFINEMENT_METHODS_PREFIX}'`
+      );
+    }
+
+    const segments = normalized.split('/');
+    if (segments.some((segment) => segment === '' || segment === '.' || segment === '..')) {
+      throw new Error(
+        `Task ${taskId} in ${filename}: Refinement method $ref '${refPath}' contains invalid path segments`
+      );
+    }
+
+    if (!normalized.endsWith('.refinement.json')) {
+      throw new Error(
+        `Task ${taskId} in ${filename}: Refinement method $ref '${refPath}' must point to a .refinement.json file`
+      );
+    }
+
+    if (normalized.length <= REFINEMENT_METHODS_PREFIX.length) {
+      throw new Error(
+        `Task ${taskId} in ${filename}: Refinement method $ref '${refPath}' must include a file location inside '${REFINEMENT_METHODS_FOLDER}/'`
+      );
+    }
+
+    return normalized;
+  }
+
+  /**
+   * Validate the planning scope string and ensure the referenced scope exists.
+   *
+   * @private
+   * @param {object} data - Task data being validated
+   * @param {string} filename - Source filename (for error context)
+   */
+  _validatePlanningScopeReference(data, filename) {
+    const { planningScope } = data;
+
+    if (!this._isValidScopeReference(planningScope)) {
+      throw new Error(
+        `Task ${data.id} in ${filename}: planningScope '${planningScope}' must be a valid scope reference (modId:scopeName)`
+      );
+    }
+
+    if (planningScope === 'none' || planningScope === 'self') {
+      return;
+    }
+
+    const scopeDefinition = this._dataRegistry.get(SCOPES_KEY, planningScope);
+    if (!scopeDefinition) {
+      throw new Error(
+        `Task ${data.id} in ${filename}: planningScope '${planningScope}' references a scope that is not loaded. Ensure the scope exists and dependencies are declared.`
+      );
     }
   }
 

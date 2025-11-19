@@ -1,0 +1,20 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:armed",
+  "description": "Marks actors that currently have a ready weapon or improvised tool.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "equippedItemId": {
+        "type": "string",
+        "description": "Entity ID of the item that armed the actor."
+      },
+      "readyState": {
+        "type": "string",
+        "enum": ["drawn", "stowed"],
+        "description": "Whether the weapon is drawn or stowed after the arming interaction."
+      }
+    },
+    "additionalProperties": false
+  }
+}

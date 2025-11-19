@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:hungry",
+  "description": "Indicates that an entity currently needs nourishment so planners can schedule consumption tasks.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "severity": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100,
+        "description": "Optional urgency indicator. Higher values mean the actor should prioritize eating." 
+      },
+      "since": {
+        "type": "string",
+        "format": "date-time",
+        "description": "Timestamp of when the hunger state was recorded."
+      }
+    },
+    "additionalProperties": false
+  }
+}

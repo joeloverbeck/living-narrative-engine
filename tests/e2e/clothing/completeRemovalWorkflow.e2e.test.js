@@ -4,6 +4,9 @@ import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
 import { createEntityDefinition } from '../../common/entities/entityFactories.js';
 
+let uniqueIdCounter = 0;
+const createUniqueId = (prefix) => `${prefix}_${Date.now()}_${++uniqueIdCounter}`;
+
 describe('Complete Clothing Removal Workflow - E2E', () => {
   let container;
   let entityManager;
@@ -60,11 +63,11 @@ describe('Complete Clothing Removal Workflow - E2E', () => {
 
   beforeEach(() => {
     testContext = {
-      actorId: `actor_${Date.now()}`,
-      jacketId: `jacket_${Date.now()}`,
-      shirtId: `shirt_${Date.now()}`,
-      beltId: `belt_${Date.now()}`,
-      pantsId: `pants_${Date.now()}`
+      actorId: createUniqueId('actor'),
+      jacketId: createUniqueId('jacket'),
+      shirtId: createUniqueId('shirt'),
+      beltId: createUniqueId('belt'),
+      pantsId: createUniqueId('pants'),
     };
   });
 
@@ -129,8 +132,8 @@ describe('Complete Clothing Removal Workflow - E2E', () => {
   });
 
   it('should allow pants removal when belt is not equipped', async () => {
-    const actorId = `actor_${Date.now()}`;
-    const pantsId = `pants_${Date.now()}`;
+    const actorId = createUniqueId('actor');
+    const pantsId = createUniqueId('pants');
 
     // Create actor with only pants equipped (no belt)
     await createTestEntity(actorId, {
@@ -155,9 +158,9 @@ describe('Complete Clothing Removal Workflow - E2E', () => {
   });
 
   it('should prevent removal of blocked items', async () => {
-    const actorId = `actor_${Date.now()}`;
-    const beltId = `belt_${Date.now()}`;
-    const pantsId = `pants_${Date.now()}`;
+    const actorId = createUniqueId('actor');
+    const beltId = createUniqueId('belt');
+    const pantsId = createUniqueId('pants');
 
     // Create actor with belt and pants equipped
     await createTestEntity(actorId, {
@@ -197,9 +200,9 @@ describe('Complete Clothing Removal Workflow - E2E', () => {
 
   it('should verify blocking works across different actors', async () => {
     // Test with Actor A - belt + pants (blocked)
-    const actorAId = `actorA_${Date.now()}`;
-    const beltAId = `beltA_${Date.now()}`;
-    const pantsAId = `pantsA_${Date.now()}`;
+    const actorAId = createUniqueId('actorA');
+    const beltAId = createUniqueId('beltA');
+    const pantsAId = createUniqueId('pantsA');
 
     await createTestEntity(actorAId, {
       'core:actor': {},
@@ -232,8 +235,8 @@ describe('Complete Clothing Removal Workflow - E2E', () => {
     expect(removableA).not.toContain(pantsAId); // Blocked by belt
 
     // Test with Actor B - only pants (not blocked)
-    const actorBId = `actorB_${Date.now()}`;
-    const pantsBId = `pantsB_${Date.now()}`;
+    const actorBId = createUniqueId('actorB');
+    const pantsBId = createUniqueId('pantsB');
 
     await createTestEntity(actorBId, {
       'core:actor': {},
@@ -308,9 +311,9 @@ describe('Multi-Actor Clothing Removal - E2E', () => {
   }
 
   it('should enforce blocking consistently for any actor', async () => {
-    const targetId = `target_${Date.now()}`;
-    const beltId = `belt_${Date.now()}`;
-    const pantsId = `pants_${Date.now()}`;
+    const targetId = createUniqueId('target');
+    const beltId = createUniqueId('belt');
+    const pantsId = createUniqueId('pants');
 
     // Create target with belt and pants equipped
     await createTestEntity(targetId, {

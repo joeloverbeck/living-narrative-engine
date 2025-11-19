@@ -1,0 +1,34 @@
+core:known_nourishing_items := entities(items:item)[][
+  {
+    "and": [
+      { "!!": { "var": "entity.components.items:drinkable" } },
+      {
+        "or": [
+          {
+            "and": [
+              { "!!": { "var": "actor.components.items:inventory" } },
+              {
+                "in": [
+                  { "var": "entity.id" },
+                  { "var": "actor.components.items:inventory.items" }
+                ]
+              }
+            ]
+          },
+          { "condition_ref": "core:entity-at-location" },
+          {
+            "and": [
+              { "!!": { "var": "entity.components.core:known_to.entities" } },
+              {
+                "in": [
+                  { "var": "actor.id" },
+                  { "var": "entity.components.core:known_to.entities" }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
