@@ -12,6 +12,7 @@
     ],
     "components": [
       "actor.component.json",
+      "armed.component.json",
       "apparent_age.component.json",
       "current_actor.component.json",
       "description.component.json",
@@ -20,6 +21,7 @@
       "fears.component.json",
       "gender.component.json",
       "goals.component.json",
+      "hungry.component.json",
       "internal_tensions.component.json",
       "known_to.component.json",
       "likes.component.json",
@@ -186,10 +188,21 @@
     ],
     "scopes": [
       "actors_in_location.scope",
-      "environment.scope"
+      "environment.scope",
+      "known_armament_items.scope",
+      "known_nourishing_items.scope"
     ],
     "recipes": [],
     "goals": [],
-    "tasks": []
+    "tasks": [
+      "arm_self.task.json",
+      "consume_nourishing_item.task.json"
+    ],
+    "refinement-methods": [
+      "arm_self/ready_inventory_weapon.refinement.json",
+      "arm_self/retrieve_and_ready.refinement.json",
+      "consume_nourishing_item/collect_and_consume.refinement.json",
+      "consume_nourishing_item/consume_from_inventory.refinement.json"
+    ]
   }
 }

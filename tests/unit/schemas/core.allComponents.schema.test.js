@@ -61,6 +61,7 @@ describe('JSON-Schema – core component data contracts', () => {
   const validPayloads = {
     'core:actor': {},
     'core:apparent_age': { minAge: 25, maxAge: 35 },
+    'core:armed': { equippedItemId: 'entity:weapon_123', readyState: 'drawn' },
     'core:current_actor': {},
     'core:player': {},
     'core:player_type': { type: 'human' },
@@ -68,6 +69,10 @@ describe('JSON-Schema – core component data contracts', () => {
     'core:dilemmas': { text: 'Am I doing the right thing?' },
     'core:dislikes': { text: 'dislike' },
     'core:fears': { text: 'fear' },
+    'core:hungry': {
+      severity: 40,
+      since: '2024-05-05T12:00:00Z',
+    },
     'core:internal_tensions': { text: 'I want freedom but crave security' },
     'core:known_to': { entities: [] },
     'core:likes': { text: 'like' },
@@ -152,6 +157,8 @@ describe('JSON-Schema – core component data contracts', () => {
     'core:material': { material: 'invalid_material_not_in_enum' },
     'core:mouth_engagement': { locked: 'not-a-boolean' },
     'core:gender': {},
+    'core:armed': { readyState: 'holstered' },
+    'core:hungry': { severity: 200 },
     'core:participation': {}, // Missing required 'participating' field
   };
 

@@ -97,6 +97,25 @@ describe('JSON-Schema – Mod Manifest', () => {
       }
       expect(ok).toBe(true);
     });
+
+    test('✓ should validate with refinement-methods content type', () => {
+      const manifestWithRefinementMethods = {
+        id: 'tasks_mod',
+        version: '2.0.0',
+        name: 'Tasks Mod',
+        content: {
+          'refinement-methods': [
+            'refinement-methods/consume_nourishing_item.simple_consume.refinement.json',
+            'refinement-methods/arm_self.draw_from_inventory.refinement.json',
+          ],
+        },
+      };
+      const ok = validate(manifestWithRefinementMethods);
+      if (!ok) {
+        console.error('Validation Errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
   });
 
   /* ── INVALID CASES ────────────────────────────────────────────────────── */
@@ -191,6 +210,24 @@ describe('JSON-Schema – Mod Manifest', () => {
         expect.objectContaining({
           instancePath: '/content/worlds/0',
           message: 'must match pattern "^(?!/)(?!.*\\.\\.)[^\\s]+\\.json$"',
+        })
+      );
+    });
+
+    test('✗ should NOT validate refinement-method entries without .refinement.json extension', () => {
+      const invalidManifest = {
+        id: 'broken_mod',
+        version: '0.0.1',
+        name: 'Broken Mod',
+        content: {
+          'refinement-methods': ['refinement-methods/invalid_file.json'],
+        },
+      };
+      expect(validate(invalidManifest)).toBe(false);
+      expect(validate.errors).toContainEqual(
+        expect.objectContaining({
+          instancePath: '/content/refinement-methods/0',
+          message: 'must match pattern "^(?!/)(?!.*\\.\\.)[^\\s]+\\.refinement\\.json$"',
         })
       );
     });

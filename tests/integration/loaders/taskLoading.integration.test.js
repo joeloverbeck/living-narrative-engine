@@ -63,6 +63,23 @@ class StrictSchemaValidator {
   }
 }
 
+const DEFAULT_SCOPES = [
+  'core:available_weapons',
+  'core:known_consumable_items',
+  'core:available_instruments',
+  'core:available_shelters',
+  'test:items',
+];
+
+function seedScope(registry, scopeId) {
+  registry.store('scopes', scopeId, {
+    id: scopeId,
+    name: scopeId,
+    modId: scopeId.split(':')[0],
+    ast: {},
+  });
+}
+
 // Mock task data fixtures
 const mockTaskData = {
   arm_self: {
@@ -72,7 +89,7 @@ const mockTaskData = {
     refinementMethods: [
       {
         methodId: 'core:arm_self.pick_up_weapon',
-        $ref: 'refinement-methods/pick_up_weapon.refinement.json',
+        $ref: 'refinement-methods/arm_self/pick_up_weapon.refinement.json',
       },
     ],
     planningEffects: [
@@ -91,11 +108,11 @@ const mockTaskData = {
     refinementMethods: [
       {
         methodId: 'core:consume_nourishing_item.eat_item',
-        $ref: 'refinement-methods/eat_item.refinement.json',
+        $ref: 'refinement-methods/consume_nourishing_item/eat_item.refinement.json',
       },
       {
         methodId: 'core:consume_nourishing_item.drink_item',
-        $ref: 'refinement-methods/drink_item.refinement.json',
+        $ref: 'refinement-methods/consume_nourishing_item/drink_item.refinement.json',
       },
     ],
     planningEffects: [
@@ -114,7 +131,7 @@ const mockTaskData = {
     refinementMethods: [
       {
         methodId: 'core:find_instrument.search_location',
-        $ref: 'refinement-methods/search_location.refinement.json',
+        $ref: 'refinement-methods/find_instrument/search_location.refinement.json',
       },
     ],
     planningEffects: [
@@ -133,7 +150,7 @@ const mockTaskData = {
     refinementMethods: [
       {
         methodId: 'core:secure_shelter.enter_building',
-        $ref: 'refinement-methods/enter_building.refinement.json',
+        $ref: 'refinement-methods/secure_shelter/enter_building.refinement.json',
       },
     ],
     planningEffects: [
@@ -146,6 +163,36 @@ const mockTaskData = {
     priority: 70,
   },
 };
+
+function buildMethodLookup(tasks) {
+  const lookup = new Map();
+  Object.values(tasks).forEach((task) => {
+    (task.refinementMethods || []).forEach((method) => {
+      lookup.set(method.$ref, {
+        id: method.methodId,
+        taskId: task.id,
+      });
+    });
+  });
+  return lookup;
+}
+
+const MOCK_METHOD_LOOKUP = buildMethodLookup(mockTaskData);
+
+function deriveMethodMetadataFromPath(path) {
+  const modMatch = path.match(/mods\/(.*?)\/refinement-methods\//);
+  const modId = modMatch ? modMatch[1] : 'core';
+  const [, relative = ''] = path.split(/refinement-methods\//);
+  const segments = relative.split('/');
+  const taskSegment = segments[0] || 'task';
+  const fileName = segments[segments.length - 1] || '';
+  const methodName = fileName.replace('.refinement.json', '');
+
+  return {
+    id: `${modId}:${taskSegment}.${methodName}`,
+    taskId: `${modId}:${taskSegment}`,
+  };
+}
 
 describe('Task Loading Integration', () => {
   let testBed;
@@ -175,11 +222,23 @@ describe('Task Loading Integration', () => {
             return Promise.resolve(JSON.parse(JSON.stringify(mockTaskData[taskName])));
           }
         }
+
+        if (path.includes('/refinement-methods/')) {
+          const [, relative = ''] = path.split(/refinement-methods\//);
+          const canonicalRef = `refinement-methods/${relative}`;
+          const lookup = MOCK_METHOD_LOOKUP.get(canonicalRef);
+          if (lookup) {
+            return Promise.resolve({ ...lookup });
+          }
+          return Promise.resolve(deriveMethodMetadataFromPath(path));
+        }
+
         return Promise.reject(new Error(`Task file not found: ${path}`));
       }),
     };
 
     dataRegistry = new NamespacedDataRegistry({ logger });
+    DEFAULT_SCOPES.forEach((scopeId) => seedScope(dataRegistry, scopeId));
 
     // Create mock schema validator with all required methods
     schemaValidator = new StrictSchemaValidator({
@@ -426,7 +485,7 @@ describe('Task Loading Integration', () => {
         refinementMethods: [
           {
             methodId: 'test_mod:cross_mod_task.method1',
-            $ref: 'refinement-methods/method1.refinement.json',
+            $ref: 'refinement-methods/cross_mod_task/method1.refinement.json',
           },
         ],
         planningEffects: [
@@ -438,9 +497,9 @@ describe('Task Loading Integration', () => {
       };
 
       // Validate the structure
-      expect(() => {
-        taskLoader._validateTaskStructure(mockTaskData, 'test_mod', 'test.task.json');
-      }).not.toThrow();
+      await expect(
+        taskLoader._validateTaskStructure(mockTaskData, 'test_mod', 'test.task.json')
+      ).resolves.toBeUndefined();
 
       // Scope reference should be valid
       expect(taskLoader._isValidScopeReference(mockTaskData.planningScope)).toBe(true);
@@ -457,9 +516,23 @@ describe('Task Loading Integration', () => {
         planningEffects: [],
       };
 
-      expect(() => {
-        taskLoader._validateTaskStructure(invalidData, 'test', 'invalid.task.json');
-      }).toThrow(/planningScope.*must be a valid scope reference/);
+      await expect(
+        taskLoader._validateTaskStructure(invalidData, 'test', 'invalid.task.json')
+      ).rejects.toThrow(/planningScope.*must be a valid scope reference/);
+    });
+
+    it('should throw error when referenced planning scope does not exist', async () => {
+      const invalidData = {
+        id: 'test:invalid_task',
+        description: 'Invalid task',
+        planningScope: 'test:missing_scope',
+        refinementMethods: [],
+        planningEffects: [],
+      };
+
+      await expect(
+        taskLoader._validateTaskStructure(invalidData, 'test', 'invalid.task.json')
+      ).rejects.toThrow(/planningScope 'test:missing_scope' references a scope that is not loaded/);
     });
 
     it('should throw error for malformed refinement method', async () => {
@@ -468,14 +541,17 @@ describe('Task Loading Integration', () => {
         description: 'Invalid task',
         planningScope: 'test:items',
         refinementMethods: [
-          { methodId: 'invalid-format', $ref: 'path.json' },
+          {
+            methodId: 'invalid-format',
+            $ref: 'refinement-methods/test_task/method.refinement.json',
+          },
         ],
         planningEffects: [],
       };
 
-      expect(() => {
-        taskLoader._validateTaskStructure(invalidData, 'test', 'invalid.task.json');
-      }).toThrow(/must follow format 'modId:task_id\.method_name'/);
+      await expect(
+        taskLoader._validateTaskStructure(invalidData, 'test', 'invalid.task.json')
+      ).rejects.toThrow(/must follow format 'modId:task_id\.method_name'/);
     });
 
     it('should throw error for method with mismatched task ID', async () => {
@@ -484,14 +560,17 @@ describe('Task Loading Integration', () => {
         description: 'Task A',
         planningScope: 'test:items',
         refinementMethods: [
-          { methodId: 'test:task_b.method1', $ref: 'path.json' },
+          {
+            methodId: 'test:task_b.method1',
+            $ref: 'refinement-methods/task_a/method1.refinement.json',
+          },
         ],
         planningEffects: [],
       };
 
-      expect(() => {
-        taskLoader._validateTaskStructure(invalidData, 'test', 'invalid.task.json');
-      }).toThrow(/task portion must match task ID base name/);
+      await expect(
+        taskLoader._validateTaskStructure(invalidData, 'test', 'invalid.task.json')
+      ).rejects.toThrow(/task portion must match task ID base name/);
     });
 
     it('should throw error for effect without type', async () => {
@@ -505,9 +584,9 @@ describe('Task Loading Integration', () => {
         ],
       };
 
-      expect(() => {
-        taskLoader._validateTaskStructure(invalidData, 'test', 'invalid.task.json');
-      }).toThrow(/must have a 'type' property/);
+      await expect(
+        taskLoader._validateTaskStructure(invalidData, 'test', 'invalid.task.json')
+      ).rejects.toThrow(/must have a 'type' property/);
     });
   });
 

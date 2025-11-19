@@ -130,6 +130,16 @@
         "structure-templates": {
           "$ref": "#/definitions/contentFileList"
         },
+        "refinement-methods": {
+          "description": "Array of relative paths to refinement method definition files. Paths are resolved relative to the mod root (typically under refinement-methods/) and must reference .refinement.json files without using absolute paths or parent directory segments.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^(?!/)(?!.*\\.\\.)[^\\s]+\\.refinement\\.json$",
+            "description": "Relative path to a refinement method file, e.g., 'refinement-methods/consume_nourishing_item.simple_consume.refinement.json'."
+          }
+        },
         "tasks": {
           "description": "Array of relative paths to .task.json files included in this mod. Tasks define planning-tasks for the GOAP system. Paths must not start with '/' or contain '..'.",
           "type": "array",

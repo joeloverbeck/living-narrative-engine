@@ -85,7 +85,7 @@
           },
           "$ref": {
             "type": "string",
-            "description": "Relative path to the refinement method file from the task file's location. By convention, refinement methods are stored in a 'refinement-methods/' subdirectory within the 'tasks/' directory. Path must resolve to a valid .refinement.json file. Example: './refinement-methods/consume_nourishing_item.simple_consume.refinement.json'"
+            "description": "Relative path to the refinement method file from the task file's location. Refinement methods live in the mod's root-level 'refinement-methods/' directory (for example 'refinement-methods/consume_nourishing_item/simple_consume.refinement.json'). Paths may include an optional leading './' but must resolve to a valid .refinement.json file within that folder."
           }
         },
         "required": ["methodId", "$ref"],

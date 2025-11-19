@@ -1,4 +1,71 @@
 {
-  "contextFileName": "AGENTS.md",
-  "autoAccept": true
+  "tools": {
+    "autoAccept": true
+  },
+  "context": {
+    "fileName": "AGENTS.md"
+  },
+  "mcpServers": {
+    "puppeteer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-puppeteer"
+      ]
+    },
+    "fetch": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@kazuph/mcp-fetch"
+      ]
+    },
+    "morphllm-fast-apply": {
+      "command": "npx",
+      "args": [
+        "@morph-llm/morph-fast-apply",
+        "/home/"
+      ],
+      "env": {
+        "ALL_TOOLS": "true"
+      }
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "env": {}
+    },
+    "magic": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@21st-dev/magic@latest"
+      ],
+      "env": {}
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest"
+      ]
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest"
+      ]
+    }
+  }
 }

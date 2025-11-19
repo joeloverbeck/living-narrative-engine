@@ -68,7 +68,7 @@ export const meta = {
   },
   refinementMethods: {
     contentKey: 'refinement-methods',
-    diskFolder: 'tasks/refinement-methods',
+    diskFolder: 'refinement-methods',
     phase: 'definitions',
     registryKey: 'refinement-methods',
   },

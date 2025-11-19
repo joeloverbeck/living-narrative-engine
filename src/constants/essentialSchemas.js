@@ -20,6 +20,7 @@ export const ESSENTIAL_SCHEMA_TYPES = [
   'rules',
   'conditions',
   'goals',
+  'refinement-methods',
 ];
 
 export default ESSENTIAL_SCHEMA_TYPES;
