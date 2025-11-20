@@ -11,6 +11,7 @@ const handlerBasePath =
   '../../../../src/logic/operationHandlers';
 
 const handlerModuleDefinitions = [
+  ['ConsumeItemHandler', `${handlerBasePath}/consumeItemHandler.js`],
   ['DispatchEventHandler', `${handlerBasePath}/dispatchEventHandler.js`],
   [
     'DispatchPerceptibleEventHandler',
@@ -219,6 +220,15 @@ beforeAll(async () => {
   } = tokens;
 
   handlerExpectations = [
+    {
+      token: tokens.ConsumeItemHandler,
+      handlerName: 'ConsumeItemHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
     {
       token: tokens.DispatchEventHandler,
       handlerName: 'DispatchEventHandler',
