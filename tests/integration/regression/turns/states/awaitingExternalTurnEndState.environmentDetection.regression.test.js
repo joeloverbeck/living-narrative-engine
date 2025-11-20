@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { AwaitingExternalTurnEndState } from '../../../../src/turns/states/awaitingExternalTurnEndState.js';
+import { AwaitingExternalTurnEndState } from '../../../../../src/turns/states/awaitingExternalTurnEndState.js';
 
 describe('AwaitingExternalTurnEndState - Environment Detection Regression', () => {
   let originalNodeEnv;

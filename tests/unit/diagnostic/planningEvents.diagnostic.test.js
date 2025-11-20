@@ -1,11 +1,12 @@
 /**
- * Verbose diagnostic with console spies to see planner logic
+ * Diagnostic test to inspect planning events from failing scenario
  */
 
-import { describe, it } from '@jest/globals';
-import { createGoapTestSetup } from '../integration/goap/testFixtures/goapTestSetup.js';
-import { createTestGoal } from '../integration/goap/testFixtures/testGoalFactory.js';
-import { createTestTask } from '../integration/goap/testFixtures/testTaskFactory.js';
+import { describe, it, expect } from '@jest/globals';
+import { createGoapTestSetup } from '../../integration/goap/testFixtures/goapTestSetup.js';
+import { createTestGoal } from '../../integration/goap/testFixtures/testGoalFactory.js';
+import { createTestTask } from '../../integration/goap/testFixtures/testTaskFactory.js';
+import { GOAP_EVENTS } from '../../../src/goap/events/goapEvents.js';
 
 /**
  *
@@ -39,9 +40,9 @@ function buildDualFormatState(actor) {
   return state;
 }
 
-describe('Verbose Planning Diagnostic', () => {
-  it('should show detailed planner execution', async () => {
-    console.log('\n=== VERBOSE PLANNING DIAGNOSTIC ===\n');
+describe('Planning Events Diagnostic', () => {
+  it('should trace events during multi-action numeric goal planning', async () => {
+    console.log('\n=== Inspecting Planning Events ===\n');
 
     const healTask = createTestTask({
       id: 'test:heal',
@@ -65,8 +66,6 @@ describe('Verbose Planning Diagnostic', () => {
         },
       ],
     });
-
-    console.log('1. Task created with planningScope:', healTask.planningScope);
 
     const setup = await createGoapTestSetup({
       mockRefinement: true,
@@ -96,27 +95,45 @@ describe('Verbose Planning Diagnostic', () => {
       entities: {},
     };
 
-    console.log('2. Executing decideTurn...\n');
+    console.log('1. Executing decideTurn with goal: health >= 80, current: 10\n');
     await setup.controller.decideTurn(actor, world);
 
     const events = setup.eventBus.getEvents();
 
-    const planningCompleted = events.find(e => e.type === 'goap:planning_completed');
-    const planningFailed = events.find(e => e.type === 'goap:planning_failed');
+    console.log(`2. Total events dispatched: ${events.length}\n`);
 
-    console.log('\n3. Results:');
-    if (planningCompleted) {
-      console.log('   ✓ PLANNING_COMPLETED');
-      console.log('   Plan length:', planningCompleted.payload?.planLength);
-      console.log('   Tasks:', JSON.stringify(planningCompleted.payload?.tasks));
-    }
+    console.log('3. Event types:');
+    const eventCounts = {};
+    events.forEach(e => {
+      eventCounts[e.type] = (eventCounts[e.type] || 0) + 1;
+    });
+    Object.entries(eventCounts).forEach(([type, count]) => {
+      console.log(`   ${type}: ${count}`);
+    });
+
+    console.log('\n4. Detailed events:');
+    events.forEach((e, idx) => {
+      console.log(`\n   Event ${idx + 1}: ${e.type}`);
+      if (e.payload) {
+        console.log(`   Payload:`, JSON.stringify(e.payload, null, 2));
+      }
+    });
+
+    const planningCompleted = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+    const planningFailed = events.some(e => e.type === GOAP_EVENTS.PLANNING_FAILED);
+
+    console.log(`\n5. Planning result:`);
+    console.log(`   PLANNING_COMPLETED: ${planningCompleted}`);
+    console.log(`   PLANNING_FAILED: ${planningFailed}`);
 
     if (planningFailed) {
-      console.log('   ✗ PLANNING_FAILED');
-      console.log('   Reason:', planningFailed.payload?.reason);
+      const failureEvent = events.find(e => e.type === GOAP_EVENTS.PLANNING_FAILED);
+      console.log(`\n6. Failure details:`);
+      console.log(`   Reason:`, failureEvent?.payload?.reason);
     }
 
+    console.log('\n=== Inspection Complete ===\n');
+
     setup.testBed.cleanup();
-    console.log('\n=== DIAGNOSTIC COMPLETE ===\n');
   });
 });

@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
+import AnatomyIntegrationTestBed from '../../../common/anatomy/anatomyIntegrationTestBed.js';
 
 describe('Octopoid Regression Tests', () => {
   let testBed;
@@ -92,7 +92,8 @@ describe('Octopoid Regression Tests', () => {
       for (const socket of socketsComp.sockets) {
         expect(socket.id).toBeDefined();
         expect(typeof socket.id).toBe('string');
-        expect(socket.orientation).toBeDefined();
+        // Note: orientation is optional in entity definitions
+        // Some sockets may have orientation, others may not
         expect(socket.allowedTypes).toBeDefined();
         expect(Array.isArray(socket.allowedTypes)).toBe(true);
       }

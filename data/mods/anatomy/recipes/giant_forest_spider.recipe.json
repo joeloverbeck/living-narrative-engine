@@ -10,16 +10,10 @@
   "slots": {
     "spinnerets": {
       "partType": "spinneret",
-      "tags": [
-        "anatomy:part"
-      ],
+      "tags": ["anatomy:part"],
       "properties": {
-        "descriptors:texture": {
-          "texture": "chitinous"
-        },
-        "descriptors:body_hair": {
-          "hairDensity": "hairy"
-        }
+        "descriptors:texture": { "texture": "chitinous" },
+        "descriptors:body_hair": { "hairDensity": "hairy" }
       }
     }
   },

@@ -12,7 +12,7 @@
         "arrangementHint": "octagonal_radial",
         "socketPattern": {
           "idTemplate": "tentacle_{{index}}",
-          "orientationScheme": "indexed",
+          "orientationScheme": "radial",
           "allowedTypes": ["tentacle"],
           "nameTpl": "tentacle {{index}}"
         }
