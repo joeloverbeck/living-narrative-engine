@@ -66,6 +66,9 @@
           "$ref": "./operations/dispatchThought.schema.json"
         },
         {
+          "$ref": "./operations/digestFood.schema.json"
+        },
+        {
           "$ref": "./operations/drinkEntirely.schema.json"
         },
         {

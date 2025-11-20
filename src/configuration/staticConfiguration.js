@@ -17,6 +17,7 @@ const OPERATION_SCHEMA_FILES = [
   'breakFollowRelation.schema.json',
   'burnEnergy.schema.json',
   'checkFollowCycle.schema.json',
+  'digestFood.schema.json',
   'dispatchEvent.schema.json',
   'dispatchPerceptibleEvent.schema.json',
   'dispatchSpeech.schema.json',

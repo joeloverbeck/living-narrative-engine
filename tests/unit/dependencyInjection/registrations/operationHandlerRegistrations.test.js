@@ -18,6 +18,7 @@ const handlerModuleDefinitions = [
   ],
   ['DispatchSpeechHandler', `${handlerBasePath}/dispatchSpeechHandler.js`],
   ['DispatchThoughtHandler', `${handlerBasePath}/dispatchThoughtHandler.js`],
+  ['DigestFoodHandler', `${handlerBasePath}/digestFoodHandler.js`],
   ['LogHandler', `${handlerBasePath}/logHandler.js`],
   [
     'ModifyComponentHandler',
@@ -252,6 +253,15 @@ beforeAll(async () => {
       dependencies: [
         { property: 'logger', token: ILogger },
         { property: 'dispatcher', token: IValidatedEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.DigestFoodHandler,
+      handlerName: 'DigestFoodHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
       ],
     },
     {
