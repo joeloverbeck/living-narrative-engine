@@ -49,6 +49,7 @@ import RebuildLeaderListCacheHandler from '../../logic/operationHandlers/rebuild
 import CheckFollowCycleHandler from '../../logic/operationHandlers/checkFollowCycleHandler.js';
 import EstablishFollowRelationHandler from '../../logic/operationHandlers/establishFollowRelationHandler.js';
 import BreakFollowRelationHandler from '../../logic/operationHandlers/breakFollowRelationHandler.js';
+import BurnEnergyHandler from '../../logic/operationHandlers/burnEnergyHandler.js';
 import AddPerceptionLogEntryHandler from '../../logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import QueryEntitiesHandler from '../../logic/operationHandlers/queryEntitiesHandler.js';
 import HasComponentHandler from '../../logic/operationHandlers/hasComponentHandler.js';
@@ -315,6 +316,16 @@ export function registerOperationHandlers(registrar) {
           rebuildLeaderListCacheHandler: c.resolve(
             tokens.RebuildLeaderListCacheHandler
           ),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.BurnEnergyHandler,
+      BurnEnergyHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],

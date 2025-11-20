@@ -73,6 +73,19 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
       );
     }
 
+    // Validate timer functions are callable
+    if (typeof setTimeoutFn !== 'function') {
+      throw new InvalidArgumentError(
+        `setTimeoutFn must be a function, got: ${typeof setTimeoutFn}`
+      );
+    }
+
+    if (typeof clearTimeoutFn !== 'function') {
+      throw new InvalidArgumentError(
+        `clearTimeoutFn must be a function, got: ${typeof clearTimeoutFn}`
+      );
+    }
+
     this.#setTimeoutFn = setTimeoutFn;
     this.#clearTimeoutFn = clearTimeoutFn;
   }

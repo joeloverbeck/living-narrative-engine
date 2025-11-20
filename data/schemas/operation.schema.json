@@ -111,6 +111,9 @@
           "$ref": "./operations/breakFollowRelation.schema.json"
         },
         {
+          "$ref": "./operations/burnEnergy.schema.json"
+        },
+        {
           "$ref": "./operations/addPerceptionLogEntry.schema.json"
         },
         {

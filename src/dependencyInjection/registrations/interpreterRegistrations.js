@@ -120,6 +120,7 @@ export function registerInterpreters(container) {
       'BREAK_FOLLOW_RELATION',
       bind(tokens.BreakFollowRelationHandler)
     );
+    registry.register('BURN_ENERGY', bind(tokens.BurnEnergyHandler));
     registry.register(
       'ADD_PERCEPTION_LOG_ENTRY',
       bind(tokens.AddPerceptionLogEntryHandler)
