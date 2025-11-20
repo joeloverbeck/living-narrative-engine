@@ -31,6 +31,7 @@ import DispatchEventHandler from '../../logic/operationHandlers/dispatchEventHan
 import DispatchPerceptibleEventHandler from '../../logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import DispatchSpeechHandler from '../../logic/operationHandlers/dispatchSpeechHandler.js';
 import DispatchThoughtHandler from '../../logic/operationHandlers/dispatchThoughtHandler.js';
+import DigestFoodHandler from '../../logic/operationHandlers/digestFoodHandler.js';
 import LogHandler from '../../logic/operationHandlers/logHandler.js';
 import ModifyComponentHandler from '../../logic/operationHandlers/modifyComponentHandler.js';
 import AddComponentHandler from '../../logic/operationHandlers/addComponentHandler.js';
@@ -137,6 +138,16 @@ export function registerOperationHandlers(registrar) {
         new Handler({
           logger: c.resolve(tokens.ILogger),
           dispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        }),
+    ],
+    [
+      tokens.DigestFoodHandler,
+      DigestFoodHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],
     [

@@ -192,6 +192,7 @@ export const coreTokens = freeze({
   DispatchEventHandler: 'DispatchEventHandler',
   DispatchSpeechHandler: 'DispatchSpeechHandler',
   DispatchThoughtHandler: 'DispatchThoughtHandler',
+  DigestFoodHandler: 'DigestFoodHandler',
   DispatchPerceptibleEventHandler: 'DispatchPerceptibleEventHandler',
   LogHandler: 'LogHandler',
   LockMovementHandler: 'LockMovementHandler',
