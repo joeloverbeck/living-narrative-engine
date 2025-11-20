@@ -25,8 +25,11 @@ import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
  * Dev / prod switch without `import.meta`.
  * • In a Jest run NODE_ENV defaults to 'test'.
  * • In Vite/webpack `process.env.NODE_ENV` is defined, too.
+ * • Browser-safe: Defaults to 'production' when process is undefined.
  */
-const IS_DEV = (process?.env?.NODE_ENV ?? 'production') !== 'production';
+const IS_DEV =
+  (typeof process !== 'undefined' && process?.env?.NODE_ENV !== 'production') ||
+  false;
 const TIMEOUT_MS = IS_DEV ? 3_000 : 30_000;
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────

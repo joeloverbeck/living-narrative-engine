@@ -56,7 +56,7 @@ describe('AwaitingExternalTurnEndState production defaults integration', () => {
     await jest.isolateModulesAsync(async () => {
       const hadNodeEnv = Object.prototype.hasOwnProperty.call(process.env, 'NODE_ENV');
       const previousEnv = process.env.NODE_ENV;
-      delete process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
       const { pathToFileURL } = await import('node:url');
       const moduleUrl = new URL(
         `../../../../src/turns/states/awaitingExternalTurnEndState.js?prod=${Date.now()}`,
