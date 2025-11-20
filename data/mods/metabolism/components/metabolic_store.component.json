@@ -1,0 +1,59 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "metabolism:metabolic_store",
+  "description": "Tracks an entity's energy reserves, burn rate, and metabolic state. Represents the actor's current energy level and how quickly it is consumed.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "currentEnergy": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Current energy level. Cannot be negative. May exceed maxEnergy in gluttonous state."
+      },
+      "maxEnergy": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Maximum energy capacity for this entity."
+      },
+      "baseBurnRate": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "description": "Resting energy expenditure per turn. Must be greater than 0."
+      },
+      "activityMultiplier": {
+        "type": "number",
+        "minimum": 0,
+        "default": 1.0,
+        "description": "Current activity's energy cost multiplier (1.0 = normal, <1.0 = reduced, >1.0 = increased)."
+      },
+      "lastUpdateTurn": {
+        "type": "integer",
+        "minimum": 0,
+        "default": 0,
+        "description": "Turn number of the last energy update. Used to calculate energy burn between turns."
+      }
+    },
+    "required": [
+      "currentEnergy",
+      "maxEnergy",
+      "baseBurnRate"
+    ],
+    "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid {propertyName}: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "{PropertyLabel} is required",
+      "invalidType": "Invalid type for {propertyName}: expected {{expected}}, got {{actual}}",
+      "minimum": "{PropertyLabel} must be at least {{limit}}",
+      "maximum": "{PropertyLabel} must be at most {{limit}}",
+      "exclusiveMinimum": "{PropertyLabel} must be greater than {{limit}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
+  }
+}

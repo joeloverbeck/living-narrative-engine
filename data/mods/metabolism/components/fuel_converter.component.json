@@ -1,0 +1,70 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "metabolism:fuel_converter",
+  "description": "Represents a digestive system or fuel conversion organ (stomach, fuel tank, etc.) that converts consumed items into usable energy over time.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "capacity": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Maximum buffer storage capacity for unconverted fuel (0-100 scale default)."
+      },
+      "bufferStorage": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Current amount of fuel waiting to be digested. Must not exceed capacity (enforced by operation handlers at runtime)."
+      },
+      "conversionRate": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Energy points converted per turn during digestion."
+      },
+      "efficiency": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "description": "Conversion efficiency multiplier (0.0 = no conversion, 1.0 = perfect conversion)."
+      },
+      "acceptedFuelTags": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        },
+        "minItems": 1,
+        "uniqueItems": true,
+        "description": "Array of compatible fuel type tags that this converter can process (e.g., 'organic', 'blood', 'electricity', 'coal', 'battery', 'combustible')."
+      },
+      "activityMultiplier": {
+        "type": "number",
+        "minimum": 0,
+        "default": 1.0,
+        "description": "Current activity's effect on conversion rate (1.0 = normal, <1.0 = reduced, >1.0 = increased)."
+      }
+    },
+    "required": [
+      "capacity",
+      "bufferStorage",
+      "conversionRate",
+      "efficiency",
+      "acceptedFuelTags"
+    ],
+    "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid {propertyName}: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "{PropertyLabel} is required",
+      "invalidType": "Invalid type for {propertyName}: expected {{expected}}, got {{actual}}",
+      "minimum": "{PropertyLabel} must be at least {{limit}}",
+      "maximum": "{PropertyLabel} must be at most {{limit}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
+  }
+}

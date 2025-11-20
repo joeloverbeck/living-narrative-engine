@@ -55,6 +55,26 @@
               "type": "string",
               "description": "Template for type validation failures. Available variables: {{field}}, {{expected}}, {{actual}}",
               "default": "Invalid type for {{field}}: expected {{expected}}, got {{actual}}"
+            },
+            "minimum": {
+              "type": "string",
+              "description": "Template for minimum value validation failures. Available variables: {{field}}, {{limit}}, {{value}}",
+              "default": "{{field}} must be at least {{limit}}, got {{value}}"
+            },
+            "maximum": {
+              "type": "string",
+              "description": "Template for maximum value validation failures. Available variables: {{field}}, {{limit}}, {{value}}",
+              "default": "{{field}} must be at most {{limit}}, got {{value}}"
+            },
+            "exclusiveMinimum": {
+              "type": "string",
+              "description": "Template for exclusive minimum validation failures. Available variables: {{field}}, {{limit}}, {{value}}",
+              "default": "{{field}} must be greater than {{limit}}, got {{value}}"
+            },
+            "exclusiveMaximum": {
+              "type": "string",
+              "description": "Template for exclusive maximum validation failures. Available variables: {{field}}, {{limit}}, {{value}}",
+              "default": "{{field}} must be less than {{limit}}, got {{value}}"
             }
           },
           "additionalProperties": false
