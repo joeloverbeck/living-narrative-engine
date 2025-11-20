@@ -13,12 +13,21 @@ import {
   clearGoalNormalizationExtensions,
 } from '../goals/normalization/index.js';
 
+/* global process */
+
 const GOAL_SCHEMA_ERROR_CODE = 'GOAL_SCHEMA_VALIDATION_FAILED';
 
 /**
- *
+ * Checks if permissive goal loader mode is enabled via environment variable.
+ * Browser-safe: Returns false (default) when process.env is unavailable.
+ * @returns {boolean} True if permissive mode is enabled, false otherwise
  */
 function isPermissiveGoalLoaderMode() {
+  // Browser compatibility: process.env doesn't exist in browsers
+  if (typeof process === 'undefined' || !process.env) {
+    return false; // Default behavior: permissive mode disabled
+  }
+
   const raw = process.env.GOAL_LOADER_ALLOW_DEFAULTS;
   if (typeof raw !== 'string') {
     return false;
@@ -28,9 +37,15 @@ function isPermissiveGoalLoaderMode() {
 }
 
 /**
- *
+ * Checks if normalization diagnostics are enabled via environment variable.
+ * Browser-safe: Returns true (default) when process.env is unavailable.
  */
 function isNormalizationDiagnosticsEnabled() {
+  // Browser compatibility: process.env doesn't exist in browsers
+  if (typeof process === 'undefined' || !process.env) {
+    return true; // Default behavior: diagnostics enabled
+  }
+
   const raw = process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS;
   if (typeof raw !== 'string') {
     return true;

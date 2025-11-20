@@ -15,13 +15,18 @@ import {
   validateThematicDirections,
 } from '../models/thematicDirection.js';
 
+/* global process */
+
 /**
  * Retry configuration for storage operations
+ * Browser-safe: Defaults to production values when process is undefined
  */
 const STORAGE_RETRY_CONFIG = {
   maxRetries: 3,
-  baseDelayMs: process.env.NODE_ENV === 'test' ? 5 : 500,
-  maxDelayMs: process.env.NODE_ENV === 'test' ? 25 : 2000,
+  baseDelayMs:
+    typeof process !== 'undefined' && process.env?.NODE_ENV === 'test' ? 5 : 500,
+  maxDelayMs:
+    typeof process !== 'undefined' && process.env?.NODE_ENV === 'test' ? 25 : 2000,
 };
 
 /**

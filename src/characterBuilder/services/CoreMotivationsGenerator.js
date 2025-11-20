@@ -15,14 +15,19 @@ import {
 import { CoreMotivation } from '../models/coreMotivation.js';
 import { CHARACTER_BUILDER_EVENTS } from './characterBuilderService.js';
 
+/* global process */
+
 /**
  * Retry configuration for core motivations generation
  * Uses minimal delays in test environment to speed up test execution
+ * Browser-safe: Defaults to production values when process is undefined
  */
 const RETRY_CONFIG = {
   maxRetries: 2,
-  baseDelayMs: process.env.NODE_ENV === 'test' ? 1 : 1000,
-  maxDelayMs: process.env.NODE_ENV === 'test' ? 5 : 4000,
+  baseDelayMs:
+    typeof process !== 'undefined' && process.env?.NODE_ENV === 'test' ? 1 : 1000,
+  maxDelayMs:
+    typeof process !== 'undefined' && process.env?.NODE_ENV === 'test' ? 5 : 4000,
 };
 
 /**
