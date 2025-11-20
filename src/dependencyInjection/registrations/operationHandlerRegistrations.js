@@ -27,6 +27,7 @@
 import { tokens } from '../tokens.js';
 
 // Import handlers (keep alphabetically sorted)
+import ConsumeItemHandler from '../../logic/operationHandlers/consumeItemHandler.js';
 import DispatchEventHandler from '../../logic/operationHandlers/dispatchEventHandler.js';
 import DispatchPerceptibleEventHandler from '../../logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import DispatchSpeechHandler from '../../logic/operationHandlers/dispatchSpeechHandler.js';
@@ -35,6 +36,7 @@ import DigestFoodHandler from '../../logic/operationHandlers/digestFoodHandler.j
 import LogHandler from '../../logic/operationHandlers/logHandler.js';
 import ModifyComponentHandler from '../../logic/operationHandlers/modifyComponentHandler.js';
 import AddComponentHandler from '../../logic/operationHandlers/addComponentHandler.js';
+
 import QueryComponentHandler from '../../logic/operationHandlers/queryComponentHandler.js';
 import QueryComponentsHandler from '../../logic/operationHandlers/queryComponentsHandler.js';
 import QueryLookupHandler from '../../logic/operationHandlers/queryLookupHandler.js';
@@ -101,6 +103,16 @@ import jsonLogic from 'json-logic-js';
 export function registerOperationHandlers(registrar) {
   // Handler factory entries (keep alphabetically sorted by token name)
   const handlerFactories = [
+    [
+      tokens.ConsumeItemHandler,
+      ConsumeItemHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
     [
       tokens.DispatchEventHandler,
       DispatchEventHandler,

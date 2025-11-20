@@ -78,6 +78,7 @@ export function registerInterpreters(container) {
 
     // Operation mappings - keep alphabetically sorted
     // Format: registry.register('OPERATION_TYPE', bind(tokens.HandlerToken));
+    registry.register('CONSUME_ITEM', bind(tokens.ConsumeItemHandler));
     registry.register('DISPATCH_EVENT', bind(tokens.DispatchEventHandler));
     registry.register(
       'DISPATCH_PERCEPTIBLE_EVENT',

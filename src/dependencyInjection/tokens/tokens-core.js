@@ -189,6 +189,7 @@ export const coreTokens = freeze({
   OperationRegistry: 'OperationRegistry',
   OperationInterpreter: 'OperationInterpreter',
   SystemLogicInterpreter: 'SystemLogicInterpreter',
+  ConsumeItemHandler: 'ConsumeItemHandler',
   DispatchEventHandler: 'DispatchEventHandler',
   DispatchSpeechHandler: 'DispatchSpeechHandler',
   DispatchThoughtHandler: 'DispatchThoughtHandler',
