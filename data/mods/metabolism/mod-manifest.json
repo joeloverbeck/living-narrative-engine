@@ -1,0 +1,23 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "metabolism",
+  "version": "1.0.0",
+  "name": "Metabolism System",
+  "description": "Hunger, energy, and digestion system with fuel converters and consumable items",
+  "author": "Living Narrative Engine",
+  "gameVersion": "0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "1.0.0"
+    }
+  ],
+  "content": {
+    "components": [
+      "fuel_converter.component.json",
+      "fuel_source.component.json",
+      "metabolic_store.component.json",
+      "hunger_state.component.json"
+    ]
+  }
+}

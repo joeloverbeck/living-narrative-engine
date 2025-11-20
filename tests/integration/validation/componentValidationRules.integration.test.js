@@ -654,4 +654,522 @@ describe('Component ValidationRules Integration', () => {
       });
     });
   });
+
+  describe('Metabolism Components Validation', () => {
+    describe('metabolic_store component', () => {
+      it('should validate correct metabolic_store data', async () => {
+        const componentSchema = {
+          id: 'metabolism:metabolic_store',
+          dataSchema: {
+            type: 'object',
+            properties: {
+              currentEnergy: {
+                type: 'number',
+                minimum: 0,
+              },
+              maxEnergy: {
+                type: 'number',
+                minimum: 0,
+              },
+              baseBurnRate: {
+                type: 'number',
+                exclusiveMinimum: 0,
+              },
+              activityMultiplier: {
+                type: 'number',
+                minimum: 0,
+                default: 1.0,
+              },
+              lastUpdateTurn: {
+                type: 'integer',
+                minimum: 0,
+                default: 0,
+              },
+            },
+            required: ['currentEnergy', 'maxEnergy', 'baseBurnRate'],
+            additionalProperties: false,
+          },
+          validationRules: {
+            generateValidator: true,
+          },
+        };
+
+        dataRegistry.store('components', 'metabolism:metabolic_store', componentSchema);
+        await validator.addSchema(componentSchema.dataSchema, 'metabolism:metabolic_store');
+
+        const validData = {
+          currentEnergy: 800,
+          maxEnergy: 1000,
+          baseBurnRate: 1.0,
+          activityMultiplier: 1.0,
+          lastUpdateTurn: 42,
+        };
+
+        const result = validator.validate('metabolism:metabolic_store', validData);
+        expect(result.isValid).toBe(true);
+        expect(result.errors).toBeNull();
+      });
+
+      it('should reject negative currentEnergy', async () => {
+        const componentSchema = {
+          id: 'metabolism:metabolic_store',
+          dataSchema: {
+            type: 'object',
+            properties: {
+              currentEnergy: {
+                type: 'number',
+                minimum: 0,
+              },
+              maxEnergy: {
+                type: 'number',
+                minimum: 0,
+              },
+              baseBurnRate: {
+                type: 'number',
+                exclusiveMinimum: 0,
+              },
+            },
+            required: ['currentEnergy', 'maxEnergy', 'baseBurnRate'],
+            additionalProperties: false,
+          },
+          validationRules: {
+            generateValidator: true,
+          },
+        };
+
+        dataRegistry.store('components', 'metabolism:metabolic_store', componentSchema);
+        await validator.addSchema(componentSchema.dataSchema, 'metabolism:metabolic_store');
+
+        const invalidData = {
+          currentEnergy: -10,
+          maxEnergy: 1000,
+          baseBurnRate: 1.0,
+        };
+
+        const result = validator.validate('metabolism:metabolic_store', invalidData);
+        expect(result.isValid).toBe(false);
+        expect(result.errors.length).toBeGreaterThan(0);
+      });
+
+      it('should reject baseBurnRate of 0 (exclusiveMinimum)', async () => {
+        const componentSchema = {
+          id: 'metabolism:metabolic_store',
+          dataSchema: {
+            type: 'object',
+            properties: {
+              currentEnergy: {
+                type: 'number',
+                minimum: 0,
+              },
+              maxEnergy: {
+                type: 'number',
+                minimum: 0,
+              },
+              baseBurnRate: {
+                type: 'number',
+                exclusiveMinimum: 0,
+              },
+            },
+            required: ['currentEnergy', 'maxEnergy', 'baseBurnRate'],
+            additionalProperties: false,
+          },
+          validationRules: {
+            generateValidator: true,
+          },
+        };
+
+        dataRegistry.store('components', 'metabolism:metabolic_store', componentSchema);
+        await validator.addSchema(componentSchema.dataSchema, 'metabolism:metabolic_store');
+
+        const invalidData = {
+          currentEnergy: 800,
+          maxEnergy: 1000,
+          baseBurnRate: 0,
+        };
+
+        const result = validator.validate('metabolism:metabolic_store', invalidData);
+        expect(result.isValid).toBe(false);
+        expect(result.errors.length).toBeGreaterThan(0);
+      });
+
+      it('should reject missing required fields', async () => {
+        const componentSchema = {
+          id: 'metabolism:metabolic_store',
+          dataSchema: {
+            type: 'object',
+            properties: {
+              currentEnergy: {
+                type: 'number',
+                minimum: 0,
+              },
+              maxEnergy: {
+                type: 'number',
+                minimum: 0,
+              },
+              baseBurnRate: {
+                type: 'number',
+                exclusiveMinimum: 0,
+              },
+            },
+            required: ['currentEnergy', 'maxEnergy', 'baseBurnRate'],
+            additionalProperties: false,
+          },
+          validationRules: {
+            generateValidator: true,
+          },
+        };
+
+        dataRegistry.store('components', 'metabolism:metabolic_store', componentSchema);
+        await validator.addSchema(componentSchema.dataSchema, 'metabolism:metabolic_store');
+
+        const invalidData = {
+          currentEnergy: 800,
+          // missing maxEnergy and baseBurnRate
+        };
+
+        const result = validator.validate('metabolism:metabolic_store', invalidData);
+        expect(result.isValid).toBe(false);
+        expect(result.errors.length).toBeGreaterThan(0);
+      });
+
+      it('should allow currentEnergy > maxEnergy (for gluttonous state)', async () => {
+        const componentSchema = {
+          id: 'metabolism:metabolic_store',
+          dataSchema: {
+            type: 'object',
+            properties: {
+              currentEnergy: {
+                type: 'number',
+                minimum: 0,
+              },
+              maxEnergy: {
+                type: 'number',
+                minimum: 0,
+              },
+              baseBurnRate: {
+                type: 'number',
+                exclusiveMinimum: 0,
+              },
+            },
+            required: ['currentEnergy', 'maxEnergy', 'baseBurnRate'],
+            additionalProperties: false,
+          },
+          validationRules: {
+            generateValidator: true,
+          },
+        };
+
+        dataRegistry.store('components', 'metabolism:metabolic_store', componentSchema);
+        await validator.addSchema(componentSchema.dataSchema, 'metabolism:metabolic_store');
+
+        const validData = {
+          currentEnergy: 1200,
+          maxEnergy: 1000,
+          baseBurnRate: 1.0,
+        };
+
+        const result = validator.validate('metabolism:metabolic_store', validData);
+        expect(result.isValid).toBe(true);
+        expect(result.errors).toBeNull();
+      });
+    });
+
+    describe('hunger_state component', () => {
+      it('should validate correct hunger_state data', async () => {
+        const componentSchema = {
+          id: 'metabolism:hunger_state',
+          dataSchema: {
+            type: 'object',
+            properties: {
+              state: {
+                type: 'string',
+                enum: ['gluttonous', 'satiated', 'neutral', 'hungry', 'starving', 'critical'],
+              },
+              energyPercentage: {
+                type: 'number',
+                minimum: 0,
+              },
+              turnsInState: {
+                type: 'integer',
+                minimum: 0,
+                default: 0,
+              },
+              starvationDamage: {
+                type: 'number',
+                minimum: 0,
+                default: 0,
+              },
+            },
+            required: ['state', 'energyPercentage'],
+            additionalProperties: false,
+          },
+          validationRules: {
+            generateValidator: true,
+            errorMessages: {
+              invalidEnum: 'Invalid hunger state: {{value}}. Valid states: gluttonous, satiated, neutral, hungry, starving, critical',
+            },
+            suggestions: {
+              enableSimilarity: true,
+              maxDistance: 3,
+              maxSuggestions: 3,
+            },
+          },
+        };
+
+        dataRegistry.store('components', 'metabolism:hunger_state', componentSchema);
+        await validator.addSchema(componentSchema.dataSchema, 'metabolism:hunger_state');
+
+        const validData = {
+          state: 'hungry',
+          energyPercentage: 25.5,
+          turnsInState: 15,
+          starvationDamage: 0,
+        };
+
+        const result = validator.validate('metabolism:hunger_state', validData);
+        expect(result.isValid).toBe(true);
+        expect(result.errors).toBeNull();
+      });
+
+      it('should reject invalid hunger state with similarity suggestion', async () => {
+        const componentSchema = {
+          id: 'metabolism:hunger_state',
+          dataSchema: {
+            type: 'object',
+            properties: {
+              state: {
+                type: 'string',
+                enum: ['gluttonous', 'satiated', 'neutral', 'hungry', 'starving', 'critical'],
+              },
+              energyPercentage: {
+                type: 'number',
+                minimum: 0,
+              },
+            },
+            required: ['state', 'energyPercentage'],
+            additionalProperties: false,
+          },
+          validationRules: {
+            generateValidator: true,
+            errorMessages: {
+              invalidEnum: 'Invalid hunger state: {{value}}. Valid states: gluttonous, satiated, neutral, hungry, starving, critical',
+            },
+            suggestions: {
+              enableSimilarity: true,
+              maxDistance: 3,
+              maxSuggestions: 3,
+            },
+          },
+        };
+
+        dataRegistry.store('components', 'metabolism:hunger_state', componentSchema);
+        await validator.addSchema(componentSchema.dataSchema, 'metabolism:hunger_state');
+
+        const invalidData = {
+          state: 'hungrey', // Typo of "hungry"
+          energyPercentage: 25.5,
+        };
+
+        const result = validator.validate('metabolism:hunger_state', invalidData);
+        expect(result.isValid).toBe(false);
+        expect(result.errors.length).toBeGreaterThan(0);
+
+        const enhancedError = result.errors.find(err => err.type === 'invalidEnum');
+        expect(enhancedError).toBeDefined();
+        expect(enhancedError.suggestion).toBeDefined();
+        expect(enhancedError.suggestion).toBe('hungry');
+      });
+
+      it('should validate all hunger states', async () => {
+        const componentSchema = {
+          id: 'metabolism:hunger_state',
+          dataSchema: {
+            type: 'object',
+            properties: {
+              state: {
+                type: 'string',
+                enum: ['gluttonous', 'satiated', 'neutral', 'hungry', 'starving', 'critical'],
+              },
+              energyPercentage: {
+                type: 'number',
+                minimum: 0,
+              },
+            },
+            required: ['state', 'energyPercentage'],
+            additionalProperties: false,
+          },
+          validationRules: {
+            generateValidator: true,
+          },
+        };
+
+        dataRegistry.store('components', 'metabolism:hunger_state', componentSchema);
+        await validator.addSchema(componentSchema.dataSchema, 'metabolism:hunger_state');
+
+        const validStates = ['gluttonous', 'satiated', 'neutral', 'hungry', 'starving', 'critical'];
+
+        validStates.forEach((state) => {
+          const result = validator.validate('metabolism:hunger_state', {
+            state,
+            energyPercentage: 50,
+          });
+          expect(result.isValid).toBe(true);
+        });
+      });
+
+      it('should reject negative energyPercentage', async () => {
+        const componentSchema = {
+          id: 'metabolism:hunger_state',
+          dataSchema: {
+            type: 'object',
+            properties: {
+              state: {
+                type: 'string',
+                enum: ['gluttonous', 'satiated', 'neutral', 'hungry', 'starving', 'critical'],
+              },
+              energyPercentage: {
+                type: 'number',
+                minimum: 0,
+              },
+            },
+            required: ['state', 'energyPercentage'],
+            additionalProperties: false,
+          },
+          validationRules: {
+            generateValidator: true,
+          },
+        };
+
+        dataRegistry.store('components', 'metabolism:hunger_state', componentSchema);
+        await validator.addSchema(componentSchema.dataSchema, 'metabolism:hunger_state');
+
+        const invalidData = {
+          state: 'hungry',
+          energyPercentage: -5,
+        };
+
+        const result = validator.validate('metabolism:hunger_state', invalidData);
+        expect(result.isValid).toBe(false);
+        expect(result.errors.length).toBeGreaterThan(0);
+      });
+
+      it('should allow energyPercentage > 100 (for gluttonous state)', async () => {
+        const componentSchema = {
+          id: 'metabolism:hunger_state',
+          dataSchema: {
+            type: 'object',
+            properties: {
+              state: {
+                type: 'string',
+                enum: ['gluttonous', 'satiated', 'neutral', 'hungry', 'starving', 'critical'],
+              },
+              energyPercentage: {
+                type: 'number',
+                minimum: 0,
+              },
+            },
+            required: ['state', 'energyPercentage'],
+            additionalProperties: false,
+          },
+          validationRules: {
+            generateValidator: true,
+          },
+        };
+
+        dataRegistry.store('components', 'metabolism:hunger_state', componentSchema);
+        await validator.addSchema(componentSchema.dataSchema, 'metabolism:hunger_state');
+
+        const validData = {
+          state: 'gluttonous',
+          energyPercentage: 125.5,
+        };
+
+        const result = validator.validate('metabolism:hunger_state', validData);
+        expect(result.isValid).toBe(true);
+        expect(result.errors).toBeNull();
+      });
+
+      it('should reject negative turnsInState', async () => {
+        const componentSchema = {
+          id: 'metabolism:hunger_state',
+          dataSchema: {
+            type: 'object',
+            properties: {
+              state: {
+                type: 'string',
+                enum: ['gluttonous', 'satiated', 'neutral', 'hungry', 'starving', 'critical'],
+              },
+              energyPercentage: {
+                type: 'number',
+                minimum: 0,
+              },
+              turnsInState: {
+                type: 'integer',
+                minimum: 0,
+              },
+            },
+            required: ['state', 'energyPercentage'],
+            additionalProperties: false,
+          },
+          validationRules: {
+            generateValidator: true,
+          },
+        };
+
+        dataRegistry.store('components', 'metabolism:hunger_state', componentSchema);
+        await validator.addSchema(componentSchema.dataSchema, 'metabolism:hunger_state');
+
+        const invalidData = {
+          state: 'hungry',
+          energyPercentage: 25.5,
+          turnsInState: -1,
+        };
+
+        const result = validator.validate('metabolism:hunger_state', invalidData);
+        expect(result.isValid).toBe(false);
+        expect(result.errors.length).toBeGreaterThan(0);
+      });
+
+      it('should reject negative starvationDamage', async () => {
+        const componentSchema = {
+          id: 'metabolism:hunger_state',
+          dataSchema: {
+            type: 'object',
+            properties: {
+              state: {
+                type: 'string',
+                enum: ['gluttonous', 'satiated', 'neutral', 'hungry', 'starving', 'critical'],
+              },
+              energyPercentage: {
+                type: 'number',
+                minimum: 0,
+              },
+              starvationDamage: {
+                type: 'number',
+                minimum: 0,
+              },
+            },
+            required: ['state', 'energyPercentage'],
+            additionalProperties: false,
+          },
+          validationRules: {
+            generateValidator: true,
+          },
+        };
+
+        dataRegistry.store('components', 'metabolism:hunger_state', componentSchema);
+        await validator.addSchema(componentSchema.dataSchema, 'metabolism:hunger_state');
+
+        const invalidData = {
+          state: 'starving',
+          energyPercentage: 5.2,
+          starvationDamage: -10,
+        };
+
+        const result = validator.validate('metabolism:hunger_state', invalidData);
+        expect(result.isValid).toBe(false);
+        expect(result.errors.length).toBeGreaterThan(0);
+      });
+    });
+  });
 });

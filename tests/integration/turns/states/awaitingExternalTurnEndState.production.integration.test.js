@@ -52,11 +52,13 @@ describe('AwaitingExternalTurnEndState production defaults integration', () => {
     const setTimeoutSpy = jest.spyOn(global, 'setTimeout');
     const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
 
+    // Set NODE_ENV to production BEFORE isolateModulesAsync
+    const hadNodeEnv = Object.prototype.hasOwnProperty.call(process.env, 'NODE_ENV');
+    const previousEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+
     let AwaitingExternalTurnEndState;
     await jest.isolateModulesAsync(async () => {
-      const hadNodeEnv = Object.prototype.hasOwnProperty.call(process.env, 'NODE_ENV');
-      const previousEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
       const { pathToFileURL } = await import('node:url');
       const moduleUrl = new URL(
         `../../../../src/turns/states/awaitingExternalTurnEndState.js?prod=${Date.now()}`,
@@ -64,9 +66,6 @@ describe('AwaitingExternalTurnEndState production defaults integration', () => {
       );
       const fileUrl = pathToFileURL(moduleUrl.pathname).href;
       ({ AwaitingExternalTurnEndState } = await import(`${fileUrl}${moduleUrl.search}`));
-      if (hadNodeEnv) {
-        process.env.NODE_ENV = previousEnv;
-      }
     });
 
     const logger = createMockLogger();
@@ -103,7 +102,15 @@ describe('AwaitingExternalTurnEndState production defaults integration', () => {
 
     handler.setTurnContext(context);
 
+    // Construct the state while NODE_ENV is still 'production'
     const state = new AwaitingExternalTurnEndState(handler);
+
+    // Restore NODE_ENV after construction
+    if (hadNodeEnv) {
+      process.env.NODE_ENV = previousEnv;
+    } else {
+      delete process.env.NODE_ENV;
+    }
 
     await state.enterState(handler, null);
 

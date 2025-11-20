@@ -1,0 +1,58 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "metabolism:hunger_state",
+  "description": "Defines threshold-based hunger states and their gameplay effects. Tracks current hunger state, energy percentage, and starvation damage.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "state": {
+        "type": "string",
+        "enum": [
+          "gluttonous",
+          "satiated",
+          "neutral",
+          "hungry",
+          "starving",
+          "critical"
+        ],
+        "description": "Current hunger state based on energy percentage thresholds. States: gluttonous (>100%), satiated (75-100%), neutral (30-75%), hungry (10-30%), starving (0.1-10%), critical (≤0%)."
+      },
+      "energyPercentage": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Current energy as percentage of maximum (0-100+). Can exceed 100% in gluttonous state."
+      },
+      "turnsInState": {
+        "type": "integer",
+        "minimum": 0,
+        "default": 0,
+        "description": "Consecutive turns the entity has been in the current hunger state. Resets when state changes."
+      },
+      "starvationDamage": {
+        "type": "number",
+        "minimum": 0,
+        "default": 0,
+        "description": "Cumulative health damage accumulated from starvation. Increases while in starving or critical states."
+      }
+    },
+    "required": [
+      "state",
+      "energyPercentage"
+    ],
+    "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid hunger state: {{value}}. Valid states: gluttonous, satiated, neutral, hungry, starving, critical",
+      "missingRequired": "{PropertyLabel} is required",
+      "invalidType": "Invalid type for {propertyName}: expected {{expected}}, got {{actual}}",
+      "minimum": "{PropertyLabel} must be at least {{limit}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
+  }
+}

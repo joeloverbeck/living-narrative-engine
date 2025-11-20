@@ -1,0 +1,64 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "metabolism:fuel_source",
+  "description": "Defines consumable items with energy and volume properties that can be processed by fuel converters.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "energyDensity": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Total calories or energy units provided when fully consumed."
+      },
+      "bulk": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 100,
+        "description": "Volume occupied in converter buffer when consumed (0-100 scale)."
+      },
+      "fuelTags": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        },
+        "minItems": 1,
+        "uniqueItems": true,
+        "description": "Array of fuel type tags indicating which converters can process this item (e.g., 'organic', 'blood', 'electricity', 'coal', 'battery', 'combustible')."
+      },
+      "digestionSpeed": {
+        "type": "string",
+        "enum": ["instant", "fast", "medium", "slow"],
+        "description": "Rate at which this fuel source is converted into energy."
+      },
+      "spoilageRate": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Number of turns until the item spoils and becomes unusable (0 = never spoils)."
+      }
+    },
+    "required": [
+      "energyDensity",
+      "bulk",
+      "fuelTags",
+      "digestionSpeed",
+      "spoilageRate"
+    ],
+    "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid {propertyName}: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "{PropertyLabel} is required",
+      "invalidType": "Invalid type for {propertyName}: expected {{expected}}, got {{actual}}",
+      "minimum": "{PropertyLabel} must be at least {{limit}}",
+      "maximum": "{PropertyLabel} must be at most {{limit}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
+  }
+}

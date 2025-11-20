@@ -10,27 +10,29 @@
  */
 
 import { AbstractTurnState } from './abstractTurnState.js';
+import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 
 import { TURN_ENDED_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { createTimeoutError } from '../../utils/timeoutUtils.js';
 import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
+import { getEnvironmentMode } from '../../utils/environmentUtils.js';
 
 /** @typedef {import('../interfaces/ITurnStateHost.js').ITurnStateHost} BaseTurnHandler */
 
-/* global process */
-
-// ─── Config ────────────────────────────────────────────────────────────────────
 /**
- * Dev / prod switch without `import.meta`.
- * • In a Jest run NODE_ENV defaults to 'test'.
- * • In Vite/webpack `process.env.NODE_ENV` is defined, too.
- * • Browser-safe: Defaults to 'production' when process is undefined.
+ * Default timeout for production environment (30 seconds).
+ *
+ * @private
  */
-const IS_DEV =
-  (typeof process !== 'undefined' && process?.env?.NODE_ENV !== 'production') ||
-  false;
-const TIMEOUT_MS = IS_DEV ? 3_000 : 30_000;
+export const DEFAULT_TIMEOUT_PRODUCTION = 30_000;
+
+/**
+ * Default timeout for development environment (3 seconds).
+ *
+ * @private
+ */
+export const DEFAULT_TIMEOUT_DEVELOPMENT = 3_000;
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 // Timeout utilities moved to src/utils/timeoutUtils.js
@@ -40,7 +42,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
   #timeoutId = null;
   #unsubscribeFn = undefined;
   #awaitingActionId = 'unknown-action';
-  #timeoutMs = TIMEOUT_MS;
+  #configuredTimeout;
   #setTimeoutFn = (...args) => setTimeout(...args);
   #clearTimeoutFn = (...args) => clearTimeout(...args);
 
@@ -56,15 +58,44 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
   constructor(
     handler,
     {
-      timeoutMs = TIMEOUT_MS,
+      timeoutMs,
       setTimeoutFn = (...args) => setTimeout(...args),
       clearTimeoutFn = (...args) => clearTimeout(...args),
     } = {}
   ) {
     super(handler);
-    this.#timeoutMs = timeoutMs;
+    this.#configuredTimeout = timeoutMs ?? this.#resolveDefaultTimeout();
+
+    // Validate timeout is positive finite number
+    if (!Number.isFinite(this.#configuredTimeout) || this.#configuredTimeout <= 0) {
+      throw new InvalidArgumentError(
+        `timeoutMs must be a positive finite number, got: ${this.#configuredTimeout} (type: ${typeof this.#configuredTimeout})`
+      );
+    }
+
     this.#setTimeoutFn = setTimeoutFn;
     this.#clearTimeoutFn = clearTimeoutFn;
+  }
+
+  /**
+   * Resolves the default timeout based on the current environment.
+   * Falls back to production timeout if environment detection fails.
+   *
+   * @returns {number} Timeout duration in milliseconds
+   * @private
+   */
+  #resolveDefaultTimeout() {
+    try {
+      const env = getEnvironmentMode();
+      const isProduction = env === 'production';
+      return isProduction
+        ? DEFAULT_TIMEOUT_PRODUCTION
+        : DEFAULT_TIMEOUT_DEVELOPMENT;
+    } catch {
+      // If environment detection fails, use production timeout as safe default
+      // Note: Logger not available during construction, silent fallback
+      return DEFAULT_TIMEOUT_PRODUCTION;
+    }
   }
 
   //─────────────────────────────────────────────────────────────────────────────
@@ -95,7 +126,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     // set guard-rail
     this.#timeoutId = this.#setTimeoutFn(async () => {
       await this.#onTimeout();
-    }, this.#timeoutMs);
+    }, this.#configuredTimeout);
   }
 
   //─────────────────────────────────────────────────────────────────────────────
@@ -191,7 +222,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     const { message, error } = createTimeoutError(
       ctx.getActor().id,
       this.#awaitingActionId,
-      this.#timeoutMs
+      this.#configuredTimeout
     );
 
     // 1) tell the UI / console
