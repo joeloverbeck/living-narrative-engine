@@ -25,7 +25,7 @@ module.exports = {
   // Integration tests may take longer
   testTimeout: 30000,
   // TODO: bump back above 1 once jest-worker crash (exitCode=0) is resolved.
-  maxWorkers: 6,
+  maxWorkers: 4,
   // Integration tests have moderate coverage expectations
   coverageThreshold: {
     global: {

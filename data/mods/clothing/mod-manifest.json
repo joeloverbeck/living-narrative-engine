@@ -7,11 +7,15 @@
   "author": "Living Narrative Engine",
   "dependencies": [
     {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
       "id": "anatomy",
       "version": "^1.0.0"
     },
     {
-      "id": "core",
+      "id": "positioning",
       "version": "^1.0.0"
     },
     {

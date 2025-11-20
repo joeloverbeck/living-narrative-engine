@@ -267,9 +267,7 @@ describe('Humanoid Regression Tests', () => {
       }
     });
 
-    it.skip('should handle futa variation correctly', async () => {
-      // Note: Futa recipe not currently available in the system
-      // Skipping until recipe is implemented
+    it('should handle futa variation correctly', async () => {
       const recipeId = 'anatomy:human_futa';
       const actor = await testBed.createActor({ recipeId });
 

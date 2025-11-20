@@ -1380,6 +1380,103 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
+      'anatomy:human_futa_torso': {
+        id: 'anatomy:human_futa_torso',
+        description: 'A futanari torso with breasts and male genitalia',
+        components: {
+          'anatomy:part': {
+            subType: 'torso',
+          },
+          'anatomy:sockets': {
+            sockets: [
+              {
+                id: 'neck',
+                orientation: 'upper',
+                allowedTypes: ['head', 'neck'],
+                nameTpl: '{{type}}',
+              },
+              {
+                id: 'left_shoulder',
+                orientation: 'left',
+                allowedTypes: ['arm'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
+              {
+                id: 'right_shoulder',
+                orientation: 'right',
+                allowedTypes: ['arm'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
+              {
+                id: 'left_hip',
+                orientation: 'left',
+                allowedTypes: ['leg'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
+              {
+                id: 'right_hip',
+                orientation: 'right',
+                allowedTypes: ['leg'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
+              {
+                id: 'left_chest',
+                orientation: 'left',
+                allowedTypes: ['breast'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
+              {
+                id: 'right_chest',
+                orientation: 'right',
+                allowedTypes: ['breast'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
+              {
+                id: 'pubic_hair',
+                allowedTypes: ['pubic_hair'],
+                nameTpl: 'pubic hair',
+              },
+              {
+                id: 'penis',
+                allowedTypes: ['penis'],
+                nameTpl: '{{type}}',
+              },
+              {
+                id: 'left_testicle',
+                orientation: 'left',
+                allowedTypes: ['testicle'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
+              {
+                id: 'right_testicle',
+                orientation: 'right',
+                allowedTypes: ['testicle'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
+              {
+                id: 'asshole',
+                allowedTypes: ['asshole'],
+                nameTpl: '{{type}}',
+              },
+              {
+                id: 'left_ass',
+                orientation: 'left',
+                allowedTypes: ['ass_cheek'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
+              {
+                id: 'right_ass',
+                orientation: 'right',
+                allowedTypes: ['ass_cheek'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
+            ],
+          },
+          'core:name': {
+            text: 'torso',
+          },
+        },
+      },
       'anatomy:human_vagina': {
         id: 'anatomy:human_vagina',
         description: 'A human vagina',
@@ -2252,6 +2349,110 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
+      'anatomy:human_futa': {
+        id: 'anatomy:human_futa',
+        root: 'anatomy:human_futa_torso',
+        compose: [
+          {
+            part: 'anatomy:humanoid_core',
+            include: ['slots', 'clothingSlotMappings'],
+          },
+        ],
+        slots: {
+          left_breast: {
+            socket: 'left_chest',
+            requirements: {
+              partType: 'breast',
+              components: ['anatomy:part'],
+            },
+          },
+          right_breast: {
+            socket: 'right_chest',
+            requirements: {
+              partType: 'breast',
+              components: ['anatomy:part'],
+            },
+          },
+          penis: {
+            socket: 'penis',
+            requirements: {
+              partType: 'penis',
+              components: ['anatomy:part'],
+            },
+          },
+          left_testicle: {
+            socket: 'left_testicle',
+            requirements: {
+              partType: 'testicle',
+              components: ['anatomy:part'],
+            },
+          },
+          right_testicle: {
+            socket: 'right_testicle',
+            requirements: {
+              partType: 'testicle',
+              components: ['anatomy:part'],
+            },
+          },
+        },
+        clothingSlotMappings: {
+          back_accessory: {
+            anatomySockets: ['upper_back', 'lower_back'],
+            allowedLayers: ['accessory', 'armor'],
+          },
+          torso_lower: {
+            anatomySockets: [
+              'left_hip',
+              'right_hip',
+              'pubic_hair',
+              'penis',
+              'left_testicle',
+              'right_testicle',
+            ],
+            allowedLayers: ['underwear', 'base', 'outer'],
+          },
+          full_body: {
+            blueprintSlots: [
+              'head',
+              'left_arm',
+              'right_arm',
+              'left_leg',
+              'right_leg',
+              'left_breast',
+              'right_breast',
+            ],
+            allowedLayers: ['outer'],
+          },
+          torso_upper: {
+            anatomySockets: [
+              'left_breast',
+              'right_breast',
+              'left_chest',
+              'right_chest',
+              'chest_center',
+              'left_shoulder',
+              'right_shoulder',
+            ],
+            allowedLayers: ['underwear', 'base', 'outer', 'armor'],
+          },
+          legs: {
+            blueprintSlots: ['left_leg', 'right_leg'],
+            allowedLayers: ['base', 'outer'],
+          },
+          left_arm_clothing: {
+            blueprintSlots: ['left_arm'],
+            allowedLayers: ['base', 'outer'],
+          },
+          right_arm_clothing: {
+            blueprintSlots: ['right_arm'],
+            allowedLayers: ['base', 'outer'],
+          },
+          feet: {
+            blueprintSlots: ['left_foot', 'right_foot'],
+            allowedLayers: ['base', 'outer'],
+          },
+        },
+      },
       // Kraken blueprint for cephalopods
       'anatomy:kraken': {
         id: 'anatomy:kraken',
@@ -2502,6 +2703,47 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
             matches: ['pubic_hair'],
             partType: 'pubic_hair',
             preferId: 'anatomy:human_pubic_hair',
+          },
+        ],
+      },
+      'anatomy:human_futa': {
+        recipeId: 'anatomy:human_futa',
+        blueprintId: 'anatomy:human_futa',
+        bodyDescriptors: {
+          build: 'shapely',
+          composition: 'average',
+          skinColor: 'fair',
+        },
+        slots: {
+          torso: {
+            partType: 'torso',
+            preferId: 'anatomy:human_futa_torso',
+          },
+          head: {
+            partType: 'head',
+            preferId: 'anatomy:humanoid_head',
+          },
+        },
+        patterns: [
+          {
+            matches: ['left_arm', 'right_arm'],
+            partType: 'arm',
+            preferId: 'anatomy:humanoid_arm',
+          },
+          {
+            matches: ['left_leg', 'right_leg'],
+            partType: 'leg',
+            preferId: 'anatomy:human_leg',
+          },
+          {
+            matches: ['left_breast', 'right_breast'],
+            partType: 'breast',
+            preferId: 'anatomy:human_breast',
+          },
+          {
+            matches: ['left_testicle', 'right_testicle'],
+            partType: 'testicle',
+            preferId: 'anatomy:human_testicle',
           },
         ],
       },

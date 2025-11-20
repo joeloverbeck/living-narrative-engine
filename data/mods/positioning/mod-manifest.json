@@ -10,10 +10,6 @@
     {
       "id": "core",
       "version": "^1.0.0"
-    },
-    {
-      "id": "movement",
-      "version": "^1.0.0"
     }
   ],
   "content": {
@@ -67,6 +63,7 @@
       "turn_your_back.action.json"
     ],
     "conditions": [
+      "actor-can-move.condition.json",
       "actor-in-entity-facing-away.condition.json",
       "actor-is-behind-entity.condition.json",
       "actor-is-in-closeness.condition.json",
