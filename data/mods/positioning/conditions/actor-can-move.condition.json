@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "positioning:actor-can-move",
+  "description": "Checks if the actor has functioning legs capable of movement",
+  "logic": {
+    "hasPartWithComponentValue": ["actor", "core:movement", "locked", false]
+  }
+}

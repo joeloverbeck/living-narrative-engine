@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
 
@@ -28,18 +28,18 @@ describe('Cross-Mod References', () => {
       expect(condition.id).toBe('movement:actor-can-move');
     });
 
-    it('should have get_close action reference movement condition', () => {
+    it('should have get_close action reference positioning condition', () => {
       const getClosePath = path.resolve(
         process.cwd(),
         'data/mods/positioning/actions/get_close.action.json',
       );
       const getCloseAction = JSON.parse(fs.readFileSync(getClosePath, 'utf8'));
 
-      // Verify movement condition reference
-      const hasMovementRef = getCloseAction.prerequisites.some(
-        (prereq) => prereq.logic?.condition_ref === 'movement:actor-can-move',
+      // Verify positioning condition reference (moved from movement to avoid circular dependency)
+      const hasPositioningRef = getCloseAction.prerequisites.some(
+        (prereq) => prereq.logic?.condition_ref === 'positioning:actor-can-move',
       );
-      expect(hasMovementRef).toBe(true);
+      expect(hasPositioningRef).toBe(true);
     });
 
     it('should have step_back action with appropriate conditions', () => {
@@ -138,20 +138,21 @@ describe('Cross-Mod References', () => {
   });
 
   describe('Mod Manifest Dependencies', () => {
-    it('should have positioning mod declare dependency on movement mod', () => {
-      const positioningManifestPath = path.resolve(
+    it('should have movement mod declare dependency on positioning mod', () => {
+      const movementManifestPath = path.resolve(
         process.cwd(),
-        'data/mods/positioning/mod-manifest.json',
+        'data/mods/movement/mod-manifest.json',
       );
-      const positioningManifest = JSON.parse(
-        fs.readFileSync(positioningManifestPath, 'utf8'),
+      const movementManifest = JSON.parse(
+        fs.readFileSync(movementManifestPath, 'utf8'),
       );
 
+      // Movement now depends on positioning (reversed to avoid circular dependency)
       // Dependencies are objects with id and version, not just strings
-      const hasMovementDep = positioningManifest.dependencies.some(
-        (dep) => dep.id === 'movement',
+      const hasPositioningDep = movementManifest.dependencies.some(
+        (dep) => dep.id === 'positioning',
       );
-      expect(hasMovementDep).toBe(true);
+      expect(hasPositioningDep).toBe(true);
     });
 
     it('should have movement mod available as a dependency', () => {
@@ -191,10 +192,15 @@ describe('Cross-Mod References', () => {
         // Each prerequisite should have a valid structure
         action.prerequisites.forEach((prereq) => {
           expect(prereq.logic).toBeDefined();
-          if (prereq.logic.condition_ref) {
-            // If it references a condition, it should use proper namespacing
-            expect(prereq.logic.condition_ref).toMatch(/^[a-z_]+:[a-z-_]+$/);
-          }
+        });
+
+        // Check that all condition references use proper namespacing
+        const conditionRefs = action.prerequisites
+          .map((prereq) => prereq.logic.condition_ref)
+          .filter((ref) => ref !== undefined);
+
+        conditionRefs.forEach((conditionRef) => {
+          expect(conditionRef).toMatch(/^[a-z_]+:[a-z-_]+$/);
         });
       });
     });
@@ -213,24 +219,29 @@ describe('Cross-Mod References', () => {
         const actionPath = path.join(positioningActionsDir, actionFile);
         const action = JSON.parse(fs.readFileSync(actionPath, 'utf8'));
 
-        if (action.prerequisites) {
-          action.prerequisites.forEach((prereq) => {
-            if (prereq.logic?.condition_ref?.startsWith('movement:')) {
-              // Extract the condition name
-              const conditionId = prereq.logic.condition_ref.split(':')[1];
-              const conditionPath = path.resolve(
-                process.cwd(),
-                `data/mods/movement/conditions/${conditionId}.condition.json`,
-              );
-
-              // Verify the referenced condition exists
-              expect(fs.existsSync(conditionPath)).toBe(
-                true,
-                `${actionFile} references non-existent condition: ${prereq.logic.condition_ref}`,
-              );
-            }
-          });
+        if (!action.prerequisites) {
+          return;
         }
+
+        // Collect all movement condition references
+        const movementConditionRefs = action.prerequisites
+          .map((prereq) => prereq.logic?.condition_ref)
+          .filter((ref) => ref?.startsWith('movement:'));
+
+        // Verify each movement condition reference exists
+        movementConditionRefs.forEach((conditionRef) => {
+          const conditionId = conditionRef.split(':')[1];
+          const conditionPath = path.resolve(
+            process.cwd(),
+            `data/mods/movement/conditions/${conditionId}.condition.json`,
+          );
+
+          const conditionExists = fs.existsSync(conditionPath);
+          expect(conditionExists).toBe(
+            true,
+            `${actionFile} references non-existent condition: ${conditionRef}`,
+          );
+        });
       });
     });
   });

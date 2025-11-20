@@ -10,6 +10,7 @@
     "weapons",
     "furniture",
     "anatomy",
+    "metabolism",
     "clothing",
     "exercise",
     "distress",
@@ -29,5 +30,5 @@
     "patrol",
     "p_erotica"
   ],
-  "startWorld": "p_erotica:volleyball"
+  "startWorld": "p_erotica:uncle"
 }
