@@ -15,6 +15,7 @@ const OPERATION_SCHEMA_FILES = [
   'autoMoveFollowers.schema.json',
   'breakClosenessWithTarget.schema.json',
   'breakFollowRelation.schema.json',
+  'burnEnergy.schema.json',
   'checkFollowCycle.schema.json',
   'dispatchEvent.schema.json',
   'dispatchPerceptibleEvent.schema.json',

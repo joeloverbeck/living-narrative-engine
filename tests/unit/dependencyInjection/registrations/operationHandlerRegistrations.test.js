@@ -52,6 +52,7 @@ const handlerModuleDefinitions = [
     'BreakFollowRelationHandler',
     `${handlerBasePath}/breakFollowRelationHandler.js`,
   ],
+  ['BurnEnergyHandler', `${handlerBasePath}/burnEnergyHandler.js`],
   [
     'AddPerceptionLogEntryHandler',
     `${handlerBasePath}/addPerceptionLogEntryHandler.js`,
@@ -415,6 +416,15 @@ beforeAll(async () => {
           property: 'rebuildLeaderListCacheHandler',
           token: RebuildLeaderListCacheHandlerToken,
         },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.BurnEnergyHandler,
+      handlerName: 'BurnEnergyHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
         { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
       ],
     },

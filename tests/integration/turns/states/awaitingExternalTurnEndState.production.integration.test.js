@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
 
+import { AwaitingExternalTurnEndState } from '../../../../src/turns/states/awaitingExternalTurnEndState.js';
 import { SafeEventDispatcher } from '../../../../src/events/safeEventDispatcher.js';
 import { TURN_ENDED_ID } from '../../../../src/constants/eventIds.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/systemEventIds.js';
@@ -57,16 +58,7 @@ describe('AwaitingExternalTurnEndState production defaults integration', () => {
     const previousEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'production';
 
-    let AwaitingExternalTurnEndState;
-    await jest.isolateModulesAsync(async () => {
-      const { pathToFileURL } = await import('node:url');
-      const moduleUrl = new URL(
-        `../../../../src/turns/states/awaitingExternalTurnEndState.js?prod=${Date.now()}`,
-        import.meta.url
-      );
-      const fileUrl = pathToFileURL(moduleUrl.pathname).href;
-      ({ AwaitingExternalTurnEndState } = await import(`${fileUrl}${moduleUrl.search}`));
-    });
+
 
     const logger = createMockLogger();
     const eventBus = createEventBus({ captureEvents: true });

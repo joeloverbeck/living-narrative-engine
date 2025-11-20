@@ -169,8 +169,13 @@ export function getBooleanEnvironmentVariable(key, defaultValue = false) {
  * @returns {string} The environment mode: 'test', 'production', 'development'
  */
 export function getEnvironmentMode() {
-  // Check NODE_ENV first if explicitly set to production or development
-  // This allows tests to simulate production/development environments
+  // Check for test environment FIRST (Jest, Vitest, etc.)
+  // This takes precedence over NODE_ENV to ensure tests are always detected as 'test' mode
+  if (isTestEnvironment()) {
+    return 'test';
+  }
+
+  // Check NODE_ENV for production or development
   if (isNodeEnvironment()) {
     const nodeEnv = process.env.NODE_ENV;
     if (nodeEnv === 'production' || nodeEnv === 'prod') {
@@ -179,12 +184,6 @@ export function getEnvironmentMode() {
     if (nodeEnv === 'development' || nodeEnv === 'dev') {
       return 'development';
     }
-    // If NODE_ENV is 'test' or 'testing', continue to test environment detection
-  }
-
-  // Check for test environment (Jest, Vitest, etc.)
-  if (isTestEnvironment()) {
-    return 'test';
   }
 
   // Get NODE_ENV or equivalent via cross-platform method

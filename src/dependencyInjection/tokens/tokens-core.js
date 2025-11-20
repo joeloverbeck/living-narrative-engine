@@ -214,6 +214,7 @@ export const coreTokens = freeze({
   CheckFollowCycleHandler: 'CheckFollowCycleHandler',
   EstablishFollowRelationHandler: 'EstablishFollowRelationHandler',
   BreakFollowRelationHandler: 'BreakFollowRelationHandler',
+  BurnEnergyHandler: 'BurnEnergyHandler',
   AddPerceptionLogEntryHandler: 'AddPerceptionLogEntryHandler',
   QueryEntitiesHandler: 'QueryEntitiesHandler',
   HasComponentHandler: 'HasComponentHandler',

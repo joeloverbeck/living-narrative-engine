@@ -500,4 +500,332 @@ describe('AwaitingExternalTurnEndState - Timeout Validation', () => {
       // Test passes if no cleanup errors or memory leaks
     });
   });
+
+  describe('Timer Function Validation (AWAEXTTURENDSTAROB-003)', () => {
+    let mockHandler;
+    let mockSafeEventDispatcher;
+
+    beforeEach(() => {
+      const noop = () => {};
+      const mockLogger = {
+        debug: jest.fn(noop),
+        error: jest.fn(noop),
+        warn: jest.fn(noop),
+      };
+
+      mockSafeEventDispatcher = {
+        dispatch: jest.fn(),
+        subscribe: jest.fn().mockReturnValue(() => {}),
+      };
+
+      const mockCtx = {
+        getChosenActionId: jest.fn().mockReturnValue(undefined),
+        getChosenAction: jest.fn().mockReturnValue({
+          actionDefinitionId: 'test-action',
+        }),
+        getActor: () => ({ id: 'actor-123' }),
+        getTarget: () => ({ id: 'target-456' }),
+      };
+
+      mockHandler = {
+        logger: mockLogger,
+        context: mockCtx,
+        safeEventDispatcher: mockSafeEventDispatcher,
+        endTurn: jest.fn(),
+      };
+    });
+
+    // AC1: Reject Non-Function setTimeoutFn
+    describe('AC1: Reject non-function setTimeoutFn', () => {
+      it('should throw InvalidArgumentError when setTimeoutFn is a string', () => {
+        expect(() => {
+          new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+            setTimeoutFn: 'not-a-function',
+          });
+        }).toThrow('setTimeoutFn must be a function, got: string');
+      });
+
+      it('should throw InvalidArgumentError when setTimeoutFn is null', () => {
+        expect(() => {
+          new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+            setTimeoutFn: null,
+          });
+        }).toThrow('setTimeoutFn must be a function, got: object');
+      });
+
+      it('should throw InvalidArgumentError when setTimeoutFn is a number', () => {
+        expect(() => {
+          new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+            setTimeoutFn: 123,
+          });
+        }).toThrow('setTimeoutFn must be a function, got: number');
+      });
+
+      it('should not create state when setTimeoutFn is invalid', () => {
+        let state;
+        expect(() => {
+          state = new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+            setTimeoutFn: {},
+          });
+        }).toThrow();
+        expect(state).toBeUndefined();
+      });
+
+      it('should not allocate resources when setTimeoutFn validation fails', () => {
+        const dispatchSpy = jest.fn();
+        mockSafeEventDispatcher.dispatch = dispatchSpy;
+
+        expect(() => {
+          new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+            setTimeoutFn: [],
+          });
+        }).toThrow();
+
+        // No events should be dispatched during failed construction
+        expect(dispatchSpy).not.toHaveBeenCalled();
+      });
+    });
+
+    // AC2: Reject Non-Function clearTimeoutFn
+    describe('AC2: Reject non-function clearTimeoutFn', () => {
+      it('should throw InvalidArgumentError when clearTimeoutFn is null', () => {
+        expect(() => {
+          new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+            clearTimeoutFn: null,
+          });
+        }).toThrow('clearTimeoutFn must be a function, got: object');
+      });
+
+      it('should throw InvalidArgumentError when clearTimeoutFn is an object', () => {
+        expect(() => {
+          new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+            clearTimeoutFn: {},
+          });
+        }).toThrow('clearTimeoutFn must be a function, got: object');
+      });
+
+      it('should throw InvalidArgumentError when clearTimeoutFn is a boolean', () => {
+        expect(() => {
+          new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+            clearTimeoutFn: false,
+          });
+        }).toThrow('clearTimeoutFn must be a function, got: boolean');
+      });
+
+      it('should not create state when clearTimeoutFn is invalid', () => {
+        let state;
+        expect(() => {
+          state = new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+            clearTimeoutFn: 'invalid',
+          });
+        }).toThrow();
+        expect(state).toBeUndefined();
+      });
+    });
+
+    // AC3: Accept Valid Function References
+    describe('AC3: Accept valid function references', () => {
+      it('should accept default setTimeout and clearTimeout', () => {
+        expect(() => {
+          new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+          });
+        }).not.toThrow();
+      });
+
+      it('should accept custom mock timer functions', () => {
+        const mockSetTimeout = jest.fn(() => 123);
+        const mockClearTimeout = jest.fn(() => {});
+
+        expect(() => {
+          new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+            setTimeoutFn: mockSetTimeout,
+            clearTimeoutFn: mockClearTimeout,
+          });
+        }).not.toThrow();
+      });
+
+      it('should store timer functions correctly when valid', () => {
+        const mockSetTimeout = jest.fn(() => 123);
+        const mockClearTimeout = jest.fn(() => {});
+
+        const state = new AwaitingExternalTurnEndState(mockHandler, {
+          timeoutMs: 5000,
+          setTimeoutFn: mockSetTimeout,
+          clearTimeoutFn: mockClearTimeout,
+        });
+
+        expect(state).toBeDefined();
+        // Functions are private, but we can verify state was created successfully
+      });
+    });
+
+    // AC4: Accept Arrow Functions and Bound Functions
+    describe('AC4: Accept arrow functions and bound functions', () => {
+      it('should accept arrow functions', () => {
+        const arrowSetTimeout = () => 123;
+        const arrowClearTimeout = () => {};
+
+        expect(() => {
+          new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+            setTimeoutFn: arrowSetTimeout,
+            clearTimeoutFn: arrowClearTimeout,
+          });
+        }).not.toThrow();
+      });
+
+      it('should accept bound functions', () => {
+        const boundSetTimeout = setTimeout.bind(null);
+        const boundClearTimeout = clearTimeout.bind(null);
+
+        expect(() => {
+          new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+            setTimeoutFn: boundSetTimeout,
+            clearTimeoutFn: boundClearTimeout,
+          });
+        }).not.toThrow();
+      });
+    });
+
+    // AC5: Default Values Work Correctly
+    describe('AC5: Default values work correctly', () => {
+      it('should not throw when using default timer functions', () => {
+        expect(() => {
+          new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+          });
+        }).not.toThrow();
+      });
+
+      it('should create state successfully with defaults', () => {
+        const state = new AwaitingExternalTurnEndState(mockHandler, {
+          timeoutMs: 5000,
+        });
+
+        expect(state).toBeDefined();
+        expect(state).toBeInstanceOf(AwaitingExternalTurnEndState);
+      });
+    });
+
+    // AC6: Validation Happens Before State Setup
+    describe('AC6: Validation happens before state setup', () => {
+      it('should fail before event subscription with invalid setTimeoutFn', () => {
+        const subscribeSpy = jest.fn().mockReturnValue(() => {});
+        mockSafeEventDispatcher.subscribe = subscribeSpy;
+
+        expect(() => {
+          new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+            setTimeoutFn: 'invalid',
+          });
+        }).toThrow();
+
+        // Subscription should not happen during failed construction
+        expect(subscribeSpy).not.toHaveBeenCalled();
+      });
+
+      it('should fail before timeout initialization with invalid clearTimeoutFn', () => {
+        const mockSetTimeout = jest.fn();
+
+        expect(() => {
+          new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+            setTimeoutFn: mockSetTimeout,
+            clearTimeoutFn: null,
+          });
+        }).toThrow();
+
+        // setTimeout should not be called during failed construction
+        expect(mockSetTimeout).not.toHaveBeenCalled();
+      });
+
+      it('should require no cleanup when validation fails', () => {
+        expect(() => {
+          new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+            setTimeoutFn: 123,
+          });
+        }).toThrow();
+        // Test passes if no cleanup errors or resource leaks
+      });
+    });
+
+    // AC7: Both Validations Can Fail Independently
+    describe('AC7: Both validations can fail independently', () => {
+      it('should report setTimeoutFn error when only setTimeoutFn is invalid', () => {
+        const validClearTimeout = jest.fn();
+
+        expect(() => {
+          new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+            setTimeoutFn: null,
+            clearTimeoutFn: validClearTimeout,
+          });
+        }).toThrow('setTimeoutFn must be a function, got: object');
+      });
+
+      it('should report clearTimeoutFn error when only clearTimeoutFn is invalid', () => {
+        const validSetTimeout = jest.fn();
+
+        expect(() => {
+          new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+            setTimeoutFn: validSetTimeout,
+            clearTimeoutFn: null,
+          });
+        }).toThrow('clearTimeoutFn must be a function, got: object');
+      });
+
+      it('should fail on first invalid parameter when both are invalid', () => {
+        // setTimeoutFn is validated first, so we expect that error
+        expect(() => {
+          new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+            setTimeoutFn: 'invalid',
+            clearTimeoutFn: 123,
+          });
+        }).toThrow('setTimeoutFn must be a function, got: string');
+      });
+    });
+
+    // AC8: Existing Tests Still Pass
+    describe('AC8: Existing tests compatibility', () => {
+      it('should work with jest.useFakeTimers() mock timers', () => {
+        jest.useFakeTimers();
+
+        expect(() => {
+          new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+          });
+        }).not.toThrow();
+
+        jest.useRealTimers();
+      });
+
+      it('should work with custom test timer mocks', () => {
+        const testSetTimeout = jest.fn(() => ({ id: 'test-timer' }));
+        const testClearTimeout = jest.fn(() => {});
+
+        expect(() => {
+          new AwaitingExternalTurnEndState(mockHandler, {
+            timeoutMs: 5000,
+            setTimeoutFn: testSetTimeout,
+            clearTimeoutFn: testClearTimeout,
+          });
+        }).not.toThrow();
+      });
+    });
+  });
 });
