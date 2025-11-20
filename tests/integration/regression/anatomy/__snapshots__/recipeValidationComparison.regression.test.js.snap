@@ -1,0 +1,771 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRunner parity captures blueprint and pattern regressions for broken pattern fixture: broken pattern report 1`] = `
+{
+  "errors": [
+    {
+      "details": {
+        "partType": "mystery_appendage",
+        "requiredProperties": [],
+        "requiredTags": [],
+        "totalEntitiesChecked": 159,
+      },
+      "location": {
+        "index": 0,
+        "type": "pattern",
+      },
+      "message": "No entity definitions found for pattern 0",
+      "severity": "error",
+      "type": "PART_UNAVAILABLE",
+    },
+    {
+      "details": {
+        "partType": "wing",
+        "requiredProperties": [],
+        "requiredTags": [],
+        "totalEntitiesChecked": 159,
+      },
+      "location": {
+        "name": "phantom_socket",
+        "type": "slot",
+      },
+      "message": "No entity definitions found for slot 'phantom_socket'",
+      "severity": "error",
+      "type": "PART_UNAVAILABLE",
+    },
+  ],
+  "isValid": false,
+  "metadata": undefined,
+  "passed": [
+    {
+      "blueprint": {
+        "id": "giant_spider",
+        "root": "anatomy:spider_cephalothorax",
+        "structureTemplate": "anatomy:structure_arachnid_8leg",
+      },
+      "check": "blueprint_exists",
+      "message": "Blueprint 'anatomy:giant_spider' found",
+    },
+    {
+      "check": "body_descriptors",
+      "message": "All 2 body descriptor(s) valid",
+    },
+    {
+      "check": "component_existence",
+      "message": "All 0 component references exist",
+    },
+    {
+      "check": "generated_slot_part_availability",
+      "message": "All 0 generated slot(s) from patterns have matching entity definitions",
+    },
+    {
+      "check": "property_schemas",
+      "message": "All 0 property objects valid",
+    },
+    {
+      "check": "socket_slot_compatibility",
+      "message": "All 2 additionalSlot socket references valid",
+    },
+  ],
+  "recipeId": "tests:broken_patterns",
+  "recipePath": "tests/common/anatomy/fixtures/validation/broken_patterns.recipe.json",
+  "suggestions": [
+    {
+      "impact": "Part will be excluded from anatomy description",
+      "location": {
+        "name": "left_arm",
+        "type": "slot",
+      },
+      "message": "Slot 'left_arm' may not appear in descriptions",
+      "reason": "No descriptor components in slot properties, and preferred entity 'tests:invalid_arm' has no descriptors",
+      "suggestion": "Add descriptor components (descriptors:size_category, descriptors:texture, etc.)",
+      "type": "MISSING_DESCRIPTORS",
+    },
+    {
+      "impact": "Part will be excluded from anatomy description",
+      "location": {
+        "name": "phantom_socket",
+        "type": "slot",
+      },
+      "message": "Slot 'phantom_socket' may not appear in descriptions",
+      "reason": "No descriptor components in slot properties, and preferred entity 'tests:phantom_wing' has no descriptors",
+      "suggestion": "Add descriptor components (descriptors:size_category, descriptors:texture, etc.)",
+      "type": "MISSING_DESCRIPTORS",
+    },
+    {
+      "impact": "Part will be excluded from anatomy description",
+      "location": {
+        "name": "spinnerets",
+        "type": "slot",
+      },
+      "message": "Slot 'spinnerets' may not appear in descriptions",
+      "reason": "No descriptor components in slot properties, and preferred entity 'tests:missing_spinneret' has no descriptors",
+      "suggestion": "Add descriptor components (descriptors:size_category, descriptors:texture, etc.)",
+      "type": "MISSING_DESCRIPTORS",
+    },
+  ],
+  "timestamp": "<redacted>",
+  "warnings": [
+    {
+      "availableSlots": [
+        "leg_1",
+        "leg_2",
+        "leg_3",
+        "leg_4",
+        "leg_5",
+        "leg_6",
+        "leg_7",
+        "leg_8",
+        "pedipalp_1",
+        "pedipalp_2",
+        "posterior_torso",
+        "venom_gland",
+        "spinnerets",
+      ],
+      "fix": "Update matches array to use existing slot keys. Available: leg_1, leg_2, leg_3, leg_4, leg_5...",
+      "location": {
+        "description": "explicit matches [tail_cluster]",
+        "index": 1,
+        "type": "pattern",
+      },
+      "matcher": {
+        "type": "v1_explicit",
+        "value": [
+          "tail_cluster",
+        ],
+      },
+      "message": "Pattern explicit matches [tail_cluster] has no matching slots",
+      "pattern": {
+        "matches": [
+          "tail_cluster",
+        ],
+        "partType": "tail",
+        "preferId": "tests:tail_that_does_not_exist",
+      },
+      "reason": "None of the explicit slot keys undefined exist in blueprint",
+      "severity": "warning",
+      "type": "NO_MATCHING_SLOTS",
+    },
+    {
+      "availableSlots": [
+        "leg_1",
+        "leg_2",
+        "leg_3",
+        "leg_4",
+        "leg_5",
+        "leg_6",
+        "leg_7",
+        "leg_8",
+        "pedipalp_1",
+        "pedipalp_2",
+        "posterior_torso",
+        "venom_gland",
+        "spinnerets",
+      ],
+      "fix": "Adjust property filter criteria or add slots to blueprint that match the filter",
+      "location": {
+        "description": "matchesAll {"slotType":"leg","orientation":"*_front"}",
+        "index": 2,
+        "type": "pattern",
+      },
+      "matcher": {
+        "type": "matchesAll",
+        "value": {
+          "orientation": "*_front",
+          "slotType": "leg",
+        },
+      },
+      "message": "Pattern matchesAll {"slotType":"leg","orientation":"*_front"} has no matching slots",
+      "pattern": {
+        "matchesAll": {
+          "orientation": "*_front",
+          "slotType": "leg",
+        },
+        "partType": "spider_leg",
+        "preferId": "tests:missing_front_leg",
+      },
+      "reason": "Property filter {"slotType":"leg","orientation":"*_front"} does not match any blueprint slots",
+      "severity": "warning",
+      "type": "NO_MATCHING_SLOTS",
+    },
+    {
+      "availableSlots": [
+        "leg_1",
+        "leg_2",
+        "leg_3",
+        "leg_4",
+        "leg_5",
+        "leg_6",
+        "leg_7",
+        "leg_8",
+        "pedipalp_1",
+        "pedipalp_2",
+        "posterior_torso",
+        "venom_gland",
+        "spinnerets",
+      ],
+      "fix": "Add appendage with type 'unknown_group' to structure template 'anatomy:structure_arachnid_8leg' topology, or use a different slot group",
+      "location": {
+        "description": "matchesGroup 'appendage:unknown_group'",
+        "index": 0,
+        "type": "pattern",
+      },
+      "matcher": {
+        "type": "matchesGroup",
+        "value": "appendage:unknown_group",
+      },
+      "message": "Pattern matchesGroup 'appendage:unknown_group' has no matching slots",
+      "pattern": {
+        "matchesGroup": "appendage:unknown_group",
+        "partType": "mystery_appendage",
+        "preferId": "tests:mystery_appendage",
+      },
+      "reason": "Slot group 'appendage:unknown_group' not found in structure template 'anatomy:structure_arachnid_8leg' or produced 0 slots",
+      "severity": "warning",
+      "type": "NO_MATCHING_SLOTS",
+    },
+    {
+      "check": "recipe_usage",
+      "details": {
+        "hint": "Entity definitions should have: "anatomy:body": { "recipeId": "tests:broken_patterns" }",
+        "recipeId": "tests:broken_patterns",
+      },
+      "message": "Recipe 'tests:broken_patterns' is not referenced by any entity definitions",
+      "severity": "warning",
+      "suggestion": "Verify that the recipeId matches what entity definitions expect",
+      "type": "RECIPE_UNUSED",
+    },
+  ],
+}
+`;
+
+exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRunner parity captures component/schema regressions for missing component fixture: missing component report 1`] = `
+{
+  "errors": [
+    {
+      "context": {
+        "componentId": "descriptors:imaginary_component",
+        "location": {
+          "field": "tags",
+          "name": "left_arm",
+          "type": "slot",
+        },
+        "recipeId": "tests:missing_components",
+      },
+      "enhancedError": {
+        "componentId": "descriptors:imaginary_component",
+        "context": "Recipe 'tests:missing_components', slot 'left_arm'",
+        "fix": [
+          "Create component at: data/mods/*/components/imaginary_component.component.json",
+          "",
+          "Example Component Structure:",
+          "{",
+          "  "$schema": "schema://living-narrative-engine/component.schema.json",",
+          "  "id": "descriptors:imaginary_component",",
+          "  "description": "Component description",",
+          "  "dataSchema": {",
+          "    "type": "object",",
+          "    "properties": { ... }",
+          "  }",
+          "}",
+        ],
+        "impact": "slot cannot be processed, anatomy generation will fail",
+        "location": {
+          "name": "left_arm",
+          "type": "slot",
+        },
+        "name": "ComponentNotFoundError",
+        "problem": "Component 'descriptors:imaginary_component' does not exist in the component registry",
+        "recipeId": "tests:missing_components",
+        "recipePath": "tests/common/anatomy/fixtures/validation/missing_components.recipe.json",
+        "references": [
+          "docs/anatomy/anatomy-system-guide.md",
+          "data/mods/anatomy/components/part.component.json (example)",
+        ],
+      },
+      "message": "Component 'descriptors:imaginary_component' does not exist",
+      "ruleId": "component-existence",
+      "severity": "error",
+      "suggestion": "Create component at: data/mods/descriptors/components/imaginary_component.component.json",
+      "type": "COMPONENT_NOT_FOUND",
+    },
+    {
+      "context": {
+        "componentId": "descriptors:nonexistent_component",
+        "location": {
+          "field": "properties",
+          "name": "torso",
+          "type": "slot",
+        },
+        "recipeId": "tests:missing_components",
+      },
+      "enhancedError": {
+        "componentId": "descriptors:nonexistent_component",
+        "context": "Recipe 'tests:missing_components', slot 'torso'",
+        "fix": [
+          "Create component at: data/mods/*/components/nonexistent_component.component.json",
+          "",
+          "Example Component Structure:",
+          "{",
+          "  "$schema": "schema://living-narrative-engine/component.schema.json",",
+          "  "id": "descriptors:nonexistent_component",",
+          "  "description": "Component description",",
+          "  "dataSchema": {",
+          "    "type": "object",",
+          "    "properties": { ... }",
+          "  }",
+          "}",
+        ],
+        "impact": "slot cannot be processed, anatomy generation will fail",
+        "location": {
+          "name": "torso",
+          "type": "slot",
+        },
+        "name": "ComponentNotFoundError",
+        "problem": "Component 'descriptors:nonexistent_component' does not exist in the component registry",
+        "recipeId": "tests:missing_components",
+        "recipePath": "tests/common/anatomy/fixtures/validation/missing_components.recipe.json",
+        "references": [
+          "docs/anatomy/anatomy-system-guide.md",
+          "data/mods/anatomy/components/part.component.json (example)",
+        ],
+      },
+      "message": "Component 'descriptors:nonexistent_component' does not exist",
+      "ruleId": "component-existence",
+      "severity": "error",
+      "suggestion": "Create component at: data/mods/descriptors/components/nonexistent_component.component.json",
+      "type": "COMPONENT_NOT_FOUND",
+    },
+    {
+      "context": {
+        "componentId": "descriptors:phantom_descriptor",
+        "location": {
+          "field": "properties",
+          "index": 0,
+          "name": "left_leg,right_leg",
+          "type": "pattern",
+        },
+        "recipeId": "tests:missing_components",
+      },
+      "enhancedError": {
+        "componentId": "descriptors:phantom_descriptor",
+        "context": "Recipe 'tests:missing_components', pattern 'left_leg,right_leg'",
+        "fix": [
+          "Create component at: data/mods/*/components/phantom_descriptor.component.json",
+          "",
+          "Example Component Structure:",
+          "{",
+          "  "$schema": "schema://living-narrative-engine/component.schema.json",",
+          "  "id": "descriptors:phantom_descriptor",",
+          "  "description": "Component description",",
+          "  "dataSchema": {",
+          "    "type": "object",",
+          "    "properties": { ... }",
+          "  }",
+          "}",
+        ],
+        "impact": "pattern cannot be processed, anatomy generation will fail",
+        "location": {
+          "name": "left_leg,right_leg",
+          "type": "pattern",
+        },
+        "name": "ComponentNotFoundError",
+        "problem": "Component 'descriptors:phantom_descriptor' does not exist in the component registry",
+        "recipeId": "tests:missing_components",
+        "recipePath": "tests/common/anatomy/fixtures/validation/missing_components.recipe.json",
+        "references": [
+          "docs/anatomy/anatomy-system-guide.md",
+          "data/mods/anatomy/components/part.component.json (example)",
+        ],
+      },
+      "message": "Component 'descriptors:phantom_descriptor' does not exist",
+      "ruleId": "component-existence",
+      "severity": "error",
+      "suggestion": "Create component at: data/mods/descriptors/components/phantom_descriptor.component.json",
+      "type": "COMPONENT_NOT_FOUND",
+    },
+  ],
+  "isValid": false,
+  "metadata": undefined,
+  "passed": [],
+  "recipeId": "tests:missing_components",
+  "recipePath": "tests/common/anatomy/fixtures/validation/missing_components.recipe.json",
+  "suggestions": [],
+  "timestamp": "<redacted>",
+  "warnings": [
+    {
+      "context": {
+        "location": {
+          "field": "properties",
+          "name": "right_arm",
+          "type": "slot",
+        },
+        "receivedType": "string",
+        "recipeId": "tests:missing_components",
+      },
+      "enhancedError": {
+        "context": "Recipe 'tests:missing_components', slot 'right_arm'",
+        "fix": [
+          "Ensure each slot or pattern sets "properties" to a plain object keyed by component IDs:",
+          "{",
+          "  "slots": {",
+          "    "arm": {",
+          "      "properties": {",
+          "        "descriptors:size_category": { "size": "tall" }",
+          "      }",
+          "    }",
+          "  }",
+          "}",
+          "Current value type: string. Replace it with an object literal.",
+        ],
+        "impact": "Component checks and schema validation cannot run until properties use the componentId → payload structure.",
+        "location": {
+          "name": "right_arm",
+          "type": "slot",
+        },
+        "name": "InvalidPropertyObjectError",
+        "problem": "Property requirements must be declared as an object keyed by component IDs (e.g., "components:foo": { ... }).",
+        "receivedType": "string",
+        "recipeId": "tests:missing_components",
+        "recipePath": "tests/common/anatomy/fixtures/validation/missing_components.recipe.json",
+        "references": [
+          "docs/anatomy/anatomy-system-guide.md#fail-fast-validators",
+          "docs/anatomy/anatomy-system-guide.md#validation-pipeline",
+        ],
+      },
+      "message": "slot 'right_arm' properties must be a plain object keyed by component IDs",
+      "ruleId": "component-existence",
+      "severity": "warning",
+      "type": "INVALID_PROPERTY_OBJECT",
+    },
+  ],
+}
+`;
+
+exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRunner parity maintains parity for the giant forest spider recipe: valid spider report 1`] = `
+{
+  "errors": [],
+  "isValid": true,
+  "metadata": undefined,
+  "passed": [
+    {
+      "message": "All slots have descriptor components",
+    },
+    {
+      "blueprint": {
+        "id": "giant_spider",
+        "root": "anatomy:spider_cephalothorax",
+        "structureTemplate": "anatomy:structure_arachnid_8leg",
+      },
+      "check": "blueprint_exists",
+      "message": "Blueprint 'anatomy:giant_spider' found",
+    },
+    {
+      "check": "body_descriptors",
+      "message": "All 3 body descriptor(s) valid",
+    },
+    {
+      "check": "component_existence",
+      "message": "All 9 component references exist",
+    },
+    {
+      "check": "generated_slot_part_availability",
+      "message": "All 11 generated slot(s) from patterns have matching entity definitions",
+    },
+    {
+      "check": "part_availability",
+      "message": "All slots and patterns have matching entity definitions",
+    },
+    {
+      "check": "pattern_matching",
+      "message": "All 3 pattern(s) have matching slots",
+    },
+    {
+      "check": "property_schemas",
+      "message": "All 5 property objects valid",
+    },
+    {
+      "check": "recipe_usage",
+      "details": {
+        "referencingEntities": [
+          "patrol:giant_forest_spider",
+        ],
+        "totalCount": 1,
+      },
+      "message": "Recipe is referenced by 1 entity definition(s)",
+    },
+    {
+      "check": "socket_slot_compatibility",
+      "message": "All 2 additionalSlot socket references valid",
+    },
+  ],
+  "recipeId": "anatomy:giant_forest_spider",
+  "recipePath": "data/mods/anatomy/recipes/giant_forest_spider.recipe.json",
+  "suggestions": [],
+  "timestamp": "<redacted>",
+  "warnings": [],
+}
+`;
+
+exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRunner parity maintains parity for the human male recipe: valid humanoid report 1`] = `
+{
+  "errors": [],
+  "isValid": true,
+  "metadata": undefined,
+  "passed": [
+    {
+      "blueprint": {
+        "id": "human_male",
+        "root": "anatomy:human_male_torso",
+      },
+      "check": "blueprint_exists",
+      "message": "Blueprint 'anatomy:human_male' found",
+    },
+    {
+      "check": "body_descriptors",
+      "message": "All 4 body descriptor(s) valid",
+    },
+    {
+      "check": "component_existence",
+      "message": "All 1 component references exist",
+    },
+    {
+      "check": "generated_slot_part_availability",
+      "message": "All 4 generated slot(s) from patterns have matching entity definitions",
+    },
+    {
+      "check": "part_availability",
+      "message": "All slots and patterns have matching entity definitions",
+    },
+    {
+      "check": "pattern_matching",
+      "message": "All 2 pattern(s) have matching slots",
+    },
+    {
+      "check": "property_schemas",
+      "message": "All 1 property objects valid",
+    },
+    {
+      "check": "recipe_usage",
+      "details": {
+        "referencingEntities": [
+          "isekai:hero",
+        ],
+        "totalCount": 1,
+      },
+      "message": "Recipe is referenced by 1 entity definition(s)",
+    },
+    {
+      "check": "socket_slot_compatibility",
+      "message": "All 0 additionalSlot socket references valid",
+    },
+  ],
+  "recipeId": "anatomy:human_male",
+  "recipePath": "data/mods/anatomy/recipes/human_male.recipe.json",
+  "suggestions": [
+    {
+      "impact": "Part will be excluded from anatomy description",
+      "location": {
+        "name": "head",
+        "type": "slot",
+      },
+      "message": "Slot 'head' may not appear in descriptions",
+      "reason": "No descriptor components in slot properties, and preferred entity 'anatomy:human_male_head_bearded' has no descriptors",
+      "suggestion": "Add descriptor components (descriptors:size_category, descriptors:texture, etc.)",
+      "type": "MISSING_DESCRIPTORS",
+    },
+  ],
+  "timestamp": "<redacted>",
+  "warnings": [],
+}
+`;
+
+exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRunner parity records recipe usage suggestions for unused human clone fixture: unused clone usage hint 1`] = `
+{
+  "errors": [],
+  "isValid": true,
+  "metadata": undefined,
+  "passed": [
+    {
+      "blueprint": {
+        "id": "human_male",
+        "root": "anatomy:human_male_torso",
+      },
+      "check": "blueprint_exists",
+      "message": "Blueprint 'anatomy:human_male' found",
+    },
+    {
+      "check": "body_descriptors",
+      "message": "All 3 body descriptor(s) valid",
+    },
+    {
+      "check": "component_existence",
+      "message": "All 0 component references exist",
+    },
+    {
+      "check": "generated_slot_part_availability",
+      "message": "All 4 generated slot(s) from patterns have matching entity definitions",
+    },
+    {
+      "check": "part_availability",
+      "message": "All slots and patterns have matching entity definitions",
+    },
+    {
+      "check": "pattern_matching",
+      "message": "All 2 pattern(s) have matching slots",
+    },
+    {
+      "check": "property_schemas",
+      "message": "All 0 property objects valid",
+    },
+    {
+      "check": "socket_slot_compatibility",
+      "message": "All 0 additionalSlot socket references valid",
+    },
+  ],
+  "recipeId": "tests:human_male_unused_clone",
+  "recipePath": "tests/common/anatomy/fixtures/validation/unused_human_clone.recipe.json",
+  "suggestions": [
+    {
+      "impact": "Part will be excluded from anatomy description",
+      "location": {
+        "name": "head",
+        "type": "slot",
+      },
+      "message": "Slot 'head' may not appear in descriptions",
+      "reason": "No descriptor components in slot properties, and preferred entity 'anatomy:humanoid_head' has no descriptors",
+      "suggestion": "Add descriptor components (descriptors:size_category, descriptors:texture, etc.)",
+      "type": "MISSING_DESCRIPTORS",
+    },
+    {
+      "impact": "Part will be excluded from anatomy description",
+      "location": {
+        "name": "torso",
+        "type": "slot",
+      },
+      "message": "Slot 'torso' may not appear in descriptions",
+      "reason": "No descriptor components in slot properties, and preferred entity 'anatomy:human_male_torso' has no descriptors",
+      "suggestion": "Add descriptor components (descriptors:size_category, descriptors:texture, etc.)",
+      "type": "MISSING_DESCRIPTORS",
+    },
+  ],
+  "timestamp": "<redacted>",
+  "warnings": [
+    {
+      "check": "recipe_usage",
+      "details": {
+        "hint": "Entity definitions should have: "anatomy:body": { "recipeId": "tests:human_male_unused_clone" }",
+        "recipeId": "tests:human_male_unused_clone",
+      },
+      "message": "Recipe 'tests:human_male_unused_clone' is not referenced by any entity definitions",
+      "severity": "warning",
+      "suggestion": "Verify that the recipeId matches what entity definitions expect",
+      "type": "RECIPE_UNUSED",
+    },
+  ],
+}
+`;
+
+exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRunner parity surfaces loader failures via CLI and validator with mocked matcher service: load failure propagation 1`] = `
+{
+  "errors": [
+    {
+      "details": {
+        "error": "Invalid components: [anatomy:part, descriptors:shape_general] at data/body",
+        "failedComponents": [
+          "anatomy:part",
+          "descriptors:shape_general",
+        ],
+        "file": "data/mods/anatomy/entities/broken.entity.json",
+        "validationDetails": [
+          {
+            "component": "anatomy:part",
+            "issue": "Component validation failed. Check schema requirements.",
+          },
+          {
+            "component": "descriptors:shape_general",
+            "issue": "Component validation failed. Check schema requirements.",
+          },
+        ],
+      },
+      "fix": "Fix validation errors:
+    anatomy:part: Component validation failed. Check schema requirements.
+    descriptors:shape_general: Component validation failed. Check schema requirements.",
+      "location": {
+        "file": "data/mods/anatomy/entities/broken.entity.json",
+        "type": "entity_definition",
+      },
+      "message": "Entity definition 'data/mods/anatomy/entities/broken' failed to load due to component validation errors",
+      "severity": "error",
+      "type": "ENTITY_LOAD_FAILURE",
+    },
+  ],
+  "isValid": false,
+  "metadata": undefined,
+  "passed": [
+    {
+      "blueprint": {
+        "id": "human_male",
+        "root": "anatomy:human_male_torso",
+      },
+      "check": "blueprint_exists",
+      "message": "Blueprint 'anatomy:human_male' found",
+    },
+    {
+      "check": "body_descriptors",
+      "message": "All 4 body descriptor(s) valid",
+    },
+    {
+      "check": "component_existence",
+      "message": "All 1 component references exist",
+    },
+    {
+      "check": "generated_slot_part_availability",
+      "message": "All 4 generated slot(s) from patterns have matching entity definitions",
+    },
+    {
+      "check": "part_availability",
+      "message": "All slots and patterns have matching entity definitions",
+    },
+    {
+      "check": "pattern_matching",
+      "message": "All 2 pattern(s) have matching slots",
+    },
+    {
+      "check": "property_schemas",
+      "message": "All 1 property objects valid",
+    },
+    {
+      "check": "recipe_usage",
+      "details": {
+        "referencingEntities": [
+          "isekai:hero",
+        ],
+        "totalCount": 1,
+      },
+      "message": "Recipe is referenced by 1 entity definition(s)",
+    },
+    {
+      "check": "socket_slot_compatibility",
+      "message": "All 0 additionalSlot socket references valid",
+    },
+  ],
+  "recipeId": "anatomy:human_male",
+  "recipePath": "data/mods/anatomy/recipes/human_male.recipe.json",
+  "suggestions": [
+    {
+      "impact": "Part will be excluded from anatomy description",
+      "location": {
+        "name": "head",
+        "type": "slot",
+      },
+      "message": "Slot 'head' may not appear in descriptions",
+      "reason": "No descriptor components in slot properties, and preferred entity 'anatomy:human_male_head_bearded' has no descriptors",
+      "suggestion": "Add descriptor components (descriptors:size_category, descriptors:texture, etc.)",
+      "type": "MISSING_DESCRIPTORS",
+    },
+  ],
+  "timestamp": "<redacted>",
+  "warnings": [],
+}
+`;

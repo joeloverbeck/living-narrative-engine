@@ -1,9 +1,9 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import path from 'path';
 import { promises as fs } from 'fs';
-import { executeRecipeValidation } from '../../../scripts/validate-recipe-v2.js';
-import RecipeValidationRunner from '../../../src/anatomy/validation/RecipeValidationRunner.js';
-import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
+import { executeRecipeValidation } from '../../../../scripts/validate-recipe-v2.js';
+import RecipeValidationRunner from '../../../../src/anatomy/validation/RecipeValidationRunner.js';
+import AnatomyIntegrationTestBed from '../../../common/anatomy/anatomyIntegrationTestBed.js';
 
 jest.mock('chalk', () => ({
   __esModule: true,
@@ -53,6 +53,7 @@ describe('Recipe Validation Comparison Regression Suite', () => {
           'part_availability',
           'pattern_matching',
           'property_schemas',
+          'recipe_usage',
           'socket_slot_compatibility',
         ].sort()
       );

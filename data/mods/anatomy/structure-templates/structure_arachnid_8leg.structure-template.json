@@ -12,7 +12,7 @@
         "arrangementHint": "four_pairs_bilateral",
         "socketPattern": {
           "idTemplate": "leg_{{index}}",
-          "orientationScheme": "indexed",
+          "orientationScheme": "radial",
           "allowedTypes": ["spider_leg"],
           "nameTpl": "leg {{index}}"
         }

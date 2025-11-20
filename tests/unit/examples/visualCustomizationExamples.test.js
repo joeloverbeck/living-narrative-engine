@@ -10,7 +10,7 @@ const {
   beforeEach,
   afterEach,
 } = require('@jest/globals');
-const { IntegrationTestBed } = require('../common/integrationTestBed.js');
+const { IntegrationTestBed } = require('../../common/integrationTestBed.js');
 const fs = require('fs');
 const path = require('path');
 
@@ -32,6 +32,7 @@ describe('Visual Customization Examples', () => {
         __dirname,
         '..',
         '..',
+        '..',
         'data',
         'examples',
         'visual-combat-actions',
@@ -49,6 +50,7 @@ describe('Visual Customization Examples', () => {
     it('should have power_attack action with red visual theme', () => {
       const actionPath = path.join(
         __dirname,
+        '..',
         '..',
         '..',
         'data',
@@ -74,6 +76,7 @@ describe('Visual Customization Examples', () => {
         __dirname,
         '..',
         '..',
+        '..',
         'data',
         'examples',
         'visual-combat-actions',
@@ -95,6 +98,7 @@ describe('Visual Customization Examples', () => {
     it('should have magic_missile action with purple visual theme', () => {
       const actionPath = path.join(
         __dirname,
+        '..',
         '..',
         '..',
         'data',
@@ -122,6 +126,7 @@ describe('Visual Customization Examples', () => {
         __dirname,
         '..',
         '..',
+        '..',
         'data',
         'examples',
         'visual-social-actions',
@@ -139,6 +144,7 @@ describe('Visual Customization Examples', () => {
     it('should have friendly_greeting action with green visual theme', () => {
       const actionPath = path.join(
         __dirname,
+        '..',
         '..',
         '..',
         'data',
@@ -162,6 +168,7 @@ describe('Visual Customization Examples', () => {
     it('should have intimidate action with dark red visual theme', () => {
       const actionPath = path.join(
         __dirname,
+        '..',
         '..',
         '..',
         'data',
@@ -213,6 +220,7 @@ describe('Visual Customization Examples', () => {
         __dirname,
         '..',
         '..',
+        '..',
         'data',
         'examples',
         'visual-combat-actions',
@@ -228,6 +236,7 @@ describe('Visual Customization Examples', () => {
       // Test social actions
       const socialActionsDir = path.join(
         __dirname,
+        '..',
         '..',
         '..',
         'data',
@@ -328,6 +337,7 @@ describe('Visual Customization Examples', () => {
         __dirname,
         '..',
         '..',
+        '..',
         'data',
         'examples',
         'visual-combat-actions',
@@ -343,6 +353,7 @@ describe('Visual Customization Examples', () => {
       // Test social actions
       const socialActionsDir = path.join(
         __dirname,
+        '..',
         '..',
         '..',
         'data',

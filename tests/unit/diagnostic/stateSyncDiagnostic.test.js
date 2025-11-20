@@ -3,9 +3,9 @@
  */
 
 import { describe, it, expect } from '@jest/globals';
-import { createGoapTestSetup } from '../integration/goap/testFixtures/goapTestSetup.js';
-import { createTestGoal } from '../integration/goap/testFixtures/testGoalFactory.js';
-import { createTestTask } from '../integration/goap/testFixtures/testTaskFactory.js';
+import { createGoapTestSetup } from '../../integration/goap/testFixtures/goapTestSetup.js';
+import { createTestGoal } from '../../integration/goap/testFixtures/testGoalFactory.js';
+import { createTestTask } from '../../integration/goap/testFixtures/testTaskFactory.js';
 
 /**
  *
