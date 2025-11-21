@@ -1,0 +1,31 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "metabolism:drink",
+  "name": "Drink",
+  "description": "Consume a liquid item to restore energy",
+  "targets": {
+    "primary": {
+      "scope": "metabolism:consumable_items",
+      "placeholder": "drink"
+    }
+  },
+  "template": "drink {drink}",
+  "required_components": {
+    "actor": ["metabolism:fuel_converter", "metabolism:metabolic_store"]
+  },
+  "forbidden_components": {
+    "actor": ["metabolism:overfull"]
+  },
+  "prerequisites": [
+    {
+      "logic": { "condition_ref": "metabolism:can_consume" },
+      "failure_message": "Your stomach is too full to drink more."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#0288d1",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#01579b",
+    "hoverTextColor": "#ffffff"
+  }
+}

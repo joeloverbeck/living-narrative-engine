@@ -1,0 +1,47 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "turn_1_energy_burn",
+  "comment": "Burns energy each turn for entities with metabolism components",
+  "event_type": "core:turn_started",
+  "actions": [
+    {
+      "type": "QUERY_COMPONENTS",
+      "comment": "Check if entity has required metabolism components",
+      "parameters": {
+        "entity_ref": "{event.payload.entityId}",
+        "pairs": [
+          {
+            "component_type": "metabolism:metabolic_store",
+            "result_variable": "metabolicStore"
+          },
+          {
+            "component_type": "metabolism:fuel_converter",
+            "result_variable": "fuelConverter"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Only burn energy if entity has both components",
+      "parameters": {
+        "condition": {
+          "and": [
+            { "var": "context.metabolicStore" },
+            { "var": "context.fuelConverter" }
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "BURN_ENERGY",
+            "parameters": {
+              "entity_ref": "{event.payload.entityId}",
+              "activity_multiplier": 1.0,
+              "turns": 1
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

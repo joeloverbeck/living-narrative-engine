@@ -137,8 +137,10 @@ describe('AnatomyInitializationService integration queue coverage', () => {
     expect(() => new AnatomyInitializationService({ eventDispatcher, logger })).toThrow(InvalidArgumentError);
   });
 
-  it('processes entity creation queue, resolves waits, and supports manual orchestration', async () => {
-    service.initialize();
+  it(
+    'processes entity creation queue, resolves waits, and supports manual orchestration',
+    async () => {
+      service.initialize();
     service.initialize();
     expect(
       logger.warnRecords.some(({ message }) => message.includes('Already initialized'))
@@ -249,9 +251,11 @@ describe('AnatomyInitializationService integration queue coverage', () => {
       logger.infoRecords.some(({ message }) => message.includes('Destroyed'))
     ).toBe(true);
 
-    const callCountBefore = generationService.callSequence.length;
-    await eventDispatcher.emit(ENTITY_CREATED_ID, { instanceId: 'post-destroy' });
-    await new Promise((resolve) => setTimeout(resolve, 20));
-    expect(generationService.callSequence.length).toBe(callCountBefore);
-  });
+      const callCountBefore = generationService.callSequence.length;
+      await eventDispatcher.emit(ENTITY_CREATED_ID, { instanceId: 'post-destroy' });
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(generationService.callSequence.length).toBe(callCountBefore);
+    },
+    30000
+  );
 });

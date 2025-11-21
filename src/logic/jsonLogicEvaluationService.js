@@ -464,24 +464,32 @@ class JsonLogicEvaluationService extends BaseService {
         ) {
           rawResult = this.#evaluateLogicalGroup(op, args, context);
         } else {
-          console.log('[DEBUG] JsonLogicEvaluationService.evaluate calling jsonLogic.apply:', {
-            op,
-            args,
+          this.#logger.debug(
+            '[JsonLogicEvaluationService] Calling jsonLogic.apply',
+            'logic:evaluation',
+            {
+              op,
+              args,
+              resolvedRule: JSON.stringify(resolvedRule),
+              contextKeys: Object.keys(context || {}),
+              stateKeys: context?.state ? Object.keys(context.state) : 'no state'
+            }
+          );
+          rawResult = jsonLogic.apply(resolvedRule, context);
+          this.#logger.debug('[JsonLogicEvaluationService] Result from jsonLogic.apply', 'logic:evaluation', rawResult);
+        }
+      } else {
+        this.#logger.debug(
+          '[JsonLogicEvaluationService] Calling jsonLogic.apply (else branch)',
+          'logic:evaluation',
+          {
             resolvedRule: JSON.stringify(resolvedRule),
             contextKeys: Object.keys(context || {}),
             stateKeys: context?.state ? Object.keys(context.state) : 'no state'
-          });
-          rawResult = jsonLogic.apply(resolvedRule, context);
-          console.log('[DEBUG] JsonLogicEvaluationService.evaluate result:', rawResult);
-        }
-      } else {
-        console.log('[DEBUG] JsonLogicEvaluationService.evaluate (else branch) calling jsonLogic.apply:', {
-          resolvedRule: JSON.stringify(resolvedRule),
-          contextKeys: Object.keys(context || {}),
-          stateKeys: context?.state ? Object.keys(context.state) : 'no state'
-        });
+          }
+        );
         rawResult = jsonLogic.apply(resolvedRule, context);
-        console.log('[DEBUG] JsonLogicEvaluationService.evaluate (else branch) result:', rawResult);
+        this.#logger.debug('[JsonLogicEvaluationService] Result from jsonLogic.apply (else branch)', 'logic:evaluation', rawResult);
       }
 
       const finalBooleanResult = !!rawResult;

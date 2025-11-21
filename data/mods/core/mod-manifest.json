@@ -12,8 +12,8 @@
     ],
     "components": [
       "actor.component.json",
-      "armed.component.json",
       "apparent_age.component.json",
+      "armed.component.json",
       "current_actor.component.json",
       "description.component.json",
       "dilemmas.component.json",

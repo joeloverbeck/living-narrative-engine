@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "metabolism:event-is-action-eat",
+  "description": "Matches eat action attempt events",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "metabolism:eat"]
+  }
+}

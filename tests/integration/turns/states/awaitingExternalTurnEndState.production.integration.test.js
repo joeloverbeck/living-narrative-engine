@@ -7,6 +7,7 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/systemEventI
 import { TurnContext } from '../../../../src/turns/context/turnContext.js';
 import { createEventBus } from '../../../common/mockFactories/eventBus.js';
 import { createMockLogger } from '../../../common/mockFactories/loggerMocks.js';
+import { TestEnvironmentProvider } from '../../../../src/configuration/TestEnvironmentProvider.js';
 
 class TestTurnHandler {
   constructor({ logger, dispatcher }) {
@@ -34,14 +35,12 @@ class TestTurnHandler {
 }
 
 describe('AwaitingExternalTurnEndState production defaults integration', () => {
-  let originalEnv;
-
   beforeEach(() => {
-    originalEnv = process.env.NODE_ENV;
+    // No environment setup needed
   });
 
   afterEach(() => {
-    process.env.NODE_ENV = originalEnv;
+    // No environment restoration needed
     jest.useRealTimers();
     jest.restoreAllMocks();
     jest.resetModules();
@@ -53,12 +52,7 @@ describe('AwaitingExternalTurnEndState production defaults integration', () => {
     const setTimeoutSpy = jest.spyOn(global, 'setTimeout');
     const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
 
-    // Set NODE_ENV to production BEFORE isolateModulesAsync
-    const hadNodeEnv = Object.prototype.hasOwnProperty.call(process.env, 'NODE_ENV');
-    const previousEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'production';
-
-
+    const productionProvider = new TestEnvironmentProvider({ IS_PRODUCTION: true });
 
     const logger = createMockLogger();
     const eventBus = createEventBus({ captureEvents: true });
@@ -94,15 +88,10 @@ describe('AwaitingExternalTurnEndState production defaults integration', () => {
 
     handler.setTurnContext(context);
 
-    // Construct the state while NODE_ENV is still 'production'
-    const state = new AwaitingExternalTurnEndState(handler);
-
-    // Restore NODE_ENV after construction
-    if (hadNodeEnv) {
-      process.env.NODE_ENV = previousEnv;
-    } else {
-      delete process.env.NODE_ENV;
-    }
+    // Construct the state with production environment provider
+    const state = new AwaitingExternalTurnEndState(handler, {
+      environmentProvider: productionProvider,
+    });
 
     await state.enterState(handler, null);
 

@@ -39,6 +39,7 @@ import EstablishLyingClosenessHandler from '../../../src/logic/operationHandlers
 import RegenerateDescriptionHandler from '../../../src/logic/operationHandlers/regenerateDescriptionHandler.js';
 import IfHandler from '../../../src/logic/operationHandlers/ifHandler.js';
 import ForEachHandler from '../../../src/logic/operationHandlers/forEachHandler.js';
+import ConsumeItemHandler from '../../../src/logic/operationHandlers/consumeItemHandler.js';
 import * as closenessCircleService from '../../../src/logic/services/closenessCircleService.js';
 import { validateDependency } from '../../../src/utils/dependencyUtils.js';
 
@@ -609,6 +610,7 @@ export class ModTestHandlerFactory {
       music: this.createHandlersWithDescriptionRegeneration.bind(this),
       patrol: this.createHandlersWithPerceptionLogging.bind(this),
       movement: this.createHandlersWithPerceptionLogging.bind(this),
+      metabolism: this.createHandlersWithPerceptionLogging.bind(this),
     };
 
     if (typeof modCategory === 'string' && modCategory.startsWith('sex-')) {
@@ -706,6 +708,41 @@ export class ModTestHandlerFactory {
       };
     }
 
+    // Ensure entityManager has batchAddComponentsOptimized for ConsumeItemHandler
+    if (typeof entityManager.batchAddComponentsOptimized !== 'function') {
+      entityManager.batchAddComponentsOptimized = async (componentSpecs, _emitBatchEvent = true) => {
+        const results = [];
+        const errors = [];
+        let updateCount = 0;
+
+        for (const spec of componentSpecs) {
+          try {
+            const { instanceId, componentTypeId, componentData } = spec;
+            await entityManager.addComponent(instanceId, componentTypeId, componentData);
+            results.push({ instanceId, componentTypeId, success: true });
+            updateCount++;
+          } catch (error) {
+            errors.push({
+              instanceId: spec.instanceId,
+              componentTypeId: spec.componentTypeId,
+              error: error.message,
+            });
+          }
+        }
+
+        return { results, errors, updateCount };
+      };
+    }
+
+    // Ensure entityManager has removeEntityInstance for ConsumeItemHandler
+    if (typeof entityManager.removeEntityInstance !== 'function') {
+      entityManager.removeEntityInstance = (entityId) => {
+        if (typeof entityManager.deleteEntity === 'function') {
+          entityManager.deleteEntity(entityId);
+        }
+      };
+    }
+
     const baseHandlers = this.createStandardHandlers(
       entityManager,
       eventBus,
@@ -791,6 +828,11 @@ export class ModTestHandlerFactory {
       REGENERATE_DESCRIPTION: new RegenerateDescriptionHandler({
         entityManager,
         bodyDescriptionComposer,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      CONSUME_ITEM: new ConsumeItemHandler({
+        entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
       }),

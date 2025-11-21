@@ -1,0 +1,80 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_drink_beverage",
+  "comment": "Handles drink action by consuming beverage and logging perception",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "metabolism:event-is-action-drink-beverage"
+  },
+  "actions": [
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get actor position for perception logging",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "comment": "Get actor name for message",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "comment": "Get beverage name for message",
+      "parameters": {
+        "entity_ref": "target",
+        "result_variable": "itemName"
+      }
+    },
+    {
+      "type": "CONSUME_ITEM",
+      "comment": "Transfer beverage nutrients to metabolic buffer",
+      "parameters": {
+        "consumer_ref": "{event.payload.actorId}",
+        "item_ref": "{event.payload.targetId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Prepare log message for macro",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} drinks {context.itemName}."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Set perception type for macro",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "drink_consumed"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Set location for macro",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Set target for macro",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.targetId}"
+      }
+    },
+    {
+      "comment": "Log success, dispatch events, and end turn",
+      "macro": "core:logSuccessAndEndTurn"
+    }
+  ]
+}

@@ -39,6 +39,7 @@ import QueryLookupHandler from '../../../../src/logic/operationHandlers/queryLoo
 import RegenerateDescriptionHandler from '../../../../src/logic/operationHandlers/regenerateDescriptionHandler.js';
 import ForEachHandler from '../../../../src/logic/operationHandlers/forEachHandler.js';
 import IfHandler from '../../../../src/logic/operationHandlers/ifHandler.js';
+import ConsumeItemHandler from '../../../../src/logic/operationHandlers/consumeItemHandler.js';
 import * as closenessCircleService from '../../../../src/logic/services/closenessCircleService.js';
 
 describe('ModTestHandlerFactory Migration Validation', () => {
@@ -307,6 +308,11 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         bodyDescriptionComposer: {
           composeDescription: jest.fn(() => 'Test description'),
         },
+      }),
+      CONSUME_ITEM: new ConsumeItemHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
       }),
     };
   }

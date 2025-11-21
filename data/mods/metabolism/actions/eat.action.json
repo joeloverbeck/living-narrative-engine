@@ -1,0 +1,31 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "metabolism:eat",
+  "name": "Eat",
+  "description": "Consume a food item to restore energy",
+  "targets": {
+    "primary": {
+      "scope": "metabolism:consumable_items",
+      "placeholder": "food"
+    }
+  },
+  "template": "eat {food}",
+  "required_components": {
+    "actor": ["metabolism:fuel_converter", "metabolism:metabolic_store"]
+  },
+  "forbidden_components": {
+    "actor": ["metabolism:overfull"]
+  },
+  "prerequisites": [
+    {
+      "logic": { "condition_ref": "metabolism:can_consume" },
+      "failure_message": "Your stomach is too full to eat more."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#8d6e63",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#6d4c41",
+    "hoverTextColor": "#ffffff"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "turn_2_digestion",
+  "comment": "Digests food from buffer storage each turn for entities with metabolism components",
+  "event_type": "core:turn_started",
+  "actions": [
+    {
+      "type": "QUERY_COMPONENTS",
+      "comment": "Get metabolism components to check existence and buffer_storage value",
+      "parameters": {
+        "entity_ref": "{event.payload.entityId}",
+        "pairs": [
+          {
+            "component_type": "metabolism:metabolic_store",
+            "result_variable": "metabolicStore"
+          },
+          {
+            "component_type": "metabolism:fuel_converter",
+            "result_variable": "fuelConverter"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Only digest if entity has components AND buffer has content",
+      "parameters": {
+        "condition": {
+          "and": [
+            { "var": "context.metabolicStore" },
+            { "var": "context.fuelConverter" },
+            { ">": [{ "var": "context.fuelConverter.buffer_storage" }, 0] }
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "DIGEST_FOOD",
+            "parameters": {
+              "entity_ref": "{event.payload.entityId}",
+              "turns": 1
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
