@@ -11,28 +11,14 @@
 
 import { AbstractTurnState } from './abstractTurnState.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
+import TimeoutConfiguration from '../config/timeoutConfiguration.js';
 
 import { TURN_ENDED_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { createTimeoutError } from '../../utils/timeoutUtils.js';
 import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
-import { ProcessEnvironmentProvider } from '../../configuration/ProcessEnvironmentProvider.js';
 
 /** @typedef {import('../interfaces/ITurnStateHost.js').ITurnStateHost} BaseTurnHandler */
-
-/**
- * Default timeout for production environment (30 seconds).
- *
- * @private
- */
-export const DEFAULT_TIMEOUT_PRODUCTION = 30_000;
-
-/**
- * Default timeout for development environment (3 seconds).
- *
- * @private
- */
-export const DEFAULT_TIMEOUT_DEVELOPMENT = 3_000;
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 // Timeout utilities moved to src/utils/timeoutUtils.js
@@ -45,13 +31,6 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
   #configuredTimeout;
   #setTimeoutFn = (...args) => setTimeout(...args);
   #clearTimeoutFn = (...args) => clearTimeout(...args);
-
-  /**
-   * Environment provider for detecting production/development mode
-   * @type {import('../../interfaces/IEnvironmentProvider.js').IEnvironmentProvider}
-   * @private
-   */
-  #environmentProvider;
 
   /**
    * Creates an instance of AwaitingExternalTurnEndState.
@@ -74,12 +53,16 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
   ) {
     super(handler);
 
-    // Initialize environment provider (default to ProcessEnvironmentProvider)
-    this.#environmentProvider = environmentProvider ?? new ProcessEnvironmentProvider();
-
-    this.#configuredTimeout = timeoutMs ?? this.#resolveDefaultTimeout();
+    // Use TimeoutConfiguration for timeout resolution
+    const timeoutConfig = new TimeoutConfiguration({
+      timeoutMs,
+      environmentProvider,
+      logger: handler?.getLogger?.(),
+    });
+    this.#configuredTimeout = timeoutConfig.getTimeoutMs();
 
     // Validate timeout is positive finite number
+    // (TimeoutConfiguration already validates, but we keep this for backward compatibility)
     if (!Number.isFinite(this.#configuredTimeout) || this.#configuredTimeout <= 0) {
       throw new InvalidArgumentError(
         `timeoutMs must be a positive finite number, got: ${this.#configuredTimeout} (type: ${typeof this.#configuredTimeout})`
@@ -101,27 +84,6 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
 
     this.#setTimeoutFn = setTimeoutFn;
     this.#clearTimeoutFn = clearTimeoutFn;
-  }
-
-  /**
-   * Resolves the default timeout based on the current environment.
-   * Falls back to production timeout if environment detection fails.
-   *
-   * @returns {number} Timeout duration in milliseconds
-   * @private
-   */
-  #resolveDefaultTimeout() {
-    try {
-      const env = this.#environmentProvider.getEnvironment();
-      const isProduction = env?.IS_PRODUCTION ?? true; // Fail-safe to production
-      return isProduction
-        ? DEFAULT_TIMEOUT_PRODUCTION
-        : DEFAULT_TIMEOUT_DEVELOPMENT;
-    } catch {
-      // If environment provider throws, use production timeout as safe default
-      // Note: Logger not available during construction, silent fallback
-      return DEFAULT_TIMEOUT_PRODUCTION;
-    }
   }
 
   //─────────────────────────────────────────────────────────────────────────────

@@ -85,6 +85,7 @@
     "test:performance": "jest --config jest.config.performance.js --env=jsdom --silent",
     "test:memory": "node --expose-gc ./node_modules/.bin/jest --config jest.config.memory.js --env=jsdom --silent --runInBand",
     "test:single": "jest --env=jsdom --silent=false --runInBand",
+    "test:property": "jest --config jest.config.property.js --env=node",
     "test:ci": "npm run validate:operations && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:integration:build && npm run test:e2e",
     "create-mod": "node scripts/createMod.mjs",
     "create:recipe": "node scripts/create-recipe-wizard.js",
