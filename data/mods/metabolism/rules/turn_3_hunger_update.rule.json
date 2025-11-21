@@ -1,0 +1,7 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "turn_3_hunger_update",
+  "comment": "Placeholder for HUNMETSYS-014 - will update hunger state based on current_energy thresholds",
+  "event_type": "core:turn_started",
+  "actions": []
+}

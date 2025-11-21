@@ -1,0 +1,6 @@
+{
+  "$schema": "schema://living-narrative-engine/scope.schema.json",
+  "id": "consumable_items",
+  "description": "Items that can be consumed (food or drinks with fuel_source component)",
+  "query": "world.entities[{ \"has-any-component\": [ { \"var\": \"\" }, [\"metabolism:fuel_source\"] ] }]"
+}

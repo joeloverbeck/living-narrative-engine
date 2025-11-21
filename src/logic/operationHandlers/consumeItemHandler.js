@@ -1,21 +1,24 @@
 /**
  * @file Handler for CONSUME_ITEM operation
  *
- * Transfers fuel source to fuel converter buffer, validating compatibility and capacity,
+ * Transfers fuel source to metabolic store buffer, validating compatibility and capacity,
  * then removes item from game.
  *
  * Operation flow:
  * 1. Validates operation parameters (consumer_ref, item_ref)
  * 2. Verifies consumer has fuel_converter component
- * 3. Verifies item has fuel_source component
- * 4. Validates fuel tag compatibility (at least one matching tag)
- * 5. Validates buffer has sufficient capacity for item bulk
- * 6. Adds item bulk to fuel_converter.buffer_storage
- * 7. Removes item entity from game
- * 8. Dispatches metabolism:item_consumed event
+ * 3. Verifies consumer has metabolic_store component
+ * 4. Verifies item has fuel_source component
+ * 5. Validates fuel tag compatibility (at least one matching tag)
+ * 6. Validates buffer has sufficient capacity for item bulk
+ * 7. Adds item {bulk, energy_content} to metabolic_store.buffer_storage array
+ * 8. Removes item entity from game
+ * 9. Dispatches metabolism:item_consumed event
  *
  * Related files:
  * @see data/schemas/operations/consumeItem.schema.json - Operation schema
+ * @see data/mods/metabolism/components/metabolic_store.component.json - Target component schema
+ * @see data/mods/metabolism/components/fuel_source.component.json - Source component schema
  * @see src/dependencyInjection/tokens/tokens-core.js - ConsumeItemHandler token
  * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
  * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
@@ -28,6 +31,7 @@ import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 const FUEL_CONVERTER_COMPONENT_ID = 'metabolism:fuel_converter';
+const METABOLIC_STORE_COMPONENT_ID = 'metabolism:metabolic_store';
 const FUEL_SOURCE_COMPONENT_ID = 'metabolism:fuel_source';
 const ITEM_CONSUMED_EVENT = 'metabolism:item_consumed';
 
@@ -142,6 +146,22 @@ class ConsumeItemHandler extends BaseOperationHandler {
         return;
       }
 
+      // Get metabolic store component
+      const metabolicStore = this.#entityManager.getComponentData(
+        consumerRef,
+        METABOLIC_STORE_COMPONENT_ID
+      );
+
+      if (!metabolicStore) {
+        safeDispatchError(
+          this.#dispatcher,
+          `CONSUME_ITEM: Consumer does not have metabolic_store component`,
+          { consumerId: consumerRef },
+          log
+        );
+        return;
+      }
+
       // Get fuel source component
       const fuelSource = this.#entityManager.getComponentData(
         itemRef,
@@ -159,19 +179,21 @@ class ConsumeItemHandler extends BaseOperationHandler {
       }
 
       // Validate fuel tag compatibility
-      const hasMatchingTag = fuelSource.fuel_tags.some((tag) =>
+      // fuel_tags is optional array, fuel_type is required string
+      const itemTags = fuelSource.fuel_tags || [fuelSource.fuel_type];
+      const hasMatchingTag = itemTags.some((tag) =>
         fuelConverter.accepted_fuel_tags.includes(tag)
       );
 
       if (!hasMatchingTag) {
         safeDispatchError(
           this.#dispatcher,
-          `CONSUME_ITEM: Incompatible fuel type. Converter accepts: ${fuelConverter.accepted_fuel_tags.join(', ')}. Item provides: ${fuelSource.fuel_tags.join(', ')}.`,
+          `CONSUME_ITEM: Incompatible fuel type. Converter accepts: ${fuelConverter.accepted_fuel_tags.join(', ')}. Item provides: ${itemTags.join(', ')}.`,
           {
             consumerId: consumerRef,
             itemId: itemRef,
             converterTags: fuelConverter.accepted_fuel_tags,
-            itemTags: fuelSource.fuel_tags,
+            itemTags,
           },
           log
         );
@@ -179,7 +201,12 @@ class ConsumeItemHandler extends BaseOperationHandler {
       }
 
       // Validate buffer capacity
-      const availableSpace = fuelConverter.capacity - fuelConverter.buffer_storage;
+      // buffer_storage is an array of {bulk, energy_content} objects
+      const currentBulk = metabolicStore.buffer_storage.reduce(
+        (sum, item) => sum + item.bulk,
+        0
+      );
+      const availableSpace = metabolicStore.buffer_capacity - currentBulk;
       if (availableSpace < fuelSource.bulk) {
         safeDispatchError(
           this.#dispatcher,
@@ -195,14 +222,21 @@ class ConsumeItemHandler extends BaseOperationHandler {
         return;
       }
 
-      // Update buffer storage
-      const newBufferStorage = fuelConverter.buffer_storage + fuelSource.bulk;
+      // Add item to buffer storage array
+      const newBufferStorage = [
+        ...metabolicStore.buffer_storage,
+        {
+          bulk: fuelSource.bulk,
+          energy_content: fuelSource.energy_content,
+        },
+      ];
+
       await this.#entityManager.batchAddComponentsOptimized([
         {
-          entityId: consumerRef,
-          componentId: FUEL_CONVERTER_COMPONENT_ID,
+          instanceId: consumerRef,
+          componentTypeId: METABOLIC_STORE_COMPONENT_ID,
           componentData: {
-            ...fuelConverter,
+            ...metabolicStore,
             buffer_storage: newBufferStorage,
           },
         },
@@ -218,7 +252,7 @@ class ConsumeItemHandler extends BaseOperationHandler {
           consumerId: consumerRef,
           itemId: itemRef,
           bulkAdded: fuelSource.bulk,
-          energyDensity: fuelSource.energy_density,
+          energyContent: fuelSource.energy_content,
           newBufferStorage,
         },
       });
@@ -227,7 +261,8 @@ class ConsumeItemHandler extends BaseOperationHandler {
         consumerId: consumerRef,
         itemId: itemRef,
         bulkAdded: fuelSource.bulk,
-        newBufferStorage,
+        energyContent: fuelSource.energy_content,
+        bufferItems: newBufferStorage.length,
       });
     } catch (error) {
       log.error('CONSUME_ITEM operation failed', error, {

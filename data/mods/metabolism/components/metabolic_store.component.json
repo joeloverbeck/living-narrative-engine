@@ -5,38 +5,64 @@
   "dataSchema": {
     "type": "object",
     "properties": {
-      "currentEnergy": {
+      "current_energy": {
         "type": "number",
         "minimum": 0,
-        "description": "Current energy level. Cannot be negative. May exceed maxEnergy in gluttonous state."
+        "description": "Current energy level. Cannot be negative. May exceed max_energy in gluttonous state."
       },
-      "maxEnergy": {
+      "max_energy": {
         "type": "number",
         "minimum": 0,
         "description": "Maximum energy capacity for this entity."
       },
-      "baseBurnRate": {
+      "base_burn_rate": {
         "type": "number",
         "exclusiveMinimum": 0,
         "description": "Resting energy expenditure per turn. Must be greater than 0."
       },
-      "activityMultiplier": {
+      "activity_multiplier": {
         "type": "number",
         "minimum": 0,
         "default": 1.0,
         "description": "Current activity's energy cost multiplier (1.0 = normal, <1.0 = reduced, >1.0 = increased)."
       },
-      "lastUpdateTurn": {
+      "last_update_turn": {
         "type": "integer",
         "minimum": 0,
         "default": 0,
         "description": "Turn number of the last energy update. Used to calculate energy burn between turns."
+      },
+      "buffer_storage": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "bulk": {
+              "type": "number",
+              "minimum": 0
+            },
+            "energy_content": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "required": ["bulk", "energy_content"]
+        },
+        "default": [],
+        "description": "Array of consumed items waiting to be metabolized. Each item has bulk and energy_content."
+      },
+      "buffer_capacity": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Maximum total bulk that can be stored in buffer_storage."
       }
     },
     "required": [
-      "currentEnergy",
-      "maxEnergy",
-      "baseBurnRate"
+      "current_energy",
+      "max_energy",
+      "base_burn_rate",
+      "buffer_storage",
+      "buffer_capacity"
     ],
     "additionalProperties": false
   },

@@ -20,16 +20,35 @@
     "components": [
       "fuel_converter.component.json",
       "fuel_source.component.json",
-      "metabolic_store.component.json",
-      "hunger_state.component.json"
+      "hunger_state.component.json",
+      "metabolic_store.component.json"
     ],
-    "actions": [],
-    "rules": [],
-    "conditions": [],
-    "scopes": [],
+    "actions": [
+      "eat.action.json",
+      "drink.action.json",
+      "rest.action.json"
+    ],
+    "rules": [
+      "handle_drink_beverage.rule.json",
+      "handle_eat_food.rule.json",
+      "handle_rest.rule.json",
+      "turn_1_energy_burn.rule.json",
+      "turn_2_digestion.rule.json",
+      "turn_3_hunger_update.rule.json"
+    ],
+    "conditions": [
+      "can-consume.condition.json",
+      "event-is-action-drink-beverage.condition.json",
+      "event-is-action-eat.condition.json",
+      "event-is-action-rest.condition.json"
+    ],
+    "scopes": [
+      "consumable_items.scope"
+    ],
     "entities": {
       "definitions": [],
       "instances": []
-    }
+    },
+    "lookups": []
   }
 }

@@ -430,8 +430,8 @@ describe('ModTestHandlerFactory', () => {
         expect(handlers[handlerKey]).toBeDefined();
       });
 
-      // Verify correct total number of handlers (11 standard + 1 QUERY_LOOKUP + 12 positioning with ESTABLISH_LYING_CLOSENESS)
-      expect(Object.keys(handlers)).toHaveLength(24);
+      // Verify correct total number of handlers (11 standard + 1 QUERY_LOOKUP + 12 positioning with ESTABLISH_LYING_CLOSENESS + 1 CONSUME_ITEM)
+      expect(Object.keys(handlers)).toHaveLength(25);
     });
 
     it('should configure all handlers with execute functions', () => {
@@ -640,8 +640,8 @@ describe('ModTestHandlerFactory', () => {
       expect(handlers.ATOMIC_MODIFY_COMPONENT).toBeDefined();
       expect(handlers.BREAK_CLOSENESS_WITH_TARGET).toBeDefined();
 
-      // Should have 11 standard + 1 QUERY_LOOKUP + 12 positioning-specific handlers (with ESTABLISH_LYING_CLOSENESS)
-      expect(Object.keys(handlers)).toHaveLength(24);
+      // Should have 11 standard + 1 QUERY_LOOKUP + 12 positioning-specific handlers (with ESTABLISH_LYING_CLOSENESS) + 1 CONSUME_ITEM
+      expect(Object.keys(handlers)).toHaveLength(25);
     });
 
     it('should return createHandlersWithComponentMutations for affection', () => {

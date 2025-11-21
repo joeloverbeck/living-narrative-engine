@@ -10,12 +10,7 @@
         "minimum": 0,
         "description": "Maximum buffer storage capacity for unconverted fuel (0-100 scale default)."
       },
-      "bufferStorage": {
-        "type": "number",
-        "minimum": 0,
-        "description": "Current amount of fuel waiting to be digested. Must not exceed capacity (enforced by operation handlers at runtime)."
-      },
-      "conversionRate": {
+      "conversion_rate": {
         "type": "number",
         "minimum": 0,
         "description": "Energy points converted per turn during digestion."
@@ -26,7 +21,7 @@
         "maximum": 1,
         "description": "Conversion efficiency multiplier (0.0 = no conversion, 1.0 = perfect conversion)."
       },
-      "acceptedFuelTags": {
+      "accepted_fuel_tags": {
         "type": "array",
         "items": {
           "type": "string",
@@ -36,19 +31,18 @@
         "uniqueItems": true,
         "description": "Array of compatible fuel type tags that this converter can process (e.g., 'organic', 'blood', 'electricity', 'coal', 'battery', 'combustible')."
       },
-      "activityMultiplier": {
+      "metabolic_efficiency_multiplier": {
         "type": "number",
         "minimum": 0,
         "default": 1.0,
-        "description": "Current activity's effect on conversion rate (1.0 = normal, <1.0 = reduced, >1.0 = increased)."
+        "description": "Current metabolic efficiency multiplier affecting energy conversion (1.0 = normal, <1.0 = reduced, >1.0 = increased)."
       }
     },
     "required": [
       "capacity",
-      "bufferStorage",
-      "conversionRate",
+      "conversion_rate",
       "efficiency",
-      "acceptedFuelTags"
+      "accepted_fuel_tags"
     ],
     "additionalProperties": false
   },

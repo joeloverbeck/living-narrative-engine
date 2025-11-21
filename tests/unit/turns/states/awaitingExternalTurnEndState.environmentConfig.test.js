@@ -8,16 +8,14 @@ import {
 } from '@jest/globals';
 import { AwaitingExternalTurnEndState } from '../../../../src/turns/states/awaitingExternalTurnEndState.js';
 import { InvalidArgumentError } from '../../../../src/errors/invalidArgumentError.js';
+import { TestEnvironmentProvider } from '../../../../src/configuration/TestEnvironmentProvider.js';
 
 describe('AwaitingExternalTurnEndState - Environment Configuration', () => {
-  let originalNodeEnv;
   let mockHandler;
   let mockCtx;
   let mockDispatcher;
 
   beforeEach(() => {
-    originalNodeEnv = process.env.NODE_ENV;
-
     // Create minimal mocks for state instantiation
     mockDispatcher = {
       dispatch: jest.fn(),
@@ -50,17 +48,18 @@ describe('AwaitingExternalTurnEndState - Environment Configuration', () => {
   });
 
   afterEach(() => {
-    process.env.NODE_ENV = originalNodeEnv;
+    // No environment restoration needed
   });
 
   describe('Environment-Based Default Timeouts', () => {
     it('should use 30-second timeout in production environment', async () => {
       // Arrange
-      process.env.NODE_ENV = 'production';
+      const productionProvider = new TestEnvironmentProvider({ IS_PRODUCTION: true });
       const mockSetTimeout = jest.fn(() => 'timeout-id');
 
       // Act
       const state = new AwaitingExternalTurnEndState(mockHandler, {
+        environmentProvider: productionProvider,
         setTimeoutFn: mockSetTimeout,
       });
       await state.enterState(mockHandler, null);
@@ -72,11 +71,12 @@ describe('AwaitingExternalTurnEndState - Environment Configuration', () => {
 
     it('should use 3-second timeout in development environment', async () => {
       // Arrange
-      process.env.NODE_ENV = 'development';
+      const developmentProvider = new TestEnvironmentProvider({ IS_PRODUCTION: false });
       const mockSetTimeout = jest.fn(() => 'timeout-id');
 
       // Act
       const state = new AwaitingExternalTurnEndState(mockHandler, {
+        environmentProvider: developmentProvider,
         setTimeoutFn: mockSetTimeout,
       });
       await state.enterState(mockHandler, null);
@@ -87,11 +87,12 @@ describe('AwaitingExternalTurnEndState - Environment Configuration', () => {
 
     it('should use 3-second timeout in test environment', async () => {
       // Arrange
-      process.env.NODE_ENV = 'test';
+      const testProvider = new TestEnvironmentProvider({ IS_PRODUCTION: false, IS_TEST: true });
       const mockSetTimeout = jest.fn(() => 'timeout-id');
 
       // Act
       const state = new AwaitingExternalTurnEndState(mockHandler, {
+        environmentProvider: testProvider,
         setTimeoutFn: mockSetTimeout,
       });
       await state.enterState(mockHandler, null);
@@ -103,11 +104,13 @@ describe('AwaitingExternalTurnEndState - Environment Configuration', () => {
 
     it('should use 3-second timeout when NODE_ENV is undefined in Jest environment', async () => {
       // Arrange
-      delete process.env.NODE_ENV; // Remove NODE_ENV
+      // Use TestEnvironmentProvider to explicitly test Jest environment behavior
+      const testProvider = new TestEnvironmentProvider({ IS_PRODUCTION: false, IS_TEST: true });
       const mockSetTimeout = jest.fn(() => 'timeout-id');
 
       // Act
       const state = new AwaitingExternalTurnEndState(mockHandler, {
+        environmentProvider: testProvider,
         setTimeoutFn: mockSetTimeout,
       });
       await state.enterState(mockHandler, null);
@@ -122,11 +125,12 @@ describe('AwaitingExternalTurnEndState - Environment Configuration', () => {
   describe('Explicit Timeout Override', () => {
     it('should use explicit timeout over production default', async () => {
       // Arrange
-      process.env.NODE_ENV = 'production';
+      const productionProvider = new TestEnvironmentProvider({ IS_PRODUCTION: true });
       const mockSetTimeout = jest.fn(() => 'timeout-id');
 
       // Act
       const state = new AwaitingExternalTurnEndState(mockHandler, {
+        environmentProvider: productionProvider,
         timeoutMs: 5_000, // Explicit override
         setTimeoutFn: mockSetTimeout,
       });
@@ -139,11 +143,12 @@ describe('AwaitingExternalTurnEndState - Environment Configuration', () => {
 
     it('should use explicit timeout over development default', async () => {
       // Arrange
-      process.env.NODE_ENV = 'development';
+      const developmentProvider = new TestEnvironmentProvider({ IS_PRODUCTION: false });
       const mockSetTimeout = jest.fn(() => 'timeout-id');
 
       // Act
       const state = new AwaitingExternalTurnEndState(mockHandler, {
+        environmentProvider: developmentProvider,
         timeoutMs: 10_000, // Explicit override
         setTimeoutFn: mockSetTimeout,
       });
@@ -158,11 +163,13 @@ describe('AwaitingExternalTurnEndState - Environment Configuration', () => {
   describe('Environment Detection Edge Cases', () => {
     it('should handle custom environment strings gracefully', async () => {
       // Arrange
-      process.env.NODE_ENV = 'staging'; // Custom environment not recognized as production
+      // Custom environments (not production) default to development timeout
+      const customProvider = new TestEnvironmentProvider({ IS_PRODUCTION: false, NODE_ENV: 'staging' });
       const mockSetTimeout = jest.fn(() => 'timeout-id');
 
       // Act
       const state = new AwaitingExternalTurnEndState(mockHandler, {
+        environmentProvider: customProvider,
         setTimeoutFn: mockSetTimeout,
       });
       await state.enterState(mockHandler, null);

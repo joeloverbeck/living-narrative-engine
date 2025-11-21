@@ -34,7 +34,8 @@
         "single_bed.entity.json",
         "swivel_chair.entity.json",
         "throne.entity.json",
-        "upholstered_king_bed.entity.json"
+        "upholstered_king_bed.entity.json",
+        "working_class_king_bed.entity.json"
       ],
       "instances": []
     },

@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "metabolism:event-is-action-rest",
+  "description": "Matches rest action attempt events",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "metabolism:rest"]
+  }
+}
