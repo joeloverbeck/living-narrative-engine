@@ -11,6 +11,7 @@ import {
   registerPlanningStateDiagnosticsEventBus,
 } from '../../../../src/goap/planner/planningStateDiagnostics.js';
 import { GOAP_EVENTS } from '../../../../src/goap/events/goapEvents.js';
+import jsonLogic from 'json-logic-js';
 
 /**
  *
@@ -211,5 +212,87 @@ describe('PlanningStateView', () => {
       PLANNING_STATE_COMPONENT_SOURCES.FLAT,
     ]).toContain(result.source);
     expect(fakeEventBus.events).toHaveLength(0);
+  });
+
+  it('merges metadata from null options and refreshes actorId via updateMetadata', () => {
+    const baseState = createState();
+    const view = createPlanningStateView(baseState, null);
+
+    expect(view.getActorId()).toBe('actor-1');
+
+    view.updateMetadata({ actorId: 'overridden-actor' });
+    expect(view.getActorId()).toBe('overridden-actor');
+  });
+
+  it('returns null actor snapshots and falls back to shallow cloning on serialization errors', () => {
+    const viewWithoutActor = createPlanningStateView({});
+    expect(viewWithoutActor.getActorSnapshot()).toBeNull();
+
+    const circularActor = { id: 'loop', components: {} };
+    circularActor.components.self = circularActor;
+    const view = createPlanningStateView({ actor: circularActor });
+
+    const snapshot = view.getActorSnapshot();
+    expect(snapshot.id).toBe('loop');
+    expect(snapshot.components.self).toBe(circularActor);
+  });
+
+  it('handles invalid and erroring json-logic lookups gracefully', () => {
+    const view = createPlanningStateView(createState());
+
+    expect(view.assertPath(123)).toBeUndefined();
+
+    const applySpy = jest.spyOn(jsonLogic, 'apply').mockImplementation(() => {
+      throw new Error('json-logic-failure');
+    });
+
+    expect(view.assertPath('state.actor.id')).toBeUndefined();
+
+    const diagnostics = getPlanningStateDiagnostics('actor-1');
+    expect(diagnostics.lastMisses.at(-1)).toEqual(
+      expect.objectContaining({
+        path: 'state.actor.id',
+        reason: 'json-logic-failure',
+      })
+    );
+
+    applySpy.mockRestore();
+  });
+
+  it('ignores malformed entities and alias keys when building indexes', () => {
+    const state = {
+      actor: { id: 'actor-2' },
+      ':dangling': true,
+      state: {
+        'entity-guard': 'not-an-object',
+        'entity-components': { components: null },
+        'entity-alias': {
+          components: {
+            'core:health': { value: 10 },
+            core_health: { value: 5 },
+          },
+        },
+      },
+    };
+
+    const view = createPlanningStateView(state);
+
+    expect(view.hasComponent('entity-alias', 'core:health').source).toBe(
+      PLANNING_STATE_COMPONENT_SOURCES.STATE
+    );
+    expect(
+      view.hasComponent('entity-components', 'core:missing').reason
+    ).toBe(PLANNING_STATE_COMPONENT_REASONS.COMPONENT_MISSING);
+  });
+
+  it('skips unnamed actor components and infers nested actor identifiers', () => {
+    const view = createPlanningStateView({
+      actor: { id: null, components: { '': { rogue: true } } },
+      state: { actor: { id: 'nested-actor' } },
+    });
+
+    expect(view.getActorId()).toBe('nested-actor');
+    const snapshot = view.getActorSnapshot();
+    expect(snapshot.components['']).toBeUndefined();
   });
 });
