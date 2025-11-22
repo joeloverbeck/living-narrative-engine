@@ -506,6 +506,57 @@ describe('CanConsumeOperator', () => {
 
       expect(result).toBe(true);
     });
+
+    it('should warn when context path is missing for consumer', () => {
+      const context = { item: { id: 'item_1' } };
+
+      const result = operator.evaluate(['actor.missing', 'item'], context);
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('No consumer entity found at path actor.missing')
+      );
+    });
+
+    it('should treat resolved object without id as original path', () => {
+      const context = {
+        actor: { name: 'nameless' },
+        item: { id: 'item_1' },
+      };
+
+      mockEntityManager.getComponentData.mockReturnValue(null);
+
+      const result = operator.evaluate(['actor', 'item'], context);
+
+      expect(result).toBe(false);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Resolved "actor" to object without id, treating original path as consumer entity ID'
+        )
+      );
+    });
+
+    it('should warn when JSON logic resolves to invalid entity object', () => {
+      const context = { item: { id: 'item_1' } };
+
+      const result = operator.evaluate([{ var: 'invalid.path' }, 'item'], context);
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid consumer entity at path {"var":"invalid.path"}')
+      );
+    });
+
+    it('should warn when entity ID resolves to empty string', () => {
+      const context = { item: { id: 'item_1' } };
+
+      const result = operator.evaluate(['', 'item'], context);
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid consumer entity ID at path : ')
+      );
+    });
   });
 
   describe('Error Handling', () => {
