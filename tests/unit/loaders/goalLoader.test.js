@@ -2,6 +2,8 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import GoalLoader from '../../../src/loaders/goalLoader.js';
 import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoader.js';
 import * as processHelper from '../../../src/loaders/helpers/processAndStoreItem.js';
+import { SimpleItemLoader } from '../../../src/loaders/simpleItemLoader.js';
+import * as schemaValidationUtils from '../../../src/utils/schemaValidationUtils.js';
 import { createGoalFixture } from '../../fixtures/goals/createGoalFixture.js';
 
 /**
@@ -316,5 +318,204 @@ describe('GoalLoader._processFetchedItem', () => {
     expect(snapshot.goalsProcessed).toBe(0);
 
     processSpy.mockRestore();
+  });
+});
+
+describe('GoalLoader diagnostics and error helpers', () => {
+  let mocks;
+  let loader;
+  const originalAllowDefaults = process.env.GOAL_LOADER_ALLOW_DEFAULTS;
+  const originalDiagnosticsFlag = process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS;
+
+  beforeEach(() => {
+    mocks = createMocks();
+    loader = new GoalLoader(
+      mocks.config,
+      mocks.pathResolver,
+      mocks.dataFetcher,
+      mocks.schemaValidator,
+      mocks.dataRegistry,
+      mocks.logger
+    );
+  });
+
+  afterEach(() => {
+    if (typeof originalAllowDefaults === 'undefined') {
+      delete process.env.GOAL_LOADER_ALLOW_DEFAULTS;
+    } else {
+      process.env.GOAL_LOADER_ALLOW_DEFAULTS = originalAllowDefaults;
+    }
+    if (typeof originalDiagnosticsFlag === 'undefined') {
+      delete process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS;
+    } else {
+      process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS = originalDiagnosticsFlag;
+    }
+    jest.restoreAllMocks();
+  });
+
+  it('treats affirmative GOAL_LOADER_NORMALIZATION_DIAGNOSTICS values as enabled', () => {
+    process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS = 'on';
+
+    expect(loader._shouldEmitNormalizationDiagnostics()).toBe(true);
+  });
+
+  it('defaults to diagnostics enabled for unrecognized GOAL_LOADER_NORMALIZATION_DIAGNOSTICS values', () => {
+    process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS = 'maybe';
+
+    expect(loader._shouldEmitNormalizationDiagnostics()).toBe(true);
+  });
+
+  it('creates diagnostics state on demand when recording stats with no existing snapshot', () => {
+    loader._normalizationDiagnostics = null;
+    loader._emitNormalizationDiagnosticsLogs = jest.fn();
+
+    loader._recordNormalizationStats(
+      'mod-a',
+      'goal.json',
+      { mutations: [], warnings: [] },
+      false
+    );
+
+    expect(loader._normalizationDiagnostics.modId).toBe('mod-a');
+    expect(loader._normalizationDiagnostics.lastFile).toBe('goal.json');
+    expect(loader._normalizationDiagnostics.goalsProcessed).toBe(1);
+  });
+
+  it('counts no autofilled fields when mutations is a non-array iterable-like object', () => {
+    loader._emitNormalizationDiagnosticsLogs = jest.fn();
+
+    loader._recordNormalizationStats(
+      'mod-b',
+      'mutations.json',
+      { mutations: { 0: { type: 'coerced' }, length: 1 }, warnings: [] },
+      false
+    );
+
+    expect(loader._normalizationDiagnostics.fieldsAutoFilled).toBe(0);
+    expect(loader._normalizationDiagnostics.totalMutations).toBe(1);
+  });
+
+  it('initializes rejection diagnostics when normalization fails before state exists', () => {
+    loader._normalizationDiagnostics = null;
+
+    loader._recordNormalizationRejection('mod-c', 'failing.json');
+
+    expect(loader._normalizationDiagnostics.goalsRejected).toBe(1);
+    expect(loader._normalizationDiagnostics.lastFile).toBe('failing.json');
+  });
+
+  it('silently skips finalization when diagnostics were never initialized', () => {
+    loader._normalizationDiagnostics = null;
+
+    loader._finalizeNormalizationDiagnostics({ status: 'error' });
+
+    expect(mocks.logger.info).not.toHaveBeenCalled();
+    expect(loader.getNormalizationDiagnosticsSnapshot()).toBeNull();
+  });
+
+  it('captures error diagnostics when loadItemsForMod throws', async () => {
+    const error = new Error('load failure');
+    jest
+      .spyOn(SimpleItemLoader.prototype, 'loadItemsForMod')
+      .mockRejectedValueOnce(error);
+
+    await expect(
+      loader.loadItemsForMod('mod-d', {}, 'goals', '/disk', 'registry')
+    ).rejects.toThrow(error);
+
+    const snapshot = loader.getNormalizationDiagnosticsSnapshot();
+    expect(snapshot.context.status).toBe('error');
+    expect(snapshot.context.errorMessage).toBe('load failure');
+    expect(snapshot.lastFile).toBeNull();
+  });
+
+  it('skips schema validation when no primary schema is configured', () => {
+    loader._primarySchemaId = null;
+
+    const result = loader._validatePrimarySchema({}, 'goal.json', 'mod-e', '/path');
+
+    expect(result).toEqual({ isValid: true, errors: null });
+    expect(mocks.logger.debug).toHaveBeenCalled();
+  });
+
+  it('logs warnings and returns errors when schema validation fails but defaults are allowed', () => {
+    loader._primarySchemaId = 'goal.schema.json';
+    process.env.GOAL_LOADER_ALLOW_DEFAULTS = 'true';
+    jest
+      .spyOn(schemaValidationUtils, 'validateAgainstSchema')
+      .mockImplementation(() => {
+        throw new Error('schema failure');
+      });
+
+    const result = loader._validatePrimarySchema(
+      { id: 'goal-x' },
+      'goal.json',
+      'mod-f',
+      '/abs/path'
+    );
+
+    expect(result).toEqual({ isValid: false, errors: null });
+    expect(mocks.logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Schema validation failed'),
+      expect.objectContaining({ modId: 'mod-f', filename: 'goal.json' })
+    );
+  });
+
+  it('serializes goal data snippets from the root pointer', () => {
+    const error = loader._createGoalSchemaError(
+      new Error('validation'),
+      'goal.schema.json',
+      { foo: 'bar' },
+      'mod-g',
+      'goal.json',
+      '/abs/path',
+      { instancePath: '', message: 'failed' }
+    );
+
+    expect(error.context.dataSnippet).toBe('{"foo":"bar"}');
+  });
+
+  it('returns undefined snippets when the instance path cannot be resolved', () => {
+    const error = loader._createGoalSchemaError(
+      new Error('validation'),
+      'goal.schema.json',
+      { foo: 'bar' },
+      'mod-h',
+      'goal.json',
+      '/abs/path',
+      { instancePath: '/missing', message: 'failed' }
+    );
+
+    expect(error.context.dataSnippet).toBeUndefined();
+  });
+
+  it('truncates large serialized snippets and handles unserializable data', () => {
+    const largeObject = { big: Array(150).fill('x') };
+    const circular = { nested: largeObject };
+    circular.self = circular;
+
+    const truncated = loader._createGoalSchemaError(
+      new Error('validation'),
+      'goal.schema.json',
+      { payload: largeObject },
+      'mod-i',
+      'goal.json',
+      '/abs/path',
+      { instancePath: '/payload', message: 'failed' }
+    );
+
+    expect(truncated.context.dataSnippet.endsWith('...')).toBe(true);
+
+    const unserializable = loader._createGoalSchemaError(
+      new Error('validation'),
+      'goal.schema.json',
+      { circular },
+      'mod-j',
+      'goal.json',
+      '/abs/path',
+      { instancePath: '/circular', message: 'failed' }
+    );
+
+    expect(unserializable.context.dataSnippet).toBe('[unserializable snippet]');
   });
 });
