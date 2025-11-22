@@ -220,4 +220,34 @@ describe('ConfigurationLoader', () => {
       'ConfigurationLoader: config path must be a string'
     );
   });
+
+  it('retains base feature flags when overrides omit them', () => {
+    const loader = new ConfigurationLoader({ schemaValidator, logger });
+    const merged = loader.merge(
+      { features: { validationPipelineGuards: true } },
+      { features: {} }
+    );
+
+    expect(merged.features.validationPipelineGuards).toBe(true);
+  });
+
+  it('interprets environment guard flag values correctly', async () => {
+    const previousEnv = process.env.VALIDATION_PIPELINE_GUARDS;
+    const previousNodeEnv = process.env.NODE_ENV;
+
+    process.env.VALIDATION_PIPELINE_GUARDS = 'false';
+    process.env.NODE_ENV = 'production';
+
+    const loader = new ConfigurationLoader({ schemaValidator, logger });
+    const result = await loader.load();
+    expect(result.pipelineConfig.guards.enabled).toBe(false);
+
+    process.env.VALIDATION_PIPELINE_GUARDS = 'not-a-boolean';
+
+    const rerun = await loader.load();
+    expect(rerun.pipelineConfig.guards.enabled).toBe(true);
+
+    process.env.VALIDATION_PIPELINE_GUARDS = previousEnv;
+    process.env.NODE_ENV = previousNodeEnv;
+  });
 });
