@@ -505,6 +505,26 @@ describe('TargetResolutionResultBuilder', () => {
 
       expect(action.resolvedTargets).toEqual({});
     });
+
+    it('should preserve non-array resolved target entries without hydration', () => {
+      const action = { actionDef: createMockActionDef() };
+      const complexTargets = { primary: { id: 'raw-object' } };
+
+      builder.attachMetadata(action, complexTargets, {}, false);
+
+      expect(action.resolvedTargets.primary).toBe(complexTargets.primary);
+      expect(entityManager.getEntityInstance).not.toHaveBeenCalled();
+    });
+
+    it('should return primitive or null targets untouched inside target arrays', () => {
+      const action = { actionDef: createMockActionDef() };
+      const rawTargets = { primary: [null, 'literal-id', 0] };
+
+      builder.attachMetadata(action, rawTargets, {}, false);
+
+      expect(action.resolvedTargets.primary).toEqual([null, 'literal-id', 0]);
+      expect(entityManager.getEntityInstance).not.toHaveBeenCalled();
+    });
   });
 
   describe('Result shape expectations', () => {
