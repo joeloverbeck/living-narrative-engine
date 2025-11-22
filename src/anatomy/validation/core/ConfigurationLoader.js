@@ -200,10 +200,6 @@ export class ConfigurationLoader {
     const merged = new Map();
 
     const ingest = (candidate) => {
-      if (!candidate || typeof candidate !== 'object') {
-        return;
-      }
-
       const existing = merged.get(candidate.name);
       if (!existing) {
         merged.set(candidate.name, { ...candidate });
