@@ -3,22 +3,23 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import Ajv from 'ajv';
 import { PropertySchemaValidationRule } from '../../../../../src/anatomy/validation/rules/propertySchemaValidationRule.js';
 import { LoadTimeValidationContext } from '../../../../../src/anatomy/validation/loadTimeValidationContext.js';
 
-describe('PropertySchemaValidationRule', () => {
-  let logger;
+  describe('PropertySchemaValidationRule', () => {
+    let logger;
   let dataRegistry;
-  let schemaValidator;
-  let rule;
+    let schemaValidator;
+    let rule;
 
-  beforeEach(() => {
-    logger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
-    };
+    beforeEach(() => {
+      logger = {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      };
 
     dataRegistry = {
       get: () => {},
@@ -29,12 +30,16 @@ describe('PropertySchemaValidationRule', () => {
       validate: () => ({ isValid: true, errors: null }),
     };
 
-    rule = new PropertySchemaValidationRule({
-      logger,
-      dataRegistry,
-      schemaValidator,
+      rule = new PropertySchemaValidationRule({
+        logger,
+        dataRegistry,
+        schemaValidator,
+      });
     });
-  });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
 
   describe('rule metadata', () => {
     it('should have correct ruleId', () => {
@@ -383,11 +388,11 @@ describe('PropertySchemaValidationRule', () => {
       expect(issues).toHaveLength(0);
     });
 
-    it('should flag non-object slot properties with INVALID_PROPERTY_OBJECT', async () => {
-      const recipe = {
-        slots: {
-          head: {
-            properties: ['invalid'],
+      it('should flag non-object slot properties with INVALID_PROPERTY_OBJECT', async () => {
+        const recipe = {
+          slots: {
+            head: {
+              properties: ['invalid'],
           },
         },
       };
@@ -406,18 +411,92 @@ describe('PropertySchemaValidationRule', () => {
       expect(issues[0]).toMatchObject({
         type: 'INVALID_PROPERTY_OBJECT',
         severity: 'error',
-        context: {
-          location: {
-            type: 'slot',
-            name: 'head',
-            field: 'properties',
+          context: {
+            location: {
+              type: 'slot',
+              name: 'head',
+              field: 'properties',
+            },
+            receivedType: 'array',
+            recipeId: 'test:recipe',
           },
-          receivedType: 'array',
-          recipeId: 'test:recipe',
-        },
+        });
+      });
+
+      it('should allow slots without properties', async () => {
+        const recipe = {
+          slots: {
+            head: {},
+          },
+        };
+
+        const context = new LoadTimeValidationContext({
+          blueprints: {},
+          recipes: { 'test:recipe': recipe },
+        });
+
+        const issues = await rule.validate(context);
+
+        expect(logger.warn).not.toHaveBeenCalled();
+        expect(issues).toHaveLength(0);
+      });
+
+      it('should report inline schema compilation errors', async () => {
+        const component = {
+          id: 'test:component',
+          dataSchema: {
+            type: 'object',
+            properties: {
+              value: { type: 'string' },
+            },
+          },
+        };
+
+        dataRegistry.get = (type, id) => {
+          if (type === 'components' && id === 'test:component') {
+            return component;
+          }
+          return undefined;
+        };
+
+        schemaValidator.validate = () => ({ isValid: true, errors: null });
+
+        jest
+          .spyOn(Ajv.prototype, 'compile')
+          .mockImplementation(() => {
+            throw new Error('compile failure');
+          });
+
+        const recipe = {
+          slots: {
+            head: {
+              properties: {
+                'test:component': {
+                  value: 'anything',
+                },
+              },
+            },
+          },
+        };
+
+        const context = new LoadTimeValidationContext({
+          blueprints: {},
+          recipes: { 'test:recipe': recipe },
+        });
+
+        const issues = await rule.validate(context);
+
+        expect(logger.error).toHaveBeenCalledWith(
+          "Failed to validate properties for component 'test:component': compile failure",
+          expect.objectContaining({ componentId: 'test:component' })
+        );
+        expect(issues).toHaveLength(1);
+        expect(issues[0].context.schemaErrors[0]).toMatchObject({
+          property: 'unknown',
+          message: 'Schema validation failed: compile failure',
+        });
       });
     });
-  });
 
   describe('validate - pattern properties', () => {
     it('should validate pattern properties', async () => {
@@ -522,9 +601,9 @@ describe('PropertySchemaValidationRule', () => {
       expect(issues).toHaveLength(0);
     });
 
-    it('should handle patterns with matches array (v1)', async () => {
-      const component = {
-        id: 'test:component',
+      it('should handle patterns with matches array (v1)', async () => {
+        const component = {
+          id: 'test:component',
         dataSchema: {
           type: 'object',
           properties: {
@@ -689,9 +768,33 @@ describe('PropertySchemaValidationRule', () => {
       });
 
       const issues = await rule.validate(context);
-      expect(issues).toHaveLength(0);
+        expect(issues).toHaveLength(0);
+      });
+
+      it('should skip pattern validation for non-existent components', async () => {
+        dataRegistry.get = () => undefined;
+
+        const recipe = {
+          patterns: [
+            {
+              matchesAll: true,
+              properties: {
+                'missing:component': { value: 'test' },
+              },
+            },
+          ],
+        };
+
+        const context = new LoadTimeValidationContext({
+          blueprints: {},
+          recipes: { 'test:recipe': recipe },
+        });
+
+        const issues = await rule.validate(context);
+
+        expect(issues).toHaveLength(0);
+      });
     });
-  });
 
   describe('suggestion algorithm', () => {
     it('should suggest "immense" for "imense"', async () => {
