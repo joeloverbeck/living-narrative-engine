@@ -10,6 +10,12 @@ import { CanScootCloserOperator } from '../../../src/logic/operators/canScootClo
 import { IsClosestLeftOccupantOperator } from '../../../src/logic/operators/isClosestLeftOccupantOperator.js';
 import { IsClosestRightOccupantOperator } from '../../../src/logic/operators/isClosestRightOccupantOperator.js';
 import { IsSocketCoveredOperator } from '../../../src/logic/operators/isSocketCoveredOperator.js';
+import { HasOtherActorsAtLocationOperator } from '../../../src/logic/operators/hasOtherActorsAtLocationOperator.js';
+import { IsRemovalBlockedOperator } from '../../../src/logic/operators/isRemovalBlockedOperator.js';
+import { HasComponentOperator } from '../../../src/logic/operators/hasComponentOperator.js';
+import { IsHungryOperator } from '../../../src/logic/operators/isHungryOperator.js';
+import { PredictedEnergyOperator } from '../../../src/logic/operators/predictedEnergyOperator.js';
+import { CanConsumeOperator } from '../../../src/logic/operators/canConsumeOperator.js';
 
 describe('JsonLogicCustomOperators', () => {
   let customOperators;
@@ -130,6 +136,42 @@ describe('JsonLogicCustomOperators', () => {
         operatorClass: IsClosestRightOccupantOperator,
         invocationArgs: ['candidate.path', 'target.path', 'actor.path'],
         expectedParams: ['candidate.path', 'target.path', 'actor.path'],
+      },
+      {
+        operatorName: 'hasOtherActorsAtLocation',
+        operatorClass: HasOtherActorsAtLocationOperator,
+        invocationArgs: ['entity.path'],
+        expectedParams: ['entity.path'],
+      },
+      {
+        operatorName: 'isRemovalBlocked',
+        operatorClass: IsRemovalBlockedOperator,
+        invocationArgs: ['actor.path', 'item.path'],
+        expectedParams: ['actor.path', 'item.path'],
+      },
+      {
+        operatorName: 'has_component',
+        operatorClass: HasComponentOperator,
+        invocationArgs: ['entity.path', 'component:name'],
+        expectedParams: ['entity.path', 'component:name'],
+      },
+      {
+        operatorName: 'is_hungry',
+        operatorClass: IsHungryOperator,
+        invocationArgs: ['entity.path'],
+        expectedParams: ['entity.path'],
+      },
+      {
+        operatorName: 'predicted_energy',
+        operatorClass: PredictedEnergyOperator,
+        invocationArgs: ['entity.path'],
+        expectedParams: ['entity.path'],
+      },
+      {
+        operatorName: 'can_consume',
+        operatorClass: CanConsumeOperator,
+        invocationArgs: ['consumer.path', 'item.path'],
+        expectedParams: ['consumer.path', 'item.path'],
       },
     ])(
       'delegates %s evaluation to operator instance',
