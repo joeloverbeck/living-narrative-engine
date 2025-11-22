@@ -12,6 +12,30 @@ import { CharacterConceptsManagerController } from './domUI/characterConceptsMan
 const PAGE_NAME = 'Character Concepts Manager';
 
 /**
+ * Post-initialization hook for the Character Concepts Manager application
+ *
+ * @param {CharacterConceptsManagerController} controller - The controller instance
+ * @param {typeof globalThis} env - Optional environment (primarily for testing)
+ */
+async function postInit(controller, env = globalThis) {
+  const hasBrowserEnv =
+    typeof env.window !== 'undefined' && typeof env.document !== 'undefined';
+
+  if (!hasBrowserEnv) {
+    return;
+  }
+
+  // Store controller reference for debugging
+  env.window.__characterConceptsManagerController = controller;
+
+  // Set up page visibility handling
+  setupPageVisibilityHandling(controller, controller.logger, env);
+
+  // Set up error handling
+  setupGlobalErrorHandling(controller.logger, env);
+}
+
+/**
  * Initialize the Character Concepts Manager application
  */
 async function initializeApp() {
@@ -30,23 +54,7 @@ async function initializeApp() {
         dismissible: true,
       },
       hooks: {
-        postInit: async (controller) => {
-          const hasBrowserEnv =
-            typeof window !== 'undefined' && typeof document !== 'undefined';
-
-          if (!hasBrowserEnv) {
-            return;
-          }
-
-          // Store controller reference for debugging
-          window.__characterConceptsManagerController = controller;
-
-          // Set up page visibility handling
-          setupPageVisibilityHandling(controller, controller.logger);
-
-          // Set up error handling
-          setupGlobalErrorHandling(controller.logger);
-        },
+        postInit: (controller) => postInit(controller),
       },
     };
 
@@ -71,15 +79,18 @@ async function initializeApp() {
  *
  * @param {CharacterConceptsManagerController} controller - The controller instance
  * @param {ILogger} logger - The logger instance
+ * @param {typeof globalThis} env - Optional environment (primarily for testing)
  */
-function setupPageVisibilityHandling(controller, logger) {
-  if (typeof document === 'undefined' || typeof window === 'undefined') {
+function setupPageVisibilityHandling(controller, logger, env = globalThis) {
+  const { document: envDocument, window: envWindow } = env;
+
+  if (typeof envDocument === 'undefined' || typeof envWindow === 'undefined') {
     return;
   }
 
   // Handle page visibility changes
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
+  envDocument.addEventListener('visibilitychange', () => {
+    if (envDocument.hidden) {
       logger.info('Page hidden');
       // Could pause animations or reduce activity
     } else {
@@ -92,12 +103,12 @@ function setupPageVisibilityHandling(controller, logger) {
   });
 
   // Handle online/offline
-  window.addEventListener('online', () => {
+  envWindow.addEventListener('online', () => {
     logger.info('Connection restored');
     controller.handleOnline?.();
   });
 
-  window.addEventListener('offline', () => {
+  envWindow.addEventListener('offline', () => {
     logger.warn('Connection lost');
     controller.handleOffline?.();
   });
@@ -107,14 +118,17 @@ function setupPageVisibilityHandling(controller, logger) {
  * Set up global error handling
  *
  * @param {ILogger} logger - The logger instance
+ * @param {typeof globalThis} env - Optional environment (primarily for testing)
  */
-function setupGlobalErrorHandling(logger) {
-  if (typeof window === 'undefined') {
+function setupGlobalErrorHandling(logger, env = globalThis) {
+  const { window: envWindow } = env;
+
+  if (typeof envWindow === 'undefined') {
     return;
   }
 
   // Handle unhandled errors
-  window.addEventListener('error', (event) => {
+  envWindow.addEventListener('error', (event) => {
     logger.error('Unhandled error', {
       message: event.message,
       filename: event.filename,
@@ -130,7 +144,7 @@ function setupGlobalErrorHandling(logger) {
   });
 
   // Handle unhandled promise rejections
-  window.addEventListener('unhandledrejection', (event) => {
+  envWindow.addEventListener('unhandledrejection', (event) => {
     logger.error('Unhandled promise rejection', {
       reason: event.reason,
       promise: event.promise,
@@ -142,4 +156,11 @@ function setupGlobalErrorHandling(logger) {
 }
 
 // Export for testing and entry point
-export { initializeApp, PAGE_NAME };
+export {
+  initializeApp,
+  PAGE_NAME,
+  // Exported for targeted unit testing and potential reuse
+  postInit,
+  setupPageVisibilityHandling,
+  setupGlobalErrorHandling,
+};
