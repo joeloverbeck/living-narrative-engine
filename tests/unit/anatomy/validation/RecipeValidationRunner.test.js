@@ -530,4 +530,147 @@ describe('RecipeValidationRunner', () => {
       expect(propertyMessage.message).toBe('All 6 property objects valid');
     });
   });
+
+  describe('guardrail configuration and registry assertions', () => {
+    const createMinimalRegistry = (onProductionFailureResult = false) => ({
+      getAll: () => [],
+      count: () => 0,
+      assertRegistered: jest.fn((_, options) => {
+        options?.onProductionFailure?.();
+        return onProductionFailureResult;
+      }),
+    });
+
+    let originalEnv;
+
+    beforeEach(() => {
+      originalEnv = {
+        NODE_ENV: process.env.NODE_ENV,
+        VALIDATION_PIPELINE_GUARDS: process.env.VALIDATION_PIPELINE_GUARDS,
+      };
+    });
+
+    afterEach(() => {
+      process.env.NODE_ENV = originalEnv.NODE_ENV;
+      process.env.VALIDATION_PIPELINE_GUARDS = originalEnv.VALIDATION_PIPELINE_GUARDS;
+    });
+
+    it('notifies monitoring and logs when mandatory validator assertion is downgraded', () => {
+      process.env.NODE_ENV = 'production';
+      const monitoringCoordinator = {
+        incrementValidationPipelineHealth: jest.fn(),
+      };
+      const registry = createMinimalRegistry(false);
+
+      new RecipeValidationRunner({
+        dataRegistry: mockDataRegistry,
+        anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+        schemaValidator: mockSchemaValidator,
+        slotGenerator: mockSlotGenerator,
+        entityMatcherService: mockEntityMatcherService,
+        logger: mockLogger,
+        validatorRegistry: registry,
+        validationPipelineConfig: { guards: { enabled: true } },
+        monitoringCoordinator,
+      });
+
+      expect(registry.assertRegistered).toHaveBeenCalled();
+      expect(monitoringCoordinator.incrementValidationPipelineHealth).toHaveBeenCalledWith(
+        'registry_assertion_failure'
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'ValidatorRegistry: Mandatory validator assertion downgraded to warning in production'
+      );
+    });
+
+    it('disables guardrails when VALIDATION_PIPELINE_GUARDS env flag is falsey', async () => {
+      process.env.NODE_ENV = 'test';
+      process.env.VALIDATION_PIPELINE_GUARDS = 'false';
+      const recipe = createRecipe();
+      const pipelineResult = { errors: [], warnings: [], suggestions: [], passed: [] };
+
+      const normalizeSpy = jest.spyOn(
+        jest.requireActual('../../../../src/anatomy/validation/utils/validationResultNormalizer.js'),
+        'normalizeValidationResult'
+      );
+      jest
+        .spyOn(ValidationPipeline.prototype, 'execute')
+        .mockResolvedValueOnce(pipelineResult);
+
+      const runner = new RecipeValidationRunner({
+        dataRegistry: mockDataRegistry,
+        anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+        schemaValidator: mockSchemaValidator,
+        slotGenerator: mockSlotGenerator,
+        entityMatcherService: mockEntityMatcherService,
+        logger: mockLogger,
+        validators: validatorStubs,
+      });
+
+      const report = await runner.validate(recipe);
+
+      expect(report.errors).toEqual(pipelineResult.errors);
+      expect(report.warnings).toEqual(pipelineResult.warnings);
+      expect(normalizeSpy).not.toHaveBeenCalled();
+    });
+
+    it('enables guardrails when env flag is unrecognized and NODE_ENV=test', async () => {
+      process.env.NODE_ENV = 'test';
+      process.env.VALIDATION_PIPELINE_GUARDS = 'maybe';
+      const recipe = createRecipe();
+      const pipelineResult = { errors: [], warnings: [], suggestions: [], passed: [] };
+
+      const normalizeSpy = jest.spyOn(
+        jest.requireActual('../../../../src/anatomy/validation/utils/validationResultNormalizer.js'),
+        'normalizeValidationResult'
+      );
+      jest
+        .spyOn(ValidationPipeline.prototype, 'execute')
+        .mockResolvedValueOnce(pipelineResult);
+
+      const runner = new RecipeValidationRunner({
+        dataRegistry: mockDataRegistry,
+        anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+        schemaValidator: mockSchemaValidator,
+        slotGenerator: mockSlotGenerator,
+        entityMatcherService: mockEntityMatcherService,
+        logger: mockLogger,
+        validators: validatorStubs,
+      });
+
+      await runner.validate(recipe);
+
+      expect(normalizeSpy).toHaveBeenCalled();
+    });
+
+    it('falls back to disabled guardrails when env flag missing and NODE_ENV is not test', async () => {
+      process.env.NODE_ENV = 'production';
+      delete process.env.VALIDATION_PIPELINE_GUARDS;
+      const recipe = createRecipe();
+      const pipelineResult = { errors: [], warnings: [], suggestions: [], passed: [] };
+
+      const normalizeSpy = jest.spyOn(
+        jest.requireActual('../../../../src/anatomy/validation/utils/validationResultNormalizer.js'),
+        'normalizeValidationResult'
+      );
+      jest
+        .spyOn(ValidationPipeline.prototype, 'execute')
+        .mockResolvedValueOnce(pipelineResult);
+
+      const runner = new RecipeValidationRunner({
+        dataRegistry: mockDataRegistry,
+        anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+        schemaValidator: mockSchemaValidator,
+        slotGenerator: mockSlotGenerator,
+        entityMatcherService: mockEntityMatcherService,
+        logger: mockLogger,
+        validators: validatorStubs,
+      });
+
+      const report = await runner.validate(recipe);
+
+      expect(report.errors).toEqual(pipelineResult.errors);
+      expect(normalizeSpy).not.toHaveBeenCalled();
+    });
+  });
 });
