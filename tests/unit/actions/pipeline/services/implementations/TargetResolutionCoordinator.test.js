@@ -315,6 +315,22 @@ describe('TargetResolutionCoordinator - coordinateResolution', () => {
     expect(result.data.marker).toBe('built');
   });
 
+  it('returns success with continueProcessing false when no targets resolved', async () => {
+    const coordinator = createCoordinator();
+    jest.spyOn(coordinator, 'resolveWithDependencies').mockResolvedValue({
+      resolvedTargets: { primary: [] },
+      resolvedCounts: { primary: 0 },
+      targetContexts: [],
+      detailedResolutionResults: { primary: {} },
+      resolutionOrder: ['primary'],
+    });
+    const context = createPipelineContext();
+    const result = await coordinator.coordinateResolution(context);
+    expect(result.success).toBe(true);
+    expect(result.continueProcessing).toBe(false);
+    expect(result.data.actionsWithTargets).toEqual([]);
+  });
+
   it('captures multi-target resolution statistics for action-aware traces', async () => {
     const trace = createMockTrace();
     const tracingOrchestrator = createMockTracingOrchestrator();
@@ -558,6 +574,35 @@ describe('TargetResolutionCoordinator - resolveDependentTargets', () => {
     );
   });
 
+  it('skips unresolved dependent entities while processing remaining candidates', async () => {
+    const targetDef = createMockActionDef().targets.secondary;
+    const primaryTargets = [{ id: 'entity-1', displayName: 'Entity entity-1' }];
+    deps.unifiedScopeResolver = createMockUnifiedScopeResolver([
+      ['missing-entity', 'dep-1'],
+    ]);
+    deps.entityManager = {
+      getEntityInstance: jest.fn((id) =>
+        id === 'missing-entity' ? null : { id, attributes: {} }
+      ),
+    };
+    deps.nameResolver = createMockNameResolver();
+    coordinator = new TargetResolutionCoordinator(deps);
+
+    const outcome = await coordinator.resolveDependentTargets({
+      targetDef,
+      primaryTargets,
+      actor: { id: 'actor-1' },
+      actionContext: createMockActionContext(),
+      resolvedTargets: { primary: primaryTargets },
+      trace,
+      scopeStartTime: Date.now(),
+    });
+
+    expect(outcome.resolvedTargets).toHaveLength(1);
+    expect(outcome.resolvedTargets[0].id).toBe('dep-1');
+    expect(outcome.targetContexts).toHaveLength(1);
+  });
+
   it('hydrates dependent targets and returns flattened contexts', async () => {
     const targetDef = createMockActionDef().targets.secondary;
     const primaryTargets = [{ id: 'entity-1', displayName: 'Entity entity-1' }];
@@ -637,6 +682,32 @@ describe('TargetResolutionCoordinator - Resolution Order & Diagnostics', () => {
     });
     const scopeCalls = unifiedScopeResolver.resolve.mock.calls.map(([scope]) => scope);
     expect(scopeCalls).toEqual(['primary_scope', 'secondary_scope']);
+  });
+
+  it('normalizes scope resolution results to string identifiers', async () => {
+    const unifiedScopeResolver = createMockUnifiedScopeResolver([
+      new Set([
+        { id: ' entity-1 ' },
+        { itemId: 'item-2' },
+        {},
+        'direct-id',
+      ]),
+    ]);
+    const coordinator = createCoordinator({ unifiedScopeResolver });
+    const outcome = await coordinator.resolveWithDependencies({
+      context: createPipelineContext(),
+      actionDef: createMockActionDef(),
+      targetDefs: createMockActionDef().targets,
+      actor: { id: 'actor-1' },
+      actionContext: createMockActionContext(),
+      resolutionOrder: ['primary'],
+      trace: createMockTrace(),
+      isActionAwareTrace: false,
+    });
+
+    expect(outcome.resolvedTargets.primary.map((t) => t.id)).toEqual(
+      expect.arrayContaining(['entity-1', 'item-2', 'direct-id'])
+    );
   });
 
   it('ensures dependent targets resolve only after their primaries exist', async () => {
