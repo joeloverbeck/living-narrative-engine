@@ -55,8 +55,10 @@ export class PlanningStateView {
   #entityIndex;
 
   constructor(state, options = {}) {
+    const normalizedOptions =
+      options && typeof options === 'object' ? options : {};
     this.#state = state && typeof state === 'object' ? state : {};
-    this.#logger = options.logger || null;
+    this.#logger = normalizedOptions.logger || null;
     this.#metadata = toMetadata(options);
     this.#actorId = this.#metadata.actorId || this.#inferActorId();
     this.#actorSnapshot = this.#buildActorSnapshot();
@@ -65,8 +67,10 @@ export class PlanningStateView {
   }
 
   updateMetadata(options = {}) {
-    if (options.logger) {
-      this.#logger = options.logger;
+    const normalizedOptions =
+      options && typeof options === 'object' ? options : {};
+    if (normalizedOptions.logger) {
+      this.#logger = normalizedOptions.logger;
     }
     const next = toMetadata(options);
     if (Object.keys(next).length > 0) {
@@ -264,15 +268,12 @@ export class PlanningStateView {
       state: stateWrapper,
     };
 
-    if (!context.actor && this.#actorSnapshot) {
-      context.actor = this.#actorSnapshot;
-    }
-
     return context;
   }
 
   #buildEntityIndex() {
     const index = new Map();
+    const sourceOptions = this.#metadata?.sourceOptions || {};
 
     const register = (entityId, componentId, value, source = null) => {
       if (!entityId || !componentId) {
@@ -291,8 +292,12 @@ export class PlanningStateView {
         value,
         source,
       });
-      if (source) {
-        entry.sources.add(source);
+      const effectiveSource =
+        sourceOptions.forceSourceless === true
+          ? null
+          : sourceOptions.customSource || source;
+      if (effectiveSource) {
+        entry.sources.add(effectiveSource);
       }
     };
 
