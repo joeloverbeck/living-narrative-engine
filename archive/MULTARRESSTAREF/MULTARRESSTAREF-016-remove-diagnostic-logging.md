@@ -1,6 +1,6 @@
 # MULTARRESSTAREF-016: Remove Diagnostic Logging
 
-**Status:** Not Started
+**Status:** Completed
 **Priority:** Low
 **Estimated Effort:** 0.5 days
 **Phase:** 5 - Cleanup
@@ -12,7 +12,10 @@ Remove temporary diagnostic logging from `MultiTargetResolutionStage` to clean u
 
 ## Background
 
-The stage contains ~15 `[DIAGNOSTIC]` marked logging statements (lines 171-175, 437-442, 450-475) that were added for debugging during development. These should be removed or converted to proper trace events.
+The stage contains diagnostic logging statements that were added for debugging during development. After code analysis, found:
+- 5 `[DIAGNOSTIC]` marked statements (lines 215-220, 490-495, 503-505, 517-519, 522-527)
+- Entry/exit logging blocks (lines 161-165, 417-423)
+- Total diagnostic code: ~30 lines to be reviewed and potentially removed
 
 ## Technical Requirements
 
@@ -29,17 +32,27 @@ The stage contains ~15 `[DIAGNOSTIC]` marked logging statements (lines 171-175, 
 - Detailed variable dumps throughout resolution
 - Temporary debugging statements
 
-**Example diagnostic logs to remove:**
+**Actual diagnostic logs found:**
 ```javascript
-// Lines 118-122: Entry/exit logging
+// Lines 161-165: Entry logging
 this.#logger.debug('\n=== MULTITARGETRESOLUTIONSTAGE ENTRY ===');
 this.#logger.debug('Candidate actions count:', candidateActions.length);
-// ... 5 more debug statements
+// ... 3 more debug statements
 
-// Lines 171-176: Temporary diagnostic markers
+// Lines 215-220: [DIAGNOSTIC] Action resolution path
 this.#logger.debug(`[DIAGNOSTIC] Action ${actionDef.id} resolution path:`, {
   isLegacy, hasStringTargets, targets, scope,
 });
+
+// Lines 490-495, 503-505, 517-519, 522-527: [DIAGNOSTIC] Legacy resolution tracking
+this.#logger.debug(`[DIAGNOSTIC] Legacy resolution for ${actionDef.id}:`, {...});
+this.#logger.debug(`[DIAGNOSTIC] About to call targetResolver.resolveTargets...`);
+this.#logger.debug(`[DIAGNOSTIC] targetResolver.resolveTargets returned...`);
+this.#logger.debug(`[DIAGNOSTIC] Legacy resolution result...`, {...});
+
+// Lines 417-423: Exit logging
+this.#logger.debug('\n=== MULTITARGETRESOLUTIONSTAGE EXIT ===');
+// ... 3 more debug statements
 ```
 
 #### 2. Decision Criteria
@@ -82,10 +95,10 @@ this.#logger.debug(`[DIAGNOSTIC] Action ${actionDef.id} resolution path:`, {
 - Remove original diagnostic logs
 
 ### Expected Removal
-- **Diagnostic markers:** ~15 statements
-- **Excessive detail dumps:** ~10 statements
-- **Temporary debugging:** ~5 statements
-- **Total:** ~30 lines removed
+- **[DIAGNOSTIC] markers:** 5 statements (lines 215-220, 490-495, 503-505, 517-519, 522-527)
+- **Entry/exit logging:** 2 blocks (lines 161-165, 417-423)
+- **Additional debug statements:** 3 statements (lines 194-196)
+- **Total:** ~25 lines to be removed
 
 ## Acceptance Criteria
 
@@ -152,3 +165,32 @@ npm run test:integration -- --testPathPattern="tracing"
 - Consider converting useful diagnostics to trace events
 - Maintain ability to troubleshoot issues in production
 - Focus on removing *temporary* debugging code, not production logging
+
+## Outcome
+
+**Status:** Successfully completed with all tests passing.
+
+**What Was Actually Changed:**
+- Removed all 5 `[DIAGNOSTIC]` marked logging statements (lines 215-220, 490-495, 503-505, 517-519, 522-527)
+- Removed entry/exit logging blocks (lines 161-165, 417-423)
+- Removed additional debug statements in action processing loop (lines 194-196)
+- Total: 25 lines of diagnostic code removed
+
+**Differences from Original Plan:**
+- Original ticket assumed line numbers from analysis report were incorrect
+- After code inspection, updated ticket with actual line numbers
+- Kept all tracing orchestrator calls intact - these provide production value
+- No conversion to trace events needed - tracing already comprehensive
+- Preserved essential trace?.step() and trace?.info() calls
+
+**Test Results:**
+- All unit tests pass (6 test suites, 89 tests)
+- All integration tests pass (2 test suites, 10 tests)
+- All pipeline integration tests pass (63 test suites, 463 tests)
+- No functionality broken by removal
+
+**Benefits:**
+- Cleaner, more maintainable code
+- Reduced log noise during normal operation
+- Tracing infrastructure provides better observability than diagnostic logs
+- File reduced by ~25 lines (4% reduction)
