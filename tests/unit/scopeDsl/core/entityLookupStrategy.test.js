@@ -50,6 +50,66 @@ describe('createEntityLookupStrategy', () => {
     ]);
   });
 
+  it('returns empty describe order when no entity manager is provided', () => {
+    const strategy = createEntityLookupStrategy();
+
+    expect(strategy.describeOrder()).toEqual([]);
+  });
+
+  it('returns undefined when resolve is called without an entityId', () => {
+    const entityManager = {
+      getEntityInstance: jest.fn(() => ({ id: 'should-not-be-used' })),
+    };
+
+    const strategy = createEntityLookupStrategy({ entityManager });
+
+    expect(strategy.resolve()).toBeUndefined();
+    expect(entityManager.getEntityInstance).not.toHaveBeenCalled();
+  });
+
+  it('emits a miss when no entity manager is available', () => {
+    const trace = { addLog: jest.fn() };
+    const strategy = createEntityLookupStrategy({
+      trace,
+      debugConfig: { enabled: true },
+    });
+
+    expect(strategy.resolve('missing')).toBeUndefined();
+    expect(trace.addLog).toHaveBeenCalledWith(
+      'debug',
+      'ScopeDSL entity lookup resolver switched.',
+      'ScopeDSL.EntityLookupStrategy',
+      expect.objectContaining({ resolver: 'miss' })
+    );
+  });
+
+  it('resets capabilities when refreshCapabilities receives null', () => {
+    const entityManager = {
+      getEntity: jest.fn(() => ({ id: 'entity' })),
+    };
+    const trace = { addLog: jest.fn() };
+    const strategy = createEntityLookupStrategy({
+      entityManager,
+      trace,
+      debugConfig: { enabled: true },
+    });
+
+    // establish initial resolver
+    strategy.resolve('alpha');
+
+    const orderAfterReset = strategy.refreshCapabilities(null);
+    expect(orderAfterReset).toEqual([]);
+
+    strategy.resolve('beta');
+
+    expect(trace.addLog).toHaveBeenCalledWith(
+      'debug',
+      'ScopeDSL entity lookup resolver switched.',
+      'ScopeDSL.EntityLookupStrategy',
+      expect.objectContaining({ resolver: 'miss' })
+    );
+  });
+
   it('allows swapping entity managers via refreshCapabilities()', () => {
     const firstManager = {
       getEntity: jest.fn((entityId) => ({ id: `legacy-${entityId}` })),
