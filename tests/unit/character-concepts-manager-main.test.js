@@ -481,5 +481,34 @@ describe('Character Concepts Manager Main', () => {
       // Should not throw
       await expect(module.initializeApp()).resolves.not.toThrow();
     });
+
+    it('should gracefully exit postInit when browser APIs are unavailable', async () => {
+      const sandboxEnv = {};
+
+      await module.postInit(mockController, sandboxEnv);
+
+      // Should exit immediately without touching the real browser globals
+      expect(sandboxEnv.window).toBeUndefined();
+      expect(global.window.__characterConceptsManagerController).toBeUndefined();
+    });
+
+    it('setupPageVisibilityHandling should short-circuit when document is undefined', () => {
+      const env = { window: { addEventListener: jest.fn() } };
+
+      module.setupPageVisibilityHandling(
+        mockController,
+        mockController.logger,
+        env
+      );
+
+      expect(env.window.addEventListener).not.toHaveBeenCalled();
+    });
+
+    it('setupGlobalErrorHandling should short-circuit when window is undefined', () => {
+      const mockLogger = { error: jest.fn(), info: jest.fn(), warn: jest.fn() };
+
+      expect(() => module.setupGlobalErrorHandling(mockLogger, {})).not.toThrow();
+      expect(mockLogger.error).not.toHaveBeenCalled();
+    });
   });
 });
