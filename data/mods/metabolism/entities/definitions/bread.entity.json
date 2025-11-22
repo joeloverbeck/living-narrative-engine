@@ -1,0 +1,26 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "metabolism:bread",
+  "description": "A loaf of freshly baked bread. Filling and nutritious.",
+  "components": {
+    "core:name": {
+      "text": "bread"
+    },
+    "core:description": {
+      "text": "A loaf of freshly baked bread. Filling and nutritious."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.5
+    },
+    "metabolism:fuel_source": {
+      "energy_content": 200,
+      "bulk": 30,
+      "fuel_type": "food",
+      "fuel_tags": ["organic", "cooked", "grain"],
+      "digestion_speed": "medium",
+      "spoilage_rate": 15
+    }
+  }
+}

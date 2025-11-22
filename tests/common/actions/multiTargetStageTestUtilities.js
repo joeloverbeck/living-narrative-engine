@@ -12,6 +12,7 @@ import { ScopeContextBuilder } from '../../../src/actions/pipeline/services/impl
 import { TargetDisplayNameResolver } from '../../../src/actions/pipeline/services/implementations/TargetDisplayNameResolver.js';
 import TargetResolutionTracingOrchestrator from '../../../src/actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
 import TargetResolutionResultBuilder from '../../../src/actions/pipeline/services/implementations/TargetResolutionResultBuilder.js';
+import TargetResolutionCoordinator from '../../../src/actions/pipeline/services/implementations/TargetResolutionCoordinator.js';
 
 /**
  * Creates a fully configured MultiTargetResolutionStage for testing
@@ -97,6 +98,19 @@ export function createMultiTargetResolutionStage({
       logger,
     });
 
+  const targetResolutionCoordinator =
+    overrides.targetResolutionCoordinator ||
+    new TargetResolutionCoordinator({
+      dependencyResolver: targetDependencyResolver,
+      contextBuilder: scopeContextBuilder,
+      nameResolver: targetDisplayNameResolver,
+      unifiedScopeResolver: defaultUnifiedScopeResolver,
+      entityManager,
+      logger,
+      tracingOrchestrator,
+      resultBuilder: targetResolutionResultBuilder,
+    });
+
   // Create and return the stage with all required dependencies
   return new MultiTargetResolutionStage({
     targetDependencyResolver,
@@ -110,6 +124,7 @@ export function createMultiTargetResolutionStage({
     logger,
     tracingOrchestrator,
     targetResolutionResultBuilder,
+    targetResolutionCoordinator,
   });
 }
 
@@ -135,6 +150,9 @@ export function createMockMultiTargetServices(logger) {
     },
     targetDisplayNameResolver: {
       getEntityDisplayName: jest.fn(),
+    },
+    targetResolutionCoordinator: {
+      coordinateResolution: jest.fn(),
     },
   };
 }

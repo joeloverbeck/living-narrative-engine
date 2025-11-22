@@ -63,6 +63,124 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
       logger: mockDeps.logger,
     });
 
+    // Create mock targetResolutionCoordinator with proper implementation
+    mockDeps.targetResolutionCoordinator = {
+      coordinateResolution: jest.fn().mockImplementation(async (context) => {
+        try {
+          const actionDef = context.actionDef;
+          const actor = context.actor;
+
+          if (!actionDef.targets || typeof actionDef.targets !== 'object') {
+            return PipelineResult.failure(
+              {
+                error: 'Invalid targets configuration',
+                phase: 'target_resolution',
+                actionId: actionDef.id,
+                stage: 'MultiTargetResolutionStage',
+              },
+              { ...context.data, error: 'Invalid targets configuration' }
+            );
+          }
+
+          const resolvedTargets = {};
+          const targetDefinitions = actionDef.targets;
+          const targetContexts = [];
+
+          let resolutionOrder;
+          try {
+            resolutionOrder = mockDeps.targetDependencyResolver.getResolutionOrder(targetDefinitions);
+          } catch (error) {
+            resolutionOrder = Object.keys(targetDefinitions);
+          }
+
+          if (!resolutionOrder || resolutionOrder.length === 0) {
+            resolutionOrder = Object.keys(targetDefinitions);
+          }
+
+          for (const targetKey of resolutionOrder) {
+            const targetDef = targetDefinitions[targetKey];
+
+            try {
+              const scopeResult = await mockDeps.unifiedScopeResolver.resolve(
+                targetDef.scope,
+                { actor, location: context.actionContext?.location }
+              );
+
+              if (scopeResult.success) {
+                const entityIds = Array.from(scopeResult.value);
+
+                let contextFromId = null;
+                if (targetDef.contextFrom && resolvedTargets[targetDef.contextFrom]) {
+                  const contextTargets = resolvedTargets[targetDef.contextFrom];
+                  if (contextTargets.length > 0) {
+                    contextFromId = contextTargets[0].id;
+                  }
+                }
+
+                resolvedTargets[targetKey] = entityIds
+                  .map((id) => {
+                    const entity = mockDeps.entityManager.getEntityInstance(id);
+                    if (!entity) return null;
+
+                    const displayName = mockDeps.targetDisplayNameResolver.getEntityDisplayName(id);
+                    targetContexts.push({
+                      type: 'entity',
+                      entityId: id,
+                      displayName,
+                      placeholder: targetDef.placeholder,
+                    });
+
+                    const targetObj = { id, displayName, entity };
+                    if (contextFromId) {
+                      targetObj.contextFromId = contextFromId;
+                    }
+                    return targetObj;
+                  })
+                  .filter(t => t !== null);
+              } else {
+                const errorInfo = scopeResult.errors?.[0] || { error: 'Unknown scope resolution error' };
+                mockDeps.logger.error(`Scope resolution failed for target ${targetKey}:`, errorInfo);
+                resolvedTargets[targetKey] = [];
+              }
+            } catch (error) {
+              mockDeps.logger.error(`Scope evaluation error for target ${targetKey}:`, error);
+              resolvedTargets[targetKey] = [];
+            }
+          }
+
+          const hasEmptyRequiredTarget = Object.entries(targetDefinitions).some(
+            ([key, def]) => {
+              const isOptional = def.optional === true;
+              const hasNoCandidates = !resolvedTargets[key] || resolvedTargets[key].length === 0;
+              return !isOptional && hasNoCandidates;
+            }
+          );
+
+          if (hasEmptyRequiredTarget) {
+            return mockDeps.targetResolutionResultBuilder.buildFinalResult(
+              context,
+              [],
+              [],
+              null,
+              null,
+              []
+            );
+          }
+
+          return mockDeps.targetResolutionResultBuilder.buildMultiTargetResult(
+            context,
+            resolvedTargets,
+            targetContexts,
+            targetDefinitions,
+            actionDef,
+            undefined
+          );
+        } catch (err) {
+          throw err;
+        }
+      }),
+    };
+
     stage = new MultiTargetResolutionStage({
       targetDependencyResolver: mockDeps.targetDependencyResolver,
       legacyTargetCompatibilityLayer: mockDeps.legacyTargetCompatibilityLayer,
@@ -75,6 +193,7 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
       logger: mockDeps.logger,
       tracingOrchestrator: mockDeps.tracingOrchestrator,
       targetResolutionResultBuilder: mockDeps.targetResolutionResultBuilder,
+      targetResolutionCoordinator: mockDeps.targetResolutionCoordinator,
     });
 
     mockActor = {

@@ -55,6 +55,7 @@ describe('registerCommandAndAction', () => {
   const mockTargetDisplayNameResolver = mockDeep();
   const mockTargetResolutionTracingOrchestrator = mockDeep();
   const mockTargetResolutionResultBuilder = mockDeep();
+  const mockTargetResolutionCoordinator = mockDeep();
 
   // Additional mocks for comprehensive coverage
   const mockTraceConfiguration = mockDeep();
@@ -123,6 +124,10 @@ describe('registerCommandAndAction', () => {
     container.register(
       tokens.ITargetResolutionResultBuilder,
       () => mockTargetResolutionResultBuilder
+    );
+    container.register(
+      tokens.ITargetResolutionCoordinator,
+      () => mockTargetResolutionCoordinator
     );
 
     // Register additional dependencies for comprehensive coverage
@@ -212,12 +217,9 @@ describe('registerCommandAndAction', () => {
         const options = registrationCall[2] || {};
         expect(options.lifecycle).toBe(lifecycle);
 
-        if (tags) {
-          expect(options.tags).toEqual(tags);
-        } else {
-          // Ensure no unexpected tags are present if none are expected
-          expect(options.tags).toBeUndefined();
-        }
+        // Verify tags - either match expected or be undefined
+        const expectedTags = tags || undefined;
+        expect(options.tags).toEqual(expectedTags);
       }
     );
   });

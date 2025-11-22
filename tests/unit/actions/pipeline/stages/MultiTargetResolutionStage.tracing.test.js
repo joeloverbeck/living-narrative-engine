@@ -94,8 +94,122 @@ describe('MultiTargetResolutionStage - Action Tracing', () => {
       logger: mockDeps.logger,
     });
 
-    // Create stage instance
-    stage = new MultiTargetResolutionStage(mockDeps);
+    // Create mock coordinator
+    mockDeps.targetResolutionCoordinator = {
+      coordinateResolution: jest.fn(async (context, trace) => {
+        const { actionDef } = context;
+        
+        // Handle errors in getting resolution order
+        let resolutionOrder;
+        try {
+          resolutionOrder = mockDeps.targetDependencyResolver.getResolutionOrder(actionDef.targets);
+        } catch (error) {
+          return { success: true, data: { ...context.data, actionsWithTargets: [], error: error?.message }, continueProcessing: false };
+        }
+        
+        const resolvedTargets = {};
+        const targetContexts = [];
+        const detailedResolutionResults = {};
+
+        for (const targetKey of resolutionOrder) {
+          const targetDef = actionDef.targets[targetKey];
+          const scopeContext = mockDeps.scopeContextBuilder.buildScopeContext();
+          const result = await mockDeps.unifiedScopeResolver.resolve(
+            targetDef.scope,
+            scopeContext
+          );
+          
+          // Log errors if scope resolution fails
+          if (!result.success) {
+            const errorDetails = result.errors || result.error || 'Unknown error';
+            mockDeps.logger.error(`Failed to resolve scope '${targetDef.scope}':`, errorDetails);
+          }
+
+          if (result.success && result.value) {
+            const candidates = Array.from(result.value).map(entry => {
+              // Normalize entity ID (handle strings and objects with id/itemId)
+              let id;
+              if (typeof entry === 'string') {
+                id = entry;
+              } else if (entry && typeof entry === 'object') {
+                if (typeof entry.id === 'string' && entry.id.trim()) {
+                  id = entry.id.trim();
+                } else if (typeof entry.itemId === 'string' && entry.itemId.trim()) {
+                  id = entry.itemId.trim();
+                } else {
+                  return null;
+                }
+              } else {
+                return null;
+              }
+              const entity = mockDeps.entityManager.getEntityInstance(id);
+              if (!entity) {
+                return null;
+              }
+              const displayName = mockDeps.targetDisplayNameResolver.getEntityDisplayName(id);
+              return {
+                id,
+                displayName,
+                entity
+              };
+            }).filter(Boolean);
+            
+            resolvedTargets[targetKey] = candidates;
+            candidates.forEach(target => {
+              targetContexts.push({
+                type: 'entity',
+                entityId: target.id,
+                displayName: target.displayName,
+                placeholder: targetDef.placeholder
+              });
+            });
+          }
+          detailedResolutionResults[targetKey] = {
+            scopeId: targetDef.scope,
+            contextFrom: targetDef.contextFrom || null,
+            candidatesFound: result?.value?.size || 0,
+            candidatesResolved: resolvedTargets[targetKey]?.length || 0,
+            failureReason: null,
+            evaluationTimeMs: 0
+          };
+          
+          // Check for dependent targets with no candidates
+          if (targetDef.contextFrom && resolvedTargets[targetKey]?.length === 0) {
+            detailedResolutionResults[targetKey].failureReason = `No candidates found for target '${targetKey}'`;
+            return { success: true, data: { ...context.data, actionsWithTargets: [], detailedResolutionResults }, continueProcessing: false };
+          }
+        }
+
+        // Check if we have any valid targets
+        const hasTargets = Object.values(resolvedTargets).some(targets => targets.length > 0);
+        
+        if (!hasTargets) {
+          return { success: true, data: { ...context.data, actionsWithTargets: [], detailedResolutionResults }, continueProcessing: false };
+        }
+
+        return mockDeps.targetResolutionResultBuilder.buildMultiTargetResult(
+          context,
+          resolvedTargets,
+          targetContexts,
+          actionDef.targets,
+          actionDef,
+          detailedResolutionResults
+        );
+      })
+    };
+
+    // Create stage instance with current constructor signature
+    stage = new MultiTargetResolutionStage({
+      legacyTargetCompatibilityLayer: mockDeps.legacyTargetCompatibilityLayer,
+      targetDisplayNameResolver: mockDeps.targetDisplayNameResolver,
+      unifiedScopeResolver: mockDeps.unifiedScopeResolver,
+      entityManager: mockDeps.entityManager,
+      targetResolver: mockDeps.targetResolver,
+      logger: mockDeps.logger,
+      tracingOrchestrator: mockDeps.tracingOrchestrator,
+      targetResolutionResultBuilder: mockDeps.targetResolutionResultBuilder,
+      targetResolutionCoordinator: mockDeps.targetResolutionCoordinator,
+    });
 
     // Create mock context
     mockContext = {

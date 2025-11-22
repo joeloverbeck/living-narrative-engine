@@ -85,7 +85,7 @@ export function registerCommandAndAction(container) {
 
   // --- Scope Registry ---
   // Must be registered before ActionDiscoveryService
-  registrar.singletonFactory(tokens.IScopeRegistry, (c) => {
+  registrar.singletonFactory(tokens.IScopeRegistry, () => {
     // ScopeRegistry constructor takes no parameters - it's a simple registry
     return new ScopeRegistry();
   });
@@ -142,25 +142,29 @@ export function registerCommandAndAction(container) {
     'Command and Action Registration: Registered TargetContextBuilder.'
   );
 
+  // --- Target Resolution Coordinator ---
+  // NOTE: TargetResolutionCoordinator is registered in pipelineServiceRegistrations.js
+  // as part of the pipeline services. No need to register here.
+
   // --- Multi-Target Resolution Stage ---
   registrar.singletonFactory(tokens.IMultiTargetResolutionStage, (c) => {
     return new MultiTargetResolutionStage({
-      targetDependencyResolver: c.resolve(tokens.ITargetDependencyResolver),
       legacyTargetCompatibilityLayer: c.resolve(
         tokens.ILegacyTargetCompatibilityLayer
       ),
-      scopeContextBuilder: c.resolve(tokens.IScopeContextBuilder),
       targetDisplayNameResolver: c.resolve(tokens.ITargetDisplayNameResolver),
       unifiedScopeResolver: c.resolve(tokens.IUnifiedScopeResolver),
       entityManager: c.resolve(tokens.IEntityManager),
       targetResolver: c.resolve(tokens.ITargetResolutionService),
-      targetContextBuilder: c.resolve(tokens.ITargetContextBuilder),
-      targetResolutionResultBuilder: c.resolve(
-        tokens.ITargetResolutionResultBuilder
-      ),
       logger: c.resolve(tokens.ILogger),
       tracingOrchestrator: c.resolve(
         tokens.ITargetResolutionTracingOrchestrator
+      ),
+      targetResolutionResultBuilder: c.resolve(
+        tokens.ITargetResolutionResultBuilder
+      ),
+      targetResolutionCoordinator: c.resolve(
+        tokens.ITargetResolutionCoordinator
       ),
     });
   });
@@ -497,7 +501,7 @@ export function registerCommandAndAction(container) {
   );
 
   // Register DirectiveStrategyResolver
-  registrar.singletonFactory(tokens.DirectiveStrategyResolver, (c) => {
+  registrar.singletonFactory(tokens.DirectiveStrategyResolver, () => {
     return new TurnDirectiveStrategyResolver(DEFAULT_STRATEGY_MAP);
   });
   logger.debug(

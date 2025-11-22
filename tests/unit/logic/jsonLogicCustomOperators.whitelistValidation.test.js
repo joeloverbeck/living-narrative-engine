@@ -133,6 +133,9 @@ describe('JsonLogicCustomOperators - Whitelist Validation', () => {
         'hasOtherActorsAtLocation',
         'isRemovalBlocked',
         'has_component',
+        'is_hungry',
+        'predicted_energy',
+        'can_consume',
       ];
 
       for (const op of expectedOperators) {
