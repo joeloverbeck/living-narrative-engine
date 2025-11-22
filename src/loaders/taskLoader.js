@@ -282,12 +282,6 @@ class TaskLoader extends SimpleItemLoader {
       );
     }
 
-    if (normalized.length <= REFINEMENT_METHODS_PREFIX.length) {
-      throw new Error(
-        `Task ${taskId} in ${filename}: Refinement method $ref '${refPath}' must include a file location inside '${REFINEMENT_METHODS_FOLDER}/'`
-      );
-    }
-
     return normalized;
   }
 

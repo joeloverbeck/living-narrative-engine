@@ -275,6 +275,22 @@ describe('TaskLoader', () => {
       ).rejects.toThrow(/must point to a \.refinement\.json file/);
     });
 
+    it('should reject when referenced refinement method is not an object', async () => {
+      const data = baseTask();
+      data.refinementMethods = [
+        {
+          methodId: 'core:test_task.method1',
+          $ref: 'refinement-methods/test_task/method1.refinement.json',
+        },
+      ];
+
+      mockDataFetcher.fetch.mockResolvedValueOnce(null);
+
+      await expect(
+        taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
+      ).rejects.toThrow(/did not return a JSON object/);
+    });
+
     it('should reject when referenced refinement method file is missing', async () => {
       const data = baseTask();
       data.refinementMethods = [
@@ -310,6 +326,24 @@ describe('TaskLoader', () => {
       ).rejects.toThrow(/declares id 'core:test_task.other'/);
     });
 
+    it('should reject when referenced refinement method is missing an id', async () => {
+      const data = baseTask();
+      data.refinementMethods = [
+        {
+          methodId: 'core:test_task.method1',
+          $ref: 'refinement-methods/test_task/method1.refinement.json',
+        },
+      ];
+
+      mockDataFetcher.fetch.mockResolvedValueOnce({
+        taskId: 'core:test_task',
+      });
+
+      await expect(
+        taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
+      ).rejects.toThrow(/must declare an 'id'/);
+    });
+
     it('should reject when referenced refinement method declares a mismatched taskId', async () => {
       const data = baseTask();
       data.refinementMethods = [
@@ -327,6 +361,24 @@ describe('TaskLoader', () => {
       await expect(
         taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
       ).rejects.toThrow(/declares taskId 'core:other_task'/);
+    });
+
+    it('should reject when referenced refinement method is missing a taskId', async () => {
+      const data = baseTask();
+      data.refinementMethods = [
+        {
+          methodId: 'core:test_task.method1',
+          $ref: 'refinement-methods/test_task/method1.refinement.json',
+        },
+      ];
+
+      mockDataFetcher.fetch.mockResolvedValueOnce({
+        id: 'core:test_task.method1',
+      });
+
+      await expect(
+        taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
+      ).rejects.toThrow(/must declare a taskId/);
     });
 
     it('should cache validated refinement methods per mod', async () => {
@@ -563,6 +615,40 @@ describe('TaskLoader', () => {
           taskId: 'core:test_task',
         })
       );
+    });
+  });
+
+  describe('_normalizeRefinementMethodRef', () => {
+    it('should reject empty or whitespace-only references', () => {
+      expect(() =>
+        taskLoader._normalizeRefinementMethodRef(
+          '   ',
+          'core:test_task',
+          'test.task.json'
+        )
+      ).toThrow(/must be a non-empty string/);
+    });
+
+    it('should strip leading ./ segments', () => {
+      const normalized = taskLoader._normalizeRefinementMethodRef(
+        '././refinement-methods/task/method.refinement.json',
+        'core:test_task',
+        'test.task.json'
+      );
+
+      expect(normalized).toBe(
+        'refinement-methods/task/method.refinement.json'
+      );
+    });
+
+    it('should reject absolute refinement method paths', () => {
+      expect(() =>
+        taskLoader._normalizeRefinementMethodRef(
+          '/refinement-methods/task/method.refinement.json',
+          'core:test_task',
+          'test.task.json'
+        )
+      ).toThrow(/cannot start with '\//);
     });
   });
 
