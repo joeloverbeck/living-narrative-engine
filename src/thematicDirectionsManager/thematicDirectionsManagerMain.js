@@ -256,4 +256,4 @@ async function initialize() {
 
 initializeWhenReady();
 
-export { ThematicDirectionsManagerApp };
+export { ThematicDirectionsManagerApp, initializeWhenReady, initialize };
