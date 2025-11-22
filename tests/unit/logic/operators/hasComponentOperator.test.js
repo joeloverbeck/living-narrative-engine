@@ -222,6 +222,18 @@ describe('HasComponentOperator', () => {
       expect(mockEntityManager.hasComponent).not.toHaveBeenCalled();
     });
 
+    it('warns when resolved entity is a non-id, non-primitive value', () => {
+      const context = { entity: true };
+
+      const result = operator.evaluate(['entity', 'movement:is_dimensional_portal'], context);
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid entity at path entity')
+      );
+      expect(mockEntityManager.hasComponent).not.toHaveBeenCalled();
+    });
+
     it('should return false and warn when componentId is empty', () => {
       const context = { entity: { id: 'entity-1' } };
 
@@ -330,6 +342,32 @@ describe('HasComponentOperator', () => {
           }
         }
       });
+    });
+
+    it('serializes undefined expressions to null and handles serialization failures gracefully', () => {
+      const circular = { id: 'circular-entity' };
+      circular.self = circular;
+      mockEntityManager.hasComponent.mockReturnValue(true);
+
+      const undefinedPathResult = operator.evaluate(
+        [undefined, 'movement:is_dimensional_portal'],
+        {}
+      );
+      expect(undefinedPathResult).toBe(false);
+
+      const circularPathResult = operator.evaluate(
+        [circular, 'movement:is_dimensional_portal'],
+        {}
+      );
+
+      expect(circularPathResult).toBe(true);
+      expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
+        'circular-entity',
+        'movement:is_dimensional_portal'
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid entityPath type')
+      );
     });
   });
 });
