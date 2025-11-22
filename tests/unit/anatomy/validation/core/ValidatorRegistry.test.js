@@ -505,4 +505,39 @@ describe('ValidatorRegistry', () => {
       expect(registry.count()).toBe(2);
     });
   });
+
+  describe('assertRegistered()', () => {
+    it('returns true when no requirements are provided or when input is invalid', () => {
+      expect(registry.assertRegistered()).toBe(true);
+      expect(registry.assertRegistered([])).toBe(true);
+      expect(registry.assertRegistered('not-an-array')).toBe(true);
+    });
+
+    it('ignores malformed requirements and validates correctly configured entries', () => {
+      registry.register({
+        name: 'valid',
+        priority: 1,
+        failFast: true,
+        validate: jest.fn(),
+      });
+
+      const result = registry.assertRegistered([
+        null,
+        { something: 'unexpected' },
+        { name: 'valid', priority: 1, failFast: true },
+      ]);
+
+      expect(result).toBe(true);
+    });
+
+    it('throws an error when a required validator is missing outside production', () => {
+      expect(() =>
+        registry.assertRegistered([
+          { name: 'missing-validator', priority: 0, failFast: true },
+        ])
+      ).toThrow(
+        'ValidatorRegistry: Required validators misconfigured (missing-validator:missing)'
+      );
+    });
+  });
 });
