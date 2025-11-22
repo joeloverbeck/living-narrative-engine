@@ -18,6 +18,7 @@
 /** @typedef {import('../services/interfaces/ITargetDisplayNameResolver.js').ITargetDisplayNameResolver} ITargetDisplayNameResolver */
 /** @typedef {import('../services/interfaces/ITargetResolutionTracingOrchestrator.js').ITargetResolutionTracingOrchestrator} ITargetResolutionTracingOrchestrator */
 /** @typedef {import('../services/interfaces/ITargetResolutionResultBuilder.js').default} ITargetResolutionResultBuilder */
+/** @typedef {import('../services/interfaces/ITargetResolutionCoordinator.js').default} ITargetResolutionCoordinator */
 
 import { PipelineStage } from '../PipelineStage.js';
 import { PipelineResult } from '../PipelineResult.js';
@@ -44,9 +45,7 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
  * Refactored from 748-line class to lightweight orchestrator
  */
 export class MultiTargetResolutionStage extends PipelineStage {
-  #dependencyResolver;
   #legacyLayer;
-  #contextBuilder;
   #nameResolver;
   #unifiedScopeResolver;
   #entityManager;
@@ -54,43 +53,38 @@ export class MultiTargetResolutionStage extends PipelineStage {
   #logger;
   #tracingOrchestrator;
   #resultBuilder;
+  #resolutionCoordinator;
 
   /**
    * @param {object} deps - Service dependencies
-   * @param {ITargetDependencyResolver} deps.targetDependencyResolver
-   * @param {ILegacyTargetCompatibilityLayer} deps.legacyTargetCompatibilityLayer
-   * @param {IScopeContextBuilder} deps.scopeContextBuilder
-   * @param {ITargetDisplayNameResolver} deps.targetDisplayNameResolver
-   * @param {UnifiedScopeResolver} deps.unifiedScopeResolver
-   * @param {IEntityManager} deps.entityManager
-   * @param {ITargetResolutionService} deps.targetResolver
-   * @param {TargetContextBuilder} deps.targetContextBuilder
-   * @param {ILogger} deps.logger
-   * @param {ITargetResolutionTracingOrchestrator} deps.tracingOrchestrator
-   * @param {ITargetResolutionResultBuilder} deps.targetResolutionResultBuilder
+   * @param {ILegacyTargetCompatibilityLayer} deps.legacyTargetCompatibilityLayer - Legacy action compatibility
+   * @param {ITargetDisplayNameResolver} deps.targetDisplayNameResolver - Entity display name resolution
+   * @param {UnifiedScopeResolver} deps.unifiedScopeResolver - Scope resolution (legacy path)
+   * @param {IEntityManager} deps.entityManager - Entity instance management
+   * @param {ITargetResolutionService} deps.targetResolver - Target resolution (legacy path)
+   * @param {ILogger} deps.logger - Logging service
+   * @param {ITargetResolutionTracingOrchestrator} deps.tracingOrchestrator - Tracing orchestration
+   * @param {ITargetResolutionResultBuilder} deps.targetResolutionResultBuilder - Result builder
+   * @param {ITargetResolutionCoordinator} deps.targetResolutionCoordinator - Multi-target coordination
    */
   constructor({
-    targetDependencyResolver,
     legacyTargetCompatibilityLayer,
-    scopeContextBuilder,
     targetDisplayNameResolver,
     unifiedScopeResolver,
     entityManager,
     targetResolver,
-    targetContextBuilder,
     logger,
     tracingOrchestrator,
     targetResolutionResultBuilder,
+    targetResolutionCoordinator,
   }) {
     super('MultiTargetResolution');
 
     // Validate all service dependencies
-    validateDependency(targetDependencyResolver, 'ITargetDependencyResolver');
     validateDependency(
       legacyTargetCompatibilityLayer,
       'ILegacyTargetCompatibilityLayer'
     );
-    validateDependency(scopeContextBuilder, 'IScopeContextBuilder');
     validateDependency(targetDisplayNameResolver, 'ITargetDisplayNameResolver');
     validateDependency(unifiedScopeResolver, 'IUnifiedScopeResolver');
     validateDependency(entityManager, 'IEntityManager');
@@ -117,9 +111,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
     );
 
     // Store service references
-    this.#dependencyResolver = targetDependencyResolver;
     this.#legacyLayer = legacyTargetCompatibilityLayer;
-    this.#contextBuilder = scopeContextBuilder;
     this.#nameResolver = targetDisplayNameResolver;
     this.#unifiedScopeResolver = unifiedScopeResolver;
     this.#entityManager = entityManager;
@@ -139,7 +131,16 @@ export class MultiTargetResolutionStage extends PipelineStage {
         ],
       }
     );
+    validateDependency(
+      targetResolutionCoordinator,
+      'ITargetResolutionCoordinator',
+      logger,
+      {
+        requiredMethods: ['coordinateResolution'],
+      }
+    );
     this.#resultBuilder = targetResolutionResultBuilder;
+    this.#resolutionCoordinator = targetResolutionCoordinator;
   }
 
   /**
@@ -300,9 +301,9 @@ export class MultiTargetResolutionStage extends PipelineStage {
             }
           }
         } else {
-          // Resolve multi-target action
+          // Resolve multi-target action using coordinator
           hasMultiTargetActions = true;
-          const result = await this.#resolveMultiTargets(
+          const result = await this.#resolutionCoordinator.coordinateResolution(
             actionProcessContext,
             trace
           );
@@ -602,466 +603,6 @@ export class MultiTargetResolutionStage extends PipelineStage {
       actionDef
     );
   }
-
-  /**
-   * Resolve multi-target action
-   *
-   * @param context
-   * @param trace
-   * @private
-   */
-  async #resolveMultiTargets(context, trace) {
-    const { actionDef, actor, actionContext } = context;
-    const targetDefs = actionDef.targets;
-    const resolutionStartTime = Date.now();
-
-    this.#logger.debug(`\n### #resolveMultiTargets for action: ${actionDef.id} ###`);
-    this.#logger.debug('targetDefs:', JSON.stringify(targetDefs, null, 2));
-
-    // Validate targets object
-    if (!targetDefs || typeof targetDefs !== 'object') {
-      return PipelineResult.failure(
-        {
-          error: 'Invalid targets configuration',
-          phase: 'target_resolution',
-          actionId: actionDef.id,
-          stage: 'MultiTargetResolutionStage',
-        },
-        { ...context.data, error: 'Invalid targets configuration' }
-      );
-    }
-
-    // Get resolution order based on dependencies
-    let resolutionOrder;
-    try {
-      resolutionOrder = this.#dependencyResolver.getResolutionOrder(targetDefs);
-    } catch (error) {
-      return PipelineResult.failure(
-        {
-          error: error?.message || 'Unknown error getting resolution order',
-          phase: 'target_resolution',
-          actionId: actionDef.id,
-          stage: 'MultiTargetResolutionStage',
-        },
-        {
-          ...context.data,
-          error: error?.message || 'Unknown error getting resolution order',
-        }
-      );
-    }
-
-    trace?.info(
-      `Target resolution order: ${resolutionOrder.join(', ')}`,
-      'MultiTargetResolutionStage'
-    );
-
-    // Check if trace supports multi-target capture
-    const isActionAwareTrace =
-      this.#tracingOrchestrator.isActionAwareTrace(trace);
-
-    // Resolve targets sequentially
-    const resolvedTargets = {};
-    const resolvedCounts = {};
-    const allTargetContexts = []; // For backward compatibility
-
-    // Track detailed resolution information for enhanced tracing
-    const detailedResolutionResults = {};
-
-    for (const targetKey of resolutionOrder) {
-      const targetDef = targetDefs[targetKey];
-      const scopeStartTime = Date.now();
-
-      this.#logger.debug(`\n  >> Resolving target key: ${targetKey}`);
-      this.#logger.debug('  >> Target def:', JSON.stringify(targetDef, null, 2));
-
-      trace?.step(
-        `Resolving ${targetKey} target`,
-        'MultiTargetResolutionStage'
-      );
-
-      // Check if this target depends on another target's context
-      if (targetDef.contextFrom && resolvedTargets[targetDef.contextFrom]) {
-        // Resolve this target for each instance of the contextFrom target
-        const primaryTargets = resolvedTargets[targetDef.contextFrom];
-        const resolvedSecondaryTargets = [];
-
-        // Initialize detailed results for this target
-        detailedResolutionResults[targetKey] = {
-          scopeId: targetDef.scope,
-          contextFrom: targetDef.contextFrom,
-          primaryTargetCount: primaryTargets.length,
-          candidatesFound: 0,
-          candidatesResolved: 0,
-          contextEntityIds: primaryTargets.map((t) => t.id),
-          failureReason: null,
-          evaluationTimeMs: 0,
-        };
-
-        trace?.info(
-          `Resolving ${targetKey} for each ${targetDef.contextFrom} target (${primaryTargets.length} instances)`,
-          'MultiTargetResolutionStage'
-        );
-
-        for (const primaryTarget of primaryTargets) {
-          // Build context specific to this primary target
-          const specificContext =
-            this.#contextBuilder.buildScopeContextForSpecificPrimary(
-              actor,
-              actionContext,
-              resolvedTargets,
-              primaryTarget,
-              targetDef,
-              trace
-            );
-
-          // Resolve scope for this specific primary
-          const candidates = await this.#resolveScope(
-            targetDef.scope,
-            specificContext,
-            actor,
-            trace
-          );
-
-          detailedResolutionResults[targetKey].candidatesFound +=
-            candidates.length;
-
-          // Store resolved targets with reference to their primary
-          candidates.forEach((entityId) => {
-            const entity = this.#entityManager.getEntityInstance(entityId);
-            if (!entity) return; // Skip missing entities
-
-            const displayName =
-              this.#nameResolver.getEntityDisplayName(entityId);
-
-            resolvedSecondaryTargets.push({
-              id: entityId,
-              displayName,
-              entity,
-              contextFromId: primaryTarget.id, // Track which primary this belongs to
-            });
-          });
-        }
-
-        detailedResolutionResults[targetKey].candidatesResolved =
-          resolvedSecondaryTargets.length;
-        detailedResolutionResults[targetKey].evaluationTimeMs =
-          Date.now() - scopeStartTime;
-
-        // Capture scope evaluation BEFORE early return (for 0-result debugging)
-        if (isActionAwareTrace) {
-          this.#tracingOrchestrator.captureScopeEvaluation(
-            trace,
-            actionDef.id,
-            targetKey,
-            {
-              scope: targetDef.scope,
-              context: targetDef.contextFrom,
-              resultCount: resolvedSecondaryTargets.length,
-              evaluationTimeMs: Date.now() - scopeStartTime,
-              cacheHit: false, // We don't have cache info for contextFrom targets yet
-            }
-          );
-        }
-
-        // Check if we found no candidates for any primary
-        if (resolvedSecondaryTargets.length === 0) {
-          detailedResolutionResults[targetKey].failureReason =
-            `No candidates found for target '${targetKey}' across ${primaryTargets.length} primary target(s)`;
-
-          trace?.failure(
-            `No candidates found for target '${targetKey}'`,
-            'MultiTargetResolutionStage'
-          );
-          return PipelineResult.success({
-            data: {
-              ...context.data,
-              actionsWithTargets: [],
-              detailedResolutionResults, // Include detailed results even on failure
-            },
-            continueProcessing: false,
-          });
-        }
-
-        resolvedTargets[targetKey] = resolvedSecondaryTargets;
-        resolvedCounts[targetKey] = resolvedSecondaryTargets.length;
-
-        // Add to flat list for backward compatibility
-        resolvedSecondaryTargets.forEach((target) => {
-          allTargetContexts.push({
-            type: 'entity',
-            entityId: target.id,
-            displayName: target.displayName,
-            placeholder: targetDef.placeholder,
-          });
-        });
-
-        trace?.success(
-          `Resolved ${resolvedSecondaryTargets.length} total candidates for ${targetKey} across all ${primaryTargets.length} ${targetDef.contextFrom} targets`,
-          'MultiTargetResolutionStage'
-        );
-      } else {
-        // Original logic for targets without contextFrom
-        // Initialize detailed results for this target
-        detailedResolutionResults[targetKey] = {
-          scopeId: targetDef.scope,
-          contextFrom: null,
-          candidatesFound: 0,
-          candidatesResolved: 0,
-          failureReason: null,
-          evaluationTimeMs: 0,
-        };
-
-        // Build scope context
-        const scopeContext = this.#contextBuilder.buildScopeContext(
-          actor,
-          actionContext,
-          resolvedTargets,
-          targetDef,
-          trace
-        );
-
-        // Resolve scope
-        const candidates = await this.#resolveScope(
-          targetDef.scope,
-          scopeContext,
-          actor,
-          trace
-        );
-
-        this.#logger.debug(
-          `  >> Scope '${targetDef.scope}' resolved to ${candidates.length} candidates`
-        );
-        this.#logger.debug('  >> Candidate IDs:', candidates);
-
-        detailedResolutionResults[targetKey].candidatesFound =
-          candidates.length;
-        detailedResolutionResults[targetKey].evaluationTimeMs =
-          Date.now() - scopeStartTime;
-
-        // Capture scope evaluation BEFORE early return (for 0-result debugging)
-        if (isActionAwareTrace) {
-          this.#tracingOrchestrator.captureScopeEvaluation(
-            trace,
-            actionDef.id,
-            targetKey,
-            {
-              scope: targetDef.scope,
-              context: 'actor', // Default context when no contextFrom
-              resultCount: candidates.length,
-              evaluationTimeMs: Date.now() - scopeStartTime,
-              cacheHit: false, // We'll need to get this from UnifiedScopeResolver
-            }
-          );
-        }
-
-        // Check if we found no candidates
-        if (candidates.length === 0) {
-          this.#logger.debug(`  ❌ NO CANDIDATES FOUND for target '${targetKey}'`);
-          this.#logger.debug(`  ❌ Scope: ${targetDef.scope}`);
-          this.#logger.debug(`  ❌ Action will be filtered out: ${actionDef.id}`);
-
-          detailedResolutionResults[targetKey].failureReason =
-            `No candidates found for scope '${targetDef.scope}' with actor context`;
-
-          trace?.failure(
-            `No candidates found for target '${targetKey}'`,
-            'MultiTargetResolutionStage'
-          );
-          return PipelineResult.success({
-            data: {
-              ...context.data,
-              actionsWithTargets: [],
-              detailedResolutionResults, // Include detailed results even on failure
-            },
-            continueProcessing: false,
-          });
-        }
-
-        // Store resolved targets
-        resolvedTargets[targetKey] = candidates
-          .map((entityId) => {
-            const entity = this.#entityManager.getEntityInstance(entityId);
-            if (!entity) {
-              return null; // Filter out missing entities
-            }
-
-            const displayName =
-              this.#nameResolver.getEntityDisplayName(entityId);
-
-            return {
-              id: entityId,
-              displayName,
-              entity,
-            };
-          })
-          .filter(Boolean); // Remove null entries
-
-        resolvedCounts[targetKey] = resolvedTargets[targetKey].length;
-
-        detailedResolutionResults[targetKey].candidatesResolved =
-          resolvedTargets[targetKey].length;
-
-        // Add to flat list for backward compatibility
-        resolvedTargets[targetKey].forEach((target) => {
-          allTargetContexts.push({
-            type: 'entity',
-            entityId: target.id,
-            displayName: target.displayName,
-            placeholder: targetDef.placeholder,
-          });
-        });
-
-        trace?.success(
-          `Resolved ${candidates.length} candidates for ${targetKey}`,
-          'MultiTargetResolutionStage'
-        );
-      }
-    }
-
-    // Update final resolution time if using multi-target tracing
-    if (isActionAwareTrace) {
-      this.#tracingOrchestrator.captureMultiTargetResolution(
-        trace,
-        actionDef.id,
-        {
-          targetKeys: Object.keys(targetDefs),
-          resolvedCounts,
-          totalTargets: Object.values(resolvedCounts).reduce(
-            (sum, count) => sum + count,
-            0
-          ),
-          resolutionOrder,
-          hasContextDependencies: resolutionOrder.some(
-            (key) => targetDefs[key].contextFrom
-          ),
-          resolutionTimeMs: Date.now() - resolutionStartTime,
-        }
-      );
-    }
-
-    // Check if we have at least one valid target
-    const hasTargets = Object.values(resolvedTargets).some(
-      (targets) => targets.length > 0
-    );
-
-    if (!hasTargets) {
-      return PipelineResult.success({
-        data: {
-          ...context.data,
-          actionsWithTargets: [],
-          detailedResolutionResults, // Include detailed results even when no targets found
-        },
-        continueProcessing: false,
-      });
-    }
-
-    return this.#resultBuilder.buildMultiTargetResult(
-      context,
-      resolvedTargets,
-      allTargetContexts,
-      targetDefs,
-      actionDef,
-      detailedResolutionResults
-    );
-  }
-
-  /**
-   * Resolve a scope expression to entity IDs
-   *
-   * @param scope
-   * @param context
-   * @param actor
-   * @param trace
-   * @private
-   */
-  async #resolveScope(scope, context, actor, trace) {
-    try {
-      trace?.step(`Evaluating scope '${scope}'`, 'MultiTargetResolutionStage');
-
-      // Create resolution context for UnifiedScopeResolver
-      // Preserve the context.actor format from TargetContextBuilder
-      const resolutionContext = {
-        ...context, // Include all fields from the scope context
-        // Don't override context.actor - it's already in the correct format from TargetContextBuilder
-        actorLocation:
-          context.location ||
-          context.actionContext?.currentLocation ||
-          context.actionContext?.location,
-        actionContext: {
-          ...context,
-          location: context.location,
-        },
-        trace,
-      };
-
-      // Resolve scope using UnifiedScopeResolver
-
-      const result = await this.#unifiedScopeResolver.resolve(
-        scope,
-        resolutionContext,
-        {
-          useCache: true,
-        }
-      );
-
-      if (!result.success) {
-        const errorDetails = result.errors || result.error || 'Unknown error';
-        const errorMessage =
-          Array.isArray(errorDetails) && errorDetails.length > 0
-            ? errorDetails[0]?.message || errorDetails[0] || 'Unknown error'
-            : typeof errorDetails === 'string'
-              ? errorDetails
-              : 'Unknown error';
-
-        this.#logger.error(`Failed to resolve scope '${scope}':`, errorDetails);
-
-        // Throw error to be caught by calling method
-        const error = new Error(errorMessage);
-        error.name = 'ScopeResolutionError';
-        error.scopeName = scope;
-        error.originalErrors = errorDetails;
-        throw error;
-      }
-
-      // Convert Set to array of entity IDs, normalizing inventory references
-      const entityIds = Array.from(result.value);
-
-      const normalizedIds = entityIds
-        .map((entry) => {
-          if (typeof entry === 'string') {
-            return entry;
-          }
-
-          if (entry && typeof entry === 'object') {
-            if (typeof entry.id === 'string' && entry.id.trim()) {
-              return entry.id.trim();
-            }
-
-            if (typeof entry.itemId === 'string' && entry.itemId.trim()) {
-              return entry.itemId.trim();
-            }
-          }
-
-          return null;
-        })
-        .filter((id) => typeof id === 'string' && id.length > 0);
-
-      trace?.info(
-        `Scope resolved to ${normalizedIds.length} entities`,
-        'MultiTargetResolutionStage'
-      );
-
-      return normalizedIds;
-    } catch (error) {
-      this.#logger.error(`Error evaluating scope '${scope}':`, error);
-      trace?.failure(
-        `Scope evaluation failed: ${error?.message || 'Unknown error'}`,
-        'MultiTargetResolutionStage'
-      );
-      return [];
-    }
-  }
-
 }
 
 export default MultiTargetResolutionStage;

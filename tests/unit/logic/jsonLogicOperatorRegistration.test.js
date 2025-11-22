@@ -85,7 +85,7 @@ describe('JSON Logic Operator Registration', () => {
       expect(operatorNames.length).toBeGreaterThan(3);
     });
 
-    it('should register exactly 12 custom operators', () => {
+    it('should register exactly 16 custom operators', () => {
       customOperators = new JsonLogicCustomOperators({
         logger,
         bodyGraphService,
@@ -102,7 +102,7 @@ describe('JSON Logic Operator Registration', () => {
       const registered = customOperators.getRegisteredOperators();
 
       // Verify count matches known operators
-      expect(registered.size).toBe(13);
+      expect(registered.size).toBe(16);
     });
 
     it('should register expected operator names', () => {
@@ -134,6 +134,9 @@ describe('JSON Logic Operator Registration', () => {
         'hasOtherActorsAtLocation',
         'isRemovalBlocked',
         'has_component',
+        'is_hungry',
+        'predicted_energy',
+        'can_consume',
       ];
 
       for (const op of expectedOperators) {

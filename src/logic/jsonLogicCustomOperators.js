@@ -14,6 +14,9 @@ import { IsClosestRightOccupantOperator } from './operators/isClosestRightOccupa
 import { HasOtherActorsAtLocationOperator } from './operators/hasOtherActorsAtLocationOperator.js';
 import { IsRemovalBlockedOperator } from './operators/isRemovalBlockedOperator.js';
 import { HasComponentOperator } from './operators/hasComponentOperator.js';
+import { IsHungryOperator } from './operators/isHungryOperator.js';
+import { PredictedEnergyOperator } from './operators/predictedEnergyOperator.js';
+import { CanConsumeOperator } from './operators/canConsumeOperator.js';
 import { validateOperatorWhitelist } from './operatorRegistrationValidator.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -161,6 +164,21 @@ export class JsonLogicCustomOperators extends BaseService {
     });
 
     const hasComponentOp = new HasComponentOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
+    const isHungryOp = new IsHungryOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
+    const predictedEnergyOp = new PredictedEnergyOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
+    const canConsumeOp = new CanConsumeOperator({
       entityManager: this.#entityManager,
       logger: this.#logger,
     });
@@ -315,6 +333,36 @@ export class JsonLogicCustomOperators extends BaseService {
       function (entityPath, componentId) {
         // 'this' is the evaluation context
         return hasComponentOp.evaluate([entityPath, componentId], this);
+      },
+      jsonLogicEvaluationService
+    );
+
+    // Register is_hungry operator
+    this.#registerOperator(
+      'is_hungry',
+      function (entityPath) {
+        // 'this' is the evaluation context
+        return isHungryOp.evaluate([entityPath], this);
+      },
+      jsonLogicEvaluationService
+    );
+
+    // Register predicted_energy operator
+    this.#registerOperator(
+      'predicted_energy',
+      function (entityPath) {
+        // 'this' is the evaluation context
+        return predictedEnergyOp.evaluate([entityPath], this);
+      },
+      jsonLogicEvaluationService
+    );
+
+    // Register can_consume operator
+    this.#registerOperator(
+      'can_consume',
+      function (consumerPath, itemPath) {
+        // 'this' is the evaluation context
+        return canConsumeOp.evaluate([consumerPath, itemPath], this);
       },
       jsonLogicEvaluationService
     );

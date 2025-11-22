@@ -46,7 +46,11 @@
       "consumable_items.scope"
     ],
     "entities": {
-      "definitions": [],
+      "definitions": [
+        "bread.entity.json",
+        "water.entity.json",
+        "steak.entity.json"
+      ],
       "instances": []
     },
     "lookups": []

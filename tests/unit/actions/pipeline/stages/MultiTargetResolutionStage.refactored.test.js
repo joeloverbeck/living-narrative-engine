@@ -65,21 +65,147 @@ describe('MultiTargetResolutionStage - Refactored with Services', () => {
       logger: mockLogger,
     });
 
-    // Create stage with mocked services
+    const tracingOrchestrator = new TargetResolutionTracingOrchestrator({
+      logger: mockLogger,
+    });
+
+    // Create mock coordinator that delegates to the old services
+    const mockCoordinator = {
+      coordinateResolution: jest.fn(async (context, trace) => {
+        // Simulate coordination logic by delegating to old mocks
+        const { actionDef, actor, actionContext } = context;
+        
+        // Handle errors in getting resolution order
+        let resolutionOrder;
+        try {
+          resolutionOrder = mockDependencyResolver.getResolutionOrder(actionDef.targets);
+        } catch (error) {
+          return { success: true, data: { ...context.data, actionsWithTargets: [], error: error?.message }, continueProcessing: false };
+        }
+        
+        const resolvedTargets = {};
+        const targetContexts = [];
+        const detailedResolutionResults = {};
+
+        for (const targetKey of resolutionOrder) {
+          const targetDef = actionDef.targets[targetKey];
+          const scopeContext = targetDef.contextFrom
+            ? mockContextBuilder.buildScopeContextForSpecificPrimary(
+                actor,
+                actionContext,
+                resolvedTargets,
+                resolvedTargets[targetDef.contextFrom]?.[0],
+                targetDef,
+                trace
+              )
+            : mockContextBuilder.buildScopeContext(
+                actor,
+                actionContext,
+                resolvedTargets,
+                targetDef,
+                trace
+              );
+
+          const result = await mockUnifiedScopeResolver.resolve(
+            targetDef.scope,
+            scopeContext
+          );
+          
+          // Log errors if scope resolution fails
+          if (!result.success) {
+            const errorDetails = result.errors || result.error || 'Unknown error';
+            mockLogger.error(`Failed to resolve scope '${targetDef.scope}':`, errorDetails);
+          }
+
+          if (result.success && result.value) {
+            const candidates = Array.from(result.value).map(entry => {
+              // Normalize entity ID (handle strings and objects with id/itemId)
+              let id;
+              if (typeof entry === 'string') {
+                id = entry;
+              } else if (entry && typeof entry === 'object') {
+                if (typeof entry.id === 'string' && entry.id.trim()) {
+                  id = entry.id.trim();
+                } else if (typeof entry.itemId === 'string' && entry.itemId.trim()) {
+                  id = entry.itemId.trim();
+                } else {
+                  return null;
+                }
+              } else {
+                return null;
+              }
+              const entity = mockEntityManager.getEntityInstance(id);
+              if (!entity) {
+                return null;
+              }
+              const displayName = mockNameResolver.getEntityDisplayName(id);
+              const target = {
+                id,
+                displayName,
+                entity,
+              };
+              if (targetDef.contextFrom) {
+                target.contextFromId = resolvedTargets[targetDef.contextFrom]?.[0]?.id;
+              }
+              return target;
+            }).filter(Boolean);
+            
+            resolvedTargets[targetKey] = candidates;
+            candidates.forEach(target => {
+              targetContexts.push({
+                type: 'entity',
+                entityId: target.id,
+                displayName: target.displayName,
+                placeholder: targetDef.placeholder
+              });
+            });
+          }
+          detailedResolutionResults[targetKey] = {
+            scopeId: targetDef.scope,
+            contextFrom: targetDef.contextFrom || null,
+            candidatesFound: result?.value?.size || 0,
+            candidatesResolved: resolvedTargets[targetKey]?.length || 0,
+            failureReason: null,
+            evaluationTimeMs: 0
+          };
+          
+          // Check for dependent targets with no candidates
+          if (targetDef.contextFrom && resolvedTargets[targetKey]?.length === 0) {
+            detailedResolutionResults[targetKey].failureReason = `No candidates found for target '${targetKey}'`;
+            return { success: true, data: { ...context.data, actionsWithTargets: [], detailedResolutionResults }, continueProcessing: false };
+          }
+        }
+
+        // Check if we have any valid targets
+        const hasTargets = Object.values(resolvedTargets).some(targets => targets.length > 0);
+        
+        if (!hasTargets) {
+          return { success: true, data: { ...context.data, actionsWithTargets: [], detailedResolutionResults }, continueProcessing: false };
+        }
+
+        // Return result matching expected format (6 parameters)
+        return targetResolutionResultBuilder.buildMultiTargetResult(
+          context,
+          resolvedTargets,
+          targetContexts,
+          actionDef.targets,
+          actionDef,
+          detailedResolutionResults
+        );
+      })
+    };
+
+    // Create stage with mocked services matching current constructor signature
     stage = new MultiTargetResolutionStage({
-      targetDependencyResolver: mockDependencyResolver,
       legacyTargetCompatibilityLayer: mockLegacyLayer,
-      scopeContextBuilder: mockContextBuilder,
       targetDisplayNameResolver: mockNameResolver,
       unifiedScopeResolver: mockUnifiedScopeResolver,
       entityManager: mockEntityManager,
       targetResolver: mockTargetResolver,
-      targetContextBuilder: {}, // Not used directly in refactored version
       logger: mockLogger,
-      tracingOrchestrator: new TargetResolutionTracingOrchestrator({
-        logger: mockLogger,
-      }),
+      tracingOrchestrator,
       targetResolutionResultBuilder,
+      targetResolutionCoordinator: mockCoordinator,
     });
   });
 

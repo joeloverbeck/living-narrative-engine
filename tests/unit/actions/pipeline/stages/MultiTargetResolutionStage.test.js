@@ -96,6 +96,141 @@ describe('MultiTargetResolutionStage', () => {
       entityManager: mockDeps.entityManager,
       logger: mockDeps.logger,
     });
+    mockDeps.targetResolutionCoordinator = {
+      coordinateResolution: jest.fn().mockImplementation(async (context) => {
+        try {
+          // Default implementation: resolve targets using UnifiedScopeResolver and build result
+          const actionDef = context.actionDef;
+          const actor = context.actor;
+
+          if (!actionDef.targets || typeof actionDef.targets !== 'object') {
+            return PipelineResult.failure(
+              {
+                error: 'Invalid targets configuration',
+                phase: 'target_resolution',
+                actionId: actionDef.id,
+                stage: 'MultiTargetResolutionStage',
+              },
+              { ...context.data, error: 'Invalid targets configuration' }
+            );
+          }
+
+          const resolvedTargets = {};
+          const targetDefinitions = actionDef.targets;
+          const targetContexts = [];
+
+          // Get resolution order from dependency resolver
+          let resolutionOrder;
+          try {
+            resolutionOrder = mockDeps.targetDependencyResolver.getResolutionOrder(targetDefinitions);
+          } catch (error) {
+            // Fallback: if mock returns error or nothing, use simple order based on keys
+            resolutionOrder = Object.keys(targetDefinitions);
+          }
+
+          // If resolution order is empty, use keys from targetDefinitions
+          if (!resolutionOrder || resolutionOrder.length === 0) {
+            resolutionOrder = Object.keys(targetDefinitions);
+          }
+
+          // Resolve targets in dependency order
+          for (const targetKey of resolutionOrder) {
+            const targetDef = targetDefinitions[targetKey];
+
+            try {
+              const scopeResult = await mockDeps.unifiedScopeResolver.resolve(
+                targetDef.scope,
+                { actor, location: context.actionContext?.location }
+              );
+
+              if (scopeResult.success) {
+                const entityIds = Array.from(scopeResult.value);
+
+                // Determine contextFromId for dependent targets
+                let contextFromId = null;
+                if (targetDef.contextFrom && resolvedTargets[targetDef.contextFrom]) {
+                  const contextTargets = resolvedTargets[targetDef.contextFrom];
+                  if (contextTargets.length > 0) {
+                    contextFromId = contextTargets[0].id;
+                  }
+                }
+
+                resolvedTargets[targetKey] = entityIds
+                  .map((id) => {
+                    const entity = mockDeps.entityManager.getEntityInstance(id);
+                    // Filter out missing entities
+                    if (!entity) return null;
+
+                    const displayName = mockDeps.targetDisplayNameResolver.getEntityDisplayName(id);
+                    targetContexts.push({
+                      type: 'entity', // Fixed: use 'entity' instead of targetKey
+                      entityId: id,
+                      displayName,
+                      placeholder: targetDef.placeholder,
+                    });
+
+                    const targetObj = {
+                      id,
+                      displayName,
+                      entity,
+                    };
+
+                    // Add contextFromId for dependent targets
+                    if (contextFromId) {
+                      targetObj.contextFromId = contextFromId;
+                    }
+
+                    return targetObj;
+                  })
+                  .filter(t => t !== null); // Remove null entries from missing entities
+              } else {
+                // Log scope resolution failures
+                const errorInfo = scopeResult.errors?.[0] || { error: 'Unknown scope resolution error' };
+                mockDeps.logger.error(`Scope resolution failed for target ${targetKey}:`, errorInfo);
+                resolvedTargets[targetKey] = [];
+              }
+            } catch (error) {
+              // Log scope evaluation errors
+              mockDeps.logger.error(`Scope evaluation error for target ${targetKey}:`, error);
+              resolvedTargets[targetKey] = [];
+            }
+          }
+
+          // Exclusion logic: filter out actions where any non-optional target has no candidates
+          const hasEmptyRequiredTarget = Object.entries(targetDefinitions).some(
+            ([key, def]) => {
+              const isOptional = def.optional === true;
+              const hasNoCandidates = !resolvedTargets[key] || resolvedTargets[key].length === 0;
+              return !isOptional && hasNoCandidates;
+            }
+          );
+
+          if (hasEmptyRequiredTarget) {
+            // Return success but with empty actionsWithTargets array
+            return mockDeps.targetResolutionResultBuilder.buildFinalResult(
+              context,
+              [], // empty actionsWithTargets
+              [],
+              null,
+              null,
+              []
+            );
+          }
+
+          const result = mockDeps.targetResolutionResultBuilder.buildMultiTargetResult(
+            context,
+            resolvedTargets,
+            targetContexts,
+            targetDefinitions,
+            actionDef,
+            undefined
+          );
+          return result;
+        } catch (err) {
+          throw err;
+        }
+      }),
+    };
 
     // Setup default mock behaviors
     mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
@@ -149,17 +284,15 @@ describe('MultiTargetResolutionStage', () => {
 
     // Create stage instance
     stage = new MultiTargetResolutionStage({
-      targetDependencyResolver: mockDeps.targetDependencyResolver,
       legacyTargetCompatibilityLayer: mockDeps.legacyTargetCompatibilityLayer,
-      scopeContextBuilder: mockDeps.scopeContextBuilder,
       targetDisplayNameResolver: mockDeps.targetDisplayNameResolver,
       unifiedScopeResolver: mockDeps.unifiedScopeResolver,
       entityManager: mockDeps.entityManager,
       targetResolver: mockDeps.targetResolver,
-      targetContextBuilder: mockDeps.targetContextBuilder,
       logger: mockDeps.logger,
       tracingOrchestrator: mockDeps.tracingOrchestrator,
       targetResolutionResultBuilder: mockDeps.targetResolutionResultBuilder,
+      targetResolutionCoordinator: mockDeps.targetResolutionCoordinator,
     });
 
     // Create mock context
