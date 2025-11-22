@@ -41,8 +41,51 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
  */
 
 /**
- * Pipeline stage that orchestrates target resolution using specialized services
- * Refactored from 748-line class to lightweight orchestrator
+ * @class MultiTargetResolutionStage
+ * @augments PipelineStage
+ * Pipeline stage responsible for resolving targets for candidate actions.
+ *
+ * This stage acts as a pure orchestrator, delegating all concerns to specialized services:
+ * - **TargetResolutionTracingOrchestrator**: Handles all tracing instrumentation
+ * - **TargetResolutionResultBuilder**: Handles result assembly and backward compatibility
+ * - **TargetResolutionCoordinator**: Handles target resolution coordination and dependencies
+ *
+ * ## Architecture
+ *
+ * The stage follows a service-oriented design with clear separation of concerns:
+ * 1. **Legacy Detection** - Identifies legacy single-target vs. multi-target actions
+ * 2. **Target Resolution** - Coordinates dependency-aware resolution via coordinator
+ * 3. **Tracing** - Captures telemetry via tracing orchestrator
+ * 4. **Result Building** - Assembles consistent results via result builder
+ *
+ * ## Refactoring History
+ *
+ * - **Before**: ~1,085 lines with mixed concerns
+ * - **After**: 556 lines focused on orchestration (~49% reduction)
+ * - **Extracted**: 3 specialized services (~530 lines total)
+ *
+ * @example
+ * // Stage is injected with all required services via DI
+ * const stage = new MultiTargetResolutionStage({
+ *   legacyTargetCompatibilityLayer,
+ *   targetDisplayNameResolver,
+ *   unifiedScopeResolver,
+ *   entityManager,
+ *   targetResolver,
+ *   logger,
+ *   tracingOrchestrator,
+ *   targetResolutionResultBuilder,
+ *   targetResolutionCoordinator
+ * });
+ *
+ * // Execute returns pipeline result with resolved targets
+ * const result = await stage.execute(context);
+ * // result.data.candidateActions - actions with resolvedTargets
+ * // result.data.targetContexts - backward compatibility
+ *
+ * @see TargetResolutionTracingOrchestrator for tracing implementation
+ * @see TargetResolutionResultBuilder for result assembly
+ * @see TargetResolutionCoordinator for resolution coordination
  */
 export class MultiTargetResolutionStage extends PipelineStage {
   #legacyLayer;

@@ -611,6 +611,50 @@ The project includes several character creation tools accessible from the main i
 - **Character Concepts Manager**: Manage character concepts
 - **Anatomy Visualizer**: Visual character anatomy system
 
+### Target Resolution Service Pattern
+
+When working with the action discovery pipeline's target resolution stage:
+
+**Architecture:**
+The `MultiTargetResolutionStage` follows a service-oriented design with three specialized services:
+
+- `TargetResolutionTracingOrchestrator` - All tracing and telemetry concerns
+- `TargetResolutionResultBuilder` - Result assembly and backward compatibility
+- `TargetResolutionCoordinator` - Multi-target resolution with dependency handling
+
+**Key Principle:** Stage orchestrates, services execute. Changes to one service don't affect others.
+
+**Service Responsibilities:**
+
+| Service | Responsibility | When to Modify |
+|---------|---------------|----------------|
+| TracingOrchestrator | Capture telemetry events | Adding new trace points |
+| ResultBuilder | Assemble pipeline results | Changing result format |
+| ResolutionCoordinator | Resolve targets with dependencies | New resolution strategies |
+
+**Extension Patterns:**
+
+```javascript
+// Adding new tracing - only modify orchestrator
+tracingOrchestrator.captureNewEvent(trace, data);
+
+// Changing result format - only modify builder
+resultBuilder.buildWithNewFormat(data);
+
+// New resolution strategy - only modify coordinator
+coordinator.resolveWithNewStrategy(targets);
+```
+
+**Testing Pattern:**
+- Unit test each service independently
+- Integration test service coordination
+- Mock services when testing stage orchestration
+
+**Documentation:**
+- Architecture: `docs/architecture/target-resolution-services.md`
+- Diagrams: `docs/architecture/diagrams/multi-target-resolution-architecture.md`
+- Migration: `docs/architecture/multi-target-resolution-migration-guide.md`
+
 ### Development Process
 
 1. **Before coding**: Read this file completely
