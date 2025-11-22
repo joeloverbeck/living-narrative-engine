@@ -61,14 +61,6 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     });
     this.#configuredTimeout = timeoutConfig.getTimeoutMs();
 
-    // Validate timeout is positive finite number
-    // (TimeoutConfiguration already validates, but we keep this for backward compatibility)
-    if (!Number.isFinite(this.#configuredTimeout) || this.#configuredTimeout <= 0) {
-      throw new InvalidArgumentError(
-        `timeoutMs must be a positive finite number, got: ${this.#configuredTimeout} (type: ${typeof this.#configuredTimeout})`
-      );
-    }
-
     // Validate timer functions are callable
     if (typeof setTimeoutFn !== 'function') {
       throw new InvalidArgumentError(
