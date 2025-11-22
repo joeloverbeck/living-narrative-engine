@@ -118,9 +118,6 @@ function getOrCreateEntry(actorId) {
     });
   }
   const entry = diagnosticsByActor.get(actorId);
-  if (!entry.telemetry) {
-    entry.telemetry = createTelemetry(actorId);
-  }
   return entry;
 }
 
