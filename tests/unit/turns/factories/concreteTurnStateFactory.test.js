@@ -17,6 +17,7 @@ import { AwaitingExternalTurnEndState } from '../../../../src/turns/states/await
 import TurnDirectiveStrategyResolver, {
   DEFAULT_STRATEGY_MAP,
 } from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
+import { KnowledgeUpdateWorkflow } from '../../../../src/turns/states/workflows/knowledgeUpdateWorkflow.js';
 
 // --- Mocks ---
 const mockCommandProcessor = {
@@ -63,6 +64,28 @@ describe('ConcreteTurnStateFactory', () => {
     });
     // Clear any previous mock calls to avoid test cross-contamination.
     jest.clearAllMocks();
+  });
+
+  describe('constructor()', () => {
+    it('throws if commandProcessor is missing', () => {
+      expect(
+        () =>
+          new ConcreteTurnStateFactory({
+            commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
+          })
+      ).toThrow('ConcreteTurnStateFactory: commandProcessor is required.');
+    });
+
+    it('throws if commandOutcomeInterpreter is missing', () => {
+      expect(
+        () =>
+          new ConcreteTurnStateFactory({
+            commandProcessor: mockCommandProcessor,
+          })
+      ).toThrow(
+        'ConcreteTurnStateFactory: commandOutcomeInterpreter is required.'
+      );
+    });
   });
 
   /**
@@ -135,6 +158,29 @@ describe('ConcreteTurnStateFactory', () => {
       // Assert: Verify the state type and its handler.
       expect(state).toBeInstanceOf(AwaitingActorDecisionState);
       expect(state._handler).toBe(mockHandler);
+    });
+
+    it('creates a knowledge workflow factory when knowledgeManager is provided', () => {
+      const knowledgeManager = { updateKnowledge: jest.fn() };
+      const factoryWithKnowledge = new ConcreteTurnStateFactory({
+        commandProcessor: mockCommandProcessor,
+        commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
+        knowledgeManager,
+      });
+
+      const state = factoryWithKnowledge.createAwaitingInputState(mockHandler);
+
+      expect(state._knowledgeUpdateWorkflowFactory).toBeInstanceOf(Function);
+
+      const actor = { id: 'actor-123' };
+      const workflow = state._knowledgeUpdateWorkflowFactory(
+        state,
+        mockTurnContext,
+        actor
+      );
+
+      expect(workflow).toBeInstanceOf(KnowledgeUpdateWorkflow);
+      expect(workflow._knowledgeManager).toBe(knowledgeManager);
     });
   });
 
