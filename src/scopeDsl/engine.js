@@ -209,8 +209,6 @@ class ScopeEngine extends IScopeEngine {
         case 'registry:clothing':
           recordStat('registryClothingHits');
           break;
-        default:
-          break;
       }
 
       if (includeSources) {
