@@ -77,6 +77,18 @@ describe('entityHelpers', () => {
       expect(result).toBeNull();
       expect(gateway.getEntityInstance).toHaveBeenCalledWith('e3');
     });
+
+    it('returns empty object when componentTypeIds is malformed', () => {
+      const gateway = {
+        getEntityInstance: jest.fn(() => ({
+          id: 'malformed',
+          componentTypeIds: 'core:name',
+        })),
+      };
+
+      const result = getOrBuildComponents('malformed', null, gateway);
+      expect(result).toEqual({});
+    });
   });
 
   describe('createEvaluationContext', () => {
@@ -529,6 +541,111 @@ describe('entityHelpers', () => {
       );
 
       expect(result.entity.id).toBe('item1');
+    });
+
+    it('logs cache event handler failures through runtime logger warnings', () => {
+      const actor = { id: 'actor1', componentTypeIds: [] };
+      const gateway = {
+        getEntityInstance: jest.fn(() => null),
+        getItemComponents: jest.fn(() => null),
+      };
+      const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
+
+      const cacheEventsHandler = jest.fn(() => {
+        throw new Error('cache callback boom');
+      });
+      const logger = { warn: jest.fn() };
+      const runtimeContext = {
+        scopeEntityLookupDebug: { enabled: true, cacheEvents: cacheEventsHandler },
+        logger,
+      };
+
+      createEvaluationContext(
+        'entity-with-callback-failure',
+        actor,
+        gateway,
+        locationProvider,
+        null,
+        runtimeContext
+      );
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        'ScopeDSL cacheEvents handler failed.',
+        expect.objectContaining({
+          type: 'miss',
+          key: 'entity_entity-with-callback-failure',
+          source: 'createEvaluationContext',
+          error: expect.any(Error),
+        })
+      );
+    });
+
+    it('skips synthetic fallback warnings when the identifier is empty', () => {
+      const actor = { id: 'actor1', componentTypeIds: [] };
+      const gateway = {
+        getEntityInstance: jest.fn(() => null),
+        getItemComponents: jest.fn(() => null),
+      };
+      const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
+
+      const logger = { warn: jest.fn() };
+      const runtimeContext = {
+        scopeEntityLookupDebug: { enabled: true },
+        logger,
+      };
+
+      const result = createEvaluationContext(
+        '',
+        actor,
+        gateway,
+        locationProvider,
+        null,
+        runtimeContext
+      );
+
+      expect(result?.entity).toEqual({ id: '' });
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it('throttles repeated synthetic fallback warnings for the same id', () => {
+      const actor = { id: 'actor1', componentTypeIds: [] };
+      const gateway = {
+        getEntityInstance: jest.fn(() => null),
+        getItemComponents: jest.fn(() => null),
+      };
+      const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
+
+      const logger = { warn: jest.fn() };
+      const runtimeContext = {
+        scopeEntityLookupDebug: { enabled: true },
+        logger,
+      };
+
+      const nowSpy = jest
+        .spyOn(Date, 'now')
+        .mockReturnValueOnce(100000)
+        .mockReturnValueOnce(100100);
+
+      createEvaluationContext(
+        'throttled-id',
+        actor,
+        gateway,
+        locationProvider,
+        null,
+        runtimeContext
+      );
+
+      createEvaluationContext(
+        'throttled-id',
+        actor,
+        gateway,
+        locationProvider,
+        null,
+        runtimeContext
+      );
+
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+      nowSpy.mockRestore();
     });
 
     it('logs comprehensive debug information when trace is provided', () => {

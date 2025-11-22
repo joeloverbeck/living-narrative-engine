@@ -220,20 +220,15 @@ export function getOrBuildComponents(entityId, entity, gateway, _trace) {
   }
 
   // VALIDATION: If entity has componentTypeIds, it must be an array
-  if (hasComponentTypeIds) {
-    const componentTypeIdsValue = instance.componentTypeIds;
-    if (!Array.isArray(componentTypeIdsValue)) {
-      return {}; // Malformed: componentTypeIds exists but is not an array
-    }
+    if (hasComponentTypeIds) {
+      const componentTypeIdsValue = instance.componentTypeIds;
+      if (!Array.isArray(componentTypeIdsValue)) {
+        return {}; // Malformed: componentTypeIds exists but is not an array
+      }
 
-    // If entity also has pre-built components, return them (optimization for getters)
-    if (hasComponents) {
-      return instance.components;
+      // Build components from componentTypeIds
+      return buildComponents(entityId, instance, gateway);
     }
-
-    // Build components from componentTypeIds
-    return buildComponents(entityId, instance, gateway);
-  }
 
   // Entity has neither components nor componentTypeIds - malformed
   return {};
