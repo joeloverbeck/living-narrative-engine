@@ -186,7 +186,18 @@
         "spider_pedipalp.entity.json",
         "spider_spinneret.entity.json",
         "squid_mantle.entity.json",
-        "squid_tentacle.entity.json"
+        "squid_tentacle.entity.json",
+        "tortoise_arm.entity.json",
+        "tortoise_beak.entity.json",
+        "tortoise_carapace.entity.json",
+        "tortoise_eye.entity.json",
+        "tortoise_foot.entity.json",
+        "tortoise_hand.entity.json",
+        "tortoise_head.entity.json",
+        "tortoise_leg.entity.json",
+        "tortoise_plastron.entity.json",
+        "tortoise_tail.entity.json",
+        "tortoise_torso_with_shell.entity.json"
       ],
       "instances": []
     },
@@ -199,6 +210,7 @@
       "human_male.blueprint.json",
       "kraken.blueprint.json",
       "red_dragon.blueprint.json",
+      "tortoise_person.blueprint.json",
       "writhing_observer.blueprint.json"
     ],
     "recipes": [
@@ -210,6 +222,7 @@
       "human_male.recipe.json",
       "kraken.recipe.json",
       "red_dragon.recipe.json",
+      "tortoise_person.recipe.json",
       "writhing_observer.recipe.json"
     ],
     "anatomyFormatting": [
@@ -236,6 +249,7 @@
       "structure_centauroid.structure-template.json",
       "structure_eldritch_abomination.structure-template.json",
       "structure_octopoid.structure-template.json",
+      "structure_tortoise_biped.structure-template.json",
       "structure_winged_quadruped.structure-template.json"
     ]
   }

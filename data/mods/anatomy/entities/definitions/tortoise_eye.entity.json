@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:tortoise_eye",
+  "description": "Reptilian eye with protective nictitating membrane",
+  "components": {
+    "anatomy:part": {
+      "subType": "tortoise_eye"
+    },
+    "core:name": {
+      "text": "eye"
+    },
+    "descriptors:color_extended": {
+      "color": "amber"
+    },
+    "descriptors:shape_eye": {
+      "shape": "round"
+    }
+  }
+}

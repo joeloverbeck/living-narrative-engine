@@ -1,0 +1,31 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:tortoise_leg",
+  "description": "Sturdy reptilian leg with foot socket",
+  "components": {
+    "anatomy:part": {
+      "subType": "tortoise_leg"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "foot",
+          "allowedTypes": ["tortoise_foot"],
+          "nameTpl": "foot"
+        }
+      ]
+    },
+    "core:name": {
+      "text": "leg"
+    },
+    "descriptors:texture": {
+      "texture": "scaled"
+    },
+    "descriptors:build": {
+      "build": "stocky"
+    },
+    "descriptors:color_extended": {
+      "color": "dark-olive"
+    }
+  }
+}

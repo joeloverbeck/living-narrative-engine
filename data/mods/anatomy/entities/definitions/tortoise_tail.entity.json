@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:tortoise_tail",
+  "description": "Short, thick reptilian tail",
+  "components": {
+    "anatomy:part": {
+      "subType": "tortoise_tail"
+    },
+    "core:name": {
+      "text": "tail"
+    },
+    "descriptors:texture": {
+      "texture": "scaled"
+    },
+    "descriptors:length_category": {
+      "length": "short"
+    },
+    "descriptors:shape_general": {
+      "shape": "conical"
+    },
+    "descriptors:color_extended": {
+      "color": "dark-olive"
+    }
+  }
+}

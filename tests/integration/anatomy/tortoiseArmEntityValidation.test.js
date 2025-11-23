@@ -1,0 +1,119 @@
+import { describe, it, expect } from '@jest/globals';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+describe('Tortoise Arm Entity Validation', () => {
+  const armEntity = JSON.parse(
+    readFileSync(
+      join(process.cwd(), 'data/mods/anatomy/entities/definitions/tortoise_arm.entity.json'),
+      'utf-8'
+    )
+  );
+
+  describe('tortoise_arm entity', () => {
+    it('should have correct entity ID', () => {
+      expect(armEntity.id).toBe('anatomy:tortoise_arm');
+    });
+
+    it('should have correct description', () => {
+      expect(armEntity.description).toBe('Scaled reptilian arm with hand socket');
+    });
+
+    it('should have anatomy:part component with tortoise_arm subType', () => {
+      expect(armEntity.components['anatomy:part']).toBeDefined();
+      expect(armEntity.components['anatomy:part'].subType).toBe('tortoise_arm');
+    });
+
+    it('should have core:name component with text "arm"', () => {
+      expect(armEntity.components['core:name']).toBeDefined();
+      expect(armEntity.components['core:name'].text).toBe('arm');
+    });
+
+    it('should have descriptors:texture component with "scaled" texture', () => {
+      expect(armEntity.components['descriptors:texture']).toBeDefined();
+      expect(armEntity.components['descriptors:texture'].texture).toBe('scaled');
+    });
+
+    it('should have descriptors:color_extended component with "olive-green" color', () => {
+      expect(armEntity.components['descriptors:color_extended']).toBeDefined();
+      expect(armEntity.components['descriptors:color_extended'].color).toBe('olive-green');
+    });
+  });
+
+  describe('Socket structure', () => {
+    it('should have anatomy:sockets component', () => {
+      expect(armEntity.components['anatomy:sockets']).toBeDefined();
+      expect(armEntity.components['anatomy:sockets'].sockets).toBeDefined();
+    });
+
+    it('should have exactly 1 socket', () => {
+      expect(armEntity.components['anatomy:sockets'].sockets).toHaveLength(1);
+    });
+
+    it('should have hand socket with correct configuration', () => {
+      const handSocket = armEntity.components['anatomy:sockets'].sockets.find(
+        (s) => s.id === 'hand'
+      );
+
+      expect(handSocket).toBeDefined();
+      expect(handSocket.allowedTypes).toEqual(['tortoise_hand']);
+      expect(handSocket.nameTpl).toBe('hand');
+    });
+
+    it('should have socket ID exactly "hand" (generic, not left/right)', () => {
+      const socket = armEntity.components['anatomy:sockets'].sockets[0];
+      expect(socket.id).toBe('hand');
+    });
+
+    it('should have allowedTypes exactly matching tortoise_hand', () => {
+      const socket = armEntity.components['anatomy:sockets'].sockets[0];
+      expect(socket.allowedTypes).toEqual(['tortoise_hand']);
+      expect(socket.allowedTypes).toHaveLength(1);
+    });
+  });
+
+  describe('Component structure', () => {
+    it('should have exactly 5 components', () => {
+      const componentKeys = Object.keys(armEntity.components);
+      expect(componentKeys.length).toBe(5);
+    });
+
+    it('should have all required components', () => {
+      expect(armEntity.components['anatomy:part']).toBeDefined();
+      expect(armEntity.components['anatomy:sockets']).toBeDefined();
+      expect(armEntity.components['core:name']).toBeDefined();
+      expect(armEntity.components['descriptors:texture']).toBeDefined();
+      expect(armEntity.components['descriptors:color_extended']).toBeDefined();
+    });
+  });
+
+  describe('Schema compliance', () => {
+    it('should reference correct schema', () => {
+      expect(armEntity.$schema).toBe(
+        'schema://living-narrative-engine/entity-definition.schema.json'
+      );
+    });
+
+    it('should have subType matching structure template allowedTypes', () => {
+      expect(armEntity.components['anatomy:part'].subType).toBe('tortoise_arm');
+    });
+  });
+
+  describe('Invariants', () => {
+    it('should have exactly one hand socket per arm', () => {
+      const sockets = armEntity.components['anatomy:sockets'].sockets;
+      expect(sockets).toHaveLength(1);
+    });
+
+    it('should use generic "hand" nameTpl without orientation prefix', () => {
+      const socket = armEntity.components['anatomy:sockets'].sockets[0];
+      expect(socket.nameTpl).toBe('hand');
+      expect(socket.nameTpl).not.toContain('left');
+      expect(socket.nameTpl).not.toContain('right');
+    });
+
+    it('should have scaled texture as per reptilian anatomy', () => {
+      expect(armEntity.components['descriptors:texture'].texture).toBe('scaled');
+    });
+  });
+});

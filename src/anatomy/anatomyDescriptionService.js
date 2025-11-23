@@ -58,7 +58,7 @@ export class AnatomyDescriptionService {
           partDescriptions
         );
       }
-      return;
+      return { bodyDescription, partDescriptions };
     }
 
     // Fallback to original implementation for backward compatibility

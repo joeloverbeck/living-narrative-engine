@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:tortoise_beak",
+  "description": "Horny beak structure for herbivorous diet",
+  "components": {
+    "anatomy:part": {
+      "subType": "tortoise_beak"
+    },
+    "core:name": {
+      "text": "beak"
+    },
+    "descriptors:texture": {
+      "texture": "ridged"
+    },
+    "descriptors:color_extended": {
+      "color": "charcoal-gray"
+    },
+    "descriptors:shape_general": {
+      "shape": "hooked"
+    }
+  }
+}
