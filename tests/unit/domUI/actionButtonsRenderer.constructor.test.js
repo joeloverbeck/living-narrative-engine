@@ -250,9 +250,13 @@ describe('ActionButtonsRenderer', () => {
 
     it('should subscribe to VED event core:update_available_actions', () => {
       createRenderer();
-      expect(mockVed.subscribe).toHaveBeenCalledTimes(1);
+      expect(mockVed.subscribe).toHaveBeenCalledTimes(2);
       expect(mockVed.subscribe).toHaveBeenCalledWith(
         'core:update_available_actions',
+        expect.any(Function)
+      );
+      expect(mockVed.subscribe).toHaveBeenCalledWith(
+        'THEME_CHANGED',
         expect.any(Function)
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(

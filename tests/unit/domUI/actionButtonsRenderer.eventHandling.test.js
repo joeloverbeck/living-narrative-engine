@@ -619,14 +619,14 @@ describe('ActionButtonsRenderer', () => {
   describe('Dispose Method', () => {
     it('should unsubscribe from VED event and perform cleanup', () => {
       const instanceToDispose = createInstance();
-      expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledTimes(1);
+      expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledTimes(2);
 
       instanceToDispose.dispose();
 
-      expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1);
+      expect(mockUnsubscribeFn).toHaveBeenCalledTimes(2);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          `${CLASS_PREFIX} Unsubscribing 1 VED event subscriptions.`
+          `${CLASS_PREFIX} Unsubscribing 2 VED event subscriptions.`
         )
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(

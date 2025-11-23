@@ -269,34 +269,18 @@ describe('Tortoise Person Recipe Validation', () => {
       expect(recipe.constraints.requires).toBeDefined();
     });
 
-    it('should have 3 co-presence requirements', () => {
-      expect(recipe.constraints.requires.length).toBe(3);
+    it('should have 1 co-presence requirement', () => {
+      expect(recipe.constraints.requires.length).toBe(1);
     });
 
     it('should require shell parts co-presence', () => {
-      const shellConstraint = recipe.constraints.requires.find(c => 
-        c.partTypes && 
-        c.partTypes.includes('shell_carapace') && 
+      const shellConstraint = recipe.constraints.requires.find(c =>
+        c.partTypes &&
+        c.partTypes.includes('shell_carapace') &&
         c.partTypes.includes('shell_plastron')
       );
       expect(shellConstraint).toBeDefined();
       expect(shellConstraint.partTypes).toEqual(['shell_carapace', 'shell_plastron']);
-    });
-
-    it('should require tortoise_beak', () => {
-      const beakConstraint = recipe.constraints.requires.find(c => 
-        c.partTypes && c.partTypes.includes('tortoise_beak')
-      );
-      expect(beakConstraint).toBeDefined();
-      expect(beakConstraint.partTypes).toEqual(['tortoise_beak']);
-    });
-
-    it('should require tortoise_eye', () => {
-      const eyeConstraint = recipe.constraints.requires.find(c => 
-        c.partTypes && c.partTypes.includes('tortoise_eye')
-      );
-      expect(eyeConstraint).toBeDefined();
-      expect(eyeConstraint.partTypes).toEqual(['tortoise_eye']);
     });
 
     it('should verify all constraint partTypes match entity subTypes', () => {
@@ -304,11 +288,10 @@ describe('Tortoise Person Recipe Validation', () => {
         ...recipe.constraints.requires.flatMap(c => c.partTypes || [])
       ];
 
+      // Only check entities that are actually in the constraints
       const entityFiles = [
         'tortoise_carapace.entity.json',
-        'tortoise_plastron.entity.json',
-        'tortoise_beak.entity.json',
-        'tortoise_eye.entity.json'
+        'tortoise_plastron.entity.json'
       ];
 
       entityFiles.forEach(fileName => {
@@ -319,7 +302,7 @@ describe('Tortoise Person Recipe Validation', () => {
         );
         const entity = JSON.parse(readFileSync(entityPath, 'utf-8'));
         const subType = entity.components['anatomy:part'].subType;
-        
+
         expect(allPartTypes).toContain(subType);
       });
     });

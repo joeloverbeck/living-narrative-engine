@@ -45,7 +45,10 @@ describe('AnatomyDescriptionService delegation and fallback coverage', () => {
     });
     const bodyEntity = { id: 'body-1' };
 
-    await expect(service.generateAllDescriptions(bodyEntity)).resolves.toBeUndefined();
+    await expect(service.generateAllDescriptions(bodyEntity)).resolves.toEqual({
+      bodyDescription: 'body-summary',
+      partDescriptions: [{ id: 'part-1', description: 'arm description' }],
+    });
 
     expect(orchestrator.generateAllDescriptions).toHaveBeenCalledWith(bodyEntity);
     expect(persistence.updateDescription).toHaveBeenCalledWith('body-1', 'body-summary');
@@ -64,7 +67,10 @@ describe('AnatomyDescriptionService delegation and fallback coverage', () => {
     const service = createService({ bodyDescriptionOrchestrator: orchestrator });
     const bodyEntity = { id: 'body-2' };
 
-    await expect(service.generateAllDescriptions(bodyEntity)).resolves.toBeUndefined();
+    await expect(service.generateAllDescriptions(bodyEntity)).resolves.toEqual({
+      bodyDescription: 'ignored',
+      partDescriptions: [],
+    });
     expect(orchestrator.generateAllDescriptions).toHaveBeenCalledWith(bodyEntity);
   });
 

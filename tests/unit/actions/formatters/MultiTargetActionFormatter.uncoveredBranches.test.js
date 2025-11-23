@@ -278,12 +278,26 @@ describe('MultiTargetActionFormatter uncovered branches', () => {
 
     expect(result.ok).toBe(true);
     expect(Array.isArray(result.value)).toBe(true);
-    expect(result.value).toHaveLength(1);
-    expect(result.value[0].command).toBe(
-      'assign Alex to guard Gate watch at North Tower'
+    // Cartesian product: 2 secondary × 2 tertiary = 4 combinations
+    expect(result.value).toHaveLength(4);
+
+    // Verify all 4 combinations are generated
+    const commands = result.value.map((item) => item.command);
+    expect(commands).toEqual(
+      expect.arrayContaining([
+        'assign Alex to guard Gate watch at North Tower',
+        'assign Alex to guard Gate watch at South Gate',
+        'assign Alex to guard Night patrol at North Tower',
+        'assign Alex to guard Night patrol at South Gate',
+      ])
     );
-    expect(result.value[0].targets.secondary).toHaveLength(2);
-    expect(result.value[0].targets.tertiary).toHaveLength(2);
+
+    // Each combination should have exactly 1 of each target
+    result.value.forEach((item) => {
+      expect(item.targets.primary).toHaveLength(1);
+      expect(item.targets.secondary).toHaveLength(1);
+      expect(item.targets.tertiary).toHaveLength(1);
+    });
   });
 
   it('generates cartesian product for multiple dependent keys', () => {

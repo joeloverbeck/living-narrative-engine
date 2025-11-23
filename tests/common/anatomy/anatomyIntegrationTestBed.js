@@ -436,6 +436,14 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
     this.container.set('BodyGraphService', this.bodyGraphService);
     this.container.set('EntityManager', this.entityManager);
     this.container.set('ILogicRegistry', this.logicRegistry);
+    this.container.set(
+      'ClothingInstantiationService',
+      this.clothingInstantiationService
+    );
+    this.container.set(
+      'ClothingManagementService',
+      this.clothingManagementService
+    );
   }
 
   /**
@@ -2065,7 +2073,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
               {
                 id: 'hand',
                 allowedTypes: ['tortoise_hand'],
-                nameTpl: 'hand',
+                nameTpl: '{{orientation}} hand',
               },
             ],
           },
@@ -2116,7 +2124,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
               {
                 id: 'foot',
                 allowedTypes: ['tortoise_foot'],
-                nameTpl: 'foot',
+                nameTpl: '{{orientation}} foot',
               },
             ],
           },

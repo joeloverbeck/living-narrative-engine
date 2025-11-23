@@ -13,12 +13,13 @@
  * @param {object} dependencies - Required services
  * @param {import('../../../clothing/services/clothingInstantiationService.js').ClothingInstantiationService} [dependencies.clothingInstantiationService] - Clothing instantiation service
  * @param {import('../../../interfaces/coreServices.js').IDataRegistry} dependencies.dataRegistry - Data registry
+ * @param {import('../../../interfaces/IEntityManager.js').IEntityManager} dependencies.entityManager - Entity manager
  * @param {import('../../../interfaces/coreServices.js').ILogger} dependencies.logger - Logger
  * @returns {Promise<object|undefined>} Clothing instantiation results or undefined
  */
 export async function executeClothingInstantiation(context, dependencies) {
   const { ownerId, recipeId, partsMap, slotEntityMappings } = context;
-  const { clothingInstantiationService, dataRegistry, logger } = dependencies;
+  const { clothingInstantiationService, dataRegistry, entityManager, logger } = dependencies;
 
   // Only execute if clothingInstantiationService is available
   if (!clothingInstantiationService) {

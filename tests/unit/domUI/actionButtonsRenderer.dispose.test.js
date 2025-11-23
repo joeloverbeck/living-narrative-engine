@@ -332,10 +332,10 @@ describe('ActionButtonsRenderer', () => {
 
       rendererForDispose.dispose();
 
-      expect(mockUnsubscribeFunction).toHaveBeenCalledTimes(1);
+      expect(mockUnsubscribeFunction).toHaveBeenCalledTimes(2);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          `${CLASS_PREFIX} Unsubscribing 1 VED event subscriptions.`
+          `${CLASS_PREFIX} Unsubscribing 2 VED event subscriptions.`
         )
       );
 
@@ -390,7 +390,7 @@ describe('ActionButtonsRenderer', () => {
       rendererForDispose.dispose();
       rendererForDispose.dispose();
 
-      expect(mockUnsubscribeFunction).toHaveBeenCalledTimes(1);
+      expect(mockUnsubscribeFunction).toHaveBeenCalledTimes(2);
       if (boundSendButton && boundSendButton.removeEventListener) {
         // Ensure it exists and has the method
         expect(boundSendButton.removeEventListener).toHaveBeenCalledTimes(1);

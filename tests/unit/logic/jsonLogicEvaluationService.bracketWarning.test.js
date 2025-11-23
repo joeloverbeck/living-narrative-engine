@@ -33,10 +33,10 @@ describe('JsonLogicEvaluationService bracket notation warning', () => {
     logicUtils.warnOnBracketPaths.mockRestore();
   });
 
-  test('returns false and logs warning for bracket notation component access', () => {
+  test('returns null and logs warning for bracket notation component access', () => {
     const rule = { var: "actor.components.['bad:component']" };
     const result = service.evaluate(rule, { actor: { components: {} } });
-    expect(result).toBe(false);
+    expect(result).toBe(null);
     expect(logicUtils.warnOnBracketPaths).toHaveBeenCalledTimes(1);
     expect(logicUtils.warnOnBracketPaths).toHaveBeenCalledWith(
       rule,

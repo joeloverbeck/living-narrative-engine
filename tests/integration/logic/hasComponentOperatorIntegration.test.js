@@ -203,7 +203,8 @@ describe('has_component Operator - Integration', () => {
 
       const result = jsonLogicEvaluationService.evaluate(rule, context);
 
-      expect(result).toBe(false);
+      // and operator returns null (first falsy value) when blocker is null
+      expect(result).toBe(null);
     });
   });
 

@@ -94,7 +94,10 @@ describe('AnatomyDescriptionService orchestrator and persistence integration', (
 
     await expect(
       service.generateAllDescriptions({ id: 'entity-noop' }),
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual({
+      bodyDescription: 'body-desc',
+      partDescriptions: expect.any(Map),
+    });
     expect(orchestrator.generateAllDescriptions).toHaveBeenCalled();
   });
 

@@ -309,13 +309,15 @@ describe('PerformanceMonitor service', () => {
 
     it('computes aggregated statistics correctly', () => {
       performanceRef.now
-        .mockReturnValueOnce(0)
-        .mockReturnValueOnce(100)
-        .mockReturnValueOnce(150)
-        .mockReturnValueOnce(200)
-        .mockReturnValueOnce(250)
-        .mockReturnValueOnce(400)
-        .mockReturnValueOnce(450);
+        .mockReturnValueOnce(0)      // task1-start mark
+        .mockReturnValueOnce(100)    // task1-end mark
+        .mockReturnValueOnce(150)    // task1 measure timestamp
+        .mockReturnValueOnce(200)    // task2-start mark
+        .mockReturnValueOnce(250)    // task2-end mark
+        .mockReturnValueOnce(300)    // task2 measure timestamp
+        .mockReturnValueOnce(400)    // task3-start mark
+        .mockReturnValueOnce(550)    // task3-end mark
+        .mockReturnValueOnce(600);   // task3 measure timestamp
 
       const monitor = new PerformanceMonitor({
         logger,
@@ -357,11 +359,12 @@ describe('PerformanceMonitor service', () => {
 
     it('emits aggregated summary to listeners', () => {
       performanceRef.now
-        .mockReturnValueOnce(0)
-        .mockReturnValueOnce(50)
-        .mockReturnValueOnce(100)
-        .mockReturnValueOnce(200)
-        .mockReturnValueOnce(250);
+        .mockReturnValueOnce(0)      // task1-start mark
+        .mockReturnValueOnce(50)     // task1-end mark
+        .mockReturnValueOnce(100)    // task1 measure timestamp
+        .mockReturnValueOnce(150)    // task2-start mark
+        .mockReturnValueOnce(250)    // task2-end mark
+        .mockReturnValueOnce(300);   // task2 measure timestamp
 
       const monitor = new PerformanceMonitor({
         logger,

@@ -462,7 +462,7 @@ describe('ActionButtonsRenderer', () => {
       const oldButton = createMockElement('button', '', [], 'Old Button');
       const renderer = await createRendererAndSettle(); // Constructor call and its refreshList settles.
 
-      expect(mockVed.subscribe).toHaveBeenCalledTimes(1);
+      expect(mockVed.subscribe).toHaveBeenCalledTimes(2);
 
       const subscribeCallArgs = mockVed.subscribe.mock.calls[0];
       const eventNameSubscribed = subscribeCallArgs[0];

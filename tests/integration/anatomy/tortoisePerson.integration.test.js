@@ -55,11 +55,10 @@ describe('Tortoise Person Anatomy Integration', () => {
       const parts = bodyComponent.body.parts;
       const partsList = Object.values(parts);
 
-      // Verify total part count: 14 parts
-      // 1 torso + 2 shell + 1 head + 1 beak + 2 eyes + 2 arms + 1 hand + 2 legs + 1 foot + 1 tail
-      // Note: Currently only generating 1 hand and 1 foot instead of 2 due to limitation
-      // in pattern matching for nested slots with parent references in blueprint V2
-      expect(partsList).toHaveLength(14);
+      // Verify total part count: 16 parts
+      // 1 torso + 2 shell + 1 head + 1 beak + 2 eyes + 2 arms + 2 hands + 2 legs + 2 feet + 1 tail
+      // Fixed: Now correctly generating 2 hands and 2 feet with bilateral symmetry
+      expect(partsList).toHaveLength(16);
 
       // Helper to check if a part with specific subType exists
       const hasPartWithSubType = (subType) => {

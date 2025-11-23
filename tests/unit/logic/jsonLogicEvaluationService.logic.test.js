@@ -133,27 +133,26 @@ describe('JsonLogicEvaluationService Unit Tests', () => {
         // Corrected var paths to use "context." prefix
         const rule1 = {
           and: [{ var: 'context.truthyVar' }, { var: 'context.numVar' }],
-        }; // true AND 1 -> 1 -> !!1 -> true
+        }; // true AND 1 -> returns 1 (last truthy value)
         const rule2 = {
           and: [{ var: 'context.truthyVar' }, { var: 'context.falsyVar' }],
-        }; // true AND false -> false -> !!false -> false
+        }; // true AND false -> returns false (first falsy value)
         const rule3 = {
           and: [{ var: 'context.truthyVar' }, { var: 'context.zeroVar' }],
-        }; // true AND 0 -> 0 -> !!0 -> false
+        }; // true AND 0 -> returns 0 (first falsy value)
         const rule4 = {
           and: [{ var: 'context.truthyVar' }, { var: 'context.emptyStrVar' }],
-        }; // true AND "" -> "" -> !!"" -> false
-        // Note: Empty array [] is TRUTHY in JavaScript. 'and' returns last value []. !![] is true.
+        }; // true AND "" -> returns "" (first falsy value)
+        // Note: Empty array [] is TRUTHY in JavaScript. 'and' returns last value [].
         const rule5 = {
           and: [{ var: 'context.truthyVar' }, { var: 'context.emptyArrayVar' }],
-        }; // true AND [] -> [] -> !![] -> true
+        }; // true AND [] -> returns [] (last truthy value)
 
-        expect(service.evaluate(rule1, mockContext)).toBe(true);
+        expect(service.evaluate(rule1, mockContext)).toBe(1);
         expect(service.evaluate(rule2, mockContext)).toBe(false);
-        expect(service.evaluate(rule3, mockContext)).toBe(false);
-        expect(service.evaluate(rule4, mockContext)).toBe(false);
-        // FIX: Corrected expectation from false to true based on JS truthiness of []
-        expect(service.evaluate(rule5, mockContext)).toBe(true);
+        expect(service.evaluate(rule3, mockContext)).toBe(0);
+        expect(service.evaluate(rule4, mockContext)).toBe('');
+        expect(service.evaluate(rule5, mockContext)).toEqual([]);
         expect(mockLogger.error).not.toHaveBeenCalled();
       });
     });

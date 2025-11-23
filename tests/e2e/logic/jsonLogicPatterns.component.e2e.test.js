@@ -684,11 +684,11 @@ describe('JsonLogicEvaluationService - Component Patterns (TEST-105)', () => {
           mockEntityManager,
           mockLogger
         );
-        // var resolves to null, which is falsy
-        expect(service.evaluate(rule, context)).toBe(false);
+        // var resolves to null for missing properties
+        expect(service.evaluate(rule, context)).toBe(null);
       });
 
-      test('should return false when component "door" is missing', () => {
+      test('should return null when component "door" is missing', () => {
         const context = createJsonLogicContext(
           baseEvent,
           null,
@@ -696,8 +696,8 @@ describe('JsonLogicEvaluationService - Component Patterns (TEST-105)', () => {
           mockEntityManager,
           mockLogger
         );
-        // var resolves to null, which is falsy
-        expect(service.evaluate(rule, context)).toBe(false);
+        // var resolves to null for missing properties
+        expect(service.evaluate(rule, context)).toBe(null);
       });
     });
 
@@ -739,7 +739,7 @@ describe('JsonLogicEvaluationService - Component Patterns (TEST-105)', () => {
         expect(service.evaluate(rule, context)).toBe(false);
       });
 
-      test('should return false when property "isActive" is missing', () => {
+      test('should return null when property "isActive" is missing', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
           if (id === actorId && compId === hiddenCompId)
             return { duration: 10 }; // Missing 'isActive'
@@ -752,11 +752,11 @@ describe('JsonLogicEvaluationService - Component Patterns (TEST-105)', () => {
           mockEntityManager,
           mockLogger
         );
-        // var resolves to null, which is falsy
-        expect(service.evaluate(rule, context)).toBe(false);
+        // var resolves to null for missing properties
+        expect(service.evaluate(rule, context)).toBe(null);
       });
 
-      test('should return false when component "hidden" is missing', () => {
+      test('should return null when component "hidden" is missing', () => {
         const context = createJsonLogicContext(
           baseEvent,
           actorId,
@@ -764,8 +764,8 @@ describe('JsonLogicEvaluationService - Component Patterns (TEST-105)', () => {
           mockEntityManager,
           mockLogger
         );
-        // var resolves to null, which is falsy
-        expect(service.evaluate(rule, context)).toBe(false);
+        // var resolves to null for missing properties
+        expect(service.evaluate(rule, context)).toBe(null);
       });
     });
   });

@@ -57,7 +57,7 @@ describe('Tortoise Arm Entity Validation', () => {
 
       expect(handSocket).toBeDefined();
       expect(handSocket.allowedTypes).toEqual(['tortoise_hand']);
-      expect(handSocket.nameTpl).toBe('hand');
+      expect(handSocket.nameTpl).toBe('{{orientation}} hand');
     });
 
     it('should have socket ID exactly "hand" (generic, not left/right)', () => {
@@ -105,11 +105,10 @@ describe('Tortoise Arm Entity Validation', () => {
       expect(sockets).toHaveLength(1);
     });
 
-    it('should use generic "hand" nameTpl without orientation prefix', () => {
+    it('should use "{{orientation}} hand" nameTpl with orientation token', () => {
       const socket = armEntity.components['anatomy:sockets'].sockets[0];
-      expect(socket.nameTpl).toBe('hand');
-      expect(socket.nameTpl).not.toContain('left');
-      expect(socket.nameTpl).not.toContain('right');
+      expect(socket.nameTpl).toBe('{{orientation}} hand');
+      expect(socket.nameTpl).toContain('{{orientation}}');
     });
 
     it('should have scaled texture as per reptilian anatomy', () => {
