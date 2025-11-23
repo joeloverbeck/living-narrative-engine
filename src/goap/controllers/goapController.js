@@ -28,6 +28,7 @@ import {
 } from '../planner/numericConstraintDiagnostics.js';
 import { GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT } from '../debug/goapDebuggerDiagnosticsContract.js';
 import { createGoapEventDispatcher, validateEventBusContract } from '../debug/goapEventDispatcher.js';
+import { GOAP_PLANNER_FAILURES } from '../planner/goapPlannerFailureReasons.js';
 
 export const GOAP_CONTROLLER_DIAGNOSTICS_CONTRACT_VERSION =
   GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.version;
@@ -1675,7 +1676,16 @@ class GoapController {
       return null;
     }
 
-    return JSON.parse(JSON.stringify(diagnostics));
+    try {
+      return JSON.parse(JSON.stringify(diagnostics));
+    } catch (error) {
+      // Diagnostics may contain circular references, return as-is
+      this.#logger.warn('Task library diagnostics contain non-serializable data', {
+        actorId,
+        error: error.message,
+      });
+      return diagnostics;
+    }
   }
 
   getGoalPathDiagnostics(actorId) {
