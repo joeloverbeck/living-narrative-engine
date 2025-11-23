@@ -1,0 +1,4 @@
+// Find food items in actor's inventory
+metabolism:inventory_food := actor.components.core:inventory.items[][{
+  "has_component": [".", "metabolism:fuel_source"]
+}]

@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "metabolism:is_digesting",
+  "description": "Check if entity has food in buffer being digested",
+  "logic": {
+    ">": [
+      { "var": "entity.components.metabolism:fuel_converter.buffer_storage.length" },
+      0
+    ]
+  }
+}
