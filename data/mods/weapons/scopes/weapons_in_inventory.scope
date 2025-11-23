@@ -1,0 +1,1 @@
+weapons:weapons_in_inventory := actor.components.items:inventory.items[][{"!!": {"var": "entity.components.weapons:weapon"}}]

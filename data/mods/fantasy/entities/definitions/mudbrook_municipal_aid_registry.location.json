@@ -1,0 +1,23 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "fantasy:mudbrook_municipal_aid_registry",
+    "components": {
+        "core:name": {
+            "text": "Mudbrook Municipal Aid Registry"
+        },
+        "core:description": {
+            "text": "The Mudbrook Municipal Aid Registry occupies a converted grain warehouse: a long, timber-built structure with thick vertical posts, wide plank flooring, and an open side facing a strip of grass and pale, misty trees beyond. The wood is sun-warmed and worn smooth where people lean, scuffed at the floorboards, and darkened in seams and knots. Dominating the upper half of the room is a broad bulletin board set into a wooden frame. The board sags slightly at the center and is crowded edge to edge with stained parchment notices—some full sheets, others torn scraps—layered and pinned in uneven rows. The papers are yellowed, smudged, and blotched with old watermarks and fingertip grime; the writing varies in size and density, giving the surface a busy, patchwork look. Below the board, a recessed service opening and counter cut into the wall suggests its former use as a loading bay. The back wall shows leftover warehouse fittings: a large hand saw and other tools hang on pegs, and a heavy wooden door or panel sits to one side. Rough tables and stools fill the foreground; their legs are thick, plain, and slightly uneven, with shallow gouges from years of use. Several glass tankards half-filled with amber drink sit on tabletops, catching the sun; condensation rings and small spills mark the wood. Benches and stools cluster close together, leaving narrow paths between table corners. The space functions as a public waiting room as much as an office. A mixed crowd of local figures sits or stands in loose groups around the tables and near the counter, their bodies turned toward the notices or toward each other. Hats, hoods, and work-worn garments are common; elbows rest on tabletop edges; mugs are held or left within reach. The overall arrangement feels permanent and improvised at once: civic business conducted in a room that still carries the proportions and plain utility of a warehouse."
+        },
+        "core:portrait": {
+            "imagePath": "portraits/mudbrook_municipal_aid_registry.png",
+            "altText": "Mudbrook Municipal Aid Registry"
+        },
+        "movement:exits": [
+            {
+                "direction": "to the streets of Mudbrook-on-the-Bend",
+                "target": "fantasy:mudbrook_on_the_bend_instance",
+                "blocker": null
+            }
+        ]
+    }
+}

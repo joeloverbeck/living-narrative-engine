@@ -1,0 +1,29 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.blueprint.schema.json",
+  "id": "anatomy:tortoise_person",
+  "schemaVersion": "2.0",
+  "root": "anatomy:tortoise_torso_with_shell",
+  "structureTemplate": "anatomy:structure_tortoise_biped",
+  "additionalSlots": {
+    "shell_upper": {
+      "socket": "carapace_mount",
+      "requirements": {
+        "partType": "shell_carapace",
+        "components": ["anatomy:part"]
+      }
+    },
+    "shell_lower": {
+      "socket": "plastron_mount",
+      "requirements": {
+        "partType": "shell_plastron",
+        "components": ["anatomy:part"]
+      }
+    }
+  },
+  "clothingSlotMappings": {
+    "shell_armor": {
+      "anatomySockets": ["carapace_mount"],
+      "allowedLayers": ["armor", "accessory"]
+    }
+  }
+}

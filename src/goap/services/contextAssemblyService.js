@@ -94,7 +94,7 @@ class ContextAssemblyService {
 
     if (this.#enableKnowledgeLimitation) {
       this.#logger.warn(
-        '[ContextAssemblyService] Knowledge limitation enabled but core:known_to component not yet implemented. Defaulting to omniscient mode.'
+        '[ContextAssemblyService] Knowledge limitation enabled but full knowledge filtering not yet integrated (see GOAPIMPL-023). Currently using omniscient mode.'
       );
     }
   }

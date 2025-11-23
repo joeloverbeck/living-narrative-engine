@@ -15,5 +15,27 @@
       "id": "items",
       "version": "1.0.0"
     }
-  ]
+  ],
+  "content": {
+    "components": [
+      "weapon.component.json"
+    ],
+    "scopes": [
+      "weapons_in_inventory.scope"
+    ],
+    "conditions": [
+      "event-is-action-wield-threateningly.condition.json"
+    ],
+    "actions": [
+      "wield_threateningly.action.json"
+    ],
+    "rules": [
+      "handle_wield_threateningly.rule.json"
+    ],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    },
+    "events": []
+  }
 }

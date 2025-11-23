@@ -208,8 +208,10 @@ export class CommandProcessingWorkflow {
 
       // Validate processing state
       if (!this._state.isProcessing) {
-        logger.warn(
-          `${stateName}: processing flag became false after dispatch for ${actorId}.`
+        // Processing flag cleared during dispatch - this can happen with fast operations or state transitions
+        // This is a handled edge case - workflow will stop safely
+        logger.debug(
+          `${stateName}: processing flag became false after dispatch for ${actorId} (handled edge case).`
         );
         return null;
       }

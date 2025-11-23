@@ -135,6 +135,7 @@ class StaticConfiguration {
       'event.schema.json',
       'game.schema.json',
       'goal.schema.json',
+      'task.schema.json', // GOAP planning task schema
       'refinement-method.schema.json', // GOAP refinement method schema
       'mod-manifest.schema.json',
       'nested-operation.schema.json',

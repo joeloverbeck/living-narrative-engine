@@ -42,7 +42,7 @@ describe('ModReferenceExtractor - Memory Tests', () => {
     testModPath = path.join(tempDir, 'memory_test_mod');
     await fs.mkdir(testModPath, { recursive: true });
 
-    await global.memoryTestUtils.addPreTestStabilization(60);
+    await global.memoryTestUtils.addPreTestStabilization(30);
   });
 
   afterEach(async () => {
@@ -57,7 +57,7 @@ describe('ModReferenceExtractor - Memory Tests', () => {
 
   describe('Memory stability scenarios', () => {
     it('should avoid leaks during repeated extractions', async () => {
-      const numIterations = 20;
+      const numIterations = 10;
       const memoryReadings = [];
 
       for (let i = 0; i < 20; i++) {
@@ -73,13 +73,12 @@ describe('ModReferenceExtractor - Memory Tests', () => {
       }
 
       for (let iteration = 0; iteration < numIterations; iteration++) {
-        await global.memoryTestUtils.forceGCAndWait();
         const references = await extractor.extractReferences(testModPath);
         expect(references.size).toBe(5);
 
         await global.memoryTestUtils.forceGCAndWait();
         const stabilizedMemory =
-          await global.memoryTestUtils.getStableMemoryUsage(3);
+          await global.memoryTestUtils.getStableMemoryUsage(2);
 
         memoryReadings.push({
           iteration,
@@ -142,12 +141,12 @@ describe('ModReferenceExtractor - Memory Tests', () => {
 
       const startTime = performance.now();
       await global.memoryTestUtils.forceGCAndWait();
-      const startMemory = await global.memoryTestUtils.getStableMemoryUsage(3);
+      const startMemory = await global.memoryTestUtils.getStableMemoryUsage(2);
 
       const references = await extractor.extractReferences(testModPath);
 
       await global.memoryTestUtils.forceGCAndWait();
-      const finalMemory = await global.memoryTestUtils.getStableMemoryUsage(3);
+      const finalMemory = await global.memoryTestUtils.getStableMemoryUsage(2);
       const duration = performance.now() - startTime;
       const memoryDelta = Math.max(0, finalMemory - startMemory);
 

@@ -29,8 +29,8 @@
     {
       "type": "ADD_COMPONENT",
       "parameters": {
-        "entityId": "actor",
-        "componentId": "core:armed",
+        "entity_ref": "actor",
+        "component_type": "core:armed",
         "value": {
           "readyState": "drawn"
         }

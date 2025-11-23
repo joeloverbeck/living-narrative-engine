@@ -3,7 +3,8 @@
  */
 
 /**
- * @description Ensures a blueprint has generated slots when using structure templates.
+ * Ensures a blueprint has generated slots when using structure templates.
+ *
  * @param {object} params - Processing parameters.
  * @param {object} params.blueprint - Raw blueprint definition that may require processing.
  * @param {import('../../../interfaces/coreServices.js').IDataRegistry} params.dataRegistry - Registry for structure templates.
@@ -21,7 +22,29 @@ export async function ensureBlueprintProcessed({
     return null;
   }
 
-  if (!blueprint.structureTemplate || blueprint._generatedSockets) {
+  // Blueprint already processed (has _generatedSockets flag)
+  if (blueprint._generatedSockets) {
+    return blueprint;
+  }
+
+  // Blueprint already has slots (from composition or V1 format)
+  // No processing needed - slots are ready to use
+  if (blueprint.slots && Object.keys(blueprint.slots).length > 0) {
+    logger.debug(
+      `BlueprintProcessingUtils: Blueprint '${
+        blueprint.id || 'unknown'
+      }' already has ${Object.keys(blueprint.slots).length} slots (composition or V1), no processing needed`
+    );
+    return blueprint;
+  }
+
+  // Blueprint needs structure template processing
+  if (!blueprint.structureTemplate) {
+    logger.warn(
+      `BlueprintProcessingUtils: Blueprint '${
+        blueprint.id || 'unknown'
+      }' has no slots and no structureTemplate, returning as-is`
+    );
     return blueprint;
   }
 

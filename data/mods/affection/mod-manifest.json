@@ -22,6 +22,10 @@
     {
       "id": "descriptors",
       "version": "^1.0.0"
+    },
+    {
+      "id": "caressing",
+      "version": "^1.0.0"
     }
   ],
   "content": {
@@ -32,6 +36,7 @@
       "link_arms.action.json",
       "massage_back.action.json",
       "massage_shoulders.action.json",
+      "pat_ass_affectionately.action.json",
       "pat_head_affectionately.action.json",
       "place_hand_on_knee.action.json",
       "place_hand_on_waist.action.json",
@@ -52,6 +57,7 @@
       "handle_brush_hair_behind_ear.rule.json",
       "handle_link_arms.rule.json",
       "handle_massage_shoulders.rule.json",
+      "handle_pat_ass_affectionately.rule.json",
       "handle_pat_head_affectionately.rule.json",
       "handle_place_hands_on_flat_chest.rule.json",
       "handle_push_target_playfully.rule.json",
@@ -74,6 +80,7 @@
       "event-is-action-link-arms.condition.json",
       "event-is-action-massage-back.condition.json",
       "event-is-action-massage-shoulders.condition.json",
+      "event-is-action-pat-ass-affectionately.condition.json",
       "event-is-action-pat-head-affectionately.condition.json",
       "event-is-action-place-hand-on-knee.condition.json",
       "event-is-action-place-hand-on-waist.condition.json",

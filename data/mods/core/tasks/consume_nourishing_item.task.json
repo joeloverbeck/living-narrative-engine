@@ -27,8 +27,8 @@
     {
       "type": "REMOVE_COMPONENT",
       "parameters": {
-        "entityId": "actor",
-        "componentId": "core:hungry"
+        "entity_ref": "actor",
+        "component_type": "core:hungry"
       }
     }
   ],

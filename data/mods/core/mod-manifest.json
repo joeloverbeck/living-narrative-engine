@@ -136,6 +136,7 @@
       "player_turn_submitted.event.json",
       "portrait_modal_closed.event.json",
       "portrait_modal_opened.event.json",
+      "round_started.event.json",
       "speech_input_gained_focus.event.json",
       "speech_input_lost_focus.event.json",
       "speech_patterns_cache_hit.event.json",

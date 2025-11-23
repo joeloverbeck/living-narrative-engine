@@ -1,0 +1,123 @@
+{
+  "$schema": "http://example.com/schemas/anatomy.recipe.schema.json",
+  "recipeId": "fantasy:bertram_the_muddy_recipe",
+  "blueprintId": "anatomy:human_male",
+  "bodyDescriptors": {
+    "height": "average",
+    "build": "stocky",
+    "composition": "soft",
+    "hairDensity": "moderate",
+    "skinColor": "weathered tan with brown tannery staining",
+    "smell": "leather oils and curing agents"
+  },
+  "slots": {
+    "torso": {
+      "partType": "torso",
+      "preferId": "anatomy:human_male_torso_thick_hairy"
+    },
+    "head": {
+      "partType": "head",
+      "preferId": "anatomy:humanoid_face_bearded_full_trimmed"
+    },
+    "penis": {
+      "partType": "penis",
+      "preferId": "anatomy:human_penis"
+    },
+    "hair": {
+      "partType": "hair",
+      "preferId": "anatomy:human_hair_short_brown_wavy"
+    },
+    "left_ass": {
+      "partType": "ass_cheek",
+      "preferId": "anatomy:human_ass_cheek_round_soft"
+    },
+    "right_ass": {
+      "partType": "ass_cheek",
+      "preferId": "anatomy:human_ass_cheek_round_soft"
+    }
+  },
+  "patterns": [
+    {
+      "matches": [
+        "left_arm",
+        "right_arm"
+      ],
+      "partType": "arm",
+      "preferId": "anatomy:humanoid_arm_weathered_tannery_stained"
+    },
+    {
+      "matches": [
+        "left_hand",
+        "right_hand"
+      ],
+      "partType": "hand",
+      "preferId": "anatomy:humanoid_hand_craftsman_stained"
+    },
+    {
+      "matches": [
+        "left_ear",
+        "right_ear"
+      ],
+      "partType": "ear",
+      "preferId": "anatomy:humanoid_ear"
+    },
+    {
+      "matches": [
+        "left_leg",
+        "right_leg"
+      ],
+      "partType": "leg",
+      "preferId": "anatomy:human_leg"
+    },
+    {
+      "matches": [
+        "left_foot",
+        "right_foot"
+      ],
+      "partType": "foot",
+      "preferId": "anatomy:human_foot"
+    },
+    {
+      "matches": [
+        "left_eye",
+        "right_eye"
+      ],
+      "partType": "eye",
+      "properties": {
+        "descriptors:color_basic": {
+          "color": "green"
+        }
+      }
+    }
+  ],
+  "clothingEntities": [
+    {
+      "entityId": "clothing:graphite_wool_briefs",
+      "equip": true
+    },
+    {
+      "entityId": "clothing:shale_gray_nylon_field_pants",
+      "equip": true
+    },
+    {
+      "entityId": "clothing:charcoal_wool_tshirt",
+      "equip": true
+    },
+    {
+      "entityId": "clothing:leather_work_apron",
+      "equip": true
+    },
+    {
+      "entityId": "clothing:dark_brown_leather_belt",
+      "equip": true
+    },
+    {
+      "entityId": "clothing:dark_gray_wool_boot_socks",
+      "equip": true
+    },
+    {
+      "entityId": "clothing:black_leather_duty_boots",
+      "equip": true
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+    "$schema": "http://example.com/schemas/world.schema.json",
+    "id": "fantasy:vespera",
+    "name": "Vespera Nightwhisper in Mudbrook-on-the-Bend",
+    "description": "A self-contained game world centered around a cat-girl in a mundane town.",
+    "instances": [
+        {
+            "instanceId": "fantasy:mudbrook_on_the_bend_instance"
+        },
+        {
+            "instanceId": "fantasy:mudbrook_municipal_aid_registry_instance"
+        },
+        {
+            "instanceId": "fantasy:bulletin_board_instance"
+        },
+        {
+            "instanceId": "fantasy:notice_alibi_wanted_instance"
+        },
+        {
+            "instanceId": "fantasy:notice_birthday_musician_instance"
+        },
+        {
+            "instanceId": "fantasy:notice_dignity_recovery_instance"
+        },
+        {
+            "instanceId": "fantasy:notice_possessed_chickens_instance"
+        },
+        {
+            "instanceId": "fantasy:notice_reciprocal_services_instance"
+        },
+        {
+            "instanceId": "fantasy:notice_staged_threat_instance"
+        },
+        {
+            "instanceId": "fantasy:vespera_hybrid_lute_viol_instance"
+        },
+        {
+            "instanceId": "fantasy:vespera_rapier_instance"
+        },
+        {
+            "instanceId": "fantasy:vespera_main_gauche_instance"
+        },
+        {
+            "instanceId": "fantasy:threadscar_melissa_instance"
+        },
+        {
+            "instanceId": "fantasy:vespera_nightwhisper_instance"
+        }
+    ]
+}

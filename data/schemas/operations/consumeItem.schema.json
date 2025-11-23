@@ -1,30 +1,42 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "schema://living-narrative-engine/operations/consumeItem.schema.json",
-  "title": "CONSUME_ITEM Operation Schema",
-  "description": "Validates CONSUME_ITEM operation parameters for consuming food items and transferring energy to fuel converter buffer.",
+  "title": "CONSUME_ITEM Operation",
   "allOf": [
     {
       "$ref": "../base-operation.schema.json"
     },
     {
-      "type": "object",
       "properties": {
         "type": {
           "const": "CONSUME_ITEM"
         },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the CONSUME_ITEM operation. Transfers fuel properties from a consumable item to a consumer's metabolic buffer and removes the item from the game.",
+      "properties": {
         "consumer_ref": {
           "type": "string",
-          "description": "Entity ID of the consumer with fuel_converter component",
-          "minLength": 1
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$",
+          "description": "Entity reference for the consumer (must have metabolism:metabolic_store component)"
         },
         "item_ref": {
           "type": "string",
-          "description": "Entity ID of the item with fuel_source component to consume",
-          "minLength": 1
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$",
+          "description": "Entity reference for the item being consumed (must have metabolism:fuel_source component)"
         }
       },
-      "required": ["type", "consumer_ref", "item_ref"]
+      "required": ["consumer_ref", "item_ref"],
+      "additionalProperties": false
     }
-  ]
+  }
 }

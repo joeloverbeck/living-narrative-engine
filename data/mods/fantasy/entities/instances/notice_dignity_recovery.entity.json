@@ -1,0 +1,10 @@
+{
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "fantasy:notice_dignity_recovery_instance",
+  "definitionId": "fantasy:notice_dignity_recovery",
+  "componentOverrides": {
+    "core:position": {
+      "locationId": "fantasy:mudbrook_municipal_aid_registry_instance"
+    }
+  }
+}

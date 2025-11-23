@@ -1,24 +1,22 @@
 /**
  * @file Handler for CONSUME_ITEM operation
  *
- * Transfers fuel source to metabolic store buffer, validating compatibility and capacity,
- * then removes item from game.
+ * Transfers fuel properties from a consumable item to a consumer's metabolic buffer.
  *
  * Operation flow:
  * 1. Validates operation parameters (consumer_ref, item_ref)
- * 2. Verifies consumer has fuel_converter component
- * 3. Verifies consumer has metabolic_store component
- * 4. Verifies item has fuel_source component
- * 5. Validates fuel tag compatibility (at least one matching tag)
- * 6. Validates buffer has sufficient capacity for item bulk
- * 7. Adds item {bulk, energy_content} to metabolic_store.buffer_storage array
- * 8. Removes item entity from game
- * 9. Dispatches metabolism:item_consumed event
+ * 2. Resolves entity references from parameters
+ * 3. Retrieves metabolism:fuel_source component from item
+ * 4. Retrieves metabolism:metabolic_store component from consumer
+ * 5. Validates buffer capacity is sufficient
+ * 6. Adds fuel to consumer's buffer_storage array
+ * 7. Removes consumed item from game
+ * 8. Dispatches metabolism:item_consumed event
  *
  * Related files:
  * @see data/schemas/operations/consumeItem.schema.json - Operation schema
- * @see data/mods/metabolism/components/metabolic_store.component.json - Target component schema
- * @see data/mods/metabolism/components/fuel_source.component.json - Source component schema
+ * @see data/mods/metabolism/components/fuel_source.component.json - Item component
+ * @see data/mods/metabolism/components/metabolic_store.component.json - Consumer component
  * @see src/dependencyInjection/tokens/tokens-core.js - ConsumeItemHandler token
  * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
  * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
@@ -30,20 +28,19 @@ import BaseOperationHandler from './baseOperationHandler.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
-const FUEL_CONVERTER_COMPONENT_ID = 'metabolism:fuel_converter';
-const METABOLIC_STORE_COMPONENT_ID = 'metabolism:metabolic_store';
 const FUEL_SOURCE_COMPONENT_ID = 'metabolism:fuel_source';
+const METABOLIC_STORE_COMPONENT_ID = 'metabolism:metabolic_store';
 const ITEM_CONSUMED_EVENT = 'metabolism:item_consumed';
 
 /**
  * @typedef {object} ConsumeItemParams
- * @property {string} consumer_ref - Entity ID of the consumer with fuel_converter component
- * @property {string} item_ref - Entity ID of the item with fuel_source component to consume
+ * @property {string} consumer_ref - Reference to entity with metabolic_store component
+ * @property {string} item_ref - Reference to item entity with fuel_source component
  */
 
 /**
  * Handler for CONSUME_ITEM operation.
- * Transfers fuel from food item to consumer's fuel converter buffer.
+ * Transfers fuel from consumable item to consumer's metabolic buffer and removes the item.
  */
 class ConsumeItemHandler extends BaseOperationHandler {
   /** @type {import('../../entities/entityManager.js').default} */ #entityManager;
@@ -54,12 +51,7 @@ class ConsumeItemHandler extends BaseOperationHandler {
       logger: { value: logger },
       entityManager: {
         value: entityManager,
-        requiredMethods: [
-          'getComponentData',
-          'hasComponent',
-          'batchAddComponentsOptimized',
-          'removeEntityInstance',
-        ],
+        requiredMethods: ['getComponentData', 'addComponent', 'removeEntityInstance'],
       },
       safeEventDispatcher: {
         value: safeEventDispatcher,
@@ -71,11 +63,11 @@ class ConsumeItemHandler extends BaseOperationHandler {
   }
 
   /**
-   * Validate parameters for execute.
+   * Validate and normalize parameters for execute.
    *
    * @param {ConsumeItemParams|null|undefined} params - Raw params object
    * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for diagnostics
-   * @returns {{consumerRef: string, itemRef: string}|null} Normalized values or null when invalid
+   * @returns {{consumerId: string, itemId: string}|null} Normalized values or null when invalid
    * @private
    */
   #validateParams(params, logger) {
@@ -85,20 +77,36 @@ class ConsumeItemHandler extends BaseOperationHandler {
 
     const { consumer_ref, item_ref } = params;
 
-    if (typeof consumer_ref !== 'string' || !consumer_ref.trim()) {
+    // Validate consumer reference
+    let consumerId;
+    if (typeof consumer_ref === 'string' && consumer_ref.trim()) {
+      consumerId = consumer_ref.trim();
+    } else if (typeof consumer_ref === 'object' && consumer_ref !== null) {
+      consumerId = consumer_ref.id || consumer_ref.entityId;
+    }
+
+    if (!consumerId) {
       safeDispatchError(
         this.#dispatcher,
-        'CONSUME_ITEM: consumer_ref is required',
+        'CONSUME_ITEM: consumer_ref is required and must be a valid string or object',
         { consumer_ref },
         logger
       );
       return null;
     }
 
-    if (typeof item_ref !== 'string' || !item_ref.trim()) {
+    // Validate item reference
+    let itemId;
+    if (typeof item_ref === 'string' && item_ref.trim()) {
+      itemId = item_ref.trim();
+    } else if (typeof item_ref === 'object' && item_ref !== null) {
+      itemId = item_ref.id || item_ref.entityId;
+    }
+
+    if (!itemId) {
       safeDispatchError(
         this.#dispatcher,
-        'CONSUME_ITEM: item_ref is required',
+        'CONSUME_ITEM: item_ref is required and must be a valid string or object',
         { item_ref },
         logger
       );
@@ -106,8 +114,8 @@ class ConsumeItemHandler extends BaseOperationHandler {
     }
 
     return {
-      consumerRef: consumer_ref.trim(),
-      itemRef: item_ref.trim(),
+      consumerId,
+      itemId,
     };
   }
 
@@ -127,152 +135,111 @@ class ConsumeItemHandler extends BaseOperationHandler {
       return;
     }
 
-    const { consumerRef, itemRef } = validated;
+    const { consumerId, itemId } = validated;
 
     try {
-      // Get fuel converter component
-      const fuelConverter = this.#entityManager.getComponentData(
-        consumerRef,
-        FUEL_CONVERTER_COMPONENT_ID
-      );
-
-      if (!fuelConverter) {
-        safeDispatchError(
-          this.#dispatcher,
-          `CONSUME_ITEM: Consumer does not have fuel_converter component`,
-          { consumerId: consumerRef },
-          log
-        );
-        return;
-      }
-
-      // Get metabolic store component
-      const metabolicStore = this.#entityManager.getComponentData(
-        consumerRef,
-        METABOLIC_STORE_COMPONENT_ID
-      );
-
-      if (!metabolicStore) {
-        safeDispatchError(
-          this.#dispatcher,
-          `CONSUME_ITEM: Consumer does not have metabolic_store component`,
-          { consumerId: consumerRef },
-          log
-        );
-        return;
-      }
-
-      // Get fuel source component
+      // Get fuel source component from item
       const fuelSource = this.#entityManager.getComponentData(
-        itemRef,
+        itemId,
         FUEL_SOURCE_COMPONENT_ID
       );
 
       if (!fuelSource) {
         safeDispatchError(
           this.#dispatcher,
-          `CONSUME_ITEM: Item does not have fuel_source component`,
-          { itemId: itemRef },
+          `CONSUME_ITEM: Item does not have ${FUEL_SOURCE_COMPONENT_ID} component`,
+          { itemId },
           log
         );
         return;
       }
 
-      // Validate fuel tag compatibility
-      // fuel_tags is optional array, fuel_type is required string
-      const itemTags = fuelSource.fuel_tags || [fuelSource.fuel_type];
-      const hasMatchingTag = itemTags.some((tag) =>
-        fuelConverter.accepted_fuel_tags.includes(tag)
+      // Get metabolic store component from consumer
+      const metabolicStore = this.#entityManager.getComponentData(
+        consumerId,
+        METABOLIC_STORE_COMPONENT_ID
       );
 
-      if (!hasMatchingTag) {
+      if (!metabolicStore) {
         safeDispatchError(
           this.#dispatcher,
-          `CONSUME_ITEM: Incompatible fuel type. Converter accepts: ${fuelConverter.accepted_fuel_tags.join(', ')}. Item provides: ${itemTags.join(', ')}.`,
-          {
-            consumerId: consumerRef,
-            itemId: itemRef,
-            converterTags: fuelConverter.accepted_fuel_tags,
-            itemTags,
-          },
+          `CONSUME_ITEM: Consumer does not have ${METABOLIC_STORE_COMPONENT_ID} component`,
+          { consumerId },
           log
         );
         return;
       }
 
-      // Validate buffer capacity
-      // buffer_storage is an array of {bulk, energy_content} objects
-      const currentBulk = metabolicStore.buffer_storage.reduce(
-        (sum, item) => sum + item.bulk,
+      // Extract data from components
+      const bufferStorage = metabolicStore.buffer_storage || [];
+      const bufferCapacity = metabolicStore.buffer_capacity;
+      const fuelBulk = fuelSource.bulk;
+      const fuelEnergy = fuelSource.energy_content;
+
+      // Calculate current buffer usage
+      const currentBufferUsage = bufferStorage.reduce(
+        (sum, item) => sum + (item.bulk || 0),
         0
       );
-      const availableSpace = metabolicStore.buffer_capacity - currentBulk;
-      if (availableSpace < fuelSource.bulk) {
+
+      // Check if there's capacity for this item
+      if (currentBufferUsage + fuelBulk > bufferCapacity) {
         safeDispatchError(
           this.#dispatcher,
-          `CONSUME_ITEM: Insufficient buffer capacity. Available: ${availableSpace}, item bulk: ${fuelSource.bulk}`,
-          {
-            consumerId: consumerRef,
-            itemId: itemRef,
-            availableSpace,
-            itemBulk: fuelSource.bulk,
-          },
+          'CONSUME_ITEM: Insufficient buffer capacity to consume item',
+          { consumerId, itemId, currentBufferUsage, fuelBulk, bufferCapacity },
           log
         );
         return;
       }
 
-      // Add item to buffer storage array
+      // Add fuel to buffer storage
       const newBufferStorage = [
-        ...metabolicStore.buffer_storage,
+        ...bufferStorage,
         {
-          bulk: fuelSource.bulk,
-          energy_content: fuelSource.energy_content,
+          bulk: fuelBulk,
+          energy_content: fuelEnergy,
         },
       ];
 
-      await this.#entityManager.batchAddComponentsOptimized([
+      // Update metabolic store with new buffer
+      await this.#entityManager.addComponent(
+        consumerId,
+        METABOLIC_STORE_COMPONENT_ID,
         {
-          instanceId: consumerRef,
-          componentTypeId: METABOLIC_STORE_COMPONENT_ID,
-          componentData: {
-            ...metabolicStore,
-            buffer_storage: newBufferStorage,
-          },
-        },
-      ]);
+          ...metabolicStore,
+          buffer_storage: newBufferStorage,
+        }
+      );
 
-      // Remove item entity from game
-      this.#entityManager.removeEntityInstance(itemRef);
+      // Remove the consumed item from the game
+      await this.#entityManager.removeEntityInstance(itemId);
 
-      // Dispatch success event
-      this.#dispatcher.dispatch({
-        type: ITEM_CONSUMED_EVENT,
-        payload: {
-          consumerId: consumerRef,
-          itemId: itemRef,
-          bulkAdded: fuelSource.bulk,
-          energyContent: fuelSource.energy_content,
-          newBufferStorage,
-        },
+      // Dispatch item consumed event
+      this.#dispatcher.dispatch(ITEM_CONSUMED_EVENT, {
+        consumerId,
+        itemId,
+        fuelBulk,
+        fuelEnergy,
+        newBufferUsage: currentBufferUsage + fuelBulk,
       });
 
       log.debug('Item consumed successfully', {
-        consumerId: consumerRef,
-        itemId: itemRef,
-        bulkAdded: fuelSource.bulk,
-        energyContent: fuelSource.energy_content,
-        bufferItems: newBufferStorage.length,
+        consumerId,
+        itemId,
+        fuelBulk,
+        fuelEnergy,
+        newBufferUsage: currentBufferUsage + fuelBulk,
       });
     } catch (error) {
-      log.error('CONSUME_ITEM operation failed', error, {
-        consumerId: consumerRef,
-        itemId: itemRef,
+      log.error('Consume item operation failed', error, {
+        consumerId,
+        itemId,
       });
       safeDispatchError(
         this.#dispatcher,
         `CONSUME_ITEM: Operation failed - ${error.message}`,
-        { consumerId: consumerRef, itemId: itemRef, error: error.message },
+        { consumerId, itemId, error: error.message },
         log
       );
     }

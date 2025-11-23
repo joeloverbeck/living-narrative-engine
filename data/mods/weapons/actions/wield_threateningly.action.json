@@ -1,0 +1,26 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "weapons:wield_threateningly",
+  "name": "Wield Threateningly",
+  "description": "Wield a weapon in a threatening manner to intimidate",
+  "generateCombinations": true,
+  "required_components": {
+    "actor": [
+      "items:inventory"
+    ]
+  },
+  "targets": {
+    "primary": {
+      "scope": "weapons:weapons_in_inventory",
+      "placeholder": "target",
+      "description": "Weapon to wield"
+    }
+  },
+  "template": "wield {target} threateningly",
+  "visual": {
+    "backgroundColor": "#112a46",
+    "textColor": "#e6f1ff",
+    "hoverBackgroundColor": "#0b3954",
+    "hoverTextColor": "#f0f4f8"
+  }
+}

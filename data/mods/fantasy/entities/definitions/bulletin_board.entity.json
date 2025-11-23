@@ -1,0 +1,29 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "fantasy:bulletin_board",
+  "components": {
+    "core:name": {
+      "text": "bulletin board"
+    },
+    "core:description": {
+      "text": "A weathered wooden board mounted to the wall, peppered with notices pinned by rusted nails and the occasional knife. The wood is stained by years of rain, ale spills, and what you hope is just mud. Several posted requests flutter in the draft, ranging from the mundane to the deeply concerning."
+    },
+    "items:item": {},
+    "items:container": {
+      "contents": [
+        "fantasy:notice_reciprocal_services_instance",
+        "fantasy:notice_alibi_wanted_instance",
+        "fantasy:notice_staged_threat_instance",
+        "fantasy:notice_possessed_chickens_instance",
+        "fantasy:notice_birthday_musician_instance",
+        "fantasy:notice_dignity_recovery_instance"
+      ],
+      "capacity": {
+        "maxWeight": 5.0,
+        "maxItems": 20
+      },
+      "isOpen": true,
+      "requiresKey": false
+    }
+  }
+}

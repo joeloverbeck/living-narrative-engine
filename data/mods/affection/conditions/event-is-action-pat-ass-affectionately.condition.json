@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "affection:event-is-action-pat-ass-affectionately",
+  "description": "Checks if the triggering event is for the 'affection:pat_ass_affectionately' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "affection:pat_ass_affectionately"
+    ]
+  }
+}

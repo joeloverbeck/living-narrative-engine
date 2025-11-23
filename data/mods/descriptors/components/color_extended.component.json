@@ -16,6 +16,7 @@
           "blonde",
           "blush-pink",
           "bronze",
+          "brown-grey-mixed",
           "brunette",
           "charcoal-gray",
           "cobalt",
@@ -51,10 +52,12 @@
           "sickly-gray-green",
           "silver",
           "smoke-black",
+          "tan-brown",
           "taupe",
           "translucent-white",
           "varied-human-colors",
-          "violet"
+          "violet",
+          "warm-brown"
         ],
         "default": "raven-black"
       }

@@ -1,5 +1,21 @@
 {
     "$schema": "http://example.com/schemas/entity-instance.schema.json",
     "instanceId": "fantasy:vespera_nightwhisper_instance",
-    "definitionId": "fantasy:vespera_nightwhisper"
+    "definitionId": "fantasy:vespera_nightwhisper",
+    "componentOverrides": {
+        "core:position": {
+            "locationId": "fantasy:mudbrook_on_the_bend_instance"
+        },
+        "items:inventory": {
+            "items": [
+                "fantasy:vespera_hybrid_lute_viol_instance",
+                "fantasy:vespera_rapier_instance",
+                "fantasy:vespera_main_gauche_instance"
+            ],
+            "capacity": {
+                "maxWeight": 50.0,
+                "maxItems": 20
+            }
+        }
+    }
 }

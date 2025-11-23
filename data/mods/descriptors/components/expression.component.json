@@ -1,0 +1,64 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:expression",
+  "description": "Natural resting expression or demeanor visible in facial features",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "demeanor": {
+        "type": "string",
+        "description": "The resting expression or visible demeanor",
+        "enum": [
+          "neutral",
+          "content",
+          "peaceful",
+          "serene",
+          "kind",
+          "warm",
+          "gentle",
+          "cheerful",
+          "pleasant",
+          "stern",
+          "harsh",
+          "severe",
+          "grim",
+          "serious",
+          "worried",
+          "anxious",
+          "melancholy",
+          "sad",
+          "sullen",
+          "angry",
+          "bitter",
+          "weary",
+          "tired",
+          "haunted",
+          "mischievous",
+          "sly",
+          "calculating",
+          "cold",
+          "distant",
+          "proud",
+          "haughty",
+          "humble"
+        ],
+        "default": "neutral"
+      }
+    },
+    "required": ["demeanor"],
+    "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid expression demeanor: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Expression demeanor is required",
+      "invalidType": "Invalid type for expression: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
+  }
+}

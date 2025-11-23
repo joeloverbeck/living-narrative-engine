@@ -1,0 +1,58 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:skin_condition",
+  "description": "Describes the condition and markings of skin including weathering, staining, and wear",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "conditions": {
+        "type": "array",
+        "description": "Array of skin condition descriptors",
+        "items": {
+          "type": "string",
+          "enum": [
+            "pristine",
+            "smooth",
+            "weathered",
+            "sun-damaged",
+            "wind-chapped",
+            "chemically-stained",
+            "tannery-stained",
+            "dye-stained",
+            "soot-stained",
+            "ink-stained",
+            "oil-stained",
+            "work-worn",
+            "callused",
+            "heavily-callused",
+            "cracked",
+            "peeling",
+            "flaking",
+            "dry",
+            "oily",
+            "scarred",
+            "pockmarked",
+            "blemished"
+          ]
+        },
+        "minItems": 1,
+        "uniqueItems": true
+      }
+    },
+    "required": ["conditions"],
+    "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid skin condition: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Skin condition is required",
+      "invalidType": "Invalid type for skin condition: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
+  }
+}

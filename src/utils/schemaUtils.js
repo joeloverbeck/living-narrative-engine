@@ -9,7 +9,10 @@ import { ensureValidLogger } from './loggerUtils.js';
  * with the same ID first. Errors encountered during removal or addition are
  * re-thrown after being logged.
  *
- * If an identical schema is already loaded, registration is skipped silently.
+ * When a schema is already loaded:
+ * - Event payload schemas (ID contains '#payload'): Logged at debug level as this is
+ *   expected during page navigation with singleton SchemaValidator
+ * - Other schemas: Logged at warn level using the provided warnMessage or default
  *
  * @param {import('../interfaces/coreServices.js').ISchemaValidator} validator
  * @param {object} schema
@@ -27,12 +30,21 @@ export async function registerSchema(
 ) {
   const moduleLogger = ensureValidLogger(logger, 'SchemaUtils');
   if (validator.isSchemaLoaded(schemaId)) {
-    // For now, we'll just continue with the existing behavior
-    // A proper fix would require exposing a method to get the raw schema from AjvSchemaValidator
-    // This would prevent duplicate warnings in production while maintaining compatibility
-    moduleLogger.warn(
-      warnMessage || `Schema '${schemaId}' already loaded. Overwriting.`
-    );
+    // Event payload schemas are commonly re-registered during page navigation
+    // because SchemaValidator is a singleton that persists across page loads.
+    // This is expected behavior when the same mod is loaded multiple times,
+    // so we only log at debug level for payload schemas to reduce noise.
+    const isPayloadSchema = schemaId.includes('#payload');
+
+    if (isPayloadSchema) {
+      moduleLogger.debug(
+        `Schema '${schemaId}' already loaded from previous session. Re-registering.`
+      );
+    } else {
+      moduleLogger.warn(
+        warnMessage || `Schema '${schemaId}' already loaded. Overwriting.`
+      );
+    }
     validator.removeSchema(schemaId);
   }
   await validator.addSchema(schema, schemaId);

@@ -36,7 +36,7 @@ describe('Schema Overwrite Warning - Reproduction Test', () => {
     testBed.cleanup();
   });
 
-  it('should reproduce schema overwrite warnings when the same schema is registered twice', async () => {
+  it('should reproduce schema overwrite debug logs when the same payload schema is registered twice', async () => {
     // Arrange: Set up the scenario where a schema is already loaded
     const schemaId = 'core:character_concept_created#payload';
     const schema = {
@@ -52,19 +52,21 @@ describe('Schema Overwrite Warning - Reproduction Test', () => {
     // First, simulate that the schema is already loaded (returns true)
     mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);
 
-    const warnMessage = `EventLoader [core]: Payload schema ID '${schemaId}' for event 'core:character_concept_created' was already loaded. Overwriting.`;
-
     // Act: Try to register the same schema again
+    // Note: Payload schemas (with #payload) are logged at debug level, not warn level
     await registerInlineSchema(
       mockSchemaValidator,
       schema,
       schemaId,
       mockLogger,
-      { warnMessage }
+      {} // No warnMessage needed for payload schemas
     );
 
-    // Assert: Verify that the warning was logged
-    expect(mockLogger.warn).toHaveBeenCalledWith(warnMessage);
+    // Assert: Verify that debug was logged (payload schemas use debug level)
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      `Schema '${schemaId}' already loaded from previous session. Re-registering.`
+    );
+    expect(mockLogger.warn).not.toHaveBeenCalled();
 
     // Verify that the schema was removed and re-added (overwrite behavior)
     expect(mockSchemaValidator.removeSchema).toHaveBeenCalledWith(schemaId);
@@ -74,18 +76,18 @@ describe('Schema Overwrite Warning - Reproduction Test', () => {
     );
   });
 
-  it('should demonstrate the specific warnings from the logs', async () => {
-    // Arrange: Set up both schemas that are causing the warnings
+  it('should demonstrate the specific debug logs from payload schemas', async () => {
+    // Arrange: Set up both schemas that are being re-registered
     const schemas = [
       {
         id: 'core:character_concept_created#payload',
-        warnMessage:
-          "EventLoader [core]: Payload schema ID 'core:character_concept_created#payload' for event 'core:character_concept_created' was already loaded. Overwriting.",
+        debugMessage:
+          "Schema 'core:character_concept_created#payload' already loaded from previous session. Re-registering.",
       },
       {
         id: 'core:character_concept_deleted#payload',
-        warnMessage:
-          "EventLoader [core]: Payload schema ID 'core:character_concept_deleted#payload' for event 'core:character_concept_deleted' was already loaded. Overwriting.",
+        debugMessage:
+          "Schema 'core:character_concept_deleted#payload' already loaded from previous session. Re-registering.",
       },
     ];
 
@@ -93,19 +95,21 @@ describe('Schema Overwrite Warning - Reproduction Test', () => {
     mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);
 
     // Act: Register both schemas (simulating the dual registration scenario)
+    // Note: Payload schemas are logged at debug level, not warn level
     for (const schemaInfo of schemas) {
       await registerInlineSchema(
         mockSchemaValidator,
         { type: 'object', properties: { conceptId: { type: 'string' } } },
         schemaInfo.id,
         mockLogger,
-        { warnMessage: schemaInfo.warnMessage }
+        {} // No warnMessage needed for payload schemas
       );
     }
 
-    // Assert: Verify both warnings were logged exactly as they appear in the logs
-    expect(mockLogger.warn).toHaveBeenCalledWith(schemas[0].warnMessage);
-    expect(mockLogger.warn).toHaveBeenCalledWith(schemas[1].warnMessage);
+    // Assert: Verify both debug messages were logged (payload schemas use debug level)
+    expect(mockLogger.debug).toHaveBeenCalledWith(schemas[0].debugMessage);
+    expect(mockLogger.debug).toHaveBeenCalledWith(schemas[1].debugMessage);
+    expect(mockLogger.warn).not.toHaveBeenCalled();
 
     // Verify both schemas were removed and re-added
     expect(mockSchemaValidator.removeSchema).toHaveBeenCalledWith(

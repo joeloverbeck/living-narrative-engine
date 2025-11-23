@@ -20,7 +20,6 @@ import ConsumeItemHandler from '../../../../src/logic/operationHandlers/consumeI
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
 
-const FUEL_CONVERTER_COMPONENT_ID = 'metabolism:fuel_converter';
 const METABOLIC_STORE_COMPONENT_ID = 'metabolism:metabolic_store';
 const FUEL_SOURCE_COMPONENT_ID = 'metabolism:fuel_source';
 const ITEM_CONSUMED_EVENT = 'metabolism:item_consumed';
@@ -40,8 +39,8 @@ beforeEach(() => {
 
   em = {
     getComponentData: jest.fn(),
+    addComponent: jest.fn().mockResolvedValue(undefined),
     hasComponent: jest.fn(),
-    batchAddComponentsOptimized: jest.fn().mockResolvedValue(undefined),
     removeEntityInstance: jest.fn(),
     getEntityInstance: jest.fn(),
   };
@@ -103,13 +102,6 @@ describe('ConsumeItemHandler', () => {
     });
 
     test('successfully consumes compatible food and adds to buffer', async () => {
-      const fuelConverter = {
-        capacity: 100,
-        conversion_rate: 5,
-        efficiency: 0.8,
-        accepted_fuel_tags: ['organic'],
-      };
-
       const metabolicStore = {
         current_energy: 50,
         max_energy: 100,
@@ -121,13 +113,11 @@ describe('ConsumeItemHandler', () => {
       const fuelSource = {
         energy_content: 200,
         bulk: 30,
-        fuel_tags: ['organic', 'cooked'],
       };
 
       em.getComponentData
-        .mockReturnValueOnce(fuelConverter) // consumer fuel_converter
-        .mockReturnValueOnce(metabolicStore) // consumer metabolic_store
-        .mockReturnValueOnce(fuelSource); // item fuel_source
+        .mockReturnValueOnce(fuelSource) // item fuel_source
+        .mockReturnValueOnce(metabolicStore); // consumer metabolic_store
 
       const executionContext = { evaluationContext: { context: {} } };
       await handler.execute(
@@ -139,46 +129,34 @@ describe('ConsumeItemHandler', () => {
       );
 
       // Verify buffer was updated
-      expect(em.batchAddComponentsOptimized).toHaveBeenCalledWith([
-        {
-          instanceId: 'actor_1',
-          componentTypeId: METABOLIC_STORE_COMPONENT_ID,
-          componentData: expect.objectContaining({
-            buffer_storage: [
-              { bulk: 10, energy_content: 100 },
-              { bulk: 30, energy_content: 200 },
-            ],
-          }),
-        },
-      ]);
+      expect(em.addComponent).toHaveBeenCalledWith(
+        'actor_1',
+        METABOLIC_STORE_COMPONENT_ID,
+        expect.objectContaining({
+          buffer_storage: [
+            { bulk: 10, energy_content: 100 },
+            { bulk: 30, energy_content: 200 },
+          ],
+        })
+      );
 
       // Verify item was removed
       expect(em.removeEntityInstance).toHaveBeenCalledWith('bread_1');
 
       // Verify event was dispatched
-      expect(dispatcher.dispatch).toHaveBeenCalledWith({
-        type: ITEM_CONSUMED_EVENT,
-        payload: {
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        ITEM_CONSUMED_EVENT,
+        {
           consumerId: 'actor_1',
           itemId: 'bread_1',
-          bulkAdded: 30,
-          energyContent: 200,
-          newBufferStorage: [
-            { bulk: 10, energy_content: 100 },
-            { bulk: 30, energy_content: 200 },
-          ],
-        },
-      });
+          fuelBulk: 30,
+          fuelEnergy: 200,
+          newBufferUsage: 40,
+        }
+      );
     });
 
     test('handles multiple fuel tags correctly', async () => {
-      const fuelConverter = {
-        capacity: 100,
-        conversion_rate: 5,
-        efficiency: 0.8,
-        accepted_fuel_tags: ['blood', 'organic'],
-      };
-
       const metabolicStore = {
         current_energy: 50,
         max_energy: 100,
@@ -190,13 +168,11 @@ describe('ConsumeItemHandler', () => {
       const fuelSource = {
         energy_content: 150,
         bulk: 20,
-        fuel_tags: ['blood', 'liquid'],
       };
 
       em.getComponentData
-        .mockReturnValueOnce(fuelConverter)
-        .mockReturnValueOnce(metabolicStore)
-        .mockReturnValueOnce(fuelSource);
+        .mockReturnValueOnce(fuelSource)
+        .mockReturnValueOnce(metabolicStore);
 
       const executionContext = { evaluationContext: { context: {} } };
       await handler.execute(
@@ -207,23 +183,20 @@ describe('ConsumeItemHandler', () => {
         executionContext
       );
 
-      expect(em.batchAddComponentsOptimized).toHaveBeenCalled();
+      expect(em.addComponent).toHaveBeenCalled();
       expect(em.removeEntityInstance).toHaveBeenCalledWith('blood_vial_1');
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        ITEM_CONSUMED_EVENT,
         expect.objectContaining({
-          type: ITEM_CONSUMED_EVENT,
+          consumerId: 'vampire_1',
+          itemId: 'blood_vial_1',
+          fuelBulk: 20,
+          fuelEnergy: 150,
         })
       );
     });
 
     test('validates capacity boundary - exactly at limit', async () => {
-      const fuelConverter = {
-        capacity: 100,
-        conversion_rate: 5,
-        efficiency: 0.8,
-        accepted_fuel_tags: ['organic'],
-      };
-
       const metabolicStore = {
         current_energy: 50,
         max_energy: 100,
@@ -235,13 +208,11 @@ describe('ConsumeItemHandler', () => {
       const fuelSource = {
         energy_content: 200,
         bulk: 30, // Exactly fills remaining capacity
-        fuel_tags: ['organic'],
       };
 
       em.getComponentData
-        .mockReturnValueOnce(fuelConverter)
-        .mockReturnValueOnce(metabolicStore)
-        .mockReturnValueOnce(fuelSource);
+        .mockReturnValueOnce(fuelSource)
+        .mockReturnValueOnce(metabolicStore);
 
       const executionContext = { evaluationContext: { context: {} } };
       await handler.execute(
@@ -252,18 +223,16 @@ describe('ConsumeItemHandler', () => {
         executionContext
       );
 
-      expect(em.batchAddComponentsOptimized).toHaveBeenCalledWith([
-        {
-          instanceId: 'actor_1',
-          componentTypeId: METABOLIC_STORE_COMPONENT_ID,
-          componentData: expect.objectContaining({
-            buffer_storage: expect.arrayContaining([
-              { bulk: 70, energy_content: 700 },
-              { bulk: 30, energy_content: 200 },
-            ]),
-          }),
-        },
-      ]);
+      expect(em.addComponent).toHaveBeenCalledWith(
+        'actor_1',
+        METABOLIC_STORE_COMPONENT_ID,
+        expect.objectContaining({
+          buffer_storage: expect.arrayContaining([
+            { bulk: 70, energy_content: 700 },
+            { bulk: 30, energy_content: 200 },
+          ]),
+        })
+      );
       expect(em.removeEntityInstance).toHaveBeenCalled();
     });
   });
@@ -326,8 +295,15 @@ describe('ConsumeItemHandler', () => {
       expect(em.removeEntityInstance).not.toHaveBeenCalled();
     });
 
-    test('rejects when consumer does not have fuel_converter component', async () => {
-      em.getComponentData.mockReturnValueOnce(null); // No fuel_converter
+    test('rejects when consumer does not have metabolic_store component', async () => {
+      const fuelSource = {
+        bulk: 30,
+        energy_content: 200,
+      };
+
+      em.getComponentData
+        .mockReturnValueOnce(fuelSource) // Item has fuel_source
+        .mockReturnValueOnce(null); // Consumer has no metabolic_store
 
       const executionContext = { evaluationContext: { context: {} } };
       await handler.execute(
@@ -339,38 +315,24 @@ describe('ConsumeItemHandler', () => {
       );
 
       expect(em.getComponentData).toHaveBeenCalledWith(
+        'bread_1',
+        FUEL_SOURCE_COMPONENT_ID
+      );
+      expect(em.getComponentData).toHaveBeenCalledWith(
         'actor_1',
-        FUEL_CONVERTER_COMPONENT_ID
+        METABOLIC_STORE_COMPONENT_ID
       );
       expect(em.removeEntityInstance).not.toHaveBeenCalled();
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',
         expect.objectContaining({
-          message: expect.stringContaining('fuel_converter'),
+          message: expect.stringContaining('metabolic_store'),
         })
       );
     });
 
     test('rejects when item does not have fuel_source component', async () => {
-      const fuelConverter = {
-        capacity: 100,
-        conversion_rate: 5,
-        efficiency: 0.8,
-        accepted_fuel_tags: ['organic'],
-      };
-
-      const metabolicStore = {
-        current_energy: 50,
-        max_energy: 100,
-        base_burn_rate: 1.0,
-        buffer_storage: [],
-        buffer_capacity: 100,
-      };
-
-      em.getComponentData
-        .mockReturnValueOnce(fuelConverter)
-        .mockReturnValueOnce(metabolicStore)
-        .mockReturnValueOnce(null); // No fuel_source
+      em.getComponentData.mockReturnValueOnce(null); // No fuel_source on item
 
       const executionContext = { evaluationContext: { context: {} } };
       await handler.execute(
@@ -381,6 +343,10 @@ describe('ConsumeItemHandler', () => {
         executionContext
       );
 
+      expect(em.getComponentData).toHaveBeenCalledWith(
+        'rock_1',
+        FUEL_SOURCE_COMPONENT_ID
+      );
       expect(em.removeEntityInstance).not.toHaveBeenCalled();
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',
@@ -390,59 +356,8 @@ describe('ConsumeItemHandler', () => {
       );
     });
 
-    test('rejects incompatible fuel tags', async () => {
-      const fuelConverter = {
-        capacity: 100,
-        conversion_rate: 20,
-        efficiency: 0.95,
-        accepted_fuel_tags: ['blood'], // Vampire only accepts blood
-      };
-
-      const metabolicStore = {
-        current_energy: 50,
-        max_energy: 100,
-        base_burn_rate: 1.0,
-        buffer_storage: [],
-        buffer_capacity: 100,
-      };
-
-      const fuelSource = {
-        energy_content: 200,
-        bulk: 30,
-        fuel_tags: ['organic', 'cooked'], // Regular food
-      };
-
-      em.getComponentData
-        .mockReturnValueOnce(fuelConverter)
-        .mockReturnValueOnce(metabolicStore)
-        .mockReturnValueOnce(fuelSource);
-
-      const executionContext = { evaluationContext: { context: {} } };
-      await handler.execute(
-        {
-          consumer_ref: 'vampire_1',
-          item_ref: 'bread_1',
-        },
-        executionContext
-      );
-
-      expect(em.removeEntityInstance).not.toHaveBeenCalled();
-      expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        'core:system_error_occurred',
-        expect.objectContaining({
-          message: expect.stringContaining('Incompatible fuel type'),
-        })
-      );
-    });
 
     test('rejects when buffer capacity is exceeded', async () => {
-      const fuelConverter = {
-        capacity: 100,
-        conversion_rate: 5,
-        efficiency: 0.8,
-        accepted_fuel_tags: ['organic'],
-      };
-
       const metabolicStore = {
         current_energy: 50,
         max_energy: 100,
@@ -454,13 +369,11 @@ describe('ConsumeItemHandler', () => {
       const fuelSource = {
         energy_content: 300,
         bulk: 50, // Too large for remaining space
-        fuel_tags: ['organic', 'meat'],
       };
 
       em.getComponentData
-        .mockReturnValueOnce(fuelConverter)
-        .mockReturnValueOnce(metabolicStore)
-        .mockReturnValueOnce(fuelSource);
+        .mockReturnValueOnce(fuelSource)
+        .mockReturnValueOnce(metabolicStore);
 
       const executionContext = { evaluationContext: { context: {} } };
       await handler.execute(
@@ -471,6 +384,14 @@ describe('ConsumeItemHandler', () => {
         executionContext
       );
 
+      expect(em.getComponentData).toHaveBeenCalledWith(
+        'steak_1',
+        FUEL_SOURCE_COMPONENT_ID
+      );
+      expect(em.getComponentData).toHaveBeenCalledWith(
+        'actor_1',
+        METABOLIC_STORE_COMPONENT_ID
+      );
       expect(em.removeEntityInstance).not.toHaveBeenCalled();
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',
@@ -494,13 +415,6 @@ describe('ConsumeItemHandler', () => {
     });
 
     test('handles errors during buffer update gracefully', async () => {
-      const fuelConverter = {
-        capacity: 100,
-        conversion_rate: 5,
-        efficiency: 0.8,
-        accepted_fuel_tags: ['organic'],
-      };
-
       const metabolicStore = {
         current_energy: 50,
         max_energy: 100,
@@ -512,14 +426,12 @@ describe('ConsumeItemHandler', () => {
       const fuelSource = {
         energy_content: 200,
         bulk: 30,
-        fuel_tags: ['organic'],
       };
 
       em.getComponentData
-        .mockReturnValueOnce(fuelConverter)
-        .mockReturnValueOnce(metabolicStore)
-        .mockReturnValueOnce(fuelSource);
-      em.batchAddComponentsOptimized.mockRejectedValueOnce(
+        .mockReturnValueOnce(fuelSource) // item fuel_source
+        .mockReturnValueOnce(metabolicStore); // consumer metabolic_store
+      em.addComponent.mockRejectedValueOnce(
         new Error('Database error')
       );
 
@@ -533,7 +445,7 @@ describe('ConsumeItemHandler', () => {
       );
 
       expect(log.error).toHaveBeenCalledWith(
-        expect.stringContaining('CONSUME_ITEM operation failed'),
+        expect.stringContaining('Consume item operation failed'),
         expect.any(Error),
         expect.objectContaining({
           consumerId: 'actor_1',
@@ -562,13 +474,6 @@ describe('ConsumeItemHandler', () => {
     });
 
     test('handles empty buffer consumption', async () => {
-      const fuelConverter = {
-        capacity: 100,
-        conversion_rate: 5,
-        efficiency: 0.8,
-        accepted_fuel_tags: ['organic'],
-      };
-
       const metabolicStore = {
         current_energy: 50,
         max_energy: 100,
@@ -580,13 +485,11 @@ describe('ConsumeItemHandler', () => {
       const fuelSource = {
         energy_content: 150,
         bulk: 20,
-        fuel_tags: ['organic'],
       };
 
       em.getComponentData
-        .mockReturnValueOnce(fuelConverter)
-        .mockReturnValueOnce(metabolicStore)
-        .mockReturnValueOnce(fuelSource);
+        .mockReturnValueOnce(fuelSource) // item fuel_source
+        .mockReturnValueOnce(metabolicStore); // consumer metabolic_store
 
       const executionContext = { evaluationContext: { context: {} } };
       await handler.execute(
@@ -597,25 +500,16 @@ describe('ConsumeItemHandler', () => {
         executionContext
       );
 
-      expect(em.batchAddComponentsOptimized).toHaveBeenCalledWith([
-        {
-          instanceId: 'actor_1',
-          componentTypeId: METABOLIC_STORE_COMPONENT_ID,
-          componentData: expect.objectContaining({
-            buffer_storage: [{ bulk: 20, energy_content: 150 }],
-          }),
-        },
-      ]);
+      expect(em.addComponent).toHaveBeenCalledWith(
+        'actor_1',
+        METABOLIC_STORE_COMPONENT_ID,
+        expect.objectContaining({
+          buffer_storage: [{ bulk: 20, energy_content: 150 }],
+        })
+      );
     });
 
     test('handles fuel tag with single matching tag', async () => {
-      const fuelConverter = {
-        capacity: 100,
-        conversion_rate: 5,
-        efficiency: 0.8,
-        accepted_fuel_tags: ['organic', 'synthetic', 'energy'],
-      };
-
       const metabolicStore = {
         current_energy: 50,
         max_energy: 100,
@@ -627,13 +521,11 @@ describe('ConsumeItemHandler', () => {
       const fuelSource = {
         energy_content: 100,
         bulk: 10,
-        fuel_tags: ['synthetic'], // Only one tag, but it matches
       };
 
       em.getComponentData
-        .mockReturnValueOnce(fuelConverter)
-        .mockReturnValueOnce(metabolicStore)
-        .mockReturnValueOnce(fuelSource);
+        .mockReturnValueOnce(fuelSource) // item fuel_source
+        .mockReturnValueOnce(metabolicStore); // consumer metabolic_store
 
       const executionContext = { evaluationContext: { context: {} } };
       await handler.execute(
@@ -646,20 +538,15 @@ describe('ConsumeItemHandler', () => {
 
       expect(em.removeEntityInstance).toHaveBeenCalledWith('battery_1');
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        ITEM_CONSUMED_EVENT,
         expect.objectContaining({
-          type: ITEM_CONSUMED_EVENT,
+          consumerId: 'robot_1',
+          itemId: 'battery_1',
         })
       );
     });
 
     test('preserves all metabolic store properties during update', async () => {
-      const fuelConverter = {
-        capacity: 100,
-        conversion_rate: 5,
-        efficiency: 0.8,
-        accepted_fuel_tags: ['organic'],
-      };
-
       const metabolicStore = {
         current_energy: 50,
         max_energy: 100,
@@ -672,13 +559,11 @@ describe('ConsumeItemHandler', () => {
       const fuelSource = {
         energy_content: 200,
         bulk: 20,
-        fuel_tags: ['organic'],
       };
 
       em.getComponentData
-        .mockReturnValueOnce(fuelConverter)
-        .mockReturnValueOnce(metabolicStore)
-        .mockReturnValueOnce(fuelSource);
+        .mockReturnValueOnce(fuelSource) // item fuel_source
+        .mockReturnValueOnce(metabolicStore); // consumer metabolic_store
 
       const executionContext = { evaluationContext: { context: {} } };
       await handler.execute(
@@ -689,19 +574,17 @@ describe('ConsumeItemHandler', () => {
         executionContext
       );
 
-      expect(em.batchAddComponentsOptimized).toHaveBeenCalledWith([
-        {
-          instanceId: 'actor_1',
-          componentTypeId: METABOLIC_STORE_COMPONENT_ID,
-          componentData: expect.objectContaining({
-            buffer_storage: [
-              { bulk: 30, energy_content: 300 },
-              { bulk: 20, energy_content: 200 },
-            ],
-            custom_property: 'preserved',
-          }),
-        },
-      ]);
+      expect(em.addComponent).toHaveBeenCalledWith(
+        'actor_1',
+        METABOLIC_STORE_COMPONENT_ID,
+        expect.objectContaining({
+          buffer_storage: [
+            { bulk: 30, energy_content: 300 },
+            { bulk: 20, energy_content: 200 },
+          ],
+          custom_property: 'preserved',
+        })
+      );
     });
   });
 });
