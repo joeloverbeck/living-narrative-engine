@@ -794,9 +794,43 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
             finalizeCombination(depCombination);
           }
         } else if (trulyDependentKeys.length > 1) {
-          // TODO: Implement proper cartesian product for multiple dependent keys
-          // Currently we group them together regardless of generateAllCombinations flag
-          finalizeCombination(combination);
+          // Multiple dependent keys - create cartesian product of all dependent targets
+          const dependentTargetArrays = trulyDependentKeys.map((key) => ({
+            key,
+            targets: dependentTargetsByKey.get(key),
+          }));
+
+          // Generate cartesian product recursively
+          const generateDependentProduct = (index = 0, current = {}) => {
+            if (combinations.length >= maxCombinations) return;
+
+            if (index === dependentTargetArrays.length) {
+              // Create combination with selected dependent targets
+              const depCombination = {
+                [primaryKey]: [primaryTarget],
+              };
+
+              // Add each selected dependent target
+              for (const depKey of trulyDependentKeys) {
+                depCombination[depKey] = [current[depKey]];
+              }
+
+              // Add independent targets as-is (they'll be expanded later)
+              for (const indepKey of independentKeys) {
+                depCombination[indepKey] = dependentTargetsByKey.get(indepKey);
+              }
+
+              finalizeCombination(depCombination);
+              return;
+            }
+
+            const { key, targets } = dependentTargetArrays[index];
+            for (const target of targets) {
+              generateDependentProduct(index + 1, { ...current, [key]: target });
+            }
+          };
+
+          generateDependentProduct();
         } else {
           // No truly dependent keys, only independent keys
           finalizeCombination(combination);
