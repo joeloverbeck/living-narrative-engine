@@ -44,9 +44,9 @@ describe('Tortoise Tail Entity Validation', () => {
       expect(tailEntity.components['descriptors:shape_general'].shape).toBe('conical');
     });
 
-    it('should have descriptors:color_extended component with "olive-green" color', () => {
+    it('should have descriptors:color_extended component with "dark-olive" color', () => {
       expect(tailEntity.components['descriptors:color_extended']).toBeDefined();
-      expect(tailEntity.components['descriptors:color_extended'].color).toBe('olive-green');
+      expect(tailEntity.components['descriptors:color_extended'].color).toBe('dark-olive');
     });
   });
 
@@ -250,7 +250,7 @@ describe('Tortoise Tail Entity Validation', () => {
     });
 
     it('should have color consistent with tortoise appearance', () => {
-      expect(tailEntity.components['descriptors:color_extended'].color).toBe('olive-green');
+      expect(tailEntity.components['descriptors:color_extended'].color).toBe('dark-olive');
     });
   });
 

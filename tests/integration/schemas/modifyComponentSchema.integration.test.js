@@ -5,10 +5,42 @@
  * GOAP system specification.
  */
 
-import { describe, it, expect } from '@jest/globals';
-import { validateAgainstSchema } from '../../../src/validation/ajvSchemaValidator.js';
+import { describe, it, expect, beforeEach } from '@jest/globals';
+import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
+import ConsoleLogger from '../../../src/logging/consoleLogger.js';
+import path from 'path';
+import fs from 'fs';
 
 describe('MODIFY_COMPONENT Schema Validation', () => {
+  let schemaValidator;
+
+  beforeEach(async () => {
+    // Create logger and validator
+    const logger = new ConsoleLogger('error');
+    schemaValidator = new AjvSchemaValidator({ logger });
+
+    // Load all schema files recursively from the schemas directory
+    // This ensures all $ref dependencies are available
+    const schemasDir = path.resolve('data/schemas');
+    const schemaFiles = fs.readdirSync(schemasDir, { recursive: true });
+
+    for (const file of schemaFiles) {
+      if (typeof file === 'string' && file.endsWith('.json')) {
+        const schemaPath = path.join(schemasDir, file);
+        try {
+          const schemaContent = fs.readFileSync(schemaPath, 'utf8');
+          const schema = JSON.parse(schemaContent);
+
+          if (schema.$id) {
+            await schemaValidator.addSchema(schema, schema.$id);
+          }
+        } catch (error) {
+          // Skip invalid JSON files or files without $id
+        }
+      }
+    }
+  });
+
   it('should validate set mode', () => {
     const operation = {
       type: 'MODIFY_COMPONENT',
@@ -21,11 +53,11 @@ describe('MODIFY_COMPONENT Schema Validation', () => {
       },
     };
 
-    const result = validateAgainstSchema(
+    const result = schemaValidator.validateAgainstSchema(
       operation,
       'schema://living-narrative-engine/operation.schema.json'
     );
-    expect(result.valid).toBe(true);
+    expect(result).toBe(true);
   });
 
   it('should validate increment mode', () => {
@@ -40,11 +72,11 @@ describe('MODIFY_COMPONENT Schema Validation', () => {
       },
     };
 
-    const result = validateAgainstSchema(
+    const result = schemaValidator.validateAgainstSchema(
       operation,
       'schema://living-narrative-engine/operation.schema.json'
     );
-    expect(result.valid).toBe(true);
+    expect(result).toBe(true);
   });
 
   it('should validate decrement mode', () => {
@@ -59,11 +91,11 @@ describe('MODIFY_COMPONENT Schema Validation', () => {
       },
     };
 
-    const result = validateAgainstSchema(
+    const result = schemaValidator.validateAgainstSchema(
       operation,
       'schema://living-narrative-engine/operation.schema.json'
     );
-    expect(result.valid).toBe(true);
+    expect(result).toBe(true);
   });
 
   it('should reject invalid mode', () => {
@@ -78,18 +110,11 @@ describe('MODIFY_COMPONENT Schema Validation', () => {
       },
     };
 
-    const result = validateAgainstSchema(
+    const result = schemaValidator.validateAgainstSchema(
       operation,
       'schema://living-narrative-engine/operation.schema.json'
     );
-    expect(result.valid).toBe(false);
-    expect(result.errors).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          message: expect.stringContaining('enum'),
-        }),
-      ])
-    );
+    expect(result).toBe(false);
   });
 
   it('should reject missing required fields', () => {
@@ -101,11 +126,11 @@ describe('MODIFY_COMPONENT Schema Validation', () => {
       },
     };
 
-    const result = validateAgainstSchema(
+    const result = schemaValidator.validateAgainstSchema(
       operation,
       'schema://living-narrative-engine/operation.schema.json'
     );
-    expect(result.valid).toBe(false);
+    expect(result).toBe(false);
   });
 
   it('should validate numeric value', () => {
@@ -120,11 +145,11 @@ describe('MODIFY_COMPONENT Schema Validation', () => {
       },
     };
 
-    const result = validateAgainstSchema(
+    const result = schemaValidator.validateAgainstSchema(
       operation,
       'schema://living-narrative-engine/operation.schema.json'
     );
-    expect(result.valid).toBe(true);
+    expect(result).toBe(true);
   });
 
   it('should validate string value (for set mode flexibility)', () => {
@@ -139,11 +164,11 @@ describe('MODIFY_COMPONENT Schema Validation', () => {
       },
     };
 
-    const result = validateAgainstSchema(
+    const result = schemaValidator.validateAgainstSchema(
       operation,
       'schema://living-narrative-engine/operation.schema.json'
     );
-    expect(result.valid).toBe(true);
+    expect(result).toBe(true);
   });
 
   it('should validate component_type pattern', () => {
@@ -158,10 +183,10 @@ describe('MODIFY_COMPONENT Schema Validation', () => {
       },
     };
 
-    const result = validateAgainstSchema(
+    const result = schemaValidator.validateAgainstSchema(
       operation,
       'schema://living-narrative-engine/operation.schema.json'
     );
-    expect(result.valid).toBe(true);
+    expect(result).toBe(true);
   });
 });

@@ -1,0 +1,43 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "fantasy:reading_spectacles",
+  "description": "Small reading spectacles designed to perch on a tortoise-person's beak",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "head_gear",
+        "secondary": []
+      },
+      "allowedLayers": [
+        "accessories"
+      ]
+    },
+    "core:material": {
+      "material": "metal"
+    },
+    "core:name": {
+      "text": "reading spectacles"
+    },
+    "core:description": {
+      "text": "Delicate reading spectacles with thin metal frames and precisely ground glass lenses. Designed specifically for tortoise-person anatomy, they perch with scholarly precision atop a pronounced beak rather than resting on ears. The lenses are sized for close work—perfect for deciphering faded ink on century-old documents. Through these unassuming circles of glass, bureaucratic details become crystal clear, allowing their wearer to maintain exacting standards of archival accuracy for decades on end."
+    },
+    "descriptors:color_extended": {
+      "color": "silver"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "head_gear"
+      ],
+      "coveragePriority": "accessories"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.05
+    }
+  }
+}

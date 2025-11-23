@@ -8,7 +8,7 @@ import { ClothingInstantiationService } from '../../../src/clothing/services/clo
 
 describe('Anatomy-Clothing Integration', () => {
   let eventBus;
-  let clothingService;
+  let clothingService; // eslint-disable-line no-unused-vars
   let mockEntityManager;
   let mockDataRegistry;
   let mockLogger;
@@ -36,6 +36,7 @@ describe('Anatomy-Clothing Integration', () => {
       getEntityInstance: jest.fn(),
       createEntityInstance: jest.fn(),
       getComponentData: jest.fn(),
+      removeEntityInstance: jest.fn(),
     };
 
     mockDataRegistry = {

@@ -10,19 +10,19 @@
       "minAge": {
         "type": "number",
         "minimum": 0,
-        "maximum": 200,
+        "maximum": 500,
         "description": "Minimum perceived age in years. The youngest the entity could reasonably appear to be."
       },
       "maxAge": {
         "type": "number",
         "minimum": 0,
-        "maximum": 200,
+        "maximum": 500,
         "description": "Maximum perceived age in years. The oldest the entity could reasonably appear to be."
       },
       "bestGuess": {
         "type": "number",
         "minimum": 0,
-        "maximum": 200,
+        "maximum": 500,
         "description": "Most likely age estimate in years. Optional field representing the most probable age within the range."
       }
     }

@@ -34,9 +34,9 @@ describe('Tortoise Arm Entity Validation', () => {
       expect(armEntity.components['descriptors:texture'].texture).toBe('scaled');
     });
 
-    it('should have descriptors:color_extended component with "olive-green" color', () => {
+    it('should have descriptors:color_extended component with "dark-olive" color', () => {
       expect(armEntity.components['descriptors:color_extended']).toBeDefined();
-      expect(armEntity.components['descriptors:color_extended'].color).toBe('olive-green');
+      expect(armEntity.components['descriptors:color_extended'].color).toBe('dark-olive');
     });
   });
 

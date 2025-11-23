@@ -7,48 +7,58 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 
 describe('Items Mod - Aiming Events', () => {
-  let fixture;
+  let aimFixture;
+  let lowerAimFixture;
 
   beforeEach(async () => {
-    fixture = await ModTestFixture.forAction('items', 'items:aim_item');
+    aimFixture = await ModTestFixture.forAction('items', 'items:aim_item');
+    lowerAimFixture = await ModTestFixture.forAction('items', 'items:lower_aim');
   });
 
   afterEach(() => {
-    if (fixture) {
-      fixture.cleanup();
+    if (aimFixture) {
+      aimFixture.cleanup();
+    }
+    if (lowerAimFixture) {
+      lowerAimFixture.cleanup();
     }
   });
 
   it('should dispatch item_aimed event when aiming', async () => {
     // Tests that the handle_aim_item rule dispatches the item_aimed event
-    const { actor, target } = fixture.createStandardActorTarget([
+    const { actor, target } = aimFixture.createStandardActorTarget([
       'Actor Name',
       'Target Name',
     ]);
 
     // Create an aimable item (pistol)
-    const pistol = fixture.entityFactory.createEntity('weapons:pistol', {
+    const pistolId = aimFixture.createEntity({
+      id: 'weapons:pistol',
       name: 'Pistol',
+      components: {
+        'items:item': {},
+        'items:portable': {},
+        'items:aimable': {},
+      },
     });
 
     // Add required components for aiming
-    fixture.entityManager.addComponent(actor.id, 'items:inventory', {
-      items: [pistol.id],
+    aimFixture.entityManager.addComponent(actor.id, 'items:inventory', {
+      items: [pistolId],
       maxWeightKg: 50,
     });
-    fixture.entityManager.addComponent(pistol.id, 'items:item', {});
-    fixture.entityManager.addComponent(pistol.id, 'items:portable', {});
-    fixture.entityManager.addComponent(pistol.id, 'items:aimable', {});
 
     // Execute the aim action
-    await fixture.executeAction(actor.id, {
-      primary: target.id,
-      secondary: pistol.id,
+    await aimFixture.executeAction(actor.id, target.id, {
+      skipDiscovery: true,
+      additionalPayload: {
+        secondaryId: pistolId,
+      },
     });
 
     // Verify aimed_at component was added to the item
-    const aimedAtComponent = fixture.entityManager.getComponent(
-      pistol.id,
+    const aimedAtComponent = aimFixture.entityManager.getComponent(
+      pistolId,
       'items:aimed_at'
     );
     expect(aimedAtComponent).toBeDefined();
@@ -56,63 +66,70 @@ describe('Items Mod - Aiming Events', () => {
     expect(aimedAtComponent.aimedBy).toBe(actor.id);
 
     // Verify event was dispatched with correct payload
-    const events = fixture.getDispatchedEvents('items:item_aimed');
-    expect(events).toHaveLength(1);
-    expect(events[0].payload).toMatchObject({
+    const itemAimedEvents = aimFixture.events.filter(
+      (e) => e.eventType === 'items:item_aimed'
+    );
+    expect(itemAimedEvents).toHaveLength(1);
+    expect(itemAimedEvents[0].payload).toMatchObject({
       actorEntity: actor.id,
-      itemEntity: pistol.id,
+      itemEntity: pistolId,
       targetEntity: target.id,
     });
-    expect(events[0].payload.timestamp).toBeDefined();
-    expect(typeof events[0].payload.timestamp).toBe('number');
+    expect(itemAimedEvents[0].payload.timestamp).toBeDefined();
+    expect(typeof itemAimedEvents[0].payload.timestamp).toBe('string');
   });
 
   it('should dispatch aim_lowered event when lowering aim', async () => {
     // Tests that the handle_lower_aim rule dispatches the aim_lowered event
-    const { actor, target } = fixture.createStandardActorTarget([
+    const { actor, target } = lowerAimFixture.createStandardActorTarget([
       'Actor Name',
       'Target Name',
     ]);
 
     // Create an aimable item (pistol) that is already aimed
-    const pistol = fixture.entityFactory.createEntity('weapons:pistol', {
+    const pistolId = lowerAimFixture.createEntity({
+      id: 'weapons:pistol',
       name: 'Pistol',
+      components: {
+        'items:item': {},
+        'items:portable': {},
+        'items:aimable': {},
+        'items:aimed_at': {
+          targetId: target.id,
+          aimedBy: actor.id,
+        },
+      },
     });
 
     // Add required components
-    fixture.entityManager.addComponent(actor.id, 'items:inventory', {
-      items: [pistol.id],
+    lowerAimFixture.entityManager.addComponent(actor.id, 'items:inventory', {
+      items: [pistolId],
       maxWeightKg: 50,
-    });
-    fixture.entityManager.addComponent(pistol.id, 'items:item', {});
-    fixture.entityManager.addComponent(pistol.id, 'items:portable', {});
-    fixture.entityManager.addComponent(pistol.id, 'items:aimable', {});
-    fixture.entityManager.addComponent(pistol.id, 'items:aimed_at', {
-      targetId: target.id,
-      aimedBy: actor.id,
     });
 
     // Execute the lower aim action
-    await fixture.executeAction(actor.id, {
-      primary: pistol.id,
+    await lowerAimFixture.executeAction(actor.id, pistolId, {
+      skipDiscovery: true,
     });
 
     // Verify aimed_at component was removed from the item
-    const aimedAtComponent = fixture.entityManager.getComponent(
-      pistol.id,
+    const aimedAtComponent = lowerAimFixture.entityManager.getComponent(
+      pistolId,
       'items:aimed_at'
     );
-    expect(aimedAtComponent).toBeUndefined();
+    expect(aimedAtComponent).toBeNull();
 
     // Verify event was dispatched with correct payload
-    const events = fixture.getDispatchedEvents('items:aim_lowered');
-    expect(events).toHaveLength(1);
-    expect(events[0].payload).toMatchObject({
+    const aimLoweredEvents = lowerAimFixture.events.filter(
+      (e) => e.eventType === 'items:aim_lowered'
+    );
+    expect(aimLoweredEvents).toHaveLength(1);
+    expect(aimLoweredEvents[0].payload).toMatchObject({
       actorEntity: actor.id,
-      itemEntity: pistol.id,
+      itemEntity: pistolId,
       previousTargetEntity: target.id,
     });
-    expect(events[0].payload.timestamp).toBeDefined();
-    expect(typeof events[0].payload.timestamp).toBe('number');
+    expect(aimLoweredEvents[0].payload.timestamp).toBeDefined();
+    expect(typeof aimLoweredEvents[0].payload.timestamp).toBe('string');
   });
 });

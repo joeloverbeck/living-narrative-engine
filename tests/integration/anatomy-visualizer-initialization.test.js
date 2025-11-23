@@ -17,6 +17,7 @@ describe('Anatomy Visualizer - Service Integration', () => {
     const mockEntityManager = {
       createEntityInstance: jest.fn(),
       getEntityInstance: jest.fn(),
+      removeEntityInstance: jest.fn(),
     };
 
     const mockDataRegistry = {
@@ -104,6 +105,7 @@ describe('Anatomy Visualizer - Service Integration', () => {
     const mockEntityManager = {
       createEntityInstance: jest.fn(),
       getEntityInstance: jest.fn(),
+      removeEntityInstance: jest.fn(),
     };
 
     const mockDataRegistry = {
@@ -213,6 +215,7 @@ describe('Anatomy Visualizer - Service Integration', () => {
     const mockEntityManager = {
       createEntityInstance: jest.fn().mockResolvedValue('clothing_123'),
       getEntityInstance: jest.fn(),
+      removeEntityInstance: jest.fn(),
     };
 
     const mockDataRegistry = {

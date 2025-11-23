@@ -103,7 +103,9 @@
       "openable_containers_at_location.scope"
     ],
     "events": [
+      "aim_lowered.event.json",
       "container_opened.event.json",
+      "item_aimed.event.json",
       "item_dropped.event.json",
       "item_picked_up.event.json",
       "item_put_in_container.event.json",

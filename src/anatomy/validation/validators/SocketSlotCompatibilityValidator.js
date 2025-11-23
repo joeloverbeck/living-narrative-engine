@@ -1,6 +1,9 @@
 import { BaseValidator } from './BaseValidator.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
-import { extractSocketsFromEntity } from '../socketExtractor.js';
+import {
+  extractSocketsFromEntity,
+  extractHierarchicalSockets,
+} from '../socketExtractor.js';
 import { levenshteinDistance } from '../../../utils/stringUtils.js';
 import { createValidatorLogger } from '../utils/validatorLoggingUtils.js';
 
@@ -89,18 +92,22 @@ function suggestSocketFix(
 }
 
 /**
- * Placeholder for structure template socket validation.
+ * Validates structure template socket compatibility (DEPRECATED - now handled hierarchically).
+ * This function is kept for backward compatibility but returns empty array.
+ * Hierarchical validation now happens in validateSocketSlotCompatibility.
  *
  * @param {object} _blueprint - Blueprint definition.
  * @param {Map<string, object>} _availableSockets - Available sockets map.
  * @param {object} _rootEntity - Root entity definition.
- * @returns {Array<object>} Currently empty list of issues.
+ * @returns {Array<object>} Empty list (validation moved to hierarchical approach).
+ * @deprecated Use extractHierarchicalSockets instead
  */
 function validateStructureTemplateSockets(
   _blueprint,
   _availableSockets,
   _rootEntity
 ) {
+  // Validation now happens in validateSocketSlotCompatibility via extractHierarchicalSockets
   return [];
 }
 
@@ -129,6 +136,9 @@ function getRootEntityDefinition(dataRegistry, entityId) {
 
 /**
  * Validates additionalSlots against available sockets for a blueprint/root entity pair.
+ * Supports hierarchical socket architecture where sockets can exist on:
+ * - Root entity (direct attachments)
+ * - Structure template generated parts (limbs, head, tail with nested sockets)
  *
  * @param {object} blueprint - Blueprint definition being validated.
  * @param {IDataRegistry|object} dataRegistry - Registry for entity lookups.
@@ -155,7 +165,23 @@ export async function validateSocketSlotCompatibility(blueprint, dataRegistry) {
     return errors;
   }
 
-  const sockets = extractSocketsFromEntity(rootEntity);
+  // Get structure template if exists
+  let structureTemplate = null;
+  if (blueprint.structureTemplate) {
+    structureTemplate = await getStructureTemplate(
+      dataRegistry,
+      blueprint.structureTemplate
+    );
+  }
+
+  // Extract hierarchical sockets (root + structure template generated parts)
+  const hierarchicalSockets = await extractHierarchicalSockets(
+    blueprint,
+    rootEntity,
+    structureTemplate,
+    dataRegistry
+  );
+
   const additionalSlots = blueprint?.additionalSlots || {};
 
   for (const [slotName, slotConfig] of Object.entries(additionalSlots)) {
@@ -175,35 +201,108 @@ export async function validateSocketSlotCompatibility(blueprint, dataRegistry) {
       continue;
     }
 
-    if (sockets.has(slotConfig.socket) || slotConfig.optional === true) {
+    // Check if socket exists in hierarchical socket map
+    if (hierarchicalSockets.has(slotConfig.socket) || slotConfig.optional === true) {
       continue;
     }
 
-    errors.push({
-      type: 'SOCKET_NOT_FOUND',
-      severity: 'error',
-      blueprintId: blueprint.id,
-      slotName,
-      socketId: slotConfig.socket,
-      rootEntityId: blueprint.root,
-      availableSockets: Array.from(sockets.keys()),
-      message: `Socket '${slotConfig.socket}' not found on root entity '${blueprint.root}'`,
-      fix: suggestSocketFix(
-        slotConfig.socket,
-        sockets,
-        blueprint.root,
-        rootEntity?._sourceFile
-      ),
-    });
-  }
-
-  if (blueprint.structureTemplate) {
-    errors.push(
-      ...validateStructureTemplateSockets(blueprint, sockets, rootEntity)
-    );
+    // Socket not found - check if it has a parent reference
+    if (slotConfig.parent) {
+      errors.push({
+        type: 'SOCKET_NOT_FOUND_ON_PARENT',
+        severity: 'error',
+        blueprintId: blueprint.id,
+        slotName,
+        socketId: slotConfig.socket,
+        parentSlot: slotConfig.parent,
+        rootEntityId: blueprint.root,
+        availableSockets: Array.from(hierarchicalSockets.keys()),
+        message: `Socket '${slotConfig.socket}' not found on parent slot '${slotConfig.parent}'`,
+        fix: suggestHierarchicalSocketFix(
+          slotConfig.socket,
+          slotConfig.parent,
+          hierarchicalSockets,
+          blueprint
+        ),
+      });
+    } else {
+      // No parent - socket should be on root entity
+      const rootSockets = extractSocketsFromEntity(rootEntity);
+      errors.push({
+        type: 'SOCKET_NOT_FOUND',
+        severity: 'error',
+        blueprintId: blueprint.id,
+        slotName,
+        socketId: slotConfig.socket,
+        rootEntityId: blueprint.root,
+        availableSockets: Array.from(rootSockets.keys()),
+        message: `Socket '${slotConfig.socket}' not found on root entity '${blueprint.root}'`,
+        fix: suggestSocketFix(
+          slotConfig.socket,
+          rootSockets,
+          blueprint.root,
+          rootEntity?._sourceFile
+        ),
+      });
+    }
   }
 
   return errors;
+}
+
+/**
+ * Gets structure template definition from registry.
+ *
+ * @param {object} dataRegistry - Data registry
+ * @param {string} templateId - Structure template ID
+ * @returns {Promise<object|undefined>} Structure template if found
+ * @private
+ */
+async function getStructureTemplate(dataRegistry, templateId) {
+  if (!dataRegistry) {
+    return undefined;
+  }
+
+  // Try the correct registry key
+  if (typeof dataRegistry.get === 'function') {
+    return dataRegistry.get('anatomyStructureTemplates', templateId);
+  }
+
+  return undefined;
+}
+
+/**
+ * Suggests fix for hierarchical socket issues (parent-child relationships).
+ *
+ * @param {string} requestedSocket - Socket ID that was requested
+ * @param {string} parentSlot - Parent slot name
+ * @param {Map<string, object>} hierarchicalSockets - All available sockets
+ * @param {object} blueprint - Blueprint definition
+ * @returns {string} Fix suggestion
+ * @private
+ */
+function suggestHierarchicalSocketFix(
+  requestedSocket,
+  parentSlot,
+  hierarchicalSockets,
+  blueprint
+) {
+  // Find sockets with matching parent
+  const parentSockets = Array.from(hierarchicalSockets.values())
+    .filter((s) => s.parent === parentSlot)
+    .map((s) => s.id);
+
+  if (parentSockets.length === 0) {
+    return `Parent slot '${parentSlot}' not found in structure template. Verify structure template '${blueprint.structureTemplate}' generates slot '${parentSlot}'`;
+  }
+
+  const similar = findSimilarSocketName(requestedSocket, parentSockets);
+
+  if (similar) {
+    return `Socket '${requestedSocket}' not found on parent '${parentSlot}'. Did you mean '${similar}'? Available on parent: [${parentSockets.join(', ')}]`;
+  }
+
+  return `Add socket '${requestedSocket}' to parent entity or use one of: [${parentSockets.join(', ')}]`;
 }
 
 /**

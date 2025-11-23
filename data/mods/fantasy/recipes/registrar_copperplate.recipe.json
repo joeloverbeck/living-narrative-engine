@@ -1,14 +1,14 @@
 {
   "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
-  "recipeId": "anatomy:tortoise_person",
+  "recipeId": "fantasy:registrar_copperplate_recipe",
   "blueprintId": "anatomy:tortoise_person",
   "bodyDescriptors": {
     "height": "short",
     "build": "stocky",
     "composition": "average",
     "hairDensity": "hairless",
-    "skinColor": "olive-green",
-    "smell": "earthy"
+    "skinColor": "green-grey",
+    "smell": "ink and old parchment"
   },
   "slots": {
     "shell_upper": {
@@ -46,6 +46,10 @@
           "texture": "scaled"
         }
       }
+    },
+    "beak": {
+      "partType": "tortoise_beak",
+      "preferId": "anatomy:tortoise_beak"
     },
     "tail": {
       "partType": "tortoise_tail",
@@ -111,6 +115,20 @@
           "color": "amber"
         }
       }
+    }
+  ],
+  "clothingEntities": [
+    {
+      "entityId": "fantasy:fitted_waistcoat",
+      "equip": true
+    },
+    {
+      "entityId": "fantasy:reading_spectacles",
+      "equip": true
+    },
+    {
+      "entityId": "fantasy:formal_sleeve_cuffs",
+      "equip": true
     }
   ],
   "constraints": {

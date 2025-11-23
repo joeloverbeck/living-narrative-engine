@@ -45,6 +45,8 @@
       "definitions": [
         "bertram_the_muddy.character.json",
         "bulletin_board.entity.json",
+        "fitted_waistcoat.entity.json",
+        "formal_sleeve_cuffs.entity.json",
         "mudbrook_municipal_aid_registry.location.json",
         "mudbrook_on_the_bend.location.json",
         "notice_alibi_wanted.entity.json",
@@ -53,6 +55,8 @@
         "notice_possessed_chickens.entity.json",
         "notice_reciprocal_services.entity.json",
         "notice_staged_threat.entity.json",
+        "reading_spectacles.entity.json",
+        "registrar_copperplate.character.json",
         "threadscar_melissa.character.json",
         "vespera_hybrid_lute_viol.entity.json",
         "vespera_main_gauche.entity.json",
@@ -70,6 +74,7 @@
         "notice_possessed_chickens.entity.json",
         "notice_reciprocal_services.entity.json",
         "notice_staged_threat.entity.json",
+        "registrar_copperplate.character.json",
         "threadscar_melissa.character.json",
         "vespera_hybrid_lute_viol.entity.json",
         "vespera_main_gauche.entity.json",
@@ -82,6 +87,7 @@
     "scopes": [],
     "recipes": [
       "bertram_the_muddy.recipe.json",
+      "registrar_copperplate.recipe.json",
       "threadscar_melissa.recipe.json",
       "vespera_nightwhisper.recipe.json"
     ],

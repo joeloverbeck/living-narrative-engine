@@ -205,29 +205,43 @@ class AnatomyRecipeLoader extends SimpleItemLoader {
       );
     }
 
-    if (value.length < 2) {
-      // Enhanced error with business rule explanation
-      const businessRule =
-        constraintType === 'requires'
-          ? 'Co-presence constraints ensure multiple part types or components exist together (e.g., wings require tail for balance)'
-          : 'Mutual exclusion constraints prevent incompatible parts from coexisting (e.g., gills vs lungs)';
-
-      const example =
-        constraintType === 'requires'
-          ? field === 'partTypes'
+    // Validate minimum array length and provide enhanced error messages
+    if (constraintType === 'requires') {
+      // Requires constraints: minimum 2 items for co-presence semantics
+      if (value.length < 2) {
+        const businessRule =
+          'Co-presence constraints ensure multiple part types or components exist together (e.g., wings require tail for balance)';
+        const example =
+          field === 'partTypes'
             ? `{ "partTypes": ["dragon_wing", "dragon_tail"] }`
-            : `{ "components": ["anatomy:wing", "anatomy:arm_socket"] }`
-          : field === 'partTypes'
+            : `{ "components": ["anatomy:wing", "anatomy:arm_socket"] }`;
+
+        throw new ValidationError(
+          `Invalid '${constraintType}' group at index ${index} in recipe '${filename}' from mod '${modId}'.\n` +
+            `  '${field}' must contain at least 2 items for co-presence.\n\n` +
+            `  Business Rule: ${businessRule}\n` +
+            `  Example: ${example}\n` +
+            `  Current: ${JSON.stringify(value)}`
+        );
+      }
+    } else if (constraintType === 'excludes') {
+      // Excludes constraints: minimum 2 items for mutual exclusion semantics
+      if (value.length < 2) {
+        const businessRule =
+          'Mutual exclusion constraints prevent incompatible parts from coexisting (e.g., gills vs lungs)';
+        const example =
+          field === 'partTypes'
             ? `{ "partTypes": ["gills", "lungs"] }`
             : `{ "components": ["anatomy:gills", "anatomy:lungs"] }`;
 
-      throw new ValidationError(
-        `Invalid '${constraintType}' group at index ${index} in recipe '${filename}' from mod '${modId}'.\n` +
-          `  '${field}' must contain at least 2 items.\n\n` +
-          `  Business Rule: ${businessRule}\n` +
-          `  Example: ${example}\n` +
-          `  Current: ${JSON.stringify(value)}`
-      );
+        throw new ValidationError(
+          `Invalid '${constraintType}' group at index ${index} in recipe '${filename}' from mod '${modId}'.\n` +
+            `  '${field}' must contain at least 2 items for mutual exclusion.\n\n` +
+            `  Business Rule: ${businessRule}\n` +
+            `  Example: ${example}\n` +
+            `  Current: ${JSON.stringify(value)}`
+        );
+      }
     }
 
     if (!value.every((entry) => typeof entry === 'string')) {

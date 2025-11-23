@@ -675,7 +675,7 @@ This contrast makes Bertram fascinating - he represents radical authenticity wit
 
 ### Character Specification Template
 
-**Primary Template**: `specs/threadscar-melissa-character-spec.md`
+**Primary Template**: `archive/THRMELCHASPE/threadscar-melissa-character-spec.md`
 - Shows complete specification format
 - Includes rationale tables for all decisions
 - Documents anatomy slots, clothing, validation

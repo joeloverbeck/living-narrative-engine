@@ -80,6 +80,26 @@
     "shell_armor": {
       "anatomySockets": ["carapace_mount"],
       "allowedLayers": ["armor", "accessory"]
+    },
+    "torso_upper": {
+      "anatomySockets": ["torso"],
+      "allowedLayers": ["base", "outer", "accessory"]
+    },
+    "torso_lower": {
+      "anatomySockets": ["torso"],
+      "allowedLayers": ["base", "outer"]
+    },
+    "head_accessory": {
+      "anatomySockets": ["head"],
+      "allowedLayers": ["accessory"]
+    },
+    "left_arm_clothing": {
+      "anatomySockets": ["arm_left"],
+      "allowedLayers": ["base", "accessory"]
+    },
+    "right_arm_clothing": {
+      "anatomySockets": ["arm_right"],
+      "allowedLayers": ["base", "accessory"]
     }
   }
 }

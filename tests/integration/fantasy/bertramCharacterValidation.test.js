@@ -129,44 +129,6 @@ describe('Bertram the Muddy Character - Integration Validation', () => {
       ).toBe('fantasy:mudbrook_on_the_bend_instance');
     });
 
-    // TODO: Clothing inventory tests - the equipped_inventory component is not present
-    // in the instance file. Investigation needed to determine if:
-    // 1. Clothing should be defined in the instance
-    // 2. Clothing is handled through a different system
-    // 3. These tests should be removed
-    it.skip('should have 7 equipped clothing items', () => {
-      const equippedItems =
-        instanceData.componentOverrides['clothing:equipped_inventory']?.items;
-      expect(equippedItems).toHaveLength(7);
-
-      // Verify all required clothing items
-      const entityIds = equippedItems.map((item) => item.entityId);
-      expect(entityIds).toContain('clothing:graphite_wool_briefs');
-      expect(entityIds).toContain('clothing:shale_gray_nylon_field_pants');
-      expect(entityIds).toContain('clothing:charcoal_wool_tshirt');
-      expect(entityIds).toContain('clothing:leather_work_apron');
-      expect(entityIds).toContain('clothing:dark_brown_leather_belt');
-      expect(entityIds).toContain('clothing:dark_gray_wool_boot_socks');
-      expect(entityIds).toContain('clothing:black_leather_duty_boots');
-    });
-
-    it.skip('should have correct slot and layer assignments for clothing', () => {
-      const equippedItems =
-        instanceData.componentOverrides['clothing:equipped_inventory']?.items;
-
-      const apron = equippedItems?.find(
-        (item) => item.entityId === 'clothing:leather_work_apron',
-      );
-      expect(apron?.slot).toBe('torso_upper');
-      expect(apron?.layer).toBe('outer');
-
-      const pants = equippedItems?.find(
-        (item) => item.entityId === 'clothing:shale_gray_nylon_field_pants',
-      );
-      expect(pants?.slot).toBe('legs');
-      expect(pants?.layer).toBe('base');
-    });
-
     it('should have empty unequipped inventory', () => {
       const inventory =
         instanceData.componentOverrides['items:inventory'].items;
