@@ -515,10 +515,6 @@ class GOAPDebugger {
   }
 
   #clearActorCaptureWarning(actorId) {
-    if (!actorId) {
-      this.#captureWarningByActor.clear();
-      return;
-    }
     this.#captureWarningByActor.delete(actorId);
   }
 
@@ -566,9 +562,6 @@ class GOAPDebugger {
           section: GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.sections.eventCompliance,
           payload: eventComplianceDiagnostics,
           lastUpdatedResolver: (payload) => {
-            if (!payload) {
-              return null;
-            }
             const timestamps = [
               payload.actor?.lastViolation?.timestamp,
               payload.global?.lastViolation?.timestamp,

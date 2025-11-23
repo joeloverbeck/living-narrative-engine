@@ -572,6 +572,30 @@ describe('GOAPDebugger', () => {
       expect(report).toContain('=== Trace ===');
     });
 
+    it('should handle failures without error codes', () => {
+      mockInspector.inspect.mockReturnValue('');
+      mockController.getFailedGoals.mockReturnValue([
+        {
+          goalId: 'test_goal',
+          failures: [{ reason: 'unknown failure', timestamp: Date.now() }],
+        },
+      ]);
+      mockController.getFailedTasks.mockReturnValue([
+        {
+          taskId: 'test_task',
+          failures: [{ reason: 'task failed', timestamp: Date.now() }],
+        },
+      ]);
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Goal: test_goal');
+      expect(report).toContain('- unknown failure');
+      expect(report).not.toContain('[');
+      expect(report).toContain('Task: test_task');
+      expect(report).toContain('- task failed');
+    });
+
     it('should validate actorId parameter', () => {
       expect(() => goapDebugger.generateReport('')).toThrow();
     });
@@ -730,6 +754,605 @@ describe('GOAPDebugger', () => {
         'actor-n'
       );
       expect(diagnostics.totalFallbacks).toBe(3);
+    });
+  });
+
+  describe('timestamp resolution', () => {
+    it('resolves string timestamps correctly in diagnostics meta', () => {
+      const isoString = '2024-01-15T10:30:00.000Z';
+      mockController.getGoalPathDiagnostics.mockReturnValue({
+        actorId: 'actor-1',
+        totalViolations: 1,
+        entries: [],
+        lastViolationAt: isoString,
+      });
+
+      const json = goapDebugger.generateReportJSON('actor-1');
+
+      expect(json.diagnosticsMeta.goalPathViolations.lastUpdated).toBe(isoString);
+      expect(json.diagnosticsMeta.goalPathViolations.stale).toBe(true);
+    });
+
+    it('handles invalid string timestamps gracefully', () => {
+      mockController.getGoalPathDiagnostics.mockReturnValue({
+        actorId: 'actor-1',
+        totalViolations: 1,
+        entries: [],
+        lastViolationAt: 'not-a-valid-date',
+      });
+
+      const json = goapDebugger.generateReportJSON('actor-1');
+
+      expect(json.diagnosticsMeta.goalPathViolations.lastUpdated).toBeNull();
+      expect(json.diagnosticsMeta.goalPathViolations.stale).toBe(true);
+    });
+  });
+
+  describe('task library diagnostics formatting', () => {
+    it('includes missing actors when present', () => {
+      mockController.getTaskLibraryDiagnostics.mockReturnValue({
+        timestamp: Date.now(),
+        totalTasks: 5,
+        namespaces: { core: { taskCount: 5 } },
+        warnings: [],
+        missingActors: ['actor-x', 'actor-y'],
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Missing Actors: actor-x, actor-y');
+    });
+
+    it('returns unavailable message when diagnostics are null', () => {
+      mockController.getTaskLibraryDiagnostics.mockReturnValue(null);
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('No task library diagnostics captured');
+      expect(report).toContain('see docs/goap/debugging-tools.md#diagnostics-contract');
+    });
+  });
+
+  describe('planning state diagnostics formatting', () => {
+    it('returns unavailable message when diagnostics are null', () => {
+      mockController.getPlanningStateDiagnostics.mockReturnValue(null);
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('No planning-state diagnostics captured');
+      expect(report).toContain('see docs/goap/debugging-tools.md#planning-state-assertions');
+    });
+  });
+
+  describe('event compliance diagnostics formatting', () => {
+    it('returns unavailable message when diagnostics are null', () => {
+      mockController.getEventComplianceDiagnostics.mockReturnValue(null);
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Event compliance diagnostics unavailable');
+      expect(report).toContain('ensure goapEventDispatcher is wired');
+    });
+
+    it('includes last violation timestamp when available', () => {
+      const violationTime = Date.now() - 1000;
+      mockController.getEventComplianceDiagnostics.mockReturnValue({
+        actor: {
+          actorId: 'actor-1',
+          totalEvents: 10,
+          missingPayloads: 0,
+        },
+        global: {
+          totalEvents: 50,
+          missingPayloads: 0,
+          lastViolation: {
+            timestamp: violationTime,
+            code: 'MISSING_PAYLOAD',
+            eventType: 'TASK_COMPLETED',
+            reason: 'missing actorId',
+          },
+        },
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Last violation recorded:');
+      expect(report).toContain('Global Totals:');
+      expect(report).toContain('total=50');
+      expect(report).toContain('missingPayloads=0');
+    });
+
+    it('formats actor entry with violation details', () => {
+      mockController.getEventComplianceDiagnostics.mockReturnValue({
+        actor: {
+          actorId: 'actor-1',
+          totalEvents: 10,
+          missingPayloads: 2,
+          lastViolation: {
+            timestamp: Date.now(),
+            code: 'MISSING_PAYLOAD',
+            eventType: 'GOAL_SELECTED',
+            reason: 'missing goalId',
+          },
+        },
+        global: {
+          totalEvents: 50,
+          missingPayloads: 0,
+        },
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Actor (actor-1):');
+      expect(report).toContain('total=10');
+      expect(report).toContain('missingPayloads=2');
+      expect(report).toContain('Last violation (MISSING_PAYLOAD):');
+      expect(report).toContain('event=GOAL_SELECTED');
+      expect(report).toContain('reason=missing goalId');
+    });
+
+    it('shows contract violation warning when violations present', () => {
+      mockController.getEventComplianceDiagnostics.mockReturnValue({
+        actor: {
+          actorId: 'actor-1',
+          totalEvents: 10,
+          missingPayloads: 3,
+        },
+        global: {
+          totalEvents: 50,
+          missingPayloads: 0,
+        },
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('⚠️ Event Contract Violations detected');
+      expect(report).toContain('docs/goap/debugging-tools.md#Planner Contract Checklist');
+    });
+
+    it('shows satisfied message when no violations', () => {
+      mockController.getEventComplianceDiagnostics.mockReturnValue({
+        actor: {
+          actorId: 'actor-1',
+          totalEvents: 10,
+          missingPayloads: 0,
+        },
+        global: {
+          totalEvents: 50,
+          missingPayloads: 0,
+        },
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Event payload contract satisfied for this actor');
+    });
+  });
+
+  describe('goal path diagnostics formatting', () => {
+    it('returns unavailable message when diagnostics are null', () => {
+      mockController.getGoalPathDiagnostics.mockReturnValue(null);
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('No goal path violations captured');
+      expect(report).toContain('Run npm run validate:goals');
+      expect(report).toContain('GOAP_GOAL_PATH_LINT=1');
+    });
+
+    it('shows stale warning and violation entries when present', () => {
+      const oldTimestamp =
+        Date.now() - GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.staleThresholdMs - 5000;
+      mockController.getGoalPathDiagnostics.mockReturnValue({
+        actorId: 'actor-1',
+        totalViolations: 2,
+        entries: [
+          {
+            timestamp: oldTimestamp,
+            goalId: 'satisfy_hunger',
+            violations: [
+              { path: 'actor.hunger', expected: 'actor.components.hunger' },
+              { path: 'actor.energy', expected: 'actor.components.energy' },
+            ],
+          },
+          {
+            timestamp: oldTimestamp,
+            goalId: 'rest',
+            violations: [{ path: 'actor.fatigue', expected: 'actor.components.fatigue' }],
+          },
+        ],
+        lastViolationAt: oldTimestamp,
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('⚠️ STALE — last violation recorded');
+      expect(report).toContain('GOAP_GOAL_PATH_LINT=1 to enforce');
+      expect(report).toContain('Total Violations: 2');
+      expect(report).toContain('Recent Violations (max 5):');
+      expect(report).toContain('goal=satisfy_hunger');
+      expect(report).toContain('paths=actor.hunger, actor.energy');
+      expect(report).toContain('goal=rest');
+      expect(report).toContain('paths=actor.fatigue');
+      expect(report).toContain('docs/goap/debugging-tools.md#Planner Contract Checklist');
+    });
+
+    it('shows empty violations message when no entries', () => {
+      mockController.getGoalPathDiagnostics.mockReturnValue({
+        actorId: 'actor-1',
+        totalViolations: 0,
+        entries: [],
+        lastViolationAt: null,
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Recent Violations: ∅');
+      expect(report).toContain('all goals follow actor.components.* contract');
+    });
+  });
+
+  describe('effect failure telemetry formatting', () => {
+    it('returns unavailable message when telemetry is null', () => {
+      mockController.getEffectFailureTelemetry.mockReturnValue(null);
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('No planning-effect telemetry captured');
+      expect(report).toContain('Ensure planner emits INVALID_EFFECT_DEFINITION');
+    });
+
+    it('shows stale warning and failure entries when present', () => {
+      const oldTimestamp =
+        Date.now() - GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.staleThresholdMs - 5000;
+      mockController.getEffectFailureTelemetry.mockReturnValue({
+        actorId: 'actor-1',
+        totalFailures: 3,
+        failures: [
+          {
+            timestamp: oldTimestamp,
+            taskId: 'eat_food',
+            phase: 'simulation',
+            goalId: 'satisfy_hunger',
+            message: 'Cannot access undefined path actor.inventory',
+          },
+          {
+            timestamp: oldTimestamp,
+            taskId: 'drink_water',
+            phase: 'planning',
+            goalId: 'quench_thirst',
+            message: 'Invalid effect path',
+          },
+          {
+            timestamp: oldTimestamp,
+            taskId: 'sleep',
+            phase: 'execution',
+            goalId: 'rest',
+            message: 'State mutation failed',
+          },
+        ],
+        lastFailureAt: oldTimestamp,
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('⚠️ STALE — last failure recorded');
+      expect(report).toContain('Total Failures: 3');
+      expect(report).toContain('Recent Failures (max 10):');
+      expect(report).toContain('task=eat_food');
+      expect(report).toContain('phase=simulation');
+      expect(report).toContain('goal=satisfy_hunger');
+      expect(report).toContain('reason=Cannot access undefined path actor.inventory');
+      expect(report).toContain('task=drink_water');
+      expect(report).toContain('task=sleep');
+      expect(report).toContain('INVALID_EFFECT_DEFINITION failures halt planning');
+      expect(report).toContain('confirm task.preconditions gate simulator usage');
+    });
+
+    it('shows empty failures message when no failures', () => {
+      mockController.getEffectFailureTelemetry.mockReturnValue({
+        actorId: 'actor-1',
+        totalFailures: 0,
+        failures: [],
+        lastFailureAt: null,
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Recent Failures: ∅');
+    });
+  });
+
+  describe('event stream formatting', () => {
+    it('returns unavailable message when event stream is null', () => {
+      mockEventTraceProbe.getSnapshot.mockReturnValue(null);
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Event stream capture unavailable');
+      expect(report).toContain('Call GOAPDebugger.startTrace(actorId) before running scenarios');
+    });
+
+    it('formats detailed event information when events present', () => {
+      const eventTime1 = Date.now() - 10000;
+      const eventTime2 = Date.now() - 5000;
+      mockEventTraceProbe.getSnapshot.mockReturnValue({
+        actorId: 'actor-1',
+        capturing: true,
+        totalCaptured: 2,
+        totalViolations: 1,
+        events: [
+          {
+            type: 'GOAL_SELECTED',
+            timestamp: eventTime1,
+            actorId: 'actor-1',
+            payload: {
+              actorId: 'actor-1',
+              goalId: 'satisfy_hunger',
+              priority: 10,
+            },
+            violation: false,
+          },
+          {
+            type: 'TASK_COMPLETED',
+            timestamp: eventTime2,
+            payload: {
+              actorId: 'actor-1',
+              taskId: 'eat_food',
+              success: true,
+            },
+            violation: true,
+          },
+        ],
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Scope: actor-1');
+      expect(report).toContain('Capturing: YES');
+      expect(report).toContain('Events Captured: 2');
+      expect(report).toContain('Violations Recorded: 1');
+      expect(report).toContain('Recent Events (max 5):');
+      expect(report).toContain('GOAL_SELECTED');
+      expect(report).toContain('actor=actor-1');
+      expect(report).toContain('TASK_COMPLETED');
+      expect(report).toContain('⚠ violation');
+      expect(report).toContain('task=eat_food');
+      expect(report).toContain('payload=');
+    });
+
+    it('shows empty events message when no events captured', () => {
+      mockEventTraceProbe.getSnapshot.mockReturnValue({
+        actorId: 'actor-1',
+        capturing: false,
+        totalCaptured: 0,
+        totalViolations: 0,
+        events: [],
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Recent Events: ∅');
+      expect(report).toContain('enable tracing via GOAPDebugger.startTrace');
+    });
+
+    it('limits event display to most recent 5 events', () => {
+      const events = Array.from({ length: 10 }, (_, i) => ({
+        type: `EVENT_${i}`,
+        timestamp: Date.now() - (10 - i) * 1000,
+        actorId: 'actor-1',
+        payload: {},
+        violation: false,
+      }));
+
+      mockEventTraceProbe.getSnapshot.mockReturnValue({
+        actorId: 'actor-1',
+        capturing: true,
+        totalCaptured: 10,
+        totalViolations: 0,
+        events,
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('EVENT_5');
+      expect(report).toContain('EVENT_9');
+      expect(report).not.toContain('EVENT_0');
+      expect(report).not.toContain('EVENT_4');
+    });
+  });
+
+  describe('probe diagnostics checking', () => {
+    it('does not warn when dispatcher is null', () => {
+      const debuggerWithoutDispatcher = new GOAPDebugger({
+        goapController: mockController,
+        planInspector: mockInspector,
+        stateDiffViewer: mockDiffViewer,
+        refinementTracer: mockTracer,
+        eventTraceProbe: mockEventTraceProbe,
+        goapEventDispatcher: null,
+        logger: mockLogger,
+      });
+
+      mockLogger.warn.mockClear();
+      debuggerWithoutDispatcher.startTrace('actor-1');
+
+      const snapshot = debuggerWithoutDispatcher.getEventStream('actor-1');
+      expect(snapshot.captureDisabled).toBeUndefined();
+    });
+
+    it('logs warning once when getProbeDiagnostics throws error', () => {
+      mockEventDispatcher.getProbeDiagnostics.mockImplementation(() => {
+        throw new Error('Dispatcher error');
+      });
+
+      mockLogger.warn.mockClear();
+      goapDebugger.startTrace('actor-1');
+      goapDebugger.startTrace('actor-2');
+
+      const diagnosticsErrors = mockLogger.warn.mock.calls.filter(
+        ([, meta]) => meta && meta.code === 'GOAP_DEBUGGER_TRACE_PROBE_DIAGNOSTICS_FAILED'
+      );
+      expect(diagnosticsErrors).toHaveLength(1);
+      expect(diagnosticsErrors[0][0]).toContain(
+        'GOAPDebugger failed to read GOAP event dispatcher probe diagnostics'
+      );
+    });
+
+    it('clears capture warning when probes become available', () => {
+      mockEventDispatcher.getProbeDiagnostics.mockReturnValue({
+        hasProbes: false,
+      });
+
+      goapDebugger.startTrace('actor-1');
+      expect(goapDebugger.getEventStream('actor-1').captureDisabled).toBe(true);
+
+      mockEventDispatcher.getProbeDiagnostics.mockReturnValue({
+        hasProbes: true,
+      });
+
+      goapDebugger.startTrace('actor-1');
+      expect(goapDebugger.getEventStream('actor-1').captureDisabled).toBeUndefined();
+    });
+  });
+
+  describe('constructor without goapEventDispatcher', () => {
+    it('should allow construction without goapEventDispatcher', () => {
+      expect(() => {
+        new GOAPDebugger({
+          goapController: mockController,
+          planInspector: mockInspector,
+          stateDiffViewer: mockDiffViewer,
+          refinementTracer: mockTracer,
+          eventTraceProbe: mockEventTraceProbe,
+          goapEventDispatcher: null,
+          logger: mockLogger,
+        });
+      }).not.toThrow();
+    });
+
+    it('should allow construction with undefined goapEventDispatcher', () => {
+      expect(() => {
+        new GOAPDebugger({
+          goapController: mockController,
+          planInspector: mockInspector,
+          stateDiffViewer: mockDiffViewer,
+          refinementTracer: mockTracer,
+          eventTraceProbe: mockEventTraceProbe,
+          goapEventDispatcher: undefined,
+          logger: mockLogger,
+        });
+      }).not.toThrow();
+    });
+  });
+
+  describe('getDependencyDiagnostics', () => {
+    it('delegates to GoapController', () => {
+      const diagnostics = [
+        {
+          dependency: 'IGoapPlanner',
+          requiredMethods: ['plan'],
+          providedMethods: ['plan'],
+          missingMethods: [],
+          status: 'ok',
+          timestamp: Date.now(),
+        },
+      ];
+      mockController.getDependencyDiagnostics.mockReturnValue(diagnostics);
+
+      const result = goapDebugger.getDependencyDiagnostics();
+
+      expect(mockController.getDependencyDiagnostics).toHaveBeenCalled();
+      expect(result).toEqual(diagnostics);
+    });
+
+    it('includes missing methods in dependency diagnostics report', () => {
+      mockInspector.inspect.mockReturnValue('');
+      mockController.getDependencyDiagnostics.mockReturnValue([
+        {
+          dependency: 'IGoapPlanner',
+          requiredMethods: ['plan', 'getLastFailure', 'reset'],
+          providedMethods: ['plan', 'getLastFailure'],
+          missingMethods: ['reset'],
+          status: 'error',
+          timestamp: Date.now(),
+        },
+      ]);
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('IGoapPlanner: status=error');
+      expect(report).toContain('missing: reset');
+    });
+
+    it('handles empty method arrays in dependency diagnostics', () => {
+      mockInspector.inspect.mockReturnValue('');
+      mockController.getDependencyDiagnostics.mockReturnValue([
+        {
+          dependency: 'ISimpleDependency',
+          requiredMethods: [],
+          providedMethods: [],
+          missingMethods: [],
+          status: 'ok',
+          timestamp: Date.now(),
+        },
+      ]);
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('ISimpleDependency: status=ok');
+      expect(report).toContain('required: ∅');
+      expect(report).toContain('provided: ∅');
+      expect(report).not.toContain('missing:');
+    });
+
+    it('handles missing dependency name', () => {
+      mockInspector.inspect.mockReturnValue('');
+      mockController.getDependencyDiagnostics.mockReturnValue([
+        {
+          dependency: null,
+          requiredMethods: ['method1'],
+          providedMethods: [],
+          missingMethods: ['method1'],
+          status: 'error',
+          timestamp: Date.now(),
+        },
+      ]);
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('unknown: status=error');
+    });
+  });
+
+  describe('event compliance null actor handling', () => {
+    it('formats null actor entry correctly', () => {
+      mockController.getEventComplianceDiagnostics.mockReturnValue({
+        actor: null,
+        global: {
+          totalEvents: 50,
+          missingPayloads: 0,
+        },
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Actor (actor-1): ∅');
+    });
+
+    it('formats null global entry correctly', () => {
+      mockController.getEventComplianceDiagnostics.mockReturnValue({
+        actor: {
+          actorId: 'actor-1',
+          totalEvents: 10,
+          missingPayloads: 0,
+        },
+        global: null,
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Global Totals: ∅');
     });
   });
 });
