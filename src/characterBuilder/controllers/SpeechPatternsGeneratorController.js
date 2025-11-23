@@ -862,8 +862,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
     }
 
     // Performance monitoring
-    // TODO: Restore after refactoring - performance monitoring removed during BASCHACUICONREF
-    // this._performanceMark('speech-patterns-generation-start');
+    this._performanceMark('speech-patterns-generation-start');
     const generationStartTime = performance.now();
 
     try {
@@ -871,8 +870,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       this.#currentGenerationController = new AbortController();
 
       // Stage 1: Initial UI Update and Validation (0-15%)
-      // TODO: Restore after refactoring - performance monitoring removed during BASCHACUICONREF
-      // this._performanceMark('speech-patterns-ui-update-start');
+      this._performanceMark('speech-patterns-ui-update-start');
       this._showState('loading');
       this.#updateUIState();
 
@@ -884,11 +882,10 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       );
       this.#updateLoadingProgress('validation', 5, timeEstimate);
 
-      // TODO: Restore after refactoring - performance monitoring removed during BASCHACUICONREF
-      // this._performanceMeasure(
-      //   'speech-patterns-ui-update',
-      //   'speech-patterns-ui-update-start'
-      // );
+      this._performanceMeasure(
+        'speech-patterns-ui-update',
+        'speech-patterns-ui-update-start'
+      );
 
       // Brief pause for UI update (simulates validation time)
       await new Promise((resolve) => setTimeout(resolve, 200));
@@ -902,8 +899,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       this.#updateLoadingProgress('validation', 15, timeEstimate);
 
       // Stage 2: AI Processing (15-70%)
-      // TODO: Restore after refactoring - performance monitoring removed during BASCHACUICONREF
-      // this._performanceMark('speech-patterns-llm-request-start');
+      this._performanceMark('speech-patterns-llm-request-start');
 
       // Update to processing stage
       timeEstimate = this.#calculateTimeEstimate(
@@ -937,11 +933,10 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
           }
         );
 
-      // TODO: Restore after refactoring - performance monitoring removed during BASCHACUICONREF
-      // this._performanceMeasure(
-      //   'speech-patterns-llm-request',
-      //   'speech-patterns-llm-request-start'
-      // );
+      this._performanceMeasure(
+        'speech-patterns-llm-request',
+        'speech-patterns-llm-request-start'
+      );
 
       // Stage 3: Response Processing (70-90%)
       timeEstimate = this.#calculateTimeEstimate(
@@ -964,8 +959,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       this.#lastGeneratedPatterns = processedPatterns;
 
       // Stage 4: Display Rendering (90-100%)
-      // TODO: Restore after refactoring - performance monitoring removed during BASCHACUICONREF
-      // this._performanceMark('speech-patterns-display-start');
+      this._performanceMark('speech-patterns-display-start');
       timeEstimate = this.#calculateTimeEstimate(
         'rendering',
         generationStartTime,
@@ -983,11 +977,10 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       );
       this.#updateLoadingProgress('rendering', 100, timeEstimate);
 
-      // TODO: Restore after refactoring - performance monitoring removed during BASCHACUICONREF
-      // this._performanceMeasure(
-      //   'speech-patterns-display',
-      //   'speech-patterns-display-start'
-      // );
+      this._performanceMeasure(
+        'speech-patterns-display',
+        'speech-patterns-display-start'
+      );
 
       // Update UI state
       this._showState('results');
@@ -995,16 +988,14 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       this.#announceResults(processedPatterns);
 
       // Measure total generation time
-      // TODO: Restore after refactoring - performance monitoring removed during BASCHACUICONREF
-      // const totalDuration = this._performanceMeasure(
-      //   'speech-patterns-generation',
-      //   'speech-patterns-generation-start'
-      // );
-      const totalDuration = performance.now() - generationStartTime;
+      const totalDuration = this._performanceMeasure(
+        'speech-patterns-generation',
+        'speech-patterns-generation-start'
+      );
 
       // Log performance summary
       this.logger.info('Speech patterns generation completed', {
-        totalDuration: `${totalDuration?.toFixed(2)}ms`,
+        totalDuration: `${totalDuration?.duration?.toFixed(2)}ms`,
         patternCount: processedPatterns.speechPatterns?.length,
       });
     } catch (error) {
