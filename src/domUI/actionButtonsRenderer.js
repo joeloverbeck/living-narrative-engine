@@ -87,6 +87,9 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
   /** @type {Map<string, ActionComposite[]>} Grouped actions by namespace */
   #groupedActions = new Map();
 
+  /** @type {string | null} Current active theme */
+  #currentTheme = null;
+
   /**
    * Constructs an ActionButtonsRenderer instance.
    *
@@ -221,6 +224,12 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
     this.logger.debug(
       `${this._logPrefix} Subscribed to VED event '${this._EVENT_TYPE_SUBSCRIBED}' via _subscribe.`
     );
+
+    // Subscribe to theme change events
+    this._subscribe('THEME_CHANGED', this.#handleThemeChange.bind(this));
+    this.logger.debug(
+      `${this._logPrefix} Subscribed to VED event 'THEME_CHANGED' via _subscribe.`
+    );
   }
 
   /**
@@ -320,6 +329,12 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
 
     // Add hover listeners (ACTBUTVIS-008)
     this._addHoverListeners(button);
+
+    // Apply current theme if one is active
+    if (this.#currentTheme) {
+      button.classList.add(`theme-${this.#currentTheme}-adapted`);
+      button.style.setProperty('--current-theme', this.#currentTheme);
+    }
 
     return button;
   }
@@ -1198,6 +1213,72 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
         error
       );
     }
+  }
+
+  /**
+   * Handles theme change events
+   *
+   * @param {object} eventObject - Event object with theme change data
+   * @param {string} eventObject.payload.newTheme - The new theme identifier
+   * @param {string} [eventObject.payload.previousTheme] - The previous theme identifier
+   * @private
+   */
+  #handleThemeChange(eventObject) {
+    if (this.#isDisposed) return;
+
+    const newTheme = eventObject?.payload?.newTheme;
+    const previousTheme = eventObject?.payload?.previousTheme;
+
+    if (!newTheme || typeof newTheme !== 'string') {
+      this.logger.warn(
+        `${this._logPrefix} Received THEME_CHANGED event with invalid newTheme`,
+        { eventObject }
+      );
+      return;
+    }
+
+    this.logger.debug(
+      `${this._logPrefix} Theme changed from '${previousTheme || 'unknown'}' to '${newTheme}'`
+    );
+
+    this.#currentTheme = newTheme;
+
+    // Apply theme adaptations to all currently rendered buttons
+    this.#applyThemeToAllButtons(newTheme, previousTheme);
+  }
+
+  /**
+   * Applies theme adaptations to all currently rendered buttons
+   *
+   * @param {string} newTheme - The new theme identifier
+   * @param {string} [previousTheme] - The previous theme identifier
+   * @private
+   */
+  #applyThemeToAllButtons(newTheme, previousTheme) {
+    if (!this.elements.listContainerElement) {
+      return;
+    }
+
+    const buttons =
+      this.elements.listContainerElement.querySelectorAll('.action-button');
+
+    buttons.forEach((button) => {
+      // Remove previous theme class if it exists
+      if (previousTheme) {
+        button.classList.remove(`theme-${previousTheme}-adapted`);
+      }
+
+      // Add new theme class
+      button.classList.add(`theme-${newTheme}-adapted`);
+
+      // Update theme-aware CSS custom properties
+      // These can be used by CSS to adjust colors based on theme
+      button.style.setProperty('--current-theme', newTheme);
+    });
+
+    this.logger.debug(
+      `${this._logPrefix} Applied theme '${newTheme}' to ${buttons.length} buttons`
+    );
   }
 
   /**

@@ -371,12 +371,9 @@ describe('Visual Properties - End-to-End Integration', () => {
       // Wait for theme change processing
       await waitFor(10);
 
-      // Verify theme-specific adaptations - theme change functionality not yet implemented
-      // TODO: Implement theme change handling in ActionButtonsRenderer
-      expect(button.classList.contains('theme-dark-adapted')).toBe(false); // Not implemented yet
-      expect(button.style.getPropertyValue('--selection-color')).toBe(
-        'var(--theme-selection-color, #0066cc)' // Still has default value
-      );
+      // Verify theme-specific adaptations - theme change functionality is now implemented
+      expect(button.classList.contains('theme-dark-adapted')).toBe(true);
+      expect(button.style.getPropertyValue('--current-theme')).toBe('dark');
     });
   });
 
