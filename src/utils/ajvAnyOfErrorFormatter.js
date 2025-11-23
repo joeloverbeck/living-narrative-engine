@@ -151,7 +151,7 @@ function extractFailingData(rootData, error) {
     current = current[part];
   }
 
-  return current !== undefined ? current : rootData;
+  return current !== undefined && current !== null ? current : rootData;
 }
 
 /**
@@ -585,15 +585,8 @@ export function formatAjvErrorsEnhanced(errors, data) {
       const firstError = errors[0];
       const failingData = extractFailingData(data, firstError);
 
-      // This looks like operation validation with missing/invalid type
-      // IMPORTANT: Check if type/macro fields are actually missing (undefined), not just falsy
-      // (e.g., type: 'operation5' should NOT trigger missing type pattern)
+      // This looks like operation validation with invalid type configuration
       if (
-        !Object.prototype.hasOwnProperty.call(failingData, 'type') &&
-        !Object.prototype.hasOwnProperty.call(failingData, 'macro')
-      ) {
-        return 'Critical structural issue: Missing "type" field in operation.\n\nThis operation is missing the required "type" field. Add a "type" field with a valid operation type, or use {"macro": "namespace:id"} for macro references.\n\nNote: Pre-validation should have caught this - consider checking pre-validation configuration.';
-      } else if (
         Object.prototype.hasOwnProperty.call(failingData, 'type') &&
         typeof failingData.type !== 'string'
       ) {
