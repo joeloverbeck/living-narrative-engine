@@ -34,11 +34,14 @@ describe('SchemaPhase', () => {
 
     mockValidator = {
       isSchemaLoaded: jest.fn().mockReturnValue(true),
+      preGenerateValidators: undefined,
+      getLoadedComponentSchemas: undefined,
     };
 
     mockLogger = {
       info: jest.fn(),
       debug: jest.fn(),
+      warn: jest.fn(),
     };
 
     mockLoadContext = {
@@ -97,6 +100,46 @@ describe('SchemaPhase', () => {
           `schema:${type}`
         );
       });
+    });
+
+    it('should pre-generate validators when supported by the validator', async () => {
+      const mockComponentSchemas = ['schema:component:one', 'schema:component:two'];
+      mockValidator.getLoadedComponentSchemas = jest
+        .fn()
+        .mockReturnValue(mockComponentSchemas);
+      mockValidator.preGenerateValidators = jest.fn();
+
+      await schemaPhase.execute(mockLoadContext);
+
+      expect(mockValidator.getLoadedComponentSchemas).toHaveBeenCalledTimes(1);
+      expect(mockValidator.preGenerateValidators).toHaveBeenCalledWith(
+        mockComponentSchemas
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'SchemaPhase: Pre-generating validators for 2 component schemas...'
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /SchemaPhase: Pre-generated validators for 2 components in \d+ms/
+        )
+      );
+    });
+
+    it('should log a warning if pre-generating validators throws an error', async () => {
+      const mockError = new Error('pre-generation failed');
+      mockValidator.getLoadedComponentSchemas = jest
+        .fn()
+        .mockReturnValue(['schema:component']);
+      mockValidator.preGenerateValidators = jest.fn(() => {
+        throw mockError;
+      });
+
+      await schemaPhase.execute(mockLoadContext);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'SchemaPhase: Failed to pre-generate validators (continuing without optimization):',
+        mockError
+      );
     });
 
     it('should throw ModsLoaderPhaseError when schema loading fails', async () => {
