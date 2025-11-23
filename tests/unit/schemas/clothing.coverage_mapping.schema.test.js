@@ -37,7 +37,7 @@ const coverageMappingComponentSchema = {
       },
       coveragePriority: {
         type: 'string',
-        enum: ['outer', 'base', 'underwear', 'accessories'],
+        enum: ['outer', 'armor', 'base', 'underwear', 'accessories'],
         description: 'Priority level for coverage resolution',
       },
     },
@@ -86,6 +86,16 @@ describe('JSON-Schema – clothing:coverage_mapping component', () => {
       const validData = {
         covers: ['hands'],
         coveragePriority: 'accessories',
+      };
+
+      const ok = validate(validData);
+      expect(ok).toBe(true);
+    });
+
+    test('should validate with armor priority level', () => {
+      const validData = {
+        covers: ['torso_upper', 'torso_lower'],
+        coveragePriority: 'armor',
       };
 
       const ok = validate(validData);
@@ -301,7 +311,7 @@ describe('JSON-Schema – clothing:coverage_mapping component', () => {
 
   describe('Edge cases', () => {
     test('should validate with all priority levels', () => {
-      const priorities = ['outer', 'base', 'underwear', 'accessories'];
+      const priorities = ['outer', 'armor', 'base', 'underwear', 'accessories'];
 
       priorities.forEach((priority) => {
         const data = {
@@ -384,10 +394,17 @@ describe('JSON-Schema – clothing:coverage_mapping component', () => {
         coveragePriority: 'accessories',
       };
 
+      // Armor breastplate
+      const breastplateData = {
+        covers: ['torso_upper', 'torso_lower'],
+        coveragePriority: 'armor',
+      };
+
       expect(validate(jeansData)).toBe(true);
       expect(validate(jacketData)).toBe(true);
       expect(validate(bodysuitData)).toBe(true);
       expect(validate(beltData)).toBe(true);
+      expect(validate(breastplateData)).toBe(true);
     });
   });
 
@@ -416,7 +433,7 @@ describe('JSON-Schema – clothing:coverage_mapping component', () => {
 
     test('should use priority levels compatible with wearable component layers', () => {
       // These match the layer enum from clothing:wearable component
-      const wearableLayers = ['outer', 'base', 'underwear', 'accessories'];
+      const wearableLayers = ['outer', 'armor', 'base', 'underwear', 'accessories'];
 
       wearableLayers.forEach((layer) => {
         const data = {

@@ -16,11 +16,17 @@ Currently, the coverage priority scoring system is:
 - `accessories`: 350
 - `direct`: 400 (fallback)
 
-To fully support armor as a distinct layer, the coverage mapping schema should include "armor" as a valid coverage priority value.
+**CRITICAL DISCREPANCY IDENTIFIED**: The `clothing:wearable` component schema (data/mods/clothing/components/wearable.component.json:10) and `clothing:slot_metadata` component schema ALREADY include "armor" in their layer enums. However, the `clothing:coverage_mapping` component schema does NOT include "armor" in its coveragePriority enum.
+
+This creates an **inconsistency** where:
+- An item can have `"layer": "armor"` in its wearable component (VALID)
+- But cannot have `"coveragePriority": "armor"` in its coverage_mapping component (INVALID)
+
+This ticket fixes this schema inconsistency to align coverage_mapping with the other clothing component schemas.
 
 ## Objective
 
-Update the `clothing:coverage_mapping` component schema to include "armor" as a valid `coveragePriority` value, allowing armor to have its own priority tier between outer and base layers.
+Update the `clothing:coverage_mapping` component schema to include "armor" as a valid `coveragePriority` value, bringing it into alignment with the `clothing:wearable` and `clothing:slot_metadata` schemas which already support armor. This ensures consistency across all clothing component schemas and allows armor to have its own priority tier between outer and base layers.
 
 ## Current State
 
@@ -134,12 +140,26 @@ After making the change:
 - **Related**: ARMSYSANA-004 (Update Slot Access Resolver) - Priority constants
 - **Depends On**: ARMSYSANA-001
 
+## Verified Assumptions (Reassessed)
+
+✅ **File Location**: `data/mods/clothing/components/coverage_mapping.component.json` exists at expected location
+✅ **Line Number**: `coveragePriority` property is at line 27-31 (close to stated "around line 29")
+✅ **Current Enum Values**: Confirmed as ["outer", "base", "underwear", "accessories"]
+❌ **New Feature**: This is NOT a new feature - it's a **consistency fix**. The `clothing:wearable` and `clothing:slot_metadata` schemas already include "armor"
+✅ **Breaking Changes**: Confirmed as none - this is an additive change
+✅ **Impact**: Minimal - no existing entities use armor coverage priority yet
+
+**Updated Understanding**: This change removes a schema inconsistency between related clothing components, rather than adding new functionality.
+
 ## Notes
 
 While this change is marked as "optional", it is **highly recommended** because:
-1. It provides semantic clarity for armor coverage
-2. It allows armor to have its own distinct priority tier
-3. It supports flexible armor positioning (under or over other layers)
-4. It aligns with the philosophy of armor as a distinct clothing category
+1. It **fixes schema inconsistency** with wearable and slot_metadata components
+2. It provides semantic clarity for armor coverage
+3. It allows armor to have its own distinct priority tier
+4. It supports flexible armor positioning (under or over other layers)
+5. It aligns with the philosophy of armor as a distinct clothing category
 
-Without this change, armor entities would need to use "outer" or "base" as their coverage priority, which is less semantically clear.
+Without this change:
+- Armor entities would need to use "outer" or "base" as their coverage priority (less semantically clear)
+- Schema validation would reject `"coveragePriority": "armor"` even though `"layer": "armor"` is valid in wearable component
