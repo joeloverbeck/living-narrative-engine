@@ -327,6 +327,302 @@ describe('JsonLogicEvaluationService - Array/String Operator Tests ([PARENT_ID].
       });
     }); // End describe "in" Operator
 
-    // TODO: Add describe blocks and tests for other operators like substr, cat if needed later
+    describe('"cat" Operator', () => {
+      test('should concatenate strings with {"cat": [string1, string2, ...]}', () => {
+        const conditionJson = {
+          cat: ['Hello', ' ', 'World'],
+        };
+        const mockContext = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
+        const result = service.evaluate(conditionJson, mockContext);
+        expect(result).toBe('Hello World');
+        expect(mockLogger.error).not.toHaveBeenCalled();
+      });
+
+      test('should concatenate strings from context variables', () => {
+        const conditionJson = {
+          cat: [
+            { var: 'event.payload.firstName' },
+            ' ',
+            { var: 'event.payload.lastName' },
+          ],
+        };
+        const eventWithNames = {
+          type: 'NAME_EVENT',
+          payload: { firstName: 'John', lastName: 'Doe' },
+        };
+        const mockContext = createJsonLogicContext(
+          eventWithNames,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
+        const result = service.evaluate(conditionJson, mockContext);
+        expect(result).toBe('John Doe');
+        expect(mockLogger.error).not.toHaveBeenCalled();
+      });
+
+      test('should concatenate arrays with {"cat": [[array1], [array2], ...]}', () => {
+        const conditionJson = {
+          cat: [
+            [1, 2],
+            [3, 4],
+            [5],
+          ],
+        };
+        const mockContext = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
+        const result = service.evaluate(conditionJson, mockContext);
+        expect(result).toEqual([1, 2, 3, 4, 5]);
+        expect(mockLogger.error).not.toHaveBeenCalled();
+      });
+
+      test('should concatenate arrays from context variables', () => {
+        const conditionJson = {
+          cat: [
+            { var: 'event.payload.list1' },
+            { var: 'event.payload.list2' },
+          ],
+        };
+        const eventWithLists = {
+          type: 'LIST_EVENT',
+          payload: {
+            list1: ['a', 'b'],
+            list2: ['c', 'd'],
+          },
+        };
+        const mockContext = createJsonLogicContext(
+          eventWithLists,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
+        const result = service.evaluate(conditionJson, mockContext);
+        expect(result).toEqual(['a', 'b', 'c', 'd']);
+        expect(mockLogger.error).not.toHaveBeenCalled();
+      });
+
+      test('should handle empty strings in concatenation', () => {
+        const conditionJson = {
+          cat: ['', 'text', ''],
+        };
+        const mockContext = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
+        const result = service.evaluate(conditionJson, mockContext);
+        expect(result).toBe('text');
+        expect(mockLogger.error).not.toHaveBeenCalled();
+      });
+
+      test('should handle empty arrays in concatenation', () => {
+        const conditionJson = {
+          cat: [[], [1, 2], []],
+        };
+        const mockContext = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
+        const result = service.evaluate(conditionJson, mockContext);
+        expect(result).toEqual([1, 2]);
+        expect(mockLogger.error).not.toHaveBeenCalled();
+      });
+
+      test('should return empty string when concatenating no strings', () => {
+        const conditionJson = {
+          cat: [],
+        };
+        const mockContext = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
+        const result = service.evaluate(conditionJson, mockContext);
+        expect(result).toBe('');
+        expect(mockLogger.error).not.toHaveBeenCalled();
+      });
+    }); // End describe "cat" Operator
+
+    describe('"substr" Operator', () => {
+      test('should extract substring with start and length: {"substr": [string, start, length]}', () => {
+        const conditionJson = {
+          substr: ['Hello World', 0, 5],
+        };
+        const mockContext = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
+        const result = service.evaluate(conditionJson, mockContext);
+        expect(result).toBe('Hello');
+        expect(mockLogger.error).not.toHaveBeenCalled();
+      });
+
+      test('should extract substring from start to end when length is omitted', () => {
+        const conditionJson = {
+          substr: ['Hello World', 6],
+        };
+        const mockContext = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
+        const result = service.evaluate(conditionJson, mockContext);
+        expect(result).toBe('World');
+        expect(mockLogger.error).not.toHaveBeenCalled();
+      });
+
+      test('should extract substring with negative start (from end)', () => {
+        const conditionJson = {
+          substr: ['Hello World', -5],
+        };
+        const mockContext = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
+        const result = service.evaluate(conditionJson, mockContext);
+        expect(result).toBe('World');
+        expect(mockLogger.error).not.toHaveBeenCalled();
+      });
+
+      test('should extract substring with negative start and length', () => {
+        const conditionJson = {
+          substr: ['Hello World', -5, 3],
+        };
+        const mockContext = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
+        const result = service.evaluate(conditionJson, mockContext);
+        expect(result).toBe('Wor');
+        expect(mockLogger.error).not.toHaveBeenCalled();
+      });
+
+      test('should extract substring from context variable', () => {
+        const conditionJson = {
+          substr: [{ var: 'event.payload.message' }, 7, 5],
+        };
+        const eventWithMessage = {
+          type: 'MESSAGE_EVENT',
+          payload: { message: 'Hello, World!' },
+        };
+        const mockContext = createJsonLogicContext(
+          eventWithMessage,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
+        const result = service.evaluate(conditionJson, mockContext);
+        expect(result).toBe('World');
+        expect(mockLogger.error).not.toHaveBeenCalled();
+      });
+
+      test('should return empty string when start is beyond string length', () => {
+        const conditionJson = {
+          substr: ['Hello', 10],
+        };
+        const mockContext = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
+        const result = service.evaluate(conditionJson, mockContext);
+        expect(result).toBe('');
+        expect(mockLogger.error).not.toHaveBeenCalled();
+      });
+
+      test('should handle zero length', () => {
+        const conditionJson = {
+          substr: ['Hello World', 0, 0],
+        };
+        const mockContext = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
+        const result = service.evaluate(conditionJson, mockContext);
+        expect(result).toBe('');
+        expect(mockLogger.error).not.toHaveBeenCalled();
+      });
+
+      test('should handle substring extraction from empty string', () => {
+        const conditionJson = {
+          substr: ['', 0, 5],
+        };
+        const mockContext = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
+        const result = service.evaluate(conditionJson, mockContext);
+        expect(result).toBe('');
+        expect(mockLogger.error).not.toHaveBeenCalled();
+      });
+
+      test('should extract substring with dynamic start and length from context', () => {
+        const conditionJson = {
+          substr: [
+            { var: 'event.payload.text' },
+            { var: 'event.payload.start' },
+            { var: 'event.payload.length' },
+          ],
+        };
+        const eventWithParams = {
+          type: 'SUBSTR_EVENT',
+          payload: {
+            text: 'Extract this text',
+            start: 8,
+            length: 4,
+          },
+        };
+        const mockContext = createJsonLogicContext(
+          eventWithParams,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
+        const result = service.evaluate(conditionJson, mockContext);
+        expect(result).toBe('this');
+        expect(mockLogger.error).not.toHaveBeenCalled();
+      });
+    }); // End describe "substr" Operator
   }); // End describe Array/String Operator Tests
 }); // End describe JsonLogicEvaluationService
