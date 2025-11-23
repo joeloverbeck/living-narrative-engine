@@ -331,10 +331,21 @@ describe('Numeric Planning Performance - Supplementary Tests', () => {
         setup.entityManager.addEntity(addFlattenedAliases(actor));
         world.state = buildDualFormatState(actor);
 
-        // Force this specific goal to be selected
-        setup.dataRegistry._registry.goals = { [goal.id]: goal };
+        // Force this specific goal to be selected by unregistering all others
+        goals.forEach((g) => {
+          if (g.id !== goal.id) {
+            setup.dataRegistry.register('goals', g.id, null);
+          }
+        });
 
         await setup.controller.decideTurn(actor, world);
+
+        // Re-register the unregistered goals for the next iteration
+        goals.forEach((g) => {
+          if (g.id !== goal.id) {
+            setup.dataRegistry.register('goals', g.id, g);
+          }
+        });
       }
 
       const totalDuration = performance.now() - startTime;
@@ -622,8 +633,21 @@ describe('Numeric Planning Performance - Supplementary Tests', () => {
 
       // Test each goal type
       for (const goal of mixedGoals) {
-        setup.dataRegistry._registry.goals = { [goal.id]: goal };
+        // Force this specific goal to be selected by unregistering all others
+        mixedGoals.forEach((g) => {
+          if (g.id !== goal.id) {
+            setup.dataRegistry.register('goals', g.id, null);
+          }
+        });
+
         await setup.controller.decideTurn(actor, world);
+
+        // Re-register the unregistered goals for the next iteration
+        mixedGoals.forEach((g) => {
+          if (g.id !== goal.id) {
+            setup.dataRegistry.register('goals', g.id, g);
+          }
+        });
       }
 
       const duration = performance.now() - startTime;
@@ -900,13 +924,26 @@ describe('Numeric Planning Performance - Supplementary Tests', () => {
         setup.entityManager.addEntity(addFlattenedAliases(actor));
 
         const goal = goals[i % goals.length];
-        setup.dataRegistry._registry.goals = { [goal.id]: goal };
+
+        // Force this specific goal to be selected by unregistering all others
+        goals.forEach((g) => {
+          if (g.id !== goal.id) {
+            setup.dataRegistry.register('goals', g.id, null);
+          }
+        });
 
         const world = { state: buildDualFormatState(actor), entities: {} };
 
         const start = performance.now();
         await setup.controller.decideTurn(actor, world);
         planCreationTimes.push(performance.now() - start);
+
+        // Re-register the unregistered goals for the next iteration
+        goals.forEach((g) => {
+          if (g.id !== goal.id) {
+            setup.dataRegistry.register('goals', g.id, g);
+          }
+        });
       }
 
       // Calculate statistics
