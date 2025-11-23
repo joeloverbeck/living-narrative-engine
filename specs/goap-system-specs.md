@@ -272,6 +272,177 @@ abort the plan and choose a new goal.
 
 To simulate state changes during planning, we should be able to rely on existing operation handlers from src/logic/operationHandlers/, which is what the rules for execution-time actions use. The effects would add/remove/modify components, but we also need to use query-like operation handlers and operate on the results of those queries.
 
+### Planning Effects (Updated)
+
+Planning effects support three operation types:
+
+1. **ADD_COMPONENT**: Add component to entity
+2. **REMOVE_COMPONENT**: Remove component from entity
+3. **MODIFY_COMPONENT**: Modify numeric component fields (supports numeric constraint planning)
+
+#### MODIFY_COMPONENT Modes
+
+The `MODIFY_COMPONENT` operation supports three modes for manipulating numeric values:
+
+- **`set`**: Direct value assignment - sets the field to an exact value
+- **`increment`**: Addition to existing value - adds to the current value
+- **`decrement`**: Subtraction from existing value - subtracts from the current value
+
+These modes enable the planner to reason about numeric changes and calculate distances to numeric goals. See `docs/goap/numeric-constraints-guide.md` for detailed usage examples.
+
+#### Example Planning Effects
+
+```json
+{
+  "planningEffects": [
+    {
+      "type": "MODIFY_COMPONENT",
+      "parameters": {
+        "entityId": "actor",
+        "componentId": "core:needs",
+        "modifications": { "hunger": 40 },
+        "mode": "decrement"
+      }
+    }
+  ]
+}
+```
+
+## Numeric Constraint Planning
+
+The GOAP planner supports backward chaining with `MODIFY_COMPONENT` operations for numeric goals. This enables planning for goals that involve numeric thresholds, such as reducing hunger, increasing health, or accumulating resources.
+
+### Architecture
+
+The numeric constraint planning system consists of four key components:
+
+- **NumericConstraintEvaluator** (`src/goap/planner/numericConstraintEvaluator.js`): Evaluates numeric constraints (>, <, >=, <=, ==) and calculates the distance from current values to goal satisfaction
+- **GoalDistanceHeuristic** (`src/goap/planner/goalDistanceHeuristic.js`): Combines component-based distance (missing/unwanted components) with numeric constraint distance for comprehensive goal evaluation
+- **GoapPlanner** (`src/goap/planner/goapPlanner.js`): Checks if tasks reduce numeric distance to goals during A* search
+- **PlanningEffectsSimulator** (`src/goap/planner/planningEffectsSimulator.js`): Simulates `MODIFY_COMPONENT` effects with type safety for fast state prediction during planning
+
+### Distance Calculation
+
+For numeric constraints, distance represents how far the current state is from satisfying the goal:
+
+- `hunger > 50` with current 30: distance = 20 (need to increase by 20)
+- `health >= 80` with current 40: distance = 40 (need to increase by 40)
+- `hunger <= 30` with current 80: distance = 50 (need to reduce by 50)
+- `count == 100` with current 25: distance = 75 (absolute difference)
+
+When a constraint is already satisfied, distance is 0.
+
+### Task Applicability
+
+A task is applicable to a numeric goal if:
+
+1. Its planning preconditions are satisfied in the current planning state
+2. Simulating its `MODIFY_COMPONENT` effects reduces the distance to the goal
+
+The planner uses the `PlanningEffectsSimulator` to predict the state after applying a task's effects, then compares the before and after distances using the `NumericConstraintEvaluator`.
+
+### Multi-Action Planning
+
+Numeric goals often require multiple task applications to satisfy. The planner supports this through:
+
+- **Task Reusability**: Tasks can be reused up to their `maxReuse` limit (default: 10)
+- **Distance Reduction**: Each task application must reduce the distance to the goal
+- **Cost Limits**: Goals can specify `maxCost` to prevent expensive plans
+- **Action Limits**: Goals can specify `maxActions` to prevent overly long plans
+- **Overshoot Handling**: Inequality goals (<=, >=) allow overshoot; equality goals (==) do not
+
+### Example Scenario
+
+```javascript
+// Planning State: actor has hunger = 80
+// Goal: hunger <= 30
+// Task: eat_food (decrement hunger by 60)
+
+// Initial distance: 50 (80 - 30)
+// Simulated state after task: hunger = 20 (80 - 60)
+// Distance after task: 0 (goal satisfied)
+// Result: Task is applicable and will be included in the plan
+```
+
+**Multi-Action Example:**
+```javascript
+// Planning State: actor has health = 10
+// Goal: health >= 80
+// Task: use_medikit (increment health by 30)
+
+// Initial distance: 70 (80 - 10)
+// After 1st application: health = 40, distance = 40
+// After 2nd application: health = 70, distance = 10
+// After 3rd application: health = 100, distance = 0 (satisfied with overshoot)
+// Result: Plan contains 3 applications of use_medikit
+```
+
+### Heuristic Guidance
+
+The `GoalDistanceHeuristic` provides two modes for estimating the cost to reach a numeric goal:
+
+1. **Standard Mode**: Counts each unsatisfied numeric constraint as distance 1 (conservative estimate)
+2. **Enhanced Mode**: Analyzes task effects to estimate the number of task applications needed
+
+Enhanced mode calculation:
+```javascript
+// Goal: hunger <= 10, Current: 100
+// Best task: eat_food (decreases hunger by 60)
+// Estimated tasks needed: Math.ceil((100 - 10) / 60) = 2
+
+// Goal: gold >= 100, Current: 0
+// Best task: mine_gold (increases gold by 25)
+// Estimated tasks needed: Math.ceil(100 / 25) = 4
+```
+
+The enhanced mode provides more accurate guidance for multi-action scenarios, reducing the search space and improving planning efficiency.
+
+### Type Safety
+
+The `PlanningEffectsSimulator` enforces type safety for numeric operations:
+
+- **Numeric Validation**: Modification values must be numbers
+- **Component Existence**: Component must exist in the planning state
+- **Field Existence**: Modified fields must exist in the component
+- **Operation Mode**: Mode must be `set`, `increment`, or `decrement`
+
+If type safety checks fail, the simulator returns the original state unchanged and logs a warning. This prevents invalid task effects from corrupting the planning state.
+
+### Integration with JSON Logic
+
+Numeric goals use JSON Logic expressions with `var` references to component fields:
+
+```json
+{
+  "goalState": {
+    "<=": [
+      { "var": "actor.components.core:needs.hunger" },
+      30
+    ]
+  }
+}
+```
+
+The `NumericConstraintEvaluator` uses the `JsonLogicEvaluationService` to evaluate these expressions against the planning state, enabling complex numeric conditions and calculations.
+
+### Performance Considerations
+
+Numeric constraint planning has performance implications:
+
+- **Distance calculations** are O(n) for n numeric constraints
+- **Effect simulation** is O(m) for m modifications in planning effects
+- **Enhanced heuristic** is O(n + t) for n constraints and t available tasks
+- **Multi-action plans** increase search space exponentially
+
+To maintain performance:
+
+- Use `structural_gates` to limit task library size
+- Set reasonable `maxCost` and `maxActions` limits on goals
+- Prefer larger effect magnitudes to reduce required task applications
+- Use enhanced heuristic mode for better A* guidance
+
+See `docs/goap/numeric-constraints-guide.md` for modder-facing documentation and best practices.
+
 ## Goals
 
 We currently have a data/schemas/goal.schema.json , which is a holdout from the previous implementation of the GOAP system that we removed. You'll need to figure out if this schema will need to change for the new GOAP system.
