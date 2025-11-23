@@ -43,6 +43,7 @@
     "rules": [],
     "entities": {
       "definitions": [
+        "back_of_tannery.location.json",
         "bertram_the_muddy.character.json",
         "bulletin_board.entity.json",
         "fitted_waistcoat.entity.json",
@@ -64,6 +65,7 @@
         "vespera_rapier.entity.json"
       ],
       "instances": [
+        "back_of_tannery.location.json",
         "bertram_the_muddy.character.json",
         "bulletin_board.entity.json",
         "mudbrook_municipal_aid_registry.location.json",
@@ -92,8 +94,11 @@
       "vespera_nightwhisper.recipe.json"
     ],
     "portraits": [
+      "back_of_tannery.png",
+      "bertram.png",
       "mudbrook.png",
       "mudbrook_municipal_aid_registry.png",
+      "registrar_copperplate.png",
       "threadscar_melissa.png",
       "vespera_nightwhisper.png"
     ],

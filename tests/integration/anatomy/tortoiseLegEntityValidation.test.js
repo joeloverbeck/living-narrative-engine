@@ -62,7 +62,7 @@ describe('Tortoise Leg Entity Validation', () => {
 
       expect(footSocket).toBeDefined();
       expect(footSocket.allowedTypes).toEqual(['tortoise_foot']);
-      expect(footSocket.nameTpl).toBe('foot');
+      expect(footSocket.nameTpl).toBe('{{orientation}} foot');
     });
 
     it('should have socket ID exactly "foot" (generic, not left/right)', () => {
@@ -111,11 +111,10 @@ describe('Tortoise Leg Entity Validation', () => {
       expect(sockets).toHaveLength(1);
     });
 
-    it('should use generic "foot" nameTpl without orientation prefix', () => {
+    it('should use "{{orientation}} foot" nameTpl with orientation token', () => {
       const socket = legEntity.components['anatomy:sockets'].sockets[0];
-      expect(socket.nameTpl).toBe('foot');
-      expect(socket.nameTpl).not.toContain('left');
-      expect(socket.nameTpl).not.toContain('right');
+      expect(socket.nameTpl).toBe('{{orientation}} foot');
+      expect(socket.nameTpl).toContain('{{orientation}}');
     });
 
     it('should have scaled texture as per reptilian anatomy', () => {

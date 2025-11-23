@@ -1,0 +1,23 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "fantasy:back_of_tannery",
+    "components": {
+        "core:name": {
+            "text": "back of tannery"
+        },
+        "core:description": {
+            "text": "A tight cluster of old, half-timbered buildings fills the background, their white plaster walls cracked and stained and their dark wooden beams exposed in irregular grids. The roofs are steep and uneven, covered in orange clay tiles that dip and kink as they meet one another. Small gables and overhangs jut out at odd angles, and several narrow windows sit open or empty, with one dark cloth hanging inside a lower opening. Ropes, slats, and thin wooden braces run along the façades; a ladder leans against one wall, and a rough catwalk and railings connect upper levels. On the right, a boxy wooden hoist or lift is bolted to the exterior, with a platform and pulley frame projecting over the yard. Below, the yard is bare and muddy, mottled with pale puddles and darker patches of damp ground. A low shed with a ribbed, slatted roof sits near the center, its interior lit by a warm orange firelight. In front of it, a black metal vat or cauldron rests on a circular stone base, venting a steady plume of white steam. Around the shed and vat are several wooden barrels and casks of different sizes, a couple toppled on their sides, and a small scatter of boxes and tools. To the left, a sagging lean-to of rough planks and poles shelters additional debris. To the right, boards, beams, and broken timbers lie in a loose pile beside a shallow, darker trough in the ground."
+        },
+        "core:portrait": {
+            "imagePath": "portraits/back_of_tannery.png",
+            "altText": "Back of tannery"
+        },
+        "movement:exits": [
+            {
+                "direction": "to the streets of Mudbrook-on-the-Bend",
+                "target": "fantasy:mudbrook_on_the_bend_instance",
+                "blocker": null
+            }
+        ]
+    }
+}

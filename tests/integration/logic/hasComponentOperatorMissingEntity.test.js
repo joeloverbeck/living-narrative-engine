@@ -284,8 +284,8 @@ describe('has_component Operator - Missing Entity Warning', () => {
 
       const result = jsonLogicEvaluationService.evaluate(rule, context);
 
-      // Should return false because blocker is null
-      expect(result).toBe(false);
+      // Should return null because blocker is null (and operator returns first falsy value)
+      expect(result).toBe(null);
 
       // has_component should not be called when blocker is null (short-circuit)
       expect(entityManager.hasComponent).not.toHaveBeenCalled();

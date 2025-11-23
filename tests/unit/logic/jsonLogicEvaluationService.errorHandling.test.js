@@ -147,44 +147,44 @@ describe('JsonLogicEvaluationService - Error Handling (Ticket 2.6.5)', () => {
         value: 123,
         type: 'number',
         description: 'a number (123)',
-        expectedResult: true,
+        expectedResult: 123,
       },
       {
         value: 'unexpected',
         type: 'string',
         description: 'a string ("unexpected")',
-        expectedResult: true,
+        expectedResult: 'unexpected',
       },
       {
         value: {},
         type: 'object',
         description: 'an object ({})',
-        expectedResult: true,
+        expectedResult: {},
       },
       {
         value: [],
         type: 'object',
         description: 'an array ([])',
-        expectedResult: true,
-      }, // Empty array is truthy
+        expectedResult: [],
+      },
       // Falsy values
       {
         value: 0,
         type: 'number',
         description: 'a number (0)',
-        expectedResult: false,
+        expectedResult: 0,
       },
       {
         value: null,
         type: 'object',
         description: 'null',
-        expectedResult: false,
+        expectedResult: null,
       },
       {
         value: undefined,
         type: 'undefined',
         description: 'undefined',
-        expectedResult: false,
+        expectedResult: undefined,
       },
       // { value: "",          type: 'string',    description: 'an empty string ("")',   expectedResult: false }, // Optional: Add empty string if relevant
       // { value: NaN,         type: 'number',    description: 'NaN',                     expectedResult: false }, // Optional: Add NaN if relevant
@@ -192,22 +192,25 @@ describe('JsonLogicEvaluationService - Error Handling (Ticket 2.6.5)', () => {
 
     // Use test.each to run the modified assertions
     test.each(nonBooleanTestCases)(
-      'should return $expectedResult (truthiness of $description) and NOT log an error when jsonLogic.apply returns $description',
+      'should return the raw value $description and NOT log an error when jsonLogic.apply returns $description',
       ({ value, type, description, expectedResult }) => {
-        // Added expectedResult
         // Configure the mock to return the specific non-boolean value
         applySpy.mockReturnValue(value);
 
         const result = service.evaluate(dummyRule, dummyContext);
 
         // --- MODIFIED ASSERTIONS ---
-        expect(result).toBe(expectedResult); // Assert based on truthiness conversion (!!value)
+        // Use toEqual for objects/arrays, toBe for primitives
+        if (type === 'object' && typeof expectedResult === 'object' && expectedResult !== null) {
+          expect(result).toEqual(expectedResult);
+        } else {
+          expect(result).toBe(expectedResult);
+        }
 
         expect(applySpy).toHaveBeenCalledTimes(1); // Apply should still have been called
         expect(applySpy).toHaveBeenCalledWith(dummyRule, dummyContext);
 
         expect(mockLogger.error).not.toHaveBeenCalled(); // Assert that error logger was NOT called
-        // logger.debug *would* be called by the original code, but we aren't testing debug logs here.
       }
     );
   });

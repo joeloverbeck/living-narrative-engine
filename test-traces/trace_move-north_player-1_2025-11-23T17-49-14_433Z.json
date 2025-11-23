@@ -1,0 +1,14 @@
+{
+  "timestamp": "2025-11-23T17:49:14.433Z",
+  "outputDirectory": "./test-traces",
+  "trace": {
+    "formatted": "test data"
+  },
+  "metadata": {
+    "actionId": "move-north",
+    "actorId": "player-1",
+    "isComplete": true,
+    "hasError": false,
+    "generatedBy": "Living Narrative Engine Action Tracing System"
+  }
+}

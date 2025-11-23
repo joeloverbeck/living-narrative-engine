@@ -368,9 +368,9 @@ describe('JsonLogicEvaluationService - Array/String Operator Tests ([PARENT_ID].
         expect(mockLogger.error).not.toHaveBeenCalled();
       });
 
-      test('should concatenate arrays with {"cat": [[array1], [array2], ...]}', () => {
+      test('should concatenate arrays with {"merge": [[array1], [array2], ...]}', () => {
         const conditionJson = {
-          cat: [
+          merge: [
             [1, 2],
             [3, 4],
             [5],
@@ -390,7 +390,7 @@ describe('JsonLogicEvaluationService - Array/String Operator Tests ([PARENT_ID].
 
       test('should concatenate arrays from context variables', () => {
         const conditionJson = {
-          cat: [
+          merge: [
             { var: 'event.payload.list1' },
             { var: 'event.payload.list2' },
           ],
@@ -432,7 +432,7 @@ describe('JsonLogicEvaluationService - Array/String Operator Tests ([PARENT_ID].
 
       test('should handle empty arrays in concatenation', () => {
         const conditionJson = {
-          cat: [[], [1, 2], []],
+          merge: [[], [1, 2], []],
         };
         const mockContext = createJsonLogicContext(
           baseEvent,

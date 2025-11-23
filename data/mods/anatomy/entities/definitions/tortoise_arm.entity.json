@@ -11,7 +11,7 @@
         {
           "id": "hand",
           "allowedTypes": ["tortoise_hand"],
-          "nameTpl": "hand"
+          "nameTpl": "{{orientation}} hand"
         }
       ]
     },

@@ -93,6 +93,10 @@
       "anatomySockets": ["head"],
       "allowedLayers": ["accessory"]
     },
+    "head_gear": {
+      "anatomySockets": ["head"],
+      "allowedLayers": ["accessory"]
+    },
     "left_arm_clothing": {
       "anatomySockets": ["arm_left"],
       "allowedLayers": ["base", "accessory"]

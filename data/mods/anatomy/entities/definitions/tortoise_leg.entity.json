@@ -11,7 +11,7 @@
         {
           "id": "foot",
           "allowedTypes": ["tortoise_foot"],
-          "nameTpl": "foot"
+          "nameTpl": "{{orientation}} foot"
         }
       ]
     },

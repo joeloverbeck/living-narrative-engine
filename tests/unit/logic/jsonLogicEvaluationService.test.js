@@ -167,7 +167,7 @@ describe('JsonLogicEvaluationService', () => {
         `JsonLogicEvaluationService: Evaluating rule: ${expectedRuleSummary}. Context keys: ${expectedContextKeys}`
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true'
+        'JsonLogicEvaluationService: Rule evaluation result: true (type: boolean)'
       );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
@@ -184,7 +184,7 @@ describe('JsonLogicEvaluationService', () => {
         `JsonLogicEvaluationService: Evaluating rule: ${expectedRuleSummary}. Context keys: ${expectedContextKeys}`
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'JsonLogicEvaluationService: Rule evaluation raw result: false, Final boolean: false'
+        'JsonLogicEvaluationService: Rule evaluation result: false (type: boolean)'
       );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
@@ -614,11 +614,11 @@ describe('JsonLogicEvaluationService', () => {
 
       // Test null rule
       let result = service.evaluate(null, context);
-      expect(result).toBe(false); // Should return false for null
+      expect(result).toBe(null); // json-logic-js returns null for null rules
 
       // Test undefined rule
       result = service.evaluate(undefined, context);
-      expect(result).toBe(false); // Should return false for undefined
+      expect(result).toBe(undefined); // json-logic-js returns undefined for undefined rules
 
       // No validation errors should be logged for null/undefined
       expect(mockLogger.error).not.toHaveBeenCalledWith(
@@ -1192,8 +1192,8 @@ describe('JsonLogicEvaluationService', () => {
 
       const result = service.evaluate(rule, context);
 
-      // Empty objects are truthy in JavaScript, so AND with true and {} is true
-      expect(result).toBe(true);
+      // Empty objects are truthy in JavaScript, and operator returns last truthy value
+      expect(result).toEqual({});
     });
   });
 

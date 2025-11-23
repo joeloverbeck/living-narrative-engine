@@ -386,12 +386,14 @@ class JsonLogicEvaluationService extends BaseService {
   }
 
   /**
-   * Evaluates a JSON Logic rule against a given data context using json-logic-js,
-   * returning a strict boolean based on the truthiness of the result.
+   * Evaluates a JSON Logic rule against a given data context using json-logic-js.
+   * Returns the actual result type from the evaluation:
+   * - Conditional operators (==, >, and, or, etc.) return boolean
+   * - Data transformation operators (cat, substr, +, -, etc.) return their natural types (string, number, array, etc.)
    *
    * @param {object} rule - The JSON Logic rule object to evaluate. Can contain `condition_ref`s.
    * @param {JsonLogicEvaluationContext} context - The data context against which the rule is evaluated.
-   * @returns {boolean} - The boolean result. Returns false on error.
+   * @returns {*} - The evaluation result. Returns false on error.
    */
   evaluate(rule, context) {
     // Validate the rule before resolving condition refs to catch issues early
@@ -492,12 +494,13 @@ class JsonLogicEvaluationService extends BaseService {
         this.#logger.debug('[JsonLogicEvaluationService] Result from jsonLogic.apply (else branch)', 'logic:evaluation', rawResult);
       }
 
-      const finalBooleanResult = !!rawResult;
-
+      // Return raw result directly - json-logic-js returns correct types for all operators
+      // Conditional operators (==, >, <, and, or) naturally return booleans
+      // Data transformation operators (cat, substr, +, -, etc.) return their proper types
       this.#logger.debug(
-        `Rule evaluation raw result: ${JSON.stringify(rawResult)}, Final boolean: ${finalBooleanResult}`
+        `Rule evaluation result: ${JSON.stringify(rawResult)} (type: ${typeof rawResult})`
       );
-      return finalBooleanResult;
+      return rawResult;
     } catch (error) {
       this.#logger.error(
         `Error evaluating JSON Logic rule: ${ruleSummary}. Context keys: ${Object.keys(context || {}).join(', ')}`,

@@ -1,0 +1,14 @@
+{
+  "timestamp": "2025-11-23T17:49:14.599Z",
+  "outputDirectory": "./test-traces",
+  "trace": {
+    "formatted": "duplicate test"
+  },
+  "metadata": {
+    "actionId": "duplicate",
+    "actorId": "duplicate",
+    "isComplete": true,
+    "hasError": false,
+    "generatedBy": "Living Narrative Engine Action Tracing System"
+  }
+}

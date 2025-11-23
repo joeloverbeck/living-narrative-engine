@@ -17,6 +17,11 @@
                 "direction": "to the Mudbrook Municipal Aid Registry",
                 "target": "fantasy:mudbrook_municipal_aid_registry_instance",
                 "blocker": null
+            },
+            {
+                "direction": "to the back of the tannery",
+                "target": "fantasy:back_of_tannery_instance",
+                "blocker": null
             }
         ]
     }

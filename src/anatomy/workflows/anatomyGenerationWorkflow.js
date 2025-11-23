@@ -124,13 +124,13 @@ export class AnatomyGenerationWorkflow extends BaseService {
       this.#getDependencies()
     );
 
-    // Step 4: Instantiate clothing (optional)
+    // Step 4: Instantiate clothing (if clothing service available)
     const clothingResult = await executeClothingInstantiation(
-      { ownerId, recipeId, partsMap, slotEntityMappings },
+      { ownerId, recipeId, graphResult, partsMap, slotEntityMappings },
       this.#getDependencies()
     );
 
-    // Step 5: Publish ANATOMY_GENERATED event (optional)
+    // Step 5: Publish ANATOMY_GENERATED event (optional - for subscribers)
     await executeEventPublication(
       { ownerId, blueprintId, graphResult, partsMap, slotEntityMappings },
       this.#getDependencies()
@@ -144,6 +144,7 @@ export class AnatomyGenerationWorkflow extends BaseService {
       slotEntityMappings,
     };
 
+    // Include clothing result if present
     if (clothingResult) {
       result.clothingResult = clothingResult;
     }

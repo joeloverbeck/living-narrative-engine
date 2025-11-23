@@ -11,6 +11,9 @@
             "instanceId": "fantasy:mudbrook_municipal_aid_registry_instance"
         },
         {
+            "instanceId": "fantasy:back_of_tannery_instance"
+        },
+        {
             "instanceId": "fantasy:bulletin_board_instance"
         },
         {
@@ -45,6 +48,9 @@
         },
         {
             "instanceId": "fantasy:threadscar_melissa_instance"
+        },
+        {
+            "instanceId": "fantasy:bertram_the_muddy_instance"
         },
         {
             "instanceId": "fantasy:vespera_nightwhisper_instance"

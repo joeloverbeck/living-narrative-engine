@@ -5,6 +5,10 @@
         "core:name": {
             "text": "Bertram"
         },
+        "core:portrait": {
+            "imagePath": "portraits/bertram.png",
+            "altText": "Bertram the Muddy - Transparently-horny laborer"
+        },
         "core:apparent_age": {
             "minAge": 50,
             "maxAge": 55,

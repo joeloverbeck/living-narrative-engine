@@ -106,7 +106,8 @@ export class AnatomyInitializationService {
     if (!this.#isProcessingQueue) {
       // Set the flag synchronously to avoid race condition
       this.#isProcessingQueue = true;
-      this.#processQueue();
+      // Defer queue processing to next event loop tick to ensure entity is fully registered
+      Promise.resolve().then(() => this.#processQueue());
     }
   }
 

@@ -233,12 +233,31 @@ describe('AnatomyInitializationService', () => {
   it('logs failures and rejects waiters when anatomy generation fails', async () => {
     const failure = new Error('generation failed');
     const deferred = createDeferred();
-    generationService.generateAnatomyIfNeeded.mockReturnValue(deferred.promise);
+
+    // Track when generateAnatomyIfNeeded is called
+    let generationStarted = false;
+    generationService.generateAnatomyIfNeeded.mockImplementation(() => {
+      generationStarted = true;
+      return deferred.promise;
+    });
 
     const handler = getHandler();
+
+    // Trigger the generation - this adds to queue and starts processing (deferred)
     const invokePromise = handler({ payload: { instanceId: 'failing-entity' } });
 
+    // Wait one tick for entity to be added to pending generations
+    await new Promise(resolve => setImmediate(resolve));
+
+    // Now register waiter after entity is pending
     const waitPromise = service.waitForEntityGeneration('failing-entity');
+
+    // Wait for queue processing to actually call generateAnatomyIfNeeded
+    while (!generationStarted) {
+      await new Promise(resolve => setImmediate(resolve));
+    }
+
+    // Now reject after generation has actually started
     deferred.reject(failure);
 
     await invokePromise;
