@@ -47,6 +47,9 @@
  * - Memory allocation pressure
  */
 
+/* eslint-disable jest/no-conditional-expect */
+// Conditional expects are intentional in performance tests - we only test ratios when differences are significant
+
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createPerformanceTestBed } from '../common/performanceTestBed.js';
 import {
@@ -596,12 +599,10 @@ describe('Multi-Target Action Performance Tests', () => {
     });
 
     it('should show reasonable performance scaling with target count', () => {
-      // SMOKE TEST: Mock validator, measures test overhead not production code
-      // See new test "should demonstrate realistic scaling with real validator" for actual performance data
-      const mockValidator = {
-        validate: jest.fn().mockReturnValue({ isValid: true, errors: [] }),
-      };
-      const schemaId = 'core:attempt_action';
+      // REAL PERFORMANCE TEST: Uses actual MultiTargetEventValidator
+      const validator = new MultiTargetEventValidator({
+        logger: testBed.mockLogger,
+      });
 
       const targetCounts = [1, 2, 4, 8];
       const results = [];
@@ -615,14 +616,13 @@ describe('Multi-Target Action Performance Tests', () => {
         // Multiple runs for statistical stability
         const timings = [];
         for (let run = 0; run < 2; run++) {
-          mockValidator.validate.mockClear();
           const benchmark = performanceTracker.startBenchmark(
             `${targetCount} targets run ${run + 1}`
           );
 
           for (let i = 0; i < 200; i++) {
             // Reduced iterations for speed
-            mockValidator.validate(schemaId, event);
+            validator.validateEvent(event);
           }
 
           const result = benchmark.end();
@@ -658,11 +658,9 @@ describe('Multi-Target Action Performance Tests', () => {
 
         // Only apply ratio test if there's a significant absolute difference
         if (isSignificantDifference) {
-          // Mock-based performance tests measure test overhead (object creation, Jest mocks),
-          // not actual validation logic. High variance (42x observed) is expected when measuring
-          // microsecond-level operations with no real work. Threshold set to prevent flakiness.
-          // TODO: Replace mock with real MultiTargetEventValidator for meaningful performance data.
-          expect(ratio).toBeLessThan(50); // Increased to account for mock-based testing variance
+          // Real validator should show sub-linear scaling characteristics
+          // Allow up to 3.5x scaling to account for test environment variance
+          expect(ratio).toBeLessThan(3.5);
         } else {
           console.log(
             `  Skipping ratio assertion due to insignificant difference`
