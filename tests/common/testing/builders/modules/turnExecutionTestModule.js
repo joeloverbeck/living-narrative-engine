@@ -352,6 +352,11 @@ export class TurnExecutionTestModule extends ITestModule {
           await testEnvironment.cleanup();
         }
         await facades.turnExecutionFacade.clearTestData();
+
+        // Cleanup event capture subscription
+        if (eventCapture && eventCapture.cleanup) {
+          eventCapture.cleanup();
+        }
       },
 
       // Add performance tracking methods if enabled
@@ -454,8 +459,23 @@ export class TurnExecutionTestModule extends ITestModule {
     const capturedEvents = [];
     const allowedTypes = new Set(this.#config.monitoring.events);
 
-    // TODO: Hook into event bus to capture events
-    // This would require accessing the underlying event bus through facades
+    // Hook into event bus to capture events
+    // Access the event bus from the entity service dependencies
+    const eventBus = facades.mockDeps?.entity?.eventBus;
+    let unsubscribe = null;
+
+    if (eventBus && typeof eventBus.subscribe === 'function') {
+      // Subscribe to all events using wildcard '*'
+      unsubscribe = eventBus.subscribe('*', (event) => {
+        // Filter and capture events based on allowed types
+        if (allowedTypes.has(event.type)) {
+          capturedEvents.push({
+            ...event,
+            timestamp: Date.now(),
+          });
+        }
+      });
+    }
 
     return {
       getEvents: (eventType) => {
@@ -476,6 +496,13 @@ export class TurnExecutionTestModule extends ITestModule {
             ...event,
             timestamp: Date.now(),
           });
+        }
+      },
+
+      // Cleanup method to unsubscribe from event bus
+      cleanup: () => {
+        if (unsubscribe && typeof unsubscribe === 'function') {
+          unsubscribe();
         }
       },
     };
