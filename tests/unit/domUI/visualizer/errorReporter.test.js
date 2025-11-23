@@ -755,7 +755,7 @@ describe('ErrorReporter', () => {
       });
     });
 
-    it('should return placeholder statistics', () => {
+    it('should return initial statistics with all zeros', () => {
       const stats = errorReporter.getStatistics();
 
       expect(stats).toEqual({
@@ -778,6 +778,86 @@ describe('ErrorReporter', () => {
         },
         lastReportTime: null,
       });
+    });
+
+    it('should track statistics after reporting errors', async () => {
+      const error = new Error('Test error');
+      await errorReporter.report(error, { operation: 'test', component: 'test' });
+
+      const stats = errorReporter.getStatistics();
+
+      expect(stats.totalReported).toBe(1);
+      expect(stats.reportedBySeverity.HIGH).toBe(1);
+      expect(stats.reportedByCategory.unknown).toBe(1);
+      expect(stats.lastReportTime).toBeTruthy();
+    });
+
+    it('should accumulate statistics across multiple reports', async () => {
+      ErrorClassifier.classify.mockReturnValueOnce({
+        errorType: 'Error',
+        errorMessage: 'Test error 1',
+        errorStack: 'Error stack',
+        timestamp: '2024-01-01T00:00:00.000Z',
+        category: 'data',
+        domain: 'system',
+        severity: 'CRITICAL',
+        recoverable: true,
+        retryable: false,
+        priority: 'high',
+        operation: 'test_operation',
+        component: 'test_component',
+        userImpact: 'moderate',
+        systemImpact: 'minor',
+        recommendedStrategy: 'fallback',
+        fallbackAvailable: false,
+        userMessageSuggested: 'An error occurred',
+        actionsSuggested: ['Refresh the page'],
+      });
+
+      ErrorClassifier.classify.mockReturnValueOnce({
+        errorType: 'Error',
+        errorMessage: 'Test error 2',
+        errorStack: 'Error stack',
+        timestamp: '2024-01-01T00:00:01.000Z',
+        category: 'render',
+        domain: 'system',
+        severity: 'HIGH',
+        recoverable: true,
+        retryable: false,
+        priority: 'high',
+        operation: 'test_operation',
+        component: 'test_component',
+        userImpact: 'moderate',
+        systemImpact: 'minor',
+        recommendedStrategy: 'fallback',
+        fallbackAvailable: false,
+        userMessageSuggested: 'An error occurred',
+        actionsSuggested: ['Refresh the page'],
+      });
+
+      await errorReporter.report(new Error('Test 1'), { operation: 'test' });
+      await errorReporter.report(new Error('Test 2'), { operation: 'test' });
+
+      const stats = errorReporter.getStatistics();
+
+      expect(stats.totalReported).toBe(2);
+      expect(stats.reportedBySeverity.CRITICAL).toBe(1);
+      expect(stats.reportedBySeverity.HIGH).toBe(1);
+      expect(stats.reportedByCategory.data).toBe(1);
+      expect(stats.reportedByCategory.render).toBe(1);
+    });
+
+    it('should return a copy of statistics to prevent external modification', async () => {
+      await errorReporter.report(new Error('Test'), { operation: 'test' });
+
+      const stats1 = errorReporter.getStatistics();
+      stats1.totalReported = 999;
+      stats1.reportedBySeverity.HIGH = 999;
+
+      const stats2 = errorReporter.getStatistics();
+
+      expect(stats2.totalReported).toBe(1);
+      expect(stats2.reportedBySeverity.HIGH).toBe(1);
     });
   });
 
