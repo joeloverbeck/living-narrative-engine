@@ -286,7 +286,7 @@ describe('MultiTargetActionFormatter uncovered branches', () => {
     expect(result.value[0].targets.tertiary).toHaveLength(2);
   });
 
-  it('groups multiple dependent keys even when generateCombinations is not provided', () => {
+  it('generates cartesian product for multiple dependent keys', () => {
     const actionDef = {
       id: 'test:dependent-default-behavior',
       template: 'assign {primary} with {secondary} at {tertiary}',
@@ -321,12 +321,27 @@ describe('MultiTargetActionFormatter uncovered branches', () => {
 
     expect(result.ok).toBe(true);
     expect(Array.isArray(result.value)).toBe(true);
-    expect(result.value).toHaveLength(1);
-    expect(result.value[0].command).toBe(
-      'assign Jamie with Repair duty at Workshop'
+    // Should generate cartesian product: 2 secondary × 2 tertiary = 4 combinations
+    expect(result.value).toHaveLength(4);
+
+    // Extract commands for verification
+    const commands = result.value.map((item) => item.command);
+    expect(commands).toEqual(
+      expect.arrayContaining([
+        'assign Jamie with Repair duty at Workshop',
+        'assign Jamie with Repair duty at North Ridge',
+        'assign Jamie with Scout mission at Workshop',
+        'assign Jamie with Scout mission at North Ridge',
+      ])
     );
-    expect(result.value[0].targets.secondary).toHaveLength(2);
-    expect(result.value[0].targets.tertiary).toHaveLength(2);
+
+    // Verify each combination has exactly 1 secondary and 1 tertiary target
+    result.value.forEach((item) => {
+      expect(item.targets.primary).toHaveLength(1);
+      expect(item.targets.secondary).toHaveLength(1);
+      expect(item.targets.tertiary).toHaveLength(1);
+      expect(item.targets.primary[0].id).toBe('actor-2');
+    });
   });
 
   it('expands independent combinations when dependent data is mixed with global targets', () => {
