@@ -48,7 +48,7 @@ describe('Component ValidationRules Integration', () => {
           properties: {
             layer: {
               type: 'string',
-              enum: ['underwear', 'base', 'outer', 'accessories'],
+              enum: ['underwear', 'base', 'outer', 'accessories', 'armor'],
             },
           },
           required: ['layer'],
@@ -82,7 +82,7 @@ describe('Component ValidationRules Integration', () => {
       expect(enhancedError.message).toContain('Invalid');
       expect(enhancedError.message).toContain('invalid-layer');
       expect(enhancedError.message).toContain('Valid options');
-      expect(enhancedError.message).toMatch(/underwear|base|outer|accessories/);
+      expect(enhancedError.message).toMatch(/underwear|base|outer|accessories|armor/);
     });
 
     it('should provide enhanced error for descriptors:build enum violation', async () => {
@@ -176,7 +176,7 @@ describe('Component ValidationRules Integration', () => {
           properties: {
             layer: {
               type: 'string',
-              enum: ['underwear', 'base', 'outer', 'accessories'],
+              enum: ['underwear', 'base', 'outer', 'accessories', 'armor'],
             },
           },
           required: ['layer'],
@@ -259,7 +259,7 @@ describe('Component ValidationRules Integration', () => {
           properties: {
             layer: {
               type: 'string',
-              enum: ['underwear', 'base', 'outer', 'accessories'],
+              enum: ['underwear', 'base', 'outer', 'accessories', 'armor'],
             },
           },
           required: ['layer'],
@@ -301,7 +301,7 @@ describe('Component ValidationRules Integration', () => {
           properties: {
             layer: {
               type: 'string',
-              enum: ['underwear', 'base', 'outer', 'accessories'],
+              enum: ['underwear', 'base', 'outer', 'accessories', 'armor'],
             },
           },
           required: ['layer'],
@@ -372,7 +372,7 @@ describe('Component ValidationRules Integration', () => {
           properties: {
             layer: {
               type: 'string',
-              enum: ['underwear', 'base', 'outer', 'accessories'],
+              enum: ['underwear', 'base', 'outer', 'accessories', 'armor'],
             },
           },
           required: ['layer'],
@@ -600,7 +600,7 @@ describe('Component ValidationRules Integration', () => {
           properties: {
             layer: {
               type: 'string',
-              enum: ['underwear', 'base', 'outer', 'accessories'],
+              enum: ['underwear', 'base', 'outer', 'accessories', 'armor'],
             },
           },
           required: ['layer'],
@@ -615,6 +615,35 @@ describe('Component ValidationRules Integration', () => {
       await validator.addSchema(componentSchema.dataSchema, 'clothing:wearable');
 
       const validData = { layer: 'outer' };
+      const result = validator.validate('clothing:wearable', validData);
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toBeNull();
+    });
+
+    it('should pass validation for armor layer (ARMSYSANA-001)', async () => {
+      const componentSchema = {
+        id: 'clothing:wearable',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            layer: {
+              type: 'string',
+              enum: ['underwear', 'base', 'outer', 'accessories', 'armor'],
+            },
+          },
+          required: ['layer'],
+          additionalProperties: false,
+        },
+        validationRules: {
+          generateValidator: true,
+        },
+      };
+
+      dataRegistry.store('components', 'clothing:wearable', componentSchema);
+      await validator.addSchema(componentSchema.dataSchema, 'clothing:wearable');
+
+      const validData = { layer: 'armor' };
       const result = validator.validate('clothing:wearable', validData);
 
       expect(result.isValid).toBe(true);

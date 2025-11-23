@@ -241,7 +241,7 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
     });
 
     test('should validate all valid layer types', () => {
-      const layers = ['underwear', 'base', 'outer', 'accessories'];
+      const layers = ['underwear', 'base', 'outer', 'accessories', 'armor'];
 
       layers.forEach((layer) => {
         const validRecipe = {

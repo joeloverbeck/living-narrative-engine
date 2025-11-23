@@ -215,7 +215,7 @@ describe('HasClothingInSlotLayerOperator', () => {
 
       expect(result).toBe(false);
       expect(mockDependencies.logger.warn).toHaveBeenCalledWith(
-        "hasClothingInSlotLayer: Invalid layer name 'invalid_layer'. Valid layers: underwear, base, outer, accessories"
+        "hasClothingInSlotLayer: Invalid layer name 'invalid_layer'. Valid layers: underwear, base, outer, accessories, armor"
       );
     });
 
@@ -469,7 +469,7 @@ describe('HasClothingInSlotLayerOperator', () => {
         );
         expect(result).toBe(false);
         expect(mockDependencies.logger.warn).toHaveBeenCalledWith(
-          `hasClothingInSlotLayer: Invalid layer name '${invalidLayer}'. Valid layers: underwear, base, outer, accessories`
+          `hasClothingInSlotLayer: Invalid layer name '${invalidLayer}'. Valid layers: underwear, base, outer, accessories, armor`
         );
       });
     });

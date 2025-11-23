@@ -195,7 +195,7 @@ describe('clothing:equipped Event Validation', () => {
       expect(typeof payload.timestamp).toBe('number');
 
       // Validate layer enum
-      expect(['underwear', 'base', 'outer', 'accessories']).toContain(
+      expect(['underwear', 'base', 'outer', 'accessories', 'armor']).toContain(
         payload.layer
       );
 

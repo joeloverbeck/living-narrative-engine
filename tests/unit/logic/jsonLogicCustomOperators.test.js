@@ -1275,7 +1275,7 @@ describe('JsonLogicCustomOperators', () => {
       expect(result).toBe(false);
       // Check that the specific warning was called (among potentially other warnings)
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        "JsonLogicCustomOperators: hasClothingInSlotLayer: Invalid layer name 'invalid_layer'. Valid layers: underwear, base, outer, accessories"
+        "JsonLogicCustomOperators: hasClothingInSlotLayer: Invalid layer name 'invalid_layer'. Valid layers: underwear, base, outer, accessories, armor"
       );
     });
 

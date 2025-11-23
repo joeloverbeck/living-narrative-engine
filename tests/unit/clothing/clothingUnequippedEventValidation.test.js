@@ -162,7 +162,7 @@ describe('clothing:unequipped Event Validation', () => {
     });
 
     it('should accept valid payload with all valid layer types', async () => {
-      const layers = ['underwear', 'base', 'outer', 'accessories'];
+      const layers = ['underwear', 'base', 'outer', 'accessories', 'armor'];
 
       for (const layer of layers) {
         const payload = {
