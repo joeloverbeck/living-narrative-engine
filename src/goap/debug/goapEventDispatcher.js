@@ -19,10 +19,7 @@ const warnedEventBuses = new WeakSet();
  * @param payload
  */
 function clonePayloadForProbe(payload) {
-  if (!payload || typeof payload !== 'object') {
-    return {};
-  }
-
+  // payload is always an object (normalized by normalizePayload)
   if (typeof structuredClone === 'function') {
     try {
       return structuredClone(payload);
@@ -131,9 +128,7 @@ function cloneComplianceEntry(entry) {
  * @param entry
  */
 function clonePlanningEntry(entry) {
-  if (!entry) {
-    return null;
-  }
+  // entry is always valid (comes from complianceByActor Map)
   const planningCompleted = entry.planningCompleted || 0;
   const planningFailed = entry.planningFailed || 0;
   return {
@@ -216,9 +211,8 @@ export function createGoapEventDispatcher(eventBus, logger, options = {}) {
   };
 
   const logProbeStateChange = (state) => {
-    if (lastProbeLogState === state) {
-      return;
-    }
+    // Note: State change is guaranteed by guards in registerProbe/detach functions
+    // (wasEmpty check and activeProbes.length === 0 check ensure only transitions are logged)
     lastProbeLogState = state;
     if (state === 'enabled') {
       safeLogger.info('GOAP event trace probe attached; tracing enabled.', {
@@ -266,17 +260,11 @@ export function createGoapEventDispatcher(eventBus, logger, options = {}) {
   };
 
   const getOrCreateEntry = (actorId) => {
-    if (!actorId || typeof actorId !== 'string') {
-      return null;
+    // actorId is always a valid non-empty string (normalized by normalizeActorId before calling)
+    if (!complianceByActor.has(actorId)) {
+      complianceByActor.set(actorId, createComplianceEntry(actorId));
     }
-    const normalizedId = actorId.trim();
-    if (!normalizedId) {
-      return null;
-    }
-    if (!complianceByActor.has(normalizedId)) {
-      complianceByActor.set(normalizedId, createComplianceEntry(normalizedId));
-    }
-    return complianceByActor.get(normalizedId);
+    return complianceByActor.get(actorId);
   };
 
   const recordEventDispatch = (actorId) => {
@@ -402,7 +390,7 @@ export function createGoapEventDispatcher(eventBus, logger, options = {}) {
           `GOAP event "${eventType}" requires a structured payload object. See specs/goap-system-specs.md#Planner Interface Contract.`
         );
       }
-    } else if (payload != null && typeof payload !== 'object') {
+    } else if (payload !== null && payload !== undefined && typeof payload !== 'object') {
       recordViolation({
         actorId: actorIdOverride,
         eventType,
