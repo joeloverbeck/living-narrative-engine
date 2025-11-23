@@ -258,6 +258,17 @@ export default class SimpleEntityManager {
   }
 
   /**
+   * Removes an entity from the manager.
+   * Alias for deleteEntity to support ConsumeItemHandler interface.
+   *
+   * @param {string} id - Entity id.
+   * @returns {void}
+   */
+  removeEntity(id) {
+    this.deleteEntity(id);
+  }
+
+  /**
    * Removes an entity instance from the manager.
    * Alias for deleteEntity to support ConsumeItemHandler interface.
    *

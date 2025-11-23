@@ -1,0 +1,19 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "fantasy:notice_alibi_wanted",
+  "components": {
+    "core:name": {
+      "text": "posted notice seeking alibi service"
+    },
+    "core:description": {
+      "text": "A hastily scrawled note on cheap parchment, with several crossed-out attempts visible beneath the final version."
+    },
+    "items:item": {},
+    "items:weight": {
+      "weight": 0.01
+    },
+    "items:readable": {
+      "text": "WANTED: Someone to tell my wife I've been working late (I've actually been at the pub). 2 copper. Convincing liars only."
+    }
+  }
+}

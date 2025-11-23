@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "affection:pat_ass_affectionately",
+  "name": "Pat ass affectionately",
+  "description": "Give the target's ass a gentle affectionate pat.",
+  "targets": "caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target",
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "template": "pat {target}'s ass",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#6a1b9a",
+    "textColor": "#f3e5f5",
+    "hoverBackgroundColor": "#8e24aa",
+    "hoverTextColor": "#ffffff"
+  }
+}

@@ -438,7 +438,7 @@ describe('CommandProcessingWorkflow fallback coverage integration', () => {
 
     expect(state.isProcessing).toBe(false);
     expect(
-      logger.calls.warn.some(([message]) =>
+      logger.calls.debug.some(([message]) =>
         message.includes('processing flag became false after dispatch')
       )
     ).toBe(true);

@@ -257,6 +257,17 @@ export default class TestEntityManagerAdapter {
   }
 
   /**
+   * Remove an entity from the manager.
+   * Alias for deleteEntity to support ConsumeItemHandler interface.
+   * This matches the production EntityManager.removeEntity() method.
+   *
+   * @param {string} entityId - Entity ID to remove
+   */
+  removeEntity(entityId) {
+    this.#simple.removeEntity(entityId);
+  }
+
+  /**
    * Remove an entity instance from the manager.
    * Alias for deleteEntity to support ConsumeItemHandler interface.
    * This matches the production EntityManager.removeEntityInstance() method.

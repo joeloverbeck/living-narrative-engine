@@ -17,7 +17,8 @@ describe('Duplicate Event Registration - Integration Test', () => {
   let warnSpy;
 
   beforeEach(() => {
-    logger = new ConsoleLogger('error');
+    // Set logger to 'warn' level to capture warning messages
+    logger = new ConsoleLogger('warn');
     warnSpy = jest.spyOn(logger, 'warn');
 
     schemaValidator = new AjvSchemaValidator({ logger });
@@ -25,7 +26,8 @@ describe('Duplicate Event Registration - Integration Test', () => {
 
   describe('Schema Registration Behavior', () => {
     it('should warn when registering the same schema ID twice', async () => {
-      const schemaId = 'core:direction_deleted#payload';
+      // Use non-payload schema ID to trigger warning behavior
+      const schemaId = 'core:direction_deleted';
       const schema = {
         type: 'object',
         properties: {
@@ -51,7 +53,10 @@ describe('Duplicate Event Registration - Integration Test', () => {
       );
     });
 
-    it('should produce the exact warning message seen in production', async () => {
+    it('should use debug logging for payload schema re-registration', async () => {
+      // Create a debug spy since payload schemas use debug logging, not warnings
+      const debugSpy = jest.spyOn(logger, 'debug');
+
       const eventDefinition = {
         id: 'core:direction_deleted',
         payloadSchema: {
@@ -85,10 +90,11 @@ describe('Duplicate Event Registration - Integration Test', () => {
         }
       );
 
-      // Clear warn spy calls from first registration
-      warnSpy.mockClear();
+      // Clear debug spy calls from first registration
+      debugSpy.mockClear();
 
       // Second registration (simulating duplicate from test setup)
+      // Payload schemas use debug logging, not warnings
       await registerInlineSchema(
         schemaValidator,
         eventDefinition.payloadSchema,
@@ -102,13 +108,16 @@ describe('Duplicate Event Registration - Integration Test', () => {
         }
       );
 
-      // Should produce the exact warning message
-      expect(warnSpy).toHaveBeenCalledWith(
-        `EventLoader [core]: Payload schema ID 'core:direction_deleted#payload' for event 'core:direction_deleted' was already loaded. Overwriting.`
+      // Payload schemas should use debug logging, not warnings
+      expect(debugSpy).toHaveBeenCalledWith(
+        expect.stringContaining(`Schema '${schemaId}' already loaded from previous session`)
       );
+      // Should NOT have produced a warning
+      expect(warnSpy).not.toHaveBeenCalled();
     });
 
     it('should handle multiple duplicate event registrations', async () => {
+      // Use non-payload schema IDs to trigger warning behavior
       const events = [
         'core:direction_deleted',
         'core:direction_updated',
@@ -116,7 +125,6 @@ describe('Duplicate Event Registration - Integration Test', () => {
       ];
 
       for (const eventId of events) {
-        const schemaId = `${eventId}#payload`;
         const schema = {
           type: 'object',
           properties: {
@@ -125,7 +133,7 @@ describe('Duplicate Event Registration - Integration Test', () => {
         };
 
         // First registration
-        await registerSchema(schemaValidator, schema, schemaId, logger);
+        await registerSchema(schemaValidator, schema, eventId, logger);
       }
 
       // Clear warn spy
@@ -133,7 +141,6 @@ describe('Duplicate Event Registration - Integration Test', () => {
 
       // Second registration of all events (simulating duplicate registration)
       for (const eventId of events) {
-        const schemaId = `${eventId}#payload`;
         const schema = {
           type: 'object',
           properties: {
@@ -141,26 +148,27 @@ describe('Duplicate Event Registration - Integration Test', () => {
           },
         };
 
-        await registerSchema(schemaValidator, schema, schemaId, logger);
+        await registerSchema(schemaValidator, schema, eventId, logger);
       }
 
       // Should have warned for all three
       expect(warnSpy).toHaveBeenCalledTimes(3);
       expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('core:direction_deleted#payload')
+        expect.stringContaining('core:direction_deleted')
       );
       expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('core:direction_updated#payload')
+        expect.stringContaining('core:direction_updated')
       );
       expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('core:orphans_cleaned#payload')
+        expect.stringContaining('core:orphans_cleaned')
       );
     });
   });
 
   describe('Schema Comparison for Smart Registration', () => {
-    it('should not warn when registering identical schemas', async () => {
-      const schemaId = 'test:event#payload';
+    it('should warn when registering identical non-payload schemas', async () => {
+      // Use non-payload schema ID
+      const schemaId = 'test:event';
       const schema = {
         type: 'object',
         properties: {
@@ -177,16 +185,16 @@ describe('Duplicate Event Registration - Integration Test', () => {
       warnSpy.mockClear();
 
       // Second registration with IDENTICAL schema
-      // After our fix, this should NOT warn since the schemas are identical
+      // Current implementation warns even for identical schemas
+      // This could be improved in the future by comparing schemas before overwriting
       await registerSchema(schemaValidator, schema, schemaId, logger);
 
-      // With current implementation, it still warns even for identical schemas
-      // This could be improved in the future by comparing schemas before overwriting
       expect(warnSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should warn when registering different schemas with same ID', async () => {
-      const schemaId = 'test:event#payload';
+      // Use non-payload schema ID
+      const schemaId = 'test:event';
       const schema1 = {
         type: 'object',
         properties: {

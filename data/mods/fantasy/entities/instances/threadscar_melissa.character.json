@@ -1,0 +1,18 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "fantasy:threadscar_melissa_instance",
+    "definitionId": "fantasy:threadscar_melissa",
+    "componentOverrides": {
+        "core:position": {
+            "locationId": "fantasy:mudbrook_municipal_aid_registry_instance"
+        },
+        "items:inventory": {
+            "items": [
+            ],
+            "capacity": {
+                "maxWeight": 50.0,
+                "maxItems": 20
+            }
+        }
+    }
+}

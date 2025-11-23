@@ -119,7 +119,12 @@
     "descriptors:deformity",
     "descriptors:structural_integrity",
     "descriptors:visual_capability",
-    "descriptors:acoustic_property"
+    "descriptors:acoustic_property",
+    "descriptors:skin_condition",
+    "descriptors:age_markers",
+    "descriptors:professional_markers",
+    "descriptors:nail_condition",
+    "descriptors:expression"
   ],
   "descriptorValueKeys": [
     "value",
@@ -144,7 +149,13 @@
     "deformity",
     "integrity",
     "capability",
-    "property"
+    "property",
+    "conditions",
+    "markers",
+    "profession",
+    "cleanliness",
+    "condition",
+    "demeanor"
   ],
   "equipmentIntegration": {
     "enabled": true,

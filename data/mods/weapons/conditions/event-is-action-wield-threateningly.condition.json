@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "weapons:event-is-action-wield-threateningly",
+  "description": "True if the event is the wield_threateningly action",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "weapons:wield_threateningly"
+    ]
+  }
+}

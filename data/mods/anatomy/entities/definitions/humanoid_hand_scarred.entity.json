@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:humanoid_hand_scarred",
+  "description": "A scarred humanoid hand",
+  "components": {
+    "anatomy:part": {
+      "subType": "hand"
+    },
+    "descriptors:texture": {
+      "texture": "scarred"
+    },
+    "core:name": {
+      "text": "hand"
+    }
+  }
+}

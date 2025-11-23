@@ -9,6 +9,7 @@
   "content": {
     "components": [
       "acoustic_property.component.json",
+      "age_markers.component.json",
       "animation.component.json",
       "body_composition.component.json",
       "body_hair.component.json",
@@ -19,6 +20,7 @@
       "digit_count.component.json",
       "effect.component.json",
       "embellishment.component.json",
+      "expression.component.json",
       "facial_aesthetic.component.json",
       "facial_hair.component.json",
       "firmness.component.json",
@@ -28,7 +30,9 @@
       "length_category.component.json",
       "length_hair.component.json",
       "luminosity.component.json",
+      "nail_condition.component.json",
       "pattern.component.json",
+      "professional_markers.component.json",
       "projection.component.json",
       "pupil_shape.component.json",
       "secretion.component.json",
@@ -37,6 +41,7 @@
       "shape_general.component.json",
       "size_category.component.json",
       "size_specific.component.json",
+      "skin_condition.component.json",
       "structural_integrity.component.json",
       "temperature.component.json",
       "texture-with-validation.component.json",

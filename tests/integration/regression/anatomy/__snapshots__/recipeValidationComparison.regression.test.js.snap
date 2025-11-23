@@ -8,7 +8,6 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
         "partType": "mystery_appendage",
         "requiredProperties": [],
         "requiredTags": [],
-        "totalEntitiesChecked": 159,
       },
       "location": {
         "index": 0,
@@ -23,7 +22,6 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
         "partType": "wing",
         "requiredProperties": [],
         "requiredTags": [],
-        "totalEntitiesChecked": 159,
       },
       "location": {
         "name": "phantom_socket",

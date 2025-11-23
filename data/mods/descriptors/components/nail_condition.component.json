@@ -1,0 +1,77 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:nail_condition",
+  "description": "Condition and appearance of fingernails and toenails",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "length": {
+        "type": "string",
+        "description": "The length of the nails",
+        "enum": [
+          "short",
+          "trimmed",
+          "medium",
+          "long",
+          "very-long",
+          "unkempt",
+          "clawed",
+          "talon-like"
+        ],
+        "default": "trimmed"
+      },
+      "cleanliness": {
+        "type": "string",
+        "description": "The cleanliness state of the nails",
+        "enum": [
+          "pristine",
+          "clean",
+          "well-maintained",
+          "dirty",
+          "stained",
+          "dirt-embedded",
+          "chemical-stained",
+          "dye-stained",
+          "ink-stained",
+          "permanently-stained"
+        ],
+        "default": "clean"
+      },
+      "condition": {
+        "type": "string",
+        "description": "The health and condition of the nails",
+        "enum": [
+          "healthy",
+          "strong",
+          "well-maintained",
+          "cracked",
+          "brittle",
+          "broken",
+          "chipped",
+          "ragged",
+          "bitten",
+          "ridged",
+          "discolored",
+          "thick",
+          "thin"
+        ],
+        "default": "healthy"
+      }
+    },
+    "required": ["length", "cleanliness", "condition"],
+    "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid nail property: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "All nail properties (length, cleanliness, condition) are required",
+      "invalidType": "Invalid type for nail property: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
+  }
+}

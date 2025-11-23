@@ -27,8 +27,7 @@
     "gymnastics",
     "music",
     "fantasy",
-    "patrol",
     "p_erotica"
   ],
-  "startWorld": "p_erotica:uncle"
+  "startWorld": "fantasy:vespera"
 }

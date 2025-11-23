@@ -1,0 +1,23 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "fantasy:mudbrook_on_the_bend",
+    "components": {
+        "core:name": {
+            "text": "streets of Mudbrook-on-the-Bend"
+        },
+        "core:description": {
+            "text": "A narrow village lane runs downhill through tightly packed houses, following the edge of a blue-green canal. The path in the foreground is uneven stone, broken by tufts of grass and small wildflowers, and it transitions into a lighter, plank-like walkway that hugs the water farther up. Short wooden posts, scattered stones, and bits of scrub line the verge where the lane meets the canal's bank. On both sides, tall, aging buildings lean inward over the passage. Their walls are a mix of pale plaster and exposed timber frames, with dark beams crisscrossing the facades. Roofs are steep and layered, mostly red or orange tile, patched with wood and small overhangs. Many upper stories jut out above lower ones, supported by thick wooden braces. Narrow windows, shutters, and small balconies face the lane; some balconies hold a pot or a low shrub, including a bright green tree spilling over a sunlit ledge. At ground level, there are rough doorways, stacked boards, and a few barrels or buckets tucked under awnings."
+        },
+        "core:portrait": {
+            "imagePath": "portraits/mudbrook.png",
+            "altText": "Streets of Mudbrook-on-the-Bend"
+        },
+        "movement:exits": [
+            {
+                "direction": "to the Mudbrook Municipal Aid Registry",
+                "target": "fantasy:mudbrook_municipal_aid_registry_instance",
+                "blocker": null
+            }
+        ]
+    }
+}

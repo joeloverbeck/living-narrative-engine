@@ -1,0 +1,31 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:humanoid_hand_craftsman_stained",
+  "description": "Broad, capable hands of a master leatherworker, showing permanent dye staining, distinctive callus patterns, and decades of skilled craft work",
+  "components": {
+    "anatomy:part": {
+      "subType": "hand"
+    },
+    "descriptors:texture": {
+      "texture": "rough"
+    },
+    "descriptors:color_extended": {
+      "color": "tan-brown"
+    },
+    "descriptors:skin_condition": {
+      "conditions": ["weathered", "chemically-stained", "callused"]
+    },
+    "descriptors:professional_markers": {
+      "profession": "leatherworker",
+      "markers": ["tannery-staining", "tool-calluses", "chemical-staining"]
+    },
+    "descriptors:nail_condition": {
+      "length": "short",
+      "cleanliness": "chemical-stained",
+      "condition": "well-maintained"
+    },
+    "core:name": {
+      "text": "hand"
+    }
+  }
+}

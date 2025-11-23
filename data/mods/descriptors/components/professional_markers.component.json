@@ -1,0 +1,91 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:professional_markers",
+  "description": "Physical markers from specific trades and professions visible on the body",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "profession": {
+        "type": "string",
+        "description": "The profession or trade",
+        "enum": [
+          "none",
+          "leatherworker",
+          "tanner",
+          "blacksmith",
+          "carpenter",
+          "mason",
+          "miner",
+          "farmer",
+          "fisher",
+          "weaver",
+          "dyer",
+          "scribe",
+          "cook",
+          "fletcher",
+          "bowyer",
+          "potter",
+          "glassblower",
+          "jeweler",
+          "tailor",
+          "cobbler",
+          "sailor",
+          "soldier",
+          "archer",
+          "swordsman"
+        ],
+        "default": "none"
+      },
+      "markers": {
+        "type": "array",
+        "description": "Array of profession-specific physical markers",
+        "items": {
+          "type": "string",
+          "enum": [
+            "none",
+            "tannery-staining",
+            "chemical-staining",
+            "dye-staining",
+            "tool-calluses",
+            "weapon-calluses",
+            "bowstring-calluses",
+            "forge-burns",
+            "burn-scars",
+            "sawdust-embedded",
+            "wood-splinters",
+            "stone-dust",
+            "rope-burns",
+            "rope-calluses",
+            "ink-stains-fingers",
+            "coal-dust",
+            "metal-dust",
+            "sun-weathered",
+            "wind-weathered",
+            "salt-weathered",
+            "sword-calluses",
+            "archery-marks",
+            "needle-pricks",
+            "knife-nicks"
+          ]
+        },
+        "minItems": 0,
+        "uniqueItems": true
+      }
+    },
+    "required": ["profession"],
+    "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid professional marker: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Profession is required",
+      "invalidType": "Invalid type for professional marker: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
+  }
+}

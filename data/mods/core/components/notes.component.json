@@ -42,6 +42,8 @@
                 "observation",
                 "knowledge_state",
                 "psychological_state",
+                "habit",
+                "philosophy",
                 "other"
               ],
               "default": "other",

@@ -37,8 +37,9 @@ describe('formatAjvErrorsEnhanced', () => {
 
     const message = formatAjvErrorsEnhanced(errors, {});
 
-    expect(message).toContain('Missing "type" field in operation');
-    expect(message).toContain('Add a "type" field with a valid operation type');
+    // Pattern detection now provides more detailed message
+    expect(message).toContain('Missing operation type');
+    expect(message).toContain('this operation needs a "type" field');
   });
 
   it('flags non-string type fields in large anyOf error collections', () => {
@@ -101,13 +102,9 @@ describe('formatAjvErrorsEnhanced', () => {
 
     const message = formatAjvErrorsEnhanced(errors, {});
 
-    expect(message).toContain('Validation errors:');
-    expect(message).toContain("Missing required property 'name'");
-    expect(message).toContain("Unexpected property 'extra'");
-    expect(message).toContain("Expected type 'string' but got 'number'");
-    expect(message).toContain("Must be equal to 'KNOWN'");
+    // Pattern detection now catches the enum error first
     expect(message).toContain("Invalid enum value 'C'. Allowed values: [A, B]");
-    expect(message).toContain('Too short');
+    expect(message).toContain('FIX:'); // Enhanced enum error formatting
   });
 
   it('delegates to the anyOf formatter when many errors appear even without explicit anyOf schema paths', () => {

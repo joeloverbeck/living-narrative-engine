@@ -12,8 +12,13 @@ import {
   performPreValidation,
   formatPreValidationError,
   validateOperationType,
+  KNOWN_OPERATION_TYPES,
 } from '../../../src/utils/preValidationUtils.js';
 import OperationValidationError from '../../../src/errors/operationValidationError.js';
+import AppContainer from '../../../src/dependencyInjection/appContainer.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
+import { Registrar } from '../../../src/utils/registrarHelpers.js';
+import { registerInterpreters } from '../../../src/dependencyInjection/registrations/interpreterRegistrations.js';
 
 describe('preValidationUtils', () => {
   describe('validateOperationStructure', () => {
@@ -880,6 +885,80 @@ describe('preValidationUtils', () => {
       }
       expect(errorMessage).toMatch(/CLAUDE\.md/);
       expect(errorMessage).toMatch(/8-step checklist/);
+    });
+  });
+
+  describe('KNOWN_OPERATION_TYPES Whitelist Completeness', () => {
+    let container;
+    let registry;
+    let registeredHandlers;
+
+    beforeEach(() => {
+      container = new AppContainer();
+      const registrar = new Registrar(container);
+
+      // Basic logger needed for OperationRegistry and handlers
+      const mockLogger = {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      };
+      registrar.instance(tokens.ILogger, mockLogger);
+
+      // Register all operation handlers (this populates the OperationRegistry)
+      registerInterpreters(container);
+
+      // Now we can resolve the registry with all handlers registered
+      registry = container.resolve(tokens.OperationRegistry);
+      registeredHandlers = registry.getRegisteredTypes();
+    });
+
+    it('should include all registered operation handlers', () => {
+      // Arrange
+      const whitelistedTypes = KNOWN_OPERATION_TYPES;
+
+      // Act & Assert - verify each registered handler is in the whitelist
+      const missing = registeredHandlers.filter(
+        type => !whitelistedTypes.includes(type)
+      );
+
+      if (missing.length > 0) {
+        throw new Error(
+          `Expected whitelisted operation types to include all registered handlers.\n` +
+          `Missing from KNOWN_OPERATION_TYPES: ${missing.join(', ')}\n\n` +
+          `Add these types to src/utils/preValidationUtils.js (lines 32-94)`
+        );
+      }
+
+      expect(missing).toHaveLength(0);
+    });
+
+    it('should not include non-existent operation types', () => {
+      // Act & Assert - verify each whitelisted type has a registered handler
+      const orphaned = KNOWN_OPERATION_TYPES.filter(
+        type => !registeredHandlers.includes(type)
+      );
+
+      if (orphaned.length > 0) {
+        throw new Error(
+          `Expected all whitelisted types to have registered handlers.\n` +
+          `No handler found for: ${orphaned.join(', ')}\n\n` +
+          `Either:\n` +
+          `1. Register handlers for these types, or\n` +
+          `2. Remove from KNOWN_OPERATION_TYPES in src/utils/preValidationUtils.js`
+        );
+      }
+
+      expect(orphaned).toHaveLength(0);
+    });
+
+    it('should maintain alphabetical order for maintainability', () => {
+      // Arrange
+      const sorted = [...KNOWN_OPERATION_TYPES].sort();
+
+      // Act & Assert
+      expect(KNOWN_OPERATION_TYPES).toEqual(sorted);
     });
   });
 });

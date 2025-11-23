@@ -113,7 +113,7 @@ describe('Schema Overwrite Fix - Verification Test', () => {
     expect(mockLogger.warn).not.toHaveBeenCalled(); // Still no warnings
   });
 
-  it('should verify the old behavior would cause warnings (before fix)', async () => {
+  it('should verify the old behavior would cause debug logs (before fix)', async () => {
     // Arrange: Demonstrate what the OLD behavior would do (without pre-checking)
     const schemaId = 'core:character_concept_created#payload';
     const schema = {
@@ -130,18 +130,20 @@ describe('Schema Overwrite Fix - Verification Test', () => {
     mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);
 
     // Act: Simulate the OLD behavior - directly call registerInlineSchema without checking
-    const warnMessage = `EventLoader [core]: Payload schema ID '${schemaId}' for event 'core:character_concept_created' was already loaded. Overwriting.`;
-
+    // Note: Payload schemas (with #payload) are logged at debug level, not warn level
     await registerInlineSchema(
       mockSchemaValidator,
       schema,
       schemaId,
       mockLogger,
-      { warnMessage }
+      {} // No warnMessage needed for payload schemas
     );
 
-    // Assert: This would produce warnings (demonstrating why the fix was needed)
-    expect(mockLogger.warn).toHaveBeenCalledWith(warnMessage);
+    // Assert: Payload schemas log at debug level, not warn level
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      `Schema '${schemaId}' already loaded from previous session. Re-registering.`
+    );
+    expect(mockLogger.warn).not.toHaveBeenCalled();
     expect(mockSchemaValidator.removeSchema).toHaveBeenCalledWith(schemaId);
     expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(
       schema,

@@ -1,0 +1,55 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:age_markers",
+  "description": "Visual indicators of aging and life experience visible in features",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "markers": {
+        "type": "array",
+        "description": "Array of age marker descriptors",
+        "items": {
+          "type": "string",
+          "enum": [
+            "none",
+            "youthful",
+            "smile-lines",
+            "laugh-lines",
+            "crow's-feet",
+            "forehead-lines",
+            "frown-lines",
+            "worry-lines",
+            "deep-wrinkles",
+            "age-spots",
+            "liver-spots",
+            "grey-threading",
+            "salt-pepper",
+            "silver-streaks",
+            "white-hair",
+            "thinning-hair",
+            "sagging-skin",
+            "jowls",
+            "neck-wrinkles"
+          ]
+        },
+        "minItems": 1,
+        "uniqueItems": true
+      }
+    },
+    "required": ["markers"],
+    "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid age marker: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Age markers are required",
+      "invalidType": "Invalid type for age markers: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
+  }
+}

@@ -74,7 +74,7 @@ describe('CommandProcessingWorkflow _dispatchAction and processCommand', () => {
       actionDefinitionId: 'a1',
     });
     expect(result).toBeNull();
-    expect(logger.warn).toHaveBeenCalled();
+    expect(logger.debug).toHaveBeenCalled();
   });
 
   it('handles context change after dispatch', async () => {

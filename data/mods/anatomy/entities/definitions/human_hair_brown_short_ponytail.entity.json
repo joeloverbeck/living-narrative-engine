@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_hair_brown_short_ponytail",
+  "description": "Short brown hair in a ponytail",
+  "components": {
+    "anatomy:part": {
+      "subType": "hair"
+    },
+    "descriptors:color_basic": {
+      "color": "brown"
+    },
+    "descriptors:length_hair": {
+      "length": "short"
+    },
+    "descriptors:hair_style": {
+      "style": "ponytail"
+    },
+    "core:name": {
+      "text": "hair"
+    }
+  }
+}

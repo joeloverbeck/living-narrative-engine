@@ -1,0 +1,5 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "fantasy:mudbrook_on_the_bend_instance",
+    "definitionId": "fantasy:mudbrook_on_the_bend"
+}

@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:humanoid_arm_weathered_tannery_stained",
+  "description": "Strong working arms bearing permanent tan-brown chemical staining from decades of tannery work, with weathered skin texture and solid forearms from leathercraft labor",
+  "components": {
+    "anatomy:part": {
+      "subType": "arm"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "wrist",
+          "allowedTypes": ["hand"],
+          "nameTpl": "{{effective_orientation}} {{type}}"
+        }
+      ]
+    },
+    "descriptors:texture": {
+      "texture": "rough"
+    },
+    "descriptors:color_extended": {
+      "color": "tan-brown"
+    },
+    "descriptors:build": {
+      "build": "working-strength"
+    },
+    "descriptors:skin_condition": {
+      "conditions": ["weathered", "chemically-stained"]
+    },
+    "descriptors:professional_markers": {
+      "profession": "leatherworker",
+      "markers": ["tannery-staining", "chemical-staining"]
+    },
+    "core:name": {
+      "text": "arm"
+    }
+  }
+}

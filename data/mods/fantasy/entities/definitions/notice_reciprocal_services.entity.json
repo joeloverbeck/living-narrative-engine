@@ -1,0 +1,19 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "fantasy:notice_reciprocal_services",
+  "components": {
+    "core:name": {
+      "text": "posted notice about reciprocal services"
+    },
+    "core:description": {
+      "text": "A wrinkled notice written in surprisingly neat handwriting, though the paper has suspicious stains around the edges."
+    },
+    "items:item": {},
+    "items:weight": {
+      "weight": 0.01
+    },
+    "items:readable": {
+      "text": "RECIPROCAL MANUAL RELEASE SERVICES OFFERED/REQUIRED\n\nLocal craftsman (53, hygiene acceptable, all digits functional) seeks partner for mutual handjob exchange. Fair trade only—you provide, I provide, we part as gentlemen/gentlewomen. No further entanglement.\n\nPayment: One (1) handjob of equivalent enthusiasm and duration.\n\nContact: Bertram the Muddy, behind the tannery after sunset."
+    }
+  }
+}

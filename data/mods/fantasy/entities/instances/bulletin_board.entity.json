@@ -1,0 +1,10 @@
+{
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "fantasy:bulletin_board_instance",
+  "definitionId": "fantasy:bulletin_board",
+  "componentOverrides": {
+    "core:position": {
+      "locationId": "fantasy:mudbrook_municipal_aid_registry_instance"
+    }
+  }
+}

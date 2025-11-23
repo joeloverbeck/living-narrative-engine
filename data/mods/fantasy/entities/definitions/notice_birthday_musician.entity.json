@@ -1,0 +1,19 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "fantasy:notice_birthday_musician",
+  "components": {
+    "core:name": {
+      "text": "posted notice for birthday musician"
+    },
+    "core:description": {
+      "text": "A notice written in flowery script with little heart decorations, though the content suggests the writer may be quietly desperate."
+    },
+    "items:item": {},
+    "items:weight": {
+      "weight": 0.01
+    },
+    "items:readable": {
+      "text": "MUSICIAN NEEDED: Play at my daughter's birthday. She's 7. You will be required to perform 'The Happy Donkey Song' seventeen times minimum. 3 copper, earplugs not provided."
+    }
+  }
+}

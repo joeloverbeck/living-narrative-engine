@@ -74,7 +74,7 @@ describe('preValidationUtils integration', () => {
 
       expect(result.isValid).toBe(false);
       expect(result.error).toBe('Unknown operation type "NOT_A_REAL_OPERATION"');
-      expect(result.suggestions?.[1]).toBe('QUERY_COMPONENT');
+      expect(result.suggestions).toContain('ADD_COMPONENT'); // First in alphabetical list
       expect(result.suggestions?.at(-1)).toMatch(/more$/);
     });
 

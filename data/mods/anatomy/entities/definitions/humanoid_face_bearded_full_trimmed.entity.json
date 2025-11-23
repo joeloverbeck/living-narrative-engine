@@ -1,0 +1,68 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:humanoid_face_bearded_full_trimmed",
+  "description": "A warm, unremarkable face with a neatly trimmed full beard transitioning from brown to grey, featuring kind eyes with smile-lines",
+  "components": {
+    "anatomy:part": {
+      "subType": "head"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "left_eye",
+          "orientation": "left",
+          "allowedTypes": ["eye"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_eye",
+          "orientation": "right",
+          "allowedTypes": ["eye"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "left_ear",
+          "orientation": "left",
+          "allowedTypes": ["ear"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_ear",
+          "orientation": "right",
+          "allowedTypes": ["ear"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "scalp",
+          "allowedTypes": ["hair"],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "nose",
+          "allowedTypes": ["nose"],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "mouth",
+          "allowedTypes": ["mouth"],
+          "nameTpl": "{{type}}"
+        }
+      ]
+    },
+    "descriptors:facial_hair": {
+      "style": "full-beard"
+    },
+    "descriptors:facial_aesthetic": {
+      "value": "unremarkable"
+    },
+    "descriptors:age_markers": {
+      "markers": ["smile-lines", "crow's-feet"]
+    },
+    "descriptors:expression": {
+      "demeanor": "content"
+    },
+    "core:name": {
+      "text": "head"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:round_started",
+  "description": "Fired when a new round begins in the turn system.",
+  "payloadSchema": {
+    "title": "Core: Round Started Event Payload",
+    "description": "Defines the payload structure for the 'core:round_started' event.",
+    "type": "object",
+    "properties": {
+      "roundNumber": {
+        "type": "number",
+        "description": "The number of the round that is starting (1-based)."
+      },
+      "actors": {
+        "type": "array",
+        "description": "Array of entity IDs representing the actors participating in this round.",
+        "items": {
+          "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId"
+        }
+      },
+      "strategy": {
+        "type": "string",
+        "enum": ["round-robin", "initiative"],
+        "description": "The turn order strategy being used for this round."
+      }
+    },
+    "required": ["roundNumber", "actors", "strategy"],
+    "additionalProperties": false
+  }
+}

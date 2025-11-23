@@ -79,7 +79,13 @@ describe('ContextAssemblyService', () => {
       });
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Knowledge limitation enabled')
+        expect.stringContaining('Knowledge limitation enabled but full knowledge filtering not yet integrated')
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('GOAPIMPL-023')
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('omniscient mode')
       );
     });
 

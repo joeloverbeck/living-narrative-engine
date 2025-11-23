@@ -1,0 +1,19 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "fantasy:notice_possessed_chickens",
+  "components": {
+    "core:name": {
+      "text": "posted notice about problematic chickens"
+    },
+    "core:description": {
+      "text": "A smudged notice with what appears to be chicken scratch marks across one corner and a few suspicious feathers stuck to it."
+    },
+    "items:item": {},
+    "items:weight": {
+      "weight": 0.01
+    },
+    "items:readable": {
+      "text": "HELP WANTED: My chickens are possessed by the vengeful spirit of my dead mother-in-law. Or they're just mean chickens. Either way, I need them gone. 1 silver, or take the chickens."
+    }
+  }
+}

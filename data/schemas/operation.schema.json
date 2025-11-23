@@ -7,12 +7,12 @@
   "$defs": {
     "Action": {
       "description": "Represents either a concrete operation or a macro reference. This is the canonical definition for any item in an action sequence.",
-      "oneOf": [
-        {
-          "$ref": "#/$defs/Operation"
-        },
+      "anyOf": [
         {
           "$ref": "#/$defs/MacroReference"
+        },
+        {
+          "$ref": "#/$defs/Operation"
         }
       ]
     },

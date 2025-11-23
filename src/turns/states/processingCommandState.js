@@ -385,8 +385,9 @@ export class ProcessingCommandState extends AbstractTurnState {
 
     if (this.isProcessing) {
       // This indicates an abnormal termination, like the handler itself being destroyed.
-      logger.warn(
-        `${this.getStateName()}: Destroyed during active processing for actor ${actorId}.`
+      // This is a handled edge case (e.g., turn end during async processing) - cleanup proceeds normally.
+      logger.debug(
+        `${this.getStateName()}: Destroyed during active processing for actor ${actorId} (handled edge case).`
       );
     }
     finishProcessing(this); // Ensure flag is cleared.

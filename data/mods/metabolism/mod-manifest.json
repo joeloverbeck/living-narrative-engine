@@ -24,8 +24,8 @@
       "metabolic_store.component.json"
     ],
     "actions": [
-      "eat.action.json",
       "drink.action.json",
+      "eat.action.json",
       "rest.action.json"
     ],
     "rules": [
@@ -33,8 +33,7 @@
       "handle_eat_food.rule.json",
       "handle_rest.rule.json",
       "turn_1_energy_burn.rule.json",
-      "turn_2_digestion.rule.json",
-      "turn_3_hunger_update.rule.json"
+      "turn_2_digestion.rule.json"
     ],
     "conditions": [
       "can-consume.condition.json",
@@ -48,8 +47,8 @@
     "entities": {
       "definitions": [
         "bread.entity.json",
-        "water.entity.json",
-        "steak.entity.json"
+        "steak.entity.json",
+        "water.entity.json"
       ],
       "instances": []
     },

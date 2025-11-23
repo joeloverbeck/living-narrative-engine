@@ -26,6 +26,14 @@
     {
       "id": "clothing",
       "version": "^1.0.0"
+    },
+    {
+      "id": "music",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "weapons",
+      "version": "^1.0.0"
     }
   ],
   "content": {
@@ -35,21 +43,56 @@
     "rules": [],
     "entities": {
       "definitions": [
-        "vespera_nightwhisper.character.json"
+        "bertram_the_muddy.character.json",
+        "bulletin_board.entity.json",
+        "mudbrook_municipal_aid_registry.location.json",
+        "mudbrook_on_the_bend.location.json",
+        "notice_alibi_wanted.entity.json",
+        "notice_birthday_musician.entity.json",
+        "notice_dignity_recovery.entity.json",
+        "notice_possessed_chickens.entity.json",
+        "notice_reciprocal_services.entity.json",
+        "notice_staged_threat.entity.json",
+        "threadscar_melissa.character.json",
+        "vespera_hybrid_lute_viol.entity.json",
+        "vespera_main_gauche.entity.json",
+        "vespera_nightwhisper.character.json",
+        "vespera_rapier.entity.json"
       ],
       "instances": [
-        "vespera_nightwhisper.character.json"
+        "bertram_the_muddy.character.json",
+        "bulletin_board.entity.json",
+        "mudbrook_municipal_aid_registry.location.json",
+        "mudbrook_on_the_bend.location.json",
+        "notice_alibi_wanted.entity.json",
+        "notice_birthday_musician.entity.json",
+        "notice_dignity_recovery.entity.json",
+        "notice_possessed_chickens.entity.json",
+        "notice_reciprocal_services.entity.json",
+        "notice_staged_threat.entity.json",
+        "threadscar_melissa.character.json",
+        "vespera_hybrid_lute_viol.entity.json",
+        "vespera_main_gauche.entity.json",
+        "vespera_nightwhisper.character.json",
+        "vespera_rapier.entity.json"
       ]
     },
     "events": [],
     "macros": [],
     "scopes": [],
     "recipes": [
+      "bertram_the_muddy.recipe.json",
+      "threadscar_melissa.recipe.json",
       "vespera_nightwhisper.recipe.json"
     ],
     "portraits": [
+      "mudbrook.png",
+      "mudbrook_municipal_aid_registry.png",
+      "threadscar_melissa.png",
       "vespera_nightwhisper.png"
     ],
-    "worlds": []
+    "worlds": [
+      "vespera.world.json"
+    ]
   }
 }
