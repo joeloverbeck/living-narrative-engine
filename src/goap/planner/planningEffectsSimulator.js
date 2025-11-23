@@ -248,21 +248,6 @@ class PlanningEffectsSimulator {
       return null;
     }
 
-    // Check for Infinity
-    if (!Number.isFinite(result)) {
-      this.#logger.warn(
-        `Modification resulted in Infinity, skipping modification`,
-        {
-          field: fieldName,
-          mode,
-          currentValue,
-          modValue,
-          result,
-        }
-      );
-      return null;
-    }
-
     return result;
   }
 
@@ -683,6 +668,8 @@ class PlanningEffectsSimulator {
         // Remove from nested format as well
         if (state[entityId] && state[entityId].components) {
           delete state[entityId].components[componentType];
+          const flattenedComponentType = componentType.replace(/:/g, '_');
+          delete state[entityId].components[flattenedComponentType];
         }
 
         this.#logger.debug(`Simulated REMOVE_COMPONENT: ${stateKey}`);
