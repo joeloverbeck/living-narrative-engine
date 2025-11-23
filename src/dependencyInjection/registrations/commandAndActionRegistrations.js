@@ -134,7 +134,10 @@ export function registerCommandAndAction(container) {
   registrar.singletonFactory(tokens.ITargetContextBuilder, (c) => {
     return new TargetContextBuilder({
       entityManager: c.resolve(tokens.IEntityManager),
-      gameStateManager: {}, // TODO: Replace with actual game state manager when available
+      // Empty object placeholder: TargetContextBuilder uses optional chaining (?.)
+      // to safely access getCurrentTurn(), getTimeOfDay(), getWeather() methods.
+      // Returns sensible defaults (0, undefined) when methods are not available.
+      gameStateManager: {},
       logger: c.resolve(tokens.ILogger),
     });
   });
