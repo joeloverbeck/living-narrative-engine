@@ -1,7 +1,7 @@
 /**
- * @file Integration test to verify placeholder rules use valid LOG operation type
- * Reproduces the runtime error where LOG_MESSAGE was used instead of LOG
+ * @file Integration test to verify aim item rules have correct structure and operations
  * Tests that handle_aim_item and handle_lower_aim rules load without validation errors
+ * and contain the expected operation sequences
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
@@ -9,11 +9,10 @@ import {
   validateRuleStructure,
   performPreValidation,
 } from '../../../../src/utils/preValidationUtils.js';
-import { validateAgainstSchema } from '../../../../src/utils/schemaValidationUtils.js';
 import fs from 'fs';
 import path from 'path';
 
-describe('Placeholder Rules Validation', () => {
+describe('Aim Item Rules Validation', () => {
   const rulePaths = {
     aimItem: path.join(
       process.cwd(),
@@ -43,25 +42,31 @@ describe('Placeholder Rules Validation', () => {
       expect(aimItemRule.actions.length).toBeGreaterThan(0);
     });
 
-    it('should use LOG operation type (not LOG_MESSAGE)', () => {
+    it('should have GET_TIMESTAMP as first operation', () => {
       const firstAction = aimItemRule.actions[0];
       expect(firstAction).toBeDefined();
-      expect(firstAction.type).toBe('LOG');
+      expect(firstAction.type).toBe('GET_TIMESTAMP');
+      expect(firstAction.parameters).toBeDefined();
+      expect(firstAction.parameters.result_variable).toBe('currentTimestamp');
     });
 
-    it('should have valid LOG operation parameters', () => {
-      const logOperation = aimItemRule.actions[0];
-      expect(logOperation.parameters).toBeDefined();
-      expect(logOperation.parameters.message).toBeDefined();
-      expect(typeof logOperation.parameters.message).toBe('string');
-      expect(logOperation.parameters.message.length).toBeGreaterThan(0);
+    it('should have complete operation sequence', () => {
+      expect(aimItemRule.actions).toHaveLength(4);
 
-      // level is optional, but if present should be one of: debug, info, warn, error
-      if (logOperation.parameters.level) {
-        expect(['debug', 'info', 'warn', 'error']).toContain(
-          logOperation.parameters.level
-        );
-      }
+      // Operation 1: GET_TIMESTAMP
+      expect(aimItemRule.actions[0].type).toBe('GET_TIMESTAMP');
+
+      // Operation 2: ADD_COMPONENT
+      expect(aimItemRule.actions[1].type).toBe('ADD_COMPONENT');
+      expect(aimItemRule.actions[1].parameters.component_type).toBe('items:aimed_at');
+
+      // Operation 3: DISPATCH_EVENT
+      expect(aimItemRule.actions[2].type).toBe('DISPATCH_EVENT');
+      expect(aimItemRule.actions[2].parameters.eventType).toBe('items:item_aimed');
+
+      // Operation 4: END_TURN
+      expect(aimItemRule.actions[3].type).toBe('END_TURN');
+      expect(aimItemRule.actions[3].parameters.success).toBe(true);
     });
 
     it('should pass pre-validation', () => {
@@ -103,25 +108,36 @@ describe('Placeholder Rules Validation', () => {
       expect(lowerAimRule.actions.length).toBeGreaterThan(0);
     });
 
-    it('should use LOG operation type (not LOG_MESSAGE)', () => {
+    it('should have QUERY_COMPONENT as first operation', () => {
       const firstAction = lowerAimRule.actions[0];
       expect(firstAction).toBeDefined();
-      expect(firstAction.type).toBe('LOG');
+      expect(firstAction.type).toBe('QUERY_COMPONENT');
+      expect(firstAction.parameters).toBeDefined();
+      expect(firstAction.parameters.component_type).toBe('items:aimed_at');
+      expect(firstAction.parameters.result_variable).toBe('aimedAtData');
     });
 
-    it('should have valid LOG operation parameters', () => {
-      const logOperation = lowerAimRule.actions[0];
-      expect(logOperation.parameters).toBeDefined();
-      expect(logOperation.parameters.message).toBeDefined();
-      expect(typeof logOperation.parameters.message).toBe('string');
-      expect(logOperation.parameters.message.length).toBeGreaterThan(0);
+    it('should have complete operation sequence', () => {
+      expect(lowerAimRule.actions).toHaveLength(5);
 
-      // level is optional, but if present should be one of: debug, info, warn, error
-      if (logOperation.parameters.level) {
-        expect(['debug', 'info', 'warn', 'error']).toContain(
-          logOperation.parameters.level
-        );
-      }
+      // Operation 1: QUERY_COMPONENT
+      expect(lowerAimRule.actions[0].type).toBe('QUERY_COMPONENT');
+      expect(lowerAimRule.actions[0].parameters.component_type).toBe('items:aimed_at');
+
+      // Operation 2: GET_TIMESTAMP
+      expect(lowerAimRule.actions[1].type).toBe('GET_TIMESTAMP');
+
+      // Operation 3: REMOVE_COMPONENT
+      expect(lowerAimRule.actions[2].type).toBe('REMOVE_COMPONENT');
+      expect(lowerAimRule.actions[2].parameters.component_type).toBe('items:aimed_at');
+
+      // Operation 4: DISPATCH_EVENT
+      expect(lowerAimRule.actions[3].type).toBe('DISPATCH_EVENT');
+      expect(lowerAimRule.actions[3].parameters.eventType).toBe('items:aim_lowered');
+
+      // Operation 5: END_TURN
+      expect(lowerAimRule.actions[4].type).toBe('END_TURN');
+      expect(lowerAimRule.actions[4].parameters.success).toBe(true);
     });
 
     it('should pass pre-validation', () => {
@@ -155,26 +171,43 @@ describe('Placeholder Rules Validation', () => {
   });
 
   describe('Cross-rule consistency', () => {
-    it('both placeholder rules should use the same LOG operation type', () => {
-      const aimOperation = aimItemRule.actions[0];
-      const lowerOperation = lowerAimRule.actions[0];
+    it('both rules should use GET_TIMESTAMP operation', () => {
+      // handle_aim_item uses GET_TIMESTAMP as first operation
+      const aimTimestampOp = aimItemRule.actions[0];
+      expect(aimTimestampOp.type).toBe('GET_TIMESTAMP');
 
-      expect(aimOperation.type).toBe(lowerOperation.type);
-      expect(aimOperation.type).toBe('LOG');
+      // handle_lower_aim uses GET_TIMESTAMP as second operation
+      const lowerTimestampOp = lowerAimRule.actions[1];
+      expect(lowerTimestampOp.type).toBe('GET_TIMESTAMP');
+
+      // Both store result in currentTimestamp variable
+      expect(aimTimestampOp.parameters.result_variable).toBe('currentTimestamp');
+      expect(lowerTimestampOp.parameters.result_variable).toBe('currentTimestamp');
     });
 
-    it('both placeholder rules should have similar LOG parameter structures', () => {
-      const aimParams = aimItemRule.actions[0].parameters;
-      const lowerParams = lowerAimRule.actions[0].parameters;
+    it('both rules should end with END_TURN operation', () => {
+      // Both rules should have END_TURN as last operation
+      const aimLastOp = aimItemRule.actions[aimItemRule.actions.length - 1];
+      const lowerLastOp = lowerAimRule.actions[lowerAimRule.actions.length - 1];
 
-      // Both should have message parameter
-      expect(aimParams).toHaveProperty('message');
-      expect(lowerParams).toHaveProperty('message');
+      expect(aimLastOp.type).toBe('END_TURN');
+      expect(lowerLastOp.type).toBe('END_TURN');
 
-      // Both should have same level if specified
-      if (aimParams.level && lowerParams.level) {
-        expect(aimParams.level).toBe(lowerParams.level);
-      }
+      // Both should mark success as true
+      expect(aimLastOp.parameters.success).toBe(true);
+      expect(lowerLastOp.parameters.success).toBe(true);
+    });
+
+    it('both rules should dispatch events related to aiming', () => {
+      // handle_aim_item dispatches items:item_aimed
+      const aimDispatchOp = aimItemRule.actions.find(op => op.type === 'DISPATCH_EVENT');
+      expect(aimDispatchOp).toBeDefined();
+      expect(aimDispatchOp.parameters.eventType).toBe('items:item_aimed');
+
+      // handle_lower_aim dispatches items:aim_lowered
+      const lowerDispatchOp = lowerAimRule.actions.find(op => op.type === 'DISPATCH_EVENT');
+      expect(lowerDispatchOp).toBeDefined();
+      expect(lowerDispatchOp.parameters.eventType).toBe('items:aim_lowered');
     });
   });
 });

@@ -55,6 +55,7 @@ const handlerModuleDefinitions = [
     `${handlerBasePath}/breakFollowRelationHandler.js`,
   ],
   ['BurnEnergyHandler', `${handlerBasePath}/burnEnergyHandler.js`],
+  ['UpdateHungerStateHandler', `${handlerBasePath}/updateHungerStateHandler.js`],
   [
     'AddPerceptionLogEntryHandler',
     `${handlerBasePath}/addPerceptionLogEntryHandler.js`,
@@ -442,6 +443,15 @@ beforeAll(async () => {
     {
       token: tokens.BurnEnergyHandler,
       handlerName: 'BurnEnergyHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.UpdateHungerStateHandler,
+      handlerName: 'UpdateHungerStateHandler',
       dependencies: [
         { property: 'logger', token: ILogger },
         { property: 'entityManager', token: IEntityManager },

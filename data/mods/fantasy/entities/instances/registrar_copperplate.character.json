@@ -1,0 +1,17 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "fantasy:registrar_copperplate_instance",
+    "definitionId": "fantasy:registrar_copperplate",
+    "componentOverrides": {
+        "core:position": {
+            "locationId": "fantasy:mudbrook_municipal_aid_registry_instance"
+        },
+        "items:inventory": {
+            "items": [],
+            "capacity": {
+                "maxWeight": 50.0,
+                "maxItems": 20
+            }
+        }
+    }
+}

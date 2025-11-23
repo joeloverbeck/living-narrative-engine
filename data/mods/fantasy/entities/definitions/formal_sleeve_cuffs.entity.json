@@ -1,0 +1,46 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "fantasy:formal_sleeve_cuffs",
+  "description": "Standalone formal cuffs designed to remain visible at shell openings",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "left_arm_clothing",
+        "secondary": [
+          "right_arm_clothing"
+        ]
+      },
+      "allowedLayers": [
+        "accessories"
+      ]
+    },
+    "core:material": {
+      "material": "linen"
+    },
+    "core:name": {
+      "text": "formal sleeve cuffs"
+    },
+    "core:description": {
+      "text": "Crisp, stiffened linen cuffs designed to encircle the wrists with professional formality. Unlike typical sleeve cuffs that are part of a larger garment, these standalone accessories are tailored specifically for tortoise-person anatomy—engineered to remain visible and pristine even when the wearer partially withdraws their limbs into their shell. The fabric has been carefully starched to maintain its structured shape through decades of use, creating the impression of perpetual readiness and bureaucratic dignity. Faint ink stains along the edges testify to centuries of archival work."
+    },
+    "descriptors:color_extended": {
+      "color": "white"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "left_arm_clothing",
+        "right_arm_clothing"
+      ],
+      "coveragePriority": "accessories"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.08
+    }
+  }
+}

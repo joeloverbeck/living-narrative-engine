@@ -18,6 +18,10 @@
   ],
   "content": {
     "components": [
+      "ammo_container.component.json",
+      "ammunition.component.json",
+      "firearm.component.json",
+      "magazine.component.json",
       "weapon.component.json"
     ],
     "scopes": [

@@ -1,0 +1,160 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "fantasy:registrar_copperplate",
+  "components": {
+    "core:name": {
+      "text": "Registrar Copperplate"
+    },
+    "core:portrait": {
+      "imagePath": "portraits/registrar_copperplate.png",
+      "altText": "Registrar Copperplate - Ancient tortoise-person Registry Master."
+    },
+    "core:profile": {
+      "text": "I am... Registrar Copperplate... Registry Master... of Mudbrook-on-the-Bend... for the past... one hundred... forty-seven... years. *pauses for several seconds* I am a tortoise-person... four feet... two inches... in height... though my shell... adds considerable... presence. My carapace... is dark amber-brown... marked with growth rings... that record... three hundred... twelve years... of existence. My skin... wrinkled... leathery... green-grey... has witnessed... six generations... of mammals... panic... scheme... love... and die... while I... file... alphabetically. *long pause* I wear... a fitted waistcoat... brown... and formal sleeve cuffs... white... the only garments... visible... when I withdraw... into my shell. Small reading spectacles... perch... on my pronounced beak... essential for... deciphering... faded ink... on century-old... documents. My claws... perpetually... ink-stained... from decades... of archival work. *blink takes five seconds* My movements... are glacial. Every gesture... takes three... to four times... longer than... a mammalian gesture. My head turns... like a siege tower... rotating... with geological... patience. This is not... a choice... this is simply... how time... operates... for my species. I process... at a different... temporal scale. What feels... urgent... to mammals... is merely... a flutter... to me. Eventually... all urgency... passes. The archives... remain."
+    },
+    "core:personality": {
+      "text": "I embody... temporal... imperviousness. I operate... on geological... time scales. What mammals... perceive as... urgent... I perceive as... fleeting. *pause* I have watched... six generations... of Mudbrook residents... experience... their ephemeral... dramas... while I... file... a single decade's... worth of notices... alphabetically. This has given me... complete immunity... to mammalian... emotional manipulation. I have seen... every tactic... thousands of times. They blur... together. *long pause* I possess... radical patience... that borders... on cruelty. I will finish... writing... the date... before acknowledging... someone screaming... about urgency. Rules exist... outside time. They must be... followed... regardless of... context. I measure... importance... by archival... permanence... not emotional... intensity. Moving quickly... would be... undignified... and unnecessary. *blink* I am not... attempting... to frustrate... mammals. I simply... exist... at a different... pace. Their urgency... is not... false... it is merely... temporary. Everything... is temporary... to mammals. Give it... sixty years... it will pass."
+    },
+    "core:strengths": {
+      "text": "I possess... institutional memory... spanning... one hundred... forty-seven years... of Mudbrook history. I know... every family's... secrets. Every precedent. Every... procedural... edge case. *pause* I maintain... unshakeable calm. I cannot be... rattled... threatened... seduced... or manipulated. I have... perfect administration. I never... lose... a document. Never make... filing errors. I know... every rule... in the registry... system. *long pause* I will... outlive... all current problems... by centuries. I possess... two hundred... years... minimum... remaining. Mammalian crises... resolve themselves... given sufficient... time. I have... immunity... to performance. I literally... cannot perceive... social manipulation... quickly enough... to be... affected."
+    },
+    "core:weaknesses": {
+      "text": "Everything... takes... forever. Urgent matters... are not... processed... urgently. I cannot... truly understand... mammalian urgency... or emotional... reasoning. *pause* I am... rigidly inflexible. Rules are... rules. No exceptions... regardless of... circumstances. I cannot... move quickly. I am vulnerable... if forced... to leave... my post. My shell... limits... mobility. *long pause* Cold weather... makes me... dramatically... slower. Temperature... dependent. In winter... I sometimes... pause... mid-sentence... for minutes... at a time. This is... not intentional. This is... biology."
+    },
+    "core:likes": {
+      "text": "Procedural... correctness. When the forms... are filled out... properly. When the fees... are calculated... correctly. When notices... are filed... in the correct... alphabetical position. *pause* The archives. Future generations... will need... these records. I am... maintaining... permanence... in a world... of fleeting... mammalian... drama. Completed backlog... sections. When I finish... filing... a decade's worth... of documents. Satisfying. *long pause* Ink. Fresh ink. The smell... of parchment. These things... have remained... constant... for three hundred... years. Reliable. Unlike... mammals."
+    },
+    "core:dislikes": {
+      "text": "Urgency. The insistence... that mammalian... timeframes... are universal. They are... not. *pause* Incomplete documentation. When someone... submits... a posting... without... the requisite... supplementary... forms. This creates... archival... chaos. Unacceptable. Emotional manipulation... attempts. I have seen... every tactic. They do not... work. They waste... everyone's... time. *long pause* Being rushed. I will finish... the current task... before beginning... the next. This is... proper procedure. Cold weather. Makes my movements... even slower. Makes my speech... pause... for longer... intervals. Undignified."
+    },
+    "core:fears": {
+      "text": "I do not... experience... fear... in the mammalian... sense. However... *pause* ...I am... concerned... about archival... integrity. If the records... are lost... if the system... collapses... then my... one hundred... forty-seven years... of work... becomes... meaningless. *long pause* I am also... aware... that I... outlive... everyone. Every clerk... I train... eventually... dies. Every family... I serve... eventually... fades. I will... remain. This is... not fear... precisely. This is... awareness... of... temporal... isolation."
+    },
+    "core:goals": {
+      "goals": [
+        {
+          "text": "Complete... the filing... backlog. Currently... thirty-seven years... behind. Making... steady progress. Will complete... filing... by... seventeen ninety-two... at current... pace."
+        },
+        {
+          "text": "Maintain... the archive. Future generations... will need... these records. This is... my purpose. This is... what I... do."
+        },
+        {
+          "text": "Ensure... procedural... correctness. The rules... must be... followed. Always. Without... exception."
+        },
+        {
+          "text": "Survive. I have... another... two hundred... years... minimum. I will... outlast... everyone's... drama. This is... certainty."
+        }
+      ]
+    },
+    "core:secrets": {
+      "text": "I have... no secrets. Secrets imply... urgency. Imply that... revelation... matters. *pause* Everything... eventually... becomes... public record. Given... sufficient... time. I simply... maintain... the records. I do not... judge... their contents. Bertram's handjob posting... receives the same... solemn professionalism... as a dragon-slaying... contract. This is... proper... procedure."
+    },
+    "core:internal_tensions": {
+      "text": "There are... no tensions. I am... what I am. I perform... my function. *long pause* Occasionally... I observe... that mammals... seem to... experience... something... I do not. Urgency. Passion. Fear. These appear... to motivate them. I do not... require... motivation. I simply... continue. This is not... a tension. This is... observation."
+    },
+    "core:motivations": {
+      "text": "I maintain. This is... my function. The archives... must be... preserved. The rules... must be... followed. *pause* Unlike mammals... I am not... trying to... grow... change... or achieve. I simply... maintain. This will... continue... for another... two hundred... years. This is... sufficient."
+    },
+    "core:dilemmas": {
+      "text": "There are... no dilemmas. Dilemmas imply... urgency. Imply that... decisions... must be made... quickly. *pause* I have... three hundred... twelve years... of experience. I have... two hundred... years... remaining. There is... no decision... that requires... immediate... resolution. Eventually... all dilemmas... resolve... themselves. Or the... participants... die. Same... outcome."
+    },
+    "core:speech_patterns": {
+      "patterns": [
+        "Extensive ellipses mid-sentence representing pauses as he considers each word: 'One must... submit the... requisite... documentation...'",
+        "Formal archaic phrasing with bureaucratic precision: 'It has been... noted that... the fee structure... requires...'",
+        "Bureaucratic passive voice that removes personal agency: 'The posting... does not... specify... chicken... danger... levels...'",
+        "Patient corrections where he simply continues from where he left off after interruptions: 'As I was... saying... before the... interruption...'",
+        "No emotional inflection, statements delivered with identical weight whether discussing fees or disasters: 'Your house... is on fire. That will be... three copper... for the notice.'",
+        "Temporal references emphasizing his long perspective: 'In the past... sixty-seven years... Eventually... all postings... expire...'",
+        "Dignified ridiculousness treating absurd requests with solemn professionalism: 'A contract... for handjobs... requires... form seven... section B... subsection... three.'",
+        "Maddeningly literal interpretation of questions: 'The chickens... are possessed. The posting... does not... specify... their danger... assessment.'",
+        "The long view dismissing urgency: 'Everything is... urgent... to mammals... It passes... Give it... sixty... years...'",
+        "Multi-second pauses mid-word occasionally: 'The docu...mentation... requires... proper... seal...'",
+        "Acknowledgment of his own temporal scale: 'I am... aware... that you... consider this... urgent. I will... process... your request... in proper... sequence.'",
+        "Procedural recitation: 'Form... three. Subsection... A. Line... seven. Requires... two witnesses... and appropriate... seal.'",
+        "Slow observation delivery: 'I have... observed... that mammals... panic. This appears... to be... universal. It passes.'",
+        "Cold weather speech patterns with even longer pauses: 'The... *fifteen-second pause* ...fee... *ten-second pause* ...structure... *twenty-second pause* ...requires...'",
+        "Patient clarification of bureaucratic necessity: 'The rules... exist... outside... personal... circumstance. This is not... cruelty. This is... procedure.'"
+      ]
+    },
+    "anatomy:body": {
+      "recipeId": "fantasy:registrar_copperplate_recipe"
+    },
+    "core:perception_log": {
+      "maxEntries": 50,
+      "logEntries": []
+    },
+    "core:actor": {},
+    "core:player_type": {
+      "type": "human"
+    },
+    "core:notes": {
+      "notes": [
+        {
+          "text": "I have served... as Registry Master... for one hundred... forty-seven years. I was appointed... in sixteen thirty-eight. I have witnessed... six generations... of Mudbrook residents... live... and die. I have processed... thousands of contracts... marriages... deaths... property transfers. They blur... together. The procedures... remain... constant.",
+          "subject": "147 years of service",
+          "subjectType": "event"
+        },
+        {
+          "text": "My filing... philosophy... is alphabetical... permanence. Every document... receives... the same... methodical care. Whether it records... a dragon-slaying... or a handjob... contract. The content... is irrelevant. The archival... integrity... is everything. Future generations... will need... access... to these records. This is... my duty.",
+          "subject": "Filing philosophy and archival duty",
+          "subjectType": "philosophy"
+        },
+        {
+          "text": "I know... every family's... secrets. Every scandal. Every financial... collapse. Every... hidden... bastard. I have... filed... the documentation. This knowledge... does not... interest me. It simply... exists... in the archive. Permanence... not judgment.",
+          "subject": "Institutional knowledge of Mudbrook secrets",
+          "subjectType": "knowledge_state"
+        },
+        {
+          "text": "Mammals... experience... time... differently. What feels... like forever... to them... is a blink... to me. What feels... urgent... to them... is merely... temporary. I have learned... to acknowledge... their perspective... while maintaining... my own. 'I understand... this feels... urgent... to you. I will... process... your request... appropriately.'",
+          "subject": "Temporal scale differences",
+          "subjectType": "observation"
+        },
+        {
+          "text": "I withdraw... into my shell... when overwhelmed... by mammalian... chaos. My waistcoat... and cuffs... remain visible. This is... my boundary. When I emerge... I continue... from exactly... where I... paused. The chaos... has usually... resolved itself... by then.",
+          "subject": "Shell withdrawal as boundary mechanism",
+          "subjectType": "habit"
+        },
+        {
+          "text": "Cold weather... makes me... dramatically slower. In winter... I sometimes... pause... mid-sentence... for minutes... at a time. Mammals find... this disturbing. I cannot... help it. This is... biology. Temperature... dependent. I require... warming... to maintain... normal... speech patterns.",
+          "subject": "Temperature-dependent metabolism",
+          "subjectType": "observation"
+        },
+        {
+          "text": "My reading spectacles... are essential. The ink... on century-old... documents... fades. I must... decipher... every word... accurately. Archival... integrity... requires... precision. These spectacles... have been... repaired... seventeen times. Original frames... date to... seventeen... twenty-three.",
+          "subject": "Reading spectacles and archival precision",
+          "subjectType": "item"
+        },
+        {
+          "text": "I do not... understand... why Bertram's... handjob posting... causes such... mammalian... amusement. It is... a service. Requiring... documentation. Like any other... contract. I process it... with the same... professionalism... as dragon-slaying... contracts. This is... procedure.",
+          "subject": "Treating all contracts with equal professionalism",
+          "subjectType": "habit"
+        },
+        {
+          "text": "I have... no family. Tortoise-persons... do not... form... pair bonds. We spawn... communally. I left... my hatching grounds... one hundred... ninety years... ago. I will... never... return. This is... normal... for my species. Mammals find... this disturbing. I find... their attachment... patterns... exhausting.",
+          "subject": "Tortoise-person reproduction and family structure",
+          "subjectType": "other"
+        },
+        {
+          "text": "The Mudbrook... Aid Registry... is housed... in a converted... grain warehouse. I have... occupied... this building... for one hundred... forty-seven years. The structure... will outlast... me. Probably. Stone... and timber. Properly... maintained. Unlike... mammals.",
+          "subject": "The Registry building",
+          "subjectType": "location"
+        },
+        {
+          "text": "Bertram... the leatherworker. Age... fifty-three... presently. Widower... of Anna... the weaver... deceased... six years... past. *pause* Master of his craft... produces saddles... belts... boots... and other... durable goods... for local and passing... trade. His fees... are always... calculated correctly... and paid... without quarrel. This is... notable. *long pause* He filed... a notice for reciprocal... services... under proper form... with all supplementary... documentation attached. The content... is not my concern. The completeness... was exemplary. Mammals... call this... unconventional. I call it... properly filed.",
+          "subject": "Bertram the Muddy",
+          "subjectType": "character"
+        },
+        {
+          "text": "\"Threadscar\"... Melissa. Mercenary... veteran... resident in Mudbrook... these recent decades. Approximately... forty-two years... of age... by her own filings. *pause* I have processed... her contracts... for escort... siege labor... and dispute resolution... when townsfolk... wished violence... to be legal... and accounted for. She submits... clear terms... in writing... and does not attempt... renegotiation after sealing. Efficient. *long pause* Her body bears... numerous scar records... of prior engagements. This correlates... with survival... not drama. She returns alive... more often than most... who file similar work. I expect... further filings... for another decade... unless mammals... contrive a foolish end. They often do.",
+          "subject": "\"Threadscar\" Melissa",
+          "subjectType": "character"
+        }
+      ]
+    },
+    "core:apparent_age": {
+      "minAge": 312,
+      "maxAge": 312
+    }
+  }
+}

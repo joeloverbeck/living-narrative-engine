@@ -1,0 +1,46 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "fantasy:fitted_waistcoat",
+  "description": "Professional waistcoat tailored for tortoise-person anatomy",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": [
+          "torso_lower"
+        ]
+      },
+      "allowedLayers": [
+        "base"
+      ]
+    },
+    "core:material": {
+      "material": "wool"
+    },
+    "core:name": {
+      "text": "fitted waistcoat"
+    },
+    "core:description": {
+      "text": "A professionally tailored waistcoat crafted from sturdy wool fabric, custom-fitted to accommodate the unique contours of tortoise-person anatomy. The garment features careful construction that allows it to remain visible even when the wearer partially withdraws into their shell. Its neutral brown coloring and precise stitching speak to decades of continuous use by a dedicated professional. The fabric shows subtle signs of age—not wear, but rather the patient accumulation of years spent bent over registry books and archival ledgers."
+    },
+    "descriptors:color_extended": {
+      "color": "brown"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper",
+        "torso_lower"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.45
+    }
+  }
+}

@@ -22,6 +22,7 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
             equipmentSlots: { primary: 'shirt' },
           }),
         }),
+        removeEntityInstance: jest.fn(),
       },
       dataRegistry: {
         get: jest.fn().mockReturnValue({

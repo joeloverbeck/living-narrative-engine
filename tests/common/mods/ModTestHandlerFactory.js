@@ -463,7 +463,8 @@ export class ModTestHandlerFactory {
       'createHandlersWithItemsSupport'
     );
 
-    const baseHandlers = this.createStandardHandlers(
+    // Items mod needs ADD_COMPONENT/REMOVE_COMPONENT for aiming and other component mutations
+    const baseHandlers = this.createHandlersWithComponentMutations(
       entityManager,
       eventBus,
       logger,
