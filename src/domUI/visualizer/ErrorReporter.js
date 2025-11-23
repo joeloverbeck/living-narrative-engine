@@ -19,6 +19,7 @@ class ErrorReporter {
   #metricsCollector;
   #reportingConfig;
   #disposed;
+  #statistics;
 
   /**
    * Create a new ErrorReporter instance
@@ -58,6 +59,28 @@ class ErrorReporter {
       includeUserAgent: config.includeUserAgent !== false,
       includeUrl: config.includeUrl !== false,
       ...config,
+    };
+
+    // Initialize statistics tracking
+    this.#statistics = {
+      totalReported: 0,
+      reportedBySeverity: {
+        CRITICAL: 0,
+        HIGH: 0,
+        MEDIUM: 0,
+        LOW: 0,
+      },
+      reportedByCategory: {
+        data: 0,
+        render: 0,
+        state: 0,
+        network: 0,
+        validation: 0,
+        permission: 0,
+        resource: 0,
+        unknown: 0,
+      },
+      lastReportTime: null,
     };
   }
 
@@ -108,6 +131,9 @@ class ErrorReporter {
       if (this.#reportingConfig.enableMetrics && this.#metricsCollector) {
         await this._collectMetrics(errorReport);
       }
+
+      // Update statistics
+      this._updateStatistics(errorReport);
 
       this.#logger.debug(`Error reported with ID: ${reportId}`);
 
@@ -184,29 +210,12 @@ class ErrorReporter {
   getStatistics() {
     this._throwIfDisposed();
 
-    // TODO: Implement actual metrics collection
-    // This method currently returns placeholder data and should be
-    // implemented to track real error reporting statistics
-    // For now, return placeholder statistics
+    // Return a deep copy of statistics to prevent external modification
     return {
-      totalReported: 0,
-      reportedBySeverity: {
-        CRITICAL: 0,
-        HIGH: 0,
-        MEDIUM: 0,
-        LOW: 0,
-      },
-      reportedByCategory: {
-        data: 0,
-        render: 0,
-        state: 0,
-        network: 0,
-        validation: 0,
-        permission: 0,
-        resource: 0,
-        unknown: 0,
-      },
-      lastReportTime: null,
+      totalReported: this.#statistics.totalReported,
+      reportedBySeverity: { ...this.#statistics.reportedBySeverity },
+      reportedByCategory: { ...this.#statistics.reportedByCategory },
+      lastReportTime: this.#statistics.lastReportTime,
     };
   }
 
@@ -350,6 +359,32 @@ class ErrorReporter {
     // - Send to external error tracking service
     // - Store in local database
     // - Send notifications for critical errors
+  }
+
+  /**
+   * Update internal statistics for the reported error
+   *
+   * @private
+   * @param {object} errorReport - Error report
+   */
+  _updateStatistics(errorReport) {
+    // Increment total reported
+    this.#statistics.totalReported++;
+
+    // Update severity counter
+    const severity = errorReport.classification.severity;
+    if (this.#statistics.reportedBySeverity[severity] !== undefined) {
+      this.#statistics.reportedBySeverity[severity]++;
+    }
+
+    // Update category counter
+    const category = errorReport.classification.category;
+    if (this.#statistics.reportedByCategory[category] !== undefined) {
+      this.#statistics.reportedByCategory[category]++;
+    }
+
+    // Update last report time
+    this.#statistics.lastReportTime = errorReport.timestamp;
   }
 
   /**
