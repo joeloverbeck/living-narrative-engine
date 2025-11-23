@@ -539,6 +539,49 @@ describe('NumericConstraintEvaluator', () => {
         // Should return null because extracted value is undefined (not a number)
         expect(distance).toBeNull();
       });
+
+      it('should return null when constraint is not an object', () => {
+        const distance = evaluator.calculateDistance('not-an-object', { value: 10 });
+
+        expect(distance).toBeNull();
+      });
+
+      it('should return null when constraint operands are malformed', () => {
+        const distance = evaluator.calculateDistance(
+          { '>': [{ var: 'value' }] },
+          { value: 5 }
+        );
+
+        expect(distance).toBeNull();
+      });
+
+      it('should return null when var expression is missing', () => {
+        const distance = evaluator.calculateDistance(
+          { '>': [{ notVar: 'value' }, 5] },
+          { value: 10 }
+        );
+
+        expect(distance).toBeNull();
+      });
+
+      it('should handle calculation errors gracefully', () => {
+        const throwingStateView = {
+          assertPath: () => {
+            throw new Error('state view failure');
+          },
+          getActorId: () => null,
+          getEvaluationContext: () => ({}),
+        };
+
+        const distance = evaluator.calculateDistance(
+          { '<=': [{ var: 'value' }, 5] },
+          { value: 10 },
+          { stateView: throwingStateView, metadata: { goalId: 'goal-error' } }
+        );
+
+        expect(distance).toBeNull();
+        expect(mockLogger.warn).toHaveBeenCalled();
+      });
     });
   });
 
@@ -642,6 +685,47 @@ describe('NumericConstraintEvaluator', () => {
       const result = evaluator.evaluateConstraint({ '<=': [{ var: 'x' }, 10] }, { x: 5 });
 
       expect(result).toBe(false);
+    });
+  });
+
+  describe('Numeric fallback emission', () => {
+    it('should log a warning when emitting a fallback event fails', () => {
+      process.env.GOAP_NUMERIC_ADAPTER = '1';
+      const failingDispatcher = {
+        dispatch: () => {
+          throw new Error('dispatch failed');
+        },
+      };
+
+      evaluator = new NumericConstraintEvaluator({
+        jsonLogicEvaluator: mockJsonLogicEvaluator,
+        logger: mockLogger,
+        goapEventDispatcher: failingDispatcher,
+      });
+
+      const context = {
+        state: {
+          actor: {
+            id: 'actor-dispatch',
+            components: {},
+          },
+        },
+      };
+
+      const distance = evaluator.calculateDistance(
+        { '<=': [{ var: 'state.actor.components.core:needs.hunger' }, 1] },
+        context,
+        { metadata: { goalId: 'goal-dispatch' } }
+      );
+
+      expect(distance).toBeNull();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Failed to emit numeric constraint fallback event',
+        expect.objectContaining({
+          error: expect.any(Error),
+          payload: expect.objectContaining({ actorId: 'actor-dispatch' }),
+        })
+      );
     });
   });
 });
