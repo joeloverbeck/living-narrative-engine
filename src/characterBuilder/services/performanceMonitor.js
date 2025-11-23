@@ -248,7 +248,6 @@ export class PerformanceMonitor {
 
   /**
    * Register an aggregated stats listener.
-   * TODO: Emit aggregated summaries once BASCHACUICONREF-008 is implemented.
    *
    * @param {Function} listener - Listener callback
    */
@@ -256,6 +255,73 @@ export class PerformanceMonitor {
     if (typeof listener === 'function') {
       this.#statsListeners.add(listener);
     }
+  }
+
+  /**
+   * Compute aggregated statistics from all measurements.
+   *
+   * @returns {object|null} Aggregated statistics or null if no measurements
+   */
+  getAggregatedStats() {
+    if (this.#measurements.size === 0) {
+      return null;
+    }
+
+    const durations = Array.from(this.#measurements.values()).map((m) => m.duration);
+    const total = durations.reduce((sum, d) => sum + d, 0);
+
+    return {
+      count: this.#measurements.size,
+      total,
+      average: total / durations.length,
+      min: Math.min(...durations),
+      max: Math.max(...durations),
+      measurements: Array.from(this.#measurements.entries()).map(
+        ([name, measurement]) => ({
+          name,
+          duration: measurement.duration,
+          startMark: measurement.startMark,
+          endMark: measurement.endMark,
+          timestamp: measurement.timestamp,
+        })
+      ),
+    };
+  }
+
+  /**
+   * Emit aggregated summary to all registered stats listeners.
+   * This computes and broadcasts aggregate statistics across all measurements.
+   *
+   * @returns {object|null} The aggregated stats that were emitted, or null if no measurements
+   */
+  emitAggregatedSummary() {
+    const stats = this.getAggregatedStats();
+
+    if (!stats || this.#statsListeners.size === 0) {
+      return stats;
+    }
+
+    for (const listener of this.#statsListeners) {
+      try {
+        listener('aggregated_summary', stats);
+      } catch (error) {
+        this.#logger?.warn?.(
+          'PerformanceMonitor: aggregated summary listener threw error',
+          error
+        );
+      }
+    }
+
+    if (stats) {
+      this.#logger?.debug?.('Emitted aggregated performance summary', {
+        count: stats.count,
+        average: `${stats.average.toFixed(2)}ms`,
+        min: `${stats.min.toFixed(2)}ms`,
+        max: `${stats.max.toFixed(2)}ms`,
+      });
+    }
+
+    return stats;
   }
 
   /**
