@@ -1,18 +1,55 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_lower_aim",
-  "comment": "Placeholder rule for lower_aim action. To be implemented in WEASYSIMP-007.",
+  "comment": "Handles the lower_aim action by removing items:aimed_at component and dispatching aim_lowered event",
   "event_type": "core:attempt_action",
   "condition": {
     "condition_ref": "items:event-is-action-lower-aim"
   },
   "actions": [
     {
-      "type": "LOG",
-      "comment": "Placeholder action - to be replaced with actual lower_aim logic in WEASYSIMP-007",
+      "type": "QUERY_COMPONENT",
+      "comment": "Retrieve items:aimed_at data before removing it",
       "parameters": {
-        "message": "lower_aim action attempted - implementation pending",
-        "level": "debug"
+        "entity_ref": "{event.payload.targetId}",
+        "component_type": "items:aimed_at",
+        "result_variable": "aimedAtData"
+      }
+    },
+    {
+      "type": "GET_TIMESTAMP",
+      "comment": "Get current game timestamp",
+      "parameters": {
+        "result_variable": "currentTimestamp"
+      }
+    },
+    {
+      "type": "REMOVE_COMPONENT",
+      "comment": "Remove items:aimed_at from item (primary target)",
+      "parameters": {
+        "entity_ref": "{event.payload.targetId}",
+        "component_type": "items:aimed_at"
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Dispatch items:aim_lowered event with previous target info",
+      "parameters": {
+        "eventType": "items:aim_lowered",
+        "payload": {
+          "actorEntity": "{event.payload.actorId}",
+          "itemEntity": "{event.payload.targetId}",
+          "previousTargetEntity": "{context.aimedAtData.targetId}",
+          "timestamp": "{context.currentTimestamp}"
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "comment": "Complete actor's turn successfully",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
       }
     }
   ]

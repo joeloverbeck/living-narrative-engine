@@ -19,8 +19,8 @@ describe('Items Mod - Aiming Events', () => {
     }
   });
 
-  it.skip('should dispatch item_aimed event when aiming', async () => {
-    // Note: This test is skipped until WEASYSIMP-007 implements the rule that dispatches this event
+  it('should dispatch item_aimed event when aiming', async () => {
+    // Tests that the handle_aim_item rule dispatches the item_aimed event
     const { actor, target } = fixture.createStandardActorTarget([
       'Actor Name',
       'Target Name',
@@ -46,6 +46,15 @@ describe('Items Mod - Aiming Events', () => {
       secondary: pistol.id,
     });
 
+    // Verify aimed_at component was added to the item
+    const aimedAtComponent = fixture.entityManager.getComponent(
+      pistol.id,
+      'items:aimed_at'
+    );
+    expect(aimedAtComponent).toBeDefined();
+    expect(aimedAtComponent.targetId).toBe(target.id);
+    expect(aimedAtComponent.aimedBy).toBe(actor.id);
+
     // Verify event was dispatched with correct payload
     const events = fixture.getDispatchedEvents('items:item_aimed');
     expect(events).toHaveLength(1);
@@ -58,8 +67,8 @@ describe('Items Mod - Aiming Events', () => {
     expect(typeof events[0].payload.timestamp).toBe('number');
   });
 
-  it.skip('should dispatch aim_lowered event when lowering aim', async () => {
-    // Note: This test is skipped until WEASYSIMP-007 implements the rule that dispatches this event
+  it('should dispatch aim_lowered event when lowering aim', async () => {
+    // Tests that the handle_lower_aim rule dispatches the aim_lowered event
     const { actor, target } = fixture.createStandardActorTarget([
       'Actor Name',
       'Target Name',
@@ -79,15 +88,21 @@ describe('Items Mod - Aiming Events', () => {
     fixture.entityManager.addComponent(pistol.id, 'items:portable', {});
     fixture.entityManager.addComponent(pistol.id, 'items:aimable', {});
     fixture.entityManager.addComponent(pistol.id, 'items:aimed_at', {
-      targetEntity: target.id,
+      targetId: target.id,
       aimedBy: actor.id,
-      timestamp: Date.now(),
     });
 
     // Execute the lower aim action
     await fixture.executeAction(actor.id, {
       primary: pistol.id,
     });
+
+    // Verify aimed_at component was removed from the item
+    const aimedAtComponent = fixture.entityManager.getComponent(
+      pistol.id,
+      'items:aimed_at'
+    );
+    expect(aimedAtComponent).toBeUndefined();
 
     // Verify event was dispatched with correct payload
     const events = fixture.getDispatchedEvents('items:aim_lowered');
