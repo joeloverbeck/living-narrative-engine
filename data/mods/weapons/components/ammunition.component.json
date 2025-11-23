@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "weapons:ammunition",
+  "description": "Tracks ammunition state for a weapon including type, current count, capacity, and chambered status. Applies to firearms and other ammunition-using weapons.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "ammoType": {
+        "type": "string",
+        "description": "Type of ammunition (e.g., '9mm', '.45ACP', '5.56mm', '12gauge')"
+      },
+      "currentAmmo": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Number of rounds currently loaded in weapon (excluding chambered round)"
+      },
+      "maxCapacity": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "Maximum number of rounds the weapon can hold"
+      },
+      "chambered": {
+        "type": "boolean",
+        "description": "Whether a round is currently chambered and ready to fire"
+      }
+    },
+    "required": [
+      "ammoType",
+      "currentAmmo",
+      "maxCapacity",
+      "chambered"
+    ],
+    "additionalProperties": false
+  }
+}

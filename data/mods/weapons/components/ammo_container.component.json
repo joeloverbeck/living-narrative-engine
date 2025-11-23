@@ -1,0 +1,41 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "weapons:ammo_container",
+  "description": "Defines a portable ammunition container (magazine, speed loader, ammo box, stripper clip) that can be used to reload weapons. Applied to entities that store and transfer ammunition.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "ammoType": {
+        "type": "string",
+        "description": "Type of ammunition contained (e.g., '9mm', '.45ACP', '5.56mm', '12gauge')"
+      },
+      "currentRounds": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Number of rounds currently in the container"
+      },
+      "maxCapacity": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "Maximum number of rounds the container can hold"
+      },
+      "containerType": {
+        "type": "string",
+        "enum": [
+          "magazine",
+          "speed_loader",
+          "ammo_box",
+          "stripper_clip"
+        ],
+        "description": "Type of ammunition container"
+      }
+    },
+    "required": [
+      "ammoType",
+      "currentRounds",
+      "maxCapacity",
+      "containerType"
+    ],
+    "additionalProperties": false
+  }
+}

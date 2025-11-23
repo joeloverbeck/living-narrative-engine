@@ -1,0 +1,23 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "weapons:magazine",
+  "description": "Tracks detachable magazine state for weapons that use magazine-fed ammunition systems. Indicates whether a magazine is inserted and its type.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "magazineInserted": {
+        "type": "boolean",
+        "description": "Whether a magazine is currently inserted in the weapon"
+      },
+      "magazineType": {
+        "type": "string",
+        "description": "Type of magazine compatible with this weapon (e.g., 'glock_17_mag', 'ar15_30rd', 'm1911_7rd')"
+      }
+    },
+    "required": [
+      "magazineInserted",
+      "magazineType"
+    ],
+    "additionalProperties": false
+  }
+}

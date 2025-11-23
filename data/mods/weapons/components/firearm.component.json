@@ -1,0 +1,70 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "weapons:firearm",
+  "description": "Defines firearm-specific properties including type, firing mode, rate of fire, accuracy, range, and condition. Used with weapons:weapon marker component to create complete firearm entities.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "firearmType": {
+        "type": "string",
+        "enum": [
+          "handgun",
+          "rifle",
+          "shotgun",
+          "submachine_gun"
+        ],
+        "description": "Category of firearm"
+      },
+      "firingMode": {
+        "type": "string",
+        "enum": [
+          "semi_automatic",
+          "automatic",
+          "burst",
+          "single_action",
+          "double_action",
+          "bolt_action",
+          "pump_action",
+          "break_action"
+        ],
+        "description": "Mechanism by which the firearm fires and cycles"
+      },
+      "rateOfFire": {
+        "type": "number",
+        "minimum": 1,
+        "description": "Rounds per minute for automatic/burst fire, or theoretical maximum for manual actions"
+      },
+      "accuracy": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 100,
+        "description": "Base accuracy rating from 0 (completely inaccurate) to 100 (perfectly accurate)"
+      },
+      "range": {
+        "type": "number",
+        "minimum": 1,
+        "description": "Effective range in meters"
+      },
+      "condition": {
+        "type": "string",
+        "enum": [
+          "excellent",
+          "good",
+          "fair",
+          "poor",
+          "broken"
+        ],
+        "description": "Current condition affecting reliability and accuracy"
+      }
+    },
+    "required": [
+      "firearmType",
+      "firingMode",
+      "rateOfFire",
+      "accuracy",
+      "range",
+      "condition"
+    ],
+    "additionalProperties": false
+  }
+}
