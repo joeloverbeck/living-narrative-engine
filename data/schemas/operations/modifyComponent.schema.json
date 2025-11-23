@@ -20,7 +20,7 @@
   "$defs": {
     "Parameters": {
       "type": "object",
-      "description": "Parameters for the MODIFY_COMPONENT operation. Modifies a specific field within an existing component (mode \"set\" only—use a MATH + SET_VARIABLE combo for arithmetic).",
+      "description": "Parameters for the MODIFY_COMPONENT operation. Modifies numeric fields in components with support for set, increment, and decrement modes for numeric constraint planning.",
       "properties": {
         "entity_ref": {
           "$ref": "../common.schema.json#/definitions/entityReference"
@@ -34,8 +34,9 @@
         },
         "mode": {
           "type": "string",
-          "enum": ["set"],
-          "default": "set"
+          "enum": ["set", "increment", "decrement"],
+          "default": "set",
+          "description": "Modification mode: 'set' (assign value), 'increment' (add to current value), 'decrement' (subtract from current value)"
         },
         "value": {}
       },
