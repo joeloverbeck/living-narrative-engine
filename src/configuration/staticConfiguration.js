@@ -65,6 +65,7 @@ const OPERATION_SCHEMA_FILES = [
   'unequipClothing.schema.json',
   'unlockMouthEngagement.schema.json',
   'unlockMovement.schema.json',
+  'updateHungerState.schema.json',
   'validateContainerCapacity.schema.json',
   'validateInventoryCapacity.schema.json',
 ];
