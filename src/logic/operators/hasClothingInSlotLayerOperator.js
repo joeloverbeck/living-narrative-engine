@@ -65,7 +65,7 @@ export class HasClothingInSlotLayerOperator extends BaseEquipmentOperator {
     // Validate layer name against schema
     if (!this.isValidLayerName(layerName)) {
       this.logger.warn(
-        `${this.operatorName}: Invalid layer name '${layerName}'. Valid layers: underwear, base, outer, accessories`
+        `${this.operatorName}: Invalid layer name '${layerName}'. Valid layers: underwear, base, outer, accessories, armor`
       );
       return false;
     }

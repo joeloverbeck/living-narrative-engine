@@ -124,7 +124,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
         ),
       getPrecedenceOrder: jest
         .fn()
-        .mockReturnValue(['underwear', 'base', 'outer', 'accessories']),
+        .mockReturnValue(['underwear', 'base', 'outer', 'accessories', 'armor']),
     };
 
     // Create mock dependencies for ClothingInstantiationService

@@ -39,7 +39,7 @@ describe('New Clothing Items Unit Tests', () => {
               properties: {
                 layer: {
                   type: 'string',
-                  enum: ['underwear', 'base', 'outer', 'accessories'],
+                  enum: ['underwear', 'base', 'outer', 'accessories', 'armor'],
                 },
                 equipmentSlots: {
                   type: 'object',
@@ -56,7 +56,7 @@ describe('New Clothing Items Unit Tests', () => {
                   type: 'array',
                   items: {
                     type: 'string',
-                    enum: ['underwear', 'base', 'outer', 'accessories'],
+                    enum: ['underwear', 'base', 'outer', 'accessories', 'armor'],
                   },
                 },
               },

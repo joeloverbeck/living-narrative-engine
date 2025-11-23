@@ -238,7 +238,7 @@ export class BaseEquipmentOperator {
    * @returns {boolean} True if layer name is valid
    */
   isValidLayerName(layerName) {
-    const validLayers = ['underwear', 'base', 'outer', 'accessories'];
+    const validLayers = ['underwear', 'base', 'outer', 'accessories', 'armor'];
     return validLayers.includes(layerName);
   }
 }
