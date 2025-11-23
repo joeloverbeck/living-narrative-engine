@@ -348,6 +348,48 @@ describe('PlanningEffectsSimulator - MODIFY_COMPONENT Simulation', () => {
     });
   });
 
+  it('should skip modification when calculation results in NaN', () => {
+    const currentState = {
+      'entity-1:core:stats:level': Number.NaN,
+    };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:stats',
+          field: 'level',
+          mode: 'increment',
+          value: 1,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const originalStructuredClone = globalThis.structuredClone;
+    globalThis.structuredClone = (value) => value;
+
+    try {
+      const result = simulator.simulateEffects(
+        currentState,
+        planningEffects,
+        context
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.state).toEqual(currentState);
+      expect(
+        mockLogger.warn.mock.calls.some((call) =>
+          call[0].includes('Modification resulted in NaN')
+        )
+      ).toBe(true);
+    } finally {
+      globalThis.structuredClone = originalStructuredClone;
+    }
+  });
+
   it('should handle nested field paths as state keys', () => {
     const currentState = {
       'entity-1:core:nutrition:hungerLevel': 50,
@@ -533,6 +575,41 @@ describe('PlanningEffectsSimulator - REMOVE_COMPONENT Simulation', () => {
     });
     expect(result.state['entity-1:core:nutrition']).toBeUndefined();
     expect(result.state['entity-1:core:nutrition:thirst']).toBeUndefined();
+  });
+
+  it('should remove component from nested state structure', () => {
+    const currentState = {
+      'entity-1:core:status': { level: 3 },
+      'entity-1': {
+        components: {
+          'core:status': { level: 3 },
+          core_status: { level: 3 },
+        },
+      },
+    };
+    const planningEffects = [
+      {
+        type: 'REMOVE_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:status',
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.state['entity-1:core:status']).toBeUndefined();
+    expect(result.state['entity-1']?.components['core:status']).toBeUndefined();
+    expect(result.state['entity-1']?.components.core_status).toBeUndefined();
   });
 
   it('should handle removing non-existent component gracefully', () => {
