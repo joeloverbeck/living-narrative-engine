@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "metabolism:has_energy_above",
+  "description": "Check if entity's current energy is above a threshold (uses var context)",
+  "logic": {
+    ">": [
+      { "var": "entity.components.metabolism:metabolic_store.current_energy" },
+      { "var": "threshold" }
+    ]
+  }
+}

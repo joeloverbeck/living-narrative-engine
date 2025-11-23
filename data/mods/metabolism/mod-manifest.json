@@ -37,12 +37,20 @@
     ],
     "conditions": [
       "can-consume.condition.json",
+      "can_consume_item.condition.json",
       "event-is-action-drink-beverage.condition.json",
       "event-is-action-eat.condition.json",
-      "event-is-action-rest.condition.json"
+      "event-is-action-rest.condition.json",
+      "has_energy_above.condition.json",
+      "is_digesting.condition.json",
+      "is_hungry.condition.json"
     ],
     "scopes": [
-      "consumable_items.scope"
+      "consumable_items.scope",
+      "inventory_food.scope"
+    ],
+    "goals": [
+      "satisfy_hunger.goal.json"
     ],
     "entities": {
       "definitions": [

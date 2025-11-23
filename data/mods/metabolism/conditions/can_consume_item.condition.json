@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "metabolism:can_consume_item",
+  "description": "Check if consumer can safely consume a specific item (uses can_consume operator)",
+  "logic": {
+    "can_consume": [{ "var": "consumerId" }, { "var": "itemId" }]
+  }
+}
