@@ -1,18 +1,50 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_aim_item",
-  "comment": "Placeholder rule for aim_item action. To be implemented in WEASYSIMP-007.",
+  "comment": "Handles the aim_item action by adding items:aimed_at component to the item and dispatching item_aimed event",
   "event_type": "core:attempt_action",
   "condition": {
     "condition_ref": "items:event-is-action-aim-item"
   },
   "actions": [
     {
-      "type": "LOG",
-      "comment": "Placeholder action - to be replaced with actual aim_item logic in WEASYSIMP-007",
+      "type": "GET_TIMESTAMP",
+      "comment": "Get current game timestamp for aim tracking",
       "parameters": {
-        "message": "aim_item action attempted - implementation pending",
-        "level": "debug"
+        "result_variable": "currentTimestamp"
+      }
+    },
+    {
+      "type": "ADD_COMPONENT",
+      "comment": "Add items:aimed_at to the item (secondary target)",
+      "parameters": {
+        "entity_ref": "{event.payload.secondaryId}",
+        "component_type": "items:aimed_at",
+        "value": {
+          "targetId": "{event.payload.targetId}",
+          "aimedBy": "{event.payload.actorId}"
+        }
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Dispatch items:item_aimed event",
+      "parameters": {
+        "eventType": "items:item_aimed",
+        "payload": {
+          "actorEntity": "{event.payload.actorId}",
+          "itemEntity": "{event.payload.secondaryId}",
+          "targetEntity": "{event.payload.targetId}",
+          "timestamp": "{context.currentTimestamp}"
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "comment": "Complete actor's turn successfully",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
       }
     }
   ]
