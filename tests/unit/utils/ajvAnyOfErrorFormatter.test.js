@@ -162,6 +162,52 @@ describe('formatAjvErrorsEnhanced', () => {
 
     expect(message).toContain('Missing operation type - this operation needs a "type" field.');
   });
+
+  it('returns the root payload when the failing path points directly at a top-level field', () => {
+    const errors = [
+      createError({
+        keyword: 'required',
+        schemaPath: '#/anyOf/0/properties/type/const',
+        instancePath: '/type',
+      }),
+      ...Array.from({ length: 60 }, () =>
+        createError({
+          keyword: 'required',
+          schemaPath: '#/anyOf/0/properties/parameters/required',
+          instancePath: '/parameters',
+          params: { missingProperty: 'field' },
+        })
+      ),
+    ];
+
+    const message = formatAjvErrorsEnhanced(errors, {});
+
+    expect(message).toContain('Missing operation type - this operation needs a "type" field.');
+    expect(message).toContain('Common operation types:');
+  });
+
+  it('falls back to the root payload when navigation hits nullish segments', () => {
+    const errors = [
+      createError({
+        keyword: 'required',
+        schemaPath: '#/anyOf/0/properties/type/const',
+        instancePath: '/operations/0/parameters/type',
+      }),
+      ...Array.from({ length: 55 }, () =>
+        createError({
+          keyword: 'required',
+          schemaPath: '#/anyOf/0/properties/parameters/required',
+          instancePath: '/parameters',
+          params: { missingProperty: 'field' },
+        })
+      ),
+    ];
+
+    const message = formatAjvErrorsEnhanced(errors, { operations: [null] });
+
+    expect(message).toContain('Missing operation type - this operation needs a "type" field.');
+    expect(message).toContain('For macro references, use:');
+  });
 });
 
 describe('formatStandardErrors integration', () => {
