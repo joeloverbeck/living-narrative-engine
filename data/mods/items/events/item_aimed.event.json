@@ -1,0 +1,31 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "items:item_aimed",
+  "description": "Dispatched when an actor aims an item at a target. Contains actor, item, target, and timestamp information.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "actorEntity": {
+        "type": "string",
+        "description": "ID of actor aiming the item",
+        "minLength": 1
+      },
+      "itemEntity": {
+        "type": "string",
+        "description": "ID of item being aimed (weapon, flashlight, camera, etc.)",
+        "minLength": 1
+      },
+      "targetEntity": {
+        "type": "string",
+        "description": "ID of target being aimed at",
+        "minLength": 1
+      },
+      "timestamp": {
+        "type": "number",
+        "description": "Game timestamp when aiming started"
+      }
+    },
+    "required": ["actorEntity", "itemEntity", "targetEntity", "timestamp"],
+    "additionalProperties": false
+  }
+}

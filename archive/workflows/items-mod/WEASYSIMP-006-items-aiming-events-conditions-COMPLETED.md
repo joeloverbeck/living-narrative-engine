@@ -2,21 +2,36 @@
 
 **Phase:** Items Mod Extensions
 **Timeline:** 1 day
-**Status:** Not Started
+**Status:** ✅ Completed
 **Dependencies:** WEASYSIMP-004 (Aiming Actions)
 **Priority:** P0 (Blocking)
 
 ## Overview
 
-Create two event schemas and two condition files for the items mod aiming system: `items:item_aimed` and `items:aim_lowered` events, plus conditions `event-is-action-aim-item` and `event-is-action-lower-aim`. These enable rule triggering and event-driven communication.
+Create two event schemas for the items mod aiming system: `items:item_aimed` and `items:aim_lowered` events. These enable rule triggering and event-driven communication. The condition files already exist in the codebase.
+
+## Assumptions Corrected
+
+**Original Assumptions:**
+- Need to create both event and condition files
+- Conditions use `"condition"` key
+- Conditions check both event type and actionId
+- Events use field names like `actorId`, `itemId`, `targetId`
+
+**Actual State of Codebase:**
+- ✅ Conditions already exist: `event-is-action-aim-item.condition.json` and `event-is-action-lower-aim.condition.json`
+- ✅ Actions already exist: `aim_item.action.json` and `lower_aim.action.json`
+- ✅ Rules already exist (as placeholders): `handle_aim_item.rule.json` and `handle_lower_aim.rule.json`
+- ✅ Conditions use `"logic"` key (not `"condition"`)
+- ✅ Conditions only check `event.payload.actionId` (no event type check)
+- ✅ Events use field names like `actorEntity`, `itemEntity`, `targetEntity` (not `actorId`)
+- ✅ Events don't use regex patterns, just `"type": "string"` with `minLength`
 
 ## Objectives
 
 1. Create `items:item_aimed` event schema
 2. Create `items:aim_lowered` event schema
-3. Create `event-is-action-aim-item` condition
-4. Create `event-is-action-lower-aim` condition
-5. Validate event and condition schemas
+3. Validate event schemas against existing patterns
 
 ## Technical Details
 
@@ -32,27 +47,27 @@ Create two event schemas and two condition files for the items mod aiming system
   "payloadSchema": {
     "type": "object",
     "properties": {
-      "actorId": {
+      "actorEntity": {
         "type": "string",
-        "pattern": "^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$",
-        "description": "ID of actor aiming the item"
+        "description": "ID of actor aiming the item",
+        "minLength": 1
       },
-      "itemId": {
+      "itemEntity": {
         "type": "string",
-        "pattern": "^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$",
-        "description": "ID of item being aimed (weapon, flashlight, camera, etc.)"
+        "description": "ID of item being aimed (weapon, flashlight, camera, etc.)",
+        "minLength": 1
       },
-      "targetId": {
+      "targetEntity": {
         "type": "string",
-        "pattern": "^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$",
-        "description": "ID of target being aimed at"
+        "description": "ID of target being aimed at",
+        "minLength": 1
       },
       "timestamp": {
         "type": "number",
         "description": "Game timestamp when aiming started"
       }
     },
-    "required": ["actorId", "itemId", "targetId", "timestamp"],
+    "required": ["actorEntity", "itemEntity", "targetEntity", "timestamp"],
     "additionalProperties": false
   }
 }
@@ -61,9 +76,9 @@ Create two event schemas and two condition files for the items mod aiming system
 **Event Details:**
 - **Dispatched By:** `items:handle_aim_item` rule (WEASYSIMP-007)
 - **Payload Fields:**
-  - `actorId` - Who is aiming
-  - `itemId` - What they're aiming (the item)
-  - `targetId` - What they're aiming at
+  - `actorEntity` - Who is aiming
+  - `itemEntity` - What they're aiming (the item)
+  - `targetEntity` - What they're aiming at
   - `timestamp` - When aiming started (from GET_TIMESTAMP operation)
 - **Use Cases:**
   - Trigger AI reactions (target notices being aimed at)
@@ -79,31 +94,31 @@ Create two event schemas and two condition files for the items mod aiming system
 {
   "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "items:aim_lowered",
-  "description": "Dispatched when an actor stops aiming an item. The previousTargetId is optional (may be omitted if target was destroyed).",
+  "description": "Dispatched when an actor stops aiming an item. The previousTargetEntity is optional (may be omitted if target was destroyed).",
   "payloadSchema": {
     "type": "object",
     "properties": {
-      "actorId": {
+      "actorEntity": {
         "type": "string",
-        "pattern": "^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$",
-        "description": "ID of actor who lowered aim"
+        "description": "ID of actor who lowered aim",
+        "minLength": 1
       },
-      "itemId": {
+      "itemEntity": {
         "type": "string",
-        "pattern": "^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$",
-        "description": "ID of item that was aimed"
+        "description": "ID of item that was aimed",
+        "minLength": 1
       },
-      "previousTargetId": {
+      "previousTargetEntity": {
         "type": "string",
-        "pattern": "^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$",
-        "description": "ID of target that was aimed at (if still exists)"
+        "description": "ID of target that was aimed at (if still exists)",
+        "minLength": 1
       },
       "timestamp": {
         "type": "number",
         "description": "Game timestamp when aim was lowered"
       }
     },
-    "required": ["actorId", "itemId", "timestamp"],
+    "required": ["actorEntity", "itemEntity", "timestamp"],
     "additionalProperties": false
   }
 }
@@ -112,9 +127,9 @@ Create two event schemas and two condition files for the items mod aiming system
 **Event Details:**
 - **Dispatched By:** `items:handle_lower_aim` rule (WEASYSIMP-007)
 - **Payload Fields:**
-  - `actorId` - Who lowered aim
-  - `itemId` - What was being aimed
-  - `previousTargetId` - What was aimed at (optional - may have been destroyed)
+  - `actorEntity` - Who lowered aim
+  - `itemEntity` - What was being aimed
+  - `previousTargetEntity` - What was aimed at (optional - may have been destroyed)
   - `timestamp` - When aim was lowered
 - **Use Cases:**
   - Trigger AI reactions (target notices aim lowered)
@@ -124,67 +139,53 @@ Create two event schemas and two condition files for the items mod aiming system
 
 ### 3. event-is-action-aim-item Condition
 
-**File to Create:** `data/mods/items/conditions/event-is-action-aim-item.condition.json`
+**Status:** ✅ Already exists in codebase
 
+**File:** `data/mods/items/conditions/event-is-action-aim-item.condition.json`
+
+**Actual Content:**
 ```json
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "items:event-is-action-aim-item",
-  "description": "Condition that matches when the event is an ACTION_DECIDED event for the aim_item action",
-  "condition": {
-    "and": [
-      {
-        "==": [
-          { "var": "event.type" },
-          "ACTION_DECIDED"
-        ]
-      },
-      {
-        "==": [
-          { "var": "event.payload.actionId" },
-          "items:aim_item"
-        ]
-      }
+  "description": "True when event is attempting the aim_item action",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "items:aim_item"
     ]
   }
 }
 ```
 
 **Condition Details:**
-- **Matches:** `ACTION_DECIDED` events where `actionId` is `items:aim_item`
+- **Matches:** Events where `actionId` is `items:aim_item`
 - **Used By:** `items:handle_aim_item` rule
-- **Pattern:** Standard action condition pattern (checks event type + action ID)
+- **Pattern:** Standard action condition pattern (checks actionId only)
 
 ### 4. event-is-action-lower-aim Condition
 
-**File to Create:** `data/mods/items/conditions/event-is-action-lower-aim.condition.json`
+**Status:** ✅ Already exists in codebase
 
+**File:** `data/mods/items/conditions/event-is-action-lower-aim.condition.json`
+
+**Actual Content:**
 ```json
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "items:event-is-action-lower-aim",
-  "description": "Condition that matches when the event is an ACTION_DECIDED event for the lower_aim action",
-  "condition": {
-    "and": [
-      {
-        "==": [
-          { "var": "event.type" },
-          "ACTION_DECIDED"
-        ]
-      },
-      {
-        "==": [
-          { "var": "event.payload.actionId" },
-          "items:lower_aim"
-        ]
-      }
+  "description": "True when event is attempting the lower_aim action",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "items:lower_aim"
     ]
   }
 }
 ```
 
 **Condition Details:**
-- **Matches:** `ACTION_DECIDED` events where `actionId` is `items:lower_aim`
+- **Matches:** Events where `actionId` is `items:lower_aim`
 - **Used By:** `items:handle_lower_aim` rule
 - **Pattern:** Standard action condition pattern
 
@@ -197,26 +198,24 @@ data/mods/items/
 │   ├── aim_lowered.event.json      ← Create
 │   └── ... (existing events)
 ├── conditions/
-│   ├── event-is-action-aim-item.condition.json   ← Create
-│   ├── event-is-action-lower-aim.condition.json  ← Create
+│   ├── event-is-action-aim-item.condition.json   ✅ Already exists
+│   ├── event-is-action-lower-aim.condition.json  ✅ Already exists
 │   └── ... (existing conditions)
 ```
 
 ## Acceptance Criteria
 
-- [ ] `item_aimed.event.json` created at `data/mods/items/events/`
-- [ ] `aim_lowered.event.json` created at `data/mods/items/events/`
-- [ ] `event-is-action-aim-item.condition.json` created at `data/mods/items/conditions/`
-- [ ] `event-is-action-lower-aim.condition.json` created at `data/mods/items/conditions/`
-- [ ] All files have valid JSON syntax
-- [ ] Events validate against `event.schema.json`
-- [ ] Conditions validate against `condition.schema.json`
-- [ ] Event IDs follow namespace pattern (`items:*`)
-- [ ] Condition IDs follow namespace pattern (`items:*`)
-- [ ] Entity ID patterns are correct (`^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$`)
-- [ ] Required fields are correctly specified
-- [ ] `previousTargetId` is NOT required in `aim_lowered` (optional field)
-- [ ] `npm run validate` passes without errors
+- [x] `item_aimed.event.json` created at `data/mods/items/events/`
+- [x] `aim_lowered.event.json` created at `data/mods/items/events/`
+- [x] `event-is-action-aim-item.condition.json` exists (already in codebase)
+- [x] `event-is-action-lower-aim.condition.json` exists (already in codebase)
+- [x] All event files have valid JSON syntax
+- [x] Events validate against `event.schema.json`
+- [x] Event IDs follow namespace pattern (`items:*`)
+- [x] Field names follow convention (`actorEntity`, `itemEntity`, `targetEntity`)
+- [x] Required fields are correctly specified
+- [x] `previousTargetEntity` is NOT required in `aim_lowered` (optional field)
+- [x] `npm run validate` passes without errors (no issues with new event files)
 
 ## Testing Requirements
 
@@ -275,9 +274,9 @@ describe('Items Mod - Aiming Events', () => {
     const events = fixture.getDispatchedEvents('items:item_aimed');
     expect(events).toHaveLength(1);
     expect(events[0].payload).toMatchObject({
-      actorId: actor.id,
-      itemId: pistol.id,
-      targetId: target.id
+      actorEntity: actor.id,
+      itemEntity: pistol.id,
+      targetEntity: target.id
     });
     expect(events[0].payload.timestamp).toBeDefined();
   });
@@ -290,7 +289,7 @@ describe('Items Mod - Aiming Events', () => {
       'items:portable': {},
       'items:aimable': {},
       'items:aimed_at': {
-        targetId: target.id,
+        targetEntity: target.id,
         aimedBy: actor.id,
         timestamp: Date.now()
       }
@@ -305,9 +304,9 @@ describe('Items Mod - Aiming Events', () => {
     const events = fixture.getDispatchedEvents('items:aim_lowered');
     expect(events).toHaveLength(1);
     expect(events[0].payload).toMatchObject({
-      actorId: actor.id,
-      itemId: pistol.id,
-      previousTargetId: target.id
+      actorEntity: actor.id,
+      itemEntity: pistol.id,
+      previousTargetEntity: target.id
     });
   });
 });
@@ -317,8 +316,10 @@ describe('Items Mod - Aiming Events', () => {
 
 - **Event Naming:** Events use past tense (`item_aimed`, `aim_lowered`) to indicate completed actions
 - **Condition Naming:** Conditions use `event-is-action-*` pattern for action conditions
+- **Condition Schema:** Uses `"logic"` key (not `"condition"`) for JSON-Logic expressions
+- **Field Naming:** Events use `*Entity` suffix (`actorEntity`, `itemEntity`, `targetEntity`) consistent with other items mod events
 - **Event Payload Access:** Rules access event payload via `{event.payload.fieldName}` interpolation
-- **Optional Fields:** `previousTargetId` in `aim_lowered` is optional because target might have been destroyed/removed before aim was lowered
+- **Optional Fields:** `previousTargetEntity` in `aim_lowered` is optional because target might have been destroyed/removed before aim was lowered
 - **Timestamp Usage:** Timestamps enable:
   - Calculating aim duration
   - Ordering events chronologically
@@ -334,3 +335,52 @@ describe('Items Mod - Aiming Events', () => {
 - **Blocks:** WEASYSIMP-007 (Aiming Rules) - rules dispatch these events
 - **Required By:** All aiming functionality in items and weapons mods
 - **Reference:** See `data/mods/items/events/` and `data/mods/items/conditions/` for existing examples
+
+---
+
+## Outcome
+
+**Status:** ✅ Completed
+
+### What Was Changed
+
+**Event Files Created (2):**
+1. ✅ `data/mods/items/events/item_aimed.event.json` - Event dispatched when actor aims item at target
+2. ✅ `data/mods/items/events/aim_lowered.event.json` - Event dispatched when actor stops aiming
+
+**Tests Created (2):**
+1. ✅ `tests/unit/mods/items/aimingEventSchemas.test.js` - 17 unit tests validating event schema structure
+2. ✅ `tests/integration/mods/items/aimingEventsDispatched.test.js` - Integration tests for event dispatching
+
+**Conditions Status:**
+- ✅ Both conditions already existed in codebase (no changes needed)
+- ✅ `event-is-action-aim-item.condition.json` - Already present
+- ✅ `event-is-action-lower-aim.condition.json` - Already present
+
+### Differences from Original Plan
+
+**Corrected Assumptions:**
+1. **Conditions**: Already existed in codebase (not created as originally planned)
+2. **Field Naming**: Used `actorEntity`, `itemEntity`, `targetEntity` (not `actorId`, `itemId`, `targetId`)
+3. **Condition Schema**: Uses `"logic"` key (not `"condition"`)
+4. **Condition Logic**: Only checks `actionId` (not both event type and actionId)
+5. **Field Validation**: Used `minLength: 1` (not regex patterns)
+
+### Validation Results
+
+- ✅ All JSON syntax valid
+- ✅ All event schemas validate against `event.schema.json`
+- ✅ All 17 unit tests pass
+- ✅ Event IDs follow namespace pattern (`items:*`)
+- ✅ Field names follow items mod convention
+- ✅ `previousTargetEntity` correctly optional in `aim_lowered` event
+- ✅ No validation errors for new event files
+
+### Impact
+
+These event schemas enable:
+- Rule-based responses to aiming actions (WEASYSIMP-007)
+- AI reactions to being aimed at
+- UI updates for aim indicators
+- Analytics and logging for aiming behavior
+- Time-based aiming mechanics (duration, stability, fatigue)
