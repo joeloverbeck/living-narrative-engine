@@ -281,9 +281,6 @@ class NumericConstraintEvaluator {
       case '==':
         // Need exact match
         return Math.abs(currentValue - targetValue);
-
-      default:
-        return null;
     }
   }
 
