@@ -16,6 +16,7 @@ describe('ClothingInstantiationService - #handleAnatomyGenerated Event Handler',
       entityManager: {
         createEntityInstance: jest.fn(),
         getEntityInstance: jest.fn(),
+        removeEntityInstance: jest.fn(),
       },
       dataRegistry: {
         get: jest.fn(),

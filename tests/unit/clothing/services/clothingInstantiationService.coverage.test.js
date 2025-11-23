@@ -17,6 +17,7 @@ describe('ClothingInstantiationService - Coverage Tests', () => {
       entityManager: {
         createEntityInstance: jest.fn(),
         getEntityInstance: jest.fn(),
+        removeEntityInstance: jest.fn(),
       },
       dataRegistry: {
         get: jest.fn(),

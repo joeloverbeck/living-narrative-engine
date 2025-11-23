@@ -103,6 +103,9 @@ function createService(overrides = {}) {
       }
       return clothingInstances.get(id) ?? null;
     }),
+    removeEntityInstance: jest.fn(async (instanceId) => {
+      clothingInstances.delete(instanceId);
+    }),
   };
 
   const slotResolver = {
