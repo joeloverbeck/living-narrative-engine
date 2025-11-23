@@ -53,6 +53,7 @@ import CheckFollowCycleHandler from '../../logic/operationHandlers/checkFollowCy
 import EstablishFollowRelationHandler from '../../logic/operationHandlers/establishFollowRelationHandler.js';
 import BreakFollowRelationHandler from '../../logic/operationHandlers/breakFollowRelationHandler.js';
 import BurnEnergyHandler from '../../logic/operationHandlers/burnEnergyHandler.js';
+import UpdateHungerStateHandler from '../../logic/operationHandlers/updateHungerStateHandler.js';
 import AddPerceptionLogEntryHandler from '../../logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import QueryEntitiesHandler from '../../logic/operationHandlers/queryEntitiesHandler.js';
 import HasComponentHandler from '../../logic/operationHandlers/hasComponentHandler.js';
@@ -345,6 +346,16 @@ export function registerOperationHandlers(registrar) {
     [
       tokens.BurnEnergyHandler,
       BurnEnergyHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.UpdateHungerStateHandler,
+      UpdateHungerStateHandler,
       (c, Handler) =>
         new Handler({
           logger: c.resolve(tokens.ILogger),

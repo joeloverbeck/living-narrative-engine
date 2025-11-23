@@ -124,6 +124,10 @@ export function registerInterpreters(container) {
     );
     registry.register('BURN_ENERGY', bind(tokens.BurnEnergyHandler));
     registry.register(
+      'UPDATE_HUNGER_STATE',
+      bind(tokens.UpdateHungerStateHandler)
+    );
+    registry.register(
       'ADD_PERCEPTION_LOG_ENTRY',
       bind(tokens.AddPerceptionLogEntryHandler)
     );
