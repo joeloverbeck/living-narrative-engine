@@ -6,6 +6,7 @@
  */
 
 import { validateDependency } from '../utils/dependencyUtils.js';
+import pkg from '../../package.json' with { type: 'json' };
 
 /**
  * Multi-format violation reporter
@@ -365,7 +366,7 @@ class ViolationReporter {
 
     const reportData = {
       timestamp: new Date().toISOString(),
-      validatorVersion: '1.0.0', // TODO: Get from package.json
+      validatorVersion: pkg.version,
       format: 'json',
     };
 
