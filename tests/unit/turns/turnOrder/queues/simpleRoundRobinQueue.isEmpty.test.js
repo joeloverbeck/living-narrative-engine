@@ -117,6 +117,4 @@ describe('SimpleRoundRobinQueue', () => {
       expect(queue.size()).toBe(0);
     });
   }); // End describe('isEmpty() and size() Methods Functionality')
-
-  // TODO: Add other test suites as needed (e.g., for clear(), toArray())
 }); // End describe('SimpleRoundRobinQueue')
