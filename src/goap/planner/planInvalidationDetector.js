@@ -345,16 +345,8 @@ class PlanInvalidationDetector {
    * //   actor: 'entity-1',
    * //   state: { ... }
    * // }
-   */
+  */
   #buildEvaluationContext(state, actorId) {
-    if (!state || typeof state !== 'object') {
-      this.#logger.warn('Invalid state for context building', { state });
-      return {
-        actor: actorId,
-        state: {},
-      };
-    }
-
     const context = {};
 
     try {

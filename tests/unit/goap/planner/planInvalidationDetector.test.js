@@ -879,4 +879,111 @@ describe('PlanInvalidationDetector - Edge Cases', () => {
       expect.objectContaining({ policy: 'unknown_policy' })
     );
   });
+
+  it('should handle invalid current state input', () => {
+    const plan = {
+      tasks: [{ taskId: 'core:task1', parameters: {} }],
+      cost: 1,
+      nodesExplored: 1,
+    };
+
+    const result = detector.checkPlanValidity(plan, null, { actorId: 'actor-123' }, 'strict');
+
+    expect(result.valid).toBe(false);
+    expect(result.reason).toBe('invalid_plan_structure');
+    expect(mockLogger.warn).toHaveBeenCalledWith('Invalid current state', { currentState: null });
+  });
+
+  it('should build evaluation context while skipping malformed keys', () => {
+    const plan = {
+      tasks: [{ taskId: 'core:task1', parameters: {} }],
+      cost: 1,
+      nodesExplored: 1,
+    };
+
+    const currentState = {
+      'actor-123:core': { stamina: 10 },
+      malformedKey: true,
+    };
+
+    mockRegistry.get.mockReturnValue({ id: 'core:task1' });
+
+    const result = detector.checkPlanValidity(plan, currentState, { actorId: 'actor-123' }, 'strict');
+
+    expect(result.valid).toBe(true);
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      'Invalid state key format',
+      expect.objectContaining({ key: 'malformedKey' })
+    );
+  });
+
+  it('should recover when evaluation context building fails', () => {
+    const plan = {
+      tasks: [{ taskId: 'core:task1', parameters: {} }],
+      cost: 1,
+      nodesExplored: 1,
+    };
+
+    mockRegistry.get.mockReturnValue({ id: 'core:task1' });
+
+    const entriesSpy = jest
+      .spyOn(Object, 'entries')
+      .mockImplementation(() => {
+        throw new Error('entries failed');
+      });
+
+    try {
+      const result = detector.checkPlanValidity(
+        plan,
+        { 'actor-123:core:hungry': true },
+        { actorId: 'actor-123' },
+        'strict'
+      );
+
+      expect(result.valid).toBe(true);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Context building failed',
+        expect.any(Error),
+        expect.objectContaining({ state: expect.anything() })
+      );
+    } finally {
+      entriesSpy.mockRestore();
+    }
+  });
+
+  it('should handle invalid task identifiers', () => {
+    const plan = {
+      tasks: [{ taskId: null, parameters: {} }],
+      cost: 1,
+      nodesExplored: 1,
+    };
+
+    const result = detector.checkPlanValidity(plan, {}, { actorId: 'actor-123' }, 'strict');
+
+    expect(result.valid).toBe(false);
+    expect(result.reason).toBe('task_not_found');
+    expect(mockLogger.warn).toHaveBeenCalledWith('Invalid task ID', { taskId: null });
+  });
+
+  it('should handle registry errors when fetching task definitions', () => {
+    const plan = {
+      tasks: [{ taskId: 'core:task1', parameters: {} }],
+      cost: 1,
+      nodesExplored: 1,
+    };
+
+    mockRegistry.get.mockImplementation(() => {
+      throw new Error('registry failure');
+    });
+
+    const result = detector.checkPlanValidity(plan, {}, { actorId: 'actor-123' }, 'strict');
+
+    expect(result.valid).toBe(false);
+    expect(result.reason).toBe('task_not_found');
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Failed to get task definition',
+      expect.any(Error),
+      expect.objectContaining({ taskId: 'core:task1' })
+    );
+  });
 });
