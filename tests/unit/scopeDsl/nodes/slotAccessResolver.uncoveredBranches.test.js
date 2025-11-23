@@ -260,4 +260,269 @@ describe('slotAccessResolver uncovered branches', () => {
     expect(result.has('array-jacket')).toBe(true);
     expect(result.has('standalone-jacket')).toBe(true);
   });
+
+  it('returns early from enhanced coverage when tracing is absent', () => {
+    const clothingAccess = createClothingAccess({
+      equipped: { torso_upper: { outer: 'no-trace-jacket' } },
+    });
+
+    dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+    const result = resolver.resolve(createNode('torso_upper'), {
+      dispatcher,
+    });
+
+    expect(result.has('no-trace-jacket')).toBe(true);
+  });
+
+  it('evaluates canResolve for supported and unsupported nodes', () => {
+    expect(
+      resolver.canResolve({
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step', field: 'topmost_clothing' },
+      })
+    ).toBe(true);
+
+    expect(
+      resolver.canResolve({
+        type: 'Value',
+        field: 'torso_upper',
+        parent: { type: 'Step', field: 'topmost_clothing' },
+      })
+    ).toBe(false);
+
+    expect(
+      resolver.canResolve({
+        type: 'Step',
+        field: null,
+        parent: { type: 'Step', field: 'topmost_clothing' },
+      })
+    ).toBe(false);
+
+    expect(
+      resolver.canResolve({
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step', field: 'inventory' },
+      })
+    ).toBe(false);
+  });
+
+  it('adds array and object component data through addToResultSet', () => {
+    dispatcher.resolve.mockReturnValue(new Set(['actor-1', 'actor-2']));
+
+    entitiesGateway.getComponentData.mockImplementation((entityId, component) => {
+      if (component !== 'torso_upper') return null;
+      if (entityId === 'actor-1') return ['layer-a', 'layer-b'];
+      if (entityId === 'actor-2') return { color: 'black' };
+      return null;
+    });
+
+    const result = resolver.resolve(createNode('torso_upper'), { dispatcher });
+
+    expect(result.has('layer-a')).toBe(true);
+    expect(result.has('layer-b')).toBe(true);
+    expect(
+      Array.from(result).some(
+        (item) => item && typeof item === 'object' && item.color === 'black'
+      )
+    ).toBe(true);
+  });
+
+  it('returns empty results without emitting errors when errorHandler is absent', () => {
+    const resolverWithoutHandler = createSlotAccessResolver({ entitiesGateway });
+    dispatcher.resolve.mockReturnValue(new Set([createClothingAccess()]));
+
+    const result = resolverWithoutHandler.resolve(createNode(null), { dispatcher });
+
+    expect(result.size).toBe(0);
+  });
+
+  it('bypasses error handling branches when no handler is configured', () => {
+    const resolverWithoutHandler = createSlotAccessResolver({ entitiesGateway });
+
+    dispatcher.resolve.mockReturnValue(new Set([createClothingAccess()]));
+    expect(
+      resolverWithoutHandler.resolve(createNode('unknown_slot'), { dispatcher }).size
+    ).toBe(0);
+
+    dispatcher.resolve.mockReturnValue(
+      new Set([createClothingAccess({ equipped: null })])
+    );
+    expect(
+      resolverWithoutHandler.resolve(createNode('torso_upper'), { dispatcher }).size
+    ).toBe(0);
+
+    dispatcher.resolve.mockReturnValue(
+      new Set([createClothingAccess({ mode: 'unsupported' })])
+    );
+    expect(
+      resolverWithoutHandler.resolve(createNode('torso_upper'), { dispatcher }).size
+    ).toBe(0);
+  });
+
+  it('disables coverage resolution when feature flag is turned off', () => {
+    const resolverWithCoverageDisabled = createSlotAccessResolver({
+      entitiesGateway,
+      coverageFeatures: { enableCoverageResolution: false },
+    });
+
+    const clothingAccess = createClothingAccess({
+      equipped: {
+        torso_upper: {},
+        torso_lower: { outer: 'cloak-coverage' },
+      },
+    });
+
+    dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+    const result = resolverWithCoverageDisabled.resolve(createNode('torso_upper'), {
+      dispatcher,
+    });
+
+    expect(result.size).toBe(0);
+  });
+
+  it('handles missing structured trace when no candidates are found', () => {
+    const clothingAccess = createClothingAccess({ equipped: { torso_upper: {} } });
+    dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+    const result = resolver.resolve(createNode('torso_upper'), { dispatcher });
+
+    expect(result.size).toBe(0);
+  });
+
+  it('skips adding span events when structured trace lacks an active span', () => {
+    const clothingAccess = createClothingAccess({ equipped: { torso_upper: {} } });
+    dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+    const structuredTrace = createStructuredTrace(null);
+
+    const result = resolver.resolve(createNode('torso_upper'), {
+      dispatcher,
+      structuredTrace,
+    });
+
+    expect(result.size).toBe(0);
+    expect(structuredTrace.getActiveSpan).toHaveBeenCalled();
+  });
+
+  it('marks tie-breaking usage on structured trace events', () => {
+    const clothingAccess = createClothingAccess({
+      equipped: { torso_upper: { outer: 'jacket', base: 'shirt' } },
+    });
+
+    dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+    jest
+      .spyOn(priorityCalculator, 'sortCandidatesWithTieBreaking')
+      .mockReturnValue([
+        { itemId: 'jacket', priority: 10 },
+        { itemId: 'shirt', priority: 10 },
+      ]);
+
+    const structuredTrace = createStructuredTrace();
+
+    const result = resolver.resolve(createNode('torso_upper'), {
+      dispatcher,
+      structuredTrace,
+      trace: { addLog: jest.fn() },
+    });
+
+    expect(result.has('jacket')).toBe(true);
+
+    const finalSelectionCallIndex = structuredTrace.startSpan.mock.calls.findIndex(
+      ([operation]) => operation === 'final_selection'
+    );
+    const finalSelectionSpan =
+      structuredTrace.startSpan.mock.results[finalSelectionCallIndex].value;
+
+    expect(finalSelectionSpan.addEvent).toHaveBeenCalledWith(
+      'selection_made',
+      expect.objectContaining({ tieBreakingUsed: true })
+    );
+    expect(finalSelectionSpan.addAttributes).toHaveBeenCalledWith(
+      expect.objectContaining({ tieBreakingUsed: true })
+    );
+  });
+
+  it('logs non-tie selections on structured traces', () => {
+    const clothingAccess = createClothingAccess({
+      equipped: { torso_upper: { outer: 'single-jacket' } },
+    });
+
+    dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+    const structuredTrace = createStructuredTrace();
+
+    const result = resolver.resolve(createNode('torso_upper'), {
+      dispatcher,
+      structuredTrace,
+      trace: { addLog: jest.fn() },
+    });
+
+    expect(result.has('single-jacket')).toBe(true);
+
+    const finalSelectionCallIndex = structuredTrace.startSpan.mock.calls.findIndex(
+      ([operation]) => operation === 'final_selection'
+    );
+    const finalSelectionSpan =
+      structuredTrace.startSpan.mock.results[finalSelectionCallIndex].value;
+
+    expect(finalSelectionSpan.addEvent).toHaveBeenCalledWith(
+      'selection_made',
+      expect.objectContaining({ tieBreakingUsed: false })
+    );
+    expect(finalSelectionSpan.addAttributes).toHaveBeenCalledWith(
+      expect.objectContaining({ tieBreakingUsed: false })
+    );
+  });
+
+  it('evaluates tie-breaking flag when priorities differ', () => {
+    const clothingAccess = createClothingAccess({
+      equipped: { torso_upper: { outer: 'coat', base: 'undershirt' } },
+    });
+
+    dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+    jest
+      .spyOn(priorityCalculator, 'sortCandidatesWithTieBreaking')
+      .mockReturnValue([
+        { itemId: 'coat', priority: 12 },
+        { itemId: 'undershirt', priority: 5 },
+      ]);
+
+    const structuredTrace = createStructuredTrace();
+
+    const result = resolver.resolve(createNode('torso_upper'), {
+      dispatcher,
+      structuredTrace,
+      trace: { addLog: jest.fn() },
+    });
+
+    expect(result.has('coat')).toBe(true);
+
+    const finalSelectionCallIndex = structuredTrace.startSpan.mock.calls.findIndex(
+      ([operation]) => operation === 'final_selection'
+    );
+    const finalSelectionSpan =
+      structuredTrace.startSpan.mock.results[finalSelectionCallIndex].value;
+
+    expect(finalSelectionSpan.addEvent).toHaveBeenCalledWith(
+      'selection_made',
+      expect.objectContaining({ tieBreakingUsed: false })
+    );
+    expect(finalSelectionSpan.addAttributes).toHaveBeenCalledWith(
+      expect.objectContaining({ tieBreakingUsed: false })
+    );
+  });
+
+  it('ignores null component data when resolving plain entity fields', () => {
+    dispatcher.resolve.mockReturnValue(new Set(['actor-3']));
+    entitiesGateway.getComponentData.mockReturnValue(null);
+
+    const result = resolver.resolve(createNode('torso_upper'), { dispatcher });
+
+    expect(result.size).toBe(0);
+  });
 });
