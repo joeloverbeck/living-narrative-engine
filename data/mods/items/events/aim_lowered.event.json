@@ -1,0 +1,31 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "items:aim_lowered",
+  "description": "Dispatched when an actor stops aiming an item. The previousTargetEntity is optional (may be omitted if target was destroyed).",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "actorEntity": {
+        "type": "string",
+        "description": "ID of actor who lowered aim",
+        "minLength": 1
+      },
+      "itemEntity": {
+        "type": "string",
+        "description": "ID of item that was aimed",
+        "minLength": 1
+      },
+      "previousTargetEntity": {
+        "type": "string",
+        "description": "ID of target that was aimed at (if still exists)",
+        "minLength": 1
+      },
+      "timestamp": {
+        "type": "number",
+        "description": "Game timestamp when aim was lowered"
+      }
+    },
+    "required": ["actorEntity", "itemEntity", "timestamp"],
+    "additionalProperties": false
+  }
+}
