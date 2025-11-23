@@ -108,7 +108,11 @@ export class ClothingInstantiationService extends BaseService {
     this.#logger = this._init('ClothingInstantiationService', logger, {
       entityManager: {
         value: entityManager,
-        requiredMethods: ['createEntityInstance', 'getEntityInstance'],
+        requiredMethods: [
+          'createEntityInstance',
+          'getEntityInstance',
+          'removeEntityInstance',
+        ],
       },
       dataRegistry: {
         value: dataRegistry,
@@ -348,7 +352,17 @@ export class ClothingInstantiationService extends BaseService {
 
           if (!validationResult.isValid) {
             // Remove the instantiated entity and skip this item
-            // TODO: Add entity cleanup here if needed
+            try {
+              await this.#entityManager.removeEntityInstance(clothingId);
+              this.#logger.debug(
+                `ClothingInstantiationService: Removed invalid clothing entity '${clothingId}'`
+              );
+            } catch (cleanupError) {
+              this.#logger.warn(
+                `ClothingInstantiationService: Failed to cleanup invalid entity '${clothingId}': ${cleanupError.message}`
+              );
+            }
+
             this.#logger.debug(
               `ClothingInstantiationService: Validation failed for '${clothingConfig.entityId}' with errors: ${JSON.stringify(validationResult.errors)}`
             );
