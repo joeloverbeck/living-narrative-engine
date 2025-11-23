@@ -294,4 +294,202 @@ describe('PerformanceMonitor service', () => {
     expect(timestamp).toBe(12345);
     expect(dateSpy).toHaveBeenCalled();
   });
+
+  describe('Aggregated Statistics', () => {
+    it('returns null when no measurements exist', () => {
+      const monitor = new PerformanceMonitor({
+        logger,
+        eventBus,
+        performanceRef,
+      });
+
+      const stats = monitor.getAggregatedStats();
+      expect(stats).toBeNull();
+    });
+
+    it('computes aggregated statistics correctly', () => {
+      performanceRef.now
+        .mockReturnValueOnce(0)
+        .mockReturnValueOnce(100)
+        .mockReturnValueOnce(150)
+        .mockReturnValueOnce(200)
+        .mockReturnValueOnce(250)
+        .mockReturnValueOnce(400)
+        .mockReturnValueOnce(450);
+
+      const monitor = new PerformanceMonitor({
+        logger,
+        eventBus,
+        performanceRef,
+        threshold: 1000,
+      });
+
+      monitor.mark('task1-start');
+      monitor.mark('task1-end');
+      monitor.measure('task1', 'task1-start', 'task1-end');
+
+      monitor.mark('task2-start');
+      monitor.mark('task2-end');
+      monitor.measure('task2', 'task2-start', 'task2-end');
+
+      monitor.mark('task3-start');
+      monitor.mark('task3-end');
+      monitor.measure('task3', 'task3-start', 'task3-end');
+
+      const stats = monitor.getAggregatedStats();
+
+      expect(stats).toMatchObject({
+        count: 3,
+        total: 100 + 50 + 150, // 300ms total
+        average: 100, // (100 + 50 + 150) / 3
+        min: 50,
+        max: 150,
+      });
+
+      expect(stats.measurements).toHaveLength(3);
+      expect(stats.measurements[0].name).toBe('task1');
+      expect(stats.measurements[0].duration).toBe(100);
+      expect(stats.measurements[1].name).toBe('task2');
+      expect(stats.measurements[1].duration).toBe(50);
+      expect(stats.measurements[2].name).toBe('task3');
+      expect(stats.measurements[2].duration).toBe(150);
+    });
+
+    it('emits aggregated summary to listeners', () => {
+      performanceRef.now
+        .mockReturnValueOnce(0)
+        .mockReturnValueOnce(50)
+        .mockReturnValueOnce(100)
+        .mockReturnValueOnce(200)
+        .mockReturnValueOnce(250);
+
+      const monitor = new PerformanceMonitor({
+        logger,
+        eventBus,
+        performanceRef,
+        threshold: 1000,
+      });
+
+      const listener1 = jest.fn();
+      const listener2 = jest.fn();
+
+      monitor.registerStatsListener(listener1);
+      monitor.registerStatsListener(listener2);
+
+      monitor.mark('task1-start');
+      monitor.mark('task1-end');
+      monitor.measure('task1', 'task1-start', 'task1-end');
+
+      monitor.mark('task2-start');
+      monitor.mark('task2-end');
+      monitor.measure('task2', 'task2-start', 'task2-end');
+
+      const stats = monitor.emitAggregatedSummary();
+
+      expect(stats).toMatchObject({
+        count: 2,
+        total: 150, // 50 + 100
+        average: 75,
+        min: 50,
+        max: 100,
+      });
+
+      expect(listener1).toHaveBeenCalledWith('aggregated_summary', stats);
+      expect(listener2).toHaveBeenCalledWith('aggregated_summary', stats);
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Emitted aggregated performance summary',
+        expect.objectContaining({
+          count: 2,
+          average: '75.00ms',
+          min: '50.00ms',
+          max: '100.00ms',
+        })
+      );
+    });
+
+    it('returns null and does not call listeners when no measurements exist', () => {
+      const monitor = new PerformanceMonitor({
+        logger,
+        eventBus,
+        performanceRef,
+      });
+
+      const listener = jest.fn();
+      monitor.registerStatsListener(listener);
+
+      const stats = monitor.emitAggregatedSummary();
+
+      expect(stats).toBeNull();
+      expect(listener).not.toHaveBeenCalled();
+    });
+
+    it('returns stats but does not call listeners when no listeners registered', () => {
+      performanceRef.now
+        .mockReturnValueOnce(0)
+        .mockReturnValueOnce(100)
+        .mockReturnValueOnce(150);
+
+      const monitor = new PerformanceMonitor({
+        logger,
+        eventBus,
+        performanceRef,
+        threshold: 1000,
+      });
+
+      monitor.mark('task-start');
+      monitor.mark('task-end');
+      monitor.measure('task', 'task-start', 'task-end');
+
+      const stats = monitor.emitAggregatedSummary();
+
+      expect(stats).toMatchObject({
+        count: 1,
+        total: 100,
+        average: 100,
+        min: 100,
+        max: 100,
+      });
+
+      expect(logger.debug).not.toHaveBeenCalledWith(
+        'Emitted aggregated performance summary',
+        expect.any(Object)
+      );
+    });
+
+    it('guards against listener errors when emitting summary', () => {
+      performanceRef.now
+        .mockReturnValueOnce(0)
+        .mockReturnValueOnce(50)
+        .mockReturnValueOnce(100);
+
+      const monitor = new PerformanceMonitor({
+        logger,
+        eventBus,
+        performanceRef,
+        threshold: 1000,
+      });
+
+      const safeListener = jest.fn();
+      const failingListener = jest.fn(() => {
+        throw new Error('aggregated summary listener broke');
+      });
+
+      monitor.registerStatsListener(safeListener);
+      monitor.registerStatsListener(failingListener);
+
+      monitor.mark('task-start');
+      monitor.mark('task-end');
+      monitor.measure('task', 'task-start', 'task-end');
+
+      const stats = monitor.emitAggregatedSummary();
+
+      expect(stats).toBeDefined();
+      expect(safeListener).toHaveBeenCalledWith('aggregated_summary', stats);
+      expect(logger.warn).toHaveBeenCalledWith(
+        'PerformanceMonitor: aggregated summary listener threw error',
+        expect.any(Error)
+      );
+    });
+  });
 });
