@@ -1,0 +1,129 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "anatomy:tortoise_person",
+  "blueprintId": "anatomy:tortoise_person",
+  "bodyDescriptors": {
+    "height": "short",
+    "build": "stocky",
+    "composition": "average",
+    "hairDensity": "hairless",
+    "skinColor": "olive-green",
+    "smell": "earthy"
+  },
+  "slots": {
+    "shell_upper": {
+      "partType": "shell_carapace",
+      "preferId": "anatomy:tortoise_carapace",
+      "properties": {
+        "descriptors:texture": {
+          "texture": "scaled"
+        },
+        "descriptors:pattern": {
+          "pattern": "hexagonal-scutes"
+        },
+        "descriptors:color_extended": {
+          "color": "bronze"
+        }
+      }
+    },
+    "shell_lower": {
+      "partType": "shell_plastron",
+      "preferId": "anatomy:tortoise_plastron",
+      "properties": {
+        "descriptors:texture": {
+          "texture": "smooth"
+        },
+        "descriptors:color_extended": {
+          "color": "cream"
+        }
+      }
+    },
+    "head": {
+      "partType": "tortoise_head",
+      "preferId": "anatomy:tortoise_head",
+      "properties": {
+        "descriptors:texture": {
+          "texture": "scaled"
+        }
+      }
+    },
+    "tail": {
+      "partType": "tortoise_tail",
+      "preferId": "anatomy:tortoise_tail"
+    }
+  },
+  "patterns": [
+    {
+      "matchesGroup": "limbSet:arm",
+      "partType": "tortoise_arm",
+      "preferId": "anatomy:tortoise_arm",
+      "properties": {
+        "descriptors:texture": {
+          "texture": "scaled"
+        }
+      }
+    },
+    {
+      "matchesGroup": "limbSet:leg",
+      "partType": "tortoise_leg",
+      "preferId": "anatomy:tortoise_leg",
+      "properties": {
+        "descriptors:texture": {
+          "texture": "scaled"
+        },
+        "descriptors:build": {
+          "build": "stocky"
+        }
+      }
+    },
+    {
+      "matches": ["left_hand", "right_hand"],
+      "partType": "tortoise_hand",
+      "preferId": "anatomy:tortoise_hand",
+      "properties": {
+        "descriptors:digit_count": {
+          "count": "3"
+        },
+        "descriptors:projection": {
+          "projection": "clawed"
+        }
+      }
+    },
+    {
+      "matches": ["left_foot", "right_foot"],
+      "partType": "tortoise_foot",
+      "preferId": "anatomy:tortoise_foot",
+      "properties": {
+        "descriptors:digit_count": {
+          "count": "3"
+        },
+        "descriptors:projection": {
+          "projection": "clawed"
+        }
+      }
+    },
+    {
+      "matches": ["left_eye", "right_eye"],
+      "partType": "tortoise_eye",
+      "preferId": "anatomy:tortoise_eye",
+      "properties": {
+        "descriptors:color_extended": {
+          "color": "amber"
+        }
+      }
+    }
+  ],
+  "constraints": {
+    "requires": [
+      {
+        "partTypes": ["shell_carapace", "shell_plastron"]
+      },
+      {
+        "partTypes": ["tortoise_beak"]
+      },
+      {
+        "partTypes": ["tortoise_eye"]
+      }
+    ]
+  }
+}

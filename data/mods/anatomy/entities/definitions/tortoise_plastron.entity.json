@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:tortoise_plastron",
+  "description": "Flat lower shell (plastron) protecting underside",
+  "components": {
+    "anatomy:part": {
+      "subType": "shell_plastron"
+    },
+    "core:name": {
+      "text": "plastron"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "descriptors:color_extended": {
+      "color": "cream"
+    },
+    "descriptors:shape_general": {
+      "shape": "flat"
+    }
+  }
+}

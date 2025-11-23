@@ -57,6 +57,17 @@
     "eldritch_compound_eye_stalk",
     "eldritch_lamprey_mouth",
     "eldritch_sensory_stalk",
+    "tortoise_torso",
+    "shell_carapace",
+    "shell_plastron",
+    "tortoise_head",
+    "tortoise_beak",
+    "tortoise_eye",
+    "tortoise_arm",
+    "tortoise_hand",
+    "tortoise_leg",
+    "tortoise_foot",
+    "tortoise_tail",
     "equipment_mount",
     "equipment",
     "activity"
@@ -84,7 +95,12 @@
     "eldritch_membrane_wing",
     "eldritch_compound_eye_stalk",
     "eldritch_lamprey_mouth",
-    "eldritch_sensory_stalk"
+    "eldritch_sensory_stalk",
+    "tortoise_eye",
+    "tortoise_arm",
+    "tortoise_hand",
+    "tortoise_leg",
+    "tortoise_foot"
   ],
   "irregularPlurals": {
     "foot": "feet",

@@ -8,7 +8,7 @@
       "projection": {
         "type": "string",
         "description": "The projection type or characteristic",
-        "enum": ["flat", "bubbly", "shelf"],
+        "enum": ["flat", "bubbly", "shelf", "clawed"],
         "default": "flat"
       }
     },

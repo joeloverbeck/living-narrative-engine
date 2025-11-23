@@ -1,0 +1,33 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:tortoise_torso_with_shell",
+  "description": "Tortoise torso with integrated shell mounting points",
+  "components": {
+    "anatomy:part": {
+      "subType": "tortoise_torso"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "carapace_mount",
+          "allowedTypes": ["shell_carapace"],
+          "nameTpl": "upper shell mount"
+        },
+        {
+          "id": "plastron_mount",
+          "allowedTypes": ["shell_plastron"],
+          "nameTpl": "lower shell mount"
+        }
+      ]
+    },
+    "core:name": {
+      "text": "tortoise torso"
+    },
+    "descriptors:texture": {
+      "texture": "leathery"
+    },
+    "descriptors:color_extended": {
+      "color": "dark-olive"
+    }
+  }
+}

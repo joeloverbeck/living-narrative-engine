@@ -18,6 +18,62 @@
         "partType": "shell_plastron",
         "components": ["anatomy:part"]
       }
+    },
+    "left_hand": {
+      "parent": "arm_left",
+      "socket": "hand",
+      "requirements": {
+        "partType": "tortoise_hand",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_hand": {
+      "parent": "arm_right",
+      "socket": "hand",
+      "requirements": {
+        "partType": "tortoise_hand",
+        "components": ["anatomy:part"]
+      }
+    },
+    "left_foot": {
+      "parent": "leg_left",
+      "socket": "foot",
+      "requirements": {
+        "partType": "tortoise_foot",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_foot": {
+      "parent": "leg_right",
+      "socket": "foot",
+      "requirements": {
+        "partType": "tortoise_foot",
+        "components": ["anatomy:part"]
+      }
+    },
+    "left_eye": {
+      "parent": "head",
+      "socket": "left_eye",
+      "requirements": {
+        "partType": "tortoise_eye",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_eye": {
+      "parent": "head",
+      "socket": "right_eye",
+      "requirements": {
+        "partType": "tortoise_eye",
+        "components": ["anatomy:part"]
+      }
+    },
+    "beak": {
+      "parent": "head",
+      "socket": "beak_mount",
+      "requirements": {
+        "partType": "tortoise_beak",
+        "components": ["anatomy:part"]
+      }
     }
   },
   "clothingSlotMappings": {

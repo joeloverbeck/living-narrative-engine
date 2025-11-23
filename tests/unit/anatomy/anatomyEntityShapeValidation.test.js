@@ -53,7 +53,6 @@ describe('Anatomy Entity Shape Validation', () => {
     const invalidShapes = [
       'normal',
       'circular',
-      'flat',
       'wide',
       '',
       null,

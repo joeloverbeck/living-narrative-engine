@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:tortoise_arm",
+  "description": "Scaled reptilian arm with hand socket",
+  "components": {
+    "anatomy:part": {
+      "subType": "tortoise_arm"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "hand",
+          "allowedTypes": ["tortoise_hand"],
+          "nameTpl": "hand"
+        }
+      ]
+    },
+    "core:name": {
+      "text": "arm"
+    },
+    "descriptors:texture": {
+      "texture": "scaled"
+    },
+    "descriptors:color_extended": {
+      "color": "dark-olive"
+    }
+  }
+}

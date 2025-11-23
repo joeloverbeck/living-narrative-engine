@@ -1899,6 +1899,289 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
+      // Tortoise person entities
+      'anatomy:tortoise_torso_with_shell': {
+        id: 'anatomy:tortoise_torso_with_shell',
+        description: 'Tortoise torso with integrated shell mounting points',
+        components: {
+          'anatomy:part': {
+            subType: 'tortoise_torso',
+          },
+          'anatomy:sockets': {
+            sockets: [
+              {
+                id: 'carapace_mount',
+                allowedTypes: ['shell_carapace'],
+                nameTpl: 'upper shell mount',
+              },
+              {
+                id: 'plastron_mount',
+                allowedTypes: ['shell_plastron'],
+                nameTpl: 'lower shell mount',
+              },
+            ],
+          },
+          'core:name': {
+            text: 'tortoise torso',
+          },
+          'descriptors:texture': {
+            texture: 'leathery',
+          },
+          'descriptors:color_extended': {
+            color: 'dark-olive',
+          },
+        },
+      },
+      'anatomy:tortoise_carapace': {
+        id: 'anatomy:tortoise_carapace',
+        description: 'Domed upper shell (carapace) with growth rings',
+        components: {
+          'anatomy:part': {
+            subType: 'shell_carapace',
+          },
+          'core:name': {
+            text: 'carapace',
+          },
+          'descriptors:texture': {
+            texture: 'scaled',
+          },
+          'descriptors:pattern': {
+            pattern: 'hexagonal-scutes',
+          },
+          'descriptors:color_extended': {
+            color: 'bronze',
+          },
+          'descriptors:shape_general': {
+            shape: 'domed',
+          },
+        },
+      },
+      'anatomy:tortoise_plastron': {
+        id: 'anatomy:tortoise_plastron',
+        description: 'Flat lower shell (plastron) protecting underside',
+        components: {
+          'anatomy:part': {
+            subType: 'shell_plastron',
+          },
+          'core:name': {
+            text: 'plastron',
+          },
+          'descriptors:texture': {
+            texture: 'smooth',
+          },
+          'descriptors:color_extended': {
+            color: 'cream',
+          },
+          'descriptors:shape_general': {
+            shape: 'flat',
+          },
+        },
+      },
+      'anatomy:tortoise_head': {
+        id: 'anatomy:tortoise_head',
+        description: 'Reptilian head with beak mount and eye sockets',
+        components: {
+          'anatomy:part': {
+            subType: 'tortoise_head',
+          },
+          'anatomy:sockets': {
+            sockets: [
+              {
+                id: 'left_eye',
+                allowedTypes: ['tortoise_eye'],
+                nameTpl: 'left eye',
+              },
+              {
+                id: 'right_eye',
+                allowedTypes: ['tortoise_eye'],
+                nameTpl: 'right eye',
+              },
+              {
+                id: 'beak_mount',
+                allowedTypes: ['tortoise_beak'],
+                nameTpl: 'beak',
+              },
+            ],
+          },
+          'core:name': {
+            text: 'tortoise head',
+          },
+          'descriptors:texture': {
+            texture: 'scaled',
+          },
+          'descriptors:shape_general': {
+            shape: 'domed',
+          },
+          'descriptors:color_extended': {
+            color: 'sickly-gray-green',
+          },
+        },
+      },
+      'anatomy:tortoise_beak': {
+        id: 'anatomy:tortoise_beak',
+        description: 'Hard, hooked beak for eating vegetation',
+        components: {
+          'anatomy:part': {
+            subType: 'tortoise_beak',
+          },
+          'core:name': {
+            text: 'beak',
+          },
+          'descriptors:texture': {
+            texture: 'ridged',
+          },
+          'descriptors:shape_general': {
+            shape: 'hooked',
+          },
+        },
+      },
+      'anatomy:tortoise_eye': {
+        id: 'anatomy:tortoise_eye',
+        description: 'Reptilian eye with protective nictitating membrane',
+        components: {
+          'anatomy:part': {
+            subType: 'tortoise_eye',
+          },
+          'core:name': {
+            text: 'eye',
+          },
+          'descriptors:color_extended': {
+            color: 'amber',
+          },
+          'descriptors:shape_eye': {
+            shape: 'round',
+          },
+        },
+      },
+      'anatomy:tortoise_arm': {
+        id: 'anatomy:tortoise_arm',
+        description: 'Scaled reptilian arm with hand socket',
+        components: {
+          'anatomy:part': {
+            subType: 'tortoise_arm',
+          },
+          'anatomy:sockets': {
+            sockets: [
+              {
+                id: 'hand',
+                allowedTypes: ['tortoise_hand'],
+                nameTpl: 'hand',
+              },
+            ],
+          },
+          'core:name': {
+            text: 'arm',
+          },
+          'descriptors:texture': {
+            texture: 'scaled',
+          },
+          'descriptors:color_extended': {
+            color: 'olive-green',
+          },
+        },
+      },
+      'anatomy:tortoise_hand': {
+        id: 'anatomy:tortoise_hand',
+        description: 'Thick-skinned hand with three prominent claws',
+        components: {
+          'anatomy:part': {
+            subType: 'tortoise_hand',
+          },
+          'core:name': {
+            text: 'hand',
+          },
+          'descriptors:texture': {
+            texture: 'leathery',
+          },
+          'descriptors:digit_count': {
+            count: '3',
+          },
+          'descriptors:projection': {
+            projection: 'clawed',
+          },
+          'descriptors:color_extended': {
+            color: 'sickly-gray-green',
+          },
+        },
+      },
+      'anatomy:tortoise_leg': {
+        id: 'anatomy:tortoise_leg',
+        description: 'Sturdy reptilian leg with foot socket',
+        components: {
+          'anatomy:part': {
+            subType: 'tortoise_leg',
+          },
+          'anatomy:sockets': {
+            sockets: [
+              {
+                id: 'foot',
+                allowedTypes: ['tortoise_foot'],
+                nameTpl: 'foot',
+              },
+            ],
+          },
+          'core:name': {
+            text: 'leg',
+          },
+          'descriptors:texture': {
+            texture: 'scaled',
+          },
+          'descriptors:build': {
+            build: 'stocky',
+          },
+          'descriptors:color_extended': {
+            color: 'dark-olive',
+          },
+        },
+      },
+      'anatomy:tortoise_foot': {
+        id: 'anatomy:tortoise_foot',
+        description: 'Broad foot with three clawed toes',
+        components: {
+          'anatomy:part': {
+            subType: 'tortoise_foot',
+          },
+          'core:name': {
+            text: 'foot',
+          },
+          'descriptors:texture': {
+            texture: 'leathery',
+          },
+          'descriptors:digit_count': {
+            count: '3',
+          },
+          'descriptors:projection': {
+            projection: 'clawed',
+          },
+          'descriptors:color_extended': {
+            color: 'sickly-gray-green',
+          },
+        },
+      },
+      'anatomy:tortoise_tail': {
+        id: 'anatomy:tortoise_tail',
+        description: 'Short, thick reptilian tail',
+        components: {
+          'anatomy:part': {
+            subType: 'tortoise_tail',
+          },
+          'core:name': {
+            text: 'tail',
+          },
+          'descriptors:texture': {
+            texture: 'scaled',
+          },
+          'descriptors:length_category': {
+            length: 'short',
+          },
+          'descriptors:shape_general': {
+            shape: 'conical',
+          },
+          'descriptors:color_extended': {
+            color: 'olive-green',
+          },
+        },
+      },
     });
 
     // Load slot libraries
@@ -2146,6 +2429,59 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
                 idTemplate: 'posterior_torso',
                 allowedTypes: ['spider_abdomen'],
                 nameTpl: 'torso',
+              },
+            },
+          ],
+        },
+      },
+      'anatomy:structure_tortoise_biped': {
+        id: 'anatomy:structure_tortoise_biped',
+        description: 'Bipedal tortoise body plan with shell, clawed limbs, and beak',
+        topology: {
+          rootType: 'torso_with_shell',
+          limbSets: [
+            {
+              type: 'arm',
+              count: 2,
+              arrangement: 'bilateral',
+              socketPattern: {
+                idTemplate: 'arm_{{orientation}}',
+                orientationScheme: 'bilateral',
+                allowedTypes: ['tortoise_arm'],
+                nameTpl: '{{orientation}} arm',
+              },
+            },
+            {
+              type: 'leg',
+              count: 2,
+              arrangement: 'bilateral',
+              socketPattern: {
+                idTemplate: 'leg_{{orientation}}',
+                orientationScheme: 'bilateral',
+                allowedTypes: ['tortoise_leg'],
+                nameTpl: '{{orientation}} leg',
+              },
+            },
+          ],
+          appendages: [
+            {
+              type: 'head',
+              count: 1,
+              attachment: 'anterior',
+              socketPattern: {
+                idTemplate: 'head',
+                allowedTypes: ['tortoise_head'],
+                nameTpl: 'head',
+              },
+            },
+            {
+              type: 'tail',
+              count: 1,
+              attachment: 'posterior',
+              socketPattern: {
+                idTemplate: 'tail',
+                allowedTypes: ['tortoise_tail'],
+                nameTpl: 'tail',
               },
             },
           ],
@@ -2496,6 +2832,85 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
             socket: 'spinnerets',
             requirements: {
               partType: 'spinneret',
+              components: ['anatomy:part'],
+            },
+          },
+        },
+      },
+      // Tortoise person blueprint
+      'anatomy:tortoise_person': {
+        id: 'anatomy:tortoise_person',
+        schemaVersion: '2.0',
+        root: 'anatomy:tortoise_torso_with_shell',
+        structureTemplate: 'anatomy:structure_tortoise_biped',
+        additionalSlots: {
+          shell_upper: {
+            socket: 'carapace_mount',
+            requirements: {
+              partType: 'shell_carapace',
+              components: ['anatomy:part'],
+            },
+          },
+          shell_lower: {
+            socket: 'plastron_mount',
+            requirements: {
+              partType: 'shell_plastron',
+              components: ['anatomy:part'],
+            },
+          },
+          left_hand: {
+            parent: 'arm_left',
+            socket: 'hand',
+            requirements: {
+              partType: 'tortoise_hand',
+              components: ['anatomy:part'],
+            },
+          },
+          right_hand: {
+            parent: 'arm_right',
+            socket: 'hand',
+            requirements: {
+              partType: 'tortoise_hand',
+              components: ['anatomy:part'],
+            },
+          },
+          left_foot: {
+            parent: 'leg_left',
+            socket: 'foot',
+            requirements: {
+              partType: 'tortoise_foot',
+              components: ['anatomy:part'],
+            },
+          },
+          right_foot: {
+            parent: 'leg_right',
+            socket: 'foot',
+            requirements: {
+              partType: 'tortoise_foot',
+              components: ['anatomy:part'],
+            },
+          },
+          left_eye: {
+            parent: 'head',
+            socket: 'left_eye',
+            requirements: {
+              partType: 'tortoise_eye',
+              components: ['anatomy:part'],
+            },
+          },
+          right_eye: {
+            parent: 'head',
+            socket: 'right_eye',
+            requirements: {
+              partType: 'tortoise_eye',
+              components: ['anatomy:part'],
+            },
+          },
+          beak: {
+            parent: 'head',
+            socket: 'beak_mount',
+            requirements: {
+              partType: 'tortoise_beak',
               components: ['anatomy:part'],
             },
           },
@@ -2961,6 +3376,125 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
             {
               partTypes: ['spider_abdomen', 'spinneret'],
             },
+          ],
+        },
+      },
+      // Tortoise person recipe
+      'anatomy:tortoise_person': {
+        recipeId: 'anatomy:tortoise_person',
+        blueprintId: 'anatomy:tortoise_person',
+        bodyDescriptors: {
+          height: 'short',
+          build: 'stocky',
+          composition: 'average',
+          hairDensity: 'hairless',
+          skinColor: 'olive-green',
+          smell: 'earthy',
+        },
+        slots: {
+          shell_upper: {
+            partType: 'shell_carapace',
+            preferId: 'anatomy:tortoise_carapace',
+            properties: {
+              'descriptors:texture': { texture: 'scaled' },
+              'descriptors:pattern': { pattern: 'hexagonal-scutes' },
+              'descriptors:color_extended': { color: 'bronze' },
+            },
+          },
+          shell_lower: {
+            partType: 'shell_plastron',
+            preferId: 'anatomy:tortoise_plastron',
+            properties: {
+              'descriptors:texture': { texture: 'smooth' },
+              'descriptors:color_extended': { color: 'cream' },
+            },
+          },
+          head: {
+            partType: 'tortoise_head',
+            preferId: 'anatomy:tortoise_head',
+            properties: {
+              'descriptors:texture': { texture: 'scaled' },
+            },
+          },
+          tail: {
+            partType: 'tortoise_tail',
+            preferId: 'anatomy:tortoise_tail',
+          },
+        },
+        patterns: [
+          {
+            matchesGroup: 'limbSet:arm',
+            partType: 'tortoise_arm',
+            preferId: 'anatomy:tortoise_arm',
+            properties: {
+              'descriptors:texture': { texture: 'scaled' },
+            },
+          },
+          {
+            matchesGroup: 'limbSet:leg',
+            partType: 'tortoise_leg',
+            preferId: 'anatomy:tortoise_leg',
+            properties: {
+              'descriptors:texture': { texture: 'scaled' },
+              'descriptors:build': { build: 'stocky' },
+            },
+          },
+          {
+            matches: ['left_hand'],
+            partType: 'tortoise_hand',
+            preferId: 'anatomy:tortoise_hand',
+            properties: {
+              'descriptors:digit_count': { count: '3' },
+              'descriptors:projection': { projection: 'clawed' },
+            },
+          },
+          {
+            matches: ['right_hand'],
+            partType: 'tortoise_hand',
+            preferId: 'anatomy:tortoise_hand',
+            properties: {
+              'descriptors:digit_count': { count: '3' },
+              'descriptors:projection': { projection: 'clawed' },
+            },
+          },
+          {
+            matches: ['left_foot'],
+            partType: 'tortoise_foot',
+            preferId: 'anatomy:tortoise_foot',
+            properties: {
+              'descriptors:digit_count': { count: '3' },
+              'descriptors:projection': { projection: 'clawed' },
+            },
+          },
+          {
+            matches: ['right_foot'],
+            partType: 'tortoise_foot',
+            preferId: 'anatomy:tortoise_foot',
+            properties: {
+              'descriptors:digit_count': { count: '3' },
+              'descriptors:projection': { projection: 'clawed' },
+            },
+          },
+          {
+            matches: ['left_eye', 'right_eye'],
+            partType: 'tortoise_eye',
+            preferId: 'anatomy:tortoise_eye',
+            properties: {
+              'descriptors:color_extended': { color: 'amber' },
+            },
+          },
+          {
+            matches: ['beak'],
+            partType: 'tortoise_beak',
+            preferId: 'anatomy:tortoise_beak',
+            properties: {},
+          },
+        ],
+        constraints: {
+          requires: [
+            { partTypes: ['shell_carapace', 'shell_plastron'] },
+            { partTypes: ['tortoise_beak'] },
+            { partTypes: ['tortoise_eye'] },
           ],
         },
       },

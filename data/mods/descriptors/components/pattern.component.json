@@ -18,7 +18,8 @@
           "polka-dot",
           "serpentine",
           "solid",
-          "striped"
+          "striped",
+          "hexagonal-scutes"
         ],
         "default": "solid"
       }

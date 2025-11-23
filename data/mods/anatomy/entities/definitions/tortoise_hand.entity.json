@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:tortoise_hand",
+  "description": "Thick-skinned hand with three prominent claws",
+  "components": {
+    "anatomy:part": {
+      "subType": "tortoise_hand"
+    },
+    "core:name": {
+      "text": "hand"
+    },
+    "descriptors:texture": {
+      "texture": "leathery"
+    },
+    "descriptors:digit_count": {
+      "count": "3"
+    },
+    "descriptors:projection": {
+      "projection": "clawed"
+    },
+    "descriptors:color_extended": {
+      "color": "sickly-gray-green"
+    }
+  }
+}
