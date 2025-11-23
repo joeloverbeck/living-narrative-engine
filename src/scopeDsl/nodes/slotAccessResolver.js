@@ -33,6 +33,7 @@ const COVERAGE_FEATURES = {
 export default function createSlotAccessResolver({
   entitiesGateway,
   errorHandler = null,
+  coverageFeatures = COVERAGE_FEATURES,
 }) {
   validateDependency(entitiesGateway, 'entitiesGateway');
 
@@ -42,6 +43,8 @@ export default function createSlotAccessResolver({
       requiredMethods: ['handleError', 'getErrorBuffer'],
     });
   }
+
+  const featureFlags = { ...COVERAGE_FEATURES, ...coverageFeatures };
 
   const CLOTHING_SLOTS = [
     'torso_upper',
@@ -57,10 +60,10 @@ export default function createSlotAccessResolver({
   /**
    * Check if coverage resolution is enabled
    *
-   * @returns {boolean} True if coverage resolution is enabled
-   */
+  * @returns {boolean} True if coverage resolution is enabled
+  */
   function isCoverageResolutionEnabled() {
-    return COVERAGE_FEATURES.enableCoverageResolution;
+    return featureFlags.enableCoverageResolution;
   }
 
   /**
@@ -145,7 +148,7 @@ export default function createSlotAccessResolver({
     const coverageCandidates = [];
 
     // Check all equipped slots for items with coverage mapping
-    for (const [slotName, slotData] of Object.entries(equipped || {})) {
+    for (const [slotName, slotData] of Object.entries(equipped)) {
       if (!slotData || slotName === targetSlot) {
         continue; // Skip empty slots and the target slot itself
       }
@@ -294,7 +297,7 @@ export default function createSlotAccessResolver({
         if (activeSpan) {
           activeSpan.addEvent('no_slot_data', {
             slotName,
-            availableSlots: Object.keys(equipped || {}),
+            availableSlots: Object.keys(equipped),
             mode,
             reason: 'no_candidates_found',
           });
@@ -387,22 +390,24 @@ export default function createSlotAccessResolver({
 
     // Structured trace: Log final selection
     if (finalSelectionSpan) {
+      let tieBreakingUsed = false;
+      if (sortedCandidates.length > 1) {
+        tieBreakingUsed =
+          sortedCandidates[0].priority === sortedCandidates[1]?.priority;
+      }
+
       finalSelectionSpan.addEvent('selection_made', {
-        selectedItem: selectedCandidate?.itemId || 'none',
+        selectedItem: selectedCandidate.itemId,
         reason: 'highest_priority',
         totalCandidates: sortedCandidates.length,
-        tieBreakingUsed:
-          sortedCandidates.length > 1 &&
-          sortedCandidates[0].priority === sortedCandidates[1]?.priority,
+        tieBreakingUsed,
       });
 
       finalSelectionSpan.addAttributes({
-        selectedItem: selectedCandidate?.itemId || 'none',
+        selectedItem: selectedCandidate.itemId,
         selectionReason: 'highest_priority',
         finalCandidates: sortedCandidates.length,
-        tieBreakingUsed:
-          sortedCandidates.length > 1 &&
-          sortedCandidates[0].priority === sortedCandidates[1]?.priority,
+        tieBreakingUsed,
       });
 
       structuredTrace.endSpan(finalSelectionSpan);
@@ -451,12 +456,12 @@ export default function createSlotAccessResolver({
             const slotItem = resolveSlotAccess(subItem, field, ctx);
             if (slotItem) {
               // Enhancement: Apply additional coverage validation here
-              const enhancedResult = applyEnhancedCoverage(
-                slotItem,
-                field,
-                ctx
-              );
-              resultSet.add(enhancedResult || slotItem);
+            const enhancedResult = applyEnhancedCoverage(
+              slotItem,
+              field,
+              ctx
+            );
+            resultSet.add(enhancedResult);
             }
           }
         }
@@ -470,14 +475,12 @@ export default function createSlotAccessResolver({
         if (slotItem) {
           // Enhancement: Apply additional coverage validation here
           const enhancedResult = applyEnhancedCoverage(slotItem, field, ctx);
-          resultSet.add(enhancedResult || slotItem);
+          resultSet.add(enhancedResult);
         }
       } else if (typeof item === 'string') {
         // Regular entity - try to access component field (backward compatibility)
         const componentData = entitiesGateway.getComponentData(item, field);
-        if (componentData !== null && componentData !== undefined) {
-          addToResultSet(resultSet, componentData);
-        }
+        addToResultSet(resultSet, componentData);
       }
     }
 
