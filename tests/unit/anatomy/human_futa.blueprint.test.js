@@ -77,13 +77,13 @@ describe('Human Futa Blueprint', () => {
   });
 
   describe('Clothing Slot Mappings', () => {
-    it('should define torso_upper with breast coverage (female-style)', () => {
+    it('should define torso_upper with chest coverage (female-style layering)', () => {
       const torsoUpper = blueprint.clothingSlotMappings.torso_upper;
       expect(torsoUpper).toBeDefined();
-      expect(torsoUpper.anatomySockets).toContain('left_breast');
-      expect(torsoUpper.anatomySockets).toContain('right_breast');
       expect(torsoUpper.anatomySockets).toContain('left_chest');
       expect(torsoUpper.anatomySockets).toContain('right_chest');
+      expect(torsoUpper.anatomySockets).toContain('left_shoulder');
+      expect(torsoUpper.anatomySockets).toContain('right_shoulder');
       expect(torsoUpper.allowedLayers).toContain('underwear');
       expect(torsoUpper.allowedLayers).toContain('base');
       expect(torsoUpper.allowedLayers).toContain('outer');

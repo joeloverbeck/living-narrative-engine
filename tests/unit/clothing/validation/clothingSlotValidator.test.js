@@ -167,7 +167,8 @@ describe('ClothingSlotValidator', () => {
 
         expect(result).toEqual({
           valid: false,
-          reason: `Clothing slot '${slotId}' has no valid attachment points`,
+          reason:
+            "Clothing slot 'upper_body' has no valid attachment points for entity 'entity123' with item 'item456'. This usually means: 1) Socket index not populated yet, 2) Blueprint slot mapping incorrect, or 3) Anatomy part missing the required socket.",
         });
       });
 
@@ -184,7 +185,8 @@ describe('ClothingSlotValidator', () => {
 
         expect(result).toEqual({
           valid: false,
-          reason: `Clothing slot '${slotId}' has no valid attachment points`,
+          reason:
+            "Clothing slot 'upper_body' has no valid attachment points for entity 'entity123' with item 'item456'. This usually means: 1) Socket index not populated yet, 2) Blueprint slot mapping incorrect, or 3) Anatomy part missing the required socket.",
         });
       });
 
