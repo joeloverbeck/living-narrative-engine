@@ -231,10 +231,15 @@ describe('BodyGraphService multi-root cache integration', () => {
     const allPartsSecond = service.getAllParts(actorBody, 'actor-1');
     expect(allPartsSecond).toEqual(allPartsFirst);
     expect(
-      collectDebugMessages(logger, (msg) =>
-        typeof msg === 'string' &&
-        msg.includes("Found cached result for root 'actor-1'")
-      ).length
+      logger
+        .messages('info')
+        .filter(
+          (msg) =>
+            typeof msg === 'string' &&
+            msg.includes(
+              "BodyGraphService.getAllParts: CACHE HIT for cache root 'actor-1'"
+            )
+        ).length
     ).toBeGreaterThanOrEqual(1);
 
     const blueprintParts = service.getAllParts(blueprintBody);

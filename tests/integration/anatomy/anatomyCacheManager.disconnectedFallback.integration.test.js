@@ -121,7 +121,7 @@ describe('AnatomyCacheManager integration fallback coverage', () => {
       'core:name': { text: 'Disconnected Actor' },
       'anatomy:body': {
         recipeId: 'humanoid_disconnected',
-        body: { root: 'blueprint-root' },
+        body: { root: 'torso-root' },
         // intentionally omit structure.rootPartId to force fallback logic
       },
     });
@@ -209,10 +209,10 @@ describe('AnatomyCacheManager integration fallback coverage', () => {
       )
     ).toBe(true);
     expect(
-      logger.debugEntries.some(([message]) =>
+      logger.infoEntries.some(([message]) =>
         typeof message === 'string' &&
         message.includes(
-          "Successfully connected actor 'actor-1' to anatomy root 'torso-root'"
+          "Successfully connected actor 'actor-1' to its own anatomy root 'torso-root'"
         )
       )
     ).toBe(true);

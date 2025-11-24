@@ -78,9 +78,9 @@ describe('Tortoise Leg Entity Validation', () => {
   });
 
   describe('Component structure', () => {
-    it('should have exactly 6 components', () => {
+    it('should have exactly 7 components', () => {
       const componentKeys = Object.keys(legEntity.components);
-      expect(componentKeys.length).toBe(6);
+      expect(componentKeys.length).toBe(7);
     });
 
     it('should have all required components', () => {
@@ -90,6 +90,7 @@ describe('Tortoise Leg Entity Validation', () => {
       expect(legEntity.components['descriptors:texture']).toBeDefined();
       expect(legEntity.components['descriptors:build']).toBeDefined();
       expect(legEntity.components['descriptors:color_extended']).toBeDefined();
+      expect(legEntity.components['core:movement']).toBeDefined();
     });
   });
 

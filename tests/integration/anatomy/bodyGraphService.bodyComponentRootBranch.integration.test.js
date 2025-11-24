@@ -191,9 +191,9 @@ describe('BodyGraphService integration – bodyComponent.root branch coverage', 
     const actorParts = service.getAllParts(blueprintStructure, actorId);
     expect(new Set(actorParts)).toEqual(new Set(actorPartIds));
     expect(
-      logger.debug.mock.calls.some(([message]) =>
+      logger.info.mock.calls.some(([message]) =>
         message.startsWith(
-          `BodyGraphService: Using actor entity '${actorId}' as cache root instead of blueprint root '${blueprintStructure.root}'`
+          `BodyGraphService.getAllParts: Actor '${actorId}' -> Using actor as cache root (blueprint root was '${blueprintStructure.root}'`
         )
       )
     ).toBe(true);
