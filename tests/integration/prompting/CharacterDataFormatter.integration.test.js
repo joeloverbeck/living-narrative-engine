@@ -123,11 +123,13 @@ describe('CharacterDataFormatter Integration Tests', () => {
       expect(result).toContain('## Your Fears');
       expect(result).toContain('Being trapped in small spaces');
 
-      // Speech patterns
-      expect(result).toContain('## Your Speech Patterns');
+      // Speech patterns (XML format)
+      expect(result).toContain('<speech_patterns>');
+      expect(result).toContain('<!-- Use these patterns naturally in conversation');
       expect(result).toContain('- Often uses diplomatic language');
       expect(result).toContain('- Speaks with measured pauses');
       expect(result).toContain('- Uses classical references in conversation');
+      expect(result).toContain('</speech_patterns>');
     });
 
     it('should handle text-based character descriptions through AIPromptContentProvider', () => {
@@ -154,10 +156,11 @@ describe('CharacterDataFormatter Integration Tests', () => {
       expect(result).toContain('**Wearing**: casual jeans and t-shirt');
       expect(result).toContain('## Your Personality');
       expect(result).toContain('Easygoing and friendly');
-      expect(result).toContain('## Your Speech Patterns');
+      expect(result).toContain('<speech_patterns>');
       expect(result).toContain('- Uses casual slang');
       expect(result).toContain('- Frequently says "no worries"');
       expect(result).toContain('- Often makes pop culture references');
+      expect(result).toContain('</speech_patterns>');
     });
 
     it('should handle minimal character data with fallbacks through AIPromptContentProvider', () => {
@@ -177,7 +180,7 @@ describe('CharacterDataFormatter Integration Tests', () => {
       // Should not contain empty optional sections
       expect(result).not.toContain('## Your Personality');
       expect(result).not.toContain('## Your Likes');
-      expect(result).not.toContain('## Your Speech Patterns');
+      expect(result).not.toContain('<speech_patterns>');
     });
 
     it('should handle error scenarios gracefully through AIPromptContentProvider', () => {
@@ -385,8 +388,8 @@ describe('CharacterDataFormatter Integration Tests', () => {
       expect(result).toContain('## Your Fears');
       expect(result).toContain('The return of the Dark Lords');
 
-      // All speech patterns
-      expect(result).toContain('## Your Speech Patterns');
+      // All speech patterns (XML format)
+      expect(result).toContain('<speech_patterns>');
       expect(result).toContain('- Speaks in archaic, formal language');
       expect(result).toContain(
         '- Often references ancient history and prophecies'
@@ -395,6 +398,7 @@ describe('CharacterDataFormatter Integration Tests', () => {
       expect(result).toContain(
         '- Pauses thoughtfully before important statements'
       );
+      expect(result).toContain('</speech_patterns>');
     });
 
     it('should format character with complete psychological profile', () => {
@@ -467,9 +471,10 @@ describe('CharacterDataFormatter Integration Tests', () => {
       expect(result).toContain('Suffers from nightmares about the soldiers');
       expect(result).toContain('## Your Fears');
       expect(result).toContain('Making a decision that leads to unnecessary deaths');
-      expect(result).toContain('## Your Speech Patterns');
+      expect(result).toContain('<speech_patterns>');
       expect(result).toContain('- Uses precise military terminology');
       expect(result).toContain('- Speaks with measured authority');
+      expect(result).toContain('</speech_patterns>');
 
       // Verify psychological sections are in correct order (after profile, before likes)
       const profileIndex = result.indexOf('## Your Profile');
@@ -551,8 +556,8 @@ describe('CharacterDataFormatter Integration Tests', () => {
       expect(result).toContain('## Your Fears');
       expect(result).toContain('The return of the Dark Lords');
 
-      // All speech patterns
-      expect(result).toContain('## Your Speech Patterns');
+      // All speech patterns (XML format)
+      expect(result).toContain('<speech_patterns>');
       expect(result).toContain('- Speaks in archaic, formal language');
       expect(result).toContain(
         '- Often references ancient history and prophecies'
@@ -561,6 +566,7 @@ describe('CharacterDataFormatter Integration Tests', () => {
       expect(result).toContain(
         '- Pauses thoughtfully before important statements'
       );
+      expect(result).toContain('</speech_patterns>');
     });
 
     it('should handle mixed data types in character descriptions', () => {
@@ -596,10 +602,11 @@ describe('CharacterDataFormatter Integration Tests', () => {
       expect(result).toContain('## Your Fears');
       expect(result).toContain('Losing his ship and crew');
 
-      expect(result).toContain('## Your Speech Patterns');
+      expect(result).toContain('<speech_patterns>');
       expect(result).toContain('- Uses nautical terms frequently');
       expect(result).toContain('- Has a slight accent');
       expect(result).toContain('- Commands with authority');
+      expect(result).toContain('</speech_patterns>');
 
       // Should not contain empty/null sections
       expect(result).not.toContain('## Your Profile');
@@ -622,7 +629,7 @@ describe('CharacterDataFormatter Integration Tests', () => {
         characterWithComplexSpeech
       );
 
-      expect(result).toContain('## Your Speech Patterns');
+      expect(result).toContain('<speech_patterns>');
       expect(result).toContain('- Uses precise scientific terminology');
       expect(result).toContain(
         '- Often explains complex concepts in simple terms'
@@ -630,6 +637,7 @@ describe('CharacterDataFormatter Integration Tests', () => {
       expect(result).toContain(
         '- Has a habit of adjusting her glasses when thinking'
       );
+      expect(result).toContain('</speech_patterns>');
     });
   });
 
@@ -697,8 +705,8 @@ describe('CharacterDataFormatter Integration Tests', () => {
       expect(result).not.toContain('## Your Dislikes');
       expect(result).not.toContain('## Your Secrets');
       expect(result).not.toContain('## Your Fears');
-      // Speech patterns with empty array still shows header (current behavior)
-      expect(result).toContain('## Your Speech Patterns');
+      // Speech patterns with empty array should not show XML tags (returns empty string)
+      expect(result).not.toContain('<speech_patterns>');
     });
 
     it('should handle malformed description parsing gracefully', () => {
@@ -730,10 +738,11 @@ describe('CharacterDataFormatter Integration Tests', () => {
         characterWithStringSpeech.speechPatterns
       );
 
-      expect(result).toContain('## Your Speech Patterns');
+      expect(result).toContain('<speech_patterns>');
       expect(result).toContain('- Uses simple language');
       expect(result).toContain('- Speaks slowly');
       expect(result).toContain('- Often repeats important points');
+      expect(result).toContain('</speech_patterns>');
     });
 
     it('should log appropriate debug messages during formatting', () => {
@@ -764,9 +773,7 @@ describe('CharacterDataFormatter Integration Tests', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Formatted Likes section')
       );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Formatted speech patterns section')
-      );
+      // Note: formatSpeechPatterns no longer logs debug messages
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           'Successfully formatted complete character persona'
@@ -865,7 +872,7 @@ describe('CharacterDataFormatter Integration Tests', () => {
         'Historical mysteries, field work'
       );
       expect(promptData.characterPersonaContent).toContain(
-        '## Your Speech Patterns'
+        '<speech_patterns>'
       );
       expect(promptData.characterPersonaContent).toContain(
         '- Uses academic terminology'
@@ -875,6 +882,9 @@ describe('CharacterDataFormatter Integration Tests', () => {
       );
       expect(promptData.characterPersonaContent).toContain(
         '- Often references historical parallels'
+      );
+      expect(promptData.characterPersonaContent).toContain(
+        '</speech_patterns>'
       );
     });
   });

@@ -51,6 +51,29 @@ export class CharacterDataFormatter {
   }
 
   /**
+   * Detects speech pattern format type
+   *
+   * @private
+   * @param {Array} patterns - Array of patterns
+   * @returns {'string'|'object'|'mixed'} Detected format
+   */
+  #detectPatternFormat(patterns) {
+    if (!patterns || patterns.length === 0) {
+      return 'string'; // Default to legacy for empty arrays
+    }
+
+    const hasStrings = patterns.some(p => typeof p === 'string');
+    const hasObjects = patterns.some(p => typeof p === 'object' && p !== null);
+
+    if (hasStrings && hasObjects) {
+      this.#logger.warn('Mixed speech pattern formats detected. Consider consolidating to structured format.');
+      return 'mixed';
+    }
+
+    return hasObjects ? 'object' : 'string';
+  }
+
+  /**
    * Extract speech patterns from text format (legacy support)
    *
    * @param {string} speechText - Text containing speech patterns
@@ -207,37 +230,161 @@ export class CharacterDataFormatter {
   }
 
   /**
-   * Format speech patterns as markdown list
+   * Get usage guidance text for speech patterns
    *
-   * @param {Array|string} speechPatterns - Speech pattern data
-   * @returns {string} Markdown formatted speech patterns section
+   * @private
+   * @returns {string} Usage guidance in XML comment format
    */
-  formatSpeechPatterns(speechPatterns) {
-    if (!speechPatterns) {
-      this.#logger.debug('CharacterDataFormatter: No speech patterns provided');
+  #getUsageGuidance() {
+    return `<!-- Use these patterns naturally in conversation. Don't force every pattern into every response. -->`;
+  }
+
+  /**
+   * Format structured (object) speech patterns
+   *
+   * @private
+   * @param {Array} patterns - Array of pattern objects
+   * @returns {string} XML formatted structured patterns
+   */
+  #formatStructuredPatterns(patterns) {
+    const objectPatterns = patterns.filter(p => typeof p === 'object' && p !== null);
+
+    if (objectPatterns.length === 0) {
       return '';
     }
 
-    let result = '## Your Speech Patterns\n';
+    let result = '<speech_patterns>\n';
+    result += this.#getUsageGuidance() + '\n\n';
 
-    if (Array.isArray(speechPatterns)) {
-      speechPatterns.forEach((pattern) => {
-        if (pattern && typeof pattern === 'string') {
-          result += `- ${pattern.trim()}\n`;
-        }
-      });
-    } else if (typeof speechPatterns === 'string') {
-      // Handle existing format where patterns might be in text
-      const patterns = this.#extractSpeechPatterns(speechPatterns);
-      patterns.forEach((pattern) => {
-        result += `- ${pattern}\n`;
+    objectPatterns.forEach((pattern, index) => {
+      result += `${index + 1}. **${pattern.type}**\n`;
+
+      if (pattern.contexts && Array.isArray(pattern.contexts) && pattern.contexts.length > 0) {
+        result += `   Contexts: ${pattern.contexts.join(', ')}\n`;
+      }
+
+      if (pattern.examples && Array.isArray(pattern.examples)) {
+        result += `   Examples:\n`;
+        pattern.examples.forEach(example => {
+          result += `   - "${example}"\n`;
+        });
+      }
+
+      if (index < objectPatterns.length - 1) {
+        result += '\n';
+      }
+    });
+
+    result += '</speech_patterns>';
+    return result;
+  }
+
+  /**
+   * Format legacy (string) speech patterns
+   *
+   * @private
+   * @param {Array} patterns - Array of string patterns
+   * @returns {string} XML formatted legacy patterns
+   */
+  #formatLegacyPatterns(patterns) {
+    const stringPatterns = patterns.filter(p => typeof p === 'string' && p.trim().length > 0);
+
+    if (stringPatterns.length === 0) {
+      return '';
+    }
+
+    let result = '<speech_patterns>\n';
+    result += this.#getUsageGuidance() + '\n\n';
+
+    stringPatterns.forEach(pattern => {
+      result += `- ${pattern.trim()}\n`;
+    });
+
+    result += '</speech_patterns>';
+    return result;
+  }
+
+  /**
+   * Format mixed (object + string) speech patterns
+   *
+   * @private
+   * @param {Array} patterns - Array of mixed pattern types
+   * @returns {string} XML formatted mixed patterns
+   */
+  #formatMixedPatterns(patterns) {
+    const objectPatterns = patterns.filter(p => typeof p === 'object' && p !== null);
+    const stringPatterns = patterns.filter(p => typeof p === 'string' && p.trim().length > 0);
+
+    let result = '<speech_patterns>\n';
+    result += this.#getUsageGuidance() + '\n\n';
+
+    // Structured patterns first
+    objectPatterns.forEach((pattern, index) => {
+      result += `${index + 1}. **${pattern.type}**\n`;
+
+      if (pattern.contexts && Array.isArray(pattern.contexts) && pattern.contexts.length > 0) {
+        result += `   Contexts: ${pattern.contexts.join(', ')}\n`;
+      }
+
+      if (pattern.examples && Array.isArray(pattern.examples)) {
+        result += `   Examples:\n`;
+        pattern.examples.forEach(example => {
+          result += `   - "${example}"\n`;
+        });
+      }
+
+      result += '\n';
+    });
+
+    // Additional legacy patterns
+    if (stringPatterns.length > 0) {
+      result += 'Additional Patterns:\n';
+      stringPatterns.forEach(pattern => {
+        result += `- ${pattern.trim()}\n`;
       });
     }
 
-    this.#logger.debug(
-      'CharacterDataFormatter: Formatted speech patterns section'
-    );
+    result += '</speech_patterns>';
     return result;
+  }
+
+  /**
+   * Format speech patterns based on detected format type
+   *
+   * @param {Array|string|object} speechPatterns - Speech pattern data (array/string) or entity object
+   * @returns {string} XML formatted speech patterns section
+   */
+  formatSpeechPatterns(speechPatterns) {
+    // Handle both direct patterns array and entity object for backward compatibility
+    let patterns;
+    if (speechPatterns && typeof speechPatterns.getComponent === 'function') {
+      // Entity object provided (new behavior for future use)
+      patterns = speechPatterns.getComponent('core:speech_patterns')?.patterns;
+    } else if (Array.isArray(speechPatterns)) {
+      // Direct patterns array (existing behavior)
+      patterns = speechPatterns;
+    } else if (typeof speechPatterns === 'string') {
+      // Legacy text format (existing behavior)
+      patterns = this.#extractSpeechPatterns(speechPatterns);
+    } else {
+      patterns = null;
+    }
+
+    if (!patterns || patterns.length === 0) {
+      return '';
+    }
+
+    const format = this.#detectPatternFormat(patterns);
+
+    switch (format) {
+      case 'object':
+        return this.#formatStructuredPatterns(patterns);
+      case 'mixed':
+        return this.#formatMixedPatterns(patterns);
+      case 'string':
+      default:
+        return this.#formatLegacyPatterns(patterns);
+    }
   }
 
   /**
