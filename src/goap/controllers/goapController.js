@@ -30,6 +30,8 @@ import { GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT } from '../debug/goapDebuggerDiagnos
 import { createGoapEventDispatcher, validateEventBusContract } from '../debug/goapEventDispatcher.js';
 import { GOAP_PLANNER_FAILURES } from '../planner/goapPlannerFailureReasons.js';
 
+const FAILURE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+
 export const GOAP_CONTROLLER_DIAGNOSTICS_CONTRACT_VERSION =
   GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.version;
 
@@ -1229,6 +1231,22 @@ class GoapController {
     }
   }
 
+  #pruneFailureMap(map, expiryMs, now = Date.now()) {
+    for (const [key, failures] of map.entries()) {
+      const recentFailures = failures.filter(
+        (failure) => now - failure.timestamp < expiryMs
+      );
+
+      if (recentFailures.length === 0) {
+        map.delete(key);
+      } else if (recentFailures.length < failures.length) {
+        map.set(key, recentFailures);
+      }
+    }
+
+    return map;
+  }
+
   /**
    * Track failed goal to prevent infinite retry loops
    *
@@ -1240,33 +1258,29 @@ class GoapController {
    */
   #trackFailedGoal(goalId, reason, code = 'UNKNOWN_PLANNER_FAILURE') {
     const now = Date.now();
-    const FAILURE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
     const MAX_FAILURES = 3;
+
+    this.#pruneFailureMap(this.#failedGoals, FAILURE_EXPIRY_MS, now);
 
     // Get or create failure history for this goal
     if (!this.#failedGoals.has(goalId)) {
       this.#failedGoals.set(goalId, []);
     }
 
-    const failures = this.#failedGoals.get(goalId);
-
-    // Prune old failures (older than 5 minutes)
-    const recentFailures = failures.filter(
-      (failure) => now - failure.timestamp < FAILURE_EXPIRY_MS
-    );
+    const recentFailures = this.#failedGoals.get(goalId) ?? [];
 
     // Add new failure
-    recentFailures.push({ reason, code, timestamp: now });
+    const updatedFailures = [...recentFailures, { reason, code, timestamp: now }];
 
     // Update map with pruned + new failures
-    this.#failedGoals.set(goalId, recentFailures);
+    this.#failedGoals.set(goalId, updatedFailures);
 
     // Check if max failures reached
-    if (recentFailures.length >= MAX_FAILURES) {
+    if (updatedFailures.length >= MAX_FAILURES) {
       this.#logger.error('Goal failed too many times', {
         goalId,
-        failureCount: recentFailures.length,
-        recentFailures: recentFailures.map((f) => f.reason),
+        failureCount: updatedFailures.length,
+        recentFailures: updatedFailures.map((f) => f.reason),
       });
       return true;
     }
@@ -1275,7 +1289,7 @@ class GoapController {
       goalId,
       reason,
       code,
-      failureCount: recentFailures.length,
+      failureCount: updatedFailures.length,
     });
 
     return false;
@@ -1292,33 +1306,29 @@ class GoapController {
    */
   #trackFailedTask(taskId, reason, code = 'TASK_FAILURE') {
     const now = Date.now();
-    const FAILURE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
     const MAX_FAILURES = 3;
+
+    this.#pruneFailureMap(this.#failedTasks, FAILURE_EXPIRY_MS, now);
 
     // Get or create failure history for this task
     if (!this.#failedTasks.has(taskId)) {
       this.#failedTasks.set(taskId, []);
     }
 
-    const failures = this.#failedTasks.get(taskId);
-
-    // Prune old failures (older than 5 minutes)
-    const recentFailures = failures.filter(
-      (failure) => now - failure.timestamp < FAILURE_EXPIRY_MS
-    );
+    const recentFailures = this.#failedTasks.get(taskId) ?? [];
 
     // Add new failure
-    recentFailures.push({ reason, code, timestamp: now });
+    const updatedFailures = [...recentFailures, { reason, code, timestamp: now }];
 
     // Update map with pruned + new failures
-    this.#failedTasks.set(taskId, recentFailures);
+    this.#failedTasks.set(taskId, updatedFailures);
 
     // Check if max failures reached
-    if (recentFailures.length >= MAX_FAILURES) {
+    if (updatedFailures.length >= MAX_FAILURES) {
       this.#logger.error('Task failed too many times', {
         taskId,
-        failureCount: recentFailures.length,
-        recentFailures: recentFailures.map((f) => f.reason),
+        failureCount: updatedFailures.length,
+        recentFailures: updatedFailures.map((f) => f.reason),
       });
       return true;
     }
@@ -1327,7 +1337,7 @@ class GoapController {
       taskId,
       reason,
       code,
-      failureCount: recentFailures.length,
+      failureCount: updatedFailures.length,
     });
 
     return false;
@@ -1565,22 +1575,17 @@ class GoapController {
     assertNonBlankString(actorId, 'actorId', 'GoapController.getFailedGoals', this.#logger);
 
     const now = Date.now();
-    const FAILURE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes (from #trackFailedGoal)
+    this.#pruneFailureMap(this.#failedGoals, FAILURE_EXPIRY_MS, now);
     const results = [];
 
     for (const [goalId, failures] of this.#failedGoals.entries()) {
-      // Filter out expired failures (consistent with #trackFailedGoal pruning)
-      const recentFailures = failures.filter(
-        (failure) => now - failure.timestamp < FAILURE_EXPIRY_MS
-      );
-
       // Only include goals with non-expired failures
       // Note: Cannot filter by actorId since goals don't have actorId property
       // Goals are selected per-turn, not actor-specific in storage
-      if (recentFailures.length > 0) {
+      if (failures.length > 0) {
         results.push({
           goalId,
-          failures: recentFailures.map(f => ({
+          failures: failures.map(f => ({
             reason: f.reason,
             code: f.code || 'UNKNOWN_PLANNER_FAILURE',
             timestamp: f.timestamp,
@@ -1608,21 +1613,16 @@ class GoapController {
     assertNonBlankString(actorId, 'actorId', 'GoapController.getFailedTasks', this.#logger);
 
     const now = Date.now();
-    const FAILURE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes (from #trackFailedTask)
+    this.#pruneFailureMap(this.#failedTasks, FAILURE_EXPIRY_MS, now);
     const results = [];
 
     for (const [taskId, failures] of this.#failedTasks.entries()) {
-      // Filter out expired failures (consistent with #trackFailedTask pruning)
-      const recentFailures = failures.filter(
-        (failure) => now - failure.timestamp < FAILURE_EXPIRY_MS
-      );
-
       // Only include tasks with non-expired failures
       // Task failures are actor-agnostic, return all
-      if (recentFailures.length > 0) {
+      if (failures.length > 0) {
         results.push({
           taskId,
-          failures: recentFailures.map(f => ({
+          failures: failures.map(f => ({
             reason: f.reason,
             code: f.code || 'TASK_FAILURE',
             timestamp: f.timestamp,
@@ -1632,6 +1632,22 @@ class GoapController {
     }
 
     return results;
+  }
+
+  /**
+   * Snapshot failure tracking map sizes (debug API).
+   *
+   * @returns {{failedGoals: number, failedTasks: number}}
+   */
+  getFailureTrackingSnapshot() {
+    const now = Date.now();
+    this.#pruneFailureMap(this.#failedGoals, FAILURE_EXPIRY_MS, now);
+    this.#pruneFailureMap(this.#failedTasks, FAILURE_EXPIRY_MS, now);
+
+    return {
+      failedGoals: this.#failedGoals.size,
+      failedTasks: this.#failedTasks.size,
+    };
   }
 
   /**

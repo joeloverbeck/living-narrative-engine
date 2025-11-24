@@ -919,6 +919,7 @@ describe('GoapController - Core Structure', () => {
         // Failures should be expired
         const expiredFailures = controller.getFailedGoals('actor_1');
         expect(expiredFailures).toHaveLength(0);
+        expect(controller.getFailureTrackingSnapshot().failedGoals).toBe(0);
       });
 
       it('logs error when goal fails too many times (max 3)', async () => {
@@ -983,6 +984,7 @@ describe('GoapController - Core Structure', () => {
 
         const expiredFailures = controller.getFailedTasks('actor_1');
         expect(expiredFailures).toHaveLength(0);
+        expect(controller.getFailureTrackingSnapshot().failedTasks).toBe(0);
       });
 
       it('logs error when task fails too many times', async () => {
