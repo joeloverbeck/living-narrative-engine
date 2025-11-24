@@ -385,8 +385,8 @@ describe('BodyGraphService integration – end-to-end cache lifecycle', () => {
     expect(validation.valid).toBe(true);
     expect(validation.issues).toEqual([]);
 
-    const bodyLogs = logger.entries.debug.filter((message) =>
-      message.includes('BodyGraphService: AnatomyGraphAlgorithms.getAllParts returned')
+    const bodyLogs = logger.entries.info.filter((message) =>
+      message.includes('AnatomyGraphAlgorithms returned')
     );
     expect(bodyLogs.length).toBeGreaterThan(0);
   });

@@ -346,8 +346,8 @@ describe('BodyGraphService real module integration', () => {
     const cachedAgain = service.getAllParts({ body: { root: 'torso' } });
     expect(cachedAgain).toEqual(cached);
     expect(
-      logger.messages('debug').some((msg) =>
-        typeof msg === 'string' && msg.includes("Found cached result for root 'torso'")
+      logger.messages('info').some((msg) =>
+        typeof msg === 'string' && msg.includes("CACHE HIT for cache root 'torso'")
       )
     ).toBe(true);
 
