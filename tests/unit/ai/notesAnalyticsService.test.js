@@ -20,7 +20,7 @@ describe('NotesAnalyticsService', () => {
       const note = {
         text: 'Test note',
         subject: 'Test',
-        subjectType: 'character',
+        subjectType: 'entity',
         context: 'test',
       };
 
@@ -28,24 +28,24 @@ describe('NotesAnalyticsService', () => {
 
       const summary = analyticsService.getAnalyticsSummary();
       expect(summary.summary.totalNotes).toBe(1);
-      expect(summary.typeDistribution.character).toBe('100.00');
+      expect(summary.typeDistribution.entity).toBe('100.00');
     });
 
     it('should track type distribution', () => {
       const notes = [
-        { text: 'Note 1', subject: 's1', subjectType: 'character' },
-        { text: 'Note 2', subject: 's2', subjectType: 'character' },
+        { text: 'Note 1', subject: 's1', subjectType: 'entity' },
+        { text: 'Note 2', subject: 's2', subjectType: 'entity' },
         { text: 'Note 3', subject: 's3', subjectType: 'plan' },
-        { text: 'Note 4', subject: 's4', subjectType: 'timeline' },
+        { text: 'Note 4', subject: 's4', subjectType: 'event' },
       ];
 
       notes.forEach((note) => analyticsService.recordNoteCreation(note));
 
       const summary = analyticsService.getAnalyticsSummary();
       expect(summary.summary.totalNotes).toBe(4);
-      expect(summary.typeDistribution.character).toBe('50.00');
+      expect(summary.typeDistribution.entity).toBe('50.00');
       expect(summary.typeDistribution.plan).toBe('25.00');
-      expect(summary.typeDistribution.timeline).toBe('25.00');
+      expect(summary.typeDistribution.event).toBe('25.00');
     });
 
     it('should include metadata in session data', () => {
@@ -97,7 +97,7 @@ describe('NotesAnalyticsService', () => {
         analyticsService.recordNoteCreation({
           text: `Note ${i}`,
           subject: `s${i}`,
-          subjectType: 'character',
+          subjectType: 'entity',
         });
       }
 
@@ -123,8 +123,8 @@ describe('NotesAnalyticsService', () => {
         { note: { text: 'N2', subject: 'S2' }, incorrect: 'event', correct: 'plan' },
         {
           note: { text: 'N3', subject: 'S3' },
-          incorrect: 'character',
-          correct: 'location',
+          incorrect: 'entity',
+          correct: 'knowledge',
         },
       ];
 
@@ -138,7 +138,7 @@ describe('NotesAnalyticsService', () => {
         count: 2,
       });
       expect(summary.topMisclassifications).toContainEqual({
-        pattern: 'character→location',
+        pattern: 'entity→knowledge',
         count: 1,
       });
     });
@@ -147,18 +147,18 @@ describe('NotesAnalyticsService', () => {
   describe('Summary generation', () => {
     it('should identify most used types', () => {
       const notes = [
-        { text: 'N1', subject: 's1', subjectType: 'character' },
-        { text: 'N2', subject: 's2', subjectType: 'character' },
-        { text: 'N3', subject: 's3', subjectType: 'character' },
+        { text: 'N1', subject: 's1', subjectType: 'entity' },
+        { text: 'N2', subject: 's2', subjectType: 'entity' },
+        { text: 'N3', subject: 's3', subjectType: 'entity' },
         { text: 'N4', subject: 's4', subjectType: 'plan' },
         { text: 'N5', subject: 's5', subjectType: 'plan' },
-        { text: 'N6', subject: 's6', subjectType: 'timeline' },
+        { text: 'N6', subject: 's6', subjectType: 'event' },
       ];
 
       notes.forEach((note) => analyticsService.recordNoteCreation(note));
 
       const summary = analyticsService.getAnalyticsSummary();
-      expect(summary.mostUsedTypes[0].type).toBe('character');
+      expect(summary.mostUsedTypes[0].type).toBe('entity');
       expect(summary.mostUsedTypes[0].count).toBe(3);
       expect(summary.mostUsedTypes[1].type).toBe('plan');
       expect(summary.mostUsedTypes[1].count).toBe(2);
@@ -168,13 +168,13 @@ describe('NotesAnalyticsService', () => {
       analyticsService.recordNoteCreation({
         text: 'Test',
         subject: 's1',
-        subjectType: 'character',
+        subjectType: 'entity',
       });
 
       const summary = analyticsService.getAnalyticsSummary();
       expect(summary.underutilizedTypes).toContain('plan');
-      expect(summary.underutilizedTypes).toContain('timeline');
-      expect(summary.underutilizedTypes).not.toContain('character');
+      expect(summary.underutilizedTypes).toContain('event');
+      expect(summary.underutilizedTypes).not.toContain('entity');
     });
 
     it('should handle zero notes gracefully', () => {
@@ -196,7 +196,7 @@ describe('NotesAnalyticsService', () => {
 
       const summary = analyticsService.getAnalyticsSummary();
       expect(summary.typeDistribution.event).toBe('100.00');
-      expect(summary.typeDistribution.character).toBe('0.00');
+      expect(summary.typeDistribution.entity).toBe('0.00');
     });
   });
 
@@ -205,7 +205,7 @@ describe('NotesAnalyticsService', () => {
       analyticsService.recordNoteCreation({
         text: 'Test note',
         subject: 'Test',
-        subjectType: 'character',
+        subjectType: 'entity',
       });
 
       const report = analyticsService.generateReport();
@@ -220,26 +220,26 @@ describe('NotesAnalyticsService', () => {
       analyticsService.recordNoteCreation({
         text: 'N1',
         subject: 's1',
-        subjectType: 'character',
+        subjectType: 'entity',
       });
       analyticsService.recordNoteCreation({
         text: 'N2',
         subject: 's2',
-        subjectType: 'location',
+        subjectType: 'knowledge',
       });
 
       const report = analyticsService.generateReport();
 
       expect(report).toContain('## Most Used Types');
-      expect(report).toContain('character');
-      expect(report).toContain('location');
+      expect(report).toContain('entity');
+      expect(report).toContain('knowledge');
     });
 
     it('should include underutilized types section when present', () => {
       analyticsService.recordNoteCreation({
         text: 'Test',
         subject: 's1',
-        subjectType: 'character',
+        subjectType: 'entity',
       });
 
       const report = analyticsService.generateReport();
@@ -296,7 +296,7 @@ describe('NotesAnalyticsService', () => {
       analyticsService.recordNoteCreation({
         text: 'Test',
         subject: 's1',
-        subjectType: 'character',
+        subjectType: 'entity',
       });
 
       let summary = analyticsService.getAnalyticsSummary();
@@ -355,7 +355,7 @@ describe('NotesAnalyticsService', () => {
       service.recordNoteCreation({
         text: 'Test',
         subject: 's1',
-        subjectType: 'character',
+        subjectType: 'entity',
       });
 
       await service.saveAnalytics();
@@ -374,7 +374,7 @@ describe('NotesAnalyticsService', () => {
     it('should load from storage when configured', async () => {
       const mockMetrics = {
         totalNotes: 5,
-        typeDistribution: { character: 5 },
+        typeDistribution: { entity: 5 },
         categorizationErrors: [],
         misclassificationPatterns: {},
         sessionData: [],
@@ -463,7 +463,7 @@ describe('NotesAnalyticsService', () => {
       const note = {
         text: 'No context',
         subject: 'Test',
-        subjectType: 'character',
+        subjectType: 'entity',
       };
 
       analyticsService.recordNoteCreation(note);
@@ -476,7 +476,7 @@ describe('NotesAnalyticsService', () => {
       analyticsService.recordNoteCreation({
         text: 'Test',
         subject: 's1',
-        subjectType: 'character',
+        subjectType: 'entity',
       });
 
       const summary = analyticsService.getAnalyticsSummary();

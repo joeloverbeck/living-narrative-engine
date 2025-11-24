@@ -59,13 +59,13 @@
         {
           "text": "My intrusive thoughts, most of them about inappropriate sexual urges and violence, are getting worse. I fear I'm becoming a danger to others, not just myself.",
           "subject": "self",
-          "subjectType": "character",
+          "subjectType": "state",
           "context": "Personal reflection on mental state"
         },
         {
           "text": "My loneliness is only contributing to my sense of disconnection from the world. I wish I could be comfortable with someone else, to the point of intimacy.",
           "subject": "self",
-          "subjectType": "emotion",
+          "subjectType": "state",
           "context": "Personal reflection on emotional needs"
         }
       ]

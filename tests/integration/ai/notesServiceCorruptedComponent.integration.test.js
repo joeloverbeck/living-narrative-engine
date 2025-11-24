@@ -94,7 +94,7 @@ describe('NotesService integration edge cases', () => {
     const existingNote = {
       text: 'Existing Insight',
       subject: 'Lorekeeper',
-      subjectType: SUBJECT_TYPES.CHARACTER,
+      subjectType: SUBJECT_TYPES.ENTITY,
       timestamp: '2024-04-04T04:04:04.000Z',
     };
     const actor = createActor('actor-dedup', {
@@ -107,7 +107,7 @@ describe('NotesService integration edge cases', () => {
     persistNotes(
       {
         notes: [
-          { text: '   existing insight!!!   ', subject: 'Lorekeeper', subjectType: SUBJECT_TYPES.CHARACTER },
+          { text: '   existing insight!!!   ', subject: 'Lorekeeper', subjectType: SUBJECT_TYPES.ENTITY },
           { text: '  Fresh Perspective  ', subject: 'Archivist' },
           'not-an-object',
         ],
@@ -155,7 +155,7 @@ describe('NotesService integration edge cases', () => {
 
     expect(normalizeNoteText('unexpected string payload')).toBe('');
     expect(normalizeNoteText(storedComponent.notes[0])).toBe(
-      'character:lorekeeper:existing insight'
+      'entity:lorekeeper:existing insight'
     );
     expect(normalizeNoteText(addedNote)).toBe('other:archivist:fresh perspective');
   });

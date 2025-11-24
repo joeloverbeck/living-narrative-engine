@@ -91,17 +91,17 @@
                 {
                     "text": "My wife Anna was a weaver. We married when I was 24, and we had thirty good years together before winter fever took her six years ago. She had a laugh that made the shop feel warmer, and she never minded the smell of the tannery on me. I miss her, and I always will, but I mourned properly and moved forward. She wouldn't have wanted me stuck in grief. I'm grateful for what we had - not everyone gets that kind of partnership.",
                     "subject": "Anna (Deceased Wife)",
-                    "subjectType": "character"
+                    "subjectType": "entity"
                 },
                 {
                     "text": "I've been working leather for over thirty years. Saddles, belts, boots, bags - all of it honestly made, fairly priced, and built to last. The work gets into you - under your nails, into your skin, into your clothes. But I take pride in it. When someone buys one of my saddles, they're getting quality that'll outlast them if they treat it right. That's worth the staining.",
                     "subject": "Leatherworking",
-                    "subjectType": "skill"
+                    "subjectType": "knowledge"
                 },
                 {
                     "text": "I've lived in Mudbrook all my life. People know me - they know my work is good, they know I'm honest in my dealings, and yes, they know about my posting. Most folks don't seem bothered by it. I'm a respected community member despite being unconventional. That says something good about Mudbrook.",
                     "subject": "Mudbrook Community",
-                    "subjectType": "location"
+                    "subjectType": "entity"
                 }
             ]
         },

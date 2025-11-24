@@ -101,37 +101,37 @@
                 {
                     "text": "My custom hybrid lute-viol instrument. I carry it across my back in a battered case, or by its neck casually when comfortable, like an old friend. This is the most worn, maintained, and valued thing I own. Everything else can be replaced. It's the only thing I treat with genuine, uncomplicated care. This instrument has a story—it likely belonged to someone I lost, or I traded something painful for it. It represents the only relationship where I'm never performing.",
                     "subject": "my hybrid lute-viol",
-                    "subjectType": "item"
+                    "subjectType": "entity"
                 },
                 {
                     "text": "I'm genuinely competent in combat, trained out of necessity. Survival taught me that a bard who can't fight is a dead bard. When situations escalate, I handle myself with unsettling competence—and enjoy it slightly too much. The chaos, the adrenaline, the ultimate inspiration. Combat provides rules and predictability that intimacy doesn't, making mortal peril emotionally simpler than genuine connection.",
                     "subject": "Combat proficiency and training",
-                    "subjectType": "skill"
+                    "subjectType": "knowledge"
                 },
                 {
                     "text": "Musical polymath out of necessity—can't afford to be precious about genre when playing taverns one night and noble courts the next, mrow. I possess genuine musical theory mastery spanning cultures and genres, allowing me to deconstruct why a song works emotionally, even if I can't consistently replicate that authenticity in my own compositions.",
                     "subject": "Musical theory and genre mastery",
-                    "subjectType": "skill"
+                    "subjectType": "knowledge"
                 },
                 {
                     "text": "My whiskers droop when I'm sad—even when I'm smiling. They twitch when I'm lying. Flatten when threatened. My tail betrays everything if you're paying attention, even when I'm using it deliberately during performances. My slit pupils contract to almost nothing in bright light, makes me feel exposed and vulnerable during the day. Sometimes I notice these things happening and I'm not even sure what they mean about what I'm actually feeling.",
                     "subject": "Feline physical tells and emotional betrayal",
-                    "subjectType": "observation"
+                    "subjectType": "knowledge"
                 },
                 {
                     "text": "I possess extensive battlefield surgery knowledge from repeatedly patching myself up after seeking danger. Mmh... my hands shake during delicate medical work unless I've recently been in combat myself—the adrenaline steadies me, revealing the disturbing connection between violence and my capacity for precision care.",
                     "subject": "Battlefield medical knowledge",
-                    "subjectType": "skill"
+                    "subjectType": "knowledge"
                 },
                 {
                     "text": "I can identify the regional origin of most instruments by construction details, wood grain, and decorative choices. This is the only knowledge I pursue purely for interest rather than utility—a rare glimpse of genuine passion uncorrupted by my transactional approach to learning.",
                     "subject": "Instrument construction and identification",
-                    "subjectType": "skill"
+                    "subjectType": "knowledge"
                 },
                 {
                     "text": "I studied interrogation techniques not for adventuring utility but because extracting confession and extracting emotional narrative use identical psychological leverage. I'm frighteningly good at both, mrow. Vulnerability can be engineered through the same mechanisms whether for torture or for storytelling. This knowledge blurs the line between my roles as artist and predator. Sometimes I'm not sure which one I am. *smoothing whiskers* Probably both.",
                     "subject": "Psychological manipulation and interrogation techniques",
-                    "subjectType": "skill"
+                    "subjectType": "knowledge"
                 },
                 {
                     "text": "My most accomplished composition—the piece other musicians call my masterwork—I wrote it right after killing someone in combat. Immediately after. The creative clarity was crystalline, perfect. But I can't remember certain details of the fight itself. How long I kept swinging. When exactly they stopped moving. I remember the music with perfect precision but the violence is... blurry. Mmh... that should probably worry me more than it does. What does it mean that the art is clear and the murder is foggy?",
@@ -141,7 +141,7 @@
                 {
                     "text": "My slit pupils contract to near-invisible lines in bright daylight, causing genuine sensory pain and making me feel exposed and vulnerable. I prefer dusk, candlelight, and the ambiguous hours between day and night. This physical vulnerability to light has shaped my entire worldview—I'm drawn to moral and emotional ambiguity the same way, finding clarity in shadows and discomfort in things that are too brightly defined or exposed.",
                     "subject": "Light sensitivity and preference for twilight",
-                    "subjectType": "observation"
+                    "subjectType": "knowledge"
                 },
                 {
                     "text": "Arrived in Mudbrook-on-the-Bend this morning seeking inspiration, meow. Last \"epic\" encounter? Killed a young couple of bandits who were genuinely terrible at banditry. Like, embarrassingly bad. The composition I wrote after was... *smoothing whiskers* ...fine. Just fine. And \"fine\" doesn't cut it, mrow. I need something rawer, more authentic, more dangerous. Something that'll give me that crystalline clarity, that post-violence honesty I keep chasing. Some local pointed me toward a building they call The Mudbrook Aid Registry—apparently it's the hub for job requests. Converted grain warehouse. Charming. *tail swishing* So here's what I'm hunting: Danger. Obviously. The kind that strips away performance and leaves only survival instinct—that's when the real music happens. Stories to harvest, preferably from people in genuinely fucked situations. Raw material, mmh... the kind of authenticity I can't get from mirror-gazing. Validation through performance would be nice—need an audience who actually appreciates complexity, not just tavern drunks who clap for anything. And honestly? Something to fuck or kill. Preferably something that makes me feel... anything. Anything unambiguous. Third bottle's the charm, right? No, wait—third dangerous contract. Gods, listen to me. Whatever. Let's go find something worth dying for. The music will be worth it. It has to be.",

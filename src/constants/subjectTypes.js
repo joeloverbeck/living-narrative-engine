@@ -2,30 +2,21 @@
  * @file Subject type constants for notes categorization system
  * @see src/ai/notesService.js
  * @see data/mods/core/components/notes.component.json
+ * @version 2.0 - Simplified taxonomy (LLMROLPROARCANA-002)
  */
 
 /**
  * Enumeration of all valid subject types for note categorization.
- * These values provide explicit typing to eliminate pattern-based inference.
+ * Simplified from 19 to 6 types to reduce LLM decision complexity.
+ *
+ * @version 2.0 - Simplified taxonomy (2025-01-24)
  */
 export const SUBJECT_TYPES = {
-  CHARACTER: 'character',
-  LOCATION: 'location',
-  ITEM: 'item',
-  CREATURE: 'creature',
+  ENTITY: 'entity',
   EVENT: 'event',
-  CONCEPT: 'concept',
-  RELATIONSHIP: 'relationship',
-  ORGANIZATION: 'organization',
-  QUEST: 'quest',
-  SKILL: 'skill',
-  EMOTION: 'emotion',
   PLAN: 'plan',
-  TIMELINE: 'timeline',
-  THEORY: 'theory',
-  OBSERVATION: 'observation',
-  KNOWLEDGE_STATE: 'knowledge_state',
-  PSYCHOLOGICAL_STATE: 'psychological_state',
+  KNOWLEDGE: 'knowledge',
+  STATE: 'state',
   OTHER: 'other',
 };
 
@@ -34,24 +25,52 @@ export const SUBJECT_TYPES = {
  * Used for documentation, validation messages, and UI tooltips.
  */
 export const SUBJECT_TYPE_DESCRIPTIONS = {
-  [SUBJECT_TYPES.CHARACTER]: 'Named individuals, NPCs, players',
-  [SUBJECT_TYPES.LOCATION]: 'Physical places and areas',
-  [SUBJECT_TYPES.ITEM]: 'Objects, tools, artifacts',
-  [SUBJECT_TYPES.CREATURE]: 'Animals, monsters, entities',
-  [SUBJECT_TYPES.EVENT]: 'Incidents, meetings, occurrences',
-  [SUBJECT_TYPES.CONCEPT]: 'Ideas, theories, abstract notions',
-  [SUBJECT_TYPES.RELATIONSHIP]: 'Social connections, dynamics',
-  [SUBJECT_TYPES.ORGANIZATION]: 'Groups, factions, institutions',
-  [SUBJECT_TYPES.QUEST]: 'Tasks, missions, objectives',
-  [SUBJECT_TYPES.SKILL]: 'Abilities, talents, behaviors',
-  [SUBJECT_TYPES.EMOTION]: 'Feelings, mood states, reactions',
-  [SUBJECT_TYPES.PLAN]: 'Future intentions, strategies, decisions not yet executed',
-  [SUBJECT_TYPES.TIMELINE]: 'Temporal sequences, deadlines, schedules (e.g., "Must do X by date Y")',
-  [SUBJECT_TYPES.THEORY]: 'Hypotheses, models, explanations about how things work',
-  [SUBJECT_TYPES.OBSERVATION]: 'Behavioral patterns, tendencies, habits noticed in characters or situations',
-  [SUBJECT_TYPES.KNOWLEDGE_STATE]: 'What is known/unknown, areas of uncertainty, epistemic states',
-  [SUBJECT_TYPES.PSYCHOLOGICAL_STATE]: 'Complex mental states beyond simple emotions (existential crises, identity conflicts)',
-  [SUBJECT_TYPES.OTHER]: 'Uncategorized subjects',
+  [SUBJECT_TYPES.ENTITY]: 'People, places, things, creatures, organizations - describing who/what/where',
+  [SUBJECT_TYPES.EVENT]: 'Past occurrences - things that already happened',
+  [SUBJECT_TYPES.PLAN]: 'Future intentions - what you intend to do (not yet executed)',
+  [SUBJECT_TYPES.KNOWLEDGE]: 'Information, theories, observations, concepts - what you know, noticed, or theorize',
+  [SUBJECT_TYPES.STATE]: 'Mental, emotional, psychological conditions - feelings or complex mental states',
+  [SUBJECT_TYPES.OTHER]: 'Fallback for uncertain or abstract concepts',
+};
+
+/**
+ * Migration mapping from old 19-type taxonomy to new 6-type taxonomy.
+ * Used for backward compatibility with existing notes.
+ *
+ * @deprecated Use new taxonomy directly. This exists only for migration.
+ */
+export const LEGACY_TYPE_MIGRATION = {
+  // Entity types
+  character: 'entity',
+  location: 'entity',
+  item: 'entity',
+  creature: 'entity',
+  organization: 'entity',
+
+  // Event/temporal types
+  event: 'event',
+  timeline: 'event',
+
+  // Plan types
+  plan: 'plan',
+  quest: 'plan',
+
+  // Knowledge types
+  theory: 'knowledge',
+  observation: 'knowledge',
+  knowledge_state: 'knowledge',
+  concept: 'knowledge',
+  philosophy: 'knowledge',
+
+  // State types
+  emotion: 'state',
+  psychological_state: 'state',
+  relationship: 'state',
+  skill: 'state',
+  habit: 'state',
+
+  // Fallback
+  other: 'other',
 };
 
 /**

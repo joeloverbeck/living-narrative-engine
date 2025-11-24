@@ -88,7 +88,7 @@ describe('Backwards Compatibility Integration Tests', () => {
                 {
                   text: 'Legacy note with tags from old save',
                   subject: 'Old Character',
-                  subjectType: SUBJECT_TYPES.CHARACTER,
+                  subjectType: SUBJECT_TYPES.ENTITY,
                   context: 'legacy game session',
                   tags: ['legacy', 'important', 'character'], // These should be filtered
                   timestamp: '2023-12-01T10:00:00Z',
@@ -96,7 +96,7 @@ describe('Backwards Compatibility Integration Tests', () => {
                 {
                   text: 'Another legacy note with different tags',
                   subject: 'Old Location',
-                  subjectType: SUBJECT_TYPES.LOCATION,
+                  subjectType: SUBJECT_TYPES.ENTITY,
                   tags: ['exploration', 'discovery'], // These should be filtered
                   timestamp: '2023-12-01T11:00:00Z',
                 },
@@ -175,14 +175,14 @@ describe('Backwards Compatibility Integration Tests', () => {
                 {
                   text: 'Normal legacy note',
                   subject: 'Normal Subject',
-                  subjectType: SUBJECT_TYPES.CHARACTER,
+                  subjectType: SUBJECT_TYPES.ENTITY,
                   tags: ['normal', 'tag'],
                 },
                 // Corrupted tag structures that should be handled gracefully
                 {
                   text: 'Note with malformed tags',
                   subject: 'Corrupted Subject',
-                  subjectType: SUBJECT_TYPES.LOCATION,
+                  subjectType: SUBJECT_TYPES.ENTITY,
                   tags: null, // Null tags
                 },
                 {
@@ -194,7 +194,7 @@ describe('Backwards Compatibility Integration Tests', () => {
                 {
                   text: 'Note with nested tag objects',
                   subject: 'Nested Subject',
-                  subjectType: SUBJECT_TYPES.ITEM,
+                  subjectType: SUBJECT_TYPES.ENTITY,
                   tags: [{ nested: 'object' }, { another: 'object' }], // Invalid nested objects
                 },
               ],
@@ -250,7 +250,7 @@ describe('Backwards Compatibility Integration Tests', () => {
                 {
                   text: 'Legacy note from old save',
                   subject: 'Legacy Subject',
-                  subjectType: SUBJECT_TYPES.CHARACTER,
+                  subjectType: SUBJECT_TYPES.ENTITY,
                   context: 'old session',
                   tags: ['legacy', 'old'],
                   timestamp: '2023-01-01T10:00:00Z',
@@ -259,7 +259,7 @@ describe('Backwards Compatibility Integration Tests', () => {
                 {
                   text: 'Current note without tags',
                   subject: 'Current Subject',
-                  subjectType: SUBJECT_TYPES.LOCATION,
+                  subjectType: SUBJECT_TYPES.ENTITY,
                   context: 'current session',
                   timestamp: '2024-01-01T10:00:00Z',
                 },
@@ -318,8 +318,7 @@ describe('Backwards Compatibility Integration Tests', () => {
       expect(groupedContent).toContain('Fully structured current note');
 
       // Verify proper grouping despite mixed formats
-      expect(groupedContent).toContain('## Characters');
-      expect(groupedContent).toContain('## Locations');
+      expect(groupedContent).toContain('## Entities');
       expect(groupedContent).toContain('## Events');
       expect(groupedContent).toContain('## Other');
     });
@@ -337,7 +336,7 @@ describe('Backwards Compatibility Integration Tests', () => {
                 {
                   text: 'Old format note with tags',
                   subject: 'Unmigrated Subject',
-                  subjectType: SUBJECT_TYPES.CHARACTER,
+                  subjectType: SUBJECT_TYPES.ENTITY,
                   tags: ['unmigrated', 'old'],
                   timestamp: '2023-01-01T10:00:00Z',
                 },
@@ -345,7 +344,7 @@ describe('Backwards Compatibility Integration Tests', () => {
                 {
                   text: 'New format note without tags',
                   subject: 'Migrated Subject',
-                  subjectType: SUBJECT_TYPES.LOCATION,
+                  subjectType: SUBJECT_TYPES.ENTITY,
                   context: 'migrated context',
                   timestamp: '2024-01-01T10:00:00Z',
                 },
@@ -422,14 +421,14 @@ describe('Backwards Compatibility Integration Tests', () => {
                 {
                   text: 'First note',
                   subject: 'Subject A',
-                  subjectType: SUBJECT_TYPES.CHARACTER,
+                  subjectType: SUBJECT_TYPES.ENTITY,
                   tags: ['first'],
                   timestamp: '2023-01-01T09:00:00Z',
                 },
                 {
                   text: 'Second note',
                   subject: 'Subject B',
-                  subjectType: SUBJECT_TYPES.LOCATION,
+                  subjectType: SUBJECT_TYPES.ENTITY,
                   tags: ['second'],
                   timestamp: '2023-01-01T10:00:00Z',
                 },
@@ -485,7 +484,7 @@ describe('Backwards Compatibility Integration Tests', () => {
           {
             text: 'Legacy note for validation',
             subject: 'Validation Subject',
-            subjectType: SUBJECT_TYPES.CHARACTER,
+            subjectType: SUBJECT_TYPES.ENTITY,
             context: 'validation context',
             tags: ['should', 'be', 'removed'], // Will be filtered
             timestamp: '2023-01-01T10:00:00Z',
@@ -521,7 +520,7 @@ describe('Backwards Compatibility Integration Tests', () => {
           {
             text: 'Note with extra legacy fields',
             subject: 'Extra Subject',
-            subjectType: SUBJECT_TYPES.LOCATION,
+            subjectType: SUBJECT_TYPES.ENTITY,
             context: 'extra context',
             tags: ['extra'], // Will be filtered
             timestamp: '2023-01-01T10:00:00Z',
@@ -551,7 +550,7 @@ describe('Backwards Compatibility Integration Tests', () => {
       const processedNote = result.component.notes[0];
       expect(processedNote.text).toBe('Note with extra legacy fields');
       expect(processedNote.subject).toBe('Extra Subject');
-      expect(processedNote.subjectType).toBe(SUBJECT_TYPES.LOCATION);
+      expect(processedNote.subjectType).toBe(SUBJECT_TYPES.ENTITY);
       expect(processedNote.context).toBe('extra context');
       expect(processedNote.timestamp).toBe('2023-01-01T10:00:00Z');
 

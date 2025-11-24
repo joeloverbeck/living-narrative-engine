@@ -93,7 +93,7 @@ describe('NotesService integration coverage', () => {
           {
             text: 'Time Anchored',
             subject: 'Chronomancer',
-            subjectType: SUBJECT_TYPES.CONCEPT,
+            subjectType: SUBJECT_TYPES.KNOWLEDGE,
             context: 'Temporal anomaly investigation',
             timestamp: explicitTimestamp,
           },
@@ -129,7 +129,7 @@ describe('NotesService integration coverage', () => {
       expect(preservedNote).toEqual({
         text: 'Time Anchored',
         subject: 'Chronomancer',
-        subjectType: SUBJECT_TYPES.CONCEPT,
+        subjectType: SUBJECT_TYPES.KNOWLEDGE,
         context: 'Temporal anomaly investigation',
         timestamp: explicitTimestamp,
       });

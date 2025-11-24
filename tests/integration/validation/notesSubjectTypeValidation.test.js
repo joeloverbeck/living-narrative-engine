@@ -1,67 +1,36 @@
 /**
  * @file Integration test for notes component subjectType enum validation
- * Ensures "habit" and "philosophy" subjectTypes are present in the schema
+ * Validates simplified 6-type taxonomy (LLMROLPROARCANA-002)
+ * @version 2.0 - Updated for simplified taxonomy
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { promises as fs } from 'fs';
 import { resolve } from 'path';
+import { LEGACY_TYPE_MIGRATION } from '../../../src/constants/subjectTypes.js';
 
-describe('Notes Component - SubjectType Validation', () => {
+describe('Notes Component - SubjectType Validation (Simplified Taxonomy)', () => {
   let notesComponent;
-  let threadscarCharacter;
 
   beforeEach(async () => {
     // Load the notes component schema
     const notesPath = resolve('data/mods/core/components/notes.component.json');
     const notesContent = await fs.readFile(notesPath, 'utf8');
     notesComponent = JSON.parse(notesContent);
-
-    // Load Threadscar Melissa character
-    const characterPath = resolve('data/mods/fantasy/entities/definitions/threadscar_melissa.character.json');
-    const characterContent = await fs.readFile(characterPath, 'utf8');
-    threadscarCharacter = JSON.parse(characterContent);
   });
 
   afterEach(() => {
     notesComponent = null;
-    threadscarCharacter = null;
   });
 
-  it('should include "habit" in the subjectType enum', () => {
-    // Assert
-    const enumValues = notesComponent.dataSchema.properties.notes.items.properties.subjectType.enum;
-    expect(enumValues).toContain('habit');
-  });
-
-  it('should include "philosophy" in the subjectType enum', () => {
-    // Assert
-    const enumValues = notesComponent.dataSchema.properties.notes.items.properties.subjectType.enum;
-    expect(enumValues).toContain('philosophy');
-  });
-
-  it('should have all expected enum values including new ones', () => {
+  it('should include all 6 simplified subject types', () => {
     // Arrange
     const expectedEnumValues = [
-      'character',
-      'location',
-      'item',
-      'creature',
+      'entity',
       'event',
-      'concept',
-      'relationship',
-      'organization',
-      'quest',
-      'skill',
-      'emotion',
       'plan',
-      'timeline',
-      'theory',
-      'observation',
-      'knowledge_state',
-      'psychological_state',
-      'habit',        // New
-      'philosophy',   // New
+      'knowledge',
+      'state',
       'other',
     ];
 
@@ -69,49 +38,61 @@ describe('Notes Component - SubjectType Validation', () => {
     const enumValues = notesComponent.dataSchema.properties.notes.items.properties.subjectType.enum;
 
     // Assert: All expected values should be present
+    expect(enumValues).toHaveLength(6);
     expectedEnumValues.forEach((expectedValue) => {
       expect(enumValues).toContain(expectedValue);
     });
   });
 
-  it('should verify Threadscar Melissa character uses habit subjectType', () => {
-    // Assert: Character should have notes component
-    const notes = threadscarCharacter.components['core:notes'];
-    expect(notes).toBeDefined();
-    expect(notes.notes).toBeInstanceOf(Array);
-
-    // Assert: Should contain at least one habit note
-    const habitNote = notes.notes.find(note => note.subjectType === 'habit');
-    expect(habitNote).toBeDefined();
-    expect(habitNote.subjectType).toBe('habit');
-  });
-
-  it('should verify Threadscar Melissa character uses philosophy subjectType', () => {
-    // Assert: Character should have notes component
-    const notes = threadscarCharacter.components['core:notes'];
-    expect(notes).toBeDefined();
-    expect(notes.notes).toBeInstanceOf(Array);
-
-    // Assert: Should contain at least one philosophy note
-    const philosophyNote = notes.notes.find(note => note.subjectType === 'philosophy');
-    expect(philosophyNote).toBeDefined();
-    expect(philosophyNote.subjectType).toBe('philosophy');
-  });
-
-  it('should ensure enum ordering is maintained with new values before "other"', () => {
+  it('should not include legacy 19-type taxonomy values', () => {
     // Arrange
+    const legacyValues = [
+      'character', 'location', 'item', 'creature', 'organization',
+      'concept', 'relationship', 'quest', 'skill', 'emotion',
+      'timeline', 'theory', 'observation', 'knowledge_state',
+      'psychological_state', 'habit', 'philosophy',
+    ];
+
+    // Act
     const enumValues = notesComponent.dataSchema.properties.notes.items.properties.subjectType.enum;
 
-    // Act: Find indices
-    const habitIndex = enumValues.indexOf('habit');
-    const philosophyIndex = enumValues.indexOf('philosophy');
-    const otherIndex = enumValues.indexOf('other');
+    // Assert: No legacy values should be present
+    legacyValues.forEach((legacyValue) => {
+      expect(enumValues).not.toContain(legacyValue);
+    });
+  });
 
-    // Assert: New values should come before "other"
-    expect(habitIndex).toBeGreaterThan(-1);
-    expect(philosophyIndex).toBeGreaterThan(-1);
-    expect(otherIndex).toBeGreaterThan(-1);
-    expect(habitIndex).toBeLessThan(otherIndex);
-    expect(philosophyIndex).toBeLessThan(otherIndex);
+  it('should have "other" as the last enum value', () => {
+    // Act
+    const enumValues = notesComponent.dataSchema.properties.notes.items.properties.subjectType.enum;
+    const lastValue = enumValues[enumValues.length - 1];
+
+    // Assert
+    expect(lastValue).toBe('other');
+  });
+
+  it('should have migration mapping for all legacy types', () => {
+    // Arrange
+    const legacyTypes = [
+      'character', 'location', 'item', 'creature', 'organization',
+      'event', 'timeline', 'plan', 'quest',
+      'theory', 'observation', 'knowledge_state', 'concept', 'philosophy',
+      'emotion', 'psychological_state', 'relationship', 'skill', 'habit',
+      'other',
+    ];
+
+    // Assert: All legacy types should have migration mapping
+    legacyTypes.forEach((legacyType) => {
+      expect(LEGACY_TYPE_MIGRATION).toHaveProperty(legacyType);
+      expect(typeof LEGACY_TYPE_MIGRATION[legacyType]).toBe('string');
+    });
+  });
+
+  it('should map habit to state in legacy migration', () => {
+    expect(LEGACY_TYPE_MIGRATION.habit).toBe('state');
+  });
+
+  it('should map philosophy to knowledge in legacy migration', () => {
+    expect(LEGACY_TYPE_MIGRATION.philosophy).toBe('knowledge');
   });
 });

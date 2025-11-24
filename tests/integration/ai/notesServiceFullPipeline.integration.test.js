@@ -57,7 +57,7 @@ describe('NotesService integration through persistence workflows', () => {
 
     const action = {
       notes: [
-        { text: 'Anchor this memory', subject: 'Archivist', subjectType: SUBJECT_TYPES.CHARACTER },
+        { text: 'Anchor this memory', subject: 'Archivist', subjectType: SUBJECT_TYPES.ENTITY },
       ],
     };
 
@@ -85,7 +85,7 @@ describe('NotesService integration through persistence workflows', () => {
             {
               text: 'Existing Insight',
               subject: 'Lorekeeper',
-              subjectType: SUBJECT_TYPES.CHARACTER,
+              subjectType: SUBJECT_TYPES.ENTITY,
               timestamp: existingTimestamp,
             },
             // Corrupted entry from an older build that should be ignored during normalization
@@ -120,13 +120,13 @@ describe('NotesService integration through persistence workflows', () => {
             {
               text: 'Existing Insight',
               subject: 'Lorekeeper',
-              subjectType: SUBJECT_TYPES.CHARACTER,
+              subjectType: SUBJECT_TYPES.ENTITY,
             },
             // Duplicate after normalization (case, punctuation, whitespace differences)
             {
               text: '  existing insight!!  ',
               subject: 'Lorekeeper',
-              subjectType: SUBJECT_TYPES.CHARACTER,
+              subjectType: SUBJECT_TYPES.ENTITY,
             },
             // Valid entry that requires default subject type and timestamp
             {
@@ -137,7 +137,7 @@ describe('NotesService integration through persistence workflows', () => {
             {
               text: 'Time Anchored',
               subject: 'Chronomancer',
-              subjectType: SUBJECT_TYPES.CONCEPT,
+              subjectType: SUBJECT_TYPES.KNOWLEDGE,
               timestamp: '2025-01-02T09:00:00.000Z',
               context: 'Temporal anomaly investigation',
             },
@@ -162,7 +162,7 @@ describe('NotesService integration through persistence workflows', () => {
     expect(existingNote).toMatchObject({
       text: 'Existing Insight',
       subject: 'Lorekeeper',
-      subjectType: SUBJECT_TYPES.CHARACTER,
+      subjectType: SUBJECT_TYPES.ENTITY,
       timestamp: existingTimestamp,
     });
 
@@ -178,7 +178,7 @@ describe('NotesService integration through persistence workflows', () => {
     expect(preservedNote).toMatchObject({
       text: 'Time Anchored',
       subject: 'Chronomancer',
-      subjectType: SUBJECT_TYPES.CONCEPT,
+      subjectType: SUBJECT_TYPES.KNOWLEDGE,
       timestamp: '2025-01-02T09:00:00.000Z',
       context: 'Temporal anomaly investigation',
     });
@@ -193,11 +193,11 @@ describe('NotesService integration through persistence workflows', () => {
 
     const normalizationKey = normalizeNoteText({
       subject: 'Lorekeeper',
-      subjectType: SUBJECT_TYPES.CHARACTER,
+      subjectType: SUBJECT_TYPES.ENTITY,
       text: 'Existing Insight',
     });
     expect(normalizationKey).toBe(
-      normalizeNoteText({ subject: 'Lorekeeper', subjectType: SUBJECT_TYPES.CHARACTER, text: 'existing insight!!' })
+      normalizeNoteText({ subject: 'Lorekeeper', subjectType: SUBJECT_TYPES.ENTITY, text: 'existing insight!!' })
     );
     expect(normalizeNoteText(null)).toBe('');
     expect(normalizeNoteText({})).toBe('');
