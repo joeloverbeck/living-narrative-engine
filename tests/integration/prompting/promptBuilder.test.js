@@ -114,7 +114,7 @@ describe('PromptBuilder (template-based)', () => {
     );
     // user_input section has been removed from AI character templates
     expect(prompt).toContain(
-      '<final_instructions>\nTest final instructions\n</final_instructions>'
+      '<system_constraints>\nTest final instructions\n</system_constraints>'
     );
 
     // Check complex sections are formatted correctly
@@ -219,7 +219,7 @@ describe('PromptBuilder (template-based)', () => {
       '<available_actions_info>\n\n</available_actions_info>'
     );
     // user_input section has been removed from AI character templates
-    expect(prompt).toContain('<final_instructions>\n\n</final_instructions>');
+    expect(prompt).toContain('<system_constraints>\n\n</system_constraints>');
   });
 
   /* ──────────────────────────────────────────────────────────────────────── */

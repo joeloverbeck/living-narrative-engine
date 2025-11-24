@@ -977,6 +977,7 @@ export class PromptGenerationTestBed {
 
     // Common XML-style tags
     const tagPatterns = [
+      'system_constraints',
       'task_definition',
       'character_persona',
       'portrayal_guidelines',
@@ -989,7 +990,7 @@ export class PromptGenerationTestBed {
       'indexed_choices',
       'available_actions_info',
       'user_input',
-      'final_instructions',
+      'final_instructions', // Backward compatibility
     ];
 
     for (const tag of tagPatterns) {
