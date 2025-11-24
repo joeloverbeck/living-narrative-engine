@@ -21,6 +21,8 @@
  * 6. Execution Context - Available actions
  */
 export const CHARACTER_PROMPT_TEMPLATE = `<system_constraints>
+{actionTagRulesContent}
+
 {finalInstructionsContent}
 </system_constraints>
 

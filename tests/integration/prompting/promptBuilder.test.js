@@ -22,6 +22,7 @@ const BASIC_LLM_CONFIG = {
 };
 
 const SAMPLE_PROMPT_DATA = {
+  actionTagRulesContent: 'Test action tag rules',
   taskDefinitionContent: 'Test task definition',
   characterPersonaContent: 'Test character persona',
   portrayalGuidelinesContent: 'Test portrayal guidelines',
@@ -113,9 +114,11 @@ describe('PromptBuilder (template-based)', () => {
       '<available_actions_info>\nTest available actions\n</available_actions_info>'
     );
     // user_input section has been removed from AI character templates
-    expect(prompt).toContain(
-      '<system_constraints>\nTest final instructions\n</system_constraints>'
-    );
+    // System constraints now includes action tag rules before final instructions
+    expect(prompt).toContain('<system_constraints>');
+    expect(prompt).toContain('Test action tag rules');
+    expect(prompt).toContain('Test final instructions');
+    expect(prompt).toContain('</system_constraints>');
 
     // Check complex sections are formatted correctly
     expect(prompt).toContain(
@@ -219,7 +222,9 @@ describe('PromptBuilder (template-based)', () => {
       '<available_actions_info>\n\n</available_actions_info>'
     );
     // user_input section has been removed from AI character templates
-    expect(prompt).toContain('<system_constraints>\n\n</system_constraints>');
+    // System constraints now has action tag rules (empty) and final instructions (empty)
+    expect(prompt).toContain('<system_constraints>');
+    expect(prompt).toContain('</system_constraints>');
   });
 
   /* ──────────────────────────────────────────────────────────────────────── */

@@ -16,6 +16,7 @@ const MINIMAL_LLM_CONFIG = {
 };
 
 const SAMPLE_PROMPT_DATA = {
+  actionTagRulesContent: '',
   taskDefinitionContent: 'Integrate the core prompt pipeline.',
   characterPersonaContent: 'An AI assistant focused on precision.',
   portrayalGuidelinesContent: 'Stay factual and structured.',
@@ -66,7 +67,10 @@ describe('PromptBuilder default dependency integration', () => {
     expect(prompt).toContain('<portrayal_guidelines>\nStay factual and structured.\n</portrayal_guidelines>');
     expect(prompt).toContain('<world_context>\nOperating within a simulated world.\n</world_context>');
     expect(prompt).toContain('<available_actions_info>\nRespond with detailed explanations.\n</available_actions_info>');
-    expect(prompt).toContain('<system_constraints>\nSummarise the reasoning before the answer.\n</system_constraints>');
+    // System constraints now includes action tag rules (empty) and final instructions
+    expect(prompt).toContain('<system_constraints>');
+    expect(prompt).toContain('Summarise the reasoning before the answer.');
+    expect(prompt).toContain('</system_constraints>');
 
     expect(prompt).toContain(
       '<perception_log>\nConsole displays system boot sequence.\nCooling fans ramp to operational speed.\n</perception_log>'
