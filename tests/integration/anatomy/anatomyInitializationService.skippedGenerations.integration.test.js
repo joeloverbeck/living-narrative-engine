@@ -153,6 +153,8 @@ describe('AnatomyInitializationService skipped generation integration', () => {
       definitionId: 'core:actor',
       wasReconstructed: false,
     });
+    // Wait for event to be processed before creating waiter
+    await new Promise(resolve => process.nextTick(resolve));
     const firstWait = service.waitForEntityGeneration(actor.id);
 
     await firstDispatch;
@@ -173,6 +175,8 @@ describe('AnatomyInitializationService skipped generation integration', () => {
       definitionId: 'core:actor',
       wasReconstructed: false,
     });
+    // Wait for event to be processed before creating waiter
+    await new Promise(resolve => process.nextTick(resolve));
     const skipWait = service.waitForEntityGeneration(actor.id);
 
     await secondDispatch;

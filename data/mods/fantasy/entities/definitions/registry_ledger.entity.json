@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "fantasy:registry_ledger",
+  "description": "Official registry ledger used by Registrar Copperplate for archival work",
+  "components": {
+    "core:name": {
+      "text": "registry ledger"
+    },
+    "core:description": {
+      "text": "A massive leather-bound ledger with copper-plated corners and spine reinforcements. The pages are yellowed with age, filled with meticulous handwriting in faded brown ink. Numerous colored bookmarks protrude from the edges, marking sections of particular bureaucratic importance. The cover bears the embossed seal of the Mudbrook Aid Registry, worn smooth by centuries of handling."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 2.5
+    },
+    "items:readable": {
+      "text": "REGISTRY LEDGER\nOfficial Archive of the Mudbrook Aid Registry\nMaster Copy, commenced Year 1638\n\n=== Filing Entry 1784.03.07 ===\nForm 3, Subsection A: Marriage contract received and processed.\nProcessing duration: 17 minutes, 40 seconds.\nFiled alphabetically under proper designation.\nAll procedures followed correctly.\n\n=== Filing Entry 1784.03.09 ===\nForm 7, Section B: Contract for handjob services received.\nAll supplementary documentation attached and verified.\nExemplary completeness demonstrated by submitting party.\nFiled under B (Bertram). Alphabetical permanence maintained.\n\n=== Filing Entry 1785.08.02 ===\nBacklog Reduction Initiative: Status Report.\nCurrent backlog: 37 years behind schedule.\nProjected completion date: Year 1792.\nThis timeline is acceptable given proper procedural adherence.\nSteady progress maintained.\n\n=== Filing Entry 1786.01.15 ===\nEnvironmental Impact Assessment: Winter Operations.\nCold weather conditions extend processing times significantly.\nAverage pause duration increased to 3.7 minutes per entry.\nBrazier heating essential for continued operations.\nTemperature-dependent biology limits productivity during winter months.\nMammals demonstrate insufficient understanding of this constraint.\n\n=== Filing Entry 1787.06.21 ===\nForm 12: Dragon-slaying contract received.\nThree witnesses verified. Official seal authenticated.\nFiled with same procedural care as previous day's chicken complaint (Form 8A).\nContent of contract irrelevant to archival duty.\nAll documentation receives equal methodical processing.\n\n=== Filing Entry 1788.11.03 ===\nInstitutional Knowledge Observation.\n147 years of continuous service completed.\nEvery family secret in Mudbrook documented and filed.\nMarriages, divorces, disputes, contracts spanning six generations.\nThe archive remembers what individuals forget.\nThis is the permanence we maintain.\n\n=== Archival Philosophy ===\nEvery document receives equal methodical care.\nFuture generations will require these records.\nThis is the duty I uphold.\nThis is what I maintain across centuries.\nThe procedures remain constant while mammals panic and perish.\nThe archive continues.\n\nTwo hundred years of service remain before retirement.\nThe work is never complete.\nThis is acceptable.\n\n=== END ARCHIVE ENTRIES ==="
+    }
+  }
+}

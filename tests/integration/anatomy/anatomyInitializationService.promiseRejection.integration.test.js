@@ -180,6 +180,9 @@ describe('AnatomyInitializationService failure propagation integration', () => {
       wasReconstructed: false,
     });
 
+    // Wait for event to be processed before creating waiters
+    await new Promise(resolve => process.nextTick(resolve));
+
     const firstWaiter = anatomyInitializationService.waitForEntityGeneration(
       failingActor.id,
       250
@@ -223,6 +226,9 @@ describe('AnatomyInitializationService failure propagation integration', () => {
       definitionId: 'core:actor',
       wasReconstructed: false,
     });
+
+    // Wait for event to be processed before creating waiter
+    await new Promise(resolve => process.nextTick(resolve));
 
     await expect(
       anatomyInitializationService.waitForEntityGeneration(recoveryActor.id, 500)

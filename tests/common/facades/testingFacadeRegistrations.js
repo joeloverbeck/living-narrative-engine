@@ -382,17 +382,78 @@ export function createMockFacades(mockDeps = {}, mockFn = () => () => {}) {
         }
       })(),
     },
-    eventBus: {
-      dispatch: (() => {
-        const mock = mockFn();
-        return mock.mockImplementation
-          ? mock.mockImplementation(async (event) => {
-              // Add to entity service mock events for testing
-              return Promise.resolve();
-            })
-          : async (event) => Promise.resolve();
-      })(),
-    },
+    eventBus: (() => {
+      // Create a listeners map to support subscribe/unsubscribe
+      const listeners = new Map();
+      let nextListenerId = 0;
+
+      const dispatchMock = mockFn();
+      const subscribeMock = mockFn();
+      const unsubscribeMock = mockFn();
+
+      const dispatch = dispatchMock.mockImplementation
+        ? dispatchMock.mockImplementation(async (event) => {
+            // Call all registered listeners
+            for (const [, listener] of listeners) {
+              const { eventType, callback } = listener;
+              // Call listener if it's wildcard (*) or matches event type
+              if (eventType === '*' || eventType === event.type) {
+                try {
+                  callback(event);
+                } catch (err) {
+                  // Suppress errors from listeners to match real EventBus behavior
+                }
+              }
+            }
+            return Promise.resolve();
+          })
+        : async (event) => {
+            // Fallback for non-Jest mock functions
+            for (const [, listener] of listeners) {
+              const { eventType, callback } = listener;
+              if (eventType === '*' || eventType === event.type) {
+                try {
+                  callback(event);
+                } catch (err) {
+                  // Suppress errors
+                }
+              }
+            }
+            return Promise.resolve();
+          };
+
+      const subscribe = subscribeMock.mockImplementation
+        ? subscribeMock.mockImplementation((eventType, callback) => {
+            const listenerId = nextListenerId++;
+            listeners.set(listenerId, { eventType, callback });
+            // Return unsubscribe function
+            return () => {
+              listeners.delete(listenerId);
+            };
+          })
+        : (eventType, callback) => {
+            // Fallback for non-Jest mock functions
+            const listenerId = nextListenerId++;
+            listeners.set(listenerId, { eventType, callback });
+            return () => {
+              listeners.delete(listenerId);
+            };
+          };
+
+      const unsubscribe = unsubscribeMock.mockImplementation
+        ? unsubscribeMock.mockImplementation((listenerId) => {
+            listeners.delete(listenerId);
+          })
+        : (listenerId) => {
+            listeners.delete(listenerId);
+          };
+
+      return {
+        dispatch,
+        subscribe,
+        unsubscribe,
+      };
+    })(),
     dataRegistry: { get: mockFn() },
     scopeRegistry: { getScope: mockFn() },
     gameDataRepository: {

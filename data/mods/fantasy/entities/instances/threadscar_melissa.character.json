@@ -8,6 +8,8 @@
         },
         "items:inventory": {
             "items": [
+                "fantasy:threadscar_melissa_longsword_instance",
+                "fantasy:threadscar_ale_tankard_instance"
             ],
             "capacity": {
                 "maxWeight": 50.0,

@@ -1,0 +1,21 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "fantasy:rustic_wooden_table_instance",
+    "definitionId": "furniture:rustic_wooden_table",
+    "componentOverrides": {
+        "core:position": {
+            "locationId": "fantasy:mudbrook_municipal_aid_registry_instance"
+        },
+        "items:container": {
+            "contents": [
+                "fantasy:ale_tankard_instance"
+            ],
+            "capacity": {
+                "maxWeight": 5.0,
+                "maxItems": 20
+            },
+            "isOpen": true,
+            "requiresKey": false
+        }
+    }
+}

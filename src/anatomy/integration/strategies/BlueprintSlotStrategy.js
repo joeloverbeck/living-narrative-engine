@@ -21,7 +21,6 @@ class BlueprintSlotStrategy {
   #bodyGraphService;
   #anatomyBlueprintRepository;
   #anatomySocketIndex;
-  #slotEntityMappings;
 
   constructor({
     logger,
@@ -29,7 +28,6 @@ class BlueprintSlotStrategy {
     bodyGraphService,
     anatomyBlueprintRepository,
     anatomySocketIndex,
-    slotEntityMappings = new Map(),
   }) {
     this.#logger = ensureValidLogger(logger, this.constructor.name);
 
@@ -53,7 +51,6 @@ class BlueprintSlotStrategy {
     this.#bodyGraphService = bodyGraphService;
     this.#anatomyBlueprintRepository = anatomyBlueprintRepository;
     this.#anatomySocketIndex = anatomySocketIndex;
-    this.#slotEntityMappings = slotEntityMappings;
   }
 
   /**
@@ -63,11 +60,16 @@ class BlueprintSlotStrategy {
    * @returns {boolean} True if mapping contains blueprint slots
    */
   canResolve(mapping) {
-    return !!(
-      mapping &&
-      mapping.blueprintSlots &&
-      Array.isArray(mapping.blueprintSlots)
+    const hasMapping = !!mapping;
+    const hasBlueprintSlots = hasMapping && !!mapping.blueprintSlots;
+    const isArray = hasBlueprintSlots && Array.isArray(mapping.blueprintSlots);
+    const result = hasMapping && hasBlueprintSlots && isArray;
+
+    this.#logger.info(
+      `BlueprintSlotStrategy.canResolve: hasMapping=${hasMapping}, hasBlueprintSlots=${hasBlueprintSlots}, isArray=${isArray}, result=${result}. Mapping: ${JSON.stringify(mapping)}`
     );
+
+    return result;
   }
 
   /**
@@ -75,9 +77,10 @@ class BlueprintSlotStrategy {
    *
    * @param {string} entityId - Entity to resolve for
    * @param {object} mapping - The clothing slot mapping
+   * @param {Map<string, string>} [slotEntityMappings=new Map()] - Optional slot-to-entity mappings for this character
    * @returns {Promise<ResolvedAttachmentPoint[]>} Resolved attachment points
    */
-  async resolve(entityId, mapping) {
+  async resolve(entityId, mapping, slotEntityMappings = new Map()) {
     if (!this.canResolve(mapping)) {
       return [];
     }
@@ -99,12 +102,27 @@ class BlueprintSlotStrategy {
       }
 
       // Try to find entity using complex slot path resolution first
+      this.#logger.info(
+        `BlueprintSlotStrategy: Attempting complex path resolution for slot '${slotId}' on entity '${entityId}'`
+      );
+
       let socketEntity = await this.#findEntityAtSlotPath(
         entityId,
         slotId,
         blueprint,
-        bodyGraph
+        bodyGraph,
+        slotEntityMappings
       );
+
+      if (socketEntity) {
+        this.#logger.info(
+          `BlueprintSlotStrategy: Complex path resolution succeeded for slot '${slotId}', found entity '${socketEntity}'`
+        );
+      } else {
+        this.#logger.warn(
+          `BlueprintSlotStrategy: Complex path resolution failed for slot '${slotId}', falling back to socket index lookup`
+        );
+      }
 
       // If complex resolution didn't work, fall back to socket index lookup
       if (!socketEntity) {
@@ -116,10 +134,24 @@ class BlueprintSlotStrategy {
           continue;
         }
 
+        this.#logger.info(
+          `BlueprintSlotStrategy: Attempting socket index lookup for slot '${slotId}', socket '${socketId}' on entity '${entityId}'`
+        );
+
         socketEntity = await this.#anatomySocketIndex.findEntityWithSocket(
           entityId,
           socketId
         );
+
+        if (!socketEntity) {
+          this.#logger.warn(
+            `BlueprintSlotStrategy: Socket index returned null for socket '${socketId}' on entity '${entityId}' (slot: '${slotId}'). This may indicate the index is not yet populated or the socket doesn't exist.`
+          );
+        } else {
+          this.#logger.info(
+            `BlueprintSlotStrategy: Socket index found entity '${socketEntity}' for socket '${socketId}'`
+          );
+        }
       }
 
       if (socketEntity) {
@@ -223,13 +255,14 @@ class BlueprintSlotStrategy {
    * @param {string} slotId - Target slot ID
    * @param {object} blueprint - Blueprint definition
    * @param {object} bodyGraph - Body graph for the entity
+   * @param {Map<string, string>} slotEntityMappings - Slot-to-entity mappings for this character
    * @returns {Promise<string|null>} Entity ID that corresponds to the slot, or null
    * @private
    */
-  async #findEntityAtSlotPath(entityId, slotId, blueprint, bodyGraph) {
+  async #findEntityAtSlotPath(entityId, slotId, blueprint, bodyGraph, slotEntityMappings) {
     // Check if we have a direct mapping for this slot
-    if (this.#slotEntityMappings.has(slotId)) {
-      const mappedEntity = this.#slotEntityMappings.get(slotId);
+    if (slotEntityMappings && slotEntityMappings.has(slotId)) {
+      const mappedEntity = slotEntityMappings.get(slotId);
       this.#logger.debug(
         `BlueprintSlotStrategy: Found direct slot mapping for '${slotId}' → '${mappedEntity}'`
       );
@@ -359,25 +392,6 @@ class BlueprintSlotStrategy {
     // For now, we can match by checking if the joint has appropriate parent socket
     // or other type-specific logic could be added here
     return joint.parentEntityId !== undefined;
-  }
-
-  /**
-   * Sets the slot-to-entity mappings for improved slot resolution
-   *
-   * @param {Map<string, string>} mappings - Map of slot IDs to entity IDs
-   */
-  setSlotEntityMappings(mappings) {
-    if (mappings instanceof Map) {
-      this.#slotEntityMappings = new Map(mappings);
-    } else if (mappings && typeof mappings === 'object') {
-      this.#slotEntityMappings = new Map(Object.entries(mappings));
-    } else {
-      this.#slotEntityMappings = new Map();
-    }
-
-    this.#logger.debug(
-      `BlueprintSlotStrategy: Updated slot-entity mappings with ${this.#slotEntityMappings.size} entries`
-    );
   }
 }
 

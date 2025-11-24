@@ -82,9 +82,15 @@ export class ClothingSlotValidator {
       const attachmentPoints = await resolveAttachmentPoints(entityId, slotId);
 
       if (!attachmentPoints || attachmentPoints.length === 0) {
+        const detailedReason = `Clothing slot '${slotId}' has no valid attachment points for entity '${entityId}' with item '${itemId}'. This usually means: 1) Socket index not populated yet, 2) Blueprint slot mapping incorrect, or 3) Anatomy part missing the required socket.`;
+
+        this.#logger.warn(
+          `ClothingSlotValidator: ${detailedReason}`
+        );
+
         return {
           valid: false,
-          reason: `Clothing slot '${slotId}' has no valid attachment points`,
+          reason: detailedReason,
         };
       }
 

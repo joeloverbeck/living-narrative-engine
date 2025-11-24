@@ -156,6 +156,21 @@ export class PromptDataFormatter {
   }
 
   /**
+   * Format voice guidance for perception log section.
+   *
+   * Reminds the LLM to notice their own recent actions.
+   * @param {Array} perceptionLogArray - Array of perception log entries
+   * @returns {string} Formatted voice guidance text
+   */
+  formatPerceptionLogVoiceGuidance(perceptionLogArray) {
+    if (!Array.isArray(perceptionLogArray) || perceptionLogArray.length === 0) {
+      return '';
+    }
+
+    return "PERCEPTION LOG GUIDANCE: Recent events and your own actions are listed below. Pay attention to what actions you've recently performed - avoid repeating the same action consecutively unless there's a specific in-character reason.";
+  }
+
+  /**
    * Format thoughts array
    *
    * @param {Array<{text: string, timestamp: string}>} thoughtsArray - Array of thoughts
@@ -543,6 +558,10 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
     formattedData.goalsContent = this.formatGoals(promptData.goalsArray || []);
 
     // New conditional section formatting (complete sections with XML tags)
+    formattedData.perceptionLogVoiceGuidance =
+      this.formatPerceptionLogVoiceGuidance(
+        promptData.perceptionLogArray || []
+      );
     formattedData.thoughtsVoiceGuidance = this.formatThoughtsVoiceGuidance(
       promptData.thoughtsArray || []
     );

@@ -56,12 +56,20 @@ class DirectSocketStrategy {
       return [];
     }
 
+    this.#logger.info(
+      `DirectSocketStrategy: Resolving for entity '${entityId}', sockets: ${JSON.stringify(mapping.anatomySockets)}`
+    );
+
     const bodyGraph = await this.#bodyGraphService.getBodyGraph(entityId);
     const attachmentPoints = [];
 
     // For direct sockets, we need to find which parts have these sockets
     // Check body parts first (preferred over root entity)
     const bodyParts = bodyGraph.getAllPartIds();
+
+    this.#logger.info(
+      `DirectSocketStrategy: Found ${bodyParts.length} body parts for entity '${entityId}'`
+    );
 
     for (const partId of bodyParts) {
       const socketsComponent = await this.#entityManager.getComponentData(
@@ -70,6 +78,9 @@ class DirectSocketStrategy {
       );
 
       if (socketsComponent?.sockets) {
+        this.#logger.info(
+          `DirectSocketStrategy: Part '${partId}' has ${socketsComponent.sockets.length} sockets: ${socketsComponent.sockets.map(s => s.id).join(', ')}`
+        );
         for (const socket of socketsComponent.sockets) {
           if (mapping.anatomySockets.includes(socket.id)) {
             attachmentPoints.push({
@@ -79,11 +90,21 @@ class DirectSocketStrategy {
               orientation: socket.orientation || 'neutral',
             });
 
-            // Don't log here to avoid cluttering tests
+            this.#logger.info(
+              `DirectSocketStrategy: Found socket '${socket.id}' on part '${partId}'`
+            );
           }
         }
+      } else {
+        this.#logger.info(
+          `DirectSocketStrategy: Part '${partId}' has NO anatomy:sockets component`
+        );
       }
     }
+
+    this.#logger.info(
+      `DirectSocketStrategy: After checking body parts, found ${attachmentPoints.length} attachment points`
+    );
 
     // Only check root entity if no body parts have the sockets
     if (attachmentPoints.length === 0) {
@@ -102,11 +123,17 @@ class DirectSocketStrategy {
               orientation: socket.orientation || 'neutral',
             });
 
-            // Don't log here to avoid cluttering tests
+            this.#logger.info(
+              `DirectSocketStrategy: Found socket '${socket.id}' on root entity '${entityId}'`
+            );
           }
         }
       }
     }
+
+    this.#logger.info(
+      `DirectSocketStrategy: Returning ${attachmentPoints.length} total attachment points for entity '${entityId}'`
+    );
 
     return attachmentPoints;
   }

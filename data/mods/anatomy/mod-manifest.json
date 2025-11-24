@@ -236,6 +236,7 @@
       "humanoid_core.part.json"
     ],
     "events": [
+      "anatomy_generated.event.json",
       "interaction_click.event.json",
       "interaction_pan.event.json",
       "interaction_panend.event.json",

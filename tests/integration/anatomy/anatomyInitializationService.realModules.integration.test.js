@@ -196,6 +196,9 @@ describe('AnatomyInitializationService real module integration', () => {
       wasReconstructed: false,
     });
 
+    // Wait for events to be processed before creating waiters
+    await waitForTick();
+
     const firstResult =
       anatomyInitializationService.waitForEntityGeneration(firstActor.id);
     const secondResult = (async () => {

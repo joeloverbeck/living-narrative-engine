@@ -34,9 +34,9 @@ describe('Bertram the Muddy Character - Integration Validation', () => {
       expect(definitionData.id).toBe('fantasy:bertram_the_muddy');
     });
 
-    it('should have all 18 required components', () => {
+    it('should have all 19 required components', () => {
       const components = definitionData.components;
-      expect(Object.keys(components)).toHaveLength(18);
+      expect(Object.keys(components)).toHaveLength(19);
 
       // Identity components
       expect(components['core:name']).toBeDefined();
@@ -75,8 +75,8 @@ describe('Bertram the Muddy Character - Integration Validation', () => {
       expect(definitionData.components['core:name'].text).toBe('Bertram');
     });
 
-    it('should be marked as LLM-powered character', () => {
-      expect(definitionData.components['core:player_type'].type).toBe('llm');
+    it('should be marked as human-controlled character', () => {
+      expect(definitionData.components['core:player_type'].type).toBe('human');
     });
 
     it('should have 4 notes about key subjects', () => {

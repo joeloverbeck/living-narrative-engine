@@ -35,6 +35,18 @@
             "instanceId": "fantasy:notice_staged_threat_instance"
         },
         {
+            "instanceId": "fantasy:registry_ledger_instance"
+        },
+        {
+            "instanceId": "fantasy:plain_wooden_stool_instance"
+        },
+        {
+            "instanceId": "fantasy:rough_wooden_bench_instance"
+        },
+        {
+            "instanceId": "fantasy:rustic_wooden_table_instance"
+        },
+        {
             "instanceId": "fantasy:vespera_hybrid_lute_viol_instance"
         },
         {
@@ -48,6 +60,15 @@
         },
         {
             "instanceId": "fantasy:threadscar_melissa_instance"
+        },
+        {
+            "instanceId": "fantasy:threadscar_ale_tankard_instance"
+        },
+        {
+            "instanceId": "fantasy:ale_tankard_instance"
+        },
+        {
+            "instanceId": "fantasy:threadscar_melissa_longsword_instance"
         },
         {
             "instanceId": "fantasy:bertram_the_muddy_instance"

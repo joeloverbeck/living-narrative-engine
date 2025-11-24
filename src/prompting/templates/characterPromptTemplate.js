@@ -23,6 +23,8 @@ export const CHARACTER_PROMPT_TEMPLATE = `<task_definition>
 {worldContextContent}
 </world_context>
 
+{perceptionLogVoiceGuidance}
+
 <perception_log>
 {perceptionLogContent}
 </perception_log>
