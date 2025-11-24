@@ -46,7 +46,7 @@ describe('NotesService Tag Removal Integration Tests', () => {
       {
         text: 'Integration test note',
         subject: 'Test Subject',
-        subjectType: 'character',
+        subjectType: 'entity',
         context: 'Test context',
       },
     ];
@@ -71,7 +71,7 @@ describe('NotesService Tag Removal Integration Tests', () => {
       {
         text: 'Note with tags in input',
         subject: 'Tagged Subject',
-        subjectType: 'location',
+        subjectType: 'entity',
         context: 'Integration test',
         tags: ['should', 'be', 'ignored'], // These should be ignored
       },
@@ -93,7 +93,7 @@ describe('NotesService Tag Removal Integration Tests', () => {
     // Verify all expected fields are present
     expect(result.component.notes[0].text).toBe('Note with tags in input');
     expect(result.component.notes[0].subject).toBe('Tagged Subject');
-    expect(result.component.notes[0].subjectType).toBe('location');
+    expect(result.component.notes[0].subjectType).toBe('entity');
     expect(result.component.notes[0].context).toBe('Integration test');
     expect(result.component.notes[0].timestamp).toBeDefined();
   });
@@ -104,7 +104,7 @@ describe('NotesService Tag Removal Integration Tests', () => {
       {
         text: 'First note',
         subject: 'Subject 1',
-        subjectType: 'character',
+        subjectType: 'entity',
         tags: ['tag1'],
       },
       {
@@ -116,7 +116,7 @@ describe('NotesService Tag Removal Integration Tests', () => {
       {
         text: 'Third note',
         subject: 'Subject 3',
-        subjectType: 'item',
+        subjectType: 'entity',
         tags: [],
       },
     ];
@@ -144,17 +144,11 @@ describe('NotesService Tag Removal Integration Tests', () => {
   test('should maintain schema compliance with all valid subjectTypes', () => {
     const component = { notes: [] };
     const validSubjectTypes = [
-      'character',
-      'location',
-      'item',
-      'creature',
+      'entity',
       'event',
-      'concept',
-      'relationship',
-      'organization',
-      'quest',
-      'skill',
-      'emotion',
+      'plan',
+      'knowledge',
+      'state',
       'other',
     ];
 

@@ -36,7 +36,7 @@ describe('NotesAnalyticsService storage and reporting coverage', () => {
 
     service.recordNoteCreation(
       {
-        subjectType: SUBJECT_TYPES.CHARACTER,
+        subjectType: SUBJECT_TYPES.ENTITY,
         subject: 'Hero',
         text: 'Meets the guide.',
         context: 'intro',
@@ -56,7 +56,7 @@ describe('NotesAnalyticsService storage and reporting coverage', () => {
     jest.advanceTimersByTime(10);
     service.recordNoteCreation(
       {
-        subjectType: SUBJECT_TYPES.CHARACTER,
+        subjectType: SUBJECT_TYPES.ENTITY,
         subject: 'Mentor',
         text: 'Provides guidance.',
         context: 'council',
@@ -70,14 +70,14 @@ describe('NotesAnalyticsService storage and reporting coverage', () => {
     };
     service.recordCategorizationError(
       erroneousNote,
-      SUBJECT_TYPES.LOCATION,
-      SUBJECT_TYPES.CHARACTER,
+      SUBJECT_TYPES.OTHER,
+      SUBJECT_TYPES.ENTITY,
       'Entity misidentified'
     );
     service.recordCategorizationError(
       erroneousNote,
       SUBJECT_TYPES.EVENT,
-      SUBJECT_TYPES.CHARACTER,
+      SUBJECT_TYPES.ENTITY,
       'Timeline confusion'
     );
 
@@ -86,21 +86,21 @@ describe('NotesAnalyticsService storage and reporting coverage', () => {
     expect(summary.summary.totalNotes).toBe(3);
     expect(summary.summary.totalErrors).toBe(2);
     expect(summary.summary.accuracy).toBe('33.33%');
-    expect(summary.typeDistribution.character).toBe('66.67');
+    expect(summary.typeDistribution.entity).toBe('66.67');
     expect(summary.mostUsedTypes[0]).toEqual(
-      expect.objectContaining({ type: SUBJECT_TYPES.CHARACTER, count: 2 })
+      expect.objectContaining({ type: SUBJECT_TYPES.ENTITY, count: 2 })
     );
     expect(summary.topMisclassifications[0]).toEqual(
-      expect.objectContaining({ pattern: `${SUBJECT_TYPES.LOCATION}→${SUBJECT_TYPES.CHARACTER}` })
+      expect.objectContaining({ pattern: `${SUBJECT_TYPES.OTHER}→${SUBJECT_TYPES.ENTITY}` })
     );
-    expect(summary.underutilizedTypes).toContain(SUBJECT_TYPES.ITEM);
+    expect(summary.underutilizedTypes).toContain(SUBJECT_TYPES.KNOWLEDGE);
     expect(summary.categorizationErrors).toHaveLength(2);
 
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Recorded note creation - character')
+      expect.stringContaining('Recorded note creation - entity')
     );
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Categorization error - location→character'),
+      expect.stringContaining('Categorization error - other→entity'),
       expect.any(Object)
     );
   });
@@ -109,7 +109,7 @@ describe('NotesAnalyticsService storage and reporting coverage', () => {
     const service = new NotesAnalyticsService({ logger });
 
     service.recordNoteCreation({
-      subjectType: SUBJECT_TYPES.CONCEPT,
+      subjectType: SUBJECT_TYPES.KNOWLEDGE,
       subject: 'Foreshadowing',
       text: 'Dark omen recorded.',
       context: 'prophecy',
@@ -120,7 +120,7 @@ describe('NotesAnalyticsService storage and reporting coverage', () => {
         text: 'Misinterpreted',
       },
       SUBJECT_TYPES.PLAN,
-      SUBJECT_TYPES.CONCEPT,
+      SUBJECT_TYPES.KNOWLEDGE,
       'Planning artifact'
     );
 
@@ -133,13 +133,13 @@ describe('NotesAnalyticsService storage and reporting coverage', () => {
     expect(report).toContain('## Underutilized Types');
     expect(report).toContain('## Top Misclassification Patterns');
     expect(report).toContain('## Categorization Errors');
-    expect(report).toContain('plan→concept');
+    expect(report).toContain('plan→knowledge');
   });
 
   it('resets analytics metrics and refreshes the session timestamp', () => {
     const service = new NotesAnalyticsService({ logger });
     service.recordNoteCreation({
-      subjectType: SUBJECT_TYPES.RELATIONSHIP,
+      subjectType: SUBJECT_TYPES.STATE,
       subject: 'Allies',
       text: 'Alliance forged.',
       context: 'treaty',
@@ -212,7 +212,7 @@ describe('NotesAnalyticsService storage and reporting coverage', () => {
     it('loads analytics from storage and replaces metrics', async () => {
       const loadedMetrics = {
         totalNotes: 4,
-        typeDistribution: { [SUBJECT_TYPES.ITEM]: 4 },
+        typeDistribution: { [SUBJECT_TYPES.ENTITY]: 4 },
         categorizationErrors: [],
         misclassificationPatterns: {},
         sessionData: [],
@@ -229,7 +229,7 @@ describe('NotesAnalyticsService storage and reporting coverage', () => {
 
       const summary = service.getAnalyticsSummary();
       expect(summary.summary.totalNotes).toBe(4);
-      expect(summary.typeDistribution.item).toBe('100.00');
+      expect(summary.typeDistribution.entity).toBe('100.00');
       expect(logger.info).toHaveBeenCalledWith(
         'Analytics: Loaded from persistent storage'
       );

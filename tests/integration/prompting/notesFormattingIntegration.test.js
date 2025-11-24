@@ -71,7 +71,7 @@ describe('Notes Formatting Integration', () => {
                 {
                   text: 'John seems nervous about the council meeting',
                   subject: 'John',
-                  subjectType: SUBJECT_TYPES.CHARACTER,
+                  subjectType: SUBJECT_TYPES.ENTITY,
                   context: 'tavern conversation',
                   tags: ['emotion', 'politics'],
                   timestamp: '2024-01-01T10:00:00Z',
@@ -79,7 +79,7 @@ describe('Notes Formatting Integration', () => {
                 {
                   text: 'Always carries that strange medallion',
                   subject: 'John',
-                  subjectType: SUBJECT_TYPES.CHARACTER,
+                  subjectType: SUBJECT_TYPES.ENTITY,
                   context: 'morning observation',
                   tags: ['mystery', 'artifact'],
                   timestamp: '2024-01-01T11:00:00Z',
@@ -87,7 +87,7 @@ describe('Notes Formatting Integration', () => {
                 {
                   text: 'Guards doubled at the north gate',
                   subject: 'The North Gate',
-                  subjectType: SUBJECT_TYPES.LOCATION,
+                  subjectType: SUBJECT_TYPES.ENTITY,
                   context: 'morning patrol',
                   tags: ['security', 'observation'],
                   timestamp: '2024-01-01T09:00:00Z',
@@ -95,7 +95,7 @@ describe('Notes Formatting Integration', () => {
                 {
                   text: 'Strange symbols carved into the gate stones',
                   subject: 'The North Gate',
-                  subjectType: SUBJECT_TYPES.LOCATION,
+                  subjectType: SUBJECT_TYPES.ENTITY,
                   context: 'evening inspection',
                   tags: ['mystery', 'magic'],
                   timestamp: '2024-01-01T20:00:00Z',
@@ -134,7 +134,7 @@ describe('Notes Formatting Integration', () => {
       expect(promptData.notesArray[0]).toEqual({
         text: 'John seems nervous about the council meeting',
         subject: 'John',
-        subjectType: SUBJECT_TYPES.CHARACTER,
+        subjectType: SUBJECT_TYPES.ENTITY,
         context: 'tavern conversation',
         // tags are intentionally excluded from the prompt pipeline
         timestamp: '2024-01-01T10:00:00Z',
@@ -155,7 +155,7 @@ describe('Notes Formatting Integration', () => {
       expect(formattedPromptData.notesContent).toContain(
         '- John seems nervous about the council meeting'
       );
-      expect(formattedPromptData.notesContent).toContain('## Characters');
+      expect(formattedPromptData.notesContent).toContain('## Entities');
 
       // Step 3: Test grouped formatting explicitly
       const groupedNotesContent = promptDataFormatter.formatNotes(
@@ -163,9 +163,8 @@ describe('Notes Formatting Integration', () => {
         { groupBySubject: true }
       );
 
-      expect(groupedNotesContent).toContain('## Characters');
+      expect(groupedNotesContent).toContain('## Entities');
       expect(groupedNotesContent).toContain('### John');
-      expect(groupedNotesContent).toContain('## Locations');
       expect(groupedNotesContent).toContain('### The North Gate');
       expect(groupedNotesContent).toContain('## Events');
       expect(groupedNotesContent).toContain('### The Missing Shipment');
@@ -188,7 +187,7 @@ describe('Notes Formatting Integration', () => {
       );
 
       expect(groupedNotesSection).toMatch(/^<notes>\n[\s\S]*\n<\/notes>$/);
-      expect(groupedNotesSection).toContain('## Characters');
+      expect(groupedNotesSection).toContain('## Entities');
     });
 
     test('should handle mixed legacy and structured notes gracefully', async () => {
@@ -203,7 +202,7 @@ describe('Notes Formatting Integration', () => {
                 {
                   text: 'Structured note with context',
                   subject: 'Test Subject',
-                  subjectType: SUBJECT_TYPES.CHARACTER,
+                  subjectType: SUBJECT_TYPES.ENTITY,
                   context: 'test context',
                 },
                 // Partially structured note
@@ -239,7 +238,7 @@ describe('Notes Formatting Integration', () => {
       expect(promptData.notesArray[1]).toEqual({
         text: 'Structured note with context',
         subject: 'Test Subject',
-        subjectType: SUBJECT_TYPES.CHARACTER,
+        subjectType: SUBJECT_TYPES.ENTITY,
         context: 'test context',
       });
       expect(promptData.notesArray[2]).toEqual({
@@ -253,7 +252,7 @@ describe('Notes Formatting Integration', () => {
         { groupBySubject: true }
       );
 
-      expect(groupedContent).toContain('## Characters');
+      expect(groupedContent).toContain('## Entities');
       expect(groupedContent).toContain('## Other');
       expect(groupedContent).toContain('### Test Subject');
       expect(groupedContent).toContain('### Another Subject');
@@ -344,7 +343,7 @@ describe('Notes Formatting Integration', () => {
                 {
                   text: 'Test note for template',
                   subject: 'Template Subject',
-                  subjectType: SUBJECT_TYPES.CHARACTER,
+                  subjectType: SUBJECT_TYPES.ENTITY,
                   context: 'template context',
                   tags: ['template', 'test'],
                 },
@@ -373,7 +372,7 @@ describe('Notes Formatting Integration', () => {
         promptDataFormatter.formatPromptData(promptData);
 
       // Verify default is now grouped format
-      expect(formattedPromptData.notesContent).toContain('## Characters');
+      expect(formattedPromptData.notesContent).toContain('## Entities');
       expect(formattedPromptData.notesContent).toContain(
         '### Template Subject'
       );
@@ -381,7 +380,7 @@ describe('Notes Formatting Integration', () => {
         '- Test note for template (template context)'
       );
       expect(formattedPromptData.notesSection).toContain(
-        '<notes>\n## Characters\n### Template Subject\n- Test note for template (template context)\n</notes>'
+        '<notes>\n## Entities\n### Template Subject\n- Test note for template (template context)\n</notes>'
       );
 
       // Test that grouped section formatting can be applied
@@ -391,7 +390,7 @@ describe('Notes Formatting Integration', () => {
       );
 
       expect(groupedNotesSection).toContain('<notes>');
-      expect(groupedNotesSection).toContain('## Characters');
+      expect(groupedNotesSection).toContain('## Entities');
       expect(groupedNotesSection).toContain('### Template Subject');
       expect(groupedNotesSection).toContain(
         '- Test note for template (template context)'
@@ -405,13 +404,13 @@ describe('Notes Formatting Integration', () => {
       const comprehensiveNotes = [
         {
           subject: 'Bobby',
-          subjectType: SUBJECT_TYPES.CHARACTER,
+          subjectType: SUBJECT_TYPES.ENTITY,
           text: 'In coma',
           context: 'brother',
         },
         {
           subject: 'Hospital',
-          subjectType: SUBJECT_TYPES.LOCATION,
+          subjectType: SUBJECT_TYPES.ENTITY,
           text: 'Third floor',
           context: 'place',
         },
@@ -429,31 +428,31 @@ describe('Notes Formatting Integration', () => {
         },
         {
           subject: 'Deadline',
-          subjectType: SUBJECT_TYPES.TIMELINE,
+          subjectType: SUBJECT_TYPES.EVENT,
           text: '3 days left',
           context: 'urgency',
         },
         {
           subject: 'My crisis',
-          subjectType: SUBJECT_TYPES.PSYCHOLOGICAL_STATE,
+          subjectType: SUBJECT_TYPES.STATE,
           text: 'Existential dread',
           context: 'mental state',
         },
         {
           subject: 'Reality theory',
-          subjectType: SUBJECT_TYPES.THEORY,
+          subjectType: SUBJECT_TYPES.KNOWLEDGE,
           text: 'Time is non-linear',
           context: 'hypothesis',
         },
         {
           subject: 'Wizard pattern',
-          subjectType: SUBJECT_TYPES.OBSERVATION,
+          subjectType: SUBJECT_TYPES.KNOWLEDGE,
           text: 'Taps staff 3 times',
           context: 'noticed behavior',
         },
         {
           subject: "Jon's knowledge",
-          subjectType: SUBJECT_TYPES.KNOWLEDGE_STATE,
+          subjectType: SUBJECT_TYPES.KNOWLEDGE,
           text: 'Knows my secret',
           context: 'epistemic',
         },
@@ -464,17 +463,13 @@ describe('Notes Formatting Integration', () => {
         { showContext: true }
       );
 
-      // Verify category order
+      // Verify new taxonomy categories (6 types: entity, event, plan, knowledge, state, other)
       const categories = [
-        'Characters',
-        'Locations',
-        'Events',
-        'Plans & Intentions',
-        'Timelines & Deadlines',
-        'Psychological States',
-        'Theories & Hypotheses',
-        'Observations & Patterns',
-        'Knowledge & Uncertainties',
+        'Entities',      // Bobby, Hospital
+        'Events',        // Council vote, Deadline
+        'Plans',         // Escape plan
+        'Knowledge',     // Reality theory, Wizard pattern, Jon's knowledge
+        'States',        // My crisis
       ];
 
       // Verify all categories are present
@@ -501,7 +496,7 @@ describe('Notes Formatting Integration', () => {
                 {
                   text: 'Note with options test',
                   subject: 'Options Subject',
-                  subjectType: SUBJECT_TYPES.CHARACTER,
+                  subjectType: SUBJECT_TYPES.ENTITY,
                   context: 'options context',
                   tags: ['option1', 'option2'],
                 },

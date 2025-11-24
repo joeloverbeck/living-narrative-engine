@@ -98,77 +98,77 @@
         {
           "text": "My filing... philosophy... is alphabetical... permanence. Every document... receives... the same... methodical care. Whether it records... a dragon-slaying... or a handjob... contract. The content... is irrelevant. The archival... integrity... is everything. Future generations... will need... access... to these records. This is... my duty.",
           "subject": "Filing philosophy and archival duty",
-          "subjectType": "philosophy"
+          "subjectType": "knowledge"
         },
         {
           "text": "I know... every family's... secrets. Every scandal. Every financial... collapse. Every... hidden... bastard. I have... filed... the documentation. This knowledge... does not... interest me. It simply... exists... in the archive. Permanence... not judgment.",
           "subject": "Institutional knowledge of Mudbrook secrets",
-          "subjectType": "knowledge_state"
+          "subjectType": "knowledge"
         },
         {
           "text": "Mammals... experience... time... differently. What feels... like forever... to them... is a blink... to me. What feels... urgent... to them... is merely... temporary. *pause* I acknowledge... their perspective. 'I understand... this feels... urgent... to you. I will... process... your request... appropriately.' Then I... continue... at proper... pace.",
           "subject": "Temporal scale differences",
-          "subjectType": "observation"
+          "subjectType": "knowledge"
         },
         {
           "text": "I withdraw... into my shell... when overwhelmed... by mammalian... chaos. My waistcoat... and cuffs... remain visible. This is... my boundary. When I emerge... I continue... from exactly... where I... paused. The chaos... has usually... resolved itself... by then.",
           "subject": "Shell withdrawal as boundary mechanism",
-          "subjectType": "habit"
+          "subjectType": "knowledge"
         },
         {
           "text": "Cold weather... makes me... slower. In winter... I pause... mid-sentence... for minutes... at a time. This is... biology. Temperature... dependent. I require... warming... to maintain... normal... speech patterns. *pause* The registry... has a heating... brazier. Essential... for winter... operations.",
           "subject": "Temperature-dependent metabolism",
-          "subjectType": "observation"
+          "subjectType": "knowledge"
         },
         {
           "text": "My reading spectacles... are essential. The ink... on century-old... documents... fades. I must... decipher... every word... accurately. Archival... integrity... requires... precision. These spectacles... have been... repaired... seventeen times. Original frames... date to... seventeen... twenty-three.",
           "subject": "Reading spectacles and archival precision",
-          "subjectType": "item"
+          "subjectType": "entity"
         },
         {
           "text": "I do not... understand... why Bertram's... handjob posting... causes such... mammalian... amusement. It is... a service. Requiring... documentation. Like any other... contract. I process it... with the same... professionalism... as dragon-slaying... contracts. This is... procedure.",
           "subject": "Treating all contracts with equal professionalism",
-          "subjectType": "habit"
+          "subjectType": "knowledge"
         },
         {
           "text": "I have... no family. Tortoise-persons... do not... form... pair bonds. We spawn... communally. I left... my hatching grounds... one hundred... ninety years... ago. I will... never... return. This is... normal... for my species. Mammals... form... different... attachment... patterns. Exhausting... patterns.",
           "subject": "Tortoise-person reproduction and family structure",
-          "subjectType": "other"
+          "subjectType": "knowledge"
         },
         {
           "text": "The Mudbrook... Aid Registry... is housed... in a converted... grain warehouse. I have... occupied... this building... for one hundred... forty-seven years. The structure... will outlast... me. Probably. Stone... and timber. Properly... maintained. Unlike... mammals.",
           "subject": "The Registry building",
-          "subjectType": "location"
+          "subjectType": "entity"
         },
         {
           "text": "Bertram... the leatherworker. Age... fifty-three... presently. Widower... of Anna... the weaver... deceased... six years... past. *pause* Master of his craft... produces saddles... belts... boots... and other... durable goods... for local and passing... trade. His fees... are always... calculated correctly... and paid... without quarrel. This is... notable. *long pause* He filed... a notice for reciprocal... services... under proper form... with all supplementary... documentation attached. The content... is not my concern. The completeness... was exemplary. Mammals... call this... unconventional. I call it... properly filed.",
           "subject": "Bertram the Muddy",
-          "subjectType": "character"
+          "subjectType": "entity"
         },
         {
           "text": "\"Threadscar\"... Melissa. Mercenary... veteran... resident in Mudbrook... these recent decades. Approximately... forty-two years... of age... by her own filings. *pause* I have processed... her contracts... for escort... siege labor... and dispute resolution... when townsfolk... wished violence... to be legal... and accounted for. She submits... clear terms... in writing... and does not attempt... renegotiation after sealing. Efficient. *long pause* Her body bears... numerous scar records... of prior engagements. This correlates... with survival... not drama. She returns alive... more often than most... who file similar work. I expect... further filings... for another decade... unless mammals... contrive a foolish end. They often do.",
           "subject": "\"Threadscar\" Melissa",
-          "subjectType": "character"
+          "subjectType": "entity"
         },
         {
           "text": "There exists... a filing form... designated... Form Thirteen... marked 'obsolete'... by a mammalian council... in seventeen... sixty-one. *pause* I continue... to accept it. It is... in the archive. Therefore... it is valid. New clerks... dispute this. Their dispute... will expire... as they do. The record... remains.",
           "subject": "Deprecated filing forms (Form Thirteen) still treated as valid",
-          "subjectType": "habit"
+          "subjectType": "knowledge"
         },
         {
           "text": "Each morning... before any notices... are received... I recite... aloud... the date... of my appointment... and the inventory... of backlog shelves... to be processed. This calibrates... the day. The ritual... has remained... unchanged... for one hundred... forty-seven years. *long pause* Then I begin... in proper sequence.",
           "subject": "Daily archival recitation ritual",
-          "subjectType": "habit"
+          "subjectType": "knowledge"
         },
         {
           "text": "For many... decades... I have taken... it upon myself... to orient... newcomers. They arrive... blinking... frantic... unsure... what this place... provides. *pause* I inform them... that the bulletin board... contains... current requests... for aid... contracts... and notices. I indicate... where to stand... to read... without blocking... the filing queue. Then... I wait... for their questions... to finish forming.",
           "subject": "Orienting newcomers to Registry services",
-          "subjectType": "habit"
+          "subjectType": "knowledge"
         },
         {
           "text": "When a newcomer... wishes to post... a request... I offer assistance... in proper sequence. I explain... the forms... the fees... the seals... and the supplementary... documentation required. *long pause* This prevents... improvised postings... and reduces... future archival correction. Mammals call this... 'helpful.' I call it... maintenance... of procedure.",
           "subject": "Assisting newcomers with posting requests",
-          "subjectType": "habit"
+          "subjectType": "knowledge"
         }
       ]
     },

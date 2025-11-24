@@ -11,92 +11,33 @@ import { SUBJECT_TYPES } from '../constants/subjectTypes.js';
 
 /**
  * Maps subject types to display categories with prioritization
+ * @version 2.0 - Updated for simplified 6-type taxonomy (LLMROLPROARCANA-002)
  */
 const SUBJECT_TYPE_DISPLAY_MAPPING = {
-  [SUBJECT_TYPES.CHARACTER]: {
-    displayCategory: 'Characters',
-    displayName: 'Characters',
+  [SUBJECT_TYPES.ENTITY]: {
+    displayCategory: 'Entities',
+    displayName: 'People, Places & Things',
     priority: 1,
-  },
-  [SUBJECT_TYPES.LOCATION]: {
-    displayCategory: 'Locations',
-    displayName: 'Locations',
-    priority: 2,
   },
   [SUBJECT_TYPES.EVENT]: {
     displayCategory: 'Events',
-    displayName: 'Events',
-    priority: 3,
-  },
-  [SUBJECT_TYPES.ITEM]: {
-    displayCategory: 'Items & Objects',
-    displayName: 'Items & Objects',
-    priority: 4,
-  },
-  [SUBJECT_TYPES.CREATURE]: {
-    displayCategory: 'Creatures',
-    displayName: 'Creatures',
-    priority: 5,
-  },
-  [SUBJECT_TYPES.ORGANIZATION]: {
-    displayCategory: 'Organizations',
-    displayName: 'Organizations',
-    priority: 6,
-  },
-  [SUBJECT_TYPES.QUEST]: {
-    displayCategory: 'Quests & Tasks',
-    displayName: 'Quests & Tasks',
-    priority: 7,
-  },
-  [SUBJECT_TYPES.RELATIONSHIP]: {
-    displayCategory: 'Relationships',
-    displayName: 'Relationships',
-    priority: 8,
-  },
-  [SUBJECT_TYPES.CONCEPT]: {
-    displayCategory: 'Concepts & Ideas',
-    displayName: 'Concepts & Ideas',
-    priority: 9,
-  },
-  [SUBJECT_TYPES.SKILL]: {
-    displayCategory: 'Skills & Abilities',
-    displayName: 'Skills & Abilities',
-    priority: 10,
+    displayName: 'Past Occurrences',
+    priority: 2,
   },
   [SUBJECT_TYPES.PLAN]: {
-    displayCategory: 'Plans & Intentions',
-    displayName: 'Plans & Intentions',
-    priority: 11,
+    displayCategory: 'Plans',
+    displayName: 'Future Intentions',
+    priority: 3,
   },
-  [SUBJECT_TYPES.TIMELINE]: {
-    displayCategory: 'Timelines & Deadlines',
-    displayName: 'Timelines & Deadlines',
-    priority: 12,
+  [SUBJECT_TYPES.KNOWLEDGE]: {
+    displayCategory: 'Knowledge',
+    displayName: 'Information & Theories',
+    priority: 4,
   },
-  [SUBJECT_TYPES.PSYCHOLOGICAL_STATE]: {
-    displayCategory: 'Psychological States',
-    displayName: 'Psychological States',
-    priority: 13,
-  },
-  [SUBJECT_TYPES.EMOTION]: {
-    displayCategory: 'Emotions & Feelings',
-    displayName: 'Emotions & Feelings',
-    priority: 14,
-  },
-  [SUBJECT_TYPES.THEORY]: {
-    displayCategory: 'Theories & Hypotheses',
-    displayName: 'Theories & Hypotheses',
-    priority: 15,
-  },
-  [SUBJECT_TYPES.OBSERVATION]: {
-    displayCategory: 'Observations & Patterns',
-    displayName: 'Observations & Patterns',
-    priority: 16,
-  },
-  [SUBJECT_TYPES.KNOWLEDGE_STATE]: {
-    displayCategory: 'Knowledge & Uncertainties',
-    displayName: 'Knowledge & Uncertainties',
-    priority: 17,
+  [SUBJECT_TYPES.STATE]: {
+    displayCategory: 'States',
+    displayName: 'Mental & Emotional',
+    priority: 5,
   },
   [SUBJECT_TYPES.OTHER]: {
     displayCategory: 'Other',

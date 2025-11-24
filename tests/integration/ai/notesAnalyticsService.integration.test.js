@@ -47,14 +47,14 @@ describe('NotesAnalyticsService - Integration', () => {
       storage,
     });
 
-    const characterNote = createNote(SUBJECT_TYPES.CHARACTER, { context: 'origin story' });
+    const entityNote = createNote(SUBJECT_TYPES.ENTITY, { context: 'origin story' });
     const eventNote = createNote(SUBJECT_TYPES.EVENT, { text: 'Festival scheduled next week' });
     const planNote = createNote(SUBJECT_TYPES.PLAN, {
       text: 'Arrange supplies before the festival',
       context: null,
     });
 
-    analytics.recordNoteCreation(characterNote, { tags: ['backstory'], source: 'player' });
+    analytics.recordNoteCreation(entityNote, { tags: ['backstory'], source: 'player' });
     analytics.recordNoteCreation(eventNote, { source: 'ai' });
     analytics.recordNoteCreation(planNote);
 
@@ -76,14 +76,14 @@ describe('NotesAnalyticsService - Integration', () => {
     const summary = analytics.getAnalyticsSummary();
     expect(summary.summary.totalNotes).toBe(3);
     expect(summary.summary.totalErrors).toBe(2);
-    expect(summary.typeDistribution[SUBJECT_TYPES.CHARACTER]).toBe('33.33');
+    expect(summary.typeDistribution[SUBJECT_TYPES.ENTITY]).toBe('33.33');
     expect(summary.topMisclassifications).toEqual(
       expect.arrayContaining([
         { pattern: `${SUBJECT_TYPES.EVENT}→${SUBJECT_TYPES.PLAN}`, count: 1 },
         { pattern: `${SUBJECT_TYPES.PLAN}→${SUBJECT_TYPES.EVENT}`, count: 1 },
       ])
     );
-    expect(summary.underutilizedTypes).toContain(SUBJECT_TYPES.LOCATION);
+    expect(summary.underutilizedTypes).toContain(SUBJECT_TYPES.KNOWLEDGE);
 
     const report = analytics.generateReport();
     expect(report).toContain('# Notes Categorization Analytics Report');
@@ -117,9 +117,9 @@ describe('NotesAnalyticsService - Integration', () => {
       'Scenario misclassified'
     );
     firstService.recordCategorizationError(
-      createNote(SUBJECT_TYPES.CHARACTER),
-      SUBJECT_TYPES.CHARACTER,
-      SUBJECT_TYPES.LOCATION
+      createNote(SUBJECT_TYPES.ENTITY),
+      SUBJECT_TYPES.ENTITY,
+      SUBJECT_TYPES.STATE
     );
 
     await firstService.saveAnalytics();
@@ -148,7 +148,7 @@ describe('NotesAnalyticsService - Integration', () => {
 
   it('handles storage absence, missing data, and persistence failures gracefully', async () => {
     const serviceWithoutStorage = new NotesAnalyticsService({ logger: createLogger() });
-    serviceWithoutStorage.recordNoteCreation(createNote(SUBJECT_TYPES.CONCEPT));
+    serviceWithoutStorage.recordNoteCreation(createNote(SUBJECT_TYPES.KNOWLEDGE));
     await expect(serviceWithoutStorage.saveAnalytics()).resolves.toBeUndefined();
     await expect(serviceWithoutStorage.loadAnalytics()).resolves.toBeUndefined();
 
@@ -173,7 +173,7 @@ describe('NotesAnalyticsService - Integration', () => {
       logger: createLogger(),
       storage: partialStorage,
     });
-    serviceWithPartialStorage.recordNoteCreation(createNote(SUBJECT_TYPES.ITEM));
+    serviceWithPartialStorage.recordNoteCreation(createNote(SUBJECT_TYPES.ENTITY));
     await serviceWithPartialStorage.saveAnalytics();
     const beforeLoadSummary = serviceWithPartialStorage.getAnalyticsSummary();
     await expect(serviceWithPartialStorage.loadAnalytics()).resolves.toBeUndefined();

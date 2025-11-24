@@ -57,7 +57,7 @@ describe('JSON-Schema – core:notes component', () => {
             {
               text: 'A note about player',
               subject: 'player',
-              subjectType: 'character',
+              subjectType: 'entity',
               context: 'During combat',
               timestamp: '2025-06-04T12:00:00Z',
             },
@@ -66,42 +66,14 @@ describe('JSON-Schema – core:notes component', () => {
       },
     ],
     [
-      'note with valid character subjectType',
+      'note with valid entity subjectType',
       {
         'core:notes': {
           notes: [
             {
               text: 'NPC behavior',
               subject: 'Iker Aguirre',
-              subjectType: 'character',
-            },
-          ],
-        },
-      },
-    ],
-    [
-      'note with valid location subjectType',
-      {
-        'core:notes': {
-          notes: [
-            {
-              text: 'Area description',
-              subject: 'Market Square',
-              subjectType: 'location',
-            },
-          ],
-        },
-      },
-    ],
-    [
-      'note with valid item subjectType',
-      {
-        'core:notes': {
-          notes: [
-            {
-              text: 'Artifact properties',
-              subject: 'Magic Sword',
-              subjectType: 'item',
+              subjectType: 'entity',
             },
           ],
         },
@@ -136,70 +108,28 @@ describe('JSON-Schema – core:notes component', () => {
       },
     ],
     [
-      'note with valid timeline subjectType',
-      {
-        'core:notes': {
-          notes: [
-            {
-              text: 'Must survive 122 days until April 27, 1973',
-              subject: 'survival timeline',
-              subjectType: 'timeline',
-            },
-          ],
-        },
-      },
-    ],
-    [
-      'note with valid theory subjectType',
+      'note with valid knowledge subjectType',
       {
         'core:notes': {
           notes: [
             {
               text: 'My ontological framework may be fundamentally incomplete',
               subject: 'reality model uncertainty',
-              subjectType: 'theory',
+              subjectType: 'knowledge',
             },
           ],
         },
       },
     ],
     [
-      'note with valid observation subjectType',
-      {
-        'core:notes': {
-          notes: [
-            {
-              text: 'Uses term "miracle" casually when describing claimed abilities',
-              subject: 'Jon Ureña language patterns',
-              subjectType: 'observation',
-            },
-          ],
-        },
-      },
-    ],
-    [
-      'note with valid knowledge_state subjectType',
-      {
-        'core:notes': {
-          notes: [
-            {
-              text: 'May have knowledge of December 24 plan without being told',
-              subject: 'Jon Ureña knowledge',
-              subjectType: 'knowledge_state',
-            },
-          ],
-        },
-      },
-    ],
-    [
-      'note with valid psychological_state subjectType',
+      'note with valid state subjectType',
       {
         'core:notes': {
           notes: [
             {
               text: 'Wrestling with existential dread about nature of reality',
               subject: 'my psychological state',
-              subjectType: 'psychological_state',
+              subjectType: 'state',
             },
           ],
         },
@@ -233,7 +163,7 @@ describe('JSON-Schema – core:notes component', () => {
       'empty text',
       {
         'core:notes': {
-          notes: [{ text: '', subject: 'player', subjectType: 'character' }],
+          notes: [{ text: '', subject: 'player', subjectType: 'entity' }],
         },
       },
     ],
@@ -294,7 +224,7 @@ describe('JSON-Schema – core:notes component', () => {
             {
               text: 'A note about player',
               subject: 'player',
-              subjectType: 'character',
+              subjectType: 'entity',
               context: 'During combat',
               tags: ['combat', 'observation'],
               timestamp: '2025-06-04T12:00:00Z',

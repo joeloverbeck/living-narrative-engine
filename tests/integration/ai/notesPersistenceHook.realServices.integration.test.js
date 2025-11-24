@@ -2,7 +2,7 @@ import { persistNotes } from '../../../src/ai/notesPersistenceHook.js';
 import NotesService from '../../../src/ai/notesService.js';
 import ComponentAccessService from '../../../src/entities/componentAccessService.js';
 import { NOTES_COMPONENT_ID } from '../../../src/constants/componentIds.js';
-import { DEFAULT_SUBJECT_TYPE } from '../../../src/constants/subjectTypes.js';
+import { DEFAULT_SUBJECT_TYPE, SUBJECT_TYPES } from '../../../src/constants/subjectTypes.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';
 
 describe('notesPersistenceHook with real services', () => {
@@ -145,7 +145,7 @@ describe('notesPersistenceHook with real services', () => {
         notes: [
           { text: 'Remember the watchword', subject: 'Security' },
           { text: 'Scout the ridge', subject: 'Recon', subjectType: 'INVALID_TYPE' },
-          { text: 'Maintain supply lines', subject: 'Logistics', subjectType: 'organization' },
+          { text: 'Maintain supply lines', subject: 'Logistics', subjectType: SUBJECT_TYPES.ENTITY },
           { text: '  ', subject: 'Whitespace' },
           'text-only-note',
         ],
@@ -176,7 +176,7 @@ describe('notesPersistenceHook with real services', () => {
     });
     expect(explicitTypeNote).toMatchObject({
       subject: 'Logistics',
-      subjectType: 'organization',
+      subjectType: SUBJECT_TYPES.ENTITY,
       text: 'Maintain supply lines',
     });
 

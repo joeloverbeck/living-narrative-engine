@@ -85,9 +85,9 @@ describe('Bertram the Muddy Character - Integration Validation', () => {
 
       const subjects = notes.map((n) => n.subjectType);
       expect(subjects).toContain('event'); // Reciprocal services posting
-      expect(subjects).toContain('character'); // Anna
-      expect(subjects).toContain('skill'); // Leatherworking
-      expect(subjects).toContain('location'); // Mudbrook
+      expect(subjects).toContain('entity'); // Anna
+      expect(subjects).toContain('knowledge'); // Leatherworking
+      expect(subjects).toContain('entity'); // Mudbrook
     });
 
     it('should have secrets explaining radical transparency', () => {

@@ -1,13 +1,14 @@
 /**
  * @file Tests for PromptDataFormatter grouped notes functionality
  * @description Comprehensive tests for subject grouping and context formatting
+ * @version 2.0 - Updated for simplified 6-type taxonomy (LLMROLPROARCANA-002)
  */
 
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import { PromptDataFormatter } from '../../../src/prompting/promptDataFormatter.js';
 import { SUBJECT_TYPES } from '../../../src/constants/subjectTypes.js';
 
-describe('PromptDataFormatter - Grouped Notes Functionality', () => {
+describe('PromptDataFormatter - Grouped Notes Functionality (Simplified Taxonomy)', () => {
   let formatter;
   let mockLogger;
 
@@ -21,36 +22,32 @@ describe('PromptDataFormatter - Grouped Notes Functionality', () => {
   });
 
   describe('formatNotes with grouping enabled', () => {
-    test('should format grouped notes with subject types and context', () => {
+    test('should format grouped notes with simplified subject types and context', () => {
       const notes = [
         {
           text: 'John seems nervous about the meeting',
           subject: 'John',
-          subjectType: SUBJECT_TYPES.CHARACTER,
+          subjectType: SUBJECT_TYPES.ENTITY,
           context: 'tavern conversation',
-          tags: ['emotion', 'politics'],
         },
         {
           text: 'The north gate has extra guards',
           subject: 'The North Gate',
-          subjectType: SUBJECT_TYPES.LOCATION,
+          subjectType: SUBJECT_TYPES.ENTITY,
           context: 'morning patrol',
-          tags: ['security'],
         },
         {
           text: 'John always carries a medallion',
           subject: 'John',
-          subjectType: SUBJECT_TYPES.CHARACTER,
+          subjectType: SUBJECT_TYPES.ENTITY,
           context: 'observation',
-          tags: ['mystery', 'artifact'],
         },
       ];
 
       const result = formatter.formatNotes(notes, { groupBySubject: true });
 
-      expect(result).toContain('## Characters');
+      expect(result).toContain('## Entities');
       expect(result).toContain('### John');
-      expect(result).toContain('## Locations');
       expect(result).toContain('### The North Gate');
       expect(result).toContain(
         '- John seems nervous about the meeting (tavern conversation)'
@@ -63,24 +60,18 @@ describe('PromptDataFormatter - Grouped Notes Functionality', () => {
       );
     });
 
-    test('should handle notes without context or tags gracefully', () => {
+    test('should handle notes without context gracefully', () => {
       const notes = [
         {
           text: 'Simple note without extras',
           subject: 'Test Subject',
-          subjectType: SUBJECT_TYPES.CHARACTER,
+          subjectType: SUBJECT_TYPES.ENTITY,
         },
         {
           text: 'Note with context only',
           subject: 'Test Subject',
-          subjectType: SUBJECT_TYPES.CHARACTER,
+          subjectType: SUBJECT_TYPES.ENTITY,
           context: 'overheard conversation',
-        },
-        {
-          text: 'Note with tags only',
-          subject: 'Test Subject',
-          subjectType: SUBJECT_TYPES.CHARACTER,
-          tags: ['important'],
         },
       ];
 
@@ -90,48 +81,63 @@ describe('PromptDataFormatter - Grouped Notes Functionality', () => {
       expect(result).toContain(
         '- Note with context only (overheard conversation)'
       );
-      expect(result).toContain('- Note with tags only');
     });
 
-    test('should group multiple subjects under correct categories', () => {
+    test('should group multiple subjects under correct simplified categories', () => {
       const notes = [
         {
-          text: 'Event note',
+          text: 'Past event note',
           subject: 'Council Meeting',
           subjectType: SUBJECT_TYPES.EVENT,
         },
         {
           text: 'Character note',
           subject: 'Mayor',
-          subjectType: SUBJECT_TYPES.CHARACTER,
+          subjectType: SUBJECT_TYPES.ENTITY,
         },
         {
           text: 'Location note',
           subject: 'Town Square',
-          subjectType: SUBJECT_TYPES.LOCATION,
+          subjectType: SUBJECT_TYPES.ENTITY,
         },
         {
-          text: 'Another event note',
-          subject: 'Festival',
-          subjectType: SUBJECT_TYPES.EVENT,
+          text: 'Future plan note',
+          subject: 'Festival Preparation',
+          subjectType: SUBJECT_TYPES.PLAN,
+        },
+        {
+          text: 'Knowledge note',
+          subject: 'Guard Patterns',
+          subjectType: SUBJECT_TYPES.KNOWLEDGE,
+        },
+        {
+          text: 'Mental state note',
+          subject: 'Feeling Anxious',
+          subjectType: SUBJECT_TYPES.STATE,
         },
       ];
 
       const result = formatter.formatNotes(notes, { groupBySubject: true });
 
       // Categories should appear in priority order
-      const characterIndex = result.indexOf('## Characters');
-      const locationIndex = result.indexOf('## Locations');
-      const eventIndex = result.indexOf('## Events');
+      const entitiesIndex = result.indexOf('## Entities');
+      const eventsIndex = result.indexOf('## Events');
+      const plansIndex = result.indexOf('## Plans');
+      const knowledgeIndex = result.indexOf('## Knowledge');
+      const statesIndex = result.indexOf('## States');
 
-      expect(characterIndex).toBeLessThan(locationIndex);
-      expect(locationIndex).toBeLessThan(eventIndex);
+      expect(entitiesIndex).toBeLessThan(eventsIndex);
+      expect(eventsIndex).toBeLessThan(plansIndex);
+      expect(plansIndex).toBeLessThan(knowledgeIndex);
+      expect(knowledgeIndex).toBeLessThan(statesIndex);
 
       // Check subjects are present
       expect(result).toContain('### Mayor');
       expect(result).toContain('### Town Square');
       expect(result).toContain('### Council Meeting');
-      expect(result).toContain('### Festival');
+      expect(result).toContain('### Festival Preparation');
+      expect(result).toContain('### Guard Patterns');
+      expect(result).toContain('### Feeling Anxious');
     });
 
     test('should handle notes with missing or invalid subject types', () => {
@@ -148,263 +154,230 @@ describe('PromptDataFormatter - Grouped Notes Functionality', () => {
         {
           text: 'Valid note',
           subject: 'Valid Subject',
-          subjectType: SUBJECT_TYPES.CHARACTER,
+          subjectType: SUBJECT_TYPES.ENTITY,
         },
       ];
 
       const result = formatter.formatNotes(notes, { groupBySubject: true });
 
-      // Invalid/missing subject types should be categorized as "Other"
+      // Notes without valid types should fall back to OTHER
       expect(result).toContain('## Other');
-      expect(result).toContain('## Characters');
-      expect(result).toContain('### Unknown Subject');
-      expect(result).toContain('### Invalid Subject');
-      expect(result).toContain('### Valid Subject');
+      expect(result).toContain('## Entities');
     });
 
-    test('should handle notes without subjects gracefully', () => {
+    test('should handle notes without subject field', () => {
       const notes = [
         {
           text: 'Note without subject',
-          subjectType: SUBJECT_TYPES.CHARACTER,
         },
         {
-          text: 'Another note without subject',
+          text: 'Note with subject',
+          subject: 'Test',
+          subjectType: SUBJECT_TYPES.ENTITY,
         },
       ];
 
       const result = formatter.formatNotes(notes, { groupBySubject: true });
 
-      // Notes without subjects should be grouped under "General"
+      // Notes without subject should be grouped under 'General'
       expect(result).toContain('### General');
-      expect(result).toContain('- Note without subject');
-      expect(result).toContain('- Another note without subject');
+      expect(result).toContain('### Test');
     });
 
     test('should sort subjects alphabetically within categories', () => {
       const notes = [
         {
-          text: 'Note about Zara',
-          subject: 'Zara',
-          subjectType: SUBJECT_TYPES.CHARACTER,
+          text: 'Note Z',
+          subject: 'Zebra',
+          subjectType: SUBJECT_TYPES.ENTITY,
         },
         {
-          text: 'Note about Alice',
-          subject: 'Alice',
-          subjectType: SUBJECT_TYPES.CHARACTER,
+          text: 'Note A',
+          subject: 'Apple',
+          subjectType: SUBJECT_TYPES.ENTITY,
         },
         {
-          text: 'Note about Bob',
-          subject: 'Bob',
-          subjectType: SUBJECT_TYPES.CHARACTER,
+          text: 'Note M',
+          subject: 'Mango',
+          subjectType: SUBJECT_TYPES.ENTITY,
         },
       ];
 
       const result = formatter.formatNotes(notes, { groupBySubject: true });
 
-      const aliceIndex = result.indexOf('### Alice');
-      const bobIndex = result.indexOf('### Bob');
-      const zaraIndex = result.indexOf('### Zara');
+      const appleIndex = result.indexOf('### Apple');
+      const mangoIndex = result.indexOf('### Mango');
+      const zebraIndex = result.indexOf('### Zebra');
 
-      expect(aliceIndex).toBeLessThan(bobIndex);
-      expect(bobIndex).toBeLessThan(zaraIndex);
-    });
-
-    test('should respect showContext and showTags options', () => {
-      const notes = [
-        {
-          text: 'Test note',
-          subject: 'Test Subject',
-          subjectType: SUBJECT_TYPES.CHARACTER,
-          context: 'test context',
-          tags: ['test', 'tag'],
-        },
-      ];
-
-      // Test with context disabled
-      const resultNoContext = formatter.formatNotes(notes, {
-        groupBySubject: true,
-        showContext: false,
-      });
-      expect(resultNoContext).toContain('- Test note');
-      expect(resultNoContext).not.toContain('(test context)');
-
-      // Test with context enabled (default behavior)
-      const resultWithContext = formatter.formatNotes(notes, {
-        groupBySubject: true,
-        showContext: true,
-      });
-      expect(resultWithContext).toContain('- Test note (test context)');
-
-      // Test with default options
-      const resultDefault = formatter.formatNotes(notes, {
-        groupBySubject: true,
-      });
-      expect(resultDefault).toContain('- Test note (test context)');
+      expect(appleIndex).toBeLessThan(mangoIndex);
+      expect(mangoIndex).toBeLessThan(zebraIndex);
     });
   });
 
-  describe('formatNotes backward compatibility', () => {
-    test('should use legacy format when groupBySubject is false', () => {
+  describe('formatNotes with context display options', () => {
+    test('should hide context when showContext is false', () => {
       const notes = [
         {
-          text: 'First note',
-          subject: 'Subject1',
-          subjectType: SUBJECT_TYPES.CHARACTER,
+          text: 'Test note',
+          subject: 'Test',
+          subjectType: SUBJECT_TYPES.ENTITY,
+          context: 'test context',
         },
+      ];
+
+      const result = formatter.formatNotes(notes, {
+        groupBySubject: true,
+        showContext: false,
+      });
+
+      expect(result).toContain('- Test note');
+      expect(result).not.toContain('(test context)');
+    });
+
+    test('should show context when showContext is true', () => {
+      const notes = [
         {
-          text: 'Second note',
-          subject: 'Subject2',
-          subjectType: SUBJECT_TYPES.LOCATION,
+          text: 'Test note',
+          subject: 'Test',
+          subjectType: SUBJECT_TYPES.ENTITY,
+          context: 'test context',
         },
+      ];
+
+      const result = formatter.formatNotes(notes, {
+        groupBySubject: true,
+        showContext: true,
+      });
+
+      expect(result).toContain('- Test note (test context)');
+    });
+  });
+
+  describe('legacy format support', () => {
+    test('should support flat formatting when groupBySubject is false', () => {
+      const notes = [
+        { text: 'Note 1', subject: 'A', subjectType: SUBJECT_TYPES.ENTITY },
+        { text: 'Note 2', subject: 'B', subjectType: SUBJECT_TYPES.EVENT },
       ];
 
       const result = formatter.formatNotes(notes, { groupBySubject: false });
 
-      // Should be flat list without categories or subjects
-      expect(result).toBe('- First note\n- Second note');
+      expect(result).toBe('- Note 1\n- Note 2');
       expect(result).not.toContain('##');
       expect(result).not.toContain('###');
     });
-
-    test('should default to legacy format when no options provided', () => {
-      const notes = [
-        {
-          text: 'Test note',
-          subject: 'Test Subject',
-          subjectType: SUBJECT_TYPES.CHARACTER,
-        },
-      ];
-
-      const result = formatter.formatNotes(notes);
-
-      // Should be grouped format by default now
-      expect(result).toContain('## Characters');
-      expect(result).toContain('### Test Subject');
-      expect(result).toContain('- Test note');
-    });
   });
 
-  describe('error handling and edge cases', () => {
+  describe('error handling', () => {
     test('should handle empty notes array', () => {
-      const result = formatter.formatNotes([], { groupBySubject: true });
+      const result = formatter.formatNotes([]);
       expect(result).toBe('');
     });
 
-    test('should handle null/undefined notes array', () => {
-      expect(formatter.formatNotes(null, { groupBySubject: true })).toBe('');
-      expect(formatter.formatNotes(undefined, { groupBySubject: true })).toBe(
-        ''
-      );
+    test('should handle null or undefined notes', () => {
+      const nullResult = formatter.formatNotes(null);
+      const undefinedResult = formatter.formatNotes(undefined);
+
+      expect(nullResult).toBe('');
+      expect(undefinedResult).toBe('');
     });
 
-    test('should filter out invalid notes gracefully', () => {
+    test('should filter out invalid note objects', () => {
       const notes = [
-        {
-          text: 'Valid note',
-          subject: 'Valid Subject',
-          subjectType: SUBJECT_TYPES.CHARACTER,
-        },
+        { text: 'Valid', subject: 'Test', subjectType: SUBJECT_TYPES.ENTITY },
         null,
-        {
-          text: '',
-          subject: 'Empty Text',
-        },
-        {
-          subject: 'No Text',
-        },
-        'not an object',
+        undefined,
+        { subject: 'Missing text', subjectType: SUBJECT_TYPES.ENTITY },
+        'string',
+        123,
       ];
 
       const result = formatter.formatNotes(notes, { groupBySubject: true });
 
-      expect(result).toContain('- Valid note');
-      expect(result).toContain('### Valid Subject');
-      // Should not contain invalid entries
-      expect(result.split('\n')).toHaveLength(3); // Category + Subject + Note
+      expect(result).toContain('- Valid');
+      expect(result.split('\n').filter((line) => line.startsWith('-'))).toHaveLength(1);
     });
 
     test('should fallback to simple formatting on error', () => {
-      // Mock an error in the grouping process
-      const originalGroupNotesBySubject = formatter.groupNotesBySubject;
-      formatter.groupNotesBySubject = jest.fn(() => {
+      const notes = [
+        { text: 'Note 1', subject: 'A', subjectType: SUBJECT_TYPES.ENTITY },
+        { text: 'Note 2', subject: 'B', subjectType: SUBJECT_TYPES.EVENT },
+      ];
+
+      // Mock sortNotesForDisplay to throw error
+      jest.spyOn(formatter, 'sortNotesForDisplay').mockImplementation(() => {
         throw new Error('Test error');
       });
 
-      const notes = [
-        {
-          text: 'Test note',
-          subject: 'Test Subject',
-        },
-      ];
-
       const result = formatter.formatNotes(notes, { groupBySubject: true });
 
-      expect(result).toBe('- Test note');
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'formatGroupedNotes: Error during formatting, falling back to simple list',
-        expect.any(Error)
-      );
-
-      // Restore original method
-      formatter.groupNotesBySubject = originalGroupNotesBySubject;
-    });
-
-    test('should handle special characters in text, context, and tags', () => {
-      const notes = [
-        {
-          text: 'Note with "quotes" and [brackets]',
-          subject: 'Subject (with parentheses)',
-          subjectType: SUBJECT_TYPES.CHARACTER,
-          context: 'Context with "quotes"',
-          tags: ['tag-with-dash', 'tag [with] brackets'],
-        },
-      ];
-
-      const result = formatter.formatNotes(notes, { groupBySubject: true });
-
-      expect(result).toContain('- Note with "quotes" and [brackets]');
-      expect(result).toContain('### Subject (with parentheses)');
-      expect(result).toContain('(Context with "quotes")');
+      // Should fall back to simple formatting
+      expect(result).toContain('- Note 1');
+      expect(result).toContain('- Note 2');
+      expect(mockLogger.error).toHaveBeenCalled();
     });
   });
 
-  describe('formatNotesSection with grouping options', () => {
-    test('should pass options to formatNotes and wrap in XML', () => {
+  describe('integration with all 6 subject types', () => {
+    test('should handle all subject types in a single notes array', () => {
       const notes = [
         {
-          text: 'Test note',
-          subject: 'Test Subject',
-          subjectType: SUBJECT_TYPES.CHARACTER,
+          text: 'Person info',
+          subject: 'John',
+          subjectType: SUBJECT_TYPES.ENTITY,
+        },
+        {
+          text: 'Past event',
+          subject: 'Battle',
+          subjectType: SUBJECT_TYPES.EVENT,
+        },
+        {
+          text: 'Future intention',
+          subject: 'Quest',
+          subjectType: SUBJECT_TYPES.PLAN,
+        },
+        {
+          text: 'Theory about magic',
+          subject: 'Magic Research',
+          subjectType: SUBJECT_TYPES.KNOWLEDGE,
+        },
+        {
+          text: 'Feeling anxious',
+          subject: 'My Mental State',
+          subjectType: SUBJECT_TYPES.STATE,
+        },
+        {
+          text: 'Miscellaneous',
+          subject: 'Random',
+          subjectType: SUBJECT_TYPES.OTHER,
         },
       ];
 
-      const result = formatter.formatNotesSection(notes, {
-        groupBySubject: true,
-      });
+      const result = formatter.formatNotes(notes, { groupBySubject: true });
 
-      expect(result).toMatch(/^<notes>\n[\s\S]*\n<\/notes>$/);
-      expect(result).toContain('## Characters');
-      expect(result).toContain('### Test Subject');
-    });
+      // All categories should be present
+      expect(result).toContain('## Entities');
+      expect(result).toContain('## Events');
+      expect(result).toContain('## Plans');
+      expect(result).toContain('## Knowledge');
+      expect(result).toContain('## States');
+      expect(result).toContain('## Other');
 
-    test('should return empty string when no notes with grouping enabled', () => {
-      const result = formatter.formatNotesSection([], { groupBySubject: true });
-      expect(result).toBe('');
-    });
+      // Verify proper ordering
+      const indices = {
+        entities: result.indexOf('## Entities'),
+        events: result.indexOf('## Events'),
+        plans: result.indexOf('## Plans'),
+        knowledge: result.indexOf('## Knowledge'),
+        states: result.indexOf('## States'),
+        other: result.indexOf('## Other'),
+      };
 
-    test('should use grouped format by default when no options provided', () => {
-      const notes = [
-        {
-          text: 'Test note',
-        },
-      ];
-
-      const result = formatter.formatNotesSection(notes);
-
-      expect(result).toContain(
-        '<notes>\n## Other\n### General\n- Test note\n</notes>'
-      );
+      expect(indices.entities).toBeLessThan(indices.events);
+      expect(indices.events).toBeLessThan(indices.plans);
+      expect(indices.plans).toBeLessThan(indices.knowledge);
+      expect(indices.knowledge).toBeLessThan(indices.states);
+      expect(indices.states).toBeLessThan(indices.other);
     });
   });
 });

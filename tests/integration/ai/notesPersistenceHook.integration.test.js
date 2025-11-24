@@ -107,7 +107,7 @@ describe('persistNotes integration coverage', () => {
     const secondNote = {
       text: 'Visit the market',
       subject: 'Marketplace',
-      subjectType: 'location',
+      subjectType: 'entity',
       context: 'northern district',
     };
 

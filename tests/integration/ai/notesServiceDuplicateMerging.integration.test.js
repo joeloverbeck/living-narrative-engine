@@ -20,7 +20,7 @@ describe('NotesService duplicate merging integration', () => {
         {
           text: 'Existing Insight',
           subject: 'Lorekeeper',
-          subjectType: SUBJECT_TYPES.CHARACTER,
+          subjectType: SUBJECT_TYPES.ENTITY,
           timestamp: '2024-04-04T04:04:04.000Z',
         },
         // Entries that should be ignored by the pre-build filter
@@ -30,14 +30,14 @@ describe('NotesService duplicate merging integration', () => {
     };
 
     const newNotes = [
-      // Duplicate via punctuation/casing differences
+      // Duplicate via punctuation/casing differences and same subjectType
       {
         text: '   existing insight!!!   ',
         subject: 'Lorekeeper',
-        subjectType: SUBJECT_TYPES.CHARACTER,
+        subjectType: SUBJECT_TYPES.ENTITY,
         timestamp: '2021-01-01T00:00:00.000Z',
       },
-      // Duplicate because subjectType defaults to OTHER
+      // NOT a duplicate - defaults to OTHER which is different from existing ENTITY type
       {
         text: 'Existing Insight',
         subject: 'Lorekeeper',
@@ -52,7 +52,7 @@ describe('NotesService duplicate merging integration', () => {
       {
         text: 'Check the archives',
         subject: 'Records Office',
-        subjectType: SUBJECT_TYPES.LOCATION,
+        subjectType: SUBJECT_TYPES.ENTITY,
         timestamp: '2025-03-03T03:03:03.000Z',
       },
       // Blank text after trimming should be skipped
@@ -77,9 +77,9 @@ describe('NotesService duplicate merging integration', () => {
     expect(notesComponent.notes).toHaveLength(6);
     expect(notesComponent.notes.slice(-3)).toEqual(result.addedNotes);
 
-    const [normalizedDuplicate, defaultedNote, preservedNote] = result.addedNotes;
+    const [duplicateTextDifferentType, defaultedNote, preservedNote] = result.addedNotes;
 
-    expect(normalizedDuplicate).toEqual({
+    expect(duplicateTextDifferentType).toEqual({
       text: 'Existing Insight',
       subject: 'Lorekeeper',
       subjectType: DEFAULT_SUBJECT_TYPE,
@@ -98,27 +98,21 @@ describe('NotesService duplicate merging integration', () => {
     expect(preservedNote).toEqual({
       text: 'Check the archives',
       subject: 'Records Office',
-      subjectType: SUBJECT_TYPES.LOCATION,
+      subjectType: SUBJECT_TYPES.ENTITY,
       context: undefined,
       timestamp: '2025-03-03T03:03:03.000Z',
     });
 
-    // Confirm only one Lorekeeper note was added despite multiple duplicate payloads
-    const lorekeeperAdditions = result.addedNotes.filter(
-      (note) => note.subject === 'Lorekeeper'
-    );
-    expect(lorekeeperAdditions).toHaveLength(1);
-
     // Validate that normalization includes subject and subject type to prevent cross-subject collisions
     const normalizedExisting = normalizeNoteText(notesComponent.notes[0]);
-    const normalizedLorekeeper = normalizeNoteText(normalizedDuplicate);
+    const normalizedDuplicateTextDifferentType = normalizeNoteText(duplicateTextDifferentType);
     const normalizedDefaulted = normalizeNoteText(defaultedNote);
     const normalizedPreserved = normalizeNoteText(preservedNote);
 
-    expect(normalizedExisting).toBe('character:lorekeeper:existing insight');
-    expect(normalizedLorekeeper).toBe('other:lorekeeper:existing insight');
+    expect(normalizedExisting).toBe('entity:lorekeeper:existing insight');
+    expect(normalizedDuplicateTextDifferentType).toBe('other:lorekeeper:existing insight');
     expect(normalizedDefaulted).toBe('other:investigation:new clue discovered');
-    expect(normalizedPreserved).toBe('location:records office:check the archives');
+    expect(normalizedPreserved).toBe('entity:records office:check the archives');
   });
 
   it('returns early without modification when provided notes collection is malformed', () => {

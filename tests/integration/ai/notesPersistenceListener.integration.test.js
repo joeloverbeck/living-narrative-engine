@@ -109,7 +109,7 @@ describe('NotesPersistenceListener integration', () => {
       {
         text: 'Remember me',
         subject: 'Alice',
-        subjectType: SUBJECT_TYPES.CHARACTER,
+        subjectType: SUBJECT_TYPES.ENTITY,
         context: 'initial memory',
         timestamp: '2023-12-24T20:15:00.000Z',
       },
@@ -163,12 +163,12 @@ describe('NotesPersistenceListener integration', () => {
             {
               text: '  Remember me!  ',
               subject: 'Alice',
-              subjectType: SUBJECT_TYPES.CHARACTER,
+              subjectType: SUBJECT_TYPES.ENTITY,
             },
             {
               text: 'Sworn to protect the village',
               subject: 'Guard Captain',
-              subjectType: SUBJECT_TYPES.RELATIONSHIP,
+              subjectType: SUBJECT_TYPES.STATE,
               context: 'oath',
             },
             {
@@ -199,7 +199,7 @@ describe('NotesPersistenceListener integration', () => {
     expect(oathNote).toMatchObject({
       text: 'Sworn to protect the village',
       subject: 'Guard Captain',
-      subjectType: SUBJECT_TYPES.RELATIONSHIP,
+      subjectType: SUBJECT_TYPES.STATE,
       context: 'oath',
       timestamp: fixedNow.toISOString(),
     });

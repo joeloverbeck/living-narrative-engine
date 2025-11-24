@@ -99,13 +99,13 @@
                 {
                     "text": "Leire Amezua. Younger sister. Autoimmune condition—the kind that requires maintenance medication, not the kind that goes away. Public healthcare reclassified her meds eighteen months ago. 'Coverage restructuring,' they called it. What it means is the costs landed on me. I send 62% of my current pay to cover medical expenses. That's the primary reason I'm here. Not the only reason I tell myself, but the one that shows up in the bank transfer every month like a gas bill.",
                     "subject": "Leire Amezua",
-                    "subjectType": "relationship",
+                    "subjectType": "entity",
                     "context": "my younger sister and primary financial dependent"
                 },
                 {
                     "text": "Four years ago I worked industrial safety compliance for a chemical processing plant. Parent company's the same megacorp I'm contracted to now, different subsidiary name. My job: walk catwalks, log corrosion, enforce respirator compliance, sign off on hazard disposal. I believed in 'nobody dies on my shift.' Flagged a storage tank for dangerous thinning three separate times via email. Timestamps: March 14, April 2, April 29. Saved the confirmations. Didn't save me.",
                     "subject": "my former career",
-                    "subjectType": "concept",
+                    "subjectType": "knowledge",
                     "context": "Industrial safety compliance officer at chemical plant"
                 },
                 {
@@ -117,37 +117,37 @@
                 {
                     "text": "My current contract includes a 'behavioral remediation clause.' Signed it after the plant incident when I was desperate and they knew it. Key provisions: I cannot discharge weapons without explicit authorization. Violation triggers forfeiture of all outstanding hazard pay, legal liability for relocation housing costs they're 'providing,' and retroactive assertion of 'negligent escalation'—which means they can make me personally financially liable for any 'cross-boundary contamination event.' Translation: if I fuck up, Leire's medical debt becomes my legal problem. The clause is 42 pages. I've read it twice with a highlighter. It's a shock collar made of paperwork.",
                     "subject": "Behavioral remediation clause",
-                    "subjectType": "concept",
+                    "subjectType": "knowledge",
                     "context": "Contractual restriction governing my use of force"
                 },
                 {
                     "text": "My current job title is 'remote environmental perimeter sentinel.' Sounds like I'm monitoring air quality sensors. Actually I'm watching a rip in reality that spits nightmares. Private contractor, not salaried employee. Zero union protection. Hazard pay, yes. NDA with scary language, yes. Contract term: 18 months. If nothing catastrophic happens in that window, I'll have accumulated enough money to maybe rebuild. Maybe. Contract terms explicitly prohibit weapons discharge without authorization—see behavioral remediation clause, which they reference four separate times like they really want me to remember it.",
                     "subject": "Remote environmental perimeter sentinel assignment",
-                    "subjectType": "concept",
+                    "subjectType": "knowledge",
                     "context": "Current job assignment"
                 },
                 {
                     "text": "The anomaly. The rift. The thing I'm contracted to monitor. It's a rip in reality, a hole in the world, located in remote salt flats dozens of kilometers from the nearest settlement. Nobody knows how it appeared. Officially. It does things I try to conceptualize in quasi-industrial terms—pressure buildups, system failures, gauge readings. Makes it manageable. The rift periodically emits psychic phenomena that causes nightmares, otherworldly shit. Visions of bizarre creatures somewhere else. Affects settlements dozens of kilometers out. I track it through temperature readings, EM noise, visual flicker, sound anomalies. My industrial-disaster framework keeps getting surprised because this thing doesn't fail like a boiler or a weld. It fails like something I don't have vocabulary for.",
                     "subject": "The Rift / The Anomaly",
-                    "subjectType": "location",
+                    "subjectType": "entity",
                     "context": "The phenomenon I'm contracted to monitor"
                 },
                 {
                     "text": "I maintain an unauthorized personal documentation system. Rite-in-the-Rain waterproof notebook. Paper, not digital—can't delete paper. I log: temperature, EM noise, visual flicker, sound anomalies, my own heart rate spikes, partner statements, comms traffic, timestamps. Color-coded ink for categorization: black for readings, blue for observations, red for anomalies. This violates data security protocols, section 7.4 subsection B: 'unapproved personal records constitute information security breach.' I do it anyway. It's insurance. When corporate systems 'can't reconstruct telemetry' after an incident—and they will say that, they always say that—I'll have my own independent record. I walk the perimeter every 30 minutes to make manual observations even though the drones supposedly handle it. I don't trust automation. I've seen inspection drones file green on cracked welds.",
                     "subject": "Personal documentation system",
-                    "subjectType": "concept",
+                    "subjectType": "knowledge",
                     "context": "my unauthorized but meticulously maintained record-keeping practice"
                 },
                 {
                     "text": "The parent megacorporation that employs me now is the same entity that owned the chemical plant. Same logo, same legal department, same institutional approach to accountability. They wrote the falsified incident reports. They made my emails disappear. They engineered my professional destruction while avoiding legal liability. Then they rehired me as a desperate contractor under exploitative terms because they knew I had no options left. I view all corporate authority through that lens. Can't differentiate between incompetent leadership and malicious leadership anymore. Every supervisor is potentially the person who'll delete my emails when the bodies drop.",
                     "subject": "Parent megacorporation",
-                    "subjectType": "organization",
+                    "subjectType": "entity",
                     "context": "my current and former employer"
                 },
                 {
                     "text": "Dylan Crace. Known him one week. That's how long we've been assigned to monitor this rift. Ex-military security contractor—convoy escort, asset recovery, disaster zones, all for subsidiaries of this same megacorp. He says he's not here for money. Says he requested this assignment because it's 'history-level important.' I think corporate propaganda got to him. He talks. Won't shut up. That alone grates—I'm quiet. Dylan calls me 'Amezua' professionally, slips and calls me 'Elena' when he's stressed. I hate that. Sounds like ownership. I always answer 'Crace,' never 'Dylan.' Won't give that ground. Corporate gave me a pistol, gave Dylan Crace an assault rifle. Because of his training, officially. Because they need a narrative where the ex-military guy goes rogue and I'm just collateral, actually.",
                     "subject": "Dylan Crace",
-                    "subjectType": "character",
+                    "subjectType": "entity",
                     "context": "the only other sentinel guarding the rip in reality"
                 }
             ]

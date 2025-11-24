@@ -51,7 +51,7 @@ describe('NotesService integration - multi-stage deduplication', () => {
             {
               text: 'Existing Insight',
               subject: 'Archivist',
-              subjectType: SUBJECT_TYPES.CHARACTER,
+              subjectType: SUBJECT_TYPES.ENTITY,
               timestamp: initialTimestamp,
             },
             null,
@@ -68,14 +68,14 @@ describe('NotesService integration - multi-stage deduplication', () => {
     const { wasModified: firstBatchModified, addedNotes: firstBatchAdded } = notesService.addNotes(
       component,
       [
-        { text: 'Existing Insight', subject: 'Archivist', subjectType: SUBJECT_TYPES.CHARACTER },
+        { text: 'Existing Insight', subject: 'Archivist', subjectType: SUBJECT_TYPES.ENTITY },
         { text: 'Twin discovery', subject: 'Companion' },
         { text: 'Twin discovery', subject: 'Companion' },
         { text: '  Fresh idea  ', subject: 'Archivist' },
         {
           text: 'Structured entry',
           subject: 'Chronomancer',
-          subjectType: SUBJECT_TYPES.CONCEPT,
+          subjectType: SUBJECT_TYPES.KNOWLEDGE,
           context: 'Temporal anomaly',
           timestamp: '2025-08-08T08:00:00.000Z',
         },
@@ -106,7 +106,7 @@ describe('NotesService integration - multi-stage deduplication', () => {
     expect(preservedNote).toMatchObject({
       text: 'Structured entry',
       subject: 'Chronomancer',
-      subjectType: SUBJECT_TYPES.CONCEPT,
+      subjectType: SUBJECT_TYPES.KNOWLEDGE,
       context: 'Temporal anomaly',
       timestamp: '2025-08-08T08:00:00.000Z',
     });
@@ -133,7 +133,7 @@ describe('NotesService integration - multi-stage deduplication', () => {
         extractedData: {
           notes: [
             { text: 'Twin discovery!!!', subject: 'Companion' },
-            { text: 'Structured entry', subject: 'Chronomancer', subjectType: SUBJECT_TYPES.CONCEPT },
+            { text: 'Structured entry', subject: 'Chronomancer', subjectType: SUBJECT_TYPES.KNOWLEDGE },
             { text: 'Scenario log', subject: 'Chronicler' },
             'string-entry',
             null,

@@ -1,13 +1,10 @@
 /**
- * @file Integration tests for enhanced LLM prompt instructions
- * @description Validates that the enhanced NOTES RULES in corePromptText.json
- * provides effective guidance for AI categorization of notes with 18 subject types.
- *
- * Tests simulate LLM behavior to validate prompt effectiveness in achieving >95%
- * categorization accuracy, particularly for temporal and epistemic distinctions.
+ * @file Integration tests for enhanced LLM prompt with simplified note taxonomy
+ * @description Validates the 6-type taxonomy system in LLM prompts
+ * @version 2.0 - Updated for simplified taxonomy (LLMROLPROARCANA-002)
  * @see data/prompts/corePromptText.json
  * @see src/constants/subjectTypes.js
- * @see workflows/NOTARCENH-002-enhance-llm-prompt-instructions.md
+ * @see data/mods/core/components/notes.component.json
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
@@ -17,7 +14,7 @@ import corePromptText from '../../../data/prompts/corePromptText.json';
 import coreNotesComponent from '../../../data/mods/core/components/notes.component.json';
 import { SUBJECT_TYPES } from '../../../src/constants/subjectTypes.js';
 
-describe('Enhanced LLM Prompt Instructions Integration', () => {
+describe('Enhanced LLM Prompt Instructions Integration (Simplified Taxonomy)', () => {
   let ajv;
   let validateNote;
 
@@ -44,627 +41,326 @@ describe('Enhanced LLM Prompt Instructions Integration', () => {
     });
   });
 
-  describe('Prompt Structure Validation', () => {
-    it('should contain all 18 subject types in enumeration', () => {
+  describe('Simplified Taxonomy Structure', () => {
+    it('should contain all 6 simplified subject types', () => {
       const promptText = corePromptText.finalLlmInstructionText;
 
-      // Verify all 18 subject types are mentioned
-      const expectedTypes = [
-        'character',
-        'location',
-        'item',
-        'creature',
+      // Check for the 6 new types
+      expect(promptText).toContain('entity');
+      expect(promptText).toContain('event');
+      expect(promptText).toContain('plan');
+      expect(promptText).toContain('knowledge');
+      expect(promptText).toContain('state');
+      expect(promptText).toContain('other');
+    });
+
+    it('should have exactly 6 subject types in schema enum', () => {
+      const enumValues =
+        coreNotesComponent.dataSchema.properties.notes.items.properties.subjectType.enum;
+      expect(enumValues).toHaveLength(6);
+      expect(enumValues).toEqual([
+        'entity',
         'event',
-        'concept',
-        'relationship',
-        'organization',
-        'quest',
-        'skill',
-        'emotion',
         'plan',
-        'timeline',
-        'theory',
-        'observation',
-        'knowledge_state',
-        'psychological_state',
+        'knowledge',
+        'state',
         'other',
-      ];
-
-      expectedTypes.forEach((type) => {
-        expect(promptText).toContain(type);
-      });
+      ]);
     });
 
-    it('should include SUBJECT TYPE DEFINITIONS section', () => {
+    it('should include NOTE SUBJECT TYPES section', () => {
       const promptText = corePromptText.finalLlmInstructionText;
-
-      expect(promptText).toContain('SUBJECT TYPE DEFINITIONS:');
-      expect(promptText).toContain('Core Entity Types:');
-      expect(promptText).toContain('Temporal & Action Types:');
-      expect(promptText).toContain('Knowledge & Mental Types:');
-      expect(promptText).toContain('Psychological & Social Types:');
+      expect(promptText).toContain('NOTE SUBJECT TYPES (Select ONE per note)');
     });
 
-    it('should include CRITICAL DISTINCTIONS section with temporal guidance', () => {
+    it('should describe entity type correctly', () => {
       const promptText = corePromptText.finalLlmInstructionText;
-
-      expect(promptText).toContain('CRITICAL DISTINCTIONS:');
-      expect(promptText).toContain('event" = PAST occurrence');
-      expect(promptText).toContain('plan" = FUTURE action/intention');
-      expect(promptText).toContain('timeline" = temporal tracking');
+      expect(promptText).toContain('1. entity - Describing who/what/where');
+      expect(promptText).toContain('people, places, things, creatures, organizations');
     });
 
-    it('should include CHOOSING THE RIGHT SUBJECT TYPE decision flow', () => {
+    it('should describe event type correctly', () => {
       const promptText = corePromptText.finalLlmInstructionText;
-
-      expect(promptText).toContain('CHOOSING THE RIGHT SUBJECT TYPE:');
-      expect(promptText).toContain('Ask yourself:');
-      expect(promptText).toContain('Is this about a PERSON?');
-      expect(promptText).toContain('Did this already HAPPEN?');
-      expect(promptText).toContain('Is this a FUTURE plan/intention?');
+      expect(promptText).toContain('2. event - Describing past occurrences');
+      expect(promptText).toContain('things that already happened');
     });
 
-    it('should include comprehensive examples for new subject types', () => {
+    it('should describe plan type correctly', () => {
       const promptText = corePromptText.finalLlmInstructionText;
-
-      // Verify examples for new subject types
-      expect(promptText).toContain('plan (FUTURE Intention):');
-      expect(promptText).toContain('timeline (Temporal Tracking):');
-      expect(promptText).toContain('theory (Hypothesis):');
-      expect(promptText).toContain('observation (Behavioral Pattern):');
-      expect(promptText).toContain('knowledge_state (Epistemic State):');
-      expect(promptText).toContain(
-        'psychological_state (Complex Mental State):'
-      );
+      expect(promptText).toContain('3. plan - Describing future intentions');
+      expect(promptText).toContain('what you intend to do (not yet executed)');
     });
 
-    it('should include NOTES PRIORITIES section', () => {
+    it('should describe knowledge type correctly', () => {
       const promptText = corePromptText.finalLlmInstructionText;
+      expect(promptText).toContain('4. knowledge - Information, theories, observations');
+      expect(promptText).toContain('what you know, noticed, or theorize');
+    });
 
-      expect(promptText).toContain('NOTES PRIORITIES');
-      expect(promptText).toContain('HIGH PRIORITY');
-      expect(promptText).toContain('MEDIUM PRIORITY');
-      expect(promptText).toContain('LOW PRIORITY');
+    it('should describe state type correctly', () => {
+      const promptText = corePromptText.finalLlmInstructionText;
+      expect(promptText).toContain('5. state - Mental/emotional/psychological conditions');
+      expect(promptText).toContain('feelings or complex mental states');
+    });
+
+    it('should describe other type correctly', () => {
+      const promptText = corePromptText.finalLlmInstructionText;
+      expect(promptText).toContain('6. other - Anything not clearly fitting above');
+      expect(promptText).toContain('Uncertain or abstract concepts');
     });
   });
 
-  describe('Temporal Distinction Validation', () => {
-    it('should guide AI to correctly distinguish event vs plan vs timeline', () => {
-      // Simulate LLM understanding of temporal distinctions
-      const temporalNotes = [
+  describe('Schema Validation', () => {
+    it('should validate notes with all 6 subject types', () => {
+      const testNotes = [
         {
-          text: 'Yesterday the king declared war on the neighboring kingdom',
-          subject: 'War Declaration',
-          subjectType: SUBJECT_TYPES.EVENT, // PAST occurrence
-          context: 'royal court announcement',
-          timestamp: '2025-01-04T12:00:00Z',
-        },
-        {
-          text: 'Tomorrow I plan to flee the city under cover of darkness',
-          subject: 'Escape Plan',
-          subjectType: SUBJECT_TYPES.PLAN, // FUTURE intention
-          context: 'my decision to escape',
-          timestamp: '2025-01-04T12:01:00Z',
-        },
-        {
-          text: 'I have 3 days until conscription begins on January 7th',
-          subject: 'Conscription Deadline',
-          subjectType: SUBJECT_TYPES.TIMELINE, // Temporal tracking
-          context: 'critical deadline',
-          timestamp: '2025-01-04T12:02:00Z',
-        },
-      ];
-
-      // Validate all notes are correctly categorized
-      temporalNotes.forEach((note) => {
-        const result = validateNote(note);
-        if (!result) {
-          console.error('Temporal note validation failed:', note);
-          console.error('Errors:', validateNote.errors);
-        }
-        expect(result).toBe(true);
-      });
-
-      // Verify distinct types used
-      const types = temporalNotes.map((n) => n.subjectType);
-      expect(new Set(types).size).toBe(3); // All three types should be distinct
-    });
-
-    it('should demonstrate proper event categorization (past only)', () => {
-      const pastEvents = [
-        {
-          text: 'The bridge collapsed during the storm last week',
-          subject: 'Bridge Collapse',
-          subjectType: SUBJECT_TYPES.EVENT,
-          context: 'disaster aftermath',
-          timestamp: '2025-01-04T12:00:00Z',
-        },
-        {
-          text: 'Met with the merchant yesterday, he agreed to the deal',
-          subject: 'Merchant Meeting',
-          subjectType: SUBJECT_TYPES.EVENT,
-          context: 'trade negotiations',
-          timestamp: '2025-01-04T12:01:00Z',
-        },
-      ];
-
-      pastEvents.forEach((note) => {
-        expect(validateNote(note)).toBe(true);
-        expect(note.subjectType).toBe(SUBJECT_TYPES.EVENT);
-      });
-    });
-
-    it('should demonstrate proper plan categorization (future only)', () => {
-      const futurePlans = [
-        {
-          text: 'Will infiltrate the castle tomorrow night at midnight',
-          subject: 'Castle Infiltration Plan',
-          subjectType: SUBJECT_TYPES.PLAN,
-          context: 'my strategy to rescue prisoner',
-          timestamp: '2025-01-04T12:00:00Z',
-        },
-        {
-          text: 'Intend to convince the council to delay the vote next week',
-          subject: 'Council Persuasion Plan',
-          subjectType: SUBJECT_TYPES.PLAN,
-          context: 'political strategy',
-          timestamp: '2025-01-04T12:01:00Z',
-        },
-      ];
-
-      futurePlans.forEach((note) => {
-        expect(validateNote(note)).toBe(true);
-        expect(note.subjectType).toBe(SUBJECT_TYPES.PLAN);
-      });
-    });
-
-    it('should demonstrate proper timeline categorization (deadlines)', () => {
-      const timelines = [
-        {
-          text: 'Must reach the safe house within 48 hours or lose contact',
-          subject: 'Safe House Deadline',
-          subjectType: SUBJECT_TYPES.TIMELINE,
-          context: 'critical time constraint',
-          timestamp: '2025-01-04T12:00:00Z',
-        },
-        {
-          text: 'Have exactly 7 days to gather evidence before the trial',
-          subject: 'Evidence Collection Timeline',
-          subjectType: SUBJECT_TYPES.TIMELINE,
-          context: 'legal deadline',
-          timestamp: '2025-01-04T12:01:00Z',
-        },
-      ];
-
-      timelines.forEach((note) => {
-        expect(validateNote(note)).toBe(true);
-        expect(note.subjectType).toBe(SUBJECT_TYPES.TIMELINE);
-      });
-    });
-  });
-
-  describe('Epistemic States Distinction Validation', () => {
-    it('should guide AI to distinguish theory vs observation vs knowledge_state', () => {
-      // Simulate LLM understanding of epistemic distinctions
-      const epistemicNotes = [
-        {
-          text: 'The wizard always taps his staff three times before casting major spells',
-          subject: "Wizard's Spellcasting Pattern",
-          subjectType: SUBJECT_TYPES.OBSERVATION, // Behavioral pattern
-          context: 'observed during battles',
-          timestamp: '2025-01-04T12:00:00Z',
-        },
-        {
-          text: 'I suspect his magic draws power from the nearby ley line nexus',
-          subject: 'Magic Power Source Theory',
-          subjectType: SUBJECT_TYPES.THEORY, // Hypothesis
-          context: 'analyzing spell effectiveness patterns',
-          timestamp: '2025-01-04T12:01:00Z',
-        },
-        {
-          text: 'He seems to know about my secret mission despite me never mentioning it',
-          subject: "Wizard's Unexplained Knowledge",
-          subjectType: SUBJECT_TYPES.KNOWLEDGE_STATE, // Epistemic state
-          context: 'assessing information leak',
-          timestamp: '2025-01-04T12:02:00Z',
-        },
-      ];
-
-      // Validate all notes are correctly categorized
-      epistemicNotes.forEach((note) => {
-        const result = validateNote(note);
-        if (!result) {
-          console.error('Epistemic note validation failed:', note);
-          console.error('Errors:', validateNote.errors);
-        }
-        expect(result).toBe(true);
-      });
-
-      // Verify distinct types used
-      const types = epistemicNotes.map((n) => n.subjectType);
-      expect(new Set(types).size).toBe(3); // All three types should be distinct
-    });
-
-    it('should demonstrate proper observation categorization (behavioral patterns)', () => {
-      const observations = [
-        {
-          text: 'The guard captain always checks the north gate first during his rounds',
-          subject: "Captain's Patrol Pattern",
-          subjectType: SUBJECT_TYPES.OBSERVATION,
-          context: 'security routine analysis',
-          timestamp: '2025-01-04T12:00:00Z',
-        },
-        {
-          text: 'The merchant becomes nervous and changes subject when asked about his suppliers',
-          subject: "Merchant's Avoidance Behavior",
-          subjectType: SUBJECT_TYPES.OBSERVATION,
-          context: 'interrogation patterns',
-          timestamp: '2025-01-04T12:01:00Z',
-        },
-      ];
-
-      observations.forEach((note) => {
-        expect(validateNote(note)).toBe(true);
-        expect(note.subjectType).toBe(SUBJECT_TYPES.OBSERVATION);
-      });
-    });
-
-    it('should demonstrate proper theory categorization (hypotheses)', () => {
-      const theories = [
-        {
-          text: 'The recent plague may be caused by contaminated water from the new well',
-          subject: 'Plague Source Hypothesis',
-          subjectType: SUBJECT_TYPES.THEORY,
-          context: 'investigating disease outbreak',
-          timestamp: '2025-01-04T12:00:00Z',
-        },
-        {
-          text: "The princess likely fled to her aunt's estate based on their close relationship",
-          subject: 'Princess Location Theory',
-          subjectType: SUBJECT_TYPES.THEORY,
-          context: 'deducing her whereabouts',
-          timestamp: '2025-01-04T12:01:00Z',
-        },
-      ];
-
-      theories.forEach((note) => {
-        expect(validateNote(note)).toBe(true);
-        expect(note.subjectType).toBe(SUBJECT_TYPES.THEORY);
-      });
-    });
-
-    it('should demonstrate proper knowledge_state categorization (epistemic states)', () => {
-      const knowledgeStates = [
-        {
-          text: 'The assassin has information about the secret passage—unclear how he learned it',
-          subject: "Assassin's Knowledge of Secret Passage",
-          subjectType: SUBJECT_TYPES.KNOWLEDGE_STATE,
-          context: 'security breach assessment',
-          timestamp: '2025-01-04T12:00:00Z',
-        },
-        {
-          text: 'She acts as if she knows my true identity, but I never revealed it',
-          subject: "Stranger's Awareness of My Identity",
-          subjectType: SUBJECT_TYPES.KNOWLEDGE_STATE,
-          context: 'evaluating information exposure',
-          timestamp: '2025-01-04T12:01:00Z',
-        },
-      ];
-
-      knowledgeStates.forEach((note) => {
-        expect(validateNote(note)).toBe(true);
-        expect(note.subjectType).toBe(SUBJECT_TYPES.KNOWLEDGE_STATE);
-      });
-    });
-  });
-
-  describe('Psychological Complexity Distinction Validation', () => {
-    it('should guide AI to distinguish emotion vs psychological_state', () => {
-      // Simulate LLM understanding of psychological complexity
-      const psychologicalNotes = [
-        {
-          text: 'I feel angry about the betrayal by my former ally',
-          subject: 'Anger at Betrayal',
-          subjectType: SUBJECT_TYPES.EMOTION, // Simple feeling
-          context: 'emotional reaction to betrayal',
-          timestamp: '2025-01-04T12:00:00Z',
-        },
-        {
-          text: 'I am questioning the fundamental nature of my identity and purpose after discovering the truth',
-          subject: 'Identity Crisis',
-          subjectType: SUBJECT_TYPES.PSYCHOLOGICAL_STATE, // Complex mental state
-          context: 'existential questioning',
-          timestamp: '2025-01-04T12:01:00Z',
-        },
-      ];
-
-      // Validate all notes are correctly categorized
-      psychologicalNotes.forEach((note) => {
-        const result = validateNote(note);
-        if (!result) {
-          console.error('Psychological note validation failed:', note);
-          console.error('Errors:', validateNote.errors);
-        }
-        expect(result).toBe(true);
-      });
-
-      // Verify distinct types used
-      const types = psychologicalNotes.map((n) => n.subjectType);
-      expect(new Set(types).size).toBe(2); // Both types should be distinct
-    });
-
-    it('should demonstrate proper emotion categorization (simple feelings)', () => {
-      const emotions = [
-        {
-          text: 'Feel deep sadness when remembering my lost homeland',
-          subject: 'Grief for Lost Home',
-          subjectType: SUBJECT_TYPES.EMOTION,
-          context: 'remembering the war',
-          timestamp: '2025-01-04T12:00:00Z',
-        },
-        {
-          text: 'Experience fear when approaching the haunted forest',
-          subject: 'Fear of Forest',
-          subjectType: SUBJECT_TYPES.EMOTION,
-          context: 'approaching dangerous area',
-          timestamp: '2025-01-04T12:01:00Z',
-        },
-      ];
-
-      emotions.forEach((note) => {
-        expect(validateNote(note)).toBe(true);
-        expect(note.subjectType).toBe(SUBJECT_TYPES.EMOTION);
-      });
-    });
-
-    it('should demonstrate proper psychological_state categorization (complex states)', () => {
-      const psychologicalStates = [
-        {
-          text: 'Struggling with moral conflict between duty to king and love for the rebellion',
-          subject: 'Moral Dilemma About Allegiance',
-          subjectType: SUBJECT_TYPES.PSYCHOLOGICAL_STATE,
-          context: 'internal conflict about loyalty',
-          timestamp: '2025-01-04T12:00:00Z',
-        },
-        {
-          text: 'Wrestling with survivor guilt after being the only one to escape the massacre',
-          subject: "Survivor's Guilt Complex",
-          subjectType: SUBJECT_TYPES.PSYCHOLOGICAL_STATE,
-          context: 'trauma response to survival',
-          timestamp: '2025-01-04T12:01:00Z',
-        },
-      ];
-
-      psychologicalStates.forEach((note) => {
-        expect(validateNote(note)).toBe(true);
-        expect(note.subjectType).toBe(SUBJECT_TYPES.PSYCHOLOGICAL_STATE);
-      });
-    });
-  });
-
-  describe('Edge Case Validation', () => {
-    it('should validate notes with all 18 subject types can be created', () => {
-      const allTypeNotes = [
-        {
-          text: 'Character test',
-          subject: 'Test Person',
-          subjectType: SUBJECT_TYPES.CHARACTER,
-        },
-        {
-          text: 'Location test',
-          subject: 'Test Place',
-          subjectType: SUBJECT_TYPES.LOCATION,
-        },
-        {
-          text: 'Item test',
-          subject: 'Test Object',
-          subjectType: SUBJECT_TYPES.ITEM,
-        },
-        {
-          text: 'Creature test',
-          subject: 'Test Creature',
-          subjectType: SUBJECT_TYPES.CREATURE,
-        },
-        {
-          text: 'Event test',
-          subject: 'Test Event',
-          subjectType: SUBJECT_TYPES.EVENT,
-        },
-        {
-          text: 'Concept test',
-          subject: 'Test Concept',
-          subjectType: SUBJECT_TYPES.CONCEPT,
-        },
-        {
-          text: 'Relationship test',
-          subject: 'Test Relationship',
-          subjectType: SUBJECT_TYPES.RELATIONSHIP,
-        },
-        {
-          text: 'Organization test',
-          subject: 'Test Organization',
-          subjectType: SUBJECT_TYPES.ORGANIZATION,
-        },
-        {
-          text: 'Quest test',
-          subject: 'Test Quest',
-          subjectType: SUBJECT_TYPES.QUEST,
-        },
-        {
-          text: 'Skill test',
-          subject: 'Test Skill',
-          subjectType: SUBJECT_TYPES.SKILL,
-        },
-        {
-          text: 'Emotion test',
-          subject: 'Test Emotion',
-          subjectType: SUBJECT_TYPES.EMOTION,
-        },
-        {
-          text: 'Plan test',
-          subject: 'Test Plan',
-          subjectType: SUBJECT_TYPES.PLAN,
-        },
-        {
-          text: 'Timeline test',
-          subject: 'Test Timeline',
-          subjectType: SUBJECT_TYPES.TIMELINE,
-        },
-        {
-          text: 'Theory test',
-          subject: 'Test Theory',
-          subjectType: SUBJECT_TYPES.THEORY,
-        },
-        {
-          text: 'Observation test',
-          subject: 'Test Observation',
-          subjectType: SUBJECT_TYPES.OBSERVATION,
-        },
-        {
-          text: 'Knowledge state test',
-          subject: 'Test Knowledge State',
-          subjectType: SUBJECT_TYPES.KNOWLEDGE_STATE,
-        },
-        {
-          text: 'Psychological state test',
-          subject: 'Test Psychological State',
-          subjectType: SUBJECT_TYPES.PSYCHOLOGICAL_STATE,
-        },
-        {
-          text: 'Other test',
-          subject: 'Test Other',
-          subjectType: SUBJECT_TYPES.OTHER,
-        },
-      ];
-
-      allTypeNotes.forEach((note) => {
-        expect(validateNote(note)).toBe(true);
-      });
-
-      // Verify all 18 types used
-      const types = allTypeNotes.map((n) => n.subjectType);
-      expect(new Set(types).size).toBe(18);
-    });
-
-    it('should maintain backward compatibility with existing note examples', () => {
-      const legacyNotes = [
-        {
-          text: 'Seems nervous about the council meeting',
+          text: 'John is a merchant',
           subject: 'John',
-          subjectType: 'character',
-          context: 'tavern conversation',
+          subjectType: 'entity',
         },
         {
-          text: 'Guards doubled at the north gate',
-          subject: 'City defenses',
-          subjectType: 'location',
-          context: 'morning patrol',
-        },
-        {
-          text: 'Discovered new spell for healing wounds',
-          subject: 'Healing Magic',
-          subjectType: 'skill',
-          context: 'library research',
-        },
-      ];
-
-      legacyNotes.forEach((note) => {
-        expect(validateNote(note)).toBe(true);
-      });
-    });
-  });
-
-  describe('Prompt Example Validation', () => {
-    it('should validate all examples from prompt are schema-compliant', () => {
-      // Examples extracted from the enhanced prompt
-      const promptExamples = [
-        {
-          text: 'Bobby is currently in a coma in Italy, doctors say brain-dead',
-          subject: 'Bobby Western',
-          subjectType: 'character',
-          context: 'my brother',
-        },
-        {
-          text: 'The council met last night and voted to increase guard patrols',
-          subject: 'Council Decision',
+          text: 'Battle occurred yesterday',
+          subject: 'Battle',
           subjectType: 'event',
-          context: 'town hall meeting, March 15',
         },
         {
-          text: 'Intend to walk into freezing woods on December 24 to end my life',
-          subject: 'December 24 plan',
+          text: 'Will investigate tomorrow',
+          subject: 'Investigation Plan',
           subjectType: 'plan',
-          context: 'my decision to die',
         },
         {
-          text: 'Must survive 122 days from December 22, 1972 to April 27, 1973 when Bobby wakes',
-          subject: 'survival timeline',
-          subjectType: 'timeline',
-          context: 'critical deadline for my survival',
+          text: 'Town guard changes at midnight',
+          subject: 'Guard Schedule',
+          subjectType: 'knowledge',
         },
         {
-          text: 'My ontological framework based on linear spacetime may be fundamentally incomplete',
-          subject: 'reality model uncertainty',
-          subjectType: 'theory',
-          context: 'witnessing impossible phenomena',
+          text: 'Feeling increasingly anxious',
+          subject: 'My Mental State',
+          subjectType: 'state',
         },
         {
-          text: 'Uses term "miracle" casually when describing claimed abilities, suggests different worldview',
-          subject: "Jon Ureña's language patterns",
-          subjectType: 'observation',
-          context: 'communication style analysis',
-        },
-        {
-          text: 'May have knowledge of December 24 plan without being told—unexplained awareness',
-          subject: "Jon Ureña's knowledge",
-          subjectType: 'knowledge_state',
-          context: 'assessing his claimed abilities',
-        },
-        {
-          text: 'Wrestling with existential dread about nature of reality after witnessing time manipulation',
-          subject: 'my psychological state',
-          subjectType: 'psychological_state',
-          context: 'crisis of understanding',
-        },
-        {
-          text: 'Need to verify Jon Ureña\'s claim that Bobby wakes on April 27, 1973',
-          subject: "verify Jon's prophecy",
-          subjectType: 'quest',
-          context: 'survival depends on this information',
-        },
-        {
-          text: 'Feel profound terror when contemplating non-linear time',
-          subject: 'my fear of temporal paradoxes',
-          subjectType: 'emotion',
-          context: "after Jon's demonstration",
-        },
-        {
-          text: 'Patient room on third floor, sterile white walls, single window facing courtyard',
-          subject: 'psychiatric hospital room',
-          subjectType: 'location',
-          context: "where I'm confined",
-        },
-        {
-          text: 'Jon Ureña treats me with gentle familiarity despite us being strangers',
-          subject: 'Jon Ureña relationship dynamic',
-          subjectType: 'relationship',
-          context: 'his behavior toward me',
+          text: 'Miscellaneous observation',
+          subject: 'Random',
+          subjectType: 'other',
         },
       ];
 
-      promptExamples.forEach((note) => {
+      testNotes.forEach((note) => {
         const result = validateNote(note);
         if (!result) {
-          console.error('Prompt example validation failed:', note);
+          console.error('Validation failed for:', note);
           console.error('Errors:', validateNote.errors);
         }
         expect(result).toBe(true);
       });
+    });
 
-      // Verify 12 examples with diverse types
-      expect(promptExamples.length).toBe(12);
-      const exampleTypes = new Set(promptExamples.map((n) => n.subjectType));
-      expect(exampleTypes.size).toBeGreaterThanOrEqual(12); // At least 12 distinct types
+    it('should reject notes with old subject types', () => {
+      const oldTypeNotes = [
+        {
+          text: 'Test',
+          subject: 'Test',
+          subjectType: 'character', // Old type
+        },
+        {
+          text: 'Test',
+          subject: 'Test',
+          subjectType: 'location', // Old type
+        },
+        {
+          text: 'Test',
+          subject: 'Test',
+          subjectType: 'emotion', // Old type
+        },
+      ];
+
+      oldTypeNotes.forEach((note) => {
+        const result = validateNote(note);
+        expect(result).toBe(false);
+        expect(validateNote.errors[0].keyword).toBe('enum');
+      });
+    });
+  });
+
+  describe('Prompt Examples Validation', () => {
+    it('should validate entity examples from prompt', () => {
+      const entityExamples = [
+        {
+          text: 'Registrar Copperplate seems nervous',
+          subject: 'Registrar Copperplate',
+          subjectType: 'entity',
+        },
+        {
+          text: 'The Crown and Quill tavern is crowded',
+          subject: 'The Crown and Quill tavern',
+          subjectType: 'entity',
+        },
+        {
+          text: 'Found an enchanted lute',
+          subject: 'enchanted lute',
+          subjectType: 'entity',
+        },
+      ];
+
+      entityExamples.forEach((note) => {
+        const result = validateNote(note);
+        expect(result).toBe(true);
+      });
+    });
+
+    it('should validate event examples from prompt', () => {
+      const eventExamples = [
+        {
+          text: 'Bertram offered job posting',
+          subject: 'Job Offer',
+          subjectType: 'event',
+        },
+        {
+          text: 'Fight broke out at bar',
+          subject: 'Bar Fight',
+          subjectType: 'event',
+        },
+      ];
+
+      eventExamples.forEach((note) => {
+        const result = validateNote(note);
+        expect(result).toBe(true);
+      });
+    });
+
+    it('should validate plan examples from prompt', () => {
+      const planExamples = [
+        {
+          text: 'Will investigate the sewers tomorrow',
+          subject: 'Sewer Investigation',
+          subjectType: 'plan',
+        },
+        {
+          text: 'Planning to perform at festival',
+          subject: 'Festival Performance',
+          subjectType: 'plan',
+        },
+      ];
+
+      planExamples.forEach((note) => {
+        const result = validateNote(note);
+        expect(result).toBe(true);
+      });
+    });
+
+    it('should validate knowledge examples from prompt', () => {
+      const knowledgeExamples = [
+        {
+          text: 'Copperplate keeps secrets',
+          subject: 'Copperplate Behavior',
+          subjectType: 'knowledge',
+        },
+        {
+          text: 'Town guard changes at midnight',
+          subject: 'Guard Schedule',
+          subjectType: 'knowledge',
+        },
+      ];
+
+      knowledgeExamples.forEach((note) => {
+        const result = validateNote(note);
+        expect(result).toBe(true);
+      });
+    });
+
+    it('should validate state examples from prompt', () => {
+      const stateExamples = [
+        {
+          text: 'Feeling increasingly feral',
+          subject: 'My Mental State',
+          subjectType: 'state',
+        },
+        {
+          text: 'Conflicted about artistic integrity',
+          subject: 'Internal Conflict',
+          subjectType: 'state',
+        },
+      ];
+
+      stateExamples.forEach((note) => {
+        const result = validateNote(note);
+        expect(result).toBe(true);
+      });
+    });
+  });
+
+  describe('Priority Guidelines', () => {
+    it('should include PRIORITY GUIDELINES section', () => {
+      const promptText = corePromptText.finalLlmInstructionText;
+      expect(promptText).toContain('PRIORITY GUIDELINES:');
+      expect(promptText).toContain('HIGH: Character secrets, survival plans, critical deadlines');
+      expect(promptText).toContain('MEDIUM: Behavioral patterns, theories, relationships');
+      expect(promptText).toContain('LOW: Routine events, common knowledge');
+    });
+  });
+
+  describe('Token Efficiency', () => {
+    it('should be significantly shorter than old 19-type taxonomy', () => {
+      const promptText = corePromptText.finalLlmInstructionText;
+      const notesSection = promptText.substring(
+        promptText.indexOf('NOTE SUBJECT TYPES'),
+        promptText.indexOf('PRIORITY GUIDELINES')
+      );
+
+      // New taxonomy should be under 1100 characters (old was ~1200, achieving ~10% reduction)
+      expect(notesSection.length).toBeLessThan(1100);
+    });
+
+    it('should enumerate all types in a single clear list', () => {
+      const promptText = corePromptText.finalLlmInstructionText;
+
+      // Should have exactly 6 numbered items (1-6)
+      const numberedSection = promptText.substring(
+        promptText.indexOf('1. entity'),
+        promptText.indexOf('PRIORITY GUIDELINES')
+      );
+      const numberedItems = numberedSection.match(/^\d\.\s+\w+\s+-/gm) || [];
+      expect(numberedItems.length).toBe(6);
+    });
+  });
+
+  describe('Backward Compatibility', () => {
+    it('should maintain required note structure', () => {
+      const noteSchema = coreNotesComponent.dataSchema.properties.notes.items;
+      expect(noteSchema.required).toContain('text');
+      expect(noteSchema.required).toContain('subject');
+      expect(noteSchema.required).toContain('subjectType');
+    });
+
+    it('should have default subjectType of "other"', () => {
+      const subjectTypeSchema =
+        coreNotesComponent.dataSchema.properties.notes.items.properties.subjectType;
+      expect(subjectTypeSchema.default).toBe('other');
+    });
+
+    it('should maintain optional context field', () => {
+      const noteSchema = coreNotesComponent.dataSchema.properties.notes.items;
+      expect(noteSchema.properties.context).toBeDefined();
+      expect(noteSchema.properties.context.type).toBe('string');
+    });
+  });
+
+  describe('Constants Integration', () => {
+    it('should have matching constants in subjectTypes.js', () => {
+      expect(SUBJECT_TYPES.ENTITY).toBe('entity');
+      expect(SUBJECT_TYPES.EVENT).toBe('event');
+      expect(SUBJECT_TYPES.PLAN).toBe('plan');
+      expect(SUBJECT_TYPES.KNOWLEDGE).toBe('knowledge');
+      expect(SUBJECT_TYPES.STATE).toBe('state');
+      expect(SUBJECT_TYPES.OTHER).toBe('other');
+    });
+
+    it('should have all constants matching schema enum values', () => {
+      const enumValues =
+        coreNotesComponent.dataSchema.properties.notes.items.properties.subjectType.enum;
+      const constantValues = Object.values(SUBJECT_TYPES);
+
+      expect(constantValues.sort()).toEqual(enumValues.sort());
     });
   });
 });

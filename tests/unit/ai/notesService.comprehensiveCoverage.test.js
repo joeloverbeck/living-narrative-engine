@@ -15,11 +15,11 @@ describe('normalizeNoteText', () => {
   it('normalizes structured notes including subject metadata', () => {
     const normalized = normalizeNoteText({
       subject: 'Ada Lovelace',
-      subjectType: SUBJECT_TYPES.CHARACTER,
+      subjectType: SUBJECT_TYPES.ENTITY,
       text: '  Calculates Analytical Engine output!  ',
     });
 
-    expect(normalized).toBe('character:ada lovelace: calculates analytical engine output');
+    expect(normalized).toBe('entity:ada lovelace: calculates analytical engine output');
   });
 
   it('falls back to the default subject type when none is provided', () => {
@@ -127,7 +127,7 @@ describe('NotesService.addNotes', () => {
         {
           text: 'Mission log',
           subject: 'Delta Station',
-          subjectType: SUBJECT_TYPES.LOCATION,
+          subjectType: SUBJECT_TYPES.ENTITY,
           timestamp: '2024-02-01T00:00:00.000Z',
         },
       ],
@@ -138,7 +138,7 @@ describe('NotesService.addNotes', () => {
       {
         text: 'Incoming supply convoy confirmed.',
         subject: 'Delta Station',
-        subjectType: SUBJECT_TYPES.LOCATION,
+        subjectType: SUBJECT_TYPES.ENTITY,
         timestamp: explicitTimestamp,
       },
     ]);
@@ -148,7 +148,8 @@ describe('NotesService.addNotes', () => {
       {
         text: 'Incoming supply convoy confirmed.',
         subject: 'Delta Station',
-        subjectType: SUBJECT_TYPES.LOCATION,
+        subjectType: SUBJECT_TYPES.ENTITY,
+        context: undefined,
         timestamp: explicitTimestamp,
       },
     ]);

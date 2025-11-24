@@ -51,35 +51,35 @@ describe('SubjectType Enum Integration', () => {
       {
         text: 'Must survive 122 days until April 27, 1973',
         subject: 'survival timeline',
-        subjectType: 'timeline',
+        subjectType: 'event',
         context: 'critical deadline',
         timestamp: '2025-01-04T12:01:00Z',
       },
       {
         text: 'My ontological framework may be fundamentally incomplete',
         subject: 'reality model uncertainty',
-        subjectType: 'theory',
+        subjectType: 'knowledge',
         context: 'witnessing impossible phenomena',
         timestamp: '2025-01-04T12:02:00Z',
       },
       {
         text: 'Uses term "miracle" casually when describing claimed abilities',
         subject: "Jon Ureña's language patterns",
-        subjectType: 'observation',
+        subjectType: 'knowledge',
         context: 'communication style analysis',
         timestamp: '2025-01-04T12:03:00Z',
       },
       {
         text: 'May have knowledge of December 24 plan without being told',
         subject: "Jon Ureña's knowledge",
-        subjectType: 'knowledge_state',
+        subjectType: 'knowledge',
         context: 'unexplained awareness',
         timestamp: '2025-01-04T12:04:00Z',
       },
       {
         text: 'Wrestling with existential dread about nature of reality',
         subject: 'my psychological state',
-        subjectType: 'psychological_state',
+        subjectType: 'state',
         context: 'after witnessing time manipulation',
         timestamp: '2025-01-04T12:05:00Z',
       },
@@ -96,25 +96,13 @@ describe('SubjectType Enum Integration', () => {
     });
   });
 
-  it('should validate all 18 subject types individually', () => {
+  it('should validate all 6 subject types individually', () => {
     const allSubjectTypes = [
-      'character',
-      'location',
-      'item',
-      'creature',
+      'entity',
       'event',
-      'concept',
-      'relationship',
-      'organization',
-      'quest',
-      'skill',
-      'emotion',
       'plan',
-      'timeline',
-      'theory',
-      'observation',
-      'knowledge_state',
-      'psychological_state',
+      'knowledge',
+      'state',
       'other',
     ];
 
@@ -158,7 +146,7 @@ describe('SubjectType Enum Integration', () => {
         {
           text: 'Character observation',
           subject: 'Jon Ureña',
-          subjectType: 'character',
+          subjectType: 'entity',
         },
         {
           text: 'Future plan',
@@ -168,12 +156,12 @@ describe('SubjectType Enum Integration', () => {
         {
           text: 'Temporal constraint',
           subject: '122 days survival',
-          subjectType: 'timeline',
+          subjectType: 'event',
         },
         {
           text: 'Theoretical framework',
           subject: 'Reality model',
-          subjectType: 'theory',
+          subjectType: 'knowledge',
         },
       ],
     };
@@ -190,17 +178,17 @@ describe('SubjectType Enum Integration', () => {
     expect(result).toBe(true);
   });
 
-  it('should maintain backward compatibility with existing types', () => {
-    const legacyNotes = [
+  it('should validate new taxonomy types', () => {
+    const newTaxonomyNotes = [
       {
         text: 'Character note',
         subject: 'Player',
-        subjectType: 'character',
+        subjectType: 'entity',
       },
       {
         text: 'Location note',
         subject: 'Market Square',
-        subjectType: 'location',
+        subjectType: 'entity',
       },
       {
         text: 'Event note',
@@ -214,10 +202,10 @@ describe('SubjectType Enum Integration', () => {
       },
     ];
 
-    legacyNotes.forEach((note) => {
+    newTaxonomyNotes.forEach((note) => {
       const result = validateNote(note);
       if (!result) {
-        console.error('Legacy note validation failed:', note);
+        console.error('New taxonomy note validation failed:', note);
         console.error('Errors:', validateNote.errors);
       }
       expect(result).toBe(true);
