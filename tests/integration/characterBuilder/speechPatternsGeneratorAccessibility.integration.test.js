@@ -404,12 +404,31 @@ function createDisplayEnhancerStub() {
           ? patterns.speechPatterns
           : [];
       return {
-        patterns: entries.map((pattern, index) => ({
-          index: index + 1,
-          htmlSafePattern: pattern.pattern,
-          htmlSafeExample: pattern.example,
-          circumstances: pattern.circumstances || '',
-        })),
+        patterns: entries.map((pattern, index) => {
+          // Support both old schema (pattern/example/circumstances) and new schema (type/examples/contexts)
+          const patternType = pattern.type || pattern.pattern || '';
+          const examples = Array.isArray(pattern.examples)
+            ? pattern.examples
+            : pattern.example
+              ? [pattern.example]
+              : [];
+          const contexts = Array.isArray(pattern.contexts)
+            ? pattern.contexts
+            : pattern.circumstances
+              ? [pattern.circumstances]
+              : [];
+          return {
+            index: index + 1,
+            // New field names expected by the controller
+            htmlSafeType: patternType,
+            htmlSafeExamples: examples,
+            htmlSafeContexts: contexts,
+            // Legacy field names for backward compatibility
+            htmlSafePattern: patternType,
+            htmlSafeExample: examples[0] || '',
+            circumstances: contexts[0] || '',
+          };
+        }),
         characterName: patterns?.characterName || 'Character',
         totalCount: entries.length,
         generatedAt: patterns?.generatedAt,

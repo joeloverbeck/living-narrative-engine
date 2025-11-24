@@ -1094,12 +1094,26 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
    */
   #createFallbackDisplayData(patterns) {
     return {
-      patterns: patterns.speechPatterns.map((pattern, index) => ({
-        index: index + 1,
-        htmlSafePattern: this.#escapeHtml(pattern.pattern || ''),
-        htmlSafeExample: this.#escapeHtml(pattern.example || ''),
-        circumstances: pattern.circumstances ? this.#escapeHtml(pattern.circumstances) : '',
-      })),
+      patterns: patterns.speechPatterns.map((pattern, index) => {
+        // Support both old schema (pattern/example/circumstances) and new schema (type/examples/contexts)
+        const patternType = pattern.type || pattern.pattern || '';
+        const examples = Array.isArray(pattern.examples)
+          ? pattern.examples
+          : pattern.example
+            ? [pattern.example]
+            : [];
+        const contexts = Array.isArray(pattern.contexts)
+          ? pattern.contexts
+          : pattern.circumstances
+            ? [pattern.circumstances]
+            : [];
+        return {
+          index: index + 1,
+          htmlSafeType: this.#escapeHtml(patternType),
+          htmlSafeExamples: examples.map((ex) => this.#escapeHtml(ex)),
+          htmlSafeContexts: contexts.map((ctx) => this.#escapeHtml(ctx)),
+        };
+      }),
       characterName: patterns.characterName || 'Character',
       totalCount: patterns.speechPatterns.length,
     };
@@ -1159,34 +1173,32 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
 
     patternElement.innerHTML = `
             <div class="pattern-number" aria-hidden="true">${pattern.index}</div>
-            
-            <!-- Screen reader title -->
-            <h3 id="pattern-${index}-title" class="screen-reader-only">
-                Speech Pattern ${pattern.index}
+
+            <!-- Pattern type as heading -->
+            <h3 id="pattern-${index}-title" class="pattern-type">
+                ${pattern.htmlSafeType}
             </h3>
-            
+
             <div id="pattern-${index}-content" class="pattern-content">
-                <div class="pattern-description" role="definition">
-                    <!-- Screen reader context labels -->
-                    <span class="screen-reader-only">Pattern description: </span>
-                    ${pattern.htmlSafePattern}
-                </div>
-                <div class="pattern-example" role="example">
-                    <span class="screen-reader-only">Example dialogue: </span>
-                    ${pattern.htmlSafeExample}
-                </div>
                 ${
-                  pattern.circumstances
+                  pattern.htmlSafeContexts && pattern.htmlSafeContexts.length > 0
                     ? `
-                    <div class="pattern-circumstances" role="note">
-                        <span class="screen-reader-only">Context: </span>
-                        ${pattern.circumstances}
+                    <div class="pattern-contexts" role="note">
+                        <span class="context-label">Contexts:</span>
+                        ${pattern.htmlSafeContexts.map((ctx) => `<span class="context-tag">${ctx}</span>`).join('')}
                     </div>
                 `
                     : ''
                 }
+
+                <div class="pattern-examples">
+                    <span class="examples-label">Examples:</span>
+                    <ul role="list">
+                        ${pattern.htmlSafeExamples.map((ex) => `<li role="listitem">${ex}</li>`).join('')}
+                    </ul>
+                </div>
             </div>
-            
+
             <!-- Navigation instructions for screen readers -->
             <div class="screen-reader-only">
                 Pattern ${pattern.index} of ${this.#lastGeneratedPatterns?.speechPatterns?.length || 'unknown total'}.

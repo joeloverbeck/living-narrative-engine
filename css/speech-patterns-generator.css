@@ -1103,26 +1103,27 @@
 .speech-pattern-item.fade-in {
   /* Start with opacity 0 only for items with fade-in class */
   opacity: 0;
-  animation: fadeIn 0.3s ease-out forwards;
+  /* Use single, stable animation - opacity only to prevent disappearing */
+  animation: fadeInPattern 0.4s ease-out forwards;
 }
 
 .speech-pattern-item.fade-in:nth-child(1) {
-  animation-delay: 0.1s;
+  animation-delay: 0.05s;
 }
 .speech-pattern-item.fade-in:nth-child(2) {
-  animation-delay: 0.2s;
+  animation-delay: 0.1s;
 }
 .speech-pattern-item.fade-in:nth-child(3) {
-  animation-delay: 0.3s;
+  animation-delay: 0.15s;
 }
 .speech-pattern-item.fade-in:nth-child(4) {
-  animation-delay: 0.4s;
+  animation-delay: 0.2s;
 }
 .speech-pattern-item.fade-in:nth-child(5) {
-  animation-delay: 0.5s;
+  animation-delay: 0.25s;
 }
 
-@keyframes fadeIn {
+@keyframes fadeInPattern {
   from {
     opacity: 0;
   }
@@ -1148,19 +1149,116 @@
   opacity: 1;
 }
 
-/* Animation for Pattern Appearance - Legacy Support */
-.speech-pattern-item.fade-in {
-  animation: fadeInLegacy 0.5s ease-in-out;
+/* Structured Pattern Display Styles */
+.pattern-type {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--narrative-purple, #6c5ce7);
+  margin: 0 0 0.75rem 0;
+  line-height: 1.4;
 }
 
-@keyframes fadeInLegacy {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+.pattern-contexts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.context-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted, #666);
+}
+
+.context-tag {
+  display: inline-block;
+  background: var(--surface-highlight, #f3f0ff);
+  color: var(--narrative-purple, #6c5ce7);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1px solid var(--border-subtle, #e0e0e0);
+  transition: all 0.2s ease;
+}
+
+.context-tag:hover {
+  background: var(--narrative-purple, #6c5ce7);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.pattern-examples {
+  margin-top: 0.75rem;
+}
+
+.examples-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted, #666);
+  margin-bottom: 0.5rem;
+}
+
+.pattern-examples ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.pattern-examples li {
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  background: var(--surface-subtle, #f9f9f9);
+  border-left: 3px solid var(--narrative-purple, #6c5ce7);
+  border-radius: 4px;
+  font-style: italic;
+  color: var(--text-primary, #333);
+  transition: background 0.2s ease;
+}
+
+.pattern-examples li:hover {
+  background: var(--surface-highlight, #f3f0ff);
+}
+
+.pattern-examples li:last-child {
+  margin-bottom: 0;
+}
+
+/* Responsive adjustments for structured display */
+@media (max-width: 768px) {
+  .pattern-type {
+    font-size: 1rem;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  .context-tag {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+  }
+
+  .pattern-examples li {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .pattern-contexts {
+    gap: 0.4rem;
+  }
+
+  .context-label {
+    font-size: 0.8rem;
+  }
+
+  .examples-label {
+    font-size: 0.8rem;
+  }
+
+  .pattern-examples li {
+    padding: 0.5rem 0.7rem;
   }
 }
 

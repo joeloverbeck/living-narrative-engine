@@ -220,12 +220,23 @@ export class SpeechPatternsDisplayEnhancer {
   #enhanceSinglePattern(pattern, index, _options) {
     // Support both old and new schema formats
     const patternText = pattern.type || pattern.pattern;
-    const exampleText = Array.isArray(pattern.examples)
-      ? pattern.examples[0] // Use first example for display
-      : pattern.example;
-    const contextText = pattern.contexts
-      ? pattern.contexts[0] // Use first context for display
-      : pattern.circumstances;
+
+    // Get all examples as array
+    const examplesArray = Array.isArray(pattern.examples)
+      ? pattern.examples
+      : pattern.example
+        ? [pattern.example]
+        : [];
+
+    // Get all contexts as array
+    const contextsArray = Array.isArray(pattern.contexts)
+      ? pattern.contexts
+      : pattern.circumstances
+        ? [pattern.circumstances]
+        : [];
+
+    // First example for backward compatibility
+    const exampleText = examplesArray[0] || '';
 
     // Validate that extracted values are strings
     if (typeof patternText !== 'string' || typeof exampleText !== 'string') {
@@ -240,19 +251,28 @@ export class SpeechPatternsDisplayEnhancer {
       index: index + 1,
       pattern: patternText.trim(),
       example: exampleText.trim(),
-      circumstances: contextText ? contextText.trim() : null,
+      circumstances: contextsArray[0] ? contextsArray[0].trim() : null,
 
-      // HTML-safe versions for display
+      // HTML-safe versions for display (legacy field names for backward compatibility)
       htmlSafePattern: this.#escapeHtml(patternText.trim()),
       htmlSafeExample: this.#escapeHtml(exampleText.trim()),
-      htmlSafeCircumstances: contextText
-        ? this.#escapeHtml(contextText.trim())
+      htmlSafeCircumstances: contextsArray[0]
+        ? this.#escapeHtml(contextsArray[0].trim())
         : null,
+
+      // New field names expected by the controller
+      htmlSafeType: this.#escapeHtml(patternText.trim()),
+      htmlSafeExamples: examplesArray.map((ex) =>
+        this.#escapeHtml(typeof ex === 'string' ? ex.trim() : '')
+      ),
+      htmlSafeContexts: contextsArray.map((ctx) =>
+        this.#escapeHtml(typeof ctx === 'string' ? ctx.trim() : '')
+      ),
 
       // Display metadata
       patternLength: patternText.length,
       exampleLength: exampleText.length,
-      hasCircumstances: !!(contextText && contextText.trim()),
+      hasCircumstances: contextsArray.length > 0 && !!contextsArray[0]?.trim(),
 
       // Content analysis
       complexity: this.#analyzeComplexity(pattern),
