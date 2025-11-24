@@ -222,8 +222,8 @@ describe('BodyGraphService integration with real cache + query modules', () => {
     const secondCall = service.getAllParts(bodyComponent, 'actor');
     expectArrayToContainSameMembers(secondCall, allFromActor);
     expect(
-      logger.messages.debug.some((message) =>
-        message.includes('Found cached result for root')
+      logger.messages.info.some((message) =>
+        message.includes('CACHE HIT for cache root')
       )
     ).toBe(true);
 
