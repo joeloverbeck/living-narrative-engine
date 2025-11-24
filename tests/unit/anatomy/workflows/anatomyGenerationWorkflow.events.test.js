@@ -43,6 +43,7 @@ describe('AnatomyGenerationWorkflow - Events', () => {
     };
 
     mockSocketIndex = {
+      buildIndex: jest.fn().mockResolvedValue(),
       getEntitySockets: jest.fn(),
     };
   });

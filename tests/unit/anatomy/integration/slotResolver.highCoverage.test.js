@@ -123,7 +123,6 @@ describe('SlotResolver', () => {
       bodyGraphService: deps.bodyGraphService,
       anatomyBlueprintRepository: deps.anatomyBlueprintRepository,
       anatomySocketIndex: deps.anatomySocketIndex,
-      slotEntityMappings: deps.slotEntityMappings,
     });
     expect(DirectSocketStrategy).toHaveBeenCalledWith({
       logger,
@@ -208,7 +207,11 @@ describe('SlotResolver', () => {
     const result = await resolver.resolve('actor-7', 'slot-arm', { type: 'blueprint' });
 
     expect(cache.get).toHaveBeenCalledWith(CacheKeyTypes.SLOT_RESOLUTION, 'actor-7:slot-arm');
-    expect(blueprintStrategy.resolve).toHaveBeenCalledWith('actor-7', { type: 'blueprint' });
+    expect(blueprintStrategy.resolve).toHaveBeenCalledWith(
+      'actor-7',
+      { type: 'blueprint' },
+      undefined
+    );
     expect(cache.set).toHaveBeenCalledWith(
       CacheKeyTypes.SLOT_RESOLUTION,
       'actor-7:slot-arm',
@@ -253,7 +256,9 @@ describe('SlotResolver', () => {
 
     const result = await resolver.resolve('actor-x', 'slot-x', { kind: 'unsupported' });
 
-    expect(logger.warn).toHaveBeenCalledWith("No strategy found for mapping type in slot 'slot-x'");
+    expect(logger.warn).toHaveBeenCalledWith(
+      "SlotResolver: No strategy found for mapping type in slot 'slot-x'. Available strategies: 3"
+    );
     expect(result).toEqual([]);
   });
 
@@ -365,7 +370,11 @@ describe('SlotResolver', () => {
 
     expect(assertPresent).toHaveBeenNthCalledWith(1, 'actor-4', 'Entity ID is required');
     expect(assertPresent).toHaveBeenNthCalledWith(2, 'belt', 'Slot ID is required');
-    expect(clothingStrategy.resolve).toHaveBeenCalledWith('actor-4', { clothingSlotId: 'belt' });
+    expect(clothingStrategy.resolve).toHaveBeenCalledWith(
+      'actor-4',
+      { clothingSlotId: 'belt' },
+      undefined
+    );
     expect(result).toEqual(['resolved-belt']);
   });
 
