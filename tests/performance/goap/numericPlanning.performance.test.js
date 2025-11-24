@@ -1,4 +1,6 @@
 /**
+ * @jest-environment node
+ *
  * @file Supplementary performance tests for numeric constraint planning
  * @description Tests missing coverage areas not covered by existing GOAP performance tests.
  * Focuses on: memory leak detection, statistical analysis (percentiles), health restoration,
@@ -727,11 +729,18 @@ describe('Numeric Planning Performance - Supplementary Tests', () => {
         actor.components['core:resources'].gold = 0;
         world.state = buildDualFormatState(actor);
 
+        jest.clearAllMocks();
+
         // Force GC every 100 iterations
         if (i % 100 === 0 && global.gc) {
           global.gc();
         }
       }
+
+      // Release references before the final GC to measure retained growth, not local scope
+      setup = null;
+      world.state = null;
+      actor.components = {};
 
       // Force final GC
       if (global.gc) {
@@ -815,6 +824,8 @@ describe('Numeric Planning Performance - Supplementary Tests', () => {
           // Reset state
           actor.components['core:resources'].gold = 0;
           world.state = buildDualFormatState(actor);
+
+          jest.clearAllMocks();
         }
 
         // Force GC and snapshot

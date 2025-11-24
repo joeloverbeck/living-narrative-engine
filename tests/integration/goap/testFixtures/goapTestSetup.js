@@ -706,7 +706,7 @@ export async function createGoapTestSetup(config = {}) {
   let refinementEngine;
   if (mockRefinement) {
     refinementEngine = {
-      refine: jest.fn(async (taskId, actorId, taskParams) => {
+      refine: async (taskId, actorId, taskParams) => {
         return {
           success: true,
           stepResults: [
@@ -721,7 +721,7 @@ export async function createGoapTestSetup(config = {}) {
           actorId,
           timestamp: Date.now(),
         };
-      }),
+      },
     };
   } else {
     const methodSelectionService = createMockMethodSelectionService(methods);

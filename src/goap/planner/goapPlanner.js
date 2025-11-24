@@ -33,6 +33,7 @@ import { createPlanningStateView } from './planningStateView.js';
 import { createGoalEvaluationContextAdapter } from './goalEvaluationContextAdapter.js';
 import { normalizePlanningPreconditions } from '../utils/planningPreconditionUtils.js';
 import { validateGoalPaths, shouldEnforceGoalPathLint } from './goalPathValidator.js';
+import BoundedCache from '../utils/boundedCache.js';
 
 const SAFE_HEURISTIC_MAX_COST = Number.MAX_SAFE_INTEGER;
 
@@ -111,7 +112,7 @@ class GoapPlanner {
   /** @type {Map<string, object>} */
   #effectFailureTelemetry;
 
-  /** @type {Map<string, { signature: string, normalizedGoalState: object|null, violations: Array, hasLoggedViolations: boolean }>} */
+  /** @type {BoundedCache} */
   #goalPathNormalizationCache;
 
   /** @type {Set<string>} */
@@ -180,7 +181,7 @@ class GoapPlanner {
     this.#externalTaskLibraryDiagnostics = null;
     this.#goalPathDiagnostics = new Map();
     this.#effectFailureTelemetry = new Map();
-    this.#goalPathNormalizationCache = new Map();
+    this.#goalPathNormalizationCache = new BoundedCache(100);
     this.#heuristicWarningCache = new Set();
   }
 

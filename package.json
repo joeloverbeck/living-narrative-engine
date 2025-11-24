@@ -82,7 +82,7 @@
     "test:integration": "jest --config jest.config.integration.js --env=jsdom --silent --coverage",
     "test:integration:build": "jest --config jest.config.build.js --env=jsdom --silent",
     "test:e2e": "jest --config jest.config.e2e.js --env=jsdom --silent --coverage",
-    "test:performance": "jest --config jest.config.performance.js --env=jsdom --silent",
+    "test:performance": "jest --config jest.config.performance.js --env=node --silent",
     "test:memory": "node --expose-gc ./node_modules/.bin/jest --config jest.config.memory.js --env=jsdom --silent --runInBand",
     "test:single": "jest --env=jsdom --silent=false --runInBand",
     "test:property": "jest --config jest.config.property.js --env=node",
