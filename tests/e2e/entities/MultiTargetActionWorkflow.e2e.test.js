@@ -31,13 +31,39 @@ describe('Multi-Target Action E2E Workflow', () => {
   let testBed;
   let logger;
 
-  beforeEach(async () => {
+  const cleanupEntities = async () => {
+    if (!testBed) {
+      return;
+    }
+
+    for (const entityId of testBed.createdEntities) {
+      if (!testBed.removedEntities.has(entityId)) {
+        try {
+          await testBed.removeTestEntity(entityId, { expectSuccess: false });
+        } catch (error) {
+          logger?.warn?.(
+            `Failed to cleanup test entity ${entityId}: ${error.message}`
+          );
+        }
+      }
+    }
+
+    testBed.createdEntities.clear();
+    testBed.removedEntities.clear();
+    testBed.clearTransientState();
+  };
+
+  beforeAll(async () => {
     testBed = new EntityWorkflowTestBed();
     await testBed.initialize();
     logger = testBed.logger;
   });
 
   afterEach(async () => {
+    await cleanupEntities();
+  });
+
+  afterAll(async () => {
     if (testBed) {
       await testBed.cleanup();
     }
