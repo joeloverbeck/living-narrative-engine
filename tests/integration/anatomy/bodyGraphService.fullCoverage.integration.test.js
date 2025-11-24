@@ -252,9 +252,9 @@ describe('BodyGraphService integration full coverage', () => {
     const fallbackParts = service.getAllParts(bodyComponent, 'ghost-actor');
     expect(fallbackParts).toEqual(allPartsFromBlueprint);
     expect(
-      logger.debug.mock.calls.some((call) =>
+      logger.info.mock.calls.some((call) =>
         call[0]?.includes(
-          `Using blueprint root '${partIds.torso}' as cache root (actor 'ghost-actor' not in cache`,
+          `BodyGraphService.getAllParts: Actor 'ghost-actor' -> Using blueprint root '${partIds.torso}' as cache root`,
         ),
       ),
     ).toBe(true);
@@ -262,8 +262,8 @@ describe('BodyGraphService integration full coverage', () => {
     const cachedParts = service.getAllParts(bodyComponent, actorId);
     expect(cachedParts).toBe(allPartsUsingActor);
     expect(
-      logger.debug.mock.calls.some((call) =>
-        call[0]?.includes('Found cached result for root'),
+      logger.info.mock.calls.some((call) =>
+        call[0]?.includes('CACHE HIT for cache root'),
       ),
     ).toBe(true);
 

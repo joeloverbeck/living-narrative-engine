@@ -175,6 +175,6 @@ describe('Kneel Before Action Resolution', () => {
     const resolveCall = mockUnifiedScopeResolver.resolve.mock.calls[0];
     expect(resolveCall[0]).toBe('core:actors_in_location'); // scope
     expect(resolveCall[1]).toHaveProperty('actor'); // context with actor
-    expect(resolveCall[2]).toEqual({ useCache: true }); // options
+    expect(resolveCall[2]).toEqual({ useCache: false }); // options
   });
 });

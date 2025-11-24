@@ -219,8 +219,8 @@ describe('BodyGraphService integration – realistic coverage', () => {
     const repeatCall = service.getAllParts(bodyComponent, actorId);
     expect([...repeatCall].sort()).toEqual([...actorParts].sort());
     expect(
-      logger.messages.debug.some((message) =>
-        message.includes('BodyGraphService: Found cached result for root'),
+      logger.messages.info.some((message) =>
+        message.includes('BodyGraphService.getAllParts: CACHE HIT for cache root'),
       ),
     ).toBe(true);
 

@@ -315,8 +315,10 @@ describe('BodyGraphService integration edge cases', () => {
 
     const fallbackParts = service.getAllParts(bodyComponent, 'ghost-actor');
     expect(fallbackParts).toEqual(blueprintParts);
-    expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("Using blueprint root 'part-torso' as cache root")
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "BodyGraphService.getAllParts: Actor 'ghost-actor' -> Using blueprint root 'part-torso' as cache root"
+      )
     );
 
     const path = service.getPath(partIds.leftHand, partIds.rightArm);
