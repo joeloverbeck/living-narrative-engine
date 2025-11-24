@@ -1,0 +1,5 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "fantasy:registry_ledger_instance",
+    "definitionId": "fantasy:registry_ledger"
+}

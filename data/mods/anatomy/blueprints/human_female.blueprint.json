@@ -62,11 +62,8 @@
     },
     "torso_upper": {
       "anatomySockets": [
-        "left_breast",
-        "right_breast",
         "left_chest",
         "right_chest",
-        "chest_center",
         "left_shoulder",
         "right_shoulder"
       ],

@@ -702,6 +702,8 @@ export function registerWorldAndEntity(container) {
       clothingInstantiationService: c.resolve(
         tokens.ClothingInstantiationService
       ),
+      eventBus: c.resolve(tokens.ISafeEventDispatcher),
+      socketIndex: c.resolve(tokens.IAnatomySocketIndex),
     });
   });
   logger.debug(

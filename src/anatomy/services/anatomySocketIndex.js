@@ -26,9 +26,9 @@ class AnatomySocketIndex extends BaseService {
   #entityManager;
   #bodyGraphService;
 
-  // O(1) lookup indexes
-  #socketToEntityMap = new Map(); // socketId -> entityId
-  #entityToSocketsMap = new Map(); // entityId -> SocketInfo[]
+  // O(1) lookup indexes with per-root isolation for concurrent safety
+  #socketToEntityMap = new Map(); // "${rootEntityId}:${socketId}" -> entityId
+  #entityToSocketsMap = new Map(); // "${rootEntityId}:${entityId}" -> SocketInfo[]
   #rootEntityCache = new Map(); // rootEntityId -> Set<entityId>
 
   constructor({ logger, entityManager, bodyGraphService, cacheCoordinator }) {
@@ -69,6 +69,32 @@ class AnatomySocketIndex extends BaseService {
   }
 
   /**
+   * Creates a composite key for socket-to-entity mapping
+   * Ensures isolation between different root entity hierarchies
+   *
+   * @param {string} rootEntityId - Root entity ID
+   * @param {string} socketId - Socket ID
+   * @returns {string} Composite key
+   * @private
+   */
+  #createSocketKey(rootEntityId, socketId) {
+    return `${rootEntityId}:${socketId}`;
+  }
+
+  /**
+   * Creates a composite key for entity-to-sockets mapping
+   * Ensures isolation between different root entity hierarchies
+   *
+   * @param {string} rootEntityId - Root entity ID
+   * @param {string} entityId - Entity ID
+   * @returns {string} Composite key
+   * @private
+   */
+  #createEntityKey(rootEntityId, entityId) {
+    return `${rootEntityId}:${entityId}`;
+  }
+
+  /**
    * Builds or rebuilds the socket index for a root entity
    * This replaces the O(n) traversal in #getEntityAnatomyStructure
    *
@@ -100,7 +126,7 @@ class AnatomySocketIndex extends BaseService {
       const entitySocketResults = await Promise.allSettled(socketPromises);
       const rootEntitySet = new Set(entitiesToIndex);
 
-      // Process results and build indexes
+      // Process results and build indexes with per-root isolation
       for (let i = 0; i < entitySocketResults.length; i++) {
         const result = entitySocketResults[i];
         const entityId = entitiesToIndex[i];
@@ -108,12 +134,14 @@ class AnatomySocketIndex extends BaseService {
         if (result.status === 'fulfilled' && result.value.length > 0) {
           const sockets = result.value;
 
-          // Update entity-to-sockets mapping
-          this.#entityToSocketsMap.set(entityId, sockets);
+          // Update entity-to-sockets mapping with composite key
+          const entityKey = this.#createEntityKey(rootEntityId, entityId);
+          this.#entityToSocketsMap.set(entityKey, sockets);
 
-          // Update socket-to-entity mapping
+          // Update socket-to-entity mapping with composite keys
           for (const socket of sockets) {
-            this.#socketToEntityMap.set(socket.id, entityId);
+            const socketKey = this.#createSocketKey(rootEntityId, socket.id);
+            this.#socketToEntityMap.set(socketKey, entityId);
           }
         }
       }
@@ -157,14 +185,29 @@ class AnatomySocketIndex extends BaseService {
 
     // Build index if not present
     if (!this.#rootEntityCache.has(rootEntityId)) {
+      this.#logger.info(
+        `AnatomySocketIndex: Building index for root entity '${rootEntityId}' (first lookup for socket '${socketId}')`
+      );
       await this.buildIndex(rootEntityId);
     }
 
-    const entityId = this.#socketToEntityMap.get(socketId);
+    // Use composite key for lookup
+    const socketKey = this.#createSocketKey(rootEntityId, socketId);
+    const entityId = this.#socketToEntityMap.get(socketKey);
+
+    this.#logger.debug(
+      `AnatomySocketIndex: Lookup for socket '${socketId}' in root '${rootEntityId}': ${entityId ? `found entity '${entityId}'` : 'not found'}`
+    );
 
     // Verify the entity is part of the root entity's hierarchy
     if (entityId && this.#rootEntityCache.get(rootEntityId)?.has(entityId)) {
       return entityId;
+    }
+
+    if (entityId) {
+      this.#logger.warn(
+        `AnatomySocketIndex: Found entity '${entityId}' for socket '${socketId}', but it's not in root entity '${rootEntityId}' hierarchy. This indicates a data integrity issue.`
+      );
     }
 
     return null;
@@ -172,6 +215,8 @@ class AnatomySocketIndex extends BaseService {
 
   /**
    * Gets all sockets for a specific entity
+   * Note: This method bypasses caching to avoid conflicts with composite key system.
+   * Use getEntitiesWithSockets() with buildIndex() for efficient batch operations.
    *
    * @param {string} entityId - The entity to get sockets for
    * @returns {Promise<Array<{id: string, orientation: string}>>} Array of socket objects
@@ -184,19 +229,9 @@ class AnatomySocketIndex extends BaseService {
       this.#logger
     );
 
-    // Check cache first
-    if (this.#entityToSocketsMap.has(entityId)) {
-      return this.#entityToSocketsMap.get(entityId).map((socket) => ({
-        id: socket.id,
-        orientation: socket.orientation,
-      }));
-    }
-
-    // Collect sockets directly if not in cache
+    // Directly collect sockets without caching
+    // This avoids conflicts with the composite key caching system used by buildIndex()
     const sockets = await this.#collectEntitySockets(entityId);
-    if (sockets.length > 0) {
-      this.#entityToSocketsMap.set(entityId, sockets);
-    }
 
     return sockets.map((socket) => ({
       id: socket.id,
@@ -228,10 +263,11 @@ class AnatomySocketIndex extends BaseService {
       return [];
     }
 
-    // Return entities that have sockets
-    return Array.from(rootEntities).filter((entityId) =>
-      this.#entityToSocketsMap.has(entityId)
-    );
+    // Return entities that have sockets (using composite keys)
+    return Array.from(rootEntities).filter((entityId) => {
+      const entityKey = this.#createEntityKey(rootEntityId, entityId);
+      return this.#entityToSocketsMap.has(entityKey);
+    });
   }
 
   /**
@@ -250,15 +286,17 @@ class AnatomySocketIndex extends BaseService {
 
     const rootEntities = this.#rootEntityCache.get(rootEntityId);
     if (rootEntities) {
-      // Remove socket-to-entity mappings for this hierarchy
+      // Remove socket-to-entity mappings for this hierarchy (using composite keys)
       for (const entityId of rootEntities) {
-        const sockets = this.#entityToSocketsMap.get(entityId);
+        const entityKey = this.#createEntityKey(rootEntityId, entityId);
+        const sockets = this.#entityToSocketsMap.get(entityKey);
         if (sockets) {
           for (const socket of sockets) {
-            this.#socketToEntityMap.delete(socket.id);
+            const socketKey = this.#createSocketKey(rootEntityId, socket.id);
+            this.#socketToEntityMap.delete(socketKey);
           }
         }
-        this.#entityToSocketsMap.delete(entityId);
+        this.#entityToSocketsMap.delete(entityKey);
       }
 
       // Remove root entity cache

@@ -454,7 +454,7 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
     let current = target;
 
     for (const segment of segments) {
-      if (current == null || typeof current !== 'object') {
+      if (current === null || current === undefined || typeof current !== 'object') {
         return defaultValue;
       }
 

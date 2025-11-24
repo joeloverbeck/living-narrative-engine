@@ -8,6 +8,7 @@ import { BodyDescriptorValidator } from '../utils/bodyDescriptorValidator.js';
 import { BodyDescriptorValidationError } from '../errors/bodyDescriptorValidationError.js';
 import { executePartsMapBuilding } from './stages/partsMapBuildingStage.js';
 import { executeSlotEntityCreation } from './stages/slotEntityCreationStage.js';
+import { executeSocketIndexBuilding } from './stages/socketIndexBuildingStage.js';
 import { executeClothingInstantiation } from './stages/clothingInstantiationStage.js';
 import { executeEventPublication } from './stages/eventPublicationStage.js';
 
@@ -121,6 +122,14 @@ export class AnatomyGenerationWorkflow extends BaseService {
     // Step 3: Create blueprint slot entities and mappings
     const { slotEntityMappings } = await executeSlotEntityCreation(
       { blueprintId, graphResult, ownerId },
+      this.#getDependencies()
+    );
+
+    // Step 3.5: Build socket index explicitly before clothing instantiation
+    // This prevents timing issues where multiple characters try to instantiate clothing
+    // concurrently while the index is still building (lazy initialization)
+    await executeSocketIndexBuilding(
+      { ownerId },
       this.#getDependencies()
     );
 

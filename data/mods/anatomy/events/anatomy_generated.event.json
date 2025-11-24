@@ -1,0 +1,45 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "anatomy:anatomy_generated",
+  "description": "Dispatched when anatomy generation completes for an entity",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "Entity ID for which anatomy was generated"
+      },
+      "blueprintId": {
+        "type": "string",
+        "description": "Blueprint ID used for anatomy generation"
+      },
+      "sockets": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Available sockets on the generated anatomy"
+      },
+      "timestamp": {
+        "type": "number",
+        "description": "Timestamp when anatomy was generated"
+      },
+      "bodyParts": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Array of body part entity IDs"
+      },
+      "partsMap": {
+        "type": "object",
+        "description": "Map of part types to entity IDs"
+      },
+      "slotEntityMappings": {
+        "type": "object",
+        "description": "Map of slots to entity IDs"
+      }
+    },
+    "required": ["entityId", "blueprintId", "sockets", "timestamp", "bodyParts"]
+  }
+}

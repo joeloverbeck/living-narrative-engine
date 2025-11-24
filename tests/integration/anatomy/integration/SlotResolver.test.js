@@ -361,20 +361,6 @@ describe('SlotResolver', () => {
     });
   });
 
-  describe('setSlotEntityMappings', () => {
-    it('should update slot entity mappings on blueprint strategy', async () => {
-      const mappings = new Map([
-        ['slot1', 'entity1'],
-        ['slot2', 'entity2'],
-      ]);
-
-      slotResolver.setSlotEntityMappings(mappings);
-
-      // Verify it doesn't throw and logs appropriately
-      expect(mockLogger.error).not.toHaveBeenCalled();
-    });
-  });
-
   describe('clearCache', () => {
     it('should clear the cache', () => {
       slotResolver.clearCache();

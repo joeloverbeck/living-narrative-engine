@@ -65,7 +65,7 @@ describe('BlueprintSlotStrategy', () => {
       }).toThrow();
     });
 
-    it('should initialize with default empty Map for slotEntityMappings', () => {
+    it('should not require slotEntityMappings in constructor', () => {
       const strategyWithDefaults = new BlueprintSlotStrategy({
         logger: mockLogger,
         entityManager: mockEntityManager,
@@ -332,17 +332,8 @@ describe('BlueprintSlotStrategy', () => {
       expect(result[0].orientation).toBe('neutral'); // Default orientation
     });
 
-    it('should use direct slot mapping when available', async () => {
+    it('should use direct slot mapping when provided as parameter', async () => {
       const slotMappings = new Map([['direct_slot', 'mapped_entity']]);
-
-      const strategyWithMappings = new BlueprintSlotStrategy({
-        logger: mockLogger,
-        entityManager: mockEntityManager,
-        bodyGraphService: mockBodyGraphService,
-        anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
-        anatomySocketIndex: mockAnatomySocketIndex,
-        slotEntityMappings: slotMappings,
-      });
 
       const mockBlueprint = {
         slots: {
@@ -372,7 +363,7 @@ describe('BlueprintSlotStrategy', () => {
       });
 
       const mapping = { blueprintSlots: ['direct_slot'] };
-      const result = await strategyWithMappings.resolve('actor123', mapping);
+      const result = await strategy.resolve('actor123', mapping, slotMappings);
 
       expect(result).toHaveLength(1);
       expect(result[0].entityId).toBe('mapped_entity');
@@ -419,50 +410,6 @@ describe('BlueprintSlotStrategy', () => {
         },
       ]);
       expect(mockAnatomySocketIndex.findEntityWithSocket).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('setSlotEntityMappings', () => {
-    it('should set mappings from Map', () => {
-      const mappings = new Map([
-        ['slot1', 'entity1'],
-        ['slot2', 'entity2'],
-      ]);
-
-      strategy.setSlotEntityMappings(mappings);
-
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'BlueprintSlotStrategy: Updated slot-entity mappings with 2 entries'
-      );
-    });
-
-    it('should set mappings from plain object', () => {
-      const mappings = {
-        slot1: 'entity1',
-        slot2: 'entity2',
-      };
-
-      strategy.setSlotEntityMappings(mappings);
-
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'BlueprintSlotStrategy: Updated slot-entity mappings with 2 entries'
-      );
-    });
-
-    it('should set empty Map for null mappings', () => {
-      strategy.setSlotEntityMappings(null);
-
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'BlueprintSlotStrategy: Updated slot-entity mappings with 0 entries'
-      );
-    });
-
-    it('should set empty Map for invalid mappings', () => {
-      strategy.setSlotEntityMappings('invalid');
-
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'BlueprintSlotStrategy: Updated slot-entity mappings with 0 entries'
-      );
     });
   });
 

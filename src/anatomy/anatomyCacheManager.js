@@ -462,63 +462,51 @@ export class AnatomyCacheManager {
         `AnatomyCacheManager: Actor entity '${rootEntityId}' has anatomy:body but no joint children, searching for anatomy root`
       );
 
-      // Find the anatomy root part by looking for entities that are parents in the joint system
-      // but not children themselves (i.e., they're anatomy roots)
-      const anatomyRootCandidates = new Set();
+      // FIXED: Use the anatomy root from anatomy:body component instead of searching all anatomy parts
+      // This prevents concurrent processing bugs where multiple actors share anatomy parts
+      const anatomyRootId = anatomyBody.body?.root;
 
-      // Collect all parent IDs from the parent-to-children map
-      for (const parentId of parentToChildren.keys()) {
-        anatomyRootCandidates.add(parentId);
-      }
-
-      // Remove any that are also children (have parents themselves)
-      const entitiesWithJoints =
-        entityManager.getEntitiesWithComponent('anatomy:joint');
-      if (entitiesWithJoints) {
-        for (const entity of entitiesWithJoints) {
-          const joint = entityManager.getComponentData(
-            entity.id,
-            'anatomy:joint'
-          );
-          const parentId = joint?.parentEntityId || joint?.parentId;
-          if (parentId) {
-            anatomyRootCandidates.delete(entity.id); // This entity has a parent, so it's not a root
-          }
-        }
-      }
-
-      // The remaining candidates should be anatomy root parts
-      for (const anatomyRootId of anatomyRootCandidates) {
-        // Verify this is actually an anatomy part
-        const anatomyPart = entityManager.getComponentData(
-          anatomyRootId,
-          'anatomy:part'
+      if (!anatomyRootId) {
+        this.#logger.warn(
+          `AnatomyCacheManager: Actor '${rootEntityId}' has anatomy:body but no body.root field`
         );
-        if (anatomyPart) {
-          this.#logger.debug(
-            `AnatomyCacheManager: Found anatomy root '${anatomyRootId}', adding to cache and connecting to actor`
-          );
-
-          // Add the anatomy root as a child of the actor
-          rootNode.children.push(anatomyRootId);
-
-          // Build the anatomy subtree starting from this root
-          this.#buildCacheRecursive(
-            anatomyRootId,
-            rootEntityId,
-            'anatomy_root_connection',
-            entityManager,
-            visited,
-            1,
-            parentToChildren
-          );
-
-          this.#logger.debug(
-            `AnatomyCacheManager: Successfully connected actor '${rootEntityId}' to anatomy root '${anatomyRootId}'`
-          );
-          break; // We found and connected the anatomy root, we're done
-        }
+        return;
       }
+
+      // Verify this anatomy root actually exists and is an anatomy part
+      const anatomyPart = entityManager.getComponentData(
+        anatomyRootId,
+        'anatomy:part'
+      );
+
+      if (!anatomyPart) {
+        this.#logger.warn(
+          `AnatomyCacheManager: Anatomy root '${anatomyRootId}' from actor '${rootEntityId}' is not an anatomy part`
+        );
+        return;
+      }
+
+      this.#logger.debug(
+        `AnatomyCacheManager: Found anatomy root '${anatomyRootId}' from anatomy:body.body.root, adding to cache and connecting to actor`
+      );
+
+      // Add the anatomy root as a child of the actor
+      rootNode.children.push(anatomyRootId);
+
+      // Build the anatomy subtree starting from this root
+      this.#buildCacheRecursive(
+        anatomyRootId,
+        rootEntityId,
+        'anatomy_root_connection',
+        entityManager,
+        visited,
+        1,
+        parentToChildren
+      );
+
+      this.#logger.info(
+        `AnatomyCacheManager: Successfully connected actor '${rootEntityId}' to its own anatomy root '${anatomyRootId}'`
+      );
     } catch (error) {
       this.#logger.error(
         `AnatomyCacheManager: Failed to handle disconnected actor anatomy for '${rootEntityId}'`,

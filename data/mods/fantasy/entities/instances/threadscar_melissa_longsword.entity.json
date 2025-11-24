@@ -1,0 +1,6 @@
+{
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "fantasy:threadscar_melissa_longsword_instance",
+  "definitionId": "fantasy:threadscar_melissa_longsword",
+  "componentOverrides": {}
+}

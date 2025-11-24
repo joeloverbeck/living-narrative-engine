@@ -10,7 +10,9 @@
       "sockets": [
         {
           "id": "foot",
-          "allowedTypes": ["tortoise_foot"],
+          "allowedTypes": [
+            "tortoise_foot"
+          ],
           "nameTpl": "{{orientation}} foot"
         }
       ]
@@ -26,6 +28,10 @@
     },
     "descriptors:color_extended": {
       "color": "dark-olive"
+    },
+    "core:movement": {
+      "locked": false,
+      "forcedOverride": false
     }
   }
 }

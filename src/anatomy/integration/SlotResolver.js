@@ -39,7 +39,6 @@ class SlotResolver {
    * @param {object} params.bodyGraphService - Body graph service
    * @param {object} params.anatomyBlueprintRepository - Blueprint repository
    * @param {object} params.anatomySocketIndex - Socket index service
-   * @param {Map} [params.slotEntityMappings] - Optional slot-to-entity mappings
    * @param {AnatomyClothingCache} [params.cache] - Cache service
    * @param {object} [params.cacheCoordinator] - Optional cache coordinator
    */
@@ -50,7 +49,6 @@ class SlotResolver {
     bodyGraphService,
     anatomyBlueprintRepository,
     anatomySocketIndex,
-    slotEntityMappings,
     cache,
     cacheCoordinator,
   }) {
@@ -74,7 +72,6 @@ class SlotResolver {
         bodyGraphService,
         anatomyBlueprintRepository,
         anatomySocketIndex,
-        slotEntityMappings,
       });
 
       const directSocketStrategy = new DirectSocketStrategy({
@@ -117,9 +114,10 @@ class SlotResolver {
    * @param {string} entityId - Entity to resolve for
    * @param {string} slotId - Slot identifier for caching
    * @param {object} mapping - The clothing slot mapping configuration
+   * @param {Map<string, string>} [slotEntityMappings] - Optional slot-to-entity mappings for this character
    * @returns {Promise<ResolvedAttachmentPoint[]>} Array of resolved attachment points
    */
-  async resolve(entityId, slotId, mapping) {
+  async resolve(entityId, slotId, mapping, slotEntityMappings) {
     assertPresent(entityId, 'Entity ID is required');
     assertPresent(slotId, 'Slot ID is required');
     assertPresent(mapping, 'Mapping is required');
@@ -153,18 +151,26 @@ class SlotResolver {
     }
 
     // Find the first strategy that can handle this mapping
+    this.#logger.info(
+      `SlotResolver: Attempting to resolve slot '${slotId}' for entity '${entityId}' with mapping: ${JSON.stringify(mapping)}`
+    );
+
     const strategy = this.#strategies.find((s) => s.canResolve(mapping));
 
     if (!strategy) {
       this.#logger.warn(
-        `No strategy found for mapping type in slot '${slotId}'`
+        `SlotResolver: No strategy found for mapping type in slot '${slotId}'. Available strategies: ${this.#strategies.length}`
       );
       return [];
     }
 
+    this.#logger.info(
+      `SlotResolver: Using strategy '${strategy.constructor.name}' for slot '${slotId}'`
+    );
+
     try {
       // Resolve using the selected strategy
-      const attachmentPoints = await strategy.resolve(entityId, mapping);
+      const attachmentPoints = await strategy.resolve(entityId, mapping, slotEntityMappings);
 
       // Cache the result
       if (supportsCacheServiceInterface && typeof this.#cache.set === 'function') {
@@ -222,25 +228,6 @@ class SlotResolver {
   }
 
   /**
-   * Updates slot-to-entity mappings for blueprint strategy
-   *
-   * @param {Map<string, string>} mappings - Map of slot IDs to entity IDs
-   */
-  setSlotEntityMappings(mappings) {
-    // Find blueprint strategy and update its mappings
-    const blueprintStrategy = this.#strategies.find(
-      (s) => s.constructor.name === 'BlueprintSlotStrategy'
-    );
-
-    if (
-      blueprintStrategy &&
-      typeof blueprintStrategy.setSlotEntityMappings === 'function'
-    ) {
-      blueprintStrategy.setSlotEntityMappings(mappings);
-    }
-  }
-
-  /**
    * Gets the number of registered strategies
    *
    * @returns {number} Strategy count
@@ -255,11 +242,12 @@ class SlotResolver {
    *
    * @param {string} entityId - Entity to resolve for
    * @param {string} slotId - Clothing slot identifier to resolve
+   * @param {Map<string, string>} [slotEntityMappings] - Optional slot-to-entity mappings for this character
    * @returns {Promise<ResolvedAttachmentPoint[]>} Array of resolved attachment points
    * @throws {ClothingSlotNotFoundError} If clothing slot not found in blueprint
    * @throws {InvalidClothingSlotMappingError} If mapping structure is invalid
    */
-  async resolveClothingSlot(entityId, slotId) {
+  async resolveClothingSlot(entityId, slotId, slotEntityMappings) {
     assertPresent(entityId, 'Entity ID is required');
     assertPresent(slotId, 'Slot ID is required');
 
@@ -278,7 +266,7 @@ class SlotResolver {
     }
 
     // Resolve using the strategy - let errors propagate
-    return await strategy.resolve(entityId, mapping);
+    return await strategy.resolve(entityId, mapping, slotEntityMappings);
   }
 }
 

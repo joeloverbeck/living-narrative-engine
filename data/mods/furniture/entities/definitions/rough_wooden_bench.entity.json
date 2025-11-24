@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "furniture:rough_wooden_bench",
+  "description": "A long wooden bench with wide plank seating, built for durability in public civic spaces",
+  "components": {
+    "core:name": {
+      "text": "rough wooden bench"
+    },
+    "core:description": {
+      "text": "A sturdy bench fashioned from wide planks, the kind of utilitarian seating found in warehouses converted to civic use. The wood has been worn smooth by years of waiting townsfolk, its surface bearing the marks of countless hours spent in patient attendance. Simple construction, built to last rather than to impress."
+    },
+    "core:portrait": {
+      "imagePath": "portraits/rough_wooden_bench.png",
+      "altText": "A long wooden bench with wide plank seating and sturdy construction"
+    },
+    "positioning:allows_sitting": {
+      "spots": [null, null, null]
+    },
+    "items:item": {}
+  }
+}

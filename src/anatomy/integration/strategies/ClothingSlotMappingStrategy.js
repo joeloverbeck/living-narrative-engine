@@ -68,11 +68,16 @@ class ClothingSlotMappingStrategy {
    * @returns {boolean} True if mapping contains clothingSlotId
    */
   canResolve(mapping) {
-    return !!(
-      mapping &&
-      typeof mapping.clothingSlotId === 'string' &&
-      mapping.clothingSlotId.length > 0
+    const hasMapping = !!mapping;
+    const hasClothingSlotId = hasMapping && typeof mapping.clothingSlotId === 'string';
+    const isNonEmpty = hasClothingSlotId && mapping.clothingSlotId.length > 0;
+    const result = hasMapping && hasClothingSlotId && isNonEmpty;
+
+    this.#logger.info(
+      `ClothingSlotMappingStrategy.canResolve: hasMapping=${hasMapping}, hasClothingSlotId=${hasClothingSlotId}, isNonEmpty=${isNonEmpty}, result=${result}. Mapping: ${JSON.stringify(mapping)}`
     );
+
+    return result;
   }
 
   /**
@@ -80,11 +85,12 @@ class ClothingSlotMappingStrategy {
    *
    * @param {string} entityId - Entity to resolve for
    * @param {object} mapping - The clothing slot mapping
+   * @param {Map<string, string>} [slotEntityMappings] - Optional slot-to-entity mappings for this character
    * @returns {Promise<ResolvedAttachmentPoint[]>} Resolved attachment points
    * @throws {ClothingSlotNotFoundError} If clothing slot not found in blueprint
    * @throws {InvalidClothingSlotMappingError} If mapping structure is invalid
    */
-  async resolve(entityId, mapping) {
+  async resolve(entityId, mapping, slotEntityMappings) {
     if (!this.canResolve(mapping)) {
       return [];
     }
@@ -125,7 +131,8 @@ class ClothingSlotMappingStrategy {
       try {
         const blueprintPoints = await this.#resolveBlueprintSlots(
           entityId,
-          clothingSlotMapping.blueprintSlots
+          clothingSlotMapping.blueprintSlots,
+          slotEntityMappings
         );
         attachmentPoints.push(...blueprintPoints);
       } catch (err) {
@@ -190,12 +197,13 @@ class ClothingSlotMappingStrategy {
    *
    * @param {string} entityId - Entity to resolve for
    * @param {string[]} blueprintSlots - Array of blueprint slot IDs
+   * @param {Map<string, string>} [slotEntityMappings] - Optional slot-to-entity mappings for this character
    * @returns {Promise<ResolvedAttachmentPoint[]>} Resolved attachment points
    * @private
    */
-  async #resolveBlueprintSlots(entityId, blueprintSlots) {
+  async #resolveBlueprintSlots(entityId, blueprintSlots, slotEntityMappings) {
     const mapping = { blueprintSlots };
-    return await this.#blueprintSlotStrategy.resolve(entityId, mapping);
+    return await this.#blueprintSlotStrategy.resolve(entityId, mapping, slotEntityMappings);
   }
 
   /**

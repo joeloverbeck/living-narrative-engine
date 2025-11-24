@@ -178,22 +178,26 @@ export class BodyGraphService {
     const cacheSize = this.#cacheManager.size();
     if (actorEntityId && this.#cacheManager.has(actorEntityId)) {
       cacheRootId = actorEntityId;
-      this.#logger.debug(
-        `BodyGraphService: Using actor entity '${actorEntityId}' as cache root instead of blueprint root '${rootId}' (cache size: ${cacheSize})`
+      this.#logger.info(
+        `BodyGraphService.getAllParts: Actor '${actorEntityId}' -> Using actor as cache root (blueprint root was '${rootId}', cache size: ${cacheSize})`
       );
     } else {
-      this.#logger.debug(
-        `BodyGraphService: Using blueprint root '${rootId}' as cache root (actor '${actorEntityId}' not in cache, cache size: ${cacheSize})`
+      this.#logger.info(
+        `BodyGraphService.getAllParts: Actor '${actorEntityId}' -> Using blueprint root '${rootId}' as cache root (actor not in cache, cache size: ${cacheSize})`
       );
     }
 
     // Check query cache first
     const cachedResult = this.#queryCache.getCachedGetAllParts(cacheRootId);
     if (cachedResult !== undefined) {
-      this.#logger.debug(
-        `BodyGraphService: Found cached result for root '${cacheRootId}': ${cachedResult.length} parts`
+      this.#logger.info(
+        `BodyGraphService.getAllParts: CACHE HIT for cache root '${cacheRootId}': returning ${cachedResult.length} parts [${cachedResult.slice(0, 3).join(', ')}${cachedResult.length > 3 ? '...' : ''}]`
       );
       return cachedResult;
+    } else {
+      this.#logger.info(
+        `BodyGraphService.getAllParts: CACHE MISS for cache root '${cacheRootId}': will query and cache`
+      );
     }
 
     // Perform the query starting from the cache root
@@ -203,12 +207,15 @@ export class BodyGraphService {
       this.#entityManager
     );
 
-    this.#logger.debug(
-      `BodyGraphService: AnatomyGraphAlgorithms.getAllParts returned ${result.length} parts for root '${cacheRootId}': [${result.slice(0, 5).join(', ')}${result.length > 5 ? '...' : ''}]`
+    this.#logger.info(
+      `BodyGraphService.getAllParts: AnatomyGraphAlgorithms returned ${result.length} parts for cache root '${cacheRootId}': [${result.slice(0, 5).join(', ')}${result.length > 5 ? '...' : ''}]`
     );
 
     // Cache the result
     this.#queryCache.cacheGetAllParts(cacheRootId, result);
+    this.#logger.info(
+      `BodyGraphService.getAllParts: Cached ${result.length} parts for cache root '${cacheRootId}'`
+    );
 
     return result;
   }

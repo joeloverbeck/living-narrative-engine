@@ -122,11 +122,8 @@
     },
     "standard_torso_upper": {
       "anatomySockets": [
-        "left_breast",
-        "right_breast",
         "left_chest",
         "right_chest",
-        "chest_center",
         "left_shoulder",
         "right_shoulder"
       ],
@@ -152,8 +149,6 @@
       "anatomySockets": [
         "left_hip",
         "right_hip",
-        "waist_front",
-        "waist_back",
         "pubic_hair",
         "penis",
         "left_testicle",

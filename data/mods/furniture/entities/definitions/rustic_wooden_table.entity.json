@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "furniture:rustic_wooden_table",
+  "description": "A sturdy rustic wooden table with thick legs and worn surface, suitable for civic and working-class settings",
+  "components": {
+    "core:name": {
+      "text": "rustic wooden table"
+    },
+    "core:description": {
+      "text": "A large table of rough-hewn timber, its surface worn smooth by years of use. The thick legs are slightly uneven, giving it a solid, functional appearance rather than any decorative refinement. Papers, ledgers, and the occasional abandoned cup have left their marks on the wood, adding to its well-used character."
+    },
+    "core:portrait": {
+      "imagePath": "portraits/rustic_wooden_table.png",
+      "altText": "A sturdy wooden table with thick plain legs and a worn surface"
+    },
+    "items:item": {}
+  }
+}

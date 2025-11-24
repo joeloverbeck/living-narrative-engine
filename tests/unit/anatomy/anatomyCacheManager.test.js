@@ -858,7 +858,10 @@ describe('AnatomyCacheManager', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (id, componentId) => {
           if (id === 'actor-1' && componentId === 'anatomy:body') {
-            return { type: 'humanoid' }; // Has anatomy:body but no structure
+            return {
+              type: 'humanoid',
+              body: { root: 'anatomy-root-1' } // NEW: Fix requires body.root field
+            };
           }
           if (id === 'anatomy-root-1' && componentId === 'anatomy:part') {
             return { subType: 'torso' };
@@ -892,8 +895,8 @@ describe('AnatomyCacheManager', () => {
       expect(anatomyRootNode.socketId).toBe('anatomy_root_connection');
       expect(anatomyRootNode.children).toContain('child-part-1');
 
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        "AnatomyCacheManager: Successfully connected actor 'actor-1' to anatomy root 'anatomy-root-1'"
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining("Successfully connected actor 'actor-1' to its own anatomy root 'anatomy-root-1'")
       );
     });
 
@@ -915,7 +918,10 @@ describe('AnatomyCacheManager', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (id, componentId) => {
           if (id === 'actor-1' && componentId === 'anatomy:body') {
-            return { type: 'humanoid' };
+            return {
+              type: 'humanoid',
+              body: { root: 'valid-root-1' } // NEW: Fix requires body.root field
+            };
           }
           if (id === 'valid-root-1' && componentId === 'anatomy:part') {
             return { subType: 'torso' };
@@ -947,7 +953,10 @@ describe('AnatomyCacheManager', () => {
           }
           // Call the original implementation for other cases
           if (id === 'actor-1' && componentId === 'anatomy:body') {
-            return { type: 'humanoid' };
+            return {
+              type: 'humanoid',
+              body: { root: 'valid-root-1' } // NEW: Fix requires body.root field
+            };
           }
           if (id === 'valid-root-1' && componentId === 'anatomy:part') {
             return { subType: 'torso' };
@@ -983,7 +992,7 @@ describe('AnatomyCacheManager', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (id, componentId) => {
           if (id === 'actor-1' && componentId === 'anatomy:body') {
-            return { type: 'humanoid' };
+            return { type: 'humanoid', body: { root: 'anatomy-root-1' } };
           }
           if (id === 'part-1' && componentId === 'anatomy:joint') {
             return { parentEntityId: 'part-2', socketId: 'socket-1' };
@@ -1042,7 +1051,7 @@ describe('AnatomyCacheManager', () => {
       );
     });
 
-    it('should handle error in handleDisconnectedActorAnatomy', async () => {
+    it('should handle error during cache building gracefully', async () => {
       const actorEntity = { id: 'actor-1' };
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
@@ -1050,37 +1059,20 @@ describe('AnatomyCacheManager', () => {
         throw new Error(`Entity ${id} not found`);
       });
 
-      mockEntityManager.getComponentData.mockImplementation(
-        (id, componentId) => {
-          if (id === 'actor-1' && componentId === 'anatomy:body') {
-            return { type: 'humanoid' };
-          }
-          return null;
-        }
-      );
-
-      // Counter to track calls
-      let callCount = 0;
-      mockEntityManager.getEntitiesWithComponent.mockImplementation(() => {
-        callCount++;
-        // Return empty array on first call (for buildParentToChildrenMap)
-        if (callCount === 1) {
-          return [];
-        }
-        // Throw error on second call (in handleDisconnectedActorAnatomy)
-        throw new Error('Database error');
+      // Simulate error when trying to get component data
+      mockEntityManager.getComponentData.mockImplementation(() => {
+        throw new Error('Database connection error');
       });
+
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([]);
 
       await cacheManager.buildCache('actor-1', mockEntityManager);
 
-      // Should log error and continue
+      // Should log error (caught in buildCacheRecursive, not handleDisconnectedActorAnatomy)
       expect(mockLogger.error).toHaveBeenCalledWith(
-        "AnatomyCacheManager: Failed to handle disconnected actor anatomy for 'actor-1'",
-        expect.any(Object)
+        expect.stringContaining("Failed to build cache node for entity 'actor-1'"),
+        expect.objectContaining({ error: expect.any(Error) })
       );
-
-      // Cache should still have the actor
-      expect(cacheManager.has('actor-1')).toBe(true);
     });
 
     it('should use alternative parent field names for compatibility', async () => {
@@ -1099,7 +1091,7 @@ describe('AnatomyCacheManager', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (id, componentId) => {
           if (id === 'actor-1' && componentId === 'anatomy:body') {
-            return { type: 'humanoid' };
+            return { type: 'humanoid', body: { root: 'anatomy-root-1' } };
           }
           if (id === 'anatomy-root-1' && componentId === 'anatomy:part') {
             return { subType: 'torso' };
@@ -1142,7 +1134,7 @@ describe('AnatomyCacheManager', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (id, componentId) => {
           if (id === 'actor-floating-root' && componentId === 'anatomy:body') {
-            return { type: 'humanoid' };
+            return { type: 'humanoid', body: { root: 'floating-root' } };
           }
           if (id === 'floating-root' && componentId === 'anatomy:part') {
             return { subType: 'torso' };

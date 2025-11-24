@@ -124,7 +124,7 @@ export class ClothingInstantiationService extends BaseService {
       },
       slotResolver: {
         value: slotResolver,
-        requiredMethods: ['resolveClothingSlot', 'setSlotEntityMappings'],
+        requiredMethods: ['resolveClothingSlot'],
       },
       clothingSlotValidator: {
         value: clothingSlotValidator,
@@ -162,106 +162,6 @@ export class ClothingInstantiationService extends BaseService {
     this.#cache = anatomyClothingCache;
     this.#layerResolutionService = layerResolutionService;
     this.#eventBus = eventBus;
-
-    // Subscribe to ANATOMY_GENERATED events
-    this.#eventBus.subscribe(
-      'ANATOMY_GENERATED',
-      this.#handleAnatomyGenerated.bind(this)
-    );
-
-    this.#logger.debug(
-      'ClothingInstantiationService: Subscribed to ANATOMY_GENERATED events'
-    );
-  }
-
-  /**
-   * Handles ANATOMY_GENERATED event
-   * Instantiates clothing based on the anatomy recipe
-   *
-   * @private
-   * @param {object} event - The event object
-   * @param {object} event.payload - Event payload
-   * @param {string} event.payload.entityId - Entity ID that anatomy was generated for
-   * @param {string} event.payload.blueprintId - Blueprint ID used
-   * @param {Array} event.payload.sockets - Socket information
-   * @param {object} event.payload.partsMap - Map of anatomy parts
-   * @param {object} event.payload.slotEntityMappings - Slot to entity mappings
-   * @returns {Promise<void>}
-   */
-  async #handleAnatomyGenerated(event) {
-    const { entityId, partsMap, slotEntityMappings } = event.payload;
-
-    this.#logger.info(
-      `ClothingInstantiationService: Handling ANATOMY_GENERATED event for entity '${entityId}'`
-    );
-
-    try {
-      // Get the anatomy:body component to find the recipe
-      const entity = this.#entityManager.getEntityInstance(entityId);
-      if (!entity) {
-        this.#logger.warn(
-          `ClothingInstantiationService: Entity '${entityId}' not found`
-        );
-        return;
-      }
-
-      const anatomyBodyData = entity.getComponentData('anatomy:body');
-      if (!anatomyBodyData?.recipeId) {
-        this.#logger.debug(
-          `ClothingInstantiationService: Entity '${entityId}' has no recipe ID`
-        );
-        return;
-      }
-
-      // Get the recipe
-      const recipe = this.#dataRegistry.get(
-        'anatomyRecipes',
-        anatomyBodyData.recipeId
-      );
-      if (!recipe) {
-        this.#logger.warn(
-          `ClothingInstantiationService: Recipe '${anatomyBodyData.recipeId}' not found`
-        );
-        return;
-      }
-
-      // Check if recipe has clothing entities
-      if (!recipe.clothingEntities || recipe.clothingEntities.length === 0) {
-        this.#logger.debug(
-          `ClothingInstantiationService: Recipe '${anatomyBodyData.recipeId}' has no clothing entities`
-        );
-        return;
-      }
-
-      // Convert partsMap and slotEntityMappings back to Maps if they're plain objects
-      const partsMapConverted =
-        partsMap instanceof Map ? partsMap : new Map(Object.entries(partsMap));
-      const slotEntityMappingsConverted =
-        slotEntityMappings instanceof Map
-          ? slotEntityMappings
-          : new Map(Object.entries(slotEntityMappings));
-
-      // Instantiate clothing
-      await this.instantiateRecipeClothing(entityId, recipe, {
-        partsMap: partsMapConverted,
-        slotEntityMappings: slotEntityMappingsConverted,
-      });
-
-      this.#logger.info(
-        `ClothingInstantiationService: Successfully handled ANATOMY_GENERATED event for entity '${entityId}'`
-      );
-    } catch (error) {
-      this.#logger.error(
-        `ClothingInstantiationService: Failed to handle ANATOMY_GENERATED event for entity '${entityId}'`,
-        error
-      );
-
-      // Dispatch error event
-      this.#eventBus.dispatch('CLOTHING_INSTANTIATION_FAILED', {
-        entityId,
-        error: error.message,
-      });
-    }
   }
 
   /**
@@ -321,8 +221,8 @@ export class ClothingInstantiationService extends BaseService {
       `Starting clothing instantiation for actor '${actorId}' with ${recipe.clothingEntities.length} items`
     );
 
-    // Set slot-entity mappings for improved slot resolution
-    this.#slotResolver.setSlotEntityMappings(anatomyData.slotEntityMappings);
+    // Store slot-entity mappings to pass through to slot resolver
+    const slotEntityMappings = anatomyData.slotEntityMappings;
 
     // Validate clothing slots against blueprint allowances for all items
     // Note: We'll validate individual items as we process them to allow partial success
@@ -347,7 +247,8 @@ export class ClothingInstantiationService extends BaseService {
             await this.#validateClothingSlotAfterInstantiation(
               actorId,
               clothingId,
-              clothingConfig
+              clothingConfig,
+              slotEntityMappings
             );
 
           if (!validationResult.isValid) {
@@ -363,7 +264,7 @@ export class ClothingInstantiationService extends BaseService {
               );
             }
 
-            this.#logger.debug(
+            this.#logger.warn(
               `ClothingInstantiationService: Validation failed for '${clothingConfig.entityId}' with errors: ${JSON.stringify(validationResult.errors)}`
             );
 
@@ -464,9 +365,10 @@ export class ClothingInstantiationService extends BaseService {
    * @param {string} entityId - The entity to validate against
    * @param {string} slotId - The slot to validate
    * @param {string} itemId - The item to validate
+   * @param {Map<string, string>} [slotEntityMappings] - Optional slot-to-entity mappings for this character
    * @returns {Promise<{valid: boolean, reason?: string}>} Validation result
    */
-  async #validateClothingSlot(entityId, slotId, itemId) {
+  async #validateClothingSlot(entityId, slotId, itemId, slotEntityMappings) {
     try {
       // Check cache first
       const cacheKey = `${entityId}:${slotId}:${itemId}`;
@@ -480,7 +382,7 @@ export class ClothingInstantiationService extends BaseService {
 
       // Create resolver function for the validator
       const resolveAttachmentPoints = async (entityId, slotId) => {
-        return await this.#slotResolver.resolveClothingSlot(entityId, slotId);
+        return await this.#slotResolver.resolveClothingSlot(entityId, slotId, slotEntityMappings);
       };
 
       // Perform validation
@@ -570,12 +472,14 @@ export class ClothingInstantiationService extends BaseService {
    * @param {string} actorId - The actor entity ID
    * @param {string} clothingInstanceId - The clothing instance ID to validate
    * @param {ClothingEntityConfig} clothingConfig - Clothing configuration
+   * @param {Map<string, string>} slotEntityMappings - Slot-to-entity mappings for this character
    * @returns {Promise<{isValid: boolean, errors: string[]}>} Validation result
    */
   async #validateClothingSlotAfterInstantiation(
     actorId,
     clothingInstanceId,
-    clothingConfig
+    clothingConfig,
+    slotEntityMappings
   ) {
     const errors = [];
 
@@ -614,7 +518,8 @@ export class ClothingInstantiationService extends BaseService {
       const validationResult = await this.#validateClothingSlot(
         actorId,
         targetSlot,
-        clothingInstanceId // Now using instance ID instead of definition ID
+        clothingInstanceId, // Now using instance ID instead of definition ID
+        slotEntityMappings
       );
 
       if (!validationResult.valid) {

@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "furniture:plain_wooden_stool",
+  "description": "A simple wooden stool with uneven legs, typical of working-class civic furnishings",
+  "components": {
+    "core:name": {
+      "text": "plain wooden stool"
+    },
+    "core:description": {
+      "text": "A straightforward stool of plain wood, its seat worn smooth from countless hours of use. The legs are slightly uneven, betraying its rough-hewn construction, but it serves its purpose well enough. The kind of practical seating found in taverns, workshops, and public offices throughout the realm."
+    },
+    "core:portrait": {
+      "imagePath": "portraits/plain_wooden_stool.png",
+      "altText": "A simple wooden stool with uneven legs and a worn seat"
+    },
+    "positioning:allows_sitting": {
+      "spots": [null]
+    },
+    "items:item": {}
+  }
+}

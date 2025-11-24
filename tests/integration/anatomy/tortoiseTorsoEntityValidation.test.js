@@ -98,10 +98,10 @@ describe('Tortoise Torso Entity Definition (TORPERANAREC-003)', () => {
       expect(entityDefinition.components['anatomy:sockets']).toBeDefined();
     });
 
-    it('should have exactly 2 sockets', () => {
+    it('should have exactly 3 sockets', () => {
       expect(
         entityDefinition.components['anatomy:sockets'].sockets
-      ).toHaveLength(2);
+      ).toHaveLength(3);
     });
 
     it('should have carapace_mount socket with correct configuration', () => {
@@ -122,6 +122,16 @@ describe('Tortoise Torso Entity Definition (TORPERANAREC-003)', () => {
       expect(plastronSocket).toBeDefined();
       expect(plastronSocket.allowedTypes).toEqual(['shell_plastron']);
       expect(plastronSocket.nameTpl).toBe('lower shell mount');
+    });
+
+    it('should have torso socket with correct configuration', () => {
+      const torsoSocket =
+        entityDefinition.components['anatomy:sockets'].sockets.find(
+          (s) => s.id === 'torso'
+        );
+      expect(torsoSocket).toBeDefined();
+      expect(torsoSocket.allowedTypes).toEqual(['torso_clothing']);
+      expect(torsoSocket.nameTpl).toBe('torso');
     });
 
     it('should validate against anatomy:sockets schema', () => {

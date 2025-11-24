@@ -1,0 +1,10 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "fantasy:plain_wooden_stool_instance",
+    "definitionId": "furniture:plain_wooden_stool",
+    "componentOverrides": {
+        "core:position": {
+            "locationId": "fantasy:mudbrook_municipal_aid_registry_instance"
+        }
+    }
+}

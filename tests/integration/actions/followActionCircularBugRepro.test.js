@@ -100,7 +100,7 @@ describe('Follow Action Circular Bug - Minimal Reproduction', () => {
       context
     );
     console.log('entity.id resolves to:', entityIdResult);
-    expect(entityIdResult).toBe(true); // Non-empty string is truthy
+    expect(entityIdResult).toBe('p_erotica:iker_aguirre_instance');
 
     // Test 2: Can we resolve the followers array?
     const followersCondition = {
@@ -111,7 +111,7 @@ describe('Follow Action Circular Bug - Minimal Reproduction', () => {
       context
     );
     console.log('followers array resolves to:', followersResult);
-    expect(followersResult).toBe(true); // Non-empty array is truthy
+    expect(followersResult).toEqual(['p_erotica:iker_aguirre_instance']);
 
     // Test 3: Direct "in" test
     const inCondition = {

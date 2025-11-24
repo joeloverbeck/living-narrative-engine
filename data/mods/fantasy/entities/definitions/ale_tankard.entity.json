@@ -1,0 +1,33 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "fantasy:ale_tankard",
+  "components": {
+    "core:name": {
+      "text": "tankard of ale"
+    },
+    "core:description": {
+      "text": "A sturdy wooden tankard filled with amber ale, its foam-capped surface catching the tavern's firelight. The brew smells of malted barley and hops with earthy undertones."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.6
+    },
+    "items:drinkable": {},
+    "items:liquid_container": {
+      "currentVolumeMilliliters": 500,
+      "maxCapacityMilliliters": 500,
+      "servingSizeMilliliters": 100,
+      "isRefillable": true,
+      "flavorText": "The ale is rich and malty with a slightly bitter hop finish. It's hearty and satisfying, warming your throat as it goes down."
+    },
+    "metabolism:fuel_source": {
+      "energy_content": 180,
+      "bulk": 25,
+      "fuel_type": "drink",
+      "fuel_tags": ["organic", "beverage", "alcohol"],
+      "digestion_speed": "medium",
+      "spoilage_rate": 0
+    }
+  }
+}
