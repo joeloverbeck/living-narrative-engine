@@ -13,7 +13,6 @@ import {
   validateDependency,
   assertPresent,
 } from '../../utils/dependencyUtils.js';
-import { SpeechPatternsGenerationError } from '../errors/SpeechPatternsGenerationError.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -228,14 +227,27 @@ export class SpeechPatternsSchemaValidator {
     };
 
     if (Array.isArray(response.speechPatterns)) {
-      sanitized.speechPatterns = response.speechPatterns.map((pattern) => ({
-        pattern: this.sanitizeInput(pattern.pattern),
-        example: this.sanitizeInput(pattern.example),
-        circumstances:
-          pattern.circumstances !== null
-            ? this.sanitizeInput(pattern.circumstances)
-            : null,
-      }));
+      sanitized.speechPatterns = response.speechPatterns.map((pattern) => {
+        const sanitizedPattern = {
+          type: this.sanitizeInput(pattern.type),
+        };
+
+        // Handle contexts array (optional)
+        if (Array.isArray(pattern.contexts)) {
+          sanitizedPattern.contexts = pattern.contexts.map((ctx) =>
+            this.sanitizeInput(ctx)
+          );
+        }
+
+        // Handle examples array (required)
+        if (Array.isArray(pattern.examples)) {
+          sanitizedPattern.examples = pattern.examples.map((ex) =>
+            this.sanitizeInput(ex)
+          );
+        }
+
+        return sanitizedPattern;
+      });
     }
 
     if (response.generatedAt) {

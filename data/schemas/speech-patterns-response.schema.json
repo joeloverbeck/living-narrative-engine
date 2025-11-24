@@ -16,11 +16,11 @@
 
     "speechPatterns": {
       "type": "array",
-      "description": "Array of generated speech patterns for the character",
+      "description": "Array of generated speech pattern groups for the character",
       "minItems": 3,
-      "maxItems": 30,
+      "maxItems": 8,
       "items": {
-        "$ref": "#/definitions/SpeechPattern"
+        "$ref": "#/definitions/SpeechPatternGroup"
       }
     },
 
@@ -42,12 +42,12 @@
         "patternCount": {
           "type": "integer",
           "minimum": 0,
-          "description": "Total number of patterns generated"
+          "description": "Total number of pattern groups generated"
         },
         "averagePatternLength": {
           "type": "integer",
           "minimum": 0,
-          "description": "Average length of pattern descriptions"
+          "description": "Average length of pattern type descriptions"
         },
         "averageExampleLength": {
           "type": "integer",
@@ -57,7 +57,7 @@
         "patternsWithCircumstances": {
           "type": "integer",
           "minimum": 0,
-          "description": "Number of patterns that include circumstances"
+          "description": "Number of pattern groups that include contexts"
         },
         "qualityScore": {
           "type": "number",
@@ -74,42 +74,52 @@
   "additionalProperties": false,
 
   "definitions": {
-    "SpeechPattern": {
+    "SpeechPatternGroup": {
       "type": "object",
-      "description": "Individual speech pattern with example and optional context",
+      "description": "Speech pattern group with type, optional contexts, and examples",
       "properties": {
-        "pattern": {
+        "type": {
           "type": "string",
-          "description": "Description of the speech pattern or characteristic",
+          "description": "The type or category of this speech pattern (e.g., 'Tonal Shifts', 'Verbal Tics')",
           "minLength": 5,
           "maxLength": 500,
           "pattern": "^[^<>]*$"
         },
 
-        "example": {
-          "type": "string",
-          "description": "Example of character's voice demonstrating this pattern",
-          "minLength": 3,
-          "maxLength": 1000,
-          "pattern": "^[^<>]*$"
+        "contexts": {
+          "type": "array",
+          "description": "Optional array of context strings indicating when this pattern is typically used",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "pattern": "^[^<>]*$"
+          },
+          "default": []
         },
 
-        "circumstances": {
-          "type": ["string", "null"],
-          "description": "When or where this pattern typically appears",
-          "maxLength": 200,
-          "pattern": "^[^<>]*$"
+        "examples": {
+          "type": "array",
+          "description": "Array of concrete dialogue examples demonstrating this speech pattern",
+          "minItems": 2,
+          "maxItems": 5,
+          "items": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 1000,
+            "pattern": "^[^<>]*$"
+          }
         }
       },
 
-      "required": ["pattern", "example"],
+      "required": ["type", "examples"],
       "additionalProperties": false,
 
       "allOf": [
         {
-          "description": "Content quality validation for pattern descriptions",
+          "description": "Content quality validation for pattern type descriptions",
           "properties": {
-            "pattern": {
+            "type": {
               "not": {
                 "pattern": "^(says|talks|speaks|has a way of speaking)\\b"
               }
@@ -119,29 +129,33 @@
         {
           "description": "Content quality validation for examples",
           "properties": {
-            "example": {
-              "anyOf": [
-                { "pattern": "['\"].*['\"]" },
-                { "pattern": "\\(.*\\).*['\"].*['\"]" }
-              ]
+            "examples": {
+              "items": {
+                "anyOf": [
+                  { "pattern": "['\"].*['\"]" },
+                  { "pattern": "\\(.*\\).*['\"].*['\"]" }
+                ]
+              }
             }
           }
         },
         {
           "if": {
             "properties": {
-              "circumstances": {
-                "type": "string",
-                "minLength": 1
+              "contexts": {
+                "type": "array",
+                "minItems": 1
               }
             }
           },
           "then": {
             "properties": {
-              "circumstances": {
-                "minLength": 5,
-                "pattern": "^(When|During|In|While|After|Before|If)\\b",
-                "description": "Circumstances should be descriptive and start with appropriate temporal/conditional words"
+              "contexts": {
+                "items": {
+                  "minLength": 5,
+                  "pattern": "^(When|During|In|While|After|Before|If)\\b",
+                  "description": "Contexts should be descriptive and start with appropriate temporal/conditional words"
+                }
               }
             }
           }
@@ -158,14 +172,17 @@
           "contains": {
             "type": "object",
             "properties": {
-              "pattern": {
+              "type": {
                 "minLength": 10
               },
-              "example": {
-                "minLength": 10
+              "examples": {
+                "minItems": 2,
+                "items": {
+                  "minLength": 10
+                }
               }
             },
-            "required": ["pattern", "example"]
+            "required": ["type", "examples"]
           }
         }
       }
@@ -187,19 +204,28 @@
       "characterName": "Sarah Mitchell",
       "speechPatterns": [
         {
-          "pattern": "Uses elaborate metaphors when explaining complex emotions",
-          "example": "\"It's like... imagine your favorite song being played backwards on a broken record player.\"",
-          "circumstances": "When trying to articulate deep emotional pain"
+          "type": "Uses elaborate metaphors when explaining complex emotions",
+          "contexts": ["When trying to articulate deep emotional pain"],
+          "examples": [
+            "\"It's like... imagine your favorite song being played backwards on a broken record player.\"",
+            "\"My heart feels like it's being squeezed through a pasta maker.\""
+          ]
         },
         {
-          "pattern": "Switches to clipped, military-style speech under pressure",
-          "example": "\"Copy that. Moving to position. ETA two minutes.\"",
-          "circumstances": "During high-stress situations requiring quick decisions"
+          "type": "Switches to clipped, military-style speech under pressure",
+          "contexts": ["During high-stress situations requiring quick decisions"],
+          "examples": [
+            "\"Copy that. Moving to position. ETA two minutes.\"",
+            "\"Affirmative. Proceeding with plan B.\""
+          ]
         },
         {
-          "pattern": "Tends to use technical jargon as emotional armor",
-          "example": "\"I need to recalibrate my approach to this situation.\"",
-          "circumstances": null
+          "type": "Tends to use technical jargon as emotional armor",
+          "contexts": [],
+          "examples": [
+            "\"I need to recalibrate my approach to this situation.\"",
+            "\"Let me optimize my emotional response parameters.\""
+          ]
         }
       ],
       "generatedAt": "2025-08-25T10:30:00Z",

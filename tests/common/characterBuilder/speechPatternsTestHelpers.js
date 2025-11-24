@@ -11,22 +11,28 @@ import { jest } from '@jest/globals';
 export function createMockSpeechPatternsArray() {
   return [
     {
-      pattern: 'Uses enthusiastic and repetitive expressions when excited',
-      example:
+      type: 'Uses enthusiastic and repetitive expressions when excited',
+      examples: [
         "Oh wow, that's amazing! I can't believe this is happening! This is the best day ever!",
-      circumstances: 'When feeling happy and excited in casual settings',
+        "This is incredible! I've never seen anything like this before!"
+      ],
+      contexts: ['When feeling happy and excited in casual settings'],
     },
     {
-      pattern: 'Employs formal, measured language to express disagreement',
-      example:
+      type: 'Employs formal, measured language to express disagreement',
+      examples: [
         'I must express my strong disagreement with this decision. This is completely unacceptable and requires immediate attention.',
-      circumstances: 'When angry in professional or formal settings',
+        'I find myself compelled to object to this course of action with the utmost seriousness.'
+      ],
+      contexts: ['When angry in professional or formal settings'],
     },
     {
-      pattern: 'Uses gentle, reassuring tone when comforting others',
-      example:
+      type: 'Uses gentle, reassuring tone when comforting others',
+      examples: [
         "It's going to be okay. I understand how you're feeling, and I'm here to help you through this.",
-      circumstances: 'When offering emotional support in difficult situations',
+        "You're not alone in this. We'll get through it together, one step at a time."
+      ],
+      contexts: ['When offering emotional support in difficult situations'],
     },
   ];
 }

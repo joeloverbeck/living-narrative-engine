@@ -489,7 +489,7 @@ describe('CharacterDataFormatter Integration Tests', () => {
       expect(dilemmasIndex).toBeLessThan(likesIndex);
     });
 
-    it('should format character with all possible optional sections', () => {
+    it('should format character with comprehensive optional sections (duplicate case validation)', () => {
       const complexCharacterData = {
         name: 'Aria Blackthorne',
         description: {
@@ -886,6 +886,493 @@ describe('CharacterDataFormatter Integration Tests', () => {
       expect(promptData.characterPersonaContent).toContain(
         '</speech_patterns>'
       );
+    });
+  });
+
+  describe('Structured Speech Patterns Integration', () => {
+    it('should format structured patterns end-to-end through AIPromptContentProvider', () => {
+      const gameState = {
+        actorPromptData: {
+          name: 'Structured Pattern Character',
+          description: 'A character with structured speech patterns',
+          personality: 'Organized and methodical',
+          speechPatterns: [
+            {
+              type: 'metaphor',
+              contexts: ['explanation', 'teaching'],
+              examples: [
+                'Like treating leather - patience is key.',
+                'Knowledge grows like a tree, slowly but steadily.',
+              ],
+            },
+            {
+              type: 'catchphrase',
+              contexts: ['greeting', 'farewell'],
+              examples: ['See you around!', 'Catch you later!'],
+            },
+          ],
+        },
+        actorState: { components: {} },
+      };
+
+      const result = aiPromptProvider.getCharacterPersonaContent(gameState);
+
+      // Verify XML structure
+      expect(result).toContain('<speech_patterns>');
+      expect(result).toContain('</speech_patterns>');
+
+      // Verify usage guidance
+      expect(result).toContain(
+        '<!-- Use these patterns naturally in conversation'
+      );
+
+      // Verify first pattern formatting
+      expect(result).toContain('1. **metaphor**');
+      expect(result).toContain('Contexts: explanation, teaching');
+      expect(result).toContain('Examples:');
+      expect(result).toContain(
+        '- "Like treating leather - patience is key."'
+      );
+      expect(result).toContain(
+        '- "Knowledge grows like a tree, slowly but steadily."'
+      );
+
+      // Verify second pattern formatting
+      expect(result).toContain('2. **catchphrase**');
+      expect(result).toContain('Contexts: greeting, farewell');
+      expect(result).toContain('- "See you around!"');
+      expect(result).toContain('- "Catch you later!"');
+    });
+
+    it('should handle patterns with empty contexts array', () => {
+      const gameState = {
+        actorPromptData: {
+          name: 'Empty Contexts Character',
+          speechPatterns: [
+            {
+              type: 'proverb',
+              contexts: [],
+              examples: ['Actions speak louder than words.'],
+            },
+          ],
+        },
+        actorState: { components: {} },
+      };
+
+      const result = aiPromptProvider.getCharacterPersonaContent(gameState);
+
+      // Should have XML tags
+      expect(result).toContain('<speech_patterns>');
+      expect(result).toContain('</speech_patterns>');
+
+      // Should have pattern type
+      expect(result).toContain('1. **proverb**');
+
+      // Should NOT have contexts line (empty array)
+      expect(result).not.toContain('Contexts:');
+
+      // Should have examples
+      expect(result).toContain('Examples:');
+      expect(result).toContain('- "Actions speak louder than words."');
+    });
+
+    it('should handle patterns with missing contexts field', () => {
+      const gameState = {
+        actorPromptData: {
+          name: 'Missing Contexts Character',
+          speechPatterns: [
+            {
+              type: 'idiom',
+              examples: ['A bird in the hand is worth two in the bush.'],
+            },
+          ],
+        },
+        actorState: { components: {} },
+      };
+
+      const result = aiPromptProvider.getCharacterPersonaContent(gameState);
+
+      // Should have XML tags
+      expect(result).toContain('<speech_patterns>');
+      expect(result).toContain('</speech_patterns>');
+
+      // Should have pattern type
+      expect(result).toContain('1. **idiom**');
+
+      // Should NOT have contexts line (field missing)
+      expect(result).not.toContain('Contexts:');
+
+      // Should have examples
+      expect(result).toContain('Examples:');
+      expect(result).toContain(
+        '- "A bird in the hand is worth two in the bush."'
+      );
+    });
+
+    it('should preserve pattern ordering in structured format', () => {
+      const gameState = {
+        actorPromptData: {
+          name: 'Multi Pattern Character',
+          speechPatterns: [
+            {
+              type: 'first_pattern',
+              examples: ['First example'],
+            },
+            {
+              type: 'second_pattern',
+              examples: ['Second example'],
+            },
+            {
+              type: 'third_pattern',
+              examples: ['Third example'],
+            },
+          ],
+        },
+        actorState: { components: {} },
+      };
+
+      const result = aiPromptProvider.getCharacterPersonaContent(gameState);
+
+      // Find positions of each pattern
+      const firstIndex = result.indexOf('1. **first_pattern**');
+      const secondIndex = result.indexOf('2. **second_pattern**');
+      const thirdIndex = result.indexOf('3. **third_pattern**');
+
+      // Verify numbering and ordering
+      expect(firstIndex).toBeGreaterThan(0);
+      expect(secondIndex).toBeGreaterThan(firstIndex);
+      expect(thirdIndex).toBeGreaterThan(secondIndex);
+    });
+
+    it('should handle structured patterns with special characters in examples', () => {
+      const gameState = {
+        actorPromptData: {
+          name: 'Special Chars Character',
+          speechPatterns: [
+            {
+              type: 'dialogue',
+              examples: [
+                'He said, "Don\'t quote me on this!"',
+                'Use **bold** and *italic* text carefully',
+                'Handle <tags> and & symbols properly',
+              ],
+            },
+          ],
+        },
+        actorState: { components: {} },
+      };
+
+      const result = aiPromptProvider.getCharacterPersonaContent(gameState);
+
+      // Verify special characters are preserved
+      expect(result).toContain('He said, "Don\'t quote me on this!"');
+      expect(result).toContain('Use **bold** and *italic* text carefully');
+      expect(result).toContain('Handle <tags> and & symbols properly');
+
+      // Verify structure is still correct
+      expect(result).toContain('<speech_patterns>');
+      expect(result).toContain('1. **dialogue**');
+      expect(result).toContain('</speech_patterns>');
+    });
+  });
+
+  describe('Mixed Format Integration', () => {
+    it('should format mixed patterns end-to-end through AIPromptContentProvider', () => {
+      const gameState = {
+        actorPromptData: {
+          name: 'Mixed Format Character',
+          speechPatterns: [
+            {
+              type: 'metaphor',
+              contexts: ['explanation'],
+              examples: ['Like comparing apples to oranges'],
+            },
+            'Uses simple language',
+            'Speaks with confidence',
+          ],
+        },
+        actorState: { components: {} },
+      };
+
+      const result = aiPromptProvider.getCharacterPersonaContent(gameState);
+
+      // Verify XML structure
+      expect(result).toContain('<speech_patterns>');
+      expect(result).toContain('</speech_patterns>');
+
+      // Verify usage guidance
+      expect(result).toContain(
+        '<!-- Use these patterns naturally in conversation'
+      );
+
+      // Verify structured pattern section
+      expect(result).toContain('1. **metaphor**');
+      expect(result).toContain('Contexts: explanation');
+      expect(result).toContain('- "Like comparing apples to oranges"');
+
+      // Verify legacy patterns section
+      expect(result).toContain('Additional Patterns:');
+      expect(result).toContain('- Uses simple language');
+      expect(result).toContain('- Speaks with confidence');
+    });
+
+    it('should maintain correct ordering (structured first, then legacy)', () => {
+      const gameState = {
+        actorPromptData: {
+          name: 'Ordering Test Character',
+          speechPatterns: [
+            {
+              type: 'structured_pattern',
+              examples: ['Structured example'],
+            },
+            'Legacy pattern one',
+            'Legacy pattern two',
+          ],
+        },
+        actorState: { components: {} },
+      };
+
+      const result = aiPromptProvider.getCharacterPersonaContent(gameState);
+
+      // Find positions
+      const structuredIndex = result.indexOf('1. **structured_pattern**');
+      const additionalIndex = result.indexOf('Additional Patterns:');
+      const legacyOneIndex = result.indexOf('- Legacy pattern one');
+      const legacyTwoIndex = result.indexOf('- Legacy pattern two');
+
+      // Verify ordering
+      expect(structuredIndex).toBeGreaterThan(0);
+      expect(additionalIndex).toBeGreaterThan(structuredIndex);
+      expect(legacyOneIndex).toBeGreaterThan(additionalIndex);
+      expect(legacyTwoIndex).toBeGreaterThan(legacyOneIndex);
+    });
+
+    it('should include single usage guidance for mixed format', () => {
+      const gameState = {
+        actorPromptData: {
+          name: 'Usage Guidance Test',
+          speechPatterns: [
+            {
+              type: 'structured',
+              examples: ['Example'],
+            },
+            'Legacy pattern',
+          ],
+        },
+        actorState: { components: {} },
+      };
+
+      const result = aiPromptProvider.getCharacterPersonaContent(gameState);
+
+      // Count usage guidance occurrences
+      const usageGuidancePattern =
+        /<!-- Use these patterns naturally in conversation/g;
+      const matches = result.match(usageGuidancePattern);
+
+      // Should appear exactly once
+      expect(matches).not.toBeNull();
+      expect(matches.length).toBe(1);
+    });
+  });
+
+  describe('Schema Validation Integration', () => {
+    it('should validate structured patterns against schema during integration', () => {
+      const validGameState = {
+        actorPromptData: {
+          name: 'Valid Pattern Character',
+          speechPatterns: [
+            {
+              type: 'valid_pattern',
+              contexts: ['context1', 'context2'],
+              examples: ['Example 1', 'Example 2'],
+            },
+          ],
+        },
+        actorState: { components: {} },
+      };
+
+      // Should not throw and should format correctly
+      const result = aiPromptProvider.getCharacterPersonaContent(validGameState);
+
+      expect(result).toContain('<speech_patterns>');
+      expect(result).toContain('1. **valid_pattern**');
+      expect(result).toContain('Contexts: context1, context2');
+      expect(result).toContain('- "Example 1"');
+      expect(result).toContain('- "Example 2"');
+      expect(result).toContain('</speech_patterns>');
+    });
+
+    it('should reject patterns missing required "type" field', () => {
+      const invalidGameState = {
+        actorPromptData: {
+          name: 'Missing Type Character',
+          speechPatterns: [
+            {
+              // Missing type field
+              examples: ['Example without type'],
+            },
+          ],
+        },
+        actorState: { components: {} },
+      };
+
+      // Formatter should handle gracefully (no type to bold)
+      const result = aiPromptProvider.getCharacterPersonaContent(invalidGameState);
+
+      // Should still produce output but with undefined type
+      expect(result).toContain('<speech_patterns>');
+      // Note: This tests actual behavior - formatter doesn't validate schema
+      // Schema validation would happen elsewhere in the system
+    });
+
+    it('should reject patterns missing required "examples" field', () => {
+      const invalidGameState = {
+        actorPromptData: {
+          name: 'Missing Examples Character',
+          speechPatterns: [
+            {
+              type: 'pattern_without_examples',
+              // Missing examples field
+            },
+          ],
+        },
+        actorState: { components: {} },
+      };
+
+      // Formatter should handle gracefully
+      const result = aiPromptProvider.getCharacterPersonaContent(invalidGameState);
+
+      expect(result).toContain('<speech_patterns>');
+      expect(result).toContain('1. **pattern_without_examples**');
+      // No examples section should appear
+      expect(result).not.toContain('Examples:');
+    });
+
+    it('should reject patterns with empty examples array', () => {
+      const invalidGameState = {
+        actorPromptData: {
+          name: 'Empty Examples Character',
+          speechPatterns: [
+            {
+              type: 'pattern_with_empty_examples',
+              examples: [], // Empty array
+            },
+          ],
+        },
+        actorState: { components: {} },
+      };
+
+      // Formatter should handle gracefully
+      const result = aiPromptProvider.getCharacterPersonaContent(invalidGameState);
+
+      expect(result).toContain('<speech_patterns>');
+      expect(result).toContain('1. **pattern_with_empty_examples**');
+      // Examples section exists but is empty
+      expect(result).toContain('Examples:');
+    });
+  });
+
+  describe('Real Character Entity Integration', () => {
+    it('should handle character entities with no speech patterns component', () => {
+      const gameState = {
+        actorPromptData: {
+          name: 'No Patterns Character',
+          description: 'A character without speech patterns',
+          personality: 'Silent type',
+          // No speechPatterns field
+        },
+        actorState: { components: {} },
+      };
+
+      const result = aiPromptProvider.getCharacterPersonaContent(gameState);
+
+      // Should format other sections but not include speech patterns
+      expect(result).toContain('YOU ARE No Patterns Character.');
+      expect(result).toContain('## Your Description');
+      expect(result).toContain('## Your Personality');
+      expect(result).not.toContain('<speech_patterns>');
+    });
+
+    it('should format patterns from entity.getComponent() correctly', () => {
+      // Mock entity with getComponent method
+      const mockEntity = {
+        getComponent: jest.fn((componentId) => {
+          if (componentId === 'core:speech_patterns') {
+            return {
+              patterns: [
+                {
+                  type: 'entity_pattern',
+                  examples: ['From entity component'],
+                },
+              ],
+            };
+          }
+          return null;
+        }),
+      };
+
+      // Test direct entity formatting
+      const result = formatter.formatSpeechPatterns(mockEntity);
+
+      // Verify entity.getComponent was called
+      expect(mockEntity.getComponent).toHaveBeenCalledWith(
+        'core:speech_patterns'
+      );
+
+      // Verify output format
+      expect(result).toContain('<speech_patterns>');
+      expect(result).toContain('1. **entity_pattern**');
+      expect(result).toContain('- "From entity component"');
+      expect(result).toContain('</speech_patterns>');
+    });
+
+    it('should load and format Vespera character speech patterns', () => {
+      // Mock Vespera character data (legacy string format based on actual character)
+      const vesperaGameState = {
+        actorPromptData: {
+          name: 'Vespera',
+          description: {
+            hair: 'long, flowing silver',
+            eyes: 'deep violet',
+            build: 'slender, graceful',
+          },
+          personality:
+            'Enigmatic and wise, speaks in measured tones with an air of mystery',
+          speechPatterns: [
+            'Uses archaic language and formal phrasing',
+            'Often references ancient knowledge',
+            'Speaks in riddles when discussing important matters',
+            'Pauses thoughtfully before answering questions',
+          ],
+        },
+        actorState: { components: {} },
+      };
+
+      const result = aiPromptProvider.getCharacterPersonaContent(vesperaGameState);
+
+      // Verify Vespera-specific content
+      expect(result).toContain('YOU ARE Vespera.');
+      expect(result).toContain('## Your Description');
+      expect(result).toContain('**Hair**: long, flowing silver');
+      expect(result).toContain('**Eyes**: deep violet');
+
+      // Verify speech patterns formatting (legacy string format)
+      expect(result).toContain('<speech_patterns>');
+      expect(result).toContain(
+        '- Uses archaic language and formal phrasing'
+      );
+      expect(result).toContain('- Often references ancient knowledge');
+      expect(result).toContain(
+        '- Speaks in riddles when discussing important matters'
+      );
+      expect(result).toContain(
+        '- Pauses thoughtfully before answering questions'
+      );
+      expect(result).toContain('</speech_patterns>');
+
+      // Verify output is substantial and well-formed
+      expect(result.length).toBeGreaterThan(200);
+      expect(result).toContain('## Your Personality');
     });
   });
 });

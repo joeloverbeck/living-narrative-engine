@@ -131,9 +131,9 @@ describe('SpeechPatternsResponseProcessor', () => {
       const result = await processor.processResponse(response);
 
       expect(result.speechPatterns).toBeDefined();
-      expect(result.speechPatterns[0]).toHaveProperty('pattern');
-      expect(result.speechPatterns[0]).toHaveProperty('example');
-      expect(result.speechPatterns[0]).toHaveProperty('circumstances');
+      expect(result.speechPatterns[0]).toHaveProperty('type');
+      expect(result.speechPatterns[0]).toHaveProperty('examples');
+      expect(result.speechPatterns[0].examples).toBeInstanceOf(Array);
     });
 
     it('should handle response with metadata', async () => {
@@ -188,23 +188,23 @@ Her voice trembles slightly when revealing secrets
       expect(result.generatedAt).toBe('2024-01-01T12:00:00.000Z');
       expect(result.speechPatterns).toHaveLength(4);
       expect(result.speechPatterns[0]).toMatchObject({
-        pattern: 'Her voice trembles slightly when revealing secrets',
-        example: 'I... I just thought you should know.',
-        circumstances: 'when confiding in allies',
+        type: 'Her voice trembles slightly when revealing secrets',
+        examples: expect.arrayContaining(['I... I just thought you should know.']),
+        contexts: expect.arrayContaining(['when confiding in allies']),
       });
       expect(result.speechPatterns[1]).toMatchObject({
-        pattern: 'Warm greeting',
-        example: 'Hello there, friend! Good to see you!',
-        circumstances: 'when meeting allies',
+        type: 'Warm greeting',
+        examples: expect.arrayContaining(['Hello there, friend! Good to see you!']),
+        contexts: expect.arrayContaining(['when meeting allies']),
       });
       expect(result.speechPatterns[2]).toMatchObject({
-        pattern: 'Sharp retort',
-        example: 'Always has a cutting remark ready',
-        circumstances: 'when challenged in debates',
+        type: 'Sharp retort',
+        examples: expect.arrayContaining(['Always has a cutting remark ready']),
+        contexts: expect.arrayContaining(['when challenged in debates']),
       });
-      expect(result.speechPatterns[3].example).toBe('Wow!');
-      expect(result.speechPatterns[3].pattern).toContain('bursts forth');
-      expect(result.speechPatterns[3].circumstances).toBe('during celebrations');
+      expect(result.speechPatterns[3].examples).toContain('Wow!');
+      expect(result.speechPatterns[3].type).toContain('bursts forth');
+      expect(result.speechPatterns[3].contexts).toContain('during celebrations');
 
       expect(result.metadata).toMatchObject({
         processingMethod: 'json',
@@ -269,19 +269,19 @@ Her voice trembles slightly when revealing secrets
             characterName: 'Sanitized Character',
             speechPatterns: [
               {
-                pattern: 'Sanitized Pattern 1',
-                example: 'Clean Example 1',
-                circumstances: 'After validation',
+                type: 'Sanitized Pattern 1',
+                examples: ['Clean Example 1', 'Another Example 1'],
+                contexts: ['After validation'],
               },
               {
-                pattern: 'Sanitized Pattern 2',
-                example: 'Clean Example 2',
-                circumstances: 'During stress',
+                type: 'Sanitized Pattern 2',
+                examples: ['Clean Example 2', 'Another Example 2'],
+                contexts: ['During stress'],
               },
               {
-                pattern: 'Sanitized Pattern 3',
-                example: 'Clean Example 3',
-                circumstances: 'In quiet moments',
+                type: 'Sanitized Pattern 3',
+                examples: ['Clean Example 3', 'Another Example 3'],
+                contexts: ['In quiet moments'],
               },
             ],
             generatedAt: '2024-02-02T00:00:00.000Z',

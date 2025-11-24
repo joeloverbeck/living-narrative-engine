@@ -179,18 +179,31 @@ export class SpeechPatternsDisplayEnhancer {
       throw new Error('No speech patterns to process');
     }
 
-    // Validate each pattern has required fields
+    // Validate each pattern has required fields (support both old and new schema formats)
     patterns.speechPatterns.forEach((pattern, index) => {
-      if (!pattern.pattern || typeof pattern.pattern !== 'string') {
+      // New schema format (v3.0.0): type and examples[]
+      const hasNewFormat = pattern.type && Array.isArray(pattern.examples);
+      // Old schema format (v2.0.0): pattern and example
+      const hasOldFormat = pattern.pattern && pattern.example;
+
+      if (!hasNewFormat && !hasOldFormat) {
         throw new Error(
-          `Pattern ${index + 1} missing required 'pattern' field`
+          `Pattern ${index + 1} missing required fields (expected 'type' and 'examples[]' OR 'pattern' and 'example')`
         );
       }
 
-      if (!pattern.example || typeof pattern.example !== 'string') {
-        throw new Error(
-          `Pattern ${index + 1} missing required 'example' field`
-        );
+      // Additional validation for new format
+      if (hasNewFormat) {
+        if (typeof pattern.type !== 'string') {
+          throw new Error(
+            `Pattern ${index + 1}: 'type' field must be a string`
+          );
+        }
+        if (pattern.examples.length < 2) {
+          throw new Error(
+            `Pattern ${index + 1}: 'examples' must have at least 2 items`
+          );
+        }
       }
     });
   }
@@ -205,29 +218,41 @@ export class SpeechPatternsDisplayEnhancer {
    * @returns {object} Enhanced pattern
    */
   #enhanceSinglePattern(pattern, index, _options) {
+    // Support both old and new schema formats
+    const patternText = pattern.type || pattern.pattern;
+    const exampleText = Array.isArray(pattern.examples)
+      ? pattern.examples[0] // Use first example for display
+      : pattern.example;
+    const contextText = pattern.contexts
+      ? pattern.contexts[0] // Use first context for display
+      : pattern.circumstances;
+
+    // Validate that extracted values are strings
+    if (typeof patternText !== 'string' || typeof exampleText !== 'string') {
+      throw new Error(
+        `Pattern ${index + 1} has invalid field types (expected strings)`
+      );
+    }
+
     const enhanced = {
-      // Basic data
+      // Basic data (unified format for both schemas)
       id: `pattern-${index + 1}`,
       index: index + 1,
-      pattern: pattern.pattern.trim(),
-      example: pattern.example.trim(),
-      circumstances: pattern.circumstances
-        ? pattern.circumstances.trim()
-        : null,
+      pattern: patternText.trim(),
+      example: exampleText.trim(),
+      circumstances: contextText ? contextText.trim() : null,
 
       // HTML-safe versions for display
-      htmlSafePattern: this.#escapeHtml(pattern.pattern.trim()),
-      htmlSafeExample: this.#escapeHtml(pattern.example.trim()),
-      htmlSafeCircumstances: pattern.circumstances
-        ? this.#escapeHtml(pattern.circumstances.trim())
+      htmlSafePattern: this.#escapeHtml(patternText.trim()),
+      htmlSafeExample: this.#escapeHtml(exampleText.trim()),
+      htmlSafeCircumstances: contextText
+        ? this.#escapeHtml(contextText.trim())
         : null,
 
       // Display metadata
-      patternLength: pattern.pattern.length,
-      exampleLength: pattern.example.length,
-      hasCircumstances: !!(
-        pattern.circumstances && pattern.circumstances.trim()
-      ),
+      patternLength: patternText.length,
+      exampleLength: exampleText.length,
+      hasCircumstances: !!(contextText && contextText.trim()),
 
       // Content analysis
       complexity: this.#analyzeComplexity(pattern),
@@ -245,19 +270,24 @@ export class SpeechPatternsDisplayEnhancer {
    * @returns {object} Complexity analysis
    */
   #analyzeComplexity(pattern) {
-    const textLength = pattern.pattern.length + pattern.example.length;
-    const wordCount = (pattern.pattern + ' ' + pattern.example).split(
-      /\s+/
-    ).length;
-    const hasCircumstances = !!(
-      pattern.circumstances && pattern.circumstances.trim()
-    );
+    // Support both old and new schema formats
+    const patternText = pattern.type || pattern.pattern;
+    const exampleText = Array.isArray(pattern.examples)
+      ? pattern.examples[0]
+      : pattern.example;
+    const contextText = pattern.contexts
+      ? pattern.contexts[0]
+      : pattern.circumstances;
+
+    const textLength = patternText.length + exampleText.length;
+    const wordCount = (patternText + ' ' + exampleText).split(/\s+/).length;
+    const hasCircumstances = !!(contextText && contextText.trim());
 
     let complexityScore = 0;
     if (textLength > 100) complexityScore += 1;
     if (wordCount > 20) complexityScore += 1;
     if (hasCircumstances) complexityScore += 1;
-    if (pattern.example.includes('(') && pattern.example.includes(')'))
+    if (exampleText.includes('(') && exampleText.includes(')'))
       complexityScore += 1;
 
     return {
@@ -411,9 +441,20 @@ SPEECH PATTERNS:
         categorizedPatterns[primaryCategory] = [];
       }
 
+      // Extract fields with support for both schema formats
+      const patternText = pattern.type || pattern.pattern;
+      const exampleText = Array.isArray(pattern.examples)
+        ? pattern.examples[0]
+        : pattern.example;
+      const contextText = pattern.contexts
+        ? pattern.contexts[0]
+        : pattern.circumstances;
+
       categorizedPatterns[primaryCategory].push({
-        ...pattern,
         index: index + 1,
+        pattern: patternText,
+        example: exampleText,
+        circumstances: contextText,
       });
     });
 
@@ -639,16 +680,27 @@ ${'='.repeat(60)}
           complexityDistribution: stats.complexityDistribution,
           categoryDistribution: stats.categoryDistribution,
         },
-        speechPatterns: patterns.speechPatterns.map((pattern, index) => ({
-          id: index + 1,
-          pattern: pattern.pattern,
-          example: pattern.example,
-          circumstances: pattern.circumstances || null,
-          metadata: {
-            categories: this.#categorizePattern(pattern),
-            complexity: this.#analyzeComplexity(pattern),
-          },
-        })),
+        speechPatterns: patterns.speechPatterns.map((pattern, index) => {
+          // Extract fields with support for both schema formats
+          const patternText = pattern.type || pattern.pattern;
+          const exampleText = Array.isArray(pattern.examples)
+            ? pattern.examples[0]
+            : pattern.example;
+          const contextText = pattern.contexts
+            ? pattern.contexts[0]
+            : pattern.circumstances;
+
+          return {
+            id: index + 1,
+            pattern: patternText,
+            example: exampleText,
+            circumstances: contextText || null,
+            metadata: {
+              categories: this.#categorizePattern(pattern),
+              complexity: this.#analyzeComplexity(pattern),
+            },
+          };
+        }),
       };
 
       if (options.includeCharacterData && options.characterDefinition) {
@@ -829,18 +881,27 @@ ${'='.repeat(60)}
 
       // Data rows
       patterns.speechPatterns.forEach((pattern, index) => {
+        // Extract fields with support for both schema formats
+        const patternText = pattern.type || pattern.pattern;
+        const exampleText = Array.isArray(pattern.examples)
+          ? pattern.examples[0]
+          : pattern.example;
+        const contextText = pattern.contexts
+          ? pattern.contexts[0]
+          : pattern.circumstances;
+
         const categories = this.#categorizePattern(pattern);
         const complexity = this.#analyzeComplexity(pattern);
 
         rows.push([
           index + 1,
-          this.#escapeCsvCell(pattern.pattern),
-          this.#escapeCsvCell(pattern.example),
-          this.#escapeCsvCell(pattern.circumstances || ''),
+          this.#escapeCsvCell(patternText),
+          this.#escapeCsvCell(exampleText),
+          this.#escapeCsvCell(contextText || ''),
           categories.join('; '),
           complexity.level,
-          pattern.pattern.length,
-          pattern.example.length,
+          patternText.length,
+          exampleText.length,
         ]);
       });
 
@@ -987,8 +1048,7 @@ ${'='.repeat(60)}
    *
    * @private
    * @param {object} patterns - Pattern data
-   * @param _options
-   * @param {object} options - Template options
+   * @param {object} _options - Template options (unused)
    * @returns {string} Summary template output
    */
   #generateSummaryTemplate(patterns, _options) {
@@ -1028,8 +1088,7 @@ ${'='.repeat(60)}
    *
    * @private
    * @param {object} patterns - Pattern data
-   * @param _options
-   * @param {object} options - Template options
+   * @param {object} _options - Template options (unused)
    * @returns {string} Character sheet output
    */
   #generateCharacterSheetTemplate(patterns, _options) {
@@ -1110,9 +1169,20 @@ ${'='.repeat(60)}
         categorizedPatterns[primaryCategory] = [];
       }
 
+      // Extract fields with support for both schema formats
+      const patternText = pattern.type || pattern.pattern;
+      const exampleText = Array.isArray(pattern.examples)
+        ? pattern.examples[0]
+        : pattern.example;
+      const contextText = pattern.contexts
+        ? pattern.contexts[0]
+        : pattern.circumstances;
+
       categorizedPatterns[primaryCategory].push({
-        ...pattern,
         index: index + 1,
+        pattern: patternText,
+        example: exampleText,
+        circumstances: contextText,
       });
     });
 
@@ -1139,7 +1209,20 @@ ${'='.repeat(60)}
       const primaryCategory = categories[0];
 
       if (!usedCategories.has(primaryCategory)) {
-        selected.push(pattern);
+        // Extract fields with support for both schema formats
+        const patternText = pattern.type || pattern.pattern;
+        const exampleText = Array.isArray(pattern.examples)
+          ? pattern.examples[0]
+          : pattern.example;
+        const contextText = pattern.contexts
+          ? pattern.contexts[0]
+          : pattern.circumstances;
+
+        selected.push({
+          pattern: patternText,
+          example: exampleText,
+          circumstances: contextText,
+        });
         usedCategories.add(primaryCategory);
       }
     });
@@ -1148,8 +1231,24 @@ ${'='.repeat(60)}
     if (selected.length < count) {
       patterns.speechPatterns.forEach((pattern) => {
         if (selected.length >= count) return;
-        if (!selected.includes(pattern)) {
-          selected.push(pattern);
+
+        // Check if already selected by comparing pattern text
+        const patternText = pattern.type || pattern.pattern;
+        const alreadySelected = selected.some(s => s.pattern === patternText);
+
+        if (!alreadySelected) {
+          const exampleText = Array.isArray(pattern.examples)
+            ? pattern.examples[0]
+            : pattern.example;
+          const contextText = pattern.contexts
+            ? pattern.contexts[0]
+            : pattern.circumstances;
+
+          selected.push({
+            pattern: patternText,
+            example: exampleText,
+            circumstances: contextText,
+          });
         }
       });
     }
@@ -1236,15 +1335,24 @@ ${'='.repeat(60)}
       let totalTextLength = 0;
 
       patterns.speechPatterns.forEach((pattern) => {
+        // Support both old and new schema formats
+        const patternText = pattern.type || pattern.pattern;
+        const exampleText = Array.isArray(pattern.examples)
+          ? pattern.examples[0]
+          : pattern.example;
+        const contextText = pattern.contexts
+          ? pattern.contexts[0]
+          : pattern.circumstances;
+
         // Length calculations
-        const patternLen = pattern.pattern.length;
-        const exampleLen = pattern.example.length;
+        const patternLen = patternText.length;
+        const exampleLen = exampleText.length;
         totalPatternLength += patternLen;
         totalExampleLength += exampleLen;
         totalTextLength += patternLen + exampleLen;
 
         // Circumstances count
-        if (pattern.circumstances && pattern.circumstances.trim()) {
+        if (contextText && contextText.trim()) {
           stats.patternsWithCircumstances++;
         }
 

@@ -16,7 +16,6 @@ import SpeechPatternsDisplayEnhancer from '../../../../src/characterBuilder/serv
 import {
   createMockSpeechPatterns,
   createMockCharacterDefinition,
-  EdgeCaseFixtures,
 } from '../../../common/characterBuilder/speechPatternsTestHelpers.js';
 
 describe('SpeechPatternsDisplayEnhancer', () => {
@@ -121,7 +120,7 @@ describe('SpeechPatternsDisplayEnhancer', () => {
       const invalidPatterns = {
         speechPatterns: [
           {
-            // Missing pattern and example fields
+            // Missing pattern and example fields (old schema) and type/examples (new schema)
             description: 'Invalid',
           },
         ],
@@ -130,7 +129,9 @@ describe('SpeechPatternsDisplayEnhancer', () => {
 
       expect(() => {
         enhancer.enhanceForDisplay(invalidPatterns);
-      }).toThrow("Pattern 1 missing required 'pattern' field");
+      }).toThrow(
+        "Pattern 1 missing required fields (expected 'type' and 'examples[]' OR 'pattern' and 'example')"
+      );
     });
 
     it('should analyze pattern complexity', () => {
@@ -608,7 +609,7 @@ describe('SpeechPatternsDisplayEnhancer', () => {
 
       expect(() => {
         enhancer.enhanceForDisplay(invalidPatterns);
-      }).toThrow("Pattern 1 missing required 'pattern' field");
+      }).toThrow('Pattern 1 has invalid field types (expected strings)');
     });
 
     it('should handle circular references in JSON export', () => {

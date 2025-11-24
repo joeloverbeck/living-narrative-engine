@@ -75,20 +75,20 @@ describe('Speech Patterns Schema Validation Integration', () => {
         characterName: 'Test Character',
         speechPatterns: [
           {
-            pattern:
+            type:
               'Uses elaborate metaphors when explaining complex emotions',
-            example: '"It\'s like watching a sunset through broken glass."',
-            circumstances: 'When discussing difficult personal experiences',
+            contexts: ['When discussing difficult personal experiences'],
+            examples: ['"It\'s like watching a sunset through broken glass."', '"My heart feels like shattered glass."'],
           },
           {
-            pattern: 'Switches to technical terminology under stress',
-            example: '"We need to optimize our approach vector immediately."',
-            circumstances: 'During high-pressure situations',
+            type: 'Switches to technical terminology under stress',
+            contexts: ['During high-pressure situations'],
+            examples: ['"We need to optimize our approach vector immediately."', '"Calculating optimal trajectory now."'],
           },
           {
-            pattern: 'Employs self-deprecating humor to deflect attention',
-            example: '"Well, that was about as smooth as sandpaper on silk."',
-            circumstances: null,
+            type: 'Employs self-deprecating humor to deflect attention',
+            contexts: ['When uncomfortable with compliments'],
+            examples: ['"Well, that was about as smooth as sandpaper on silk."', '"I\'m a walking disaster, really."'],
           },
         ],
         generatedAt: '2025-08-25T10:30:00Z',
@@ -127,14 +127,14 @@ describe('Speech Patterns Schema Validation Integration', () => {
         characterName: 'Test Character',
         speechPatterns: [
           {
-            pattern: 'Hi', // Too short - violates minLength: 5
-            example: '"Character says something here"',
-            circumstances: null,
+            type: 'Hi', // Too short - violates minLength: 5
+            contexts: ['anytime'],
+            examples: ['"Character says something here"', '"More dialogue"'],
           },
           {
-            pattern: 'Valid pattern that meets minimum requirements',
-            example: 'Hi', // Too short - violates minLength: 3
-            circumstances: null,
+            type: 'Valid pattern that meets minimum requirements',
+            contexts: ['various situations'],
+            examples: ['Hi', 'Yo'], // Too short - violates minLength: 3
           },
         ],
         // Missing third pattern - violates minItems: 3
@@ -160,19 +160,19 @@ describe('Speech Patterns Schema Validation Integration', () => {
         characterName: 'Test Character',
         speechPatterns: [
           {
-            pattern: 'Uses descriptive language when painting scenes',
-            // Missing required 'example' field
-            circumstances: null,
+            type: 'Uses descriptive language when painting scenes',
+            contexts: ['When describing scenes'],
+            // Missing required 'examples' field
           },
           {
-            // Missing required 'pattern' field
-            example: '"This demonstrates the speaking pattern"',
-            circumstances: null,
+            // Missing required 'type' field
+            contexts: ['When demonstrating'],
+            examples: ['"This demonstrates the speaking pattern"', '"More examples"'],
           },
           {
-            pattern: 'Shows empathy through careful word choice',
-            example: '"I understand how you feel"',
-            circumstances: null,
+            type: 'Shows empathy through careful word choice',
+            contexts: ['When being empathetic'],
+            examples: ['"I understand how you feel"', '"I\'m here for you"'],
           },
         ],
         generatedAt: '2025-08-25T10:30:00Z',
@@ -197,19 +197,19 @@ describe('Speech Patterns Schema Validation Integration', () => {
         characterName: 'Test Character',
         speechPatterns: [
           {
-            pattern: 'Uses formal language in professional settings',
-            example: '"I believe we should proceed with utmost caution."',
-            circumstances: 'Usually does this in meetings', // Bad format
+            type: 'Uses formal language in professional settings',
+            contexts: ['Usually does this in meetings'], // Bad format (should be more descriptive)
+            examples: ['"I believe we should proceed with utmost caution."', '"Let us review the data carefully."'],
           },
           {
-            pattern: 'Becomes more casual with trusted friends',
-            example: '"Hey, wanna grab some coffee later?"',
-            circumstances: 'Sometimes with people they know', // Bad format
+            type: 'Becomes more casual with trusted friends',
+            contexts: ['Sometimes with people they know'], // Bad format
+            examples: ['"Hey, wanna grab some coffee later?"', '"Dude, that was awesome!"'],
           },
           {
-            pattern: 'Shows deference to authority figures',
-            example: '"Yes, ma\'am. I understand completely."',
-            circumstances: 'Always being respectful to bosses', // Bad format
+            type: 'Shows deference to authority figures',
+            contexts: ['Always being respectful to bosses'], // Bad format
+            examples: ['"Yes, ma\'am. I understand completely."', '"Of course, sir."'],
           },
         ],
         generatedAt: '2025-08-25T10:30:00Z',
@@ -225,7 +225,8 @@ describe('Speech Patterns Schema Validation Integration', () => {
           (err) =>
             err.includes('temporal') ||
             err.includes('conditional') ||
-            err.includes('circumstances')
+            err.includes('contexts') ||
+            err.includes('pattern')
         )
       ).toBe(true);
     });
@@ -237,20 +238,20 @@ describe('Speech Patterns Schema Validation Integration', () => {
         characterName: 'Evil<script>alert("xss")</script>Character',
         speechPatterns: [
           {
-            pattern:
+            type:
               'Uses elaborate metaphors when explaining complex emotions',
-            example: '"It\'s like watching a sunset through broken glass."',
-            circumstances: 'When discussing difficult personal experiences',
+            contexts: ['When discussing difficult personal experiences'],
+            examples: ['"It\'s like watching a sunset through broken glass."', '"My heart feels like shattered glass."'],
           },
           {
-            pattern: 'Switches to technical terminology under stress',
-            example: '"We need to optimize our approach vector immediately."',
-            circumstances: 'During high-pressure situations',
+            type: 'Switches to technical terminology under stress',
+            contexts: ['During high-pressure situations'],
+            examples: ['"We need to optimize our approach vector immediately."', '"Calculating optimal trajectory now."'],
           },
           {
-            pattern: 'Employs self-deprecating humor to deflect attention',
-            example: '"Well, that was about as smooth as sandpaper on silk."',
-            circumstances: null,
+            type: 'Employs self-deprecating humor to deflect attention',
+            contexts: ['When uncomfortable with compliments'],
+            examples: ['"Well, that was about as smooth as sandpaper on silk."', '"I\'m a walking disaster, really."'],
           },
         ],
         generatedAt: '2025-08-25T10:30:00Z',
@@ -271,24 +272,31 @@ describe('Speech Patterns Schema Validation Integration', () => {
         characterName: 'Test Character',
         speechPatterns: [
           {
-            pattern:
+            type:
               'Uses<script>alert("pattern")</script> elaborate metaphors',
-            example:
+            contexts: [
+              'When<script>alert("circumstances")</script> discussing experiences'
+            ],
+            examples: [
               '"It\'s<iframe src="evil.com"></iframe> like watching a sunset."',
-            circumstances:
-              'When<script>alert("circumstances")</script> discussing experiences',
+              '"Another <script>bad</script> example"'
+            ],
           },
           {
-            pattern: 'Switches to technical terminology under stress',
-            example:
+            type: 'Switches to technical terminology under stress',
+            contexts: ['During high-pressure situations'],
+            examples: [
               '"We need to javascript:alert("example") optimize our approach."',
-            circumstances: 'During high-pressure situations',
+              '"Calculating <script>evil</script> trajectory"'
+            ],
           },
           {
-            pattern: 'Employs self-deprecating humor to deflect attention',
-            example:
+            type: 'Employs self-deprecating humor to deflect attention',
+            contexts: ['When uncomfortable'],
+            examples: [
               '"Well, that was <div onclick="badFunction()">smooth</div> as silk."',
-            circumstances: null,
+              '"I\'m <script>terrible</script> at this"'
+            ],
           },
         ],
         generatedAt: '2025-08-25T10:30:00Z',
@@ -299,20 +307,20 @@ describe('Speech Patterns Schema Validation Integration', () => {
           maliciousResponse
         );
 
-      expect(result.sanitizedResponse.speechPatterns[0].pattern).not.toContain(
-        '<script>'
+      expect(result.sanitizedResponse.speechPatterns[0].type).not.toContain(
+      '<script>'
       );
-      expect(result.sanitizedResponse.speechPatterns[0].example).not.toContain(
-        '<iframe>'
+      expect(result.sanitizedResponse.speechPatterns[0].examples[0]).not.toContain(
+      '<iframe>'
       );
       expect(
-        result.sanitizedResponse.speechPatterns[0].circumstances
+      result.sanitizedResponse.speechPatterns[0].contexts[0]
       ).not.toContain('<script>');
-      expect(result.sanitizedResponse.speechPatterns[1].example).not.toContain(
-        'javascript:'
+      expect(result.sanitizedResponse.speechPatterns[1].examples[0]).not.toContain(
+      'javascript:'
       );
-      expect(result.sanitizedResponse.speechPatterns[2].example).not.toContain(
-        'onclick='
+      expect(result.sanitizedResponse.speechPatterns[2].examples[0]).not.toContain(
+      'onclick='
       );
     });
 
@@ -321,21 +329,29 @@ describe('Speech Patterns Schema Validation Integration', () => {
         characterName: 'Test Character',
         speechPatterns: [
           {
-            pattern: 'Uses <em>emphasis</em> in important conversations',
-            example:
+            type: 'Uses <em>emphasis</em> in important conversations',
+            contexts: ['When <b>making</b> crucial points'],
+            examples: [
               '"This is <strong>really</strong> important to understand."',
-            circumstances: 'When <b>making</b> crucial points',
+              '"Pay <em>attention</em> to this."'
+            ],
           },
           {
-            pattern: 'Includes <a href="link.com">references</a> frequently',
-            example: '"You can find more info <a href="site.com">here</a>."',
-            circumstances: null,
+            type: 'Includes <a href="link.com">references</a> frequently',
+            contexts: ['When sharing information'],
+            examples: [
+              '"You can find more info <a href="site.com">here</a>."',
+              '"Check <a>this link</a> out."'
+            ],
           },
           {
-            pattern:
+            type:
               'Sometimes uses <code>technical terms</code> inappropriately',
-            example: '"The <span class="error">error</span> rate is too high."',
-            circumstances: 'During <div>technical</div> discussions',
+            contexts: ['During <div>technical</div> discussions'],
+            examples: [
+              '"The <span class="error">error</span> rate is too high."',
+              '"We need <code>optimization</code> now."'
+            ],
           },
         ],
         generatedAt: '2025-08-25T10:30:00Z',
@@ -345,17 +361,17 @@ describe('Speech Patterns Schema Validation Integration', () => {
         await speechPatternsValidator.validateAndSanitizeResponse(htmlResponse);
 
       // HTML tags should be removed but text content preserved
-      expect(result.sanitizedResponse.speechPatterns[0].pattern).toContain(
-        'emphasis'
+      expect(result.sanitizedResponse.speechPatterns[0].type).toContain(
+      'emphasis'
       );
-      expect(result.sanitizedResponse.speechPatterns[0].pattern).not.toContain(
-        '<em>'
+      expect(result.sanitizedResponse.speechPatterns[0].type).not.toContain(
+      '<em>'
       );
-      expect(result.sanitizedResponse.speechPatterns[0].example).toContain(
-        'really'
+      expect(result.sanitizedResponse.speechPatterns[0].examples[0]).toContain(
+      'really'
       );
-      expect(result.sanitizedResponse.speechPatterns[0].example).not.toContain(
-        '<strong>'
+      expect(result.sanitizedResponse.speechPatterns[0].examples[0]).not.toContain(
+      '<strong>'
       );
     });
   });
@@ -366,23 +382,30 @@ describe('Speech Patterns Schema Validation Integration', () => {
         characterName: 'Integrated Test Character',
         speechPatterns: [
           {
-            pattern: 'Uses technical jargon when nervous or uncertain',
-            example:
+            type: 'Uses technical jargon when nervous or uncertain',
+            contexts: ['When facing unfamiliar or challenging situations'],
+            examples: [
               '"We need to recalibrate the parameters for optimal functionality."',
-            circumstances: 'When facing unfamiliar or challenging situations',
+              '"Let\'s optimize the workflow processes."'
+            ],
           },
           {
-            pattern: 'Becomes more personal and warm in casual settings',
-            example:
+            type: 'Becomes more personal and warm in casual settings',
+            contexts: [
+              'During relaxed conversations with trusted individuals'
+            ],
+            examples: [
               '"You know, I was just thinking about that story you told me."',
-            circumstances:
-              'During relaxed conversations with trusted individuals',
+              '"That reminds me of what you said."'
+            ],
           },
           {
-            pattern: 'Adopts formal speech patterns in professional contexts',
-            example:
+            type: 'Adopts formal speech patterns in professional contexts',
+            contexts: ['In business meetings or official presentations'],
+            examples: [
               '"I would be honored to present our findings to the committee."',
-            circumstances: 'In business meetings or official presentations',
+              '"May I direct your attention to the data."'
+            ],
           },
         ],
       });
@@ -432,15 +455,18 @@ describe('Speech Patterns Schema Validation Integration', () => {
     it('should handle large valid responses efficiently', async () => {
       const largeResponse = {
         characterName: 'Performance Test Character',
-        speechPatterns: Array.from({ length: 25 }, (_, i) => ({
-          pattern: `Complex speech pattern number ${i + 1} with detailed descriptive content that explains a unique vocal characteristic`,
-          example: `"This is example dialogue number ${i + 1} that demonstrates the specific pattern mentioned above in a realistic context."`,
-          circumstances: `When situation ${i + 1} occurs requiring this particular speech adaptation`,
+        speechPatterns: Array.from({ length: 8 }, (_, i) => ({
+          type: `Complex speech pattern number ${i + 1} with detailed descriptive content that explains a unique vocal characteristic`,
+          contexts: [`When situation ${i + 1} occurs requiring this particular speech adaptation`],
+          examples: [
+            `"This is example dialogue number ${i + 1} that demonstrates the specific pattern mentioned above in a realistic context."`,
+            `"Another example ${i + 1} showing the same pattern."`
+          ],
         })),
         generatedAt: '2025-08-25T10:30:00Z',
         metadata: {
           processingMethod: 'json',
-          patternCount: 25,
+          patternCount: 8,
           qualityScore: 0.95,
         },
       };
@@ -459,19 +485,19 @@ describe('Speech Patterns Schema Validation Integration', () => {
         characterName: 'Min',
         speechPatterns: [
           {
-            pattern: 'Short',
-            example: '"Hi"',
-            circumstances: null,
+            type: 'Short',
+            contexts: ['Anytime'],
+            examples: ['"Hi"', '"Hey"'],
           },
           {
-            pattern: 'Brief',
-            example: '"Yes"',
-            circumstances: null,
+            type: 'Brief',
+            contexts: ['When answering'],
+            examples: ['"Yes"', '"Yep"'],
           },
           {
-            pattern: 'Terse',
-            example: '"No"',
-            circumstances: null,
+            type: 'Terse',
+            contexts: ['When refusing'],
+            examples: ['"No"', '"Nope"'],
           },
         ],
         generatedAt: '2025-08-25T10:30:00Z',
@@ -487,10 +513,13 @@ describe('Speech Patterns Schema Validation Integration', () => {
     it('should handle maximum boundary cases correctly', async () => {
       const maximumResponse = {
         characterName: 'Maximum Test Character',
-        speechPatterns: Array.from({ length: 30 }, (_, i) => ({
-          pattern: `Sophisticated speech pattern ${i + 1} demonstrating complex vocal characteristics and nuanced communication styles that reflect deep personality traits`,
-          example: `"This elaborate example dialogue ${i + 1} showcases the intricate way this character expresses themselves in various social and emotional contexts."`,
-          circumstances: `When confronted with complex scenario ${i + 1} requiring thoughtful and measured response`,
+        speechPatterns: Array.from({ length: 8 }, (_, i) => ({
+          type: `Sophisticated speech pattern ${i + 1} demonstrating complex vocal characteristics and nuanced communication styles that reflect deep personality traits`,
+          contexts: [`When confronted with complex scenario ${i + 1} requiring thoughtful and measured response`],
+          examples: [
+            `"This elaborate example dialogue ${i + 1} showcases the intricate way this character expresses themselves in various social and emotional contexts."`,
+            `"Another elaborate example ${i + 1} demonstrating the same sophisticated pattern."`
+          ],
         })),
         generatedAt: '2025-08-25T10:30:00Z',
       };
@@ -505,10 +534,10 @@ describe('Speech Patterns Schema Validation Integration', () => {
     it('should reject responses exceeding maximum patterns', async () => {
       const tooManyPatternsResponse = {
         characterName: 'Over Limit Character',
-        speechPatterns: Array.from({ length: 35 }, (_, i) => ({
-          pattern: `Pattern ${i + 1}`,
-          example: `"Example ${i + 1}"`,
-          circumstances: null,
+        speechPatterns: Array.from({ length: 9 }, (_, i) => ({
+          type: `Pattern ${i + 1}`,
+          contexts: [`Context ${i + 1}`],
+          examples: [`"Example ${i + 1}"`, `"Example ${i + 1} again"`],
         })),
         generatedAt: '2025-08-25T10:30:00Z',
       };
@@ -520,7 +549,7 @@ describe('Speech Patterns Schema Validation Integration', () => {
       expect(result.isValid).toBe(false);
       expect(
         result.errors.some(
-          (err) => err.includes('maximum') || err.includes('30')
+          (err) => err.includes('maximum') || err.includes('8')
         )
       ).toBe(true);
     });

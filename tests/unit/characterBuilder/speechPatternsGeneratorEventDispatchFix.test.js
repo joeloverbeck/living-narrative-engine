@@ -1,6 +1,7 @@
 /**
  * @file Tests for event dispatch API usage in SpeechPatternsGenerator
- * @description Verifies that event dispatch follows the correct API pattern: dispatch(eventName, payload)
+ * @description Verifies that event dispatch follows the correct API pattern: dispatch(eventName, payload).
+ * Updated to use new schema format: type/contexts[]/examples[] (v3.0.0)
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
@@ -70,14 +71,23 @@ describe('SpeechPatternsGenerator - Event Dispatch API Usage', () => {
 
   describe('Event Dispatch API Usage', () => {
     it('should use correct dispatch API format for start event', async () => {
-      // Mock LLM response and processor to complete the generation (needs at least 3 patterns)
+      // Mock LLM response with NEW schema format (type/examples[])
       mockLlmStrategyFactory.getAIDecision.mockResolvedValue(
         JSON.stringify({
           characterName: 'Test Character',
           speechPatterns: [
-            { pattern: 'Test pattern', example: '"Test example"' },
-            { pattern: 'Second pattern', example: '"Second example"' },
-            { pattern: 'Third pattern', example: '"Third example"' },
+            {
+              type: 'Test Pattern Type',
+              examples: ['"Test example one"', '"Test example two"'],
+            },
+            {
+              type: 'Second Pattern Type',
+              examples: ['"Second example one"', '"Second example two"'],
+            },
+            {
+              type: 'Third Pattern Type',
+              examples: ['"Third example one"', '"Third example two"'],
+            },
           ],
         })
       );
@@ -126,27 +136,40 @@ describe('SpeechPatternsGenerator - Event Dispatch API Usage', () => {
     });
 
     it('should use correct dispatch API format for completion event', async () => {
-      // Mock successful LLM response with enough patterns and proper format
+      // Mock successful LLM response with NEW schema format (type/contexts[]/examples[])
       mockLlmStrategyFactory.getAIDecision.mockResolvedValue(
         JSON.stringify({
           characterName: 'Test Character',
           speechPatterns: [
             {
-              pattern: 'Uses confident assertive language',
-              example: '"I know exactly what I\'m doing here."',
+              type: 'Confident Assertive Language',
+              examples: [
+                '"I know exactly what I\'m doing here."',
+                '"Trust me, I\'ve got this under control."',
+              ],
             },
             {
-              pattern: 'Shifts between vulnerability and strength',
-              example:
+              type: 'Vulnerability and Strength Balance',
+              contexts: ['When facing emotional challenges'],
+              examples: [
                 "\"Maybe I'm scared, but that doesn't mean I'll back down.\"",
+                '"I admit I\'m nervous, but I won\'t give up."',
+              ],
             },
             {
-              pattern: 'Questions with underlying assumptions',
-              example: '"You really think that\'s the best approach?"',
+              type: 'Questions with Underlying Assumptions',
+              examples: [
+                '"You really think that\'s the best approach?"',
+                '"Are we certain this is the right path?"',
+              ],
             },
             {
-              pattern: 'Self-deprecating humor as defense',
-              example: '"Well, I guess I\'m the expert at making mistakes."',
+              type: 'Self-Deprecating Humor as Defense',
+              contexts: ['When deflecting criticism', 'During awkward moments'],
+              examples: [
+                '"Well, I guess I\'m the expert at making mistakes."',
+                '"At least I\'m consistent in my incompetence."',
+              ],
             },
           ],
         })
@@ -232,26 +255,39 @@ describe('SpeechPatternsGenerator - Event Dispatch API Usage', () => {
     });
 
     it('should use the correct dispatch API format with string event names and payload objects', async () => {
+      // Mock with NEW schema format
       mockLlmStrategyFactory.getAIDecision.mockResolvedValue(
         JSON.stringify({
           characterName: 'Test Character',
           speechPatterns: [
             {
-              pattern: 'Uses confident assertive language',
-              example: '"I know exactly what I\'m doing here."',
+              type: 'Confident Assertive Language',
+              examples: [
+                '"I know exactly what I\'m doing here."',
+                '"Trust me on this."',
+              ],
             },
             {
-              pattern: 'Shifts between vulnerability and strength',
-              example:
+              type: 'Vulnerability and Strength Balance',
+              contexts: ['When facing difficult emotions'],
+              examples: [
                 "\"Maybe I'm scared, but that doesn't mean I'll back down.\"",
+                '"I\'m nervous but determined."',
+              ],
             },
             {
-              pattern: 'Questions with underlying assumptions',
-              example: '"You really think that\'s the best approach?"',
+              type: 'Questions with Underlying Assumptions',
+              examples: [
+                '"You really think that\'s the best approach?"',
+                '"Are we sure about this?"',
+              ],
             },
             {
-              pattern: 'Self-deprecating humor as defense',
-              example: '"Well, I guess I\'m the expert at making mistakes."',
+              type: 'Self-Deprecating Humor as Defense',
+              examples: [
+                '"Well, I guess I\'m the expert at making mistakes."',
+                '"Another brilliant decision by me."',
+              ],
             },
           ],
         })

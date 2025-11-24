@@ -148,7 +148,7 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
       const mockSpeechPatternsGenerator = {
         generateSpeechPatterns: jest.fn().mockResolvedValue({
           speechPatterns: [
-            { pattern: 'Test pattern', circumstances: ['always'] },
+            { type: 'Test pattern', contexts: ['always'], examples: ['"Example dialogue"'] },
           ],
           characterName: 'Test Character',
           generatedAt: new Date().toISOString(),
@@ -649,19 +649,19 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
         "characterName": "Test Character",
         "speechPatterns": [
           {
-            "pattern": "Generic response pattern",
-            "example": "This is an example",
-            "circumstances": "When testing"
+            "type": "Generic response pattern",
+            "contexts": ["When testing"],
+            "examples": ["This is an example", "Another example"]
           },
           {
-            "pattern": "Second test pattern",
-            "example": "Another example",
-            "circumstances": "When testing again"
+            "type": "Second test pattern",
+            "contexts": ["When testing again"],
+            "examples": ["More examples", "Yet more examples"]
           },
           {
-            "pattern": "Third test pattern",
-            "example": "Yet another example", 
-            "circumstances": "When testing more"
+            "type": "Third test pattern",
+            "contexts": ["When testing more"],
+            "examples": ["Final example", "Last example"]
           }
         ]
       }`;
@@ -672,19 +672,19 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
           characterName: 'Test Character',
           speechPatterns: [
             {
-              pattern: 'Generic response pattern',
-              example: 'This is an example',
-              circumstances: 'When testing',
+              type: 'Generic response pattern',
+              contexts: ['When testing'],
+              examples: ['This is an example', 'Another example'],
             },
             {
-              pattern: 'Second test pattern',
-              example: 'Another example',
-              circumstances: 'When testing again',
+              type: 'Second test pattern',
+              contexts: ['When testing again'],
+              examples: ['More examples', 'Yet more examples'],
             },
             {
-              pattern: 'Third test pattern',
-              example: 'Yet another example',
-              circumstances: 'When testing more',
+              type: 'Third test pattern',
+              contexts: ['When testing more'],
+              examples: ['Final example', 'Last example'],
             },
           ],
         }),
@@ -780,19 +780,19 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
           characterName: 'Test Character',
           speechPatterns: [
             {
-              pattern: 'Uses generic terms',
-              example: 'Non-quoted example',
-              circumstances: 'Testing',
+              type: 'Uses generic terms',
+              contexts: ['Testing'],
+              examples: ['Non-quoted example', 'Another example'],
             },
             {
-              pattern: 'Generic pattern',
-              example: 'Also non-quoted',
-              circumstances: 'More testing',
+              type: 'Generic pattern',
+              contexts: ['More testing'],
+              examples: ['Also non-quoted', 'More non-quoted'],
             },
             {
-              pattern: 'Another generic',
-              example: 'Still no quotes',
-              circumstances: 'Even more testing',
+              type: 'Another generic',
+              contexts: ['Even more testing'],
+              examples: ['Still no quotes', 'More no quotes'],
             },
           ],
         }),
@@ -865,9 +865,9 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
               characterName: 'Ane Arrieta',
               speechPatterns: [
                 {
-                  pattern: 'Test pattern',
-                  example: '"Test dialogue"',
-                  circumstances: 'When testing',
+                  type: 'Test pattern',
+                  contexts: ['When testing'],
+                  examples: ['"Test dialogue"', '"More dialogue"'],
                 },
               ],
               generatedAt: new Date().toISOString(),

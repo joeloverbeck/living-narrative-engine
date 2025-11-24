@@ -93,24 +93,24 @@ function createGenerator(overrides = {}) {
 function createValidResponse(patternOverrides) {
   const basePatterns = [
     {
-      pattern: 'Shares a reflective observation before offering advice',
-      example: 'It sounds like the echo of your choices is still whispering; let us answer it together.',
-      circumstances: 'When guiding someone through a dilemma',
+      type: 'Shares a reflective observation before offering advice',
+      examples: ['It sounds like the echo of your choices is still whispering; let us answer it together.', 'The past whispers; shall we listen together?'],
+      contexts: ['When guiding someone through a dilemma'],
     },
     {
-      pattern: 'Uses gentle humor to dissolve tension',
-      example: 'If words were dancers, yours are still stretching; shall we help them rehearse?',
-      circumstances: 'When easing a stressful conversation',
+      type: 'Uses gentle humor to dissolve tension',
+      examples: ['If words were dancers, yours are still stretching; shall we help them rehearse?', 'Our thoughts need a warm-up, shall we stretch?'],
+      contexts: ['When easing a stressful conversation'],
     },
     {
-      pattern: 'Builds cadence before revealing a sharp insight',
-      example: 'Listen to the rhythm of their hesitation—it crescendos into the truth they fear.',
-      circumstances: 'When highlighting hidden motives',
+      type: 'Builds cadence before revealing a sharp insight',
+      examples: ['Listen to the rhythm of their hesitation—it crescendos into the truth they fear.', 'The silence speaks louder than their words.'],
+      contexts: ['When highlighting hidden motives'],
     },
     {
-      pattern: 'Adapts vocabulary to mirror the listener',
-      example: 'Your language is all constellations; let me chart alongside you in matching starlight.',
-      circumstances: 'When creating rapport with scholars or poets',
+      type: 'Adapts vocabulary to mirror the listener',
+      examples: ['Your language is all constellations; let me chart alongside you in matching starlight.', 'I speak your dialect of thought.'],
+      contexts: ['When creating rapport with scholars or poets'],
     },
   ];
 
@@ -313,7 +313,7 @@ describe('SpeechPatternsGenerator additional coverage', () => {
     const { generator, llmStrategyFactory } = createGenerator();
     const responseSpy = jest
       .spyOn(SpeechPatternsResponseProcessor.prototype, 'processResponse')
-      .mockResolvedValue(createValidResponse([{ pattern: 'One', example: 'Two', circumstances: 'Three' }]));
+      .mockResolvedValue(createValidResponse([{ type: 'One', examples: ['Two', 'Another'], contexts: ['Three'] }]));
 
     llmStrategyFactory.getAIDecision.mockResolvedValue(createMockLLMResponse());
 
@@ -330,9 +330,9 @@ describe('SpeechPatternsGenerator additional coverage', () => {
     const { generator, llmStrategyFactory } = createGenerator();
     const duplicatePatterns = createValidResponse(
       Array.from({ length: 4 }, () => ({
-        pattern: 'Echo phrase repeated',
-        example: 'echo phrase repeated again',
-        circumstances: 'testing duplicates',
+        type: 'Echo phrase repeated',
+        examples: ['echo phrase repeated again', 'yet another echo'],
+        contexts: ['testing duplicates'],
       }))
     );
 
@@ -350,14 +350,14 @@ describe('SpeechPatternsGenerator additional coverage', () => {
     const { generator, llmStrategyFactory } = createGenerator();
     const lowQualityPatterns = createValidResponse(
       [
-        { pattern: 'ok', example: 'no', circumstances: 'rare case' },
-        { pattern: 'tiny', example: 'hi', circumstances: 'quick exchange' },
-        { pattern: 'unique expression', example: 'unique example', circumstances: 'context' },
+        { type: 'ok', examples: ['no', 'nope'], contexts: ['rare case'] },
+        { type: 'tiny', examples: ['hi', 'hey'], contexts: ['quick exchange'] },
+        { type: 'unique expression', examples: ['unique example', 'another unique'], contexts: ['context'] },
       ].concat(
         Array.from({ length: 3 }, (_, idx) => ({
-          pattern: `distinct pattern ${idx}`,
-          example: `Example with sufficient detail ${idx}`,
-          circumstances: 'contextual usage',
+          type: `distinct pattern ${idx}`,
+          examples: [`Example with sufficient detail ${idx}`, `Another example ${idx}`],
+          contexts: ['contextual usage'],
         }))
       )
     );

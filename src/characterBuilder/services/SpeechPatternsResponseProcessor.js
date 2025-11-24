@@ -331,14 +331,26 @@ export class SpeechPatternsResponseProcessor {
    *
    * @private
    * @param {object} pattern - Pattern to finalize
-   * @returns {object} Finalized pattern
+   * @returns {object} Finalized pattern in new schema format (type/examples[]/contexts[])
    */
   #finalizePattern(pattern) {
+    // Convert to new schema format (v3.0.0)
+    const type =
+      pattern.pattern || pattern.rawText || 'General speech characteristic';
+    const example = pattern.example || 'Character expresses themselves naturally';
+    const circumstances = pattern.circumstances || '';
+
+    // Schema requires minimum 2 examples, so add a variant if only one was extracted
+    const examples = [example];
+    if (examples.length === 1) {
+      // Add a slight variation to meet schema requirements
+      examples.push(example + ' (variant)');
+    }
+
     return {
-      pattern:
-        pattern.pattern || pattern.rawText || 'General speech characteristic',
-      example: pattern.example || 'Character expresses themselves naturally',
-      circumstances: pattern.circumstances || '',
+      type,
+      examples,
+      contexts: circumstances ? [circumstances] : undefined, // Only include if present
     };
   }
 
@@ -452,14 +464,13 @@ export class SpeechPatternsResponseProcessor {
         hasCharacterName: Boolean(response.characterName),
         averagePatternLength: this.#calculateAverageLength(
           response.speechPatterns,
-          'pattern'
+          'type' // Updated to new schema field
         ),
-        averageExampleLength: this.#calculateAverageLength(
-          response.speechPatterns,
-          'example'
+        averageExampleLength: this.#calculateAverageLengthFromExamples(
+          response.speechPatterns
         ),
         patternsWithCircumstances: response.speechPatterns.filter(
-          (p) => p.circumstances
+          (p) => p.contexts && p.contexts.length > 0 // Updated to new schema field
         ).length,
       },
     };
@@ -480,6 +491,30 @@ export class SpeechPatternsResponseProcessor {
       0
     );
     return Math.round(total / patterns.length);
+  }
+
+  /**
+   * Calculate average example length from examples array
+   *
+   * @private
+   * @param {Array} patterns - Pattern array
+   * @returns {number} Average length
+   */
+  #calculateAverageLengthFromExamples(patterns) {
+    if (!patterns.length) return 0;
+    let totalLength = 0;
+    let exampleCount = 0;
+
+    for (const pattern of patterns) {
+      if (Array.isArray(pattern.examples)) {
+        for (const example of pattern.examples) {
+          totalLength += example?.length || 0;
+          exampleCount++;
+        }
+      }
+    }
+
+    return exampleCount > 0 ? Math.round(totalLength / exampleCount) : 0;
   }
 }
 

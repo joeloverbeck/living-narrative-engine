@@ -107,23 +107,24 @@ describe('SpeechPatternsSchemaValidator', () => {
         characterName: 'Sarah Mitchell',
         speechPatterns: [
           {
-            pattern:
+            type:
               'Uses elaborate metaphors when explaining complex emotions',
-            example:
+            examples: [
               "It's like... imagine your favorite song being played backwards on a broken record player.",
-            circumstances: 'When trying to articulate deep emotional pain',
+              "Emotions are like a tangled ball of yarn..."
+            ],
+            contexts: ['When trying to articulate deep emotional pain'],
           },
           {
-            pattern:
+            type:
               'Switches to clipped, military-style speech under pressure',
-            example: 'Copy that. Moving to position. ETA two minutes.',
-            circumstances:
-              'During high-stress situations requiring quick decisions',
+            examples: ['Copy that. Moving to position. ETA two minutes.', 'Roger. Executing now.'],
+            contexts:
+              ['During high-stress situations requiring quick decisions'],
           },
           {
-            pattern: 'Tends to use technical jargon as emotional armor',
-            example: 'I need to recalibrate my approach to this situation.',
-            circumstances: null,
+            type: 'Tends to use technical jargon as emotional armor',
+            examples: ['I need to recalibrate my approach to this situation.', 'My protocols need adjustment.'],
           },
         ],
         generatedAt: '2025-08-25T10:30:00Z',
@@ -258,10 +259,12 @@ describe('SpeechPatternsSchemaValidator', () => {
   describe('validatePattern', () => {
     it('should validate individual pattern successfully', async () => {
       const validPattern = {
-        pattern: 'Uses elaborate metaphors when explaining complex emotions',
-        example:
+        type: 'Uses elaborate metaphors when explaining complex emotions',
+        examples: [
           "It's like... imagine your favorite song being played backwards on a broken record player.",
-        circumstances: 'When trying to articulate deep emotional pain',
+          "Emotions are like a tangled ball of yarn..."
+        ],
+        contexts: ['When trying to articulate deep emotional pain'],
       };
 
       const result = await validator.validatePattern(validPattern);
@@ -280,8 +283,8 @@ describe('SpeechPatternsSchemaValidator', () => {
       });
 
       const invalidPattern = {
-        pattern: 'Bad',
-        example: 'Example',
+        type: 'Bad',
+        examples: ['Example', 'Another example'],
       };
 
       const result = await validator.validatePattern(invalidPattern);
@@ -302,8 +305,8 @@ describe('SpeechPatternsSchemaValidator', () => {
       });
 
       const pattern = {
-        pattern: 'Test pattern',
-        example: 'Test example',
+        type: 'Test pattern',
+        examples: ['Test example', 'Another test example'],
       };
 
       const result = await validator.validatePattern(pattern);
@@ -447,20 +450,18 @@ describe('SpeechPatternsSchemaValidator', () => {
         characterName: 'Evil<script>alert("xss")</script>Character',
         speechPatterns: [
           {
-            pattern: 'Dangerous<script>alert("pattern")</script>pattern',
-            example: 'Safe example',
-            circumstances: null,
+            type: 'Dangerous<script>alert("pattern")</script>pattern',
+            examples: ['Safe example', 'Another safe example'],
           },
           {
-            pattern: 'Safe pattern',
-            example: 'Malicious<iframe src="evil.com"></iframe>example',
-            circumstances: null,
+            type: 'Safe pattern',
+            examples: ['Malicious<iframe src="evil.com"></iframe>example', 'Another example'],
           },
           {
-            pattern: 'Another safe pattern',
-            example: 'Safe example',
-            circumstances:
-              'Safe<script>alert("circumstances")</script>circumstances',
+            type: 'Another safe pattern',
+            examples: ['Safe example', 'Another safe example'],
+            contexts:
+              ['Safe<script>alert("circumstances")</script>circumstances'],
           },
         ],
       };
@@ -469,14 +470,14 @@ describe('SpeechPatternsSchemaValidator', () => {
         await validator.validateAndSanitizeResponse(maliciousResponse);
 
       expect(result.sanitizedResponse.characterName).not.toContain('<script>');
-      expect(result.sanitizedResponse.speechPatterns[0].pattern).not.toContain(
+      expect(result.sanitizedResponse.speechPatterns[0].type).not.toContain(
         '<script>'
       );
-      expect(result.sanitizedResponse.speechPatterns[1].example).not.toContain(
+      expect(result.sanitizedResponse.speechPatterns[1].examples[0]).not.toContain(
         '<iframe>'
       );
       expect(
-        result.sanitizedResponse.speechPatterns[2].circumstances
+        result.sanitizedResponse.speechPatterns[2].contexts[0]
       ).not.toContain('<script>');
     });
 
