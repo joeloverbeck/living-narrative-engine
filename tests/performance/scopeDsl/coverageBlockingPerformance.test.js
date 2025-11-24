@@ -315,20 +315,36 @@ describe('Coverage Blocking Performance Benchmarks', () => {
         avgTimes.push(avgTime);
       }
 
-      // At these scales, times should be measurable (> 0.1ms)
-      // Check that scaling is reasonable (not exponential)
+      // At these scales, times should be measurable (> 0.1ms), but on fast
+      // environments the timings can dip below the noise floor. Handle that
+      // explicitly so the ratio calculation doesn't amplify jitter.
+      const minMeasurableTime = 0.1; // milliseconds
       const baseTime = avgTimes[0];
+      const isNoiseDominated = baseTime < minMeasurableTime;
 
       for (let i = 1; i < avgTimes.length; i++) {
         const ratio = avgTimes[i] / baseTime;
         const sizeRatio = sizes[i] / sizes[0];
 
-        // Allow for some non-linearity, but catch exponential growth
-        // At 2.5x size (100→250), we allow up to 10x time increase
-        // This catches O(n²) or worse behavior while tolerating some overhead
-        const maxAllowedRatio = Math.pow(sizeRatio, 2) * 1.5;
+        // When both measurements are under the timer resolution, ratio-based
+        // checks become meaningless—skip to absolute thresholds instead.
+        const withinNoiseFloor =
+          isNoiseDominated && avgTimes[i] < minMeasurableTime * 2;
 
-        expect(ratio).toBeLessThan(maxAllowedRatio);
+        if (!withinNoiseFloor) {
+          // Allow for some non-linearity, but catch exponential growth. When
+          // operating below the noise floor, give extra tolerance proportional
+          // to how far below the measurable threshold we are.
+          const maxAllowedRatio = isNoiseDominated
+            ? Math.pow(sizeRatio, 2) *
+                Math.max(
+                  2.5, // Baseline tolerance for sub-millisecond jitter
+                  Math.ceil(minMeasurableTime / Math.max(baseTime, Number.EPSILON))
+                )
+            : Math.pow(sizeRatio, 2) * 1.5;
+
+          expect(ratio).toBeLessThan(maxAllowedRatio);
+        }
 
         // Also ensure absolute performance stays reasonable
         expect(avgTimes[i]).toBeLessThan(50); // Max 50ms even at 250 items
