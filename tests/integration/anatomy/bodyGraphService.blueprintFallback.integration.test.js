@@ -202,9 +202,7 @@ describe('BodyGraphService blueprint and cache fallback integration', () => {
       )
     ).toBe(true);
     expect(
-      env.logger.debugEntries.some(({ message }) =>
-        message.includes('Using blueprint root')
-      )
+      env.logger.infoEntries.some(({ message }) => message.includes('Using blueprint root'))
     ).toBe(true);
   });
 

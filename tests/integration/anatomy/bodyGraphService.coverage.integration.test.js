@@ -383,9 +383,9 @@ describe('BodyGraphService integration coverage enhancement', () => {
       largeResult
     );
     expect(result).toEqual(largeResult);
-    const debugMessages = logger.debug.mock.calls.flat().filter((m) => typeof m === 'string');
-    expect(debugMessages.some((msg) => msg.includes('Using blueprint root'))).toBe(true);
-    expect(debugMessages.some((msg) => msg.includes('...'))).toBe(true);
+    const infoMessages = logger.info.mock.calls.flat().filter((m) => typeof m === 'string');
+    expect(infoMessages.some((msg) => msg.includes('Using blueprint root'))).toBe(true);
+    expect(infoMessages.some((msg) => msg.includes('AnatomyGraphAlgorithms returned'))).toBe(true);
   });
 
   it('supports direct root usage and actor cache preference', () => {
@@ -408,8 +408,8 @@ describe('BodyGraphService integration coverage enhancement', () => {
       ['actor-root']
     );
     expect(viaActor).toEqual(['actor-root']);
-    expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("Using actor entity 'actor-1' as cache root")
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining("Actor 'actor-1' -> Using actor as cache root")
     );
   });
 
