@@ -250,12 +250,13 @@ describe('CharacterDataFormatter', () => {
 
       const result = formatter.formatSpeechPatterns(speechPatterns);
 
-      expect(result).toContain('## Your Speech Patterns');
+      expect(result).toContain('<speech_patterns>');
       expect(result).toContain('- I speak with authority and confidence');
       expect(result).toContain('- I use metaphors frequently');
       expect(result).toContain(
         '- I pause dramatically before important points'
       );
+      expect(result).toContain('</speech_patterns>');
     });
 
     it('should handle string-based speech patterns', () => {
@@ -263,9 +264,10 @@ describe('CharacterDataFormatter', () => {
 
       const result = formatter.formatSpeechPatterns(speechPatterns);
 
-      expect(result).toContain('## Your Speech Patterns');
+      expect(result).toContain('<speech_patterns>');
       expect(result).toContain('- I speak with authority');
       expect(result).toContain('- I use metaphors');
+      expect(result).toContain('</speech_patterns>');
     });
 
     it('should return empty string for null speech patterns', () => {
@@ -285,7 +287,109 @@ describe('CharacterDataFormatter', () => {
 
       expect(result).toContain('- I speak with authority');
       expect(result).toContain('- I use metaphors');
-      expect(result).not.toContain('- \n');
+      // Empty strings and nulls are filtered out during pattern extraction
+      const bulletMatches = result.match(/- \s*\n/g);
+      expect(bulletMatches).toBeNull(); // No empty bullets
+    });
+
+    describe('format detection', () => {
+      it('should use legacy format for array of strings', () => {
+        const speechPatterns = ['pattern1', 'pattern2'];
+
+        const result = formatter.formatSpeechPatterns(speechPatterns);
+
+        expect(result).toContain('<speech_patterns>');
+        expect(result).toContain('- pattern1');
+        expect(result).toContain('- pattern2');
+      });
+
+      it('should use structured format for array of objects', () => {
+        const speechPatterns = [
+          {
+            type: 'metaphor',
+            examples: ['Like treating leather - patience is key.'],
+          },
+        ];
+
+        const result = formatter.formatSpeechPatterns(speechPatterns);
+
+        expect(result).toContain('<speech_patterns>');
+        expect(result).toContain('1. **metaphor**');
+      });
+
+      it('should detect mixed format and log warning', () => {
+        const speechPatterns = [
+          'Simple string pattern',
+          {
+            type: 'metaphor',
+            examples: ['Complex structured pattern'],
+          },
+        ];
+
+        formatter.formatSpeechPatterns(speechPatterns);
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'Mixed speech pattern formats detected. Consider consolidating to structured format.'
+        );
+      });
+
+      it('should return empty for empty array', () => {
+        const speechPatterns = [];
+
+        const result = formatter.formatSpeechPatterns(speechPatterns);
+
+        expect(result).toBe('');
+      });
+
+      it('should extract and format text-based patterns', () => {
+        const speechPatterns = '- Pattern one\n- Pattern two';
+
+        const result = formatter.formatSpeechPatterns(speechPatterns);
+
+        expect(result).toContain('<speech_patterns>');
+        expect(result).toContain('- Pattern one');
+        expect(result).toContain('- Pattern two');
+      });
+
+      it('should use XML format for string patterns', () => {
+        const speechPatterns = ['pattern1', 'pattern2'];
+
+        const result = formatter.formatSpeechPatterns(speechPatterns);
+
+        expect(result).toContain('<speech_patterns>');
+        expect(result).toContain('- pattern1');
+        expect(result).toContain('- pattern2');
+        expect(result).toContain('</speech_patterns>');
+      });
+
+      it('should filter null patterns without crashing', () => {
+        const speechPatterns = [null, 'pattern1', null];
+
+        const result = formatter.formatSpeechPatterns(speechPatterns);
+
+        expect(result).toContain('- pattern1');
+        expect(result).toContain('<speech_patterns>');
+      });
+
+      it('should filter undefined patterns without crashing', () => {
+        const speechPatterns = [undefined, 'pattern1', undefined];
+
+        const result = formatter.formatSpeechPatterns(speechPatterns);
+
+        expect(result).toContain('- pattern1');
+        expect(result).toContain('<speech_patterns>');
+      });
+
+      it('should not modify input array during detection', () => {
+        const speechPatterns = ['pattern1', 'pattern2'];
+        const originalLength = speechPatterns.length;
+
+        formatter.formatSpeechPatterns(speechPatterns);
+
+        expect(speechPatterns.length).toBe(originalLength);
+        expect(speechPatterns[0]).toBe('pattern1');
+        expect(speechPatterns[1]).toBe('pattern2');
+      });
     });
   });
 
@@ -421,8 +525,9 @@ describe('CharacterDataFormatter', () => {
       expect(result).toContain('I can speak to animals.');
       expect(result).toContain('## Your Fears');
       expect(result).toContain('Being forgotten.');
-      expect(result).toContain('## Your Speech Patterns');
+      expect(result).toContain('<speech_patterns>');
       expect(result).toContain('- I often speak in rhymes');
+      expect(result).toContain('</speech_patterns>');
     });
 
     it('should format character with minimal data', () => {
@@ -822,6 +927,398 @@ What is the meaning of true strength?
       expect(result).toContain('- Valid pattern');
       expect(result).toContain('- Another valid pattern');
       expect(result).not.toContain('123');
+    });
+  });
+
+  describe('XML formatted speech patterns', () => {
+    describe('structured format (object patterns)', () => {
+      it('should render object patterns with <speech_patterns> tags', () => {
+        const patterns = [
+          {
+            type: 'metaphor',
+            examples: ['Like treating leather - patience is key.'],
+          },
+        ];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        expect(result).toContain('<speech_patterns>');
+        expect(result).toContain('</speech_patterns>');
+      });
+
+      it('should display pattern type as bold markdown', () => {
+        const patterns = [
+          {
+            type: 'metaphor',
+            examples: ['Example 1'],
+          },
+        ];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        expect(result).toContain('**metaphor**');
+      });
+
+      it('should show contexts line when contexts array has values', () => {
+        const patterns = [
+          {
+            type: 'catchphrase',
+            contexts: ['when greeting', 'when excited'],
+            examples: ['Example 1'],
+          },
+        ];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        expect(result).toContain('Contexts: when greeting, when excited');
+      });
+
+      it('should not show contexts line when contexts array is empty', () => {
+        const patterns = [
+          {
+            type: 'catchphrase',
+            contexts: [],
+            examples: ['Example 1'],
+          },
+        ];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        expect(result).not.toContain('Contexts:');
+      });
+
+      it('should not show contexts line when contexts is missing', () => {
+        const patterns = [
+          {
+            type: 'catchphrase',
+            examples: ['Example 1'],
+          },
+        ];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        expect(result).not.toContain('Contexts:');
+      });
+
+      it('should display examples with proper indentation and quotes', () => {
+        const patterns = [
+          {
+            type: 'metaphor',
+            examples: ['First example', 'Second example'],
+          },
+        ];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        expect(result).toContain('Examples:');
+        expect(result).toContain('   - "First example"');
+        expect(result).toContain('   - "Second example"');
+      });
+
+      it('should number multiple pattern groups correctly', () => {
+        const patterns = [
+          {
+            type: 'metaphor',
+            examples: ['Example 1'],
+          },
+          {
+            type: 'idiom',
+            examples: ['Example 2'],
+          },
+          {
+            type: 'catchphrase',
+            examples: ['Example 3'],
+          },
+        ];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        expect(result).toContain('1. **metaphor**');
+        expect(result).toContain('2. **idiom**');
+        expect(result).toContain('3. **catchphrase**');
+      });
+
+      it('should include usage guidance at top', () => {
+        const patterns = [
+          {
+            type: 'metaphor',
+            examples: ['Example 1'],
+          },
+        ];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        expect(result).toContain(
+          "<!-- Use these patterns naturally in conversation. Don't force every pattern into every response. -->"
+        );
+      });
+
+      it('should preserve whitespace in examples', () => {
+        const patterns = [
+          {
+            type: 'metaphor',
+            examples: ['  Example with spaces  '],
+          },
+        ];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        expect(result).toContain('"  Example with spaces  "');
+      });
+    });
+
+    describe('legacy format (string patterns)', () => {
+      it('should render string patterns with <speech_patterns> tags', () => {
+        const patterns = ['Simple string pattern'];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        expect(result).toContain('<speech_patterns>');
+        expect(result).toContain('</speech_patterns>');
+      });
+
+      it('should prefix each pattern with bullet point', () => {
+        const patterns = ['Pattern one', 'Pattern two'];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        expect(result).toContain('- Pattern one');
+        expect(result).toContain('- Pattern two');
+      });
+
+      it('should include usage guidance at top', () => {
+        const patterns = ['Pattern one'];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        expect(result).toContain(
+          "<!-- Use these patterns naturally in conversation. Don't force every pattern into every response. -->"
+        );
+      });
+
+      it('should preserve original string content exactly', () => {
+        const patterns = ['I speak with authority and confidence'];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        expect(result).toContain('- I speak with authority and confidence');
+      });
+    });
+
+    describe('mixed format (object + string patterns)', () => {
+      it('should render object patterns first with structured format', () => {
+        const patterns = [
+          {
+            type: 'metaphor',
+            examples: ['Structured example'],
+          },
+          'Simple string pattern',
+        ];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        const structuredIndex = result.indexOf('1. **metaphor**');
+        const additionalIndex = result.indexOf('Additional Patterns:');
+
+        expect(structuredIndex).toBeGreaterThan(-1);
+        expect(additionalIndex).toBeGreaterThan(-1);
+        expect(structuredIndex).toBeLessThan(additionalIndex);
+      });
+
+      it('should add "Additional Patterns" section for string patterns', () => {
+        const patterns = [
+          {
+            type: 'metaphor',
+            examples: ['Structured example'],
+          },
+          'Simple string pattern',
+        ];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        expect(result).toContain('Additional Patterns:');
+      });
+
+      it('should use bullet format for string patterns', () => {
+        const patterns = [
+          {
+            type: 'metaphor',
+            examples: ['Structured example'],
+          },
+          'Simple string one',
+          'Simple string two',
+        ];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        expect(result).toContain('- Simple string one');
+        expect(result).toContain('- Simple string two');
+      });
+
+      it('should use single <speech_patterns> wrapper for both', () => {
+        const patterns = [
+          {
+            type: 'metaphor',
+            examples: ['Structured example'],
+          },
+          'Simple string pattern',
+        ];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        const openingTags = (result.match(/<speech_patterns>/g) || []).length;
+        const closingTags = (result.match(/<\/speech_patterns>/g) || []).length;
+
+        expect(openingTags).toBe(1);
+        expect(closingTags).toBe(1);
+      });
+
+      it('should include usage guidance once at top', () => {
+        const patterns = [
+          {
+            type: 'metaphor',
+            examples: ['Structured example'],
+          },
+          'Simple string pattern',
+        ];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        const guidanceCount = (
+          result.match(
+            /<!-- Use these patterns naturally in conversation/g
+          ) || []
+        ).length;
+
+        expect(guidanceCount).toBe(1);
+      });
+
+      it('should preserve order: structured then legacy', () => {
+        const patterns = [
+          'String first',
+          {
+            type: 'metaphor',
+            examples: ['Object second'],
+          },
+          'String third',
+        ];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        const metaphorIndex = result.indexOf('1. **metaphor**');
+        const additionalIndex = result.indexOf('Additional Patterns:');
+
+        expect(metaphorIndex).toBeLessThan(additionalIndex);
+        expect(result).toContain('- String first');
+        expect(result).toContain('- String third');
+      });
+    });
+
+    describe('edge cases', () => {
+      it('should return empty string for empty patterns array', () => {
+        const patterns = [];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        expect(result).toBe('');
+      });
+
+      it('should return empty string for null patterns', () => {
+        const result = formatter.formatSpeechPatterns(null);
+
+        expect(result).toBe('');
+      });
+
+      it('should not show contexts line when contexts array is empty', () => {
+        const patterns = [
+          {
+            type: 'catchphrase',
+            contexts: [],
+            examples: ['Example 1'],
+          },
+        ];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        expect(result).not.toContain('Contexts:');
+      });
+
+      it('should preserve whitespace in examples', () => {
+        const patterns = [
+          {
+            type: 'metaphor',
+            examples: ['  Example with spaces  '],
+          },
+        ];
+
+        const result = formatter.formatSpeechPatterns(patterns);
+
+        expect(result).toContain('"  Example with spaces  "');
+      });
+    });
+
+    describe('backward compatibility', () => {
+      it('should still work with existing string-only tests', () => {
+        const speechPatterns = [
+          'I speak with authority and confidence',
+          'I use metaphors frequently',
+          'I pause dramatically before important points',
+        ];
+
+        const result = formatter.formatSpeechPatterns(speechPatterns);
+
+        // Old behavior expected XML format with bullets
+        expect(result).toContain('<speech_patterns>');
+        expect(result).toContain('- I speak with authority and confidence');
+        expect(result).toContain('- I use metaphors frequently');
+        expect(result).toContain(
+          '- I pause dramatically before important points'
+        );
+        expect(result).toContain('</speech_patterns>');
+      });
+
+      it('should handle entity object parameter (new behavior)', () => {
+        const mockEntity = {
+          getComponent: jest.fn().mockReturnValue({
+            patterns: [
+              {
+                type: 'metaphor',
+                examples: ['Like treating leather - patience is key.'],
+              },
+            ],
+          }),
+        };
+
+        const result = formatter.formatSpeechPatterns(mockEntity);
+
+        expect(mockEntity.getComponent).toHaveBeenCalledWith(
+          'core:speech_patterns'
+        );
+        expect(result).toContain('<speech_patterns>');
+        expect(result).toContain('1. **metaphor**');
+      });
+
+      it('should handle entity object with empty patterns', () => {
+        const mockEntity = {
+          getComponent: jest.fn().mockReturnValue({
+            patterns: [],
+          }),
+        };
+
+        const result = formatter.formatSpeechPatterns(mockEntity);
+
+        expect(result).toBe('');
+      });
+
+      it('should handle entity object with null component', () => {
+        const mockEntity = {
+          getComponent: jest.fn().mockReturnValue(null),
+        };
+
+        const result = formatter.formatSpeechPatterns(mockEntity);
+
+        expect(result).toBe('');
+      });
     });
   });
 });

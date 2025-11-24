@@ -10,9 +10,43 @@
       "patterns": {
         "type": "array",
         "items": {
-          "type": "string"
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "Legacy format: A simple string providing a concrete example of how the character speaks."
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type", "examples"],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "The type or category of this speech pattern (e.g., 'metaphor', 'catchphrase', 'idiom')."
+                },
+                "contexts": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "default": [],
+                  "description": "Optional array of context strings indicating when this pattern is typically used."
+                },
+                "examples": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1,
+                  "description": "Array of concrete examples demonstrating this speech pattern."
+                }
+              },
+              "description": "Structured format: An object defining a speech pattern with type classification, optional contexts, and examples."
+            }
+          ]
         },
-        "description": "An array of strings, each providing a concrete example of how the character speaks. These examples should aim to showcase their unique vocabulary (e.g., favorite words, jargon, level of formality), typical sentence structures, cadence, common utterances, catchphrases, verbal tics, or characteristic ways of expressing emotions or reacting to situations. The more these patterns highlight individuality and consistent idiosyncrasies, the better they will serve to make the character's voice distinct."
+        "description": "An array of speech patterns, each either a simple string (legacy format) or a structured object with type, optional contexts, and examples. These patterns should showcase the character's unique vocabulary, sentence structures, cadence, catchphrases, verbal tics, or characteristic ways of expressing emotions."
       }
     }
   }

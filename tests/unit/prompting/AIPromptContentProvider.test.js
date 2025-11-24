@@ -664,9 +664,10 @@ describe('AIPromptContentProvider', () => {
         expect(result).toContain('Dragons, injustice.');
         expect(result).toContain('## Your Secrets');
         expect(result).toContain('Afraid of spiders.');
-        expect(result).toContain('## Your Speech Patterns');
+        expect(result).toContain('<speech_patterns>');
         expect(result).toContain('- Verily!');
         expect(result).toContain('- Forsooth!');
+        expect(result).toContain('</speech_patterns>');
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
           'AIPromptContentProvider: Formatting character persona content with markdown structure.'
         );
