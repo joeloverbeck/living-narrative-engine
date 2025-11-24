@@ -382,8 +382,8 @@ describe('BodyGraphService integration coverage boost', () => {
       'blueprint-root',
       ['torso', 'arm']
     );
-    expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("cache size: 3")
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining('cache size: 3')
     );
     expect(result).toEqual(['torso', 'arm']);
   });
@@ -435,7 +435,12 @@ describe('BodyGraphService integration coverage boost', () => {
     const debugMessages = logger.debug.mock.calls
       .flat()
       .filter((msg) => typeof msg === 'string');
-    expect(debugMessages.some((msg) => msg.includes('...'))).toBe(true);
+    const infoMessages = logger.info.mock.calls
+      .flat()
+      .filter((msg) => typeof msg === 'string');
+    expect(
+      [...debugMessages, ...infoMessages].some((msg) => msg.includes('...'))
+    ).toBe(true);
   });
 
   it('detects components on parts', () => {
