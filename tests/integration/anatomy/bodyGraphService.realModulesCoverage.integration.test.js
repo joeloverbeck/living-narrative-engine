@@ -163,8 +163,9 @@ describe('BodyGraphService integration with real anatomy collaborators', () => {
     const cachedParts = bodyGraphService.getAllParts(bodyComponent, torsoId);
     expect(cachedParts).toEqual(allParts);
     expect(
-      logger.debug.mock.calls.some(([message]) =>
-        typeof message === 'string' && message.includes('Found cached result for root')
+      logger.info.mock.calls.some(([message]) =>
+        typeof message === 'string' &&
+        message.includes('BodyGraphService.getAllParts: CACHE HIT for cache root')
       )
     ).toBe(true);
 

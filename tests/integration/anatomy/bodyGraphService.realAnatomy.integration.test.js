@@ -115,7 +115,7 @@ describe('BodyGraphService real anatomy integration', () => {
 
     const fallbackParts = service.getAllParts(bodyComponent, 'ghost-actor');
     expect(fallbackParts).toEqual(blueprintParts);
-    expect(logger.debug).toHaveBeenCalledWith(
+    expect(logger.info).toHaveBeenCalledWith(
       expect.stringContaining('Using blueprint root')
     );
 

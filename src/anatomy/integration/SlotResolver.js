@@ -228,6 +228,17 @@ class SlotResolver {
   }
 
   /**
+   * Propagates slot-to-entity mapping overrides to strategies that support it
+   *
+   * @param {Map<string, string>|object} slotEntityMappings
+   */
+  setSlotEntityMappings(slotEntityMappings) {
+    this.#strategies
+      .filter((strategy) => typeof strategy.setSlotEntityMappings === 'function')
+      .forEach((strategy) => strategy.setSlotEntityMappings(slotEntityMappings));
+  }
+
+  /**
    * Gets the number of registered strategies
    *
    * @returns {number} Strategy count

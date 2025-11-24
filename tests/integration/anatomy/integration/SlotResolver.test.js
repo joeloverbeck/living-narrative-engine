@@ -311,7 +311,7 @@ describe('SlotResolver', () => {
 
       expect(result).toEqual([]);
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        `No strategy found for mapping type in slot 'test.slot'`
+        `SlotResolver: No strategy found for mapping type in slot 'test.slot'. Available strategies: 2`
       );
       expect(mockStrategy1.canResolve).toHaveBeenCalledWith(mapping);
       expect(mockStrategy2.canResolve).toHaveBeenCalledWith(mapping);
