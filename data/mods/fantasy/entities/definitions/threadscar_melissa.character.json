@@ -140,11 +140,6 @@
           "subjectType": "observation"
         },
         {
-          "text": "Morning plan: Municipal Aid Registry. Where Mudbrook's citizens gather. I'll take a corner table. Nurse a drink. Observe. I do this too often. Watch locals bond with each other. Study their interactions like combat patterns. Trying to understand the mechanism. Doesn't improve my performance. Still do it. Request posted on the board caught my attention. Staged threat. Shopkeeper wants adventurer to fake-threaten their business. Make them look heroic. 5 copper, lunch included. I've killed forty-seven people in actual combat. And I'm considering this. Veteran mercenary staging street theater for 5 copper. Absurd. Ridiculous. That's why it appeals. Ironic distraction. Low stakes, no danger, just performance. I'm terrible at performing emotions. Staged combat though? I can execute that. Clean. Professional. Hilariously wasteful of my skill set. That's the point. Haven't decided. Drink first. Observe the locals doing their bonding thing. Then I'll see if I'm taking the ridiculous contract or not.",
-          "subject": "Morning at the Registry and the staged threat request",
-          "subjectType": "plan"
-        },
-        {
           "text": "Bertram the Muddy. Leatherworker. Fifty-something, built like a barrel that learned patience. Smells like tannery and honest labor—doesn't try to hide it. I've bought and repaired gear through him for years. Work is clean, stitching holds, prices fair, no drama. Radically sincere type: says exactly what he means, even when what he means is 'reciprocal handjobs.' Not my business. Operationally: reliable supplier, safe to deal with, zero hidden angles. If he tells you a strap will hold, it will hold. If he says he wants something, he wants that thing. Useful clarity.",
           "subject": "Bertram the Muddy",
           "subjectType": "character"
@@ -208,6 +203,11 @@
           "text": "I take one ridiculous low-stakes job a season on purpose. Street theatre, escorting a goat, guarding someone's pride. It's not about money. It's about testing myself in a world where nobody's dying. I keep expecting relief. I mostly feel bored. But I keep doing it. Don't know what that means yet.",
           "subject": "Seasonal 'ridiculous contract' habit",
           "subjectType": "habit"
+        },
+        {
+          "text": "Pulled a ridiculous notice off Copperplate's board. Five copper. Lunch. Fake-threaten some shopkeeper's stall, let him swing at air, fall down on cue, make him look brave. Theatre-combat. No stakes. Seasonal stupidity. I was about to track down which merchant wrote it—idiot didn't even sign his own contract—when Bertram the Muddy barrels up the street like he found a sale on entrails. Says a cat-folk bard, swords on her hips and confidence in her mouth, just took a job to kill \"possessed chickens\" out on the north road. Newcomer. No local sense. Bertram wants me as backup, calls it 'assistance,' means 'keep her alive if the birds bite back.' Fine. That's a better distraction than pretending to be a villain for pocket change. Plan: meet the bard, assess competence, set parameters, make sure nobody dies over poultry. If it stays absurd, good. If it turns real, I'm already paid in clarity.",
+          "subject": "Switching from staged shopkeeper threat to possessed-chickens job with the cat-folk bard",
+          "subjectType": "plan"
         }
       ]
     }

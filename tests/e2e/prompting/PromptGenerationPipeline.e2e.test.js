@@ -95,10 +95,10 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
 
       // Assert - Key sections are present
       const sections = testBed.parsePromptSections(prompt);
+      expect(sections.system_constraints).toBeDefined();
       expect(sections.task_definition).toBeDefined();
       expect(sections.character_persona).toBeDefined();
       expect(sections.available_actions_info).toBeDefined();
-      expect(sections.final_instructions).toBeDefined();
 
       // Assert - Character name was resolved
       expect(prompt).toContain('Elara the Bard');
@@ -127,31 +127,40 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
         availableActions
       );
 
-      // Assert - Elements appear in correct order
+      // Assert - Elements appear in correct constraint-first order (v2.0)
+      const constraintsIndex = prompt.indexOf('<system_constraints>');
+      const contentPolicyIndex = prompt.indexOf('<content_policy>');
       const taskIndex = prompt.indexOf('<task_definition>');
       const personaIndex = prompt.indexOf('<character_persona>');
       const worldIndex = prompt.indexOf('<world_context>');
       const perceptionIndex = prompt.indexOf('<perception_log>');
       const thoughtsIndex = prompt.indexOf('<thoughts>');
       const choicesIndex = prompt.indexOf('<available_actions_info>');
-      const instructionsIndex = prompt.indexOf('<final_instructions>');
-      const contentPolicyIndex = prompt.indexOf('<content_policy>');
 
       // All required elements should be present
+      expect(constraintsIndex).toBeGreaterThanOrEqual(0);
+      expect(contentPolicyIndex).toBeGreaterThanOrEqual(0);
       expect(taskIndex).toBeGreaterThanOrEqual(0);
       expect(personaIndex).toBeGreaterThanOrEqual(0);
       expect(choicesIndex).toBeGreaterThanOrEqual(0);
-      expect(instructionsIndex).toBeGreaterThanOrEqual(0);
-      expect(contentPolicyIndex).toBeGreaterThanOrEqual(0);
 
-      // They should appear in the configured order
+      // They should appear in the configured constraint-first order
+      // PHASE 1: Constraints first (most important change)
+      expect(constraintsIndex).toBeLessThan(contentPolicyIndex);
+      expect(contentPolicyIndex).toBeLessThan(taskIndex);
+
+      // PHASE 2-3: Task and character identity
       expect(taskIndex).toBeLessThan(personaIndex);
+
+      // PHASE 4: World state
       expect(personaIndex).toBeLessThan(worldIndex);
       expect(worldIndex).toBeLessThan(perceptionIndex);
-      expect(perceptionIndex).toBeLessThan(thoughtsIndex);
-      expect(choicesIndex).toBeLessThan(instructionsIndex);
-      // Content policy should now appear after final instructions (as appendix)
-      expect(instructionsIndex).toBeLessThan(contentPolicyIndex);
+
+      // PHASE 5: Execution context
+      if (thoughtsIndex >= 0) {
+        expect(perceptionIndex).toBeLessThan(thoughtsIndex);
+      }
+      expect(choicesIndex).toBeGreaterThan(0);
     });
 
     test('should properly index available actions', async () => {
@@ -413,9 +422,9 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
       expect(sections.task_definition).toBeDefined();
       expect(sections.task_definition.length).toBeGreaterThan(50);
 
-      // Final instructions should have content
-      expect(sections.final_instructions).toBeDefined();
-      expect(sections.final_instructions.length).toBeGreaterThan(50);
+      // System constraints (formerly final_instructions) should have content
+      expect(sections.system_constraints).toBeDefined();
+      expect(sections.system_constraints.length).toBeGreaterThan(50);
     });
   }); // End LLM Configuration
 

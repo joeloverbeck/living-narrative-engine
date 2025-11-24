@@ -159,29 +159,33 @@ describe('Prompt Assembly with template-based system', () => {
     // Notes and goals sections are conditional - they won't appear if empty
     expect(prompt).toContain('<available_actions_info>');
     // user_input section has been removed from AI character templates
-    expect(prompt).toContain('<final_instructions>');
+    expect(prompt).toContain('<system_constraints>');
 
     // Verify conditional sections are not present when empty
     expect(prompt).not.toContain('<notes>'); // Should be empty and therefore not present
     expect(prompt).not.toContain('<goals>'); // Should be empty and therefore not present
   });
 
-  test('Prompt sections are in the correct order', async () => {
+  test('Prompt sections are in the correct constraint-first order (v2.0)', async () => {
     const prompt = await buildPrompt(['Test thought']);
 
-    // Test that sections appear in the expected order
+    // Test that sections appear in the expected constraint-first order
+    const constraintsIndex = prompt.indexOf('<system_constraints>');
+    const contentPolicyIndex = prompt.indexOf('<content_policy>');
     const taskDefIndex = prompt.indexOf('<task_definition>');
     const personaIndex = prompt.indexOf('<character_persona>');
     const guidelinesIndex = prompt.indexOf('<portrayal_guidelines>');
     const thoughtsIndex = prompt.indexOf('<thoughts>');
-    const finalIndex = prompt.indexOf('<final_instructions>');
-    const contentPolicyIndex = prompt.indexOf('<content_policy>');
 
+    // PHASE 1: Constraints first (critical change)
+    expect(constraintsIndex).toBeLessThan(contentPolicyIndex);
+    expect(contentPolicyIndex).toBeLessThan(taskDefIndex);
+
+    // PHASE 2-3: Task and character identity
     expect(taskDefIndex).toBeLessThan(personaIndex);
     expect(personaIndex).toBeLessThan(guidelinesIndex);
+
+    // PHASE 4-5: World state and execution context
     expect(guidelinesIndex).toBeLessThan(thoughtsIndex);
-    expect(thoughtsIndex).toBeLessThan(finalIndex);
-    // Content policy should now appear after final instructions (as appendix)
-    expect(finalIndex).toBeLessThan(contentPolicyIndex);
   });
 });
