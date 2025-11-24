@@ -383,11 +383,11 @@ describe('BodyGraphService', () => {
       const result = service.getAllParts({ root: 'bp-root' }, 'actor-1');
 
       expect(result).toEqual(largeResult);
-      const summaryLog = mockLogger.debug.mock.calls
+      const summaryLog = mockLogger.info.mock.calls
         .map((call) => call[0])
         .find((message) =>
           message?.startsWith(
-            'BodyGraphService: AnatomyGraphAlgorithms.getAllParts returned'
+            'BodyGraphService.getAllParts: AnatomyGraphAlgorithms returned'
           )
         );
       expect(summaryLog).toContain('...');

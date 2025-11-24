@@ -453,7 +453,7 @@ describe('TargetResolutionCoordinator - resolveWithDependencies', () => {
     expect(deps.unifiedScopeResolver.resolve).toHaveBeenCalledWith(
       'primary_scope',
       expect.any(Object),
-      expect.objectContaining({ useCache: true })
+      expect.objectContaining({ useCache: false })
     );
   });
 
@@ -570,7 +570,7 @@ describe('TargetResolutionCoordinator - resolveDependentTargets', () => {
     expect(deps.unifiedScopeResolver.resolve).toHaveBeenCalledWith(
       'secondary_scope',
       expect.any(Object),
-      expect.objectContaining({ useCache: true })
+      expect.objectContaining({ useCache: false })
     );
   });
 

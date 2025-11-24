@@ -275,7 +275,8 @@ describe('ClothingSlotMappingStrategy', () => {
           'actor123',
           {
             blueprintSlots: ['left_breast', 'right_breast'],
-          }
+          },
+          undefined
         );
         expect(mockDirectSocketStrategy.resolve).not.toHaveBeenCalled();
       });
@@ -340,7 +341,8 @@ describe('ClothingSlotMappingStrategy', () => {
           'actor123',
           {
             blueprintSlots: ['torso'],
-          }
+          },
+          undefined
         );
         expect(mockDirectSocketStrategy.resolve).toHaveBeenCalledWith(
           'actor123',
@@ -640,7 +642,8 @@ describe('ClothingSlotMappingStrategy', () => {
 
         expect(mockBlueprintSlotStrategy.resolve).toHaveBeenCalledWith(
           'actor123',
-          { blueprintSlots: ['left_breast', 'right_breast'] }
+          { blueprintSlots: ['left_breast', 'right_breast'] },
+          undefined
         );
         expect(result).toEqual(expectedPoints);
       });

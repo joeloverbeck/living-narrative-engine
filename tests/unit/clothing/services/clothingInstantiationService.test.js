@@ -101,6 +101,13 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
         partsMap: new Map([['torso', 'torso_entity']]),
       };
 
+      mockDeps.clothingSlotValidator.validateSlotCompatibility.mockImplementation(
+        async (entityId, slotId, itemId, availableSlots, resolveAttachmentPoints) => {
+          await resolveAttachmentPoints(entityId, slotId);
+          return { valid: true };
+        }
+      );
+
       // This test needs actual clothing entities to trigger the slot resolver
       await service.instantiateRecipeClothing(
         'actor123',
@@ -108,9 +115,12 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
         anatomyData
       );
 
-      expect(mockDeps.slotResolver.setSlotEntityMappings).toHaveBeenCalledWith(
+      expect(mockDeps.slotResolver.resolveClothingSlot).toHaveBeenCalledWith(
+        'actor123',
+        'shirt',
         anatomyData.slotEntityMappings
       );
+      expect(mockDeps.slotResolver.setSlotEntityMappings).not.toHaveBeenCalled();
     });
 
     it('should use decomposed components for validation', async () => {
