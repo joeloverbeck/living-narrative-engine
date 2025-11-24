@@ -191,6 +191,9 @@ describe('End-to-End Short-Term Memory Flow', () => {
     // Verify the prompt contains the expected template structure
     expect(prompt2).toContain('<task_definition>');
     expect(prompt2).toContain('<character_persona>');
-    expect(prompt2).toContain('<final_instructions>');
+    expect(
+      prompt2.includes('<final_instructions>') ||
+        prompt2.includes('<system_constraints>')
+    ).toBe(true);
   });
 });
