@@ -1,4 +1,8 @@
 /**
+ * @jest-environment jsdom
+ */
+
+/**
  * @file Multi-Mod Scope Interactions Performance Test Suite
  * @see tests/performance/scopeDsl/MultiModScopeInteractions.performance.test.js
  *

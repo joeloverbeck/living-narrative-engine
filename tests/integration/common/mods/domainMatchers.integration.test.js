@@ -5,19 +5,29 @@ import { registerDomainMatchers } from '../../../common/mods/domainMatchers.js';
 
 describe('Domain Matchers - Integration Tests', () => {
   let testFixture;
+  let sharedFixture;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     registerDomainMatchers();
+    // Create fixture once for all tests - heavy I/O operation
+    sharedFixture = await ModTestFixture.forAction('positioning', 'positioning:kneel_before');
   });
 
-  beforeEach(async () => {
-    // Use kneel_before action which is well-tested and reliable
-    testFixture = await ModTestFixture.forAction('positioning', 'positioning:kneel_before');
+  beforeEach(() => {
+    // Reuse shared fixture (no I/O, fast)
+    testFixture = sharedFixture;
+  });
+
+  afterAll(() => {
+    if (sharedFixture) {
+      sharedFixture.cleanup();
+    }
   });
 
   afterEach(() => {
-    if (testFixture) {
-      testFixture.cleanup();
+    // Clear events between tests without destroying fixture
+    if (testFixture && testFixture.events) {
+      testFixture.events.length = 0;
     }
   });
 
