@@ -13,13 +13,14 @@ import {
 describe('speechPatternsPrompts constants', () => {
   it('exposes the current prompt version information', () => {
     expect(PROMPT_VERSION_INFO).toEqual({
-      version: '2.0.0',
+      version: '3.0.0',
       previousVersions: {
         '1.0.0': 'Initial implementation with unstructured format',
+        '2.0.0': 'XML-like structure with pattern/example/circumstances fields',
       },
       currentChanges: expect.arrayContaining([
-        'Implemented XML-like organizational structure for architectural consistency',
-        'Enhanced focused prompt integration with XML structure',
+        'Updated schema to match speech_patterns.component.json structure',
+        'Changed from pattern/example/circumstances to type/contexts[]/examples[]',
       ]),
     });
   });
@@ -41,8 +42,9 @@ describe('speechPatternsPrompts constants', () => {
         speechPatterns: expect.objectContaining({
           type: 'array',
           minItems: 3,
+          maxItems: 8,
           items: expect.objectContaining({
-            required: ['pattern', 'example'],
+            required: ['type', 'examples'],
           }),
         }),
       },
@@ -78,18 +80,22 @@ describe('createSpeechPatternsPrompt', () => {
 
     expect(prompt).toContain('<role>');
     expect(prompt).toContain('<task_definition>');
-    expect(prompt).toContain('approximately 20 unique and distinctive speech patterns');
+    expect(prompt).toContain('4-8 speech pattern groups');
+    expect(prompt).toContain('approximately 20 total examples');
     expect(prompt).toContain('targeting ~20');
     expect(prompt).toContain('Focus on psychological and emotional depth');
     expect(prompt).toContain('"name": "Lyra"');
     expect(prompt).toContain('"origin": "Nova Station"');
+    expect(prompt).toContain('"type": "Pattern Category Name"');
+    expect(prompt).toContain('"contexts"');
+    expect(prompt).toContain('"examples"');
     expect(prompt).toContain('<content_policy>');
   });
 
   it('honors a custom pattern count when provided', () => {
     const prompt = createSpeechPatternsPrompt(baseCharacter, { patternCount: 12 });
 
-    expect(prompt).toContain('approximately 12 unique and distinctive speech patterns');
+    expect(prompt).toContain('approximately 12 total examples');
     expect(prompt).toContain('targeting ~12');
   });
 });
@@ -130,9 +136,21 @@ describe('validateSpeechPatternsGenerationResponse', () => {
     const response = {
       characterName: 'Lyra',
       speechPatterns: [
-        { pattern: 'Measured cadence', example: "It's wonderful to see you", circumstances: 'around allies' },
-        { pattern: 'Sharp sarcasm', example: 'Oh, brilliant plan.', circumstances: undefined },
-        { pattern: 'Rapid tangents', example: 'And then we could—no, wait—', circumstances: '' },
+        { 
+          type: 'Measured cadence', 
+          examples: ["It's wonderful to see you", "How delightful"], 
+          contexts: ['around allies'] 
+        },
+        { 
+          type: 'Sharp sarcasm', 
+          examples: ['Oh, brilliant plan.', 'What could go wrong?'],
+          contexts: undefined 
+        },
+        { 
+          type: 'Rapid tangents', 
+          examples: ['And then we could—no, wait—', 'But what if—'],
+          contexts: [] 
+        },
       ],
     };
 
@@ -151,7 +169,7 @@ describe('validateSpeechPatternsGenerationResponse', () => {
     const response = {
       characterName: '',
       speechPatterns: [
-        { pattern: 'shrt', example: 'hi', circumstances: 42 },
+        { type: 'shrt', examples: ['hi'], contexts: 42 },
       ],
     };
 
@@ -161,9 +179,9 @@ describe('validateSpeechPatternsGenerationResponse', () => {
     expect(result.errors).toEqual(
       expect.arrayContaining([
         'At least 3 speech patterns are required',
-        "Pattern 1: 'pattern' must be at least 5 characters long",
-        "Pattern 1: 'example' must be at least 3 characters long",
-        "Pattern 1: 'circumstances' must be a string if provided",
+        "Pattern 1: 'type' must be at least 5 characters long",
+        "Pattern 1: 'examples' must have at least 2 items",
+        "Pattern 1: 'contexts' must be an array if provided",
         'characterName is required and must be a string',
       ])
     );
@@ -195,45 +213,45 @@ describe('validateSpeechPatternsGenerationResponse', () => {
     });
   });
 
-  it('flags missing pattern descriptions on individual entries', () => {
+  it('flags missing type field on individual entries', () => {
     const result = validateSpeechPatternsGenerationResponse({
       characterName: 'Echo',
       speechPatterns: [
-        { example: 'Says things twice.' },
-        { pattern: 'Echoing cadence', example: 'Echo echo' },
-        { pattern: 'Rhythmic delivery', example: 'Tap tap tap' },
+        { examples: ['Says things twice.', 'Repeats often'] },
+        { type: 'Echoing cadence', examples: ['Echo echo', 'Echo'] },
+        { type: 'Rhythmic delivery', examples: ['Tap tap tap', 'Tap'] },
       ],
     });
 
     expect(result.isValid).toBe(false);
     expect(result.errors).toEqual(
       expect.arrayContaining([
-        "Pattern 1: 'pattern' field is required and must be a string",
+        "Pattern 1: 'type' field is required and must be a string",
       ])
     );
   });
 
-  it('flags missing example dialogue on individual entries', () => {
+  it('flags missing examples array on individual entries', () => {
     const result = validateSpeechPatternsGenerationResponse({
       characterName: 'Echo',
       speechPatterns: [
-        { pattern: 'Repeating phrases', example: null },
-        { pattern: 'Echoing cadence', example: 'Echo echo' },
-        { pattern: 'Rhythmic delivery', example: 'Tap tap tap' },
+        { type: 'Repeating phrases', examples: null },
+        { type: 'Echoing cadence', examples: ['Echo echo', 'Echo'] },
+        { type: 'Rhythmic delivery', examples: ['Tap tap tap', 'Tap'] },
       ],
     });
 
     expect(result.isValid).toBe(false);
     expect(result.errors).toEqual(
       expect.arrayContaining([
-        "Pattern 1: 'example' field is required and must be a string",
+        "Pattern 1: 'examples' field is required and must be an array",
       ])
     );
   });
 
   it('returns a catch-all error when response access throws', () => {
     const explosivePattern = {};
-    Object.defineProperty(explosivePattern, 'pattern', {
+    Object.defineProperty(explosivePattern, 'type', {
       get() {
         throw new Error('boom');
       },
@@ -250,6 +268,96 @@ describe('validateSpeechPatternsGenerationResponse', () => {
       expect.arrayContaining([
         'Validation error: boom',
         'At least 3 speech patterns are required',
+      ])
+    );
+  });
+
+  it('validates that contexts must contain string items', () => {
+    const result = validateSpeechPatternsGenerationResponse({
+      characterName: 'Test',
+      speechPatterns: [
+        { type: 'Pattern A', examples: ['ex1', 'ex2'], contexts: ['valid', 123, 'also valid'] },
+        { type: 'Pattern B', examples: ['ex1', 'ex2'] },
+        { type: 'Pattern C', examples: ['ex1', 'ex2'] },
+      ],
+    });
+
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toEqual(
+      expect.arrayContaining([
+        'Pattern 1, context 2: must be a string',
+      ])
+    );
+  });
+
+  it('validates that contexts strings are not empty', () => {
+    const result = validateSpeechPatternsGenerationResponse({
+      characterName: 'Test',
+      speechPatterns: [
+        { type: 'Pattern A', examples: ['ex1', 'ex2'], contexts: ['valid', '', 'also valid'] },
+        { type: 'Pattern B', examples: ['ex1', 'ex2'] },
+        { type: 'Pattern C', examples: ['ex1', 'ex2'] },
+      ],
+    });
+
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toEqual(
+      expect.arrayContaining([
+        'Pattern 1, context 2: must be at least 1 character long',
+      ])
+    );
+  });
+
+  it('validates that examples must contain string items', () => {
+    const result = validateSpeechPatternsGenerationResponse({
+      characterName: 'Test',
+      speechPatterns: [
+        { type: 'Pattern A', examples: ['valid', 456, 'also valid'] },
+        { type: 'Pattern B', examples: ['ex1', 'ex2'] },
+        { type: 'Pattern C', examples: ['ex1', 'ex2'] },
+      ],
+    });
+
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toEqual(
+      expect.arrayContaining([
+        'Pattern 1, example 2: must be a string',
+      ])
+    );
+  });
+
+  it('validates that examples are at least 3 characters long', () => {
+    const result = validateSpeechPatternsGenerationResponse({
+      characterName: 'Test',
+      speechPatterns: [
+        { type: 'Pattern A', examples: ['valid example', 'hi'] },
+        { type: 'Pattern B', examples: ['ex1', 'ex2'] },
+        { type: 'Pattern C', examples: ['ex1', 'ex2'] },
+      ],
+    });
+
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toEqual(
+      expect.arrayContaining([
+        'Pattern 1, example 2: must be at least 3 characters long',
+      ])
+    );
+  });
+
+  it('validates that examples array has at most 5 items', () => {
+    const result = validateSpeechPatternsGenerationResponse({
+      characterName: 'Test',
+      speechPatterns: [
+        { type: 'Pattern A', examples: ['ex1', 'ex2', 'ex3', 'ex4', 'ex5', 'ex6'] },
+        { type: 'Pattern B', examples: ['ex1', 'ex2'] },
+        { type: 'Pattern C', examples: ['ex1', 'ex2'] },
+      ],
+    });
+
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toEqual(
+      expect.arrayContaining([
+        'Pattern 1: \'examples\' must have at most 5 items',
       ])
     );
   });
@@ -276,7 +384,8 @@ describe('buildSpeechPatternsGenerationPrompt', () => {
   it('builds a standard prompt when no focus is supplied', () => {
     const prompt = buildSpeechPatternsGenerationPrompt(character);
 
-    expect(prompt).toContain('approximately 20 unique and distinctive speech patterns');
+    expect(prompt).toContain('4-8 speech pattern groups');
+    expect(prompt).toContain('approximately 20 total examples');
     expect(prompt).toContain('targeting ~20');
   });
 });

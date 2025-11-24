@@ -5,7 +5,9 @@
   "dataSchema": {
     "type": "object",
     "additionalProperties": false,
-    "required": ["patterns"],
+    "required": [
+      "patterns"
+    ],
     "properties": {
       "patterns": {
         "type": "array",
@@ -18,12 +20,15 @@
             {
               "type": "object",
               "additionalProperties": false,
-              "required": ["type", "examples"],
+              "required": [
+                "type",
+                "examples"
+              ],
               "properties": {
                 "type": {
                   "type": "string",
                   "minLength": 1,
-                  "description": "The type or category of this speech pattern (e.g., 'metaphor', 'catchphrase', 'idiom')."
+                  "description": "The type or category of this speech pattern (e.g., 'Tonal Shifts', 'Violence Casualization', 'Deflection & Exposure Patterns')."
                 },
                 "contexts": {
                   "type": "array",
@@ -31,7 +36,7 @@
                     "type": "string"
                   },
                   "default": [],
-                  "description": "Optional array of context strings indicating when this pattern is typically used."
+                  "description": "Optional array of context strings indicating when this pattern is typically used (e.g., 'Rare moments of confessional self-examination', 'Deflects genuine compliments with aggressive flirtation or mockery'."
                 },
                 "examples": {
                   "type": "array",

@@ -8,17 +8,18 @@
  * Prompt version information and management
  */
 export const PROMPT_VERSION_INFO = {
-  version: '2.0.0',
+  version: '3.0.0',
   previousVersions: {
     '1.0.0': 'Initial implementation with unstructured format',
+    '2.0.0': 'XML-like structure with pattern/example/circumstances fields',
   },
   currentChanges: [
-    'Implemented XML-like organizational structure for architectural consistency',
-    'Moved content policy to end of prompt following established pattern',
-    'Increased token allocation from 2000 to 3000 for better completion',
-    'Added clear role definition and structured constraints section',
-    'Improved consistency with other character generators',
-    'Enhanced focused prompt integration with XML structure',
+    'Updated schema to match speech_patterns.component.json structure',
+    'Changed from pattern/example/circumstances to type/contexts[]/examples[]',
+    'Request 4-8 pattern groups with 2-5 examples each',
+    'Contexts now an array instead of single string',
+    'Examples now an array instead of single string',
+    'Better alignment with component data structure',
   ],
 };
 
@@ -44,24 +45,31 @@ export const SPEECH_PATTERNS_RESPONSE_SCHEMA = {
     speechPatterns: {
       type: 'array',
       minItems: 3,
+      maxItems: 8,
       items: {
         type: 'object',
         additionalProperties: false,
         properties: {
-          pattern: {
+          type: {
             type: 'string',
             minLength: 5,
+            description: 'Pattern category name (e.g., "Verbal Tics", "Tonal Shifts")',
           },
-          example: {
-            type: 'string',
-            minLength: 3,
+          contexts: {
+            type: 'array',
+            items: { type: 'string', minLength: 1 },
+            default: [],
+            description: 'Array of situations where pattern applies',
           },
-          circumstances: {
-            type: 'string',
-            minLength: 0,
+          examples: {
+            type: 'array',
+            items: { type: 'string', minLength: 3 },
+            minItems: 2,
+            maxItems: 5,
+            description: 'Array of 2-5 dialogue examples',
           },
         },
-        required: ['pattern', 'example'],
+        required: ['type', 'examples'],
       },
     },
     generatedAt: {
@@ -88,7 +96,7 @@ You are an expert character development consultant specializing in speech patter
 </role>
 
 <task_definition>
-Generate approximately ${patternCount} unique and distinctive speech patterns for the character defined below. Each pattern should reflect their complete persona, including personality, background, fears, desires, relationships, and psychological complexity. Focus on deeper speech characteristics beyond simple accents or surface-level verbal tics.
+Generate 4-8 speech pattern groups for the character defined below. Each group should contain a pattern category, contexts where it applies, and 2-5 dialogue examples. Aim for approximately ${patternCount} total examples across all groups. Focus on deeper speech characteristics beyond simple accents or surface-level verbal tics.
 </task_definition>
 
 <character_definition>
@@ -99,32 +107,57 @@ ${characterJson}
 Based on the character definition provided:
 
 1. Analyze the character's complete persona including personality traits, background, relationships, fears, desires, and psychological complexity
-2. Identify approximately ${patternCount} unique speech patterns that authentically reflect their character
-3. For each pattern, provide a clear description of the speech characteristic
-4. Include specific examples of the character's voice demonstrating each pattern
-5. Add contextual information about when or where each pattern typically appears (circumstances)
-6. Focus on psychological and emotional depth rather than superficial accent assignment
-7. Ensure patterns reflect the character's whole persona and internal complexity
-8. Include natural dialogue snippets that sound like the character actually speaking
-9. Preface dialogue examples with circumstantial context in parentheses when helpful
+2. Identify 4-8 distinct speech pattern categories (e.g., "Verbal Tics", "Tonal Shifts", "Power Dynamics")
+3. For each pattern category:
+   - Provide a clear category name (type)
+   - List 1-3 contexts where this pattern typically appears
+   - Include 2-5 concrete dialogue examples demonstrating the pattern
+4. Aim for approximately ${patternCount} total examples across all groups
+5. Focus on psychological and emotional depth rather than superficial accent assignment
+6. Ensure patterns reflect the character's whole persona and internal complexity
+7. Include natural dialogue snippets that sound like the character actually speaking
+8. Contexts should be situational descriptions, not single words
 </instructions>
 
 <constraints>
-- Generate exactly 15-25 speech patterns (targeting ~${patternCount})
-- Each pattern must include: pattern description, example dialogue, and optional circumstances
-- Pattern descriptions must be at least 10 characters, examples at least 5 characters
+- Generate 4-8 pattern groups total
+- Each group must have: category name (type), contexts array (optional), examples array (2-5 items)
+- Category names must be at least 5 characters
+- Each example must be at least 3 characters
+- Aim for 15-25 total examples across all groups (targeting ~${patternCount})
 - Focus on authentic character voice, not stereotypical accents or clichés
 - Examples should sound natural and true to the character's persona
-- Avoid repetitive or overly similar patterns
-- Ensure patterns reflect different emotional states and social contexts
+- Contexts should be situational descriptions, not single words
+- Ensure pattern groups reflect different emotional states and social contexts
 - All patterns must be grounded in the provided character definition
 </constraints>
 
 <examples>
 Desired format examples:
-"(When comfortable, slipping into a more genuine, playful tone) 'Oh! That's absolutely brilliant!' or 'You've got to be kidding me!'"
-"(Using vulgarity as armor) 'I'm not some fucking kid, I know exactly what I'm doing.'"
-"(A rare, unguarded moment of curiosity) '...You really think that? Huh. Most people don't think at all.'"
+{
+  "type": "Deadpan Dark Humor",
+  "contexts": [
+    "Moments of tension",
+    "When someone expects her to be impressed or afraid"
+  ],
+  "examples": [
+    "If you want drama, start a tavern fight without me.",
+    "Oh, how terrifying. A man with a sword. I've never seen that before.",
+    "You're threatening me? That's adorable."
+  ]
+}
+
+{
+  "type": "Deflection & Exposure Patterns",
+  "contexts": [
+    "Deflects genuine compliments with aggressive flirtation or mockery",
+    "Rare moments of confessional self-examination"
+  ],
+  "examples": [
+    "You think I'm clever? How sweet. Want to see how clever I am with my hands?",
+    "I don't do 'nice.' Nice gets you killed or disappointed."
+  ]
+}
 </examples>
 
 <response_format>
@@ -132,9 +165,16 @@ Desired format examples:
   "characterName": "Character Name",
   "speechPatterns": [
     {
-      "pattern": "Description of the speech pattern",
-      "example": "Example dialogue showing the pattern", 
-      "circumstances": "When this pattern typically appears (optional)"
+      "type": "Pattern Category Name",
+      "contexts": [
+        "When this pattern appears",
+        "Situational context"
+      ],
+      "examples": [
+        "Example dialogue 1",
+        "Example dialogue 2",
+        "Example dialogue 3"
+      ]
     }
   ],
   "generatedAt": "ISO 8601 timestamp"
@@ -267,33 +307,63 @@ export function validateSpeechPatternsGenerationResponse(response, logger) {
 
     // Validate each pattern
     response.speechPatterns.forEach((pattern, index) => {
-      if (!pattern.pattern || typeof pattern.pattern !== 'string') {
+      // Check for 'type' field
+      if (!pattern.type || typeof pattern.type !== 'string') {
         errors.push(
-          `Pattern ${index + 1}: 'pattern' field is required and must be a string`
+          `Pattern ${index + 1}: 'type' field is required and must be a string`
         );
-      } else if (pattern.pattern.length < 5) {
+      } else if (pattern.type.length < 5) {
         errors.push(
-          `Pattern ${index + 1}: 'pattern' must be at least 5 characters long`
-        );
-      }
-
-      if (!pattern.example || typeof pattern.example !== 'string') {
-        errors.push(
-          `Pattern ${index + 1}: 'example' field is required and must be a string`
-        );
-      } else if (pattern.example.length < 3) {
-        errors.push(
-          `Pattern ${index + 1}: 'example' must be at least 3 characters long`
+          `Pattern ${index + 1}: 'type' must be at least 5 characters long`
         );
       }
 
-      if (
-        pattern.circumstances !== undefined &&
-        typeof pattern.circumstances !== 'string'
-      ) {
+      // Check for 'contexts' array (optional)
+      if (pattern.contexts !== undefined) {
+        if (!Array.isArray(pattern.contexts)) {
+          errors.push(
+            `Pattern ${index + 1}: 'contexts' must be an array if provided`
+          );
+        } else {
+          pattern.contexts.forEach((ctx, ctxIdx) => {
+            if (typeof ctx !== 'string') {
+              errors.push(
+                `Pattern ${index + 1}, context ${ctxIdx + 1}: must be a string`
+              );
+            } else if (ctx.length < 1) {
+              errors.push(
+                `Pattern ${index + 1}, context ${ctxIdx + 1}: must be at least 1 character long`
+              );
+            }
+          });
+        }
+      }
+
+      // Check for 'examples' array (required)
+      if (!pattern.examples || !Array.isArray(pattern.examples)) {
         errors.push(
-          `Pattern ${index + 1}: 'circumstances' must be a string if provided`
+          `Pattern ${index + 1}: 'examples' field is required and must be an array`
         );
+      } else if (pattern.examples.length < 2) {
+        errors.push(
+          `Pattern ${index + 1}: 'examples' must have at least 2 items`
+        );
+      } else if (pattern.examples.length > 5) {
+        errors.push(
+          `Pattern ${index + 1}: 'examples' must have at most 5 items`
+        );
+      } else {
+        pattern.examples.forEach((ex, exIdx) => {
+          if (typeof ex !== 'string') {
+            errors.push(
+              `Pattern ${index + 1}, example ${exIdx + 1}: must be a string`
+            );
+          } else if (ex.length < 3) {
+            errors.push(
+              `Pattern ${index + 1}, example ${exIdx + 1}: must be at least 3 characters long`
+            );
+          }
+        });
       }
     });
 

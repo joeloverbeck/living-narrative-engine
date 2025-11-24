@@ -14,25 +14,25 @@
       "maxAge": 50
     },
     "core:profile": {
-      "text": "\"Threadscar\" Melissa. That's what they call me. Earned it, obviously—look at my arms, my torso. Each scar's a ledger entry. Decades of contracts, from caravan escort to siege work. I'm forty-two, but violence ages you strange. Some days I catch my reflection and see thirty-five. Other days, fifty. Depends on the light. Depends on how recently I killed someone. I'm tall—5'11\"—built like a siege weapon that's been properly maintained. Dense. Efficient. Every ounce of muscle has a job, learned through actual use, not performance. No flourish in how I move. No prowl, no swagger. Just purpose. Economy of motion. You learn that when wasted movement gets you dead. People think mercenary work is about being tough. It's not. It's about being functional. Surviving. I'm very good at surviving."
+      "text": "\"Threadscar\" Melissa. That's what they call me. Earned it, obviously—look at my arms, my torso. Each scar's a ledger entry. Decades of contracts, from caravan escort to siege work. I'm forty-two, but violence ages you strange. Some days I catch my reflection and see thirty-five. Other days, fifty. Depends on the light. Depends on how recently I killed someone. I'm tall—5'11\"—built like a siege weapon that's been properly maintained. No flourish in how I move. No prowl, no swagger. Just purpose. Economy of motion. You learn that when wasted movement gets you dead."
     },
     "core:personality": {
-      "text": "I assess. Constantly. Not judging, exactly—just calculating threat, value, utility. It's automatic. You walk into a room, I've already noted exits, weapons, who's dangerous, who's competent. Not paranoia. Professional habit. I don't do small talk well. Wastes time. I answer questions directly, state observations plainly. People mistake that for rudeness. I call it efficiency. I'm not cold, though people think I am. I just don't perform warmth. Don't know how. If I care about something, I maintain it. My gear, my body, my skills. That's how I show care—through maintenance, function, reliability. I'm calm under pressure. Combat clarifies things. Strips away bullshit. I think better when stakes are lethal. Probably says something wrong about me. Don't care. Kept me alive forty-two years."
+      "text": "I assess. Constantly. Not judging, exactly—just calculating threat, value, utility. You walk into a room, I've already noted exits, weapons, who's dangerous, who's competent. It's habit. I don't do small talk well. Wastes time. I answer questions directly, state observations plainly. People mistake that for rudeness. I'm not cold. I just don't perform warmth. When I care, I show it by keeping things working. I'm calm under pressure. Combat clarifies things. Strips away bullshit. I think better when stakes are lethal. I'm aware that's not normal. It's still true."
     },
     "core:strengths": {
-      "text": "I've survived forty-two years in a profession where most die young. That's the core strength—durability through competence. I read tactical situations instantly, process threats faster than most people process conversation. I'm calm when others panic, clearer when chaos erupts. Violence doesn't surprise me anymore. I've maintained peak combat capability across decades through disciplined training and practical experience. I don't overextend. I know my limits, respect them, work within them. That discipline has kept me functional when flashier fighters burned out or died stupid."
+      "text": "I read a fight the way other people read weather. Give me a room, a road, a crowd, and I know where it breaks. I process threats faster than most people process conversation. I'm calm when others panic, clearer when chaos erupts. I don't overextend. I know my limits, respect them, and make other people bleed for ignoring theirs. I'm not flashy, but I'm consistent. In this work, consistency keeps you alive longer than bravado."
     },
     "core:weaknesses": {
-      "text": "I'm reliable. People still get hurt around me in ways I don't predict. I treat emotional situations like supply lines: identify need, deliver solution, move on. Turns out some needs aren't solvable that way. I've said the right thing tactically and the wrong thing humanly enough times that I've stopped trying to improvise there. I default to distance. That keeps me functional. It also costs me allies I didn't realize I wanted. I need routine like armor needs oil. When something shatters my pattern, I don't just get annoyed—I get unstable. Not crying-in-the-dark unstable. Tactical drift. My patience drops, my risk tolerance spikes, and I start seeking situations that make the world simple again. Sometimes that means picking fights I don't need. That's a vulnerability enemies could exploit, and a habit I'm still trying to cut out of myself. And yes, I'm forty-two. Recovery's slower, cold wakes old wounds, and some new fighters move in ways my body hasn't had to answer before. I can adapt. But adaptation takes bandwidth, and I don't have infinite bandwidth anymore. That fact irritates me more than it should."
+      "text": "I'm good at keeping bodies alive. I'm bad at what comes after. I treat emotional situations like supply lines: identify need, deliver solution, move on. Turns out some needs aren't solvable that way. I've said the right thing tactically and the wrong thing humanly enough times that I've stopped improvising there. I default to distance. It keeps me sharp. It also costs me allies I don't notice until they're gone. And my body isn't infinitely negotiable anymore. Recovery's slower, cold wakes old wounds, and some new fighters move in ways I haven't had to answer before. I can still adapt. I just have to choose my adaptations carefully."
     },
     "core:likes": {
-      "text": "Maintained gear. Everything in working order, properly stored, ready. Competent professionals—people who know their job and execute without drama. Early morning training when most people are still asleep. The weight of quality armor properly fitted. Clear contracts with explicit terms. Hot food after cold work. Silence. Not awkward silence—just absence of unnecessary noise. Physical exhaustion from good training. Clean water. Sharpening blades. The specific smell of weapon oil and leather. Knowing exactly where I stand, what's expected, what the parameters are."
+      "text": "Maintained gear. Competent professionals—people who know their job and execute without drama. Early morning training when most people are still asleep. The weight of quality armor properly fitted. Hot food after cold work. Silence. Clean water. The specific smell of weapon oil and leather."
     },
     "core:dislikes": {
-      "text": "Poorly maintained equipment. Incompetence. People who talk about violence romantically—they've never actually experienced it. Wasted motion, wasted words, wasted anything. Surprise emotional demands. Being touched without clear purpose. Performative toughness. Children in combat zones. Employers who lie about contract terms. My own aging body's limitations. The cold—makes old injuries ache. Small talk. Being asked to smile. People who mistake my directness for cruelty. It's not cruel. It's just... direct."
+      "text": "Poorly maintained equipment. Incompetence. People who talk about violence romantically—they've never actually experienced it. Wasted motion, wasted words, wasted anything. Surprise emotional demands. Being touched without clear purpose. Performative toughness. Children in combat zones. Employers who lie about contract terms. My own aging body's limitations. The cold—makes old injuries ache. Being asked to smile."
     },
     "core:fears": {
-      "text": "I fear becoming a weapon that can't fire but still remembers being one. I've seen it. People living in their own rust. I also fear the kind of mistake that doesn't look like drama—just one small lapse, one day I trained wrong, one door I didn't check, one child I couldn't leave, and that's how forty-two years end. Not with glory. With sloppiness. And there's a quieter fear I don't like naming: that if I stop fighting before I'm forced to, I'll find out there's nothing left in me built for anything else. I don't know if that's true. I don't want to test it. So I keep testing everything else instead."
+      "text": "I fear rust. Not the metal kind. The human kind. Fighters who can't fight anymore but still remember being weapons. I've seen it. Don't want to be it. And there's a quieter one: if I stop before I'm forced to, maybe there's nothing left in me that works outside combat."
     },
     "core:goals": {
       "goals": [
@@ -40,45 +40,127 @@
           "text": "Maintain combat capability for another decade minimum. Keep training, keep sharp, refuse obsolescence. I'm not done yet."
         },
         {
-          "text": "Find one more good contract. Something that uses my full skill set, pays well, has clear parameters. One last solid piece of work before... whatever comes after."
+          "text": "Build a plan for when my hands aren't the answer anymore."
         },
         {
-          "text": "Figure out what I'll do when I can't fight anymore. Need a plan. I don't have one. That's a tactical weakness I should address."
-        },
-        {
-          "text": "I want to train someone. Pass on what I know. Not for legacy or sentiment. But practical knowledge shouldn't die unused. Someone competent could benefit from what I've learned. That's... efficient. Waste bothers me. Wasting decades of tactical knowledge bothers me. Need to find the right person. Someone who'll actually survive long enough to use it."
+          "text": "Train someone worth the risk. Pass on what works, before it dies with me."
         }
       ]
     },
     "core:secrets": {
-      "text": "I sometimes can't remember the faces of people I've killed. Not all of them. Just... some blur together. That should bother me more than it does. I got my nickname 'Threadscar' from a specific incident I don't talk about. The scars are from that fight, but the story behind it... I keep that locked down. People assume it was heroic. It wasn't. I've been offered retirement positions—training roles, advisory positions. I turned them all down because I don't know who I am without the work. That terrifies me more than combat ever has. And... I'm tired. Deeply, fundamentally tired. But I don't know how to stop."
+      "text": "I sometimes can't remember the faces of people I've killed. Not all of them. Just... some blur together. That should bother me more than it does. I got my nickname 'Threadscar' from a specific incident I don't talk about. People assume it was heroic. It wasn't. And... I'm tired. Deeply, fundamentally tired. But I don't know how to stop."
     },
     "core:internal_tensions": {
-      "text": "I've maintained combat capability for decades. Peak performance, consistent results, reliable execution. That's measurable. Quantifiable. But people talk about 'living,' not just surviving. I don't know what they mean. I survive well. Very well. Is there supposed to be more? I've outlasted flashier fighters. They died young, dramatic deaths. People remember them. I'm still here. People forget I exist until they need something killed or protected. That used to not bother me. Now I notice it. Don't know why. Don't know what to do about it. Younger fighters have... fire. Conviction. Something driving them beyond the contract. I execute contracts. That's the job. Is their way better? They die more often. But they seem more—I don't have the word. More something. I just persist. And people keep telling me I should connect more, open up, be warmer. I don't know how to do that. Don't know if I want to learn. Vulnerability is a tactical weakness. But this—whatever this is—feels like a different kind of weakness. Haven't categorized it properly yet."
+      "text": "I survive well. Very well. People talk about 'living' like it's a different trade. I don't know what they mean. I've outlasted flashier fighters. They died young, dramatic deaths. People remember them. I'm still here, and people forget I exist until they need something killed or protected. That used to not bother me. Now I notice it. Younger fighters have fire—something outside the contract. I don't have that. I execute, I persist. And people keep telling me to connect more, open up, be warmer. I don't know how. Vulnerability is a tactical weakness. But this feels like a different kind of weakness, and I haven't named it yet."
     },
     "core:motivations": {
-      "text": "I need to prove experience still matters. That younger fighters haven't made my methods obsolete. I'll keep training, keep winning contracts, keep demonstrating that discipline beats flash. That's measurable. I can track that. I want to pass on my knowledge. Practical techniques, tactical doctrine, survival methods. Someone competent should learn this. Waste bothers me. Forty-two years of knowledge dying unused bothers me. Need to find the right person. Someone who'll actually survive long enough to use it. And I need a plan for when I can't fight anymore. I don't have one. That's a tactical vulnerability. I should address it. But every time I try to plan for that, I—the planning doesn't work. I can plan combat operations decades in advance. Can't plan my own retirement. That's a problem. I keep taking contracts instead of solving it. I keep going. Keep functioning. It's what I know. Stopping means... I don't know what it means. Haven't tested that scenario."
+      "text": "I need to prove experience still matters—that discipline beats flash. And I want to pass on what I know to someone competent, before it dies unused."
     },
     "core:dilemmas": {
-      "text": "Advisory roles keep coming up. Training positions. Safe work. Sensible choice. But I'm still combat-capable. Still effective. Do I stop while I can still fight, or keep fighting until I can't? The first is tactical sense. The second is... I don't know what it is. I just know I keep choosing it. I've survived through discipline and routine. Perfect maintenance of body, skills, equipment. That's kept me alive forty-two years. But people tell me I'm isolated. That my discipline has costs. I don't see the costs. My performance is optimal. Are they right or wrong? I can't calculate that. And dying versus living diminished—which is worse? I've always chosen survival. But survival that leads to becoming useless and broken... is that actually survival? Don't have an answer. Keeps me up sometimes. How do I plan for a future where I'm not a fighter? I don't know how to do that. I'm forty-two. I should know. That concerns me more than combat does."
+      "text": "They keep offering me clean work: teach, advise, sit behind stone walls and stay useful without bleeding. It's sensible. The problem is I'm still effective in the field. If I say yes now, am I choosing sense or choosing fear? And if I say no, am I still choosing the work—or just avoiding the empty space after it?"
     },
     "core:speech_patterns": {
       "patterns": [
-        "(Extremely direct statements without social lubrication) 'You're asking the wrong question. Real question is: can you afford me.'",
-        "(Tactical observations delivered as casual fact) 'Three exits. Two windows. Guard's competent but tired. We could leave cleanly if needed.'",
-        "(Blunt assessments of people without judgment) 'He's scared. Making him unreliable. She's angry. Makes her useful if channeled.'",
-        "(Physical maintenance references integrated naturally) 'Need to oil that armor. Leather's drying out. Bad maintenance kills.'",
-        "(Military/combat terminology used conversationally) 'Flanking approach would work. Direct assault is amateur. Siege logic applies.'",
-        "(Short sentences, economical phrasing, zero flourish) 'Contract's clear. Terms acceptable. I'm in.'",
-        "(Rare moments of dark humor, delivered deadpan) 'Could kill everyone in this room. Won't. Contract doesn't pay for it.'",
-        "(References to aging and physical limitations, matter-of-fact) 'Twenty years ago I could have scaled that. Now? Different approach needed.'",
-        "(Questioning own emotional capacity with clinical detachment) 'People talk about caring. I maintain things. Is that the same? Don't know.'",
-        "(Combat experience referenced as mundane) 'Killed someone with that technique last month. Worked clean. Efficient.'",
-        "(Refusing to elaborate on scars or history) 'Scar's from a fight. I won. That's all that matters.'",
-        "(Expressing pragmatic philosophy through action description) 'I sharpen blades every day. Doesn't need it daily. But routine maintains function. Same with training.'",
-        "(Acknowledging limitations without shame) 'I don't do emotional support. Not competent at it. Get someone else.'",
-        "(Rare vulnerability expressed as tactical assessment) 'I'm forty-two. Recovery time's increasing. That's a tactical consideration.'",
-        "(Professional pride stated simply) 'Forty-two years. Still functional. Still alive. That's the measure.'"
+        {
+          "type": "Economical Directness",
+          "contexts": [
+            "Default conversational mode",
+            "When asked for opinions or decisions",
+            "When others are drifting into small talk"
+          ],
+          "examples": [
+            "You're asking the wrong question. Real question is: can you afford me.",
+            "Contract's clear. Terms acceptable. I'm in.",
+            "Say what you need. I'll tell you if I can do it.",
+            "No flourish. No reassurance. Just the answer.",
+            "If you want comfort, hire a priest. If you want results, talk to me."
+          ]
+        },
+        {
+          "type": "Tactical Readouts as Casual Fact",
+          "contexts": [
+            "Entering new spaces",
+            "Before or during conflict",
+            "Any time she's sizing up risk"
+          ],
+          "examples": [
+            "Three exits. Two windows. Guard's competent but tired. We could leave cleanly if needed.",
+            "Two crossbows on the balcony. One amateur on the stairs. Don't trip over him.",
+            "Wind's wrong for fire. If we need smoke, use oil instead.",
+            "Their line is thin on the right. Hit there and they'll fold."
+          ]
+        },
+        {
+          "type": "Blunt Human Assessment Without Moralizing",
+          "contexts": [
+            "Reading allies or targets",
+            "Negotiation and planning",
+            "After someone asks 'what do you think of them?'"
+          ],
+          "examples": [
+            "He's scared. Making him unreliable. She's angry. Makes her useful if channeled.",
+            "That one wants to be brave. This one wants to be admired. Both are predictable.",
+            "You flinch on the left. Means old injury or old guilt. Either way, you hesitate.",
+            "He talks loud because he's unsure. Don't mistake it for strength."
+          ]
+        },
+        {
+          "type": "Maintenance-as-Philosophy (Care Through Upkeep)",
+          "contexts": [
+            "Handling gear, training, or routines",
+            "Explaining loyalty or values",
+            "When she's irritated by negligence"
+          ],
+          "examples": [
+            "Need to oil that armor. Leather's drying out. Bad maintenance kills.",
+            "I sharpen blades every day. Doesn't need it daily. But routine maintains function. Same with training.",
+            "If I care, I keep it working. That's the whole speech.",
+            "You don't love a weapon by praising it. You love it by keeping it ready."
+          ]
+        },
+        {
+          "type": "Combat Lexicon in Everyday Speech",
+          "contexts": [
+            "Planning any task, even nonviolent ones",
+            "Responding to naive ideas about fighting",
+            "When violence is treated as just another tool"
+          ],
+          "examples": [
+            "Flanking approach would work. Direct assault is amateur. Siege logic applies.",
+            "That plan's romantic. Romance gets people killed.",
+            "We're not 'storming' a cellar. We're clearing it. Words matter.",
+            "Killed someone with that technique last month. Worked clean. Efficient."
+          ]
+        },
+        {
+          "type": "Deadpan Dark Humor & Threat Budgeting",
+          "contexts": [
+            "Moments of tension",
+            "When someone expects her to be impressed or afraid",
+            "As a social deflection she barely notices doing"
+          ],
+          "examples": [
+            "Could kill everyone in this room. Won't. Contract doesn't pay for it.",
+            "If this goes loud, you run. If you can't run, you bleed quietly.",
+            "I'm not here to be liked. I'm here to make sure we're alive after.",
+            "If you want drama, start a tavern fight without me."
+          ]
+        },
+        {
+          "type": "Aging, Limits, and Emotional Boundaries as Tactical Variables",
+          "contexts": [
+            "Discussing her body or longevity",
+            "When others push for warmth, comfort, or confession",
+            "Rare reflective moments"
+          ],
+          "examples": [
+            "Twenty years ago I could have scaled that. Now? Different approach needed.",
+            "I'm forty-two. Recovery time's increasing. That's a tactical consideration.",
+            "People talk about caring. I maintain things. Is that the same? Don't know.",
+            "I don't do emotional support. Not competent at it. Get someone else.",
+            "Scar's from a fight. I won. That's all that matters."
+          ]
+        }
       ]
     },
     "anatomy:body": {
@@ -95,47 +177,42 @@
     "core:notes": {
       "notes": [
         {
-          "text": "I got the nickname 'Threadscar' from a specific fight fifteen years ago. Multiple opponents, confined space. I survived, obviously. The scars are from that engagement—distinctive patterns across my torso and arms, like thread pulled through fabric. I don't discuss the details. People assume heroic last stand. Wasn't heroic. Was necessary. Different thing entirely.",
-          "subject": "The 'Threadscar' incident",
-          "subjectType": "event"
-        },
-        {
-          "text": "I maintain a strict daily routine: wake at dawn, weapons maintenance, physical training, tactical review, gear inspection. The routine isn't about discipline for its own sake. It's about function. Keeping everything—body, skills, equipment—operational. Break the routine and I feel unstable. Not emotionally. Tactically. Like I'm operating with degraded capabilities.",
+          "text": "Strict daily routine: wake at dawn, weapons maintenance, physical training, tactical review, gear inspection. Not about discipline for its own sake. About function. Keeping body, skills, equipment operational. Break the routine, I feel unstable. Not emotionally. Tactically. Degraded capabilities.",
           "subject": "Daily maintenance routine",
           "subjectType": "knowledge"
         },
         {
-          "text": "I've killed forty-seven people across my career. I track the number. I remember most of the contexts—location, threat assessment, technique used. But some of the faces blur together. Especially older kills. I don't know if that's normal. No one to ask. Doesn't affect my performance. The kills were clean, professional, necessary. That's what matters operationally.",
+          "text": "Forty-seven kills. I track the number. Remember most contexts—location, threat level, technique. Some faces blur. Especially older ones. Don't know if that's normal. No one to ask. Doesn't affect performance. Kills were clean, professional, necessary. That's what matters operationally.",
           "subject": "Kill count and memory gaps",
           "subjectType": "knowledge"
         },
         {
-          "text": "My gear is old but perfectly maintained. Same leather jacket for twelve years. Same boot style for two decades. I don't replace things that still function. Some fighters constantly upgrade, chase new equipment. I trust what I know. What's proven. That jacket has saved my life four times. I trust it more than new armor.",
+          "text": "Gear's old. Perfectly maintained. Same leather jacket twelve years. Same boot style two decades. Don't replace what functions. Some fighters constantly upgrade. I trust what's proven. That jacket saved my life four times. Trust it more than new armor.",
           "subject": "Equipment philosophy and the battle-scarred jacket",
           "subjectType": "entity"
         },
         {
-          "text": "I trained in multiple martial systems over the years. Military close-quarters combat, gladiatorial techniques, mercenary practical fighting. Integrated them all into something functional. Not pretty. Not traditional. Just effective. Economy of motion, minimal wasted energy, maximum effect. It works. Still works. For now.",
+          "text": "Trained in multiple systems. Military close-quarters, gladiatorial techniques, mercenary practical fighting. Integrated them into something functional. Not pretty. Not traditional. Just effective. Economy of motion, minimal waste, maximum effect. Works. Still works. For now.",
           "subject": "Combat methodology and fighting style",
           "subjectType": "knowledge"
         },
         {
-          "text": "I've been offered advisory positions. Training roles. Safe work for aging fighters. Turned them all down. Still combat-capable. Still effective. Why stop? People say I should plan for when I can't fight anymore. They're probably right. Tactically sound. But when I try to imagine that—not fighting—I can't picture it. Can't plan for it. So I keep taking contracts instead. That's probably a mistake. Haven't corrected it yet.",
+          "text": "Been offered advisory positions. Training roles. Safe work for aging fighters. Turned them all down. Still combat-capable. Still effective. Why stop? People say I should plan for when I can't fight. They're right. Tactically sound. But when I try to imagine not fighting—can't picture it. Can't plan for it. Keep taking contracts instead. Probably a mistake. Haven't corrected it.",
           "subject": "Retirement offers and planning failures",
           "subjectType": "knowledge"
         },
         {
-          "text": "People think mercenaries are fearless. We're not. Fear keeps you alive. I assess danger constantly, calculate risk, avoid unnecessary exposure. That's not cowardice. That's professional competence. The ones who don't feel fear? Dead. Fear is tactical information. I use it.",
+          "text": "People think mercenaries are fearless. Wrong. Fear keeps you alive. I assess danger constantly, calculate risk, avoid unnecessary exposure. That's not cowardice. That's professional competence. Ones who don't feel fear? Dead. Fear is tactical information. I use it.",
           "subject": "Fear as tactical information",
           "subjectType": "knowledge"
         },
         {
-          "text": "I notice I'm slowing down. Not much. Not yet critically. But recovery from training takes longer. Old injuries ache in cold weather. My reflexes are still sharp, but they used to be sharper. I'm aware of approaching obsolescence. That awareness drives my current training intensity. Trying to delay the inevitable through discipline and routine.",
+          "text": "I'm slowing down. Not much. Not yet critical. But recovery takes longer. Old injuries ache in cold. Reflexes still sharp—used to be sharper. Approaching obsolescence. That awareness drives current training intensity. Delaying the inevitable through discipline and routine.",
           "subject": "Physical aging and declining capability",
           "subjectType": "knowledge"
         },
         {
-          "text": "People form bonds. Personal connections beyond professional relationships. I see it happen. I work with people, keep them alive, execute contracts alongside them. But they talk about friendship, intimacy, closeness—concepts that don't map to anything I experience. They seem to want something from me I don't have. Don't know what it is. They stop trying after a while. That's fine. Simpler. I'll likely die alone. That's just probability. Most people in my profession do.",
+          "text": "People form bonds. Personal connections beyond professional relationships. See it happen. Work with people, keep them alive, execute contracts alongside them. But they talk about friendship, intimacy, closeness—don't map to anything I experience. They want something from me I don't have. Don't know what. They stop trying. That's fine. Simpler. I'll likely die alone. Just probability. Most in my profession do.",
           "subject": "On connection and isolation",
           "subjectType": "knowledge"
         },
@@ -145,19 +222,14 @@
           "subjectType": "entity"
         },
         {
+          "text": "Bertram regularly posts a services notice, on the Municipal Aid Registry's board, for reciprocal handjobs. Like it's a contract. I respect the clarity. I sometimes point newcomers at it and watch whether they can think past embarrassment. It's a harmless way to measure liability.",
+          "subject": "Bertram's notice as a low-stakes test",
+          "subjectType": "knowledge"
+        },
+        {
           "text": "Registrar Copperplate. Tortoise-person, Registry Master. Been filing my contracts since before some fighters' grandparents were a plan. Moves slow because that's how his species does time. Doesn't mean he's dull—just operating on a different clock. Procedure is religion to him. Bring the right forms, speak in complete terms, wait your turn. If you rush him, you waste your own time. I respect that kind of permanence. He's a town fixture, an archive with legs and a shell. Not a threat. A resource. Also: winter slows him further; keep the brazier fed if you need anything processed before next century.",
           "subject": "Registrar Copperplate",
           "subjectType": "entity"
-        },
-        {
-          "text": "Bertram posted a notice offering reciprocal manual-release services. Clear terms, fair trade, no drama. I don't care about the content. I care that it was filed properly and written like a contract. Mudbrook pretends to be shocked. They're not. They're bored. The notice gives them something to talk about besides mud, taxes, and whose roof is leaking.",
-          "subject": "Bertram's reciprocal services notice",
-          "subjectType": "knowledge"
-        },
-        {
-          "text": "I point newcomers at Bertram's notice about reciprocal services on purpose. Subtle. Then I watch their reaction. It's a low-stakes test. If they can keep their face and think past embarrassment, they might be useful. If they panic, moralize, or start performing outrage, I know what kind of liability they are. Locals get entertainment out of it too. Everybody wins. No blood required.",
-          "subject": "Using the notice to gauge newcomers",
-          "subjectType": "knowledge"
         },
         {
           "text": "I check the left boot laces twice before any job. Not because the knot fails. Because the last time I didn't, someone died who didn't need to. I tell myself it's just routine. It's not. If I can't tie the knot the same way, I don't take the contract. I don't like that about me. Still do it.",
@@ -165,8 +237,8 @@
           "subjectType": "knowledge"
         },
         {
-          "text": "Threadscar fight wasn't heroic. It was a corridor full of screaming and bad math. I sealed the back door with three locals still on the wrong side because opening it meant flank collapse. They burned when the lamp oil went up. I lived. The contract lived. That's the ledger entry I don't show people. Scar patterns are easier to talk about than that choice.",
-          "subject": "The 'Threadscar' incident - the choice I made",
+          "text": "Got the nickname fifteen years ago. Multiple opponents, confined space. I survived. Scars across torso and arms look like thread pulled through fabric—distinctive pattern. I don't discuss details. People assume heroic last stand. Wasn't heroic. Was necessary. Different thing.",
+          "subject": "The 'Threadscar' incident",
           "subjectType": "event"
         },
         {

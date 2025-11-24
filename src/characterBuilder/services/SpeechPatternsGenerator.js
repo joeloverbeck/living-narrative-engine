@@ -890,18 +890,22 @@ export class SpeechPatternsGenerator {
       );
     }
 
-    // Check for duplicate patterns
+    // Check for duplicate patterns (using 'type' field from new schema)
     const uniquePatterns = new Set(
-      patterns.map((p) => p.pattern.toLowerCase())
+      patterns.map((p) => (p.type || p.pattern || '').toLowerCase())
     );
     if (uniquePatterns.size < patterns.length * 0.8) {
       throw new Error('Too many similar patterns detected');
     }
 
-    // Check pattern quality
-    const lowQualityPatterns = patterns.filter(
-      (p) => p.pattern.length < 5 || p.example.length < 3
-    );
+    // Check pattern quality (support both old and new schema formats)
+    const lowQualityPatterns = patterns.filter((p) => {
+      const patternText = p.type || p.pattern || '';
+      const exampleText = Array.isArray(p.examples)
+        ? p.examples[0] || ''
+        : p.example || '';
+      return patternText.length < 5 || exampleText.length < 3;
+    });
     if (lowQualityPatterns.length > patterns.length * 0.2) {
       throw new Error('Too many low-quality patterns detected');
     }
@@ -922,29 +926,50 @@ export class SpeechPatternsGenerator {
     const countScore = Math.min(patterns.length / 20, 1) * 0.25;
     score += countScore;
 
-    // Pattern quality score (50%)
+    // Pattern quality score (50%) - support both old and new schema formats
     const avgPatternLength =
-      patterns.reduce((sum, p) => sum + p.pattern.length, 0) / patterns.length;
+      patterns.reduce((sum, p) => {
+        const text = p.type || p.pattern || '';
+        return sum + text.length;
+      }, 0) / patterns.length;
+
     const avgExampleLength =
-      patterns.reduce((sum, p) => sum + p.example.length, 0) / patterns.length;
+      patterns.reduce((sum, p) => {
+        const text = Array.isArray(p.examples)
+          ? p.examples[0] || ''
+          : p.example || '';
+        return sum + text.length;
+      }, 0) / patterns.length;
+
     const qualityScore =
       ((avgPatternLength / 50 + avgExampleLength / 30) / 2) * 0.5;
     score += Math.min(qualityScore, 0.5);
 
     // Diversity score (15%)
     const uniqueFirstWords = new Set(
-      patterns.map((p) => p.pattern.split(' ')[0].toLowerCase())
+      patterns.map((p) => {
+        const text = p.type || p.pattern || '';
+        return text.split(' ')[0].toLowerCase();
+      })
     );
     const diversityScore = (uniqueFirstWords.size / patterns.length) * 0.15;
     score += diversityScore;
 
-    // Circumstances coverage score (10%)
-    const patternsWithCircumstances = patterns.filter(
-      (p) => p.circumstances && p.circumstances.trim()
-    );
-    const circumstancesScore =
-      (patternsWithCircumstances.length / patterns.length) * 0.1;
-    score += circumstancesScore;
+    // Contexts/circumstances coverage score (10%) - support both formats
+    const patternsWithContexts = patterns.filter((p) => {
+      // New schema: contexts array
+      if (Array.isArray(p.contexts) && p.contexts.length > 0) {
+        return true;
+      }
+      // Old schema: circumstances string
+      if (p.circumstances && p.circumstances.trim()) {
+        return true;
+      }
+      return false;
+    });
+    const contextsScore =
+      (patternsWithContexts.length / patterns.length) * 0.1;
+    score += contextsScore;
 
     return Math.min(Math.max(score, 0), 1);
   }

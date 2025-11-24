@@ -9,19 +9,18 @@
  * - Error handling and retries
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import SpeechPatternsGenerator from '../../../../src/characterBuilder/services/SpeechPatternsGenerator.js';
 import {
-  createMockCharacterDefinition,
-  createMockSpeechPatterns,
   createMockLLMResponse,
   createMockSpeechPatternsArray,
 } from '../../../common/characterBuilder/speechPatternsTestHelpers.js';
 
-// Create character data compatible with production validation
 /**
+ * Create character data compatible with production validation
  *
+ * @returns {object} Valid character data structure for testing
  */
 function createValidCharacterData() {
   return {
@@ -216,34 +215,30 @@ describe('SpeechPatternsGenerator', () => {
 
       mockLlmStrategyFactory.getAIDecision.mockResolvedValueOnce(mockResponse);
 
-      try {
-        const result = await generator.generateSpeechPatterns(character);
-        expect(result).toBeDefined();
-        expect(result.speechPatterns).toHaveLength(3);
-        expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalled();
-        // Verify event dispatches (using correct API format: dispatch(eventName, payload))
-        expect(mockEventBus.dispatch).toHaveBeenCalledTimes(2);
-        expect(mockEventBus.dispatch).toHaveBeenNthCalledWith(
-          1,
-          expect.any(String), // Event name as first argument
-          expect.objectContaining({
-            characterData: expect.any(Object),
-            options: expect.any(Object),
-            timestamp: expect.any(String),
-          })
-        );
-        expect(mockEventBus.dispatch).toHaveBeenNthCalledWith(
-          2,
-          expect.any(String), // Event name as first argument
-          expect.objectContaining({
-            result: expect.any(Object),
-            processingTime: expect.any(Number),
-            timestamp: expect.any(String),
-          })
-        );
-      } catch (error) {
-        throw error;
-      }
+      const result = await generator.generateSpeechPatterns(character);
+      expect(result).toBeDefined();
+      expect(result.speechPatterns).toHaveLength(3);
+      expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalled();
+      // Verify event dispatches (using correct API format: dispatch(eventName, payload))
+      expect(mockEventBus.dispatch).toHaveBeenCalledTimes(2);
+      expect(mockEventBus.dispatch).toHaveBeenNthCalledWith(
+        1,
+        expect.any(String), // Event name as first argument
+        expect.objectContaining({
+          characterData: expect.any(Object),
+          options: expect.any(Object),
+          timestamp: expect.any(String),
+        })
+      );
+      expect(mockEventBus.dispatch).toHaveBeenNthCalledWith(
+        2,
+        expect.any(String), // Event name as first argument
+        expect.objectContaining({
+          result: expect.any(Object),
+          processingTime: expect.any(Number),
+          timestamp: expect.any(String),
+        })
+      );
     });
 
     it('should construct proper prompt for generation', async () => {
@@ -405,13 +400,13 @@ describe('SpeechPatternsGenerator', () => {
       const character = createValidCharacterData();
 
       // Mock response that will fail business rules (too few patterns)
+      // Using NEW schema format (v3.0.0): type/examples[]
       const shortResponse = JSON.stringify({
         characterName: 'Test Character',
         speechPatterns: [
           {
-            pattern: 'Short pattern',
-            example: 'Hi',
-            circumstances: '',
+            type: 'Short pattern',
+            examples: ['Hi', 'Hello'], // Minimum 2 examples required
           },
         ],
         generatedAt: new Date().toISOString(),
@@ -495,13 +490,17 @@ describe('SpeechPatternsGenerator', () => {
       };
 
       // Mock response with enough patterns to satisfy business rule validation (10 patterns)
+      // Using NEW schema format (v3.0.0): type/examples[]/contexts[]
       const mockResponseWith10Patterns = JSON.stringify({
         speechPatterns: Array(10)
           .fill()
           .map((_, i) => ({
-            pattern: `Speech pattern ${i + 1}: Uses specific communication style in context ${i + 1}`,
-            example: `"This is example dialogue number ${i + 1} showing the pattern in action and demonstrating the character's unique way of speaking."`,
-            circumstances: `When in emotional situation ${i + 1} requiring this specific response`,
+            type: `Speech pattern ${i + 1}: Uses specific communication style in context ${i + 1}`,
+            examples: [
+              `"This is example dialogue number ${i + 1} showing the pattern in action and demonstrating the character's unique way of speaking."`,
+              `"This is a second example for pattern ${i + 1} showing variation in the character's speech."`,
+            ],
+            contexts: [`When in emotional situation ${i + 1} requiring this specific response`],
           })),
         characterName: 'Test Character',
         generatedAt: new Date().toISOString(),
@@ -551,12 +550,16 @@ describe('SpeechPatternsGenerator', () => {
       // Verify business validation passed (should have at least 3 patterns for default)
       expect(result.speechPatterns.length).toBeGreaterThanOrEqual(2);
 
-      // Verify patterns have required structure
+      // Verify patterns have required structure (NEW schema format: type/examples[])
       result.speechPatterns.forEach((pattern) => {
-        expect(pattern.pattern).toBeDefined();
-        expect(pattern.example).toBeDefined();
-        expect(pattern.pattern.length).toBeGreaterThan(0);
-        expect(pattern.example.length).toBeGreaterThan(0);
+        expect(pattern.type).toBeDefined();
+        expect(pattern.examples).toBeDefined();
+        expect(pattern.examples).toBeInstanceOf(Array);
+        expect(pattern.type.length).toBeGreaterThan(0);
+        expect(pattern.examples.length).toBeGreaterThanOrEqual(2); // Schema requires minimum 2 examples
+        pattern.examples.forEach((example) => {
+          expect(example.length).toBeGreaterThan(0);
+        });
       });
     });
   });
@@ -606,6 +609,8 @@ describe('SpeechPatternsGenerator', () => {
     describe('Nested Components Structure Support', () => {
       /**
        * Create character data in the nested components format found in .character.json files
+       *
+       * @returns {object} Character data with nested components structure
        */
       function createNestedComponentsCharacterData() {
         return {
