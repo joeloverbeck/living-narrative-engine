@@ -1027,6 +1027,19 @@ class GoapPlanner {
     return deepClone(entry);
   }
 
+  clearActorDiagnostics(actorId) {
+    if (!actorId || typeof actorId !== 'string') {
+      return;
+    }
+
+    this.getGoalPathDiagnostics(actorId);
+    this.getEffectFailureTelemetry(actorId);
+
+    if (typeof this.#goalPathNormalizationCache?.clear === 'function') {
+      this.#goalPathNormalizationCache.clear();
+    }
+  }
+
   /**
    * Record failure metadata for the most recent planning attempt
    *

@@ -7,7 +7,11 @@ import GoapController from '../../../../src/goap/controllers/goapController.js';
 import { createGoapPlannerMock } from '../../../common/mocks/createGoapPlannerMock.js';
 import { expectGoapPlannerMock } from '../../../common/mocks/expectGoapPlannerMock.js';
 import { GOAP_EVENTS } from '../../../../src/goap/events/goapEvents.js';
-import { recordNumericConstraintFallback, clearNumericConstraintDiagnostics } from '../../../../src/goap/planner/numericConstraintDiagnostics.js';
+import {
+  recordNumericConstraintFallback,
+  clearNumericConstraintDiagnostics,
+} from '../../../../src/goap/planner/numericConstraintDiagnostics.js';
+import * as numericConstraintDiagnostics from '../../../../src/goap/planner/numericConstraintDiagnostics.js';
 
 describe('GoapController - Core Structure', () => {
   let mockLogger;
@@ -82,6 +86,7 @@ describe('GoapController - Core Structure', () => {
 
   afterEach(() => {
     clearNumericConstraintDiagnostics();
+    jest.restoreAllMocks();
   });
 
   describe('constructor', () => {
@@ -1486,6 +1491,45 @@ describe('GoapController - Core Structure', () => {
 
       it('throws when actorId is missing', () => {
         expect(() => controller.getEffectFailureTelemetry()).toThrow();
+      });
+    });
+
+    describe('clearActorDiagnostics', () => {
+      it('clears controller diagnostics and delegates to planner', async () => {
+        const deps = createValidDependencies();
+        deps.goapPlanner.clearActorDiagnostics = jest.fn();
+        const controller = new GoapController(deps);
+
+        const actor = { id: 'actor_1' };
+        const goal = { id: 'goal:test', priority: 1, goalState: {} };
+        mockDataRegistry.getAll.mockReturnValue([goal]);
+        mockContextAssemblyService.assemblePlanningContext.mockReturnValue({});
+        mockGoapPlanner.plan.mockReturnValue({ tasks: [{ taskId: 'task:1' }] });
+        mockRefinementEngine.refine.mockResolvedValue({
+          success: true,
+          stepResults: [],
+          methodId: 'method:1',
+          taskId: 'task:1',
+          actorId: actor.id,
+          timestamp: Date.now(),
+        });
+
+        await controller.decideTurn(actor, { state: {} });
+
+        const clearNumericConstraintsSpy = jest.spyOn(
+          numericConstraintDiagnostics,
+          'clearNumericConstraintDiagnostics'
+        );
+
+        controller.clearActorDiagnostics(actor.id);
+
+        expect(deps.goapPlanner.clearActorDiagnostics).toHaveBeenCalledWith(actor.id);
+        expect(clearNumericConstraintsSpy).toHaveBeenCalledWith(actor.id);
+      });
+
+      it('throws when actorId is missing', () => {
+        const controller = new GoapController(createValidDependencies());
+        expect(() => controller.clearActorDiagnostics()).toThrow();
       });
     });
 

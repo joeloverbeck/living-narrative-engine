@@ -996,8 +996,23 @@ class GoapController {
       totalSteps: plan.tasks.length,
     });
 
-    this.#cleanupActorDiagnostics(actorId);
+    this.clearActorDiagnostics(actorId);
     this.#deleteActorPlan(actorId);
+  }
+
+  clearActorDiagnostics(actorId) {
+    assertNonBlankString(
+      actorId,
+      'actorId',
+      'GoapController.clearActorDiagnostics',
+      this.#logger
+    );
+
+    this.#cleanupActorDiagnostics(actorId);
+
+    if (typeof this.#planner?.clearActorDiagnostics === 'function') {
+      this.#planner.clearActorDiagnostics(actorId);
+    }
   }
 
   #cleanupActorDiagnostics(actorId) {
