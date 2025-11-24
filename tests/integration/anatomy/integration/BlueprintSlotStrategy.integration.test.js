@@ -215,11 +215,10 @@ describe('BlueprintSlotStrategy (integration)', () => {
     ]);
 
     const strategy = createStrategy();
-    strategy.setSlotEntityMappings(new Map([['mapped_slot', 'mapped-entity']]));
 
     const result = await strategy.resolve('actor-direct', {
       blueprintSlots: ['mapped_slot'],
-    });
+    }, new Map([['mapped_slot', 'mapped-entity']]));
 
     expect(result).toEqual([
       {
@@ -392,23 +391,4 @@ describe('BlueprintSlotStrategy (integration)', () => {
     ]);
   });
 
-  it('updates slot-to-entity mappings from objects and invalid inputs', () => {
-    const strategy = createStrategy();
-
-    logger.debug.mockClear();
-    strategy.setSlotEntityMappings({ slotA: 'entityA', slotB: 'entityB' });
-    expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'BlueprintSlotStrategy: Updated slot-entity mappings with 2 entries'
-      )
-    );
-
-    logger.debug.mockClear();
-    strategy.setSlotEntityMappings(42);
-    expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'BlueprintSlotStrategy: Updated slot-entity mappings with 0 entries'
-      )
-    );
-  });
 });

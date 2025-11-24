@@ -121,9 +121,10 @@ describe('BodyGraphService dependency validation edge cases', () => {
     expect(
       logger.entries.some(
         (entry) =>
-          entry.level === 'debug' &&
-          entry.message ===
-            "BodyGraphService: Using blueprint root 'torso-edge' as cache root (actor 'actor-edge' not in cache, cache size: 2)"
+          entry.level === 'info' &&
+          entry.message.includes(
+            "BodyGraphService.getAllParts: Actor 'actor-edge' -> Using blueprint root 'torso-edge' as cache root (actor not in cache, cache size: 2)"
+          )
       )
     ).toBe(true);
 
@@ -132,9 +133,10 @@ describe('BodyGraphService dependency validation edge cases', () => {
     expect(
       logger.entries.some(
         (entry) =>
-          entry.level === 'debug' &&
-          entry.message ===
-            "BodyGraphService: Found cached result for root 'torso-edge': 2 parts"
+          entry.level === 'info' &&
+          entry.message.includes(
+            "BodyGraphService.getAllParts: CACHE HIT for cache root 'torso-edge'"
+          )
       )
     ).toBe(true);
   });
