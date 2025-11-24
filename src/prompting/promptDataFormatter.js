@@ -477,6 +477,7 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
 
     // Start with the simple string fields
     const formattedData = {
+      actionTagRulesContent: promptData.actionTagRulesContent || '',
       taskDefinitionContent: promptData.taskDefinitionContent || '',
       characterPersonaContent: promptData.characterPersonaContent || '',
       portrayalGuidelinesContent: promptData.portrayalGuidelinesContent || '',
