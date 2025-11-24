@@ -131,7 +131,12 @@ describe('Notes Formatting Performance', () => {
         expect(note).not.toHaveProperty('tags');
       });
 
-      expect(groupedContent).toContain('## Characters');
+      const primaryCategory =
+        promptDataFormatter.getSubjectTypeDisplayInfo(
+          Object.values(SUBJECT_TYPES)[0]
+        ).displayCategory;
+
+      expect(groupedContent).toContain(`## ${primaryCategory}`);
       expect(groupedContent).toContain('### Subject 1');
 
       // Verify all subjects are present

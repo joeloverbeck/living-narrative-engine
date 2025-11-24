@@ -104,6 +104,11 @@ describe('Tag Removal Performance Tests', () => {
     availableActions: [],
   });
 
+  const getPrimaryDisplayCategory = () =>
+    promptDataFormatter.getSubjectTypeDisplayInfo(
+      Object.values(SUBJECT_TYPES)[0]
+    ).displayCategory;
+
   beforeEach(() => {
     mockLogger = createMockLogger();
     const mockServices = createMockServices();
@@ -288,7 +293,9 @@ describe('Tag Removal Performance Tests', () => {
       // Validate efficient processing
       expect(processingTimeMs).toBeLessThan(200); // Should process 100 notes in under 200ms
       expect(promptData.notesArray).toHaveLength(100);
-      expect(formattedData.notesContent).toContain('## Characters');
+      expect(formattedData.notesContent).toContain(
+        `## ${getPrimaryDisplayCategory()}`
+      );
 
       // Verify no tags are processed
       promptData.notesArray.forEach((note) => {
@@ -406,7 +413,7 @@ describe('Tag Removal Performance Tests', () => {
       // Validate efficient end-to-end processing
       expect(totalWorkflowTime).toBeLessThan(100); // Under 100ms for complete workflow
       expect(notesSection).toContain('<notes>');
-      expect(notesSection).toContain('## Characters');
+      expect(notesSection).toContain(`## ${getPrimaryDisplayCategory()}`);
       expect(formattedData.notesContent.length).toBeGreaterThan(0);
 
       console.log(`End-to-End Workflow (50 notes): ${totalWorkflowTime}ms`);
