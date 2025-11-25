@@ -58,14 +58,15 @@ describe('Tortoise Hand Entity Validation', () => {
       expect(handEntity.components['anatomy:sockets']).toBeUndefined();
     });
 
-    it('should have exactly 6 components (no sockets)', () => {
+    it('should have exactly 7 components (no sockets)', () => {
       const componentKeys = Object.keys(handEntity.components);
-      expect(componentKeys.length).toBe(6);
+      expect(componentKeys.length).toBe(7);
     });
   });
 
   describe('Component structure', () => {
     it('should have all required components', () => {
+      expect(handEntity.components['anatomy:can_grab']).toBeDefined();
       expect(handEntity.components['anatomy:part']).toBeDefined();
       expect(handEntity.components['core:name']).toBeDefined();
       expect(handEntity.components['descriptors:texture']).toBeDefined();
@@ -74,8 +75,16 @@ describe('Tortoise Hand Entity Validation', () => {
       expect(handEntity.components['descriptors:color_extended']).toBeDefined();
     });
 
+    it('should have anatomy:can_grab component with grabbing capability', () => {
+      const canGrab = handEntity.components['anatomy:can_grab'];
+      expect(canGrab.gripStrength).toBe(0.8);
+      expect(canGrab.heldItemId).toBeNull();
+      expect(canGrab.locked).toBe(false);
+    });
+
     it('should have only the expected component keys', () => {
       const expectedKeys = [
+        'anatomy:can_grab',
         'anatomy:part',
         'core:name',
         'descriptors:texture',

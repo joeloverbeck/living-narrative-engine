@@ -25,6 +25,9 @@
     "core:material": {
       "material": "steel",
       "properties": ["rigid"]
+    },
+    "anatomy:requires_grabbing": {
+      "handsRequired": 1
     }
   }
 }

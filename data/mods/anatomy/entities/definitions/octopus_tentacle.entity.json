@@ -3,6 +3,11 @@
   "id": "anatomy:octopus_tentacle",
   "description": "Common octopus tentacle with thick build and reddish-brown coloring",
   "components": {
+    "anatomy:can_grab": {
+      "gripStrength": 0.9,
+      "heldItemId": null,
+      "locked": false
+    },
     "anatomy:part": {
       "subType": "tentacle"
     },
@@ -12,17 +17,17 @@
     "descriptors:build": {
       "build": "thick"
     },
-    "descriptors:length_category": {
-      "length": "average"
-    },
-    "descriptors:texture": {
-      "texture": "suckered"
-    },
     "descriptors:color_extended": {
       "color": "reddish-brown"
     },
+    "descriptors:length_category": {
+      "length": "average"
+    },
     "descriptors:shape_general": {
       "shape": "cylindrical"
+    },
+    "descriptors:texture": {
+      "texture": "suckered"
     }
   }
 }

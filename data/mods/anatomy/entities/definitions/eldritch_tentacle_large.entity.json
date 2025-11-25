@@ -3,32 +3,37 @@
   "id": "anatomy:eldritch_tentacle_large",
   "description": "Massive grasping tentacle with powerful musculature and acidic mucus",
   "components": {
+    "anatomy:can_grab": {
+      "gripStrength": 1.2,
+      "heldItemId": null,
+      "locked": false
+    },
     "anatomy:part": {
       "subType": "eldritch_tentacle"
     },
     "core:name": {
       "text": "large grasping tentacle"
     },
-    "descriptors:size_category": {
-      "size": "enormous"
-    },
-    "descriptors:length_category": {
-      "length": "extremely-long"
-    },
-    "descriptors:texture": {
-      "texture": "suckered"
+    "descriptors:build": {
+      "build": "muscular"
     },
     "descriptors:color_extended": {
       "color": "mottled-purple-gray"
     },
-    "descriptors:secretion": {
-      "secretion": "acidic-mucus"
-    },
     "descriptors:flexibility": {
       "flexibility": "highly-flexible"
     },
-    "descriptors:build": {
-      "build": "muscular"
+    "descriptors:length_category": {
+      "length": "extremely-long"
+    },
+    "descriptors:secretion": {
+      "secretion": "acidic-mucus"
+    },
+    "descriptors:size_category": {
+      "size": "enormous"
+    },
+    "descriptors:texture": {
+      "texture": "suckered"
     }
   }
 }

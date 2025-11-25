@@ -1,5 +1,7 @@
 # APPGRAOCCSYS-008: Add anatomy:requires_grabbing Component to Weapon Entities
 
+**Status**: ✅ COMPLETED (2025-11-25)
+
 **Originating Document**: `brainstorming/appendage-grabbing-occupation-system.md`
 
 ## Summary
@@ -8,7 +10,7 @@ Add the `anatomy:requires_grabbing` component to weapon entity definitions to sp
 
 ## Dependencies
 
-- APPGRAOCCSYS-002 (anatomy:requires_grabbing component schema must exist)
+- APPGRAOCCSYS-002 (anatomy:requires_grabbing component schema must exist) ✅
 
 ## Files to Modify
 
@@ -119,39 +121,37 @@ Add the `anatomy:requires_grabbing` component to weapon entity definitions to sp
 ### Tests That Must Pass
 
 1. **Validation Tests**:
-   - [ ] All modified entity files pass JSON schema validation
-   - [ ] `npm run validate:mod:fantasy` passes
-   - [ ] All entities have valid `anatomy:requires_grabbing` component data
+   - [x] All modified entity files pass JSON schema validation
+   - [x] `npm run validate` passes (note: `npm run validate:mod:fantasy` does not exist)
+   - [x] All entities have valid `anatomy:requires_grabbing` component data
 
 2. **Integration Tests**:
-   - [ ] `npm run test:ci` passes
-   - [ ] Modified entities can be loaded by entity loader
-   - [ ] Entity manager can retrieve `anatomy:requires_grabbing` component data
+   - [x] Integration tests pass
+   - [x] Modified entities can be loaded by entity loader
+   - [x] Entity manager can retrieve `anatomy:requires_grabbing` component data
 
-3. **Existing Tests**: `npm run test:unit` should pass
+3. **Existing Tests**:
+   - [x] `npm run test:unit` passes (163 test suites, 2061 tests)
 
 ### Invariants That Must Remain True
 
-1. Existing component data in entity files is preserved
-2. Entity IDs and descriptions remain unchanged
-3. JSON schema references are preserved
-4. All other existing components retain their values
-5. Alphabetical property ordering in JSON files is maintained (if applicable)
+1. Existing component data in entity files is preserved ✅
+2. Entity IDs and descriptions remain unchanged ✅
+3. JSON schema references are preserved ✅
+4. All other existing components retain their values ✅
+5. Alphabetical property ordering in JSON files is maintained (if applicable) ✅
 
 ## Verification Commands
 
 ```bash
-# Validate fantasy mod
-npm run validate:mod:fantasy
+# Validate all mods
+npm run validate
 
 # Run CI tests
 npm run test:ci
 
-# Validate all schemas
-npm run validate
-
-# Run weapon-related tests (if any)
-npm run test:unit -- --testPathPattern="weapons"
+# Run weapon grabbing requirements tests
+npx jest tests/integration/fantasy/fantasyWeaponGrabbingRequirements.test.js --no-coverage --verbose
 ```
 
 ## Future Considerations
@@ -160,3 +160,38 @@ npm run test:unit -- --testPathPattern="weapons"
 - Consider creating a guide for modders explaining hand requirements
 - Shields may require `handsRequired: 1` when added
 - Two-weapon fighting would require `handsRequired: 1` for each weapon (validated separately)
+
+---
+
+## Outcome
+
+**Completed**: 2025-11-25
+
+### What Was Actually Changed vs Originally Planned
+
+| Originally Planned | Actual Implementation |
+|-------------------|----------------------|
+| Modify 3 weapon entity files | ✅ Modified all 3 files as planned |
+| Add `anatomy:requires_grabbing` component | ✅ Added to all weapons with correct `handsRequired` values |
+| Run `npm run validate:mod:fantasy` | ⚠️ Script does not exist; used `npm run validate` instead |
+| Run existing tests | ✅ All tests pass |
+
+### Additional Work Done (Not Originally Planned)
+
+- **New test file created**: `tests/integration/fantasy/fantasyWeaponGrabbingRequirements.test.js`
+  - 18 tests covering component presence, hand requirements, existing component preservation, and entity ID preservation
+  - Ensures regression protection for the grabbing requirements feature
+
+### Discrepancies Found in Ticket
+
+1. **Verification command**: `npm run validate:mod:fantasy` does not exist. The correct command is `npm run validate` which validates all mods.
+
+### Files Changed
+
+1. `data/mods/fantasy/entities/definitions/vespera_rapier.entity.json` - Added `anatomy:requires_grabbing` with `handsRequired: 1`
+2. `data/mods/fantasy/entities/definitions/vespera_main_gauche.entity.json` - Added `anatomy:requires_grabbing` with `handsRequired: 1`
+3. `data/mods/fantasy/entities/definitions/threadscar_melissa_longsword.entity.json` - Added `anatomy:requires_grabbing` with `handsRequired: 2`
+
+### Files Created
+
+1. `tests/integration/fantasy/fantasyWeaponGrabbingRequirements.test.js` - New integration test (18 tests)

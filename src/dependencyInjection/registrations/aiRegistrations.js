@@ -90,6 +90,7 @@ import { GoapDecisionProvider } from '../../turns/providers/goapDecisionProvider
 import { registerActorAwareStrategy } from './registerActorAwareStrategy.js';
 import XmlElementBuilder from '../../prompting/xmlElementBuilder.js';
 import CharacterDataXmlBuilder from '../../prompting/characterDataXmlBuilder.js';
+import { ModActionMetadataProvider } from '../../prompting/modActionMetadataProvider.js';
 
 /**
  * Registers LLM infrastructure and adapter services.
@@ -334,6 +335,16 @@ export function registerAIGameStateProviders(registrar, logger) {
  * @returns {void}
  */
 export function registerAITurnPipeline(registrar, logger) {
+  registrar.singletonFactory(tokens.IModActionMetadataProvider, (c) => {
+    return new ModActionMetadataProvider({
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `AI Systems Registration: Registered ${tokens.IModActionMetadataProvider}.`
+  );
+
   registrar.singletonFactory(tokens.IAIPromptContentProvider, (c) => {
     return new AIPromptContentProvider({
       logger: c.resolve(tokens.ILogger),

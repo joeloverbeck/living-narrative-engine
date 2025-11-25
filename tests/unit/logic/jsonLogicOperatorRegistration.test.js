@@ -102,7 +102,7 @@ describe('JSON Logic Operator Registration', () => {
       const registered = customOperators.getRegisteredOperators();
 
       // Verify count matches known operators
-      expect(registered.size).toBe(16);
+      expect(registered.size).toBe(17);
     });
 
     it('should register expected operator names', () => {
@@ -137,6 +137,7 @@ describe('JSON Logic Operator Registration', () => {
         'is_hungry',
         'predicted_energy',
         'can_consume',
+        'hasFreeGrabbingAppendages',
       ];
 
       for (const op of expectedOperators) {

@@ -152,6 +152,18 @@
         }
       },
       "additionalProperties": false
+    },
+    "actionPurpose": {
+      "description": "Brief description of what kinds of actions this mod provides. Displayed in LLM prompts when actions are grouped by mod.",
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 200
+    },
+    "actionConsiderWhen": {
+      "description": "Guidance for LLM on when to consider using actions from this mod. Displayed in LLM prompts when actions are grouped by mod.",
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 200
     }
   },
   "required": ["id", "version", "name"],

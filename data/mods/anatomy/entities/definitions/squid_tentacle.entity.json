@@ -3,26 +3,31 @@
   "id": "anatomy:squid_tentacle",
   "description": "Common squid tentacle with medium size, long length and translucent-white coloring",
   "components": {
+    "anatomy:can_grab": {
+      "gripStrength": 0.8,
+      "heldItemId": null,
+      "locked": false
+    },
     "anatomy:part": {
       "subType": "tentacle"
     },
     "core:name": {
       "text": "tentacle"
     },
-    "descriptors:size_category": {
-      "size": "medium"
+    "descriptors:color_extended": {
+      "color": "translucent-white"
     },
     "descriptors:length_category": {
       "length": "long"
     },
-    "descriptors:texture": {
-      "texture": "suckered"
-    },
-    "descriptors:color_extended": {
-      "color": "translucent-white"
-    },
     "descriptors:shape_general": {
       "shape": "cylindrical"
+    },
+    "descriptors:size_category": {
+      "size": "medium"
+    },
+    "descriptors:texture": {
+      "texture": "suckered"
     }
   }
 }
