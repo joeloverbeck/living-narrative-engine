@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "name": "Music Performance System",
   "description": "Musical performance capabilities with instruments and emotional moods",
+  "actionPurpose": "Perform music on instruments with various techniques and set emotional moods for performances.",
+  "actionConsiderWhen": "Playing an instrument, setting a musical atmosphere, expressing emotions through music, or performing for others.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
   "dependencies": [

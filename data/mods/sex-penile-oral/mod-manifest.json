@@ -1,7 +1,13 @@
 {
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "sex-penile-oral",
   "version": "1.0.0",
-  "name": "sex-penile-oral",
+  "name": "Sex - Penile Oral",
+  "description": "Oral stimulation of the penis including licking, sucking, and blowjob actions.",
+  "actionPurpose": "Perform oral stimulation on a penis including teasing, licking, sucking, and managing oral penetration.",
+  "actionConsiderWhen": "Giving or receiving oral sex, teasing with breath, licking genitals, or performing a blowjob.",
+  "author": "Living Narrative Engine Team",
+  "gameVersion": ">=0.0.1",
   "dependencies": [
     {
       "id": "positioning",

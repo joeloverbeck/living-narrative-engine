@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "name": "Sex - Breastplay",
   "description": "Breast-focused intimacy actions and supporting logic split from the legacy sex module.",
+  "actionPurpose": "Engage in breast-focused intimacy including fondling, licking, sucking nipples, and lactation play.",
+  "actionConsiderWhen": "Engaging in breast play, stimulating nipples, pressing bodies together, or exploring lactation scenarios.",
   "author": "Living Narrative Engine Team",
   "gameVersion": ">=0.0.1",
   "dependencies": [

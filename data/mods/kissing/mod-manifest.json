@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "name": "Kissing - Romantic Mouth-Based Intimacy",
   "description": "All actions involving kissing and mouth-based romantic interactions. Explicitly romantic and requires mutual participation through state management.",
+  "actionPurpose": "Engage in romantic mouth-based intimacy from gentle pecks to passionate deep kisses and neck play.",
+  "actionConsiderWhen": "Expressing romantic desire, deepening intimacy, showing passionate attraction, or breaking from a kiss.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
   "dependencies": [

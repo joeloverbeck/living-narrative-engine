@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "name": "Metabolism System",
   "description": "Hunger, energy, and digestion system with fuel converters and consumable items",
+  "actionPurpose": "Manage hunger and energy through eating, drinking, and resting actions.",
+  "actionConsiderWhen": "Feeling hungry, needing energy, consuming food or beverages, or recovering stamina through rest.",
   "author": "Living Narrative Engine",
   "gameVersion": "0.0.1",
   "dependencies": [

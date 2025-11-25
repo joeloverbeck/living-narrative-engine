@@ -1,5 +1,7 @@
 # WEAHANREQFIL-002: Implement IsItemBeingGrabbedOperator
 
+**Status**: ✅ COMPLETED
+
 ## Summary
 
 Create a new JSON Logic operator `isItemBeingGrabbed` that checks whether an item is currently being held by an actor.
@@ -41,7 +43,7 @@ When filtering weapons for the `wield_threateningly` action, items already being
 ### Pattern Reference
 Follow the pattern established in `src/logic/operators/hasFreeGrabbingAppendagesOperator.js`:
 - Use `#entityManager` and `#logger` private fields
-- Use `resolveEntityPath()` from `src/logic/operators/utils/entityPathResolver.js`
+- Use `resolveEntityPath()` from `src/logic/utils/entityPathResolver.js`
 - Use `hasValidEntityId()` from same file
 - Import `getHeldItems` from `src/utils/grabbingUtils.js`
 - Use `#operatorName` for consistent logging
@@ -98,3 +100,32 @@ Create `tests/unit/logic/operators/isItemBeingGrabbedOperator.test.js` with:
 - ~180 lines of operator code (following existing pattern)
 - ~120 lines of tests
 - Single focused PR, easy to review
+
+---
+
+## Outcome
+
+### What Was Actually Changed vs Originally Planned
+
+**Ticket Corrections Made:**
+- Fixed incorrect path in ticket: `src/logic/operators/utils/entityPathResolver.js` → `src/logic/utils/entityPathResolver.js`
+
+**Implementation Delivered:**
+- Created `src/logic/operators/isItemBeingGrabbedOperator.js` (~215 lines) - slightly larger than estimated due to comprehensive parameter resolution logic
+- Created `tests/unit/logic/operators/isItemBeingGrabbedOperator.test.js` (~380 lines) - significantly more tests than estimated (35 tests vs ~15 estimated)
+
+**Additional Tests Beyond Requirements:**
+- Added tests for multiple held items scenario
+- Added state immutability verification test
+- Added tests for null/undefined entity IDs
+- Added complex path resolution tests
+- Added error handling tests
+
+**All Invariants Verified:**
+- ✅ Operator does not modify entity state (tested)
+- ✅ Operator always returns boolean (never throws)
+- ✅ All 564 existing operator tests pass
+- ✅ `grabbingUtils.js` exports unchanged (43 tests pass)
+- ✅ No existing files modified (only new files created)
+
+**Completion Date:** 2025-11-25

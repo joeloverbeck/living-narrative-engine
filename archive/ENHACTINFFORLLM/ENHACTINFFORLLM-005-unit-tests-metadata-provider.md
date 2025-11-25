@@ -1,13 +1,17 @@
 # ENHACTINFFORLLM-005: Unit Tests for ModActionMetadataProvider
 
+## Status: COMPLETED ✅
+
 ## Summary
 Create comprehensive unit tests for the ModActionMetadataProvider service.
 
 ## Prerequisites
-- ENHACTINFFORLLM-002 must be completed (service implementation)
+- ENHACTINFFORLLM-002 must be completed (service implementation) ✅
 
 ## Files to Touch
-- `tests/unit/prompting/services/modActionMetadataProvider.test.js` (NEW FILE)
+- `tests/unit/prompting/modActionMetadataProvider.test.js` (NEW FILE)
+
+> **Note**: The original ticket incorrectly specified `tests/unit/prompting/services/` but the service is at `src/prompting/modActionMetadataProvider.js` (not in a `services/` subfolder). Test file location updated to mirror the source structure.
 
 ## Out of Scope
 - DO NOT modify the service implementation
@@ -17,13 +21,13 @@ Create comprehensive unit tests for the ModActionMetadataProvider service.
 ## Implementation Details
 
 ### Directory Structure
-Create directory if needed: `tests/unit/prompting/services/`
+Tests go in: `tests/unit/prompting/` (mirroring source location)
 
 ### Test File Structure
 
 ```javascript
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { ModActionMetadataProvider } from '../../../../src/prompting/services/modActionMetadataProvider.js';
+import { ModActionMetadataProvider } from '../../../src/prompting/modActionMetadataProvider.js';
 
 describe('ModActionMetadataProvider', () => {
   let provider;
@@ -199,18 +203,44 @@ describe('ModActionMetadataProvider', () => {
 ## Acceptance Criteria
 
 ### Tests That Must Pass
-- `npm run test:unit -- tests/unit/prompting/services/modActionMetadataProvider.test.js` passes
-- All 15 test cases pass
-- Coverage > 90% for the service file
+- `npm run test:unit -- tests/unit/prompting/modActionMetadataProvider.test.js` passes ✅
+- All 14 test cases pass ✅
+- Coverage > 90% for the service file ✅ (100% achieved)
 
 ### Invariants That Must Remain True
-1. Tests use `@jest/globals` imports consistently
-2. Tests follow AAA pattern (Arrange, Act, Assert)
-3. Mock objects created fresh in `beforeEach`
-4. Tests are independent and can run in any order
-5. Test file location mirrors source location
+1. Tests use `@jest/globals` imports consistently ✅
+2. Tests follow AAA pattern (Arrange, Act, Assert) ✅
+3. Mock objects created fresh in `beforeEach` ✅
+4. Tests are independent and can run in any order ✅
+5. Test file location mirrors source location ✅
 
 ## Verification Steps
-1. Run `npm run test:unit -- tests/unit/prompting/services/modActionMetadataProvider.test.js --verbose`
-2. Run `npm run test:unit -- tests/unit/prompting/services/modActionMetadataProvider.test.js --coverage`
-3. Verify all test names are descriptive and follow "should..." convention
+1. Run `npm run test:unit -- tests/unit/prompting/modActionMetadataProvider.test.js --verbose` ✅
+2. Run `npm run test:unit -- tests/unit/prompting/modActionMetadataProvider.test.js --coverage` ✅
+3. Verify all test names are descriptive and follow "should..." convention ✅
+
+---
+
+## Outcome
+
+### What was changed vs originally planned
+
+**Originally Planned:**
+- Create test file at `tests/unit/prompting/services/modActionMetadataProvider.test.js`
+- Import from `../../../../src/prompting/services/modActionMetadataProvider.js`
+- 15 test cases
+
+**Actually Implemented:**
+- Created test file at `tests/unit/prompting/modActionMetadataProvider.test.js` (corrected path - no `services/` subfolder since the source file is at `src/prompting/modActionMetadataProvider.js`)
+- Import from `../../../src/prompting/modActionMetadataProvider.js`
+- 14 test cases (original had a minor count error)
+
+**Discrepancies Corrected in Ticket:**
+1. File path updated to match actual source location (no `services/` folder)
+2. Import path corrected accordingly
+3. Test count corrected to 14 (actual)
+
+**Results:**
+- All 14 tests pass
+- 100% code coverage on `src/prompting/modActionMetadataProvider.js`
+- No ESLint errors

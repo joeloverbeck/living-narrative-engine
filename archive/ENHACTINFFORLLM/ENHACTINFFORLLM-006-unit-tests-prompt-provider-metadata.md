@@ -18,8 +18,15 @@ Create unit tests specifically for the action metadata formatting functionality 
 
 ### Test File Structure
 
+**Note**: The mock structures below were corrected to match the actual interface requirements
+discovered during implementation. Key corrections:
+- `promptStaticContentService` method names match the actual interface
+- `gameStateValidationService` uses `validate` method
+- `characterDataXmlBuilder` uses `buildCharacterDataXml` method
+- `actionCategorizationService` includes all required methods
+
 ```javascript
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, test, expect, beforeEach, jest } from '@jest/globals';
 import { AIPromptContentProvider } from '../../../src/prompting/AIPromptContentProvider.js';
 
 describe('AIPromptContentProvider - Action Metadata Formatting', () => {
@@ -40,29 +47,35 @@ describe('AIPromptContentProvider - Action Metadata Formatting', () => {
       info: jest.fn(),
     };
 
+    // Note: Method names must match actual IPromptStaticContentService interface
     mockPromptStaticContentService = {
-      getTaskDefinition: jest.fn().mockReturnValue(''),
-      getContentPolicy: jest.fn().mockReturnValue(''),
+      getCoreTaskDescriptionText: jest.fn().mockReturnValue(''),
+      getNc21ContentPolicyText: jest.fn().mockReturnValue(''),
       getCharacterPortrayalGuidelines: jest.fn().mockReturnValue(''),
-      getFinalInstructions: jest.fn().mockReturnValue(''),
+      getFinalLlmInstructionText: jest.fn().mockReturnValue(''),
     };
 
     mockPerceptionLogFormatter = {
       format: jest.fn().mockReturnValue([]),
     };
 
+    // Note: Uses single `validate` method per actual interface
     mockGameStateValidationService = {
-      validateEntity: jest.fn().mockReturnValue({ isValid: true }),
-      validateActorData: jest.fn().mockReturnValue({ isValid: true }),
+      validate: jest.fn().mockReturnValue({ isValid: true, errorContent: null }),
     };
 
+    // Note: All required methods from IActionCategorizationService
     mockActionCategorizationService = {
+      extractNamespace: jest.fn((actionId) => actionId.split(':')[0] || 'unknown'),
+      shouldUseGrouping: jest.fn(() => true),
       groupActionsByNamespace: jest.fn(),
+      getSortedNamespaces: jest.fn(() => []),
       formatNamespaceDisplayName: jest.fn((ns) => ns.toUpperCase()),
     };
 
+    // Note: Method is `buildCharacterDataXml` not `build`
     mockCharacterDataXmlBuilder = {
-      build: jest.fn().mockReturnValue('<character/>'),
+      buildCharacterDataXml: jest.fn().mockReturnValue('<character/>'),
     };
 
     mockModActionMetadataProvider = {
@@ -81,7 +94,7 @@ describe('AIPromptContentProvider - Action Metadata Formatting', () => {
   });
 
   describe('_formatCategorizedActions with metadata', () => {
-    it('should include purpose and consider when in formatted output', () => {
+    test('should include purpose and consider when in formatted output', () => {
       const actions = [
         { id: 'positioning:sit_down', command: 'sit down', description: 'Take a seat' },
       ];
@@ -99,7 +112,7 @@ describe('AIPromptContentProvider - Action Metadata Formatting', () => {
       expect(result).toContain('**Consider when:** Getting closer');
     });
 
-    it('should handle missing metadata gracefully (no Purpose/Consider lines)', () => {
+    test('should handle missing metadata gracefully (no Purpose/Consider lines)', () => {
       const actions = [
         { id: 'core:wait', command: 'wait', description: 'Wait' },
       ];
@@ -114,7 +127,7 @@ describe('AIPromptContentProvider - Action Metadata Formatting', () => {
       expect(result).toContain('### CORE Actions');
     });
 
-    it('should handle partial metadata (only purpose)', () => {
+    test('should handle partial metadata (only purpose)', () => {
       const actions = [
         { id: 'items:pickup', command: 'pick up', description: 'Pick up item' },
       ];
@@ -132,7 +145,7 @@ describe('AIPromptContentProvider - Action Metadata Formatting', () => {
       expect(result).not.toContain('**Consider when:**');
     });
 
-    it('should handle partial metadata (only consider when)', () => {
+    test('should handle partial metadata (only consider when)', () => {
       const actions = [
         { id: 'affection:hug', command: 'hug', description: 'Hug someone' },
       ];
@@ -150,10 +163,11 @@ describe('AIPromptContentProvider - Action Metadata Formatting', () => {
       expect(result).toContain('**Consider when:** Showing tenderness.');
     });
 
-    it('should maintain backward compatibility when provider returns null', () => {
+    test('should maintain backward compatibility when provider returns null', () => {
+      // Note: Use `commandString` and `index` as required by _formatSingleAction
       const actions = [
-        { id: 'test:action1', command: 'action1', description: 'Test action' },
-        { id: 'test:action2', command: 'action2', description: 'Another test' },
+        { id: 'test:action1', commandString: 'action1', description: 'Test action', index: 0 },
+        { id: 'test:action2', commandString: 'action2', description: 'Another test', index: 1 },
       ];
       const groupedMap = new Map([['test', actions]]);
       mockActionCategorizationService.groupActionsByNamespace.mockReturnValue(groupedMap);
@@ -162,11 +176,11 @@ describe('AIPromptContentProvider - Action Metadata Formatting', () => {
       const result = provider._formatCategorizedActions(actions);
 
       expect(result).toContain('### TEST Actions');
-      expect(result).toContain('action1');
-      expect(result).toContain('action2');
+      expect(result).toContain('Command: "action1"');
+      expect(result).toContain('Command: "action2"');
     });
 
-    it('should include action count in header', () => {
+    test('should include action count in header', () => {
       const actions = [
         { id: 'positioning:sit', command: 'sit', description: 'Sit' },
         { id: 'positioning:stand', command: 'stand', description: 'Stand' },
@@ -181,7 +195,7 @@ describe('AIPromptContentProvider - Action Metadata Formatting', () => {
       expect(result).toContain('(3 actions)');
     });
 
-    it('should format multiple namespaces with different metadata states', () => {
+    test('should format multiple namespaces with different metadata states', () => {
       const positioningActions = [{ id: 'positioning:sit', command: 'sit', description: 'Sit' }];
       const coreActions = [{ id: 'core:wait', command: 'wait', description: 'Wait' }];
       const allActions = [...positioningActions, ...coreActions];
@@ -210,7 +224,7 @@ describe('AIPromptContentProvider - Action Metadata Formatting', () => {
   });
 
   describe('constructor validation', () => {
-    it('should throw when modActionMetadataProvider is missing', () => {
+    test('should throw when modActionMetadataProvider is missing', () => {
       expect(() => new AIPromptContentProvider({
         logger: mockLogger,
         promptStaticContentService: mockPromptStaticContentService,
@@ -222,7 +236,7 @@ describe('AIPromptContentProvider - Action Metadata Formatting', () => {
       })).toThrow();
     });
 
-    it('should throw when modActionMetadataProvider lacks required method', () => {
+    test('should throw when modActionMetadataProvider lacks required method', () => {
       expect(() => new AIPromptContentProvider({
         logger: mockLogger,
         promptStaticContentService: mockPromptStaticContentService,
@@ -237,12 +251,16 @@ describe('AIPromptContentProvider - Action Metadata Formatting', () => {
 });
 ```
 
+## Status
+
+**COMPLETED** - 2025-01-25
+
 ## Acceptance Criteria
 
 ### Tests That Must Pass
-- `npm run test:unit -- tests/unit/prompting/AIPromptContentProvider.actionMetadata.test.js` passes
-- All 9 test cases pass
-- No regression in existing AIPromptContentProvider tests
+- `npm run test:unit -- tests/unit/prompting/AIPromptContentProvider.actionMetadata.test.js` passes ✅
+- All 11 test cases pass ✅ (2 additional edge case tests added during implementation)
+- No regression in existing AIPromptContentProvider tests ✅ (124 total tests pass)
 
 ### Invariants That Must Remain True
 1. Tests are isolated from other AIPromptContentProvider tests
@@ -253,5 +271,53 @@ describe('AIPromptContentProvider - Action Metadata Formatting', () => {
 
 ## Verification Steps
 1. Run `npm run test:unit -- tests/unit/prompting/AIPromptContentProvider.actionMetadata.test.js --verbose`
-2. Run `npm run test:unit -- --testPathPattern="AIPromptContentProvider"` to verify no regression
+2. Run `npm run test:unit -- --testPathPatterns="AIPromptContentProvider"` to verify no regression
 3. Verify test file follows project conventions
+
+## Outcome
+
+### What was actually changed vs originally planned
+
+**Originally Planned (9 tests)**:
+- Tests for `_formatCategorizedActions` with metadata (7 tests)
+- Constructor validation tests (2 tests)
+
+**Actually Implemented (11 tests)**:
+- All 9 originally planned tests ✅
+- 2 additional edge case tests:
+  - `should handle empty actionPurpose string as missing` - tests empty string handling
+  - `should handle empty actionConsiderWhen string as missing` - tests empty string handling
+
+### Discrepancies corrected in ticket
+
+Before implementation, the following assumptions in the ticket template were corrected:
+
+1. **Mock method names for `promptStaticContentService`**:
+   - Old: `getTaskDefinition`, `getContentPolicy`, `getFinalInstructions`
+   - Corrected: `getCoreTaskDescriptionText`, `getNc21ContentPolicyText`, `getFinalLlmInstructionText`
+
+2. **Mock method for `gameStateValidationService`**:
+   - Old: `validateEntity`, `validateActorData`
+   - Corrected: `validate` (single method)
+
+3. **Mock method for `characterDataXmlBuilder`**:
+   - Old: `build`
+   - Corrected: `buildCharacterDataXml`
+
+4. **Missing methods in `actionCategorizationService` mock**:
+   - Added: `extractNamespace`, `shouldUseGrouping`, `getSortedNamespaces`
+
+5. **Action object properties**:
+   - Old: `command` property
+   - Corrected: `commandString` and `index` properties
+
+6. **Test keyword convention**:
+   - Old: `it()`
+   - Corrected: `test()` (project convention)
+
+### Files created
+- `tests/unit/prompting/AIPromptContentProvider.actionMetadata.test.js` (NEW)
+
+### Test results
+- 11 tests pass
+- 124 total AIPromptContentProvider tests pass (no regression)

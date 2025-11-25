@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "name": "Ballet",
   "description": "Classical ballet movements and techniques for graceful performers",
+  "actionPurpose": "Perform classical ballet techniques including turns, jumps, positions, and graceful movements.",
+  "actionConsiderWhen": "Demonstrating dance skill, expressing artistry through movement, practicing ballet, or performing for others.",
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
   "dependencies": [

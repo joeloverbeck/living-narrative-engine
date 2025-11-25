@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "name": "Hand Holding",
   "description": "Sophisticated state-based hand-holding interactions with bidirectional relationship tracking. Includes actions for establishing, enhancing, and breaking hand-holding state.",
+  "actionPurpose": "Establish, enhance, or break hand-holding connections with others through tender gestures.",
+  "actionConsiderWhen": "Seeking connection, offering comfort or reassurance, initiating romantic touch, or ending physical closeness.",
   "author": "Living Narrative Engine Team",
   "gameVersion": ">=0.0.1",
   "dependencies": [

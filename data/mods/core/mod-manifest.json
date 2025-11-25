@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "name": "core",
   "description": "Contains the essential base data and definitions required to run the Living Narrative Engine engine.",
+  "actionPurpose": "Pass time without taking significant action, allowing events to unfold.",
+  "actionConsiderWhen": "Choosing to observe rather than act, pausing to think, waiting for someone else to act first, or when no other action is appropriate.",
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
   "content": {
@@ -189,21 +191,11 @@
     ],
     "scopes": [
       "actors_in_location.scope",
-      "environment.scope",
-      "known_armament_items.scope",
-      "known_nourishing_items.scope"
+      "environment.scope"
     ],
     "recipes": [],
     "goals": [],
-    "tasks": [
-      "arm_self.task.json",
-      "consume_nourishing_item.task.json"
-    ],
-    "refinement-methods": [
-      "arm_self/ready_inventory_weapon.refinement.json",
-      "arm_self/retrieve_and_ready.refinement.json",
-      "consume_nourishing_item/collect_and_consume.refinement.json",
-      "consume_nourishing_item/consume_from_inventory.refinement.json"
-    ]
+    "tasks": [],
+    "refinement-methods": []
   }
 }

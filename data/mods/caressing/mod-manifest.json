@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "name": "Caressing - Sensual Touch Actions",
   "description": "Flirtatious and sensual touching that creates or escalates sexual tension. More intimate than affection, distinct from kissing through touch-based interaction.",
+  "actionPurpose": "Engage in sensual, flirtatious touching that builds or escalates sexual tension through intimate caresses.",
+  "actionConsiderWhen": "Escalating romantic tension, initiating physical intimacy, expressing desire through touch, or deepening a sensual encounter.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
   "dependencies": [

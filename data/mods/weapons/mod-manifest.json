@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "name": "Weapons System",
   "description": "Firearms, ammunition, reloading, and shooting mechanics. Includes weapons, ammunition containers, and combat actions for tactical gameplay scenarios.",
+  "actionPurpose": "Wield and use weapons in threatening or combat situations.",
+  "actionConsiderWhen": "Threatening someone with a weapon, intimidating with firearms, or displaying armed aggression.",
   "author": "Living Narrative Engine",
   "gameVersion": "0.0.1",
   "dependencies": [
