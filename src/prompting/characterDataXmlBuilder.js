@@ -87,11 +87,9 @@ class CharacterDataXmlBuilder {
 
     // Section 1: Identity
     const identitySection = this.#buildIdentitySection(characterData);
-    if (identitySection) {
-      parts.push('');
-      parts.push(this.#buildSectionComment(1, 'ESSENTIAL IDENTITY', 'WHO YOU ARE', 'These define your fundamental self - read and internalize deeply.'));
-      parts.push(identitySection);
-    }
+    parts.push('');
+    parts.push(this.#buildSectionComment(1, 'ESSENTIAL IDENTITY', 'WHO YOU ARE', 'These define your fundamental self - read and internalize deeply.'));
+    parts.push(identitySection);
 
     // Section 2: Core Self
     const coreSelfSection = this.#buildCoreSelfSection(characterData);
@@ -320,7 +318,7 @@ class CharacterDataXmlBuilder {
    * @returns {string} Speech patterns section XML or empty string
    */
   #buildSpeechPatternsSection(patterns) {
-    if (!patterns || !Array.isArray(patterns) || patterns.length === 0) {
+    if (!patterns || !Array.isArray(patterns)) {
       return '';
     }
 
@@ -357,10 +355,6 @@ class CharacterDataXmlBuilder {
    * @returns {'string'|'object'|'mixed'} Detected format type
    */
   #detectPatternFormat(patterns) {
-    if (!patterns || patterns.length === 0) {
-      return 'string';
-    }
-
     const hasStrings = patterns.some((p) => typeof p === 'string');
     const hasObjects = patterns.some((p) => typeof p === 'object' && p !== null);
 
@@ -380,10 +374,6 @@ class CharacterDataXmlBuilder {
    */
   #formatStructuredPatterns(patterns) {
     const objectPatterns = patterns.filter((p) => typeof p === 'object' && p !== null);
-
-    if (objectPatterns.length === 0) {
-      return '';
-    }
 
     const lines = [];
 
