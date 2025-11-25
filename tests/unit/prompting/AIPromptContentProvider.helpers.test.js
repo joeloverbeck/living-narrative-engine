@@ -31,6 +31,10 @@ const makeDummyActionCategorizationService = () => ({
   formatNamespaceDisplayName: jest.fn((namespace) => namespace),
 });
 
+const makeDummyCharacterDataXmlBuilder = () => ({
+  buildCharacterDataXml: jest.fn(() => '<character_data>Mock XML</character_data>'),
+});
+
 describe('AIPromptContentProvider helper methods', () => {
   let provider;
   let logger;
@@ -43,6 +47,7 @@ describe('AIPromptContentProvider helper methods', () => {
       perceptionLogFormatter: makeDummyPerceptionLogFormatter(),
       gameStateValidationService: makeDummyGameStateValidationService(),
       actionCategorizationService: makeDummyActionCategorizationService(),
+      characterDataXmlBuilder: makeDummyCharacterDataXmlBuilder(),
     });
   });
 

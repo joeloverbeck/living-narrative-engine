@@ -1,5 +1,7 @@
 # APPGRAOCCSYS-002: Create anatomy:requires_grabbing Component Schema
 
+**Status**: ✅ COMPLETED (2025-11-25)
+
 **Originating Document**: `brainstorming/appendage-grabbing-occupation-system.md`
 
 ## Summary
@@ -90,89 +92,104 @@ Create the `anatomy:requires_grabbing` component schema that specifies how many 
 
 ## Test File Template
 
+**Note**: The test follows the established pattern from `can_grab.component.test.js`, using direct AJV imports and schema compilation rather than the `testBed` utility (which does not provide schema validation methods).
+
 ```javascript
 // tests/unit/mods/anatomy/components/requires_grabbing.component.test.js
-import { describe, it, expect, beforeAll } from '@jest/globals';
-import { createTestBed } from '../../../common/testBed.js';
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
+import { beforeAll, describe, expect, test } from '@jest/globals';
 
-describe('anatomy:requires_grabbing component schema', () => {
-  let testBed;
-  let validator;
+// --- Schemas to test against ---
+import componentSchema from '../../../../../data/schemas/component.schema.json';
+import commonSchema from '../../../../../data/schemas/common.schema.json';
 
-  beforeAll(async () => {
-    testBed = await createTestBed();
-    validator = testBed.getSchemaValidator();
-    await testBed.loadSchemas();
+// --- Component definition file to validate ---
+import requiresGrabbingComponent from '../../../../../data/mods/anatomy/components/requires_grabbing.component.json';
+
+describe('anatomy:requires_grabbing Component Definition', () => {
+  let validateComponentDefinition;
+  let validateComponentData;
+
+  beforeAll(() => {
+    const ajv = new Ajv({
+      schemas: [commonSchema],
+      strict: true,
+      allErrors: true,
+    });
+    addFormats(ajv);
+
+    validateComponentDefinition = ajv.compile(componentSchema);
+    validateComponentData = ajv.compile(requiresGrabbingComponent.dataSchema);
   });
 
-  describe('valid data', () => {
-    it('should validate one-handed item', () => {
+  describe('Schema Validation', () => {
+    test('should conform to the component definition schema', () => {
+      const ok = validateComponentDefinition(requiresGrabbingComponent);
+      expect(ok).toBe(true);
+    });
+
+    test('should have correct component ID', () => {
+      expect(requiresGrabbingComponent.id).toBe('anatomy:requires_grabbing');
+    });
+  });
+
+  describe('Valid Component Data', () => {
+    test('should validate one-handed item', () => {
       const data = { handsRequired: 1 };
-      const result = validator.validate('anatomy:requires_grabbing', data);
-      expect(result.isValid).toBe(true);
+      expect(validateComponentData(data)).toBe(true);
     });
 
-    it('should validate two-handed item', () => {
+    test('should validate two-handed item', () => {
       const data = { handsRequired: 2 };
-      const result = validator.validate('anatomy:requires_grabbing', data);
-      expect(result.isValid).toBe(true);
+      expect(validateComponentData(data)).toBe(true);
     });
 
-    it('should validate worn item (zero hands)', () => {
+    test('should validate worn item (zero hands)', () => {
       const data = { handsRequired: 0 };
-      const result = validator.validate('anatomy:requires_grabbing', data);
-      expect(result.isValid).toBe(true);
+      expect(validateComponentData(data)).toBe(true);
     });
 
-    it('should validate with minGripStrength', () => {
+    test('should validate with minGripStrength', () => {
       const data = { handsRequired: 2, minGripStrength: 2.0 };
-      const result = validator.validate('anatomy:requires_grabbing', data);
-      expect(result.isValid).toBe(true);
+      expect(validateComponentData(data)).toBe(true);
     });
 
-    it('should validate heavy item requiring many hands', () => {
-      // e.g., a battering ram requiring 4 appendages
+    test('should validate heavy item requiring many hands', () => {
       const data = { handsRequired: 4, minGripStrength: 4.0 };
-      const result = validator.validate('anatomy:requires_grabbing', data);
-      expect(result.isValid).toBe(true);
+      expect(validateComponentData(data)).toBe(true);
     });
   });
 
-  describe('invalid data', () => {
-    it('should reject missing handsRequired field', () => {
+  describe('Invalid Component Data', () => {
+    test('should reject missing handsRequired field', () => {
       const data = { minGripStrength: 1.0 };
-      const result = validator.validate('anatomy:requires_grabbing', data);
-      expect(result.isValid).toBe(false);
+      expect(validateComponentData(data)).toBe(false);
     });
 
-    it('should reject non-integer handsRequired', () => {
+    test('should reject non-integer handsRequired', () => {
       const data = { handsRequired: 1.5 };
-      const result = validator.validate('anatomy:requires_grabbing', data);
-      expect(result.isValid).toBe(false);
+      expect(validateComponentData(data)).toBe(false);
     });
 
-    it('should reject string handsRequired', () => {
+    test('should reject string handsRequired', () => {
       const data = { handsRequired: '1' };
-      const result = validator.validate('anatomy:requires_grabbing', data);
-      expect(result.isValid).toBe(false);
+      expect(validateComponentData(data)).toBe(false);
     });
 
-    it('should reject negative handsRequired', () => {
+    test('should reject negative handsRequired', () => {
       const data = { handsRequired: -1 };
-      const result = validator.validate('anatomy:requires_grabbing', data);
-      expect(result.isValid).toBe(false);
+      expect(validateComponentData(data)).toBe(false);
     });
 
-    it('should reject negative minGripStrength', () => {
+    test('should reject negative minGripStrength', () => {
       const data = { handsRequired: 1, minGripStrength: -0.5 };
-      const result = validator.validate('anatomy:requires_grabbing', data);
-      expect(result.isValid).toBe(false);
+      expect(validateComponentData(data)).toBe(false);
     });
 
-    it('should reject additional properties', () => {
+    test('should reject additional properties', () => {
       const data = { handsRequired: 1, extraField: true };
-      const result = validator.validate('anatomy:requires_grabbing', data);
-      expect(result.isValid).toBe(false);
+      expect(validateComponentData(data)).toBe(false);
     });
   });
 });
@@ -205,3 +222,32 @@ npm run test:unit -- --testPathPattern="anatomy"
 | Lute | 2 | - | Two-handed instrument |
 | Ring | 0 | - | Worn, not held |
 | Torch | 1 | - | One-handed |
+
+## Outcome
+
+### What Was Changed (vs. Originally Planned)
+
+**Ticket Corrections Applied:**
+- The test file template was corrected to match the actual established pattern from `can_grab.component.test.js`. The original template incorrectly assumed `createTestBed()` provides `getSchemaValidator()` and `loadSchemas()` methods—these don't exist. The actual pattern uses direct AJV imports and schema compilation.
+
+**Files Created (as planned):**
+1. `data/mods/anatomy/components/requires_grabbing.component.json` — Component schema exactly as specified
+2. `tests/unit/mods/anatomy/components/requires_grabbing.component.test.js` — Comprehensive test suite with 34 tests
+
+**Files Modified (as planned):**
+1. `data/mods/anatomy/mod-manifest.json` — Added `requires_grabbing.component.json` to components array
+
+**Test Results:**
+- All 34 new tests pass
+- All 233 anatomy-related test suites pass (4706 tests total)
+- No regressions introduced
+
+**Test Coverage Added:**
+| Test Category | Tests Added | Rationale |
+|---------------|-------------|-----------|
+| Schema Validation | 4 | Validates component definition conformance |
+| Valid Component Data | 8 | Tests all valid input combinations including edge cases |
+| Invalid Component Data | 10 | Tests all rejection scenarios specified + extras |
+| Schema Structure | 7 | Verifies schema properties and constraints |
+| Required Fields | 1 | Ensures component has required schema fields |
+| Edge Cases | 4 | Tests component definition mutation scenarios |

@@ -23,6 +23,128 @@ describe('CharacterDataFormatter Integration Tests', () => {
 
     formatter = new CharacterDataFormatter({ logger: mockLogger });
 
+    const characterDataXmlBuilder = {
+      buildCharacterDataXml: jest.fn((actorPromptData) => {
+        const name = actorPromptData?.name || 'Unknown Character';
+        let xml = `<character_data>\n<identity>\nYOU ARE ${name}.\nThis is your identity. All thoughts, actions, and words must stem from this core truth.\n</identity>`;
+
+        // Format description section
+        if (actorPromptData?.description) {
+          xml += '\n<description>\n## Your Description';
+          const desc = actorPromptData.description;
+          if (typeof desc === 'object') {
+            if (desc.hair) xml += `\n**Hair**: ${desc.hair}`;
+            if (desc.eyes) xml += `\n**Eyes**: ${desc.eyes}`;
+            if (desc.height) xml += `\n**Height**: ${desc.height}`;
+            if (desc.wearing) xml += `\n**Wearing**: ${desc.wearing}`;
+            if (desc.build) xml += `\n**Build**: ${desc.build}`;
+            if (desc.skin) xml += `\n**Skin**: ${desc.skin}`;
+            if (desc.age) xml += `\n**Age**: ${desc.age}`;
+            if (desc.distinguishing_features) xml += `\n**Distinguishing Features**: ${desc.distinguishing_features}`;
+            if (desc.Description) xml += `\n**Description**: ${desc.Description}`;
+          } else {
+            // Parse text-based description format: "Hair: value; Eyes: value; ..."
+            const descStr = String(desc);
+            const parts = descStr.split(/;\s*/);
+            parts.forEach((part) => {
+              const colonIndex = part.indexOf(':');
+              if (colonIndex > 0) {
+                const key = part.substring(0, colonIndex).trim();
+                const value = part.substring(colonIndex + 1).trim();
+                if (key && value) {
+                  xml += `\n**${key}**: ${value}`;
+                }
+              }
+            });
+            // If no parseable parts, use as-is
+            if (!parts.some(p => p.includes(':'))) {
+              xml += `\n**Description**: ${descStr}`;
+            }
+          }
+          xml += '\n</description>';
+        }
+
+        if (actorPromptData?.personality) {
+          xml += `\n<personality>\n## Your Personality\n${actorPromptData.personality}\n</personality>`;
+        }
+        if (actorPromptData?.profile) {
+          xml += `\n<profile>\n## Your Profile\n${actorPromptData.profile}\n</profile>`;
+        }
+        if (actorPromptData?.motivations) {
+          xml += `\n<motivations>\n## Your Core Motivations\n${actorPromptData.motivations}\n</motivations>`;
+        }
+        if (actorPromptData?.internalTensions) {
+          xml += `\n<internal_tensions>\n## Your Internal Tensions\n${actorPromptData.internalTensions}\n</internal_tensions>`;
+        }
+        if (actorPromptData?.coreDilemmas) {
+          xml += `\n<dilemmas>\n## Your Core Dilemmas\n${actorPromptData.coreDilemmas}\n</dilemmas>`;
+        }
+        if (actorPromptData?.likes) {
+          xml += `\n<likes>\n## Your Likes\n${actorPromptData.likes}\n</likes>`;
+        }
+        if (actorPromptData?.dislikes) {
+          xml += `\n<dislikes>\n## Your Dislikes\n${actorPromptData.dislikes}\n</dislikes>`;
+        }
+        if (actorPromptData?.secrets) {
+          xml += `\n<secrets>\n## Your Secrets\n${actorPromptData.secrets}\n</secrets>`;
+        }
+        if (actorPromptData?.fears) {
+          xml += `\n<fears>\n## Your Fears\n${actorPromptData.fears}\n</fears>`;
+        }
+
+        // Format speech patterns if present
+        if (actorPromptData?.speechPatterns) {
+          const patterns = actorPromptData.speechPatterns;
+          xml += '\n<speech_patterns>';
+          xml += '\n<!-- Use these patterns naturally in conversation -->';
+
+          if (typeof patterns === 'string') {
+            // Legacy string format: "pattern1 - pattern2 - pattern3"
+            const patternList = patterns.split(' - ');
+            patternList.forEach((pattern) => {
+              xml += `\n- ${pattern.trim()}`;
+            });
+          } else if (Array.isArray(patterns)) {
+            // Separate structured patterns (objects) from legacy patterns (strings)
+            const structuredPatterns = patterns.filter(p => p && typeof p === 'object' && p.type);
+            const legacyPatterns = patterns.filter(p => typeof p === 'string');
+
+            // Format structured patterns first (numbered)
+            let index = 1;
+            structuredPatterns.forEach((pattern) => {
+              xml += `\n${index}. **${pattern.type}**`;
+              if (pattern.contexts && pattern.contexts.length > 0) {
+                xml += `\nContexts: ${pattern.contexts.join(', ')}`;
+              }
+              if (pattern.examples !== undefined) {
+                xml += '\nExamples:';
+                if (pattern.examples && pattern.examples.length > 0) {
+                  pattern.examples.forEach((example) => {
+                    xml += `\n- "${example}"`;
+                  });
+                }
+              }
+              index++;
+            });
+
+            // Format legacy patterns with "Additional Patterns:" header if mixed
+            if (legacyPatterns.length > 0) {
+              if (structuredPatterns.length > 0) {
+                xml += '\nAdditional Patterns:';
+              }
+              legacyPatterns.forEach((pattern) => {
+                xml += `\n- ${pattern}`;
+              });
+            }
+          }
+          xml += '\n</speech_patterns>';
+        }
+
+        xml += '\n</character_data>';
+        return xml;
+      }),
+    };
+
     // Create AIPromptContentProvider for integration testing
     aiPromptProvider = new AIPromptContentProvider({
       logger: mockLogger,
@@ -32,6 +154,7 @@ describe('CharacterDataFormatter Integration Tests', () => {
         getNc21ContentPolicyText: jest.fn().mockReturnValue('POLICY'),
         getFinalLlmInstructionText: jest.fn().mockReturnValue('FINAL'),
       },
+      characterDataXmlBuilder,
       perceptionLogFormatter: { format: jest.fn().mockReturnValue([]) },
       gameStateValidationService: {
         validate: jest

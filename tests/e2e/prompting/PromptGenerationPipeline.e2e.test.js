@@ -323,7 +323,7 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
       expect(sections.thoughts).toContain('The innkeeper seems trustworthy');
     });
 
-    test('should generate character persona with markdown formatting', async () => {
+    test('should generate character persona with XML formatting', async () => {
       // Arrange
       const aiActor = testActors.aiActor;
       const turnContext = testBed.createTestTurnContext();
@@ -336,24 +336,23 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
         availableActions
       );
 
-      // Assert - Verify markdown structure in character persona
+      // Assert - Verify XML structure in character persona
       expect(prompt).toMatch(
-        /<character_persona>[\s\S]*## Your Description[\s\S]*<\/character_persona>/
+        /<character_persona>[\s\S]*<character_data>[\s\S]*<\/character_persona>/
       );
-      expect(prompt).toMatch(/\*\*[^*]+\*\*:/); // Bold formatting for attributes
 
       // Extract character persona section for detailed validation
       const sections = testBed.parsePromptSections(prompt);
       const personaSection = sections.character_persona;
 
-      // Verify specific markdown elements that should exist for the test character
-      expect(personaSection).toContain('YOU ARE Elara the Bard.');
-      expect(personaSection).toContain('## Your Description');
-      expect(personaSection).toMatch(/\*\*\w+\*\*:/); // Bold attribute labels (e.g., **Description**:)
+      // Verify XML structure elements for character identity
+      expect(personaSection).toMatch(
+        /<identity>[\s\S]*<name>[\s\S]*<\/name>[\s\S]*<\/identity>/
+      );
+      expect(personaSection).toContain('Elara the Bard');
 
-      // Since the test character may not have all sections, just verify the structure
-      // Check that the character persona section uses markdown formatting
-      expect(personaSection).toMatch(/^##\s+/m); // Contains markdown headers
+      // Verify decorated comments exist (for LLM attention priming)
+      expect(personaSection).toMatch(/<!--[\s\S]*IDENTITY[\s\S]*-->/);
     });
   }); // End Content Processing
 

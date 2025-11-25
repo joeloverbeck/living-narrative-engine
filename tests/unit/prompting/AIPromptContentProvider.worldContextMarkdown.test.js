@@ -59,6 +59,13 @@ const mockActionCategorizationServiceFn = () => ({
   formatNamespaceDisplayName: jest.fn((namespace) => namespace),
 });
 
+/**
+ * @returns {jest.Mocked<any>}
+ */
+const mockCharacterDataXmlBuilderFn = () => ({
+  buildCharacterDataXml: jest.fn(() => '<character_data>Mock XML</character_data>'),
+});
+
 describe('AIPromptContentProvider - Markdown World Context Enhancement', () => {
   /** @type {AIPromptContentProvider} */
   let provider;
@@ -83,6 +90,7 @@ describe('AIPromptContentProvider - Markdown World Context Enhancement', () => {
       perceptionLogFormatter: mockPerceptionLogFormatter,
       gameStateValidationService: mockGameStateValidationService,
       actionCategorizationService: mockActionCategorizationServiceFn(),
+      characterDataXmlBuilder: mockCharacterDataXmlBuilderFn(),
     });
   });
 

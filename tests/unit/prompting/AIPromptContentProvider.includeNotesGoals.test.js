@@ -43,12 +43,17 @@ describe('AIPromptContentProvider.getPromptData', () => {
       formatNamespaceDisplayName: jest.fn((namespace) => namespace),
     };
 
+    const dummyCharacterDataXmlBuilder = {
+      buildCharacterDataXml: jest.fn(() => '<character_data>Mock XML</character_data>'),
+    };
+
     provider = new AIPromptContentProvider({
       logger: dummyLogger,
       promptStaticContentService: dummyPromptStaticContentService,
       perceptionLogFormatter: dummyPerceptionLogFormatter,
       gameStateValidationService: dummyGameStateValidationService,
       actionCategorizationService: dummyActionCategorizationService,
+      characterDataXmlBuilder: dummyCharacterDataXmlBuilder,
     });
   });
 

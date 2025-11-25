@@ -345,6 +345,7 @@ export function registerAITurnPipeline(registrar, logger) {
       actionCategorizationService: c.resolve(
         tokens.IActionCategorizationService
       ),
+      characterDataXmlBuilder: c.resolve(tokens.CharacterDataXmlBuilder),
     });
   });
   registrar.singletonFactory(tokens.LlmJsonService, () => new LlmJsonService());

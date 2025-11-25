@@ -12,7 +12,6 @@
 
 import { IAIPromptContentProvider } from '../turns/interfaces/IAIPromptContentProvider.js';
 import { ensureTerminalPunctuation } from '../utils/textUtils.js';
-import { CharacterDataFormatter } from './CharacterDataFormatter.js';
 import {
   DEFAULT_FALLBACK_CHARACTER_NAME,
   DEFAULT_FALLBACK_DESCRIPTION_RAW,
@@ -47,8 +46,8 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   #perceptionLogFormatter;
   /** @type {IGameStateValidationServiceForPrompting} */
   #gameStateValidationService;
-  /** @type {CharacterDataFormatter} */
-  #characterDataFormatter;
+  /** @type {import('./characterDataXmlBuilder.js').CharacterDataXmlBuilder} */
+  #characterDataXmlBuilder;
   /** @type {*} */
   #actionCategorizationService;
 
@@ -59,6 +58,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    * @param {IPerceptionLogFormatter} dependencies.perceptionLogFormatter - Service to format perception logs.
    * @param {IGameStateValidationServiceForPrompting} dependencies.gameStateValidationService - Service to validate game state for prompting.
    * @param {*} dependencies.actionCategorizationService - Service for action categorization.
+   * @param {import('./characterDataXmlBuilder.js').CharacterDataXmlBuilder} dependencies.characterDataXmlBuilder - Builder for XML character data.
    * @returns {void}
    */
   constructor({
@@ -67,6 +67,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     perceptionLogFormatter,
     gameStateValidationService,
     actionCategorizationService,
+    characterDataXmlBuilder,
   }) {
     super();
     validateDependencies(
@@ -107,6 +108,11 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
             'formatNamespaceDisplayName',
           ],
         },
+        {
+          dependency: characterDataXmlBuilder,
+          name: 'AIPromptContentProvider: characterDataXmlBuilder',
+          methods: ['buildCharacterDataXml'],
+        },
       ],
       logger
     );
@@ -116,9 +122,9 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     this.#perceptionLogFormatter = perceptionLogFormatter;
     this.#gameStateValidationService = gameStateValidationService;
     this.#actionCategorizationService = actionCategorizationService;
-    this.#characterDataFormatter = new CharacterDataFormatter({ logger });
+    this.#characterDataXmlBuilder = characterDataXmlBuilder;
     this.#logger.debug(
-      'AIPromptContentProvider initialized with new services.'
+      'AIPromptContentProvider initialized with XML builder for character data.'
     );
   }
 
@@ -484,7 +490,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    */
   getCharacterPersonaContent(gameState) {
     this.#logger.debug(
-      'AIPromptContentProvider: Formatting character persona content with markdown structure.'
+      'AIPromptContentProvider: Formatting character persona content with XML structure.'
     );
     const { actorPromptData } = gameState;
 
@@ -511,28 +517,28 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
       return PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS;
     }
 
-    // Use the new CharacterDataFormatter for markdown structure
+    // Use CharacterDataXmlBuilder for XML structure
     try {
       const formattedPersona =
-        this.#characterDataFormatter.formatCharacterPersona(actorPromptData);
+        this.#characterDataXmlBuilder.buildCharacterDataXml(actorPromptData);
 
       if (!formattedPersona || formattedPersona.trim().length === 0) {
         this.#logger.warn(
-          'AIPromptContentProvider: CharacterDataFormatter returned empty result. Using fallback.'
+          'AIPromptContentProvider: CharacterDataXmlBuilder returned empty result. Using fallback.'
         );
         return PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS;
       }
 
       this.#logger.debug(
-        'AIPromptContentProvider: Successfully formatted character persona with markdown structure.'
+        'AIPromptContentProvider: Successfully formatted character persona with XML structure.'
       );
       return formattedPersona;
     } catch (error) {
       this.#logger.error(
-        'AIPromptContentProvider: Error formatting character persona with CharacterDataFormatter.',
+        'AIPromptContentProvider: Error formatting character persona with CharacterDataXmlBuilder.',
         error
       );
-      // Fallback to basic format if formatter fails
+      // Fallback to basic format if builder fails
       return `YOU ARE ${actorPromptData.name || DEFAULT_FALLBACK_CHARACTER_NAME}.\nThis is your identity. All thoughts, actions, and words must stem from this core truth.`;
     }
   }

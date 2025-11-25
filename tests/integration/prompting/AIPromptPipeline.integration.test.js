@@ -193,12 +193,20 @@ function createPipelineSetup({
     logger: promptLogger,
   });
 
+  const characterDataXmlBuilder = {
+    buildCharacterDataXml: jest.fn((actorPromptData) => {
+      const name = actorPromptData?.name || 'Unknown';
+      return `<character_data>\n<identity>\nYOU ARE ${name}.\nThis is your identity. All thoughts, actions, and words must stem from this core truth.\n</identity>\n</character_data>`;
+    }),
+  };
+
   const promptContentProvider = new AIPromptContentProvider({
     logger: promptLogger,
     promptStaticContentService: staticContentService,
     perceptionLogFormatter,
     gameStateValidationService,
     actionCategorizationService,
+    characterDataXmlBuilder,
   });
 
   const llmConfigService = {

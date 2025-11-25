@@ -57,6 +57,9 @@ describe('Notes Formatting Performance', () => {
         namespace.toUpperCase()
       ),
     },
+    characterDataXmlBuilder: {
+      buildCharacterDataXml: jest.fn(() => '<character/>'),
+    },
   });
 
   beforeEach(() => {

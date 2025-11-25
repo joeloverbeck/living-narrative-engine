@@ -56,11 +56,44 @@ describe('Enhanced Character Prompts Integration', () => {
       getFinalLlmInstructionText: jest.fn().mockReturnValue('FINAL'),
     };
 
+    const characterDataXmlBuilder = {
+      buildCharacterDataXml: jest.fn((actorPromptData) => {
+        const name = actorPromptData?.name || 'Unknown';
+        // Build XML with all psychological components for testing
+        let xml = `<character_data>\n<identity>\nYOU ARE ${name}.\nThis is your identity. All thoughts, actions, and words must stem from this core truth.\n</identity>`;
+        if (actorPromptData?.description) {
+          xml += `\n<description>\n## Your Description\n${typeof actorPromptData.description === 'string' ? actorPromptData.description : 'A complex individual'}\n</description>`;
+        }
+        if (actorPromptData?.personality) {
+          xml += `\n<personality>\n## Your Personality\n${actorPromptData.personality}\n</personality>`;
+        }
+        if (actorPromptData?.profile) {
+          xml += `\n<profile>\n## Your Profile\n${actorPromptData.profile}\n</profile>`;
+        }
+        if (actorPromptData?.motivations) {
+          xml += `\n<motivations>\n## Your Core Motivations\n${actorPromptData.motivations}\n</motivations>`;
+        }
+        if (actorPromptData?.internalTensions) {
+          xml += `\n<internal_tensions>\n## Your Internal Tensions\n${actorPromptData.internalTensions}\n</internal_tensions>`;
+        }
+        if (actorPromptData?.coreDilemmas) {
+          xml += `\n<dilemmas>\n## Your Core Dilemmas\n${actorPromptData.coreDilemmas}\n</dilemmas>`;
+        }
+        if (actorPromptData?.likes) {
+          xml += `\n<likes>\n## Your Likes\n${actorPromptData.likes}\n</likes>`;
+        }
+        if (actorPromptData?.dislikes) {
+          xml += `\n<dislikes>\n## Your Dislikes\n${actorPromptData.dislikes}\n</dislikes>`;
+        }
+        xml += '\n</character_data>';
+        return xml;
+      }),
+    };
+
     promptProvider = new AIPromptContentProvider({
       logger: mockLogger,
       promptStaticContentService,
-      characterDataFormatter: formatter,
-      actorDataExtractor: extractor,
+      characterDataXmlBuilder,
       perceptionLogFormatter: { format: jest.fn().mockReturnValue([]) },
       gameStateValidationService: {
         validate: jest.fn().mockReturnValue({ isValid: true, errorContent: null }),
