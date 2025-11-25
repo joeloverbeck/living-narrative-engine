@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "anatomy:can_grab",
+  "description": "Marks a body part as capable of grabbing/holding items. Contains a lock that indicates whether this appendage is currently occupied.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "locked": {
+        "description": "If true, this grabbing appendage is currently occupied (holding something). If false, it's available.",
+        "type": "boolean",
+        "default": false
+      },
+      "heldItemId": {
+        "description": "The entity ID of the item currently held by this appendage. Null if not holding anything.",
+        "type": ["string", "null"],
+        "default": null
+      },
+      "gripStrength": {
+        "description": "The strength of grip this appendage provides. Used for weight limits or skill checks.",
+        "type": "number",
+        "default": 1.0,
+        "minimum": 0
+      }
+    },
+    "required": ["locked"],
+    "additionalProperties": false
+  }
+}
