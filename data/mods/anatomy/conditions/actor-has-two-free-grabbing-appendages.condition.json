@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "anatomy:actor-has-two-free-grabbing-appendages",
+  "description": "Checks if the actor has at least two free (unlocked) grabbing appendages available",
+  "logic": {
+    "hasFreeGrabbingAppendages": ["actor", 2]
+  }
+}

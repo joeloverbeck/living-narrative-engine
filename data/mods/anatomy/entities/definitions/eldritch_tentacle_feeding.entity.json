@@ -3,14 +3,19 @@
   "id": "anatomy:eldritch_tentacle_feeding",
   "description": "Specialized feeding tentacle tipped with a lamprey-like mouth",
   "components": {
+    "anatomy:can_grab": {
+      "gripStrength": 0.6,
+      "heldItemId": null,
+      "locked": false
+    },
     "anatomy:part": {
       "subType": "eldritch_tentacle"
     },
     "anatomy:sockets": {
       "sockets": [
         {
-          "id": "tip_mouth",
           "allowedTypes": ["eldritch_lamprey_mouth"],
+          "id": "tip_mouth",
           "nameTpl": "tip mouth"
         }
       ]
@@ -18,20 +23,20 @@
     "core:name": {
       "text": "feeding tentacle"
     },
-    "descriptors:size_category": {
-      "size": "large"
-    },
-    "descriptors:length_category": {
-      "length": "long"
-    },
-    "descriptors:texture": {
-      "texture": "smooth-muscular"
-    },
     "descriptors:color_extended": {
       "color": "dark-purple"
     },
     "descriptors:flexibility": {
       "flexibility": "highly-flexible"
+    },
+    "descriptors:length_category": {
+      "length": "long"
+    },
+    "descriptors:size_category": {
+      "size": "large"
+    },
+    "descriptors:texture": {
+      "texture": "smooth-muscular"
     }
   }
 }

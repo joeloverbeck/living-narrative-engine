@@ -45,6 +45,7 @@ export const aiTokens = freeze({
   IPerceptionLogProvider: 'IPerceptionLogProvider',
   IAvailableActionsProvider: 'IAvailableActionsProvider',
   ILocationSummaryProvider: 'ILocationSummaryProvider',
+  IModActionMetadataProvider: 'IModActionMetadataProvider',
   IActorDataExtractor: 'IActorDataExtractor',
   ILLMDecisionProvider: 'ILLMDecisionProvider',
   LlmJsonService: 'LlmJsonService',

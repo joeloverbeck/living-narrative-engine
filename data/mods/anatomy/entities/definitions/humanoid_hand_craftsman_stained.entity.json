@@ -3,29 +3,34 @@
   "id": "anatomy:humanoid_hand_craftsman_stained",
   "description": "Broad, capable hands of a master leatherworker, showing permanent dye staining, distinctive callus patterns, and decades of skilled craft work",
   "components": {
+    "anatomy:can_grab": {
+      "gripStrength": 1.0,
+      "heldItemId": null,
+      "locked": false
+    },
     "anatomy:part": {
       "subType": "hand"
     },
-    "descriptors:texture": {
-      "texture": "rough"
+    "core:name": {
+      "text": "hand"
     },
     "descriptors:color_extended": {
       "color": "tan-brown"
     },
+    "descriptors:nail_condition": {
+      "cleanliness": "chemical-stained",
+      "condition": "well-maintained",
+      "length": "short"
+    },
+    "descriptors:professional_markers": {
+      "markers": ["tannery-staining", "tool-calluses", "chemical-staining"],
+      "profession": "leatherworker"
+    },
     "descriptors:skin_condition": {
       "conditions": ["weathered", "chemically-stained", "callused"]
     },
-    "descriptors:professional_markers": {
-      "profession": "leatherworker",
-      "markers": ["tannery-staining", "tool-calluses", "chemical-staining"]
-    },
-    "descriptors:nail_condition": {
-      "length": "short",
-      "cleanliness": "chemical-stained",
-      "condition": "well-maintained"
-    },
-    "core:name": {
-      "text": "hand"
+    "descriptors:texture": {
+      "texture": "rough"
     }
   }
 }

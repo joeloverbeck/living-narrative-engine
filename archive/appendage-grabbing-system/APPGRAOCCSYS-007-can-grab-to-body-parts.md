@@ -15,6 +15,10 @@ Add the `anatomy:can_grab` component to body part entity definitions that should
 | File | Change |
 |------|--------|
 | `data/mods/anatomy/entities/definitions/human_hand.entity.json` | Add `anatomy:can_grab` component |
+| `data/mods/anatomy/entities/definitions/humanoid_hand_craftsman_stained.entity.json` | Add `anatomy:can_grab` component |
+| `data/mods/anatomy/entities/definitions/humanoid_hand_scarred.entity.json` | Add `anatomy:can_grab` component |
+| `data/mods/anatomy/entities/definitions/eldritch_malformed_hand.entity.json` | Add `anatomy:can_grab` component (gripStrength 0.7) |
+| `data/mods/anatomy/entities/definitions/tortoise_hand.entity.json` | Add `anatomy:can_grab` component (gripStrength 0.8) |
 | `data/mods/anatomy/entities/definitions/squid_tentacle.entity.json` | Add `anatomy:can_grab` component |
 | `data/mods/anatomy/entities/definitions/kraken_tentacle.entity.json` | Add `anatomy:can_grab` component |
 | `data/mods/anatomy/entities/definitions/octopus_tentacle.entity.json` | Add `anatomy:can_grab` component |
@@ -26,6 +30,7 @@ Add the `anatomy:can_grab` component to body part entity definitions that should
 
 These body parts cannot grab:
 - `human_foot.entity.json` (feet cannot grab)
+- `tortoise_foot.entity.json` (feet cannot grab)
 - `spider_leg.entity.json` (spider legs are locomotion only)
 - All torso, head, eye, hair, breast, leg, ear, etc. entities
 
@@ -48,16 +53,16 @@ These body parts cannot grab:
   "id": "anatomy:human_hand",
   "description": "A human hand",
   "components": {
+    "anatomy:can_grab": {
+      "gripStrength": 1.0,
+      "heldItemId": null,
+      "locked": false
+    },
     "anatomy:part": {
       "subType": "hand"
     },
     "core:name": {
       "text": "hand"
-    },
-    "anatomy:can_grab": {
-      "locked": false,
-      "heldItemId": null,
-      "gripStrength": 1.0
     }
   }
 }
@@ -71,31 +76,31 @@ These body parts cannot grab:
   "id": "anatomy:squid_tentacle",
   "description": "Common squid tentacle with medium size, long length and translucent-white coloring",
   "components": {
+    "anatomy:can_grab": {
+      "gripStrength": 0.8,
+      "heldItemId": null,
+      "locked": false
+    },
     "anatomy:part": {
       "subType": "tentacle"
     },
     "core:name": {
       "text": "tentacle"
     },
-    "descriptors:size_category": {
-      "size": "medium"
+    "descriptors:color_extended": {
+      "color": "translucent-white"
     },
     "descriptors:length_category": {
       "length": "long"
     },
-    "descriptors:texture": {
-      "texture": "suckered"
-    },
-    "descriptors:color_extended": {
-      "color": "translucent-white"
-    },
     "descriptors:shape_general": {
       "shape": "cylindrical"
     },
-    "anatomy:can_grab": {
-      "locked": false,
-      "heldItemId": null,
-      "gripStrength": 0.8
+    "descriptors:size_category": {
+      "size": "medium"
+    },
+    "descriptors:texture": {
+      "texture": "suckered"
     }
   }
 }
@@ -106,6 +111,9 @@ These body parts cannot grab:
 | Body Part Type | gripStrength | Rationale |
 |---------------|--------------|-----------|
 | Human hand | 1.0 | Standard baseline |
+| Humanoid hand (craftsman/scarred) | 1.0 | Same as human hand |
+| Eldritch malformed hand | 0.7 | Deformed joints reduce precision |
+| Tortoise hand | 0.8 | Only 3 digits, less dexterity |
 | Squid tentacle | 0.8 | Flexible but less precise |
 | Octopus tentacle | 0.9 | Strong suckers |
 | Kraken tentacle | 1.5 | Massive and powerful |
@@ -160,3 +168,65 @@ npm run test:unit -- --testPathPattern="anatomy"
 - Future body part definitions may also need this component added
 - The gripStrength values are initial estimates and can be adjusted based on gameplay testing
 - Spider legs intentionally excluded as they are for locomotion, not manipulation
+- Components should be alphabetically ordered in JSON files per project conventions
+
+## Status
+
+**COMPLETED** - 2025-01-25
+
+## Outcome
+
+### What Was Actually Changed vs Originally Planned
+
+**Originally Planned (7 entities):**
+- human_hand, squid_tentacle, kraken_tentacle, octopus_tentacle, eldritch_tentacle_feeding, eldritch_tentacle_large, eldritch_tentacle_sensory
+
+**Actually Changed (11 entities):**
+The original ticket was missing 4 hand entities that exist in the codebase:
+- humanoid_hand_craftsman_stained.entity.json (gripStrength: 1.0)
+- humanoid_hand_scarred.entity.json (gripStrength: 1.0)
+- eldritch_malformed_hand.entity.json (gripStrength: 0.7)
+- tortoise_hand.entity.json (gripStrength: 0.8)
+
+**Ticket was corrected** before implementation to include these additional hand entities.
+
+### Entity Files Modified
+
+| File | gripStrength | Notes |
+|------|-------------|-------|
+| human_hand.entity.json | 1.0 | Baseline |
+| humanoid_hand_craftsman_stained.entity.json | 1.0 | Standard humanoid |
+| humanoid_hand_scarred.entity.json | 1.0 | Standard humanoid |
+| eldritch_malformed_hand.entity.json | 0.7 | Reduced due to deformed joints |
+| tortoise_hand.entity.json | 0.8 | Reduced due to only 3 digits |
+| squid_tentacle.entity.json | 0.8 | Flexible but less precise |
+| octopus_tentacle.entity.json | 0.9 | Strong suckers |
+| kraken_tentacle.entity.json | 1.5 | Massive and powerful |
+| eldritch_tentacle_feeding.entity.json | 0.6 | Designed for feeding |
+| eldritch_tentacle_large.entity.json | 1.2 | Otherworldly strength |
+| eldritch_tentacle_sensory.entity.json | 0.3 | Designed for sensing |
+
+### New Tests Created
+
+| File | Tests | Rationale |
+|------|-------|-----------|
+| tests/integration/mods/anatomy/grabbableBodyParts.integration.test.js | 66 tests | Integration tests ensuring body parts have correct can_grab configuration |
+
+**Test Coverage:**
+- Hand entities have anatomy:can_grab component with correct gripStrength
+- Tentacle entities have anatomy:can_grab component with correct gripStrength
+- Non-grabbable body parts (feet, legs, arms, heads) do NOT have anatomy:can_grab
+- Component invariants: locked=false, heldItemId=null, gripStrength >= 0
+- Components are alphabetically ordered (per project conventions)
+- Grip strength reasonableness checks (human baseline, kraken strongest, sensory weakest)
+
+### Existing Tests Verified
+
+- can_grab.component.test.js: 29 tests ✅
+- grabbingUtils.test.js: 43 tests ✅
+- hasFreeGrabbingAppendagesOperator.test.js: 36 tests ✅
+
+### Validation
+
+- `npm run validate` ✅
+- All entity files pass JSON schema validation

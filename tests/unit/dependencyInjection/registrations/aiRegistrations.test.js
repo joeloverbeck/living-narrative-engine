@@ -120,6 +120,11 @@ jest.mock('../../../../src/prompting/characterDataXmlBuilder.js', () => ({
   default: mockCreateClass('CharacterDataXmlBuilder'),
 }));
 
+jest.mock('../../../../src/prompting/modActionMetadataProvider.js', () => ({
+  __esModule: true,
+  ModActionMetadataProvider: mockCreateClass('ModActionMetadataProvider'),
+}));
+
 jest.mock('../../../../src/data/providers/entitySummaryProvider.js', () => ({
   __esModule: true,
   EntitySummaryProvider: mockCreateClass('EntitySummaryProvider'),
@@ -267,6 +272,9 @@ const XmlElementBuilderMock = jest.requireMock(
 const CharacterDataXmlBuilderMock = jest.requireMock(
   '../../../../src/prompting/characterDataXmlBuilder.js'
 ).default;
+const { ModActionMetadataProvider: ModActionMetadataProviderMock } = jest.requireMock(
+  '../../../../src/prompting/modActionMetadataProvider.js'
+);
 const { ActorDataExtractor: ActorDataExtractorMock } = jest.requireMock(
   '../../../../src/turns/services/actorDataExtractor.js'
 );
@@ -686,6 +694,22 @@ describe('aiRegistrations', () => {
       const registrar = new Registrar(container);
 
       registerAITurnPipeline(registrar, logger);
+
+      // IModActionMetadataProvider registration
+      const metadataProviderCall = container.register.mock.calls.find(
+        ([token]) => token === tokens.IModActionMetadataProvider
+      );
+      expect(metadataProviderCall).toBeDefined();
+      metadataProviderCall[1](
+        createFactoryContext({
+          [tokens.IDataRegistry]: { registry: true },
+          [tokens.ILogger]: logger,
+        })
+      );
+      expect(ModActionMetadataProviderMock).toHaveBeenCalledWith({
+        dataRegistry: { registry: true },
+        logger,
+      });
 
       const contentCall = container.register.mock.calls.find(
         ([token]) => token === tokens.IAIPromptContentProvider
