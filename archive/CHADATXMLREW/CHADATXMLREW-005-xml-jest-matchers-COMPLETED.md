@@ -2,9 +2,42 @@
 
 **Priority:** P2 - MEDIUM
 **Effort:** 1-2 hours
-**Status:** Not Started
+**Status:** ✅ COMPLETED
+**Completed Date:** 2025-11-25
 **Spec Reference:** [specs/character-data-xml-rework.md](../specs/character-data-xml-rework.md) - "Custom XML Jest Matchers" section
 **Depends On:** None (can be done in parallel with other tickets)
+
+---
+
+## Outcome
+
+### What Was Originally Planned
+- Create custom Jest matchers for XML validation
+- Implement 4 matchers: `toBeWellFormedXml`, `toContainXmlElement`, `toHaveXmlElementContent`, `toHaveXmlElementExactContent`
+- Create self-test file to validate matchers
+- Ticket specified paths: `tests/common/prompting/xmlMatchers.js` and `tests/unit/common/prompting/xmlMatchers.test.js`
+
+### What Was Actually Changed
+- **Created**: `tests/common/prompting/xmlMatchers.js` - Custom Jest matchers with all 4 matchers
+- **Created**: `tests/unit/common/prompting/xmlMatchers.test.js` - Comprehensive test suite with 38 tests
+- **Created**: `tests/unit/common/prompting/` directory (did not exist previously)
+
+### Implementation Notes
+- All 4 matchers implemented as specified
+- Added `/* global expect */` directive to satisfy ESLint
+- Test file refactored to avoid conditional expects (Jest best practice)
+- 38 tests covering all matcher behaviors, edge cases, and error messages
+
+### Test Results
+- All 38 matcher self-tests pass
+- All 505 prompting unit tests pass (no regressions)
+- Related tests (xmlElementBuilder.test.js, characterDataXmlBuilder.test.js) continue to pass
+
+### Files Created
+| File | Purpose |
+|------|---------|
+| `tests/common/prompting/xmlMatchers.js` | Custom Jest matchers for XML validation |
+| `tests/unit/common/prompting/xmlMatchers.test.js` | Self-tests for the matchers |
 
 ---
 
@@ -19,7 +52,7 @@ Without these matchers, tests would require verbose DOMParser boilerplate in eve
 
 ---
 
-## Files to Create
+## Files Created
 
 | File | Purpose |
 |------|---------|
@@ -48,6 +81,8 @@ Without these matchers, tests would require verbose DOMParser boilerplate in eve
  * @file Custom Jest matchers for XML validation
  * @description Provides matchers for validating XML output in character data tests
  */
+
+/* global expect */
 
 /**
  * Parses XML string and returns document or null if parse error
@@ -185,12 +220,7 @@ expect.extend({
     };
   },
 
-  /**
-   * Checks that XML does NOT contain a specific element
-   * @param {string} selector - Tag name or CSS selector
-   * @example expect(xmlString).not.toContainXmlElement('psychology'); // for empty section
-   */
-  // Note: Use with .not prefix: expect(xml).not.toContainXmlElement('tag')
+  // Note: Use with .not prefix for negative assertions: expect(xml).not.toContainXmlElement('tag')
 });
 
 export default expect;
@@ -230,49 +260,49 @@ describe('CharacterDataXmlBuilder', () => {
 
 ## Acceptance Criteria
 
-### Tests That Must Pass
+### Tests That Must Pass ✅
 
-Create a self-test file to validate the matchers work correctly:
+Created a self-test file to validate the matchers work correctly:
 
 **File:** `tests/unit/common/prompting/xmlMatchers.test.js`
 
-1. **toBeWellFormedXml**
+1. **toBeWellFormedXml** ✅
    - Passes for valid XML: `<root><child/></root>`
    - Fails for unclosed tags: `<root><child></root>`
    - Fails for invalid characters
    - Provides helpful error message on failure
 
-2. **toContainXmlElement**
+2. **toContainXmlElement** ✅
    - Finds root element by tag name
    - Finds nested element by tag name
    - Supports CSS selector syntax (`parent > child`)
    - Returns false for missing elements
    - Handles malformed XML gracefully
 
-3. **toHaveXmlElementContent**
+3. **toHaveXmlElementContent** ✅
    - Matches partial content (substring)
    - Case-sensitive matching
    - Handles whitespace in content
    - Returns false for missing element
    - Returns false for wrong content
 
-4. **toHaveXmlElementExactContent**
+4. **toHaveXmlElementExactContent** ✅
    - Matches exact content (after trim)
    - Fails for partial matches
    - Trims whitespace before comparison
 
-### Invariants That Must Remain True
+### Invariants That Must Remain True ✅
 
-- **No external dependencies** - only uses DOMParser (built-in)
-- **Graceful degradation** - malformed XML handled without throwing
-- **Helpful error messages** - failures include context for debugging
-- **Composable** - works with Jest's `.not` modifier
-- **No side effects** - matchers are pure functions
+- **No external dependencies** - only uses DOMParser (built-in) ✅
+- **Graceful degradation** - malformed XML handled without throwing ✅
+- **Helpful error messages** - failures include context for debugging ✅
+- **Composable** - works with Jest's `.not` modifier ✅
+- **No side effects** - matchers are pure functions ✅
 
-### Coverage Requirements
+### Coverage Requirements ✅
 
-- 100% function coverage on matchers
-- Self-tests validate all matcher behaviors
+- 100% function coverage on matchers ✅
+- Self-tests validate all matcher behaviors ✅ (38 tests)
 
 ---
 

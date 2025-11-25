@@ -36,6 +36,7 @@ const OPERATION_SCHEMA_FILES = [
   'hasComponent.schema.json',
   'if.schema.json',
   'ifCoLocated.schema.json',
+  'lockGrabbing.schema.json',
   'lockMouthEngagement.schema.json',
   'lockMovement.schema.json',
   'log.schema.json',

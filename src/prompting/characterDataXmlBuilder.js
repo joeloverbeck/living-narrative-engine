@@ -4,7 +4,6 @@
  * semantic sections, decorated comments for attention priming, and strategic
  * ordering for primacy/recency effects.
  * @see xmlElementBuilder.js
- * @see CharacterDataFormatter.js (legacy Markdown implementation)
  */
 
 import { validateDependency } from '../utils/dependencyUtils.js';

@@ -72,6 +72,7 @@ import RemoveLyingClosenessHandler from '../../logic/operationHandlers/removeLyi
 import BreakClosenessWithTargetHandler from '../../logic/operationHandlers/breakClosenessWithTargetHandler.js';
 import HasBodyPartWithComponentValueHandler from '../../logic/operationHandlers/hasBodyPartWithComponentValueHandler.js';
 import UnequipClothingHandler from '../../logic/operationHandlers/unequipClothingHandler.js';
+import LockGrabbingHandler from '../../logic/operationHandlers/lockGrabbingHandler.js';
 import LockMovementHandler from '../../logic/operationHandlers/lockMovementHandler.js';
 import LockMouthEngagementHandler from '../../logic/operationHandlers/lockMouthEngagementHandler.js';
 import UnlockMovementHandler from '../../logic/operationHandlers/unlockMovementHandler.js';
@@ -555,6 +556,16 @@ export function registerOperationHandlers(registrar) {
           logger: c.resolve(tokens.ILogger),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
           equipmentOrchestrator: c.resolve(tokens.EquipmentOrchestrator),
+        }),
+    ],
+    [
+      tokens.LockGrabbingHandler,
+      LockGrabbingHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],
     [
