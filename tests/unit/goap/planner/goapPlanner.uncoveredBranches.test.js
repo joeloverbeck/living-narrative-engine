@@ -1,11 +1,11 @@
 import { jest } from '@jest/globals';
 import { GOAP_PLANNER_FAILURES } from '../../../../src/goap/planner/goapPlannerFailureReasons.js';
-import { setGoalPathLintOverride } from '../../../../src/goap/planner/goalPathValidator.js';
+import * as goalPathValidator from '../../../../src/goap/planner/goalPathValidator.js';
 import { createPlannerHarness } from './helpers/createPlannerHarness.js';
 
 describe('GoapPlanner uncovered branches', () => {
   afterEach(() => {
-    setGoalPathLintOverride(null);
+    goalPathValidator.setGoalPathLintOverride(null);
     jest.restoreAllMocks();
   });
 
@@ -19,6 +19,67 @@ describe('GoapPlanner uncovered branches', () => {
 
     expect(planner.getGoalPathDiagnostics()).toBeNull();
     expect(planner.getGoalPathDiagnostics('missing-entry')).toBeNull();
+  });
+
+  it('applies bound parameters to precondition evaluation context', () => {
+    const { planner, mocks } = createPlannerHarness({ actorId: 'actor-binding' });
+    mocks.scopeRegistry.getScopeAst.mockReturnValue({});
+    mocks.scopeEngine.resolve.mockReturnValue(new Set(['entity:target']));
+
+    mocks.jsonLogicEvaluationService.evaluateCondition.mockImplementation(
+      (condition, context) => {
+        expect(context.target).toBe('entity:target');
+        return true;
+      }
+    );
+
+    const applicable = planner.testGetApplicableTasks(
+      [
+        {
+          id: 'task:with-scope',
+          planningScope: 'scope:targetable',
+          planningPreconditions: [
+            { description: 'requires bound target', condition: { var: 'target' } },
+          ],
+          planningEffects: [],
+        },
+      ],
+      {},
+      'actor-binding'
+    );
+
+    expect(applicable).toHaveLength(1);
+    expect(applicable[0].boundParams).toEqual({ target: 'entity:target' });
+  });
+
+  it('skips tasks when precondition evaluation throws errors', () => {
+    const { planner, mocks } = createPlannerHarness({ actorId: 'actor-precondition-error' });
+    mocks.scopeRegistry.getScopeAst.mockReturnValue({});
+    mocks.scopeEngine.resolve.mockReturnValue(new Set(['entity:target']));
+
+    mocks.jsonLogicEvaluationService.evaluateCondition.mockImplementation(() => {
+      throw new Error('precondition boom');
+    });
+
+    const applicable = planner.testGetApplicableTasks(
+      [
+        {
+          id: 'task:unstable',
+          planningScope: 'scope:targetable',
+          planningPreconditions: [
+            { description: 'throws', condition: { var: 'target' } },
+          ],
+          planningEffects: [],
+        },
+      ],
+      {},
+      'actor-precondition-error'
+    );
+
+    expect(applicable).toHaveLength(0);
+    expect(mocks.logger.warn).toHaveBeenCalledWith(
+      'Task task:unstable precondition evaluation failed: precondition boom'
+    );
   });
 
   it('records and trims goal path diagnostics', () => {
@@ -93,6 +154,12 @@ describe('GoapPlanner uncovered branches', () => {
     expect(telemetry.totalFailures).toBe(11);
     expect(telemetry.failures).toHaveLength(10);
     expect(planner.getEffectFailureTelemetry('actor-telemetry')).toBeNull();
+  });
+
+  it('returns null telemetry when no actor is provided', () => {
+    const { planner } = createPlannerHarness();
+
+    expect(planner.getEffectFailureTelemetry()).toBeNull();
   });
 
   it('aborts planning when applicability checks raise invalid effect errors', () => {
@@ -186,5 +253,52 @@ describe('GoapPlanner uncovered branches', () => {
         code: GOAP_PLANNER_FAILURES.NO_APPLICABLE_TASKS,
       })
     );
+  });
+
+  it('records undefined goal state signatures without crashing', () => {
+    const { planner, mocks } = createPlannerHarness({ actorId: 'actor-undefined-goal' });
+
+    mocks.heuristicRegistry.calculate.mockReturnValue(0);
+    mocks.gameDataRepository.get.mockReturnValue({ core: {} });
+    mocks.jsonLogicEvaluationService.evaluateCondition.mockReturnValue(false);
+
+    const goal = { id: 'goal-undefined' }; // goalState intentionally undefined
+
+    const planResult = planner.plan('actor-undefined-goal', goal, {});
+
+    expect(planResult).toBeNull();
+    expect([
+      GOAP_PLANNER_FAILURES.NO_APPLICABLE_TASKS,
+      GOAP_PLANNER_FAILURES.TASK_LIBRARY_EXHAUSTED,
+    ]).toContain(planner.getLastFailure().code);
+  });
+
+  it('rethrows unexpected goal path lint errors during normalization handling', () => {
+    const { planner, mocks } = createPlannerHarness({ actorId: 'actor-goalpath-throw' });
+    mocks.heuristicRegistry.calculate.mockReturnValue(0);
+    mocks.gameDataRepository.get.mockReturnValue({ core: {} });
+    mocks.jsonLogicEvaluationService.evaluateCondition.mockReturnValue(false);
+
+    const validateSpy = jest
+      .spyOn(goalPathValidator, 'validateGoalPaths')
+      .mockReturnValue({
+        normalizedGoalState: { var: 'actor.name' },
+        violations: [{ path: 'actor.name', reason: 'missing-components-prefix' }],
+      });
+
+    const lintSpy = jest
+      .spyOn(goalPathValidator, 'shouldEnforceGoalPathLint')
+      .mockImplementation(() => {
+        throw new Error('lint toggle failed');
+      });
+
+    const goal = { id: 'goal-lint-throw', goalState: { var: 'actor.name' } };
+
+    expect(() => planner.plan('actor-goalpath-throw', goal, {})).toThrow(
+      'lint toggle failed'
+    );
+
+    validateSpy.mockRestore();
+    lintSpy.mockRestore();
   });
 });
