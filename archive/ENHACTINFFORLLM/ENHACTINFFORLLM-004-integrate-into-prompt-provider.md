@@ -1,5 +1,7 @@
 # ENHACTINFFORLLM-004: Integrate ModActionMetadataProvider into AIPromptContentProvider
 
+## Status: ✅ COMPLETED
+
 ## Summary
 Update AIPromptContentProvider to use the ModActionMetadataProvider service to include Purpose and Consider When metadata in the formatted action output.
 
@@ -23,9 +25,10 @@ Update AIPromptContentProvider to use the ModActionMetadataProvider service to i
 
 Location: `src/prompting/AIPromptContentProvider.js`
 
-#### 1a. Add Private Field (around line 51, after `#actionCategorizationService`)
+#### 1a. Add Private Field (line 53, after `#actionCategorizationService`)
 
 ```javascript
+/** @type {import('./services/modActionMetadataProvider.js').ModActionMetadataProvider} */
 #modActionMetadataProvider;
 ```
 
@@ -42,14 +45,15 @@ Add to constructor parameters:
 modActionMetadataProvider,
 ```
 
-Add validation (after `actionCategorizationService` validation around line 110):
+**NOTE**: Constructor uses `validateDependencies()` (array-based batch validation), NOT individual `validateDependency()` calls.
+
+Add to the dependencies array in `validateDependencies`:
 ```javascript
-validateDependency(
-  modActionMetadataProvider,
-  'IModActionMetadataProvider',
-  logger,
-  { requiredMethods: ['getMetadataForMod'] }
-);
+{
+  dependency: modActionMetadataProvider,
+  name: 'AIPromptContentProvider: modActionMetadataProvider',
+  methods: ['getMetadataForMod'],
+},
 ```
 
 Add assignment (after `this.#actionCategorizationService = actionCategorizationService;`):
@@ -99,7 +103,7 @@ for (const [namespace, namespaceActions] of grouped) {
 
 Location: `src/dependencyInjection/registrations/aiRegistrations.js`
 
-Update the `IAIPromptContentProvider` factory (around line 337) to include the new dependency:
+Update the `IAIPromptContentProvider` factory (around line 348) to include the new dependency:
 
 ```javascript
 registrar.singletonFactory(tokens.IAIPromptContentProvider, (c) => {
@@ -141,3 +145,36 @@ registrar.singletonFactory(tokens.IAIPromptContentProvider, (c) => {
 2. Run `npx eslint src/prompting/AIPromptContentProvider.js`
 3. Run `npm run test:unit -- --testPathPattern="AIPromptContentProvider"`
 4. Manually verify output format with a test that has metadata and without
+
+---
+
+## Outcome
+
+### What Was Actually Changed vs Originally Planned
+
+**Ticket Corrections Made First:**
+- The ticket originally assumed individual `validateDependency()` calls, but the actual code uses `validateDependencies()` with an array-based batch validation pattern. Corrected in ticket before implementation.
+
+**Implementation Matched Plan:**
+All planned code changes were implemented as specified:
+
+1. **AIPromptContentProvider.js** - All 4 changes applied:
+   - Added typedef for `ModActionMetadata`
+   - Added private field `#modActionMetadataProvider`
+   - Added to constructor parameters, validation array, and assignment
+   - Updated `_formatCategorizedActions` to lookup and display metadata
+
+2. **aiRegistrations.js** - Factory updated with new dependency
+
+**Additional Changes Required (Not in Original Plan):**
+- Updated 4 test files to provide mock `modActionMetadataProvider`:
+  - `tests/unit/prompting/AIPromptContentProvider.test.js`
+  - `tests/integration/prompting/notesFormattingIntegration.test.js`
+  - `tests/integration/prompting/AIPromptPipeline.integration.test.js`
+  - `tests/integration/prompting/PromptAssembly.test.js`
+
+**Verification Results:**
+- ✅ All 32 unit tests pass
+- ✅ All 32 integration tests pass
+- ✅ Typecheck passes
+- ✅ Backward compatibility maintained (default mock returns `null`)

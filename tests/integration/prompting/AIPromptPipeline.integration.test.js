@@ -200,6 +200,10 @@ function createPipelineSetup({
     }),
   };
 
+  const modActionMetadataProvider = {
+    getMetadataForMod: jest.fn(() => null),
+  };
+
   const promptContentProvider = new AIPromptContentProvider({
     logger: promptLogger,
     promptStaticContentService: staticContentService,
@@ -207,6 +211,7 @@ function createPipelineSetup({
     gameStateValidationService,
     actionCategorizationService,
     characterDataXmlBuilder,
+    modActionMetadataProvider,
   });
 
   const llmConfigService = {

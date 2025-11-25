@@ -47,6 +47,10 @@ describe('AIPromptContentProvider.getPromptData', () => {
       buildCharacterDataXml: jest.fn(() => '<character_data>Mock XML</character_data>'),
     };
 
+    const dummyModActionMetadataProvider = {
+      getMetadataForMod: jest.fn(() => null),
+    };
+
     provider = new AIPromptContentProvider({
       logger: dummyLogger,
       promptStaticContentService: dummyPromptStaticContentService,
@@ -54,6 +58,7 @@ describe('AIPromptContentProvider.getPromptData', () => {
       gameStateValidationService: dummyGameStateValidationService,
       actionCategorizationService: dummyActionCategorizationService,
       characterDataXmlBuilder: dummyCharacterDataXmlBuilder,
+      modActionMetadataProvider: dummyModActionMetadataProvider,
     });
   });
 

@@ -60,6 +60,9 @@ describe('Notes Formatting Performance', () => {
     characterDataXmlBuilder: {
       buildCharacterDataXml: jest.fn(() => '<character/>'),
     },
+    modActionMetadataProvider: {
+      getMetadataForMod: jest.fn(() => null),
+    },
   });
 
   beforeEach(() => {

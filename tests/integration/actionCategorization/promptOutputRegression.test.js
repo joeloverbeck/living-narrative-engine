@@ -65,6 +65,9 @@ describe('AI Prompt Output Regression', () => {
       characterDataXmlBuilder: {
         buildCharacterDataXml: () => '<character>Mock XML</character>',
       },
+      modActionMetadataProvider: {
+        getMetadataForMod: jest.fn(() => null),
+      },
     });
   });
 

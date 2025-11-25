@@ -49,6 +49,10 @@ const makeDummyCharacterDataXmlBuilder = () => ({
   buildCharacterDataXml: jest.fn(() => '<character_data>Mock XML</character_data>'),
 });
 
+const makeDummyModActionMetadataProvider = () => ({
+  getMetadataForMod: jest.fn(() => null),
+});
+
 // ---- Test Suite ---- //
 describe('AIPromptContentProvider.getPromptData → Goals without timestamps bug fix', () => {
   let provider;
@@ -63,6 +67,7 @@ describe('AIPromptContentProvider.getPromptData → Goals without timestamps bug
       gameStateValidationService: makeDummyGameStateValidationService(),
       actionCategorizationService: makeDummyActionCategorizationService(),
       characterDataXmlBuilder: makeDummyCharacterDataXmlBuilder(),
+      modActionMetadataProvider: makeDummyModActionMetadataProvider(),
     });
   });
 

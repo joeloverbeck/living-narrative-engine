@@ -722,6 +722,7 @@ describe('aiRegistrations', () => {
           [tokens.IGameStateValidationServiceForPrompting]: { validation: true },
           [tokens.IActionCategorizationService]: { categorization: true },
           [tokens.CharacterDataXmlBuilder]: { xmlBuilder: true },
+          [tokens.IModActionMetadataProvider]: { metadataProvider: true },
         })
       );
       expect(AIPromptContentProviderMock).toHaveBeenCalledWith({
@@ -731,6 +732,7 @@ describe('aiRegistrations', () => {
         gameStateValidationService: { validation: true },
         actionCategorizationService: { categorization: true },
         characterDataXmlBuilder: { xmlBuilder: true },
+        modActionMetadataProvider: { metadataProvider: true },
       });
 
       const llmJsonCall = container.register.mock.calls.find(

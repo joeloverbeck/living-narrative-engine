@@ -9,6 +9,14 @@
       "items:inventory"
     ]
   },
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
+      },
+      "failure_message": "You need at least one free hand or appendage to wield a weapon."
+    }
+  ],
   "targets": {
     "primary": {
       "scope": "weapons:weapons_in_inventory",

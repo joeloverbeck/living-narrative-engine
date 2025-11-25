@@ -62,6 +62,9 @@ describe('Tag Removal Performance Tests', () => {
     characterDataXmlBuilder: {
       buildCharacterDataXml: jest.fn(() => '<character/>'),
     },
+    modActionMetadataProvider: {
+      getMetadataForMod: jest.fn(() => null),
+    },
   });
 
   const createTestNotesWithTags = (count = 10) => {

@@ -147,6 +147,9 @@ describe('End-to-End Notes Persistence Flow', () => {
             '<character_data><identity><name>Test Character</name></identity></character_data>'
           ),
       },
+      modActionMetadataProvider: {
+        getMetadataForMod: jest.fn().mockReturnValue(null),
+      },
     });
 
     const llmConfigService = {
