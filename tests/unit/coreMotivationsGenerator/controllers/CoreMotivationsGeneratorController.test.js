@@ -4004,6 +4004,45 @@ describe('CoreMotivationsGeneratorController', () => {
       expect(modal.style.display).toBe('flex');
     });
 
+    it('should export motivations when pressing Ctrl+E', async () => {
+      const originalClipboard = navigator.clipboard;
+      const originalCreateObjectUrl = URL.createObjectURL;
+      const originalRevokeObjectUrl = URL.revokeObjectURL;
+
+      navigator.clipboard = {
+        writeText: jest.fn().mockResolvedValue(undefined),
+      };
+      URL.createObjectURL = jest.fn(() => 'blob:mock-url');
+      URL.revokeObjectURL = jest.fn();
+
+      const motivations = [
+        {
+          id: 'motivation-1',
+          text: 'Stay curious',
+          category: 'Growth',
+          createdAt: new Date(),
+        },
+      ];
+
+      await testBed.loadDirectionWithMotivations('dir-export', motivations);
+
+      document.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'e', ctrlKey: true, bubbles: true })
+      );
+
+      await testBed.waitForAsyncOperations();
+
+      const [exportedMotivations] =
+        testBed.mockDisplayEnhancer.formatMotivationsForExport.mock.calls[0];
+      expect(exportedMotivations).toEqual(motivations);
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('Exported motivations');
+      expect(URL.createObjectURL).toHaveBeenCalled();
+
+      navigator.clipboard = originalClipboard;
+      URL.createObjectURL = originalCreateObjectUrl;
+      URL.revokeObjectURL = originalRevokeObjectUrl;
+    });
+
     it('should attach focus indicators for dynamic elements on Tab navigation', async () => {
       await testBed.controller.initialize();
 
