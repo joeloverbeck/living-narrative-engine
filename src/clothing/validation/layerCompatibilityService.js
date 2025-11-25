@@ -28,7 +28,7 @@ export class LayerCompatibilityService {
    *
    * @readonly
    */
-  static LAYER_ORDER = ['underwear', 'base', 'outer', 'accessories'];
+  static LAYER_ORDER = ['underwear', 'base', 'armor', 'outer', 'accessories'];
 
   /**
    * Default layer requirements
@@ -37,6 +37,7 @@ export class LayerCompatibilityService {
    */
   static LAYER_REQUIREMENTS = {
     outer: ['base'], // Outer layer requires base layer
+    armor: [], // Armor has no requirements (can be worn directly)
     accessories: [], // Accessories have no requirements
   };
 

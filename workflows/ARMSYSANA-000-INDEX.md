@@ -75,13 +75,16 @@ Armor can be implemented as a **fifth clothing layer** without modifying the cor
 - **Priority Values**: armor = 150 (between outer: 100 and base: 200)
 - **Breaking Changes**: None (behavior addition)
 
-#### ARMSYSANA-005: Update Related Coverage Logic
-- **File**: `workflows/ARMSYSANA-005-update-coverage-logic.md`
+#### ARMSYSANA-005: Update Related Coverage Logic ✅ COMPLETED
+- **File**: `archive/workflows/armor-system-analysis/ARMSYSANA-005-update-coverage-logic-COMPLETED.md`
 - **Priority**: High
 - **Estimated Effort**: 45 minutes
 - **Description**: Discover and update all coverage-related components for armor support
-- **Exploratory**: Yes (exact components determined during implementation)
-- **Potential Files**: Coverage analyzer, action text generation, clothing state manager
+- **Status**: ✅ Completed 2025-11-25
+- **Actual Changes**:
+  - Updated `LayerCompatibilityService.LAYER_ORDER` to include armor
+  - Updated `SlotAccessResolver.getCoveragePriorityFromMode()` for armor mapping
+  - Most components were already data-driven via centralized `priorityConstants.js`
 
 #### ARMSYSANA-006: Run Comprehensive Tests
 - **File**: `workflows/ARMSYSANA-006-run-comprehensive-tests.md`
@@ -289,6 +292,7 @@ After armor system is complete, consider:
 
 ---
 
-**Migration Status**: Not Started
-**Last Updated**: 2025-11-12
-**Next Ticket**: ARMSYSANA-001
+**Migration Status**: Phase 2 In Progress
+**Last Updated**: 2025-11-25
+**Next Ticket**: ARMSYSANA-006
+**Completed Tickets**: ARMSYSANA-001, ARMSYSANA-002, ARMSYSANA-003, ARMSYSANA-004, ARMSYSANA-005

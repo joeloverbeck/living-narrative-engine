@@ -1,5 +1,7 @@
 # WIECOM-004: Activity System Array Support
 
+**Status**: ✅ COMPLETED
+
 ## Summary
 
 Modify `activityMetadataCollectionSystem.js` to support array-based target roles (like `wielded_item_ids`), enabling multi-item activity descriptions.
@@ -18,14 +20,15 @@ Modify `activityMetadataCollectionSystem.js` to support array-based target roles
 
 - **DO NOT** modify any mod data files (components, rules, manifests)
 - **DO NOT** modify `activityNLGSystem.js` (see WIECOM-005)
-- **DO NOT** modify any test files
 - **DO NOT** change existing single-target behavior
 - **DO NOT** add any new dependencies
 - **DO NOT** modify the class constructor or other methods
 
+> **Note**: Unit tests ARE required per implementation request to cover array-based target scenarios.
+
 ## Implementation Details
 
-### Current `#parseInlineMetadata` Method (lines 281-331)
+### Current `#parseInlineMetadata` Method (lines 282-332)
 
 The current implementation only handles single string targets:
 
@@ -167,3 +170,37 @@ npx eslint src/anatomy/services/activityMetadataCollectionSystem.js
 ## Diff Size Estimate
 
 The diff should modify approximately 20-30 lines within the `#parseInlineMetadata` method.
+
+---
+
+## Outcome
+
+### What Was Changed
+
+1. **`src/anatomy/services/activityMetadataCollectionSystem.js`** (~25 lines modified):
+   - Added `targetRoleIsArray = false` extraction from `activityMetadata`
+   - Added array handling branch that returns `{ targetEntityIds, isMultiTarget: true }` when `targetRoleIsArray && Array.isArray(rawTargetValue)`
+   - Filters invalid array items (non-strings, empty/whitespace-only strings)
+   - Updated JSDoc to document new behavior
+   - Renamed internal variable `rawTargetEntityId` → `rawTargetValue` for clarity
+
+2. **`tests/unit/anatomy/services/activityMetadataCollectionSystem.test.js`** (5 new test cases):
+   - `should return isMultiTarget true and targetEntityIds array when targetRoleIsArray is true`
+   - `should return empty targetEntityIds array for empty arrays`
+   - `should filter out invalid array items (non-strings and empty strings)`
+   - `should fall through to existing single-target behavior when targetRoleIsArray is missing`
+   - `should preserve single-target behavior when targetRoleIsArray is false`
+
+### Deviations from Original Plan
+
+1. **Ticket correction**: Original ticket claimed lines 281-331; actual was 282-332 (off by 1)
+2. **Test prohibition removed**: Original ticket said "DO NOT modify any test files" but user's implementation request explicitly required tests
+3. **Variable rename**: Renamed `rawTargetEntityId` to `rawTargetValue` for semantic accuracy (it's not always an entity ID)
+
+### Validation Results
+
+- ✅ 70 unit tests pass for `activityMetadataCollectionSystem.test.js`
+- ✅ 652 anatomy service tests pass overall
+- ✅ ESLint: 0 errors (5 pre-existing warnings unrelated to changes)
+- ✅ TypeScript: Pre-existing errors only (JSDoc typing issues not related to changes)
+- ✅ Backward compatibility: All existing single-target tests continue to pass

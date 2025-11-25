@@ -349,6 +349,28 @@ class ActivityNLGSystem {
     usePronounsForTarget = false,
     options = {}
   ) {
+    // Handle multi-target activities (e.g., wielding multiple items)
+    if (activity.isMultiTarget && Array.isArray(activity.targetEntityIds)) {
+      const names = activity.targetEntityIds
+        .map((id) => this.resolveEntityName(id))
+        .filter((name) => name && name.trim());
+
+      const formattedList = this.#formatListWithConjunction(names, 'and');
+
+      if (activity.template) {
+        const rawPhrase = activity.template
+          .replace(/\{actor\}/g, actorRef)
+          .replace(/\{targets\}/g, formattedList);
+        return rawPhrase.trim();
+      }
+
+      // Fallback if no template
+      return formattedList
+        ? `${actorRef} is with ${formattedList}`.trim()
+        : actorRef.trim();
+    }
+
+    // Single-target handling (existing logic)
     const targetEntityId = activity.targetEntityId || activity.targetId;
     const actorId = options?.actorId ?? null;
     const actorName = options?.actorName ?? null;
@@ -461,6 +483,26 @@ class ActivityNLGSystem {
       fullPhrase: normalizedPhrase,
       verbPhrase,
     };
+  }
+
+  /**
+   * Formats an array of items as a natural language list with conjunction.
+   *
+   * @description Formats an array of items as a natural language list with conjunction.
+   * Uses Oxford comma for lists of 3+ items (e.g., "a, b, and c").
+   * @param {string[]} items - Array of items to format
+   * @param {string} [conjunction='and'] - Conjunction to use ('and', 'or')
+   * @returns {string} Formatted list, or empty string if items is empty/invalid
+   * @example
+   * #formatListWithConjunction(['sword'], 'and') // 'sword'
+   * #formatListWithConjunction(['sword', 'dagger'], 'and') // 'sword and dagger'
+   * #formatListWithConjunction(['sword', 'dagger', 'staff'], 'and') // 'sword, dagger, and staff'
+   */
+  #formatListWithConjunction(items, conjunction = 'and') {
+    if (!Array.isArray(items) || items.length === 0) return '';
+    if (items.length === 1) return items[0];
+    if (items.length === 2) return `${items[0]} ${conjunction} ${items[1]}`;
+    return `${items.slice(0, -1).join(', ')}, ${conjunction} ${items[items.length - 1]}`;
   }
 
   /**

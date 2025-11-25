@@ -1085,6 +1085,148 @@ describe('ActivityMetadataCollectionSystem', () => {
 
       expect(result?.targetEntityId).toBeNull();
     });
+
+    describe('Array Target Support (targetRoleIsArray)', () => {
+      it('should return isMultiTarget true and targetEntityIds array when targetRoleIsArray is true', () => {
+        const hooks = system.getTestHooks();
+
+        const componentData = {
+          wielded_item_ids: ['item1', 'item2', 'item3'],
+        };
+
+        const activityMetadata = {
+          template: '{actor} is wielding {targets}',
+          priority: 70,
+          targetRole: 'wielded_item_ids',
+          targetRoleIsArray: true,
+        };
+
+        const result = hooks.parseInlineMetadata(
+          'positioning:wielding',
+          componentData,
+          activityMetadata
+        );
+
+        expect(result).not.toBeNull();
+        expect(result.type).toBe('inline');
+        expect(result.isMultiTarget).toBe(true);
+        expect(result.targetEntityIds).toEqual(['item1', 'item2', 'item3']);
+        expect(result.priority).toBe(70);
+        expect(result.targetEntityId).toBeUndefined();
+        expect(result.targetId).toBeUndefined();
+      });
+
+      it('should return empty targetEntityIds array for empty arrays', () => {
+        const hooks = system.getTestHooks();
+
+        const componentData = {
+          wielded_item_ids: [],
+        };
+
+        const activityMetadata = {
+          template: '{actor} is wielding {targets}',
+          targetRole: 'wielded_item_ids',
+          targetRoleIsArray: true,
+        };
+
+        const result = hooks.parseInlineMetadata(
+          'positioning:wielding',
+          componentData,
+          activityMetadata
+        );
+
+        expect(result).not.toBeNull();
+        expect(result.isMultiTarget).toBe(true);
+        expect(result.targetEntityIds).toEqual([]);
+      });
+
+      it('should filter out invalid array items (non-strings and empty strings)', () => {
+        const hooks = system.getTestHooks();
+
+        const componentData = {
+          wielded_item_ids: [
+            'valid_item',
+            '',
+            '   ',
+            123,
+            null,
+            undefined,
+            'another_valid',
+          ],
+        };
+
+        const activityMetadata = {
+          template: '{actor} is wielding {targets}',
+          targetRole: 'wielded_item_ids',
+          targetRoleIsArray: true,
+        };
+
+        const result = hooks.parseInlineMetadata(
+          'positioning:wielding',
+          componentData,
+          activityMetadata
+        );
+
+        expect(result).not.toBeNull();
+        expect(result.isMultiTarget).toBe(true);
+        expect(result.targetEntityIds).toEqual(['valid_item', 'another_valid']);
+      });
+
+      it('should fall through to existing single-target behavior when targetRoleIsArray is missing', () => {
+        const hooks = system.getTestHooks();
+
+        const componentData = {
+          entityId: 'single_target',
+        };
+
+        const activityMetadata = {
+          template: '{actor} is kneeling before {target}',
+          targetRole: 'entityId',
+          // targetRoleIsArray is NOT specified - should default to false
+        };
+
+        const result = hooks.parseInlineMetadata(
+          'positioning:kneeling',
+          componentData,
+          activityMetadata
+        );
+
+        expect(result).not.toBeNull();
+        expect(result.targetEntityId).toBe('single_target');
+        expect(result.targetId).toBe('single_target');
+        expect(result.isMultiTarget).toBeUndefined();
+        expect(result.targetEntityIds).toBeUndefined();
+      });
+
+      it('should preserve single-target behavior when targetRoleIsArray is false', () => {
+        const hooks = system.getTestHooks();
+
+        const componentData = {
+          entityId: 'target_entity',
+        };
+
+        const activityMetadata = {
+          template: '{actor} is hugging {target}',
+          targetRole: 'entityId',
+          targetRoleIsArray: false, // Explicitly false
+          priority: 66,
+        };
+
+        const result = hooks.parseInlineMetadata(
+          'positioning:hugging',
+          componentData,
+          activityMetadata
+        );
+
+        expect(result).not.toBeNull();
+        expect(result.type).toBe('inline');
+        expect(result.targetEntityId).toBe('target_entity');
+        expect(result.targetId).toBe('target_entity');
+        expect(result.priority).toBe(66);
+        expect(result.isMultiTarget).toBeUndefined();
+        expect(result.targetEntityIds).toBeUndefined();
+      });
+    });
   });
 
   describe('Edge Cases', () => {
