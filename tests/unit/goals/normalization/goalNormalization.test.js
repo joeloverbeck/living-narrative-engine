@@ -3,6 +3,7 @@ import {
   normalizeGoalData,
   registerGoalNormalizationExtension,
   clearGoalNormalizationExtensions,
+  getGoalNormalizationExtensions,
   alwaysTrueCondition,
   simpleStateMatcher,
 } from '../../../../src/goals/normalization/index.js';
@@ -106,5 +107,77 @@ describe('normalizeGoalData', () => {
       )
     ).toBe(true);
     expect(logger.warn).toHaveBeenCalled();
+  });
+
+  it('defaults invalid priorities when defaults are allowed', () => {
+    const logger = { warn: jest.fn() };
+    const goal = { relevance: { condition_ref: 'valid' }, goalState: { condition_ref: 'state' } };
+
+    const result = normalizeGoalData(goal, { allowDefaults: true, logger });
+
+    expect(result.data.priority).toBe(0);
+    expect(result.warnings.some((warning) => warning.message.includes('defaulted to 0'))).toBe(true);
+    expect(result.mutations.some((mutation) => mutation.type === 'defaulted' && mutation.field === 'priority')).toBe(true);
+    expect(logger.warn).toHaveBeenCalled();
+  });
+
+  it('unwraps logic containers when they contain nested condition objects', () => {
+    const logger = { warn: jest.fn() };
+    const goal = {
+      priority: 5,
+      relevance: { logic: { condition_ref: 'wrapped.relevance' } },
+      goalState: { condition_ref: 'state.valid' },
+    };
+
+    const result = normalizeGoalData(goal, { allowDefaults: false, logger });
+
+    expect(result.data.relevance).toEqual({ condition_ref: 'wrapped.relevance' });
+    expect(result.mutations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ field: 'relevance', type: 'unwrapped', from: { logic: { condition_ref: 'wrapped.relevance' } } }),
+      ])
+    );
+    expect(result.warnings.some((warning) => warning.message.includes("'logic' has been normalized"))).toBe(true);
+    expect(logger.warn).toHaveBeenCalled();
+  });
+
+  it('treats logic containers with non-object payloads as conditions', () => {
+    const goal = {
+      priority: 3,
+      relevance: { logic: 'string payload' },
+      goalState: { condition_ref: 'state.valid' },
+    };
+
+    const result = normalizeGoalData(goal, { allowDefaults: false });
+
+    expect(result.data.relevance).toEqual({ logic: 'string payload' });
+  });
+
+  it('accepts condition_ref-style conditions', () => {
+    const goal = {
+      priority: 2,
+      relevance: { condition_ref: 'direct.ref' },
+      goalState: { condition_ref: 'state.valid' },
+    };
+
+    const result = normalizeGoalData(goal, { allowDefaults: false });
+
+    expect(result.data.relevance).toEqual({ condition_ref: 'direct.ref' });
+  });
+
+  it('throws when provided data is not a plain object', () => {
+    expect(() => normalizeGoalData(null)).toThrow(TypeError);
+    expect(() => normalizeGoalData(['not', 'object'])).toThrow(TypeError);
+  });
+
+  it('validates extension registration types', () => {
+    expect(() => registerGoalNormalizationExtension({})).toThrow(TypeError);
+  });
+
+  it('exposes registered extensions', () => {
+    const hook = jest.fn();
+    registerGoalNormalizationExtension(hook);
+
+    expect(getGoalNormalizationExtensions()).toContain(hook);
   });
 });
