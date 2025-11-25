@@ -254,6 +254,11 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       emptyState: '#empty-state',
       patternCount: '#pattern-count',
 
+      // Export controls
+      exportFormat: { selector: '#export-format', required: false },
+      exportTemplate: { selector: '#export-template', required: false },
+      templateGroup: { selector: '#template-group', required: false },
+
       // Progress elements (optional - will be created dynamically)
       progressContainer: {
         selector: '#progress-container',
