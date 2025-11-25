@@ -183,6 +183,7 @@ export function registerInterpreters(container) {
       bind(tokens.HasBodyPartWithComponentValueHandler)
     );
     registry.register('UNEQUIP_CLOTHING', bind(tokens.UnequipClothingHandler));
+    registry.register('LOCK_GRABBING', bind(tokens.LockGrabbingHandler));
     registry.register('LOCK_MOVEMENT', bind(tokens.LockMovementHandler));
     registry.register(
       'LOCK_MOUTH_ENGAGEMENT',

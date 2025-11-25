@@ -28,6 +28,10 @@
       "version": "^1.0.0"
     },
     {
+      "id": "furniture",
+      "version": "^1.0.0"
+    },
+    {
       "id": "music",
       "version": "^1.0.0"
     },
