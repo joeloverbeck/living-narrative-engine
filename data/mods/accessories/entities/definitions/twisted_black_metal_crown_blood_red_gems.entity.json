@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-  "id": "clothing:twisted_black_metal_crown_blood_red_gems",
+  "id": "accessories:twisted_black_metal_crown_blood_red_gems",
   "description": "Gothic crown of twisted black metal set with blood-red gemstones",
   "components": {
     "clothing:wearable": {

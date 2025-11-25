@@ -125,7 +125,7 @@
       "equip": true
     },
     {
-      "entityId": "clothing:black_tactical_work_belt",
+      "entityId": "accessories:black_tactical_work_belt",
       "equip": true
     },
     {
@@ -137,7 +137,7 @@
       "equip": true
     },
     {
-      "entityId": "clothing:slate_nylon_baseball_cap",
+      "entityId": "accessories:slate_nylon_baseball_cap",
       "equip": true
     }
   ]

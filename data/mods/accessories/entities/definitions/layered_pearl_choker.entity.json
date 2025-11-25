@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-  "id": "clothing:platinum_necklace",
-  "description": "Elegant platinum necklace",
+  "id": "accessories:layered_pearl_choker",
+  "description": "Layered pearl choker",
   "components": {
     "clothing:wearable": {
       "layer": "accessories",
@@ -13,19 +13,22 @@
       ]
     },
     "core:material": {
-      "material": "platinum"
+      "material": "pearl"
     },
     "core:name": {
-      "text": "necklace"
+      "text": "layered pearl choker"
     },
     "core:description": {
-      "text": "A refined platinum necklace that embodies understated elegance. The lustrous platinum chain catches the light with a subtle, sophisticated gleam. Its sleek design sits perfectly against the collarbone, making it an ideal accessory for both formal occasions and elevated everyday wear. The secure clasp ensures comfortable, worry-free wear throughout the day."
+      "text": "A dramatic layered choker composed of multiple rows of lustrous pearls that hug the throat. The staggered strands create dimensional shimmer, closing with a satin ribbon for a touch of couture romance. Ideal for balancing plunging necklines or elevating minimalist gowns with Old World glamour."
     },
     "descriptors:color_extended": {
-      "color": "silver"
+      "color": "pearl-white"
     },
     "descriptors:texture": {
       "texture": "smooth"
+    },
+    "descriptors:size_specific": {
+      "size": "layered collar length"
     },
     "clothing:coverage_mapping": {
       "covers": [
@@ -36,7 +39,7 @@
     "items:item": {},
     "items:portable": {},
     "items:weight": {
-      "weight": 0.14
+      "weight": 0.18
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-  "id": "clothing:black_calfskin_belt",
+  "id": "accessories:black_calfskin_belt",
   "description": "Black calfskin belt with brushed-brass buckle",
   "components": {
     "clothing:wearable": {

@@ -30,6 +30,10 @@
     {
       "id": "clothing",
       "version": "^1.0.0"
+    },
+    {
+      "id": "accessories",
+      "version": "^1.0.0"
     }
   ],
   "content": {

@@ -8,15 +8,16 @@ describe('Belt Entities - Blocking Component', () => {
   let tacticalBelt;
 
   beforeEach(async () => {
-    // Load belt entity definitions from files
+    // Load belt entity definitions from accessories mod (migrated from clothing mod)
+    // See CLOLAYMIG-004 for migration details
     const blackBeltPath = resolve(
-      'data/mods/clothing/entities/definitions/black_calfskin_belt.entity.json'
+      'data/mods/accessories/entities/definitions/black_calfskin_belt.entity.json'
     );
     const brownBeltPath = resolve(
-      'data/mods/clothing/entities/definitions/dark_brown_leather_belt.entity.json'
+      'data/mods/accessories/entities/definitions/dark_brown_leather_belt.entity.json'
     );
     const tacticalBeltPath = resolve(
-      'data/mods/clothing/entities/definitions/black_tactical_work_belt.entity.json'
+      'data/mods/accessories/entities/definitions/black_tactical_work_belt.entity.json'
     );
 
     blackBelt = JSON.parse(await fs.readFile(blackBeltPath, 'utf-8'));

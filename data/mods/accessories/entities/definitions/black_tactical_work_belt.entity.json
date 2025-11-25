@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-  "id": "clothing:black_tactical_work_belt",
+  "id": "accessories:black_tactical_work_belt",
   "description": "Black tactical work belt with MOLLE webbing for pouches and holster support",
   "components": {
     "clothing:wearable": {
