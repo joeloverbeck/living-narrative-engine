@@ -1113,7 +1113,7 @@ class GoapPlanner {
 
   #getGoalNormalizationEntry(actorId, goal) {
     const cacheKey = this.#buildGoalNormalizationCacheKey(actorId, goal);
-    const sourceGoalState = goal?.goalState ?? null;
+      const sourceGoalState = goal?.goalState;
     const signature = this.#serializeGoalStateSignature(sourceGoalState);
     const cachedEntry = this.#goalPathNormalizationCache.get(cacheKey);
     if (cachedEntry && cachedEntry.signature === signature) {
