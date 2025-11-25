@@ -25,7 +25,7 @@ describe('Wield Threateningly Rule - Validation', () => {
     // Assert: Rule should exist and be properly structured
     expect(ruleFile).toBeDefined();
     expect(ruleFile.rule_id).toBe('handle_wield_threateningly');
-    expect(ruleFile.actions).toHaveLength(8);
+    expect(ruleFile.actions).toHaveLength(11);
 
     // Assert: First two operations should get names
     expect(ruleFile.actions[0].type).toBe('GET_NAME');

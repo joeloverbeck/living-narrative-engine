@@ -612,6 +612,7 @@ export class ModTestHandlerFactory {
       patrol: this.createHandlersWithPerceptionLogging.bind(this),
       movement: this.createHandlersWithPerceptionLogging.bind(this),
       metabolism: this.createHandlersWithPerceptionLogging.bind(this),
+      weapons: this.createHandlersWithPerceptionLogging.bind(this),
     };
 
     if (typeof modCategory === 'string' && modCategory.startsWith('sex-')) {

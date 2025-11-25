@@ -57,6 +57,54 @@
       }
     },
     {
+      "type": "QUERY_COMPONENT",
+      "comment": "Check if actor already has wielding component",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "positioning:wielding",
+        "result_variable": "existingWielding",
+        "missing_value": null
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Add to existing array or create new component",
+      "parameters": {
+        "condition": { "var": "context.existingWielding" },
+        "then_actions": [
+          {
+            "type": "MODIFY_ARRAY_FIELD",
+            "comment": "Append weapon to existing wielded_item_ids array",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "positioning:wielding",
+              "field": "wielded_item_ids",
+              "mode": "push_unique",
+              "value": "{event.payload.targetId}"
+            }
+          }
+        ],
+        "else_actions": [
+          {
+            "type": "ADD_COMPONENT",
+            "comment": "Create new wielding component with weapon in array",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "positioning:wielding",
+              "value": {
+                "wielded_item_ids": ["{event.payload.targetId}"]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "REGENERATE_DESCRIPTION",
+      "comment": "Update actor description to include wielding activity",
+      "parameters": { "entity_ref": "actor" }
+    },
+    {
       "comment": "Log success and end turn",
       "macro": "core:logSuccessAndEndTurn"
     }
