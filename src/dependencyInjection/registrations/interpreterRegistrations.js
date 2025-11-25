@@ -185,6 +185,7 @@ export function registerInterpreters(container) {
     registry.register('UNEQUIP_CLOTHING', bind(tokens.UnequipClothingHandler));
     registry.register('LOCK_GRABBING', bind(tokens.LockGrabbingHandler));
     registry.register('LOCK_MOVEMENT', bind(tokens.LockMovementHandler));
+    registry.register('UNLOCK_GRABBING', bind(tokens.UnlockGrabbingHandler));
     registry.register(
       'LOCK_MOUTH_ENGAGEMENT',
       bind(tokens.LockMouthEngagementHandler)
