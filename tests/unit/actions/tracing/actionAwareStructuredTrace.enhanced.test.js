@@ -209,6 +209,188 @@ describe('ActionAwareStructuredTrace - Enhanced Filtering (ACTTRA-017)', () => {
     });
   });
 
+  describe('Additional coverage for enhanced tracing flows', () => {
+    beforeEach(() => {
+      trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockEnhancedFilter,
+        actorId: 'coverage-actor',
+        logger: testBed.mockLogger,
+      });
+    });
+
+    it('captures enhanced scope evaluation details', () => {
+      trace.captureScopeEvaluation(
+        'action:scope',
+        'target-1',
+        {
+          scope: 'global',
+          context: { foo: 'bar' },
+          resultCount: 3,
+          evaluationTimeMs: 7,
+        },
+        {
+          entityDiscovery: [{ componentId: 'seat', totalEntities: 2 }],
+          filterEvaluations: [{ itemId: 'chair', filterPassed: true }],
+          resolverDetails: { strategy: 'demo' },
+        }
+      );
+
+      const scopeStage = trace.getActionTrace('action:scope').stages
+        .scope_evaluation.data;
+      expect(scopeStage.entityDiscovery).toEqual([
+        { componentId: 'seat', totalEntities: 2 },
+      ]);
+      expect(scopeStage.filterEvaluations).toEqual([
+        { itemId: 'chair', filterPassed: true },
+      ]);
+      expect(scopeStage.resolverDetails).toEqual({ strategy: 'demo' });
+    });
+
+    it('builds multi-target summaries including relationships', () => {
+      trace.captureMultiTargetResolution('action:multi', {
+        targetKeys: ['first', 'second'],
+        totalTargets: 2,
+        resolutionTimeMs: 42,
+      });
+
+      trace.captureScopeEvaluation('action:multi', 'first', {
+        scope: 'local',
+        context: {},
+        resultCount: 1,
+      });
+
+      trace.captureTargetRelationships('action:multi', {
+        totalTargets: 2,
+        relationships: [{ from: 'a', to: 'b' }],
+      });
+
+      const summary = trace.getMultiTargetSummary('action:multi');
+      expect(summary.isMultiTarget).toBe(true);
+      expect(summary.targetKeys).toEqual(['first', 'second']);
+      expect(summary.totalTargets).toBe(2);
+      expect(summary.hasRelationships).toBe(true);
+      expect(summary.relationshipCount).toBe(1);
+    });
+
+    it('applies minimal filtering and preserves error messages', () => {
+      const minimalFilter = testBed.createMockActionTraceFilter({
+        tracedActions: ['core:test'],
+        verbosity: 'minimal',
+      });
+
+      const minimalTrace = new ActionAwareStructuredTrace({
+        actionTraceFilter: minimalFilter,
+        actorId: 'actor-minimal',
+        logger: testBed.mockLogger,
+      });
+
+      minimalTrace.captureActionData('component_filtering', 'core:test', {
+        passed: false,
+        error: new Error('minimal failure'),
+      });
+
+      const captured = minimalTrace.getActionTrace('core:test').stages
+        .component_filtering.data;
+      expect(captured.error).toBe('minimal failure');
+    });
+
+    it('counts object prerequisites in standard filtering', () => {
+      const standardFilter = testBed.createMockActionTraceFilter({
+        tracedActions: ['core:test'],
+        verbosity: 'standard',
+        includePrerequisites: true,
+      });
+
+      const standardTrace = new ActionAwareStructuredTrace({
+        actionTraceFilter: standardFilter,
+        actorId: 'actor-standard',
+        logger: testBed.mockLogger,
+      });
+
+      standardTrace.captureActionData('component_filtering', 'core:test', {
+        prerequisites: { one: true, two: false },
+        passed: true,
+      });
+
+      const captured = standardTrace.getActionTrace('core:test').stages
+        .component_filtering.data;
+      expect(captured.prerequisiteCount).toBe(2);
+    });
+
+    it('summarizes enhanced data using filter verbosity when target missing', () => {
+      mockEnhancedFilter.getVerbosityLevel.mockReturnValue('verbose');
+
+      trace.captureEnhancedActionData(
+        'summary_stage',
+        'core:summary',
+        {
+          debug: 'x'.repeat(300),
+          performance: { cost: 5 },
+        },
+        { summarize: true }
+      );
+
+      const data = trace.getActionTrace('core:summary').stages.summary_stage
+        .data;
+      expect(mockEnhancedFilter.getVerbosityLevel).toHaveBeenCalled();
+      expect(data._enhanced.verbosityLevel).toBe('verbose');
+    });
+
+    it('handles dynamic rule removal and enhanced exports', () => {
+      const removeSpy = jest.fn();
+      mockEnhancedFilter.removeDynamicRule = removeSpy;
+
+      trace.removeDynamicTraceRule('temporary');
+      expect(removeSpy).toHaveBeenCalledWith('temporary');
+
+      mockEnhancedFilter.getVerbosityLevel.mockReturnValue('verbose');
+      trace.captureEnhancedActionData('enhanced_stage', 'core:export', { a: 1 });
+      trace.captureActionData('component_filtering', 'core:export', {
+        passed: true,
+      });
+
+      const exported = trace.exportFilteredTraceData('standard');
+      expect(exported['core:export'].stages.enhanced_stage).toBeUndefined();
+      expect(exported['core:export'].stages.component_filtering).toBeDefined();
+    });
+
+    it('manages enhanced filter caches and serializes trace', () => {
+      const resetStats = jest.fn();
+      const clearCache = jest.fn();
+      const optimizeCache = jest.fn();
+      mockEnhancedFilter.resetEnhancedStats = resetStats;
+      mockEnhancedFilter.clearEnhancedCache = clearCache;
+      mockEnhancedFilter.optimizeCache = optimizeCache;
+
+      trace.resetEnhancedStats();
+      trace.clearEnhancedCache();
+      trace.optimizeEnhancedCache();
+
+      expect(resetStats).toHaveBeenCalled();
+      expect(clearCache).toHaveBeenCalled();
+      expect(optimizeCache).toHaveBeenCalledWith(300000);
+
+      trace.captureActionData('action_start', 'core:serialize', {
+        timestamp: 1000,
+      });
+      trace.captureActionData('action_complete', 'core:serialize', {
+        timestamp: 1600,
+      });
+
+      const actionTrace = trace.getActionTrace('core:serialize');
+      actionTrace.stages.action_start.timestamp = 1000;
+      actionTrace.stages.action_complete.timestamp = 1600;
+
+      const serialized = trace.toJSON();
+      expect(serialized.actions['core:serialize'].stageOrder).toEqual([
+        'action_start',
+        'action_complete',
+      ]);
+      expect(serialized.actions['core:serialize'].totalDuration).toBe(600);
+      expect(serialized.summary.tracedActionCount).toBeGreaterThanOrEqual(1);
+    });
+  });
+
   describe('Data Summarization', () => {
     beforeEach(() => {
       trace = new ActionAwareStructuredTrace({
