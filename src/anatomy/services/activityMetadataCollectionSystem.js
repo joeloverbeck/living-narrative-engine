@@ -270,12 +270,16 @@ class ActivityMetadataCollectionSystem {
   /**
    * Parse inline metadata into activity object.
    *
-   * Extracts template, targetRole, and priority from inline metadata
-   * and resolves target entity ID from component data.
+   * Extracts template, targetRole, targetRoleIsArray, and priority from inline metadata
+   * and resolves target entity ID(s) from component data.
+   *
+   * For single targets (default): returns object with `targetEntityId` and `targetId`
+   * For array targets (when targetRoleIsArray=true): returns object with `targetEntityIds` and `isMultiTarget: true`
    *
    * @param {string} componentId - Component ID containing metadata
    * @param {object} componentData - Full component data
    * @param {object} activityMetadata - Activity metadata from component
+   * @param {boolean} [activityMetadata.targetRoleIsArray=false] - Whether targetRole points to an array
    * @returns {object|null} Activity object or null if invalid
    * @private
    */
@@ -283,6 +287,7 @@ class ActivityMetadataCollectionSystem {
     const {
       template,
       targetRole = 'entityId',
+      targetRoleIsArray = false,
       priority = 50,
     } = activityMetadata;
 
@@ -291,20 +296,47 @@ class ActivityMetadataCollectionSystem {
       return null;
     }
 
-    // Resolve target entity ID
-    const rawTargetEntityId = componentData?.[targetRole];
+    // Resolve target entity ID(s)
+    const rawTargetValue = componentData?.[targetRole];
+
+    // Handle array targets when targetRoleIsArray is true
+    if (targetRoleIsArray && Array.isArray(rawTargetValue)) {
+      const validIds = rawTargetValue.filter(
+        (id) => typeof id === 'string' && id.trim().length > 0
+      );
+
+      const basicDescription = template
+        .replace(/\{actor\}/g, '')
+        .replace(/\{targets\}/g, '')
+        .trim();
+
+      return {
+        type: 'inline',
+        sourceComponent: componentId,
+        sourceData: componentData,
+        activityMetadata,
+        conditions: activityMetadata?.conditions ?? null,
+        targetEntityIds: validIds,
+        isMultiTarget: true,
+        priority,
+        template,
+        description: basicDescription,
+      };
+    }
+
+    // Handle single string target (original behavior)
     let targetEntityId = null;
 
-    if (typeof rawTargetEntityId === 'string') {
-      const trimmedTarget = rawTargetEntityId.trim();
+    if (typeof rawTargetValue === 'string') {
+      const trimmedTarget = rawTargetValue.trim();
       if (trimmedTarget.length > 0) {
         targetEntityId = trimmedTarget;
-      } else if (rawTargetEntityId.length > 0) {
+      } else if (rawTargetValue.length > 0) {
         this.#logger.warn(
           `Inline metadata for ${componentId} provided blank target entity reference for role ${targetRole}; using null`
         );
       }
-    } else if (rawTargetEntityId !== undefined && rawTargetEntityId !== null) {
+    } else if (rawTargetValue !== undefined && rawTargetValue !== null) {
       this.#logger.warn(
         `Inline metadata for ${componentId} provided invalid target entity reference for role ${targetRole}; expected non-empty string`
       );

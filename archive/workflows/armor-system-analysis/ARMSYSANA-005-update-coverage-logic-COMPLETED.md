@@ -4,6 +4,7 @@
 **Priority**: High
 **Risk Level**: Medium
 **Estimated Effort**: 45 minutes
+**Status**: ✅ COMPLETED
 
 ## Context
 
@@ -293,14 +294,14 @@ const layerRegex = /^(underwear|base|outer|accessories)$/;
 
 ## Success Criteria
 
-- [ ] All clothing/coverage-related components identified
-- [ ] Each component reviewed for armor support needs
-- [ ] All necessary components updated with armor support
-- [ ] Unit tests pass for all updated components
-- [ ] Integration tests pass for all updated components
-- [ ] No hardcoded layer lists remain that exclude armor
-- [ ] All priority logic includes armor tier
-- [ ] `npm run test:ci` passes without errors
+- [x] All clothing/coverage-related components identified
+- [x] Each component reviewed for armor support needs
+- [x] All necessary components updated with armor support
+- [x] Unit tests pass for all updated components
+- [x] Integration tests pass for all updated components
+- [x] No hardcoded layer lists remain that exclude armor
+- [x] All priority logic includes armor tier
+- [x] `npm run test:ci` passes without errors
 
 ## Documentation
 
@@ -323,7 +324,7 @@ Document the following:
 
 ## Related Tickets
 
-- **Previous**: ARMSYSANA-004 (Update Slot Access Resolver)
+- **Previous**: ARMSYSANA-004 (Update Priority Constants)
 - **Next**: ARMSYSANA-006 (Run Comprehensive Tests)
 - **Depends On**: ARMSYSANA-001, ARMSYSANA-002, ARMSYSANA-004
 
@@ -348,3 +349,109 @@ Files to definitely check:
 - `src/validation/` directory (for layer validation)
 
 The goal is to ensure that armor behaves consistently throughout the entire system, not just in the schema and priority resolver.
+
+---
+
+## Outcome
+
+**Completed**: 2025-11-25
+
+### Assumption Corrections
+
+The original ticket assumed extensive exploratory work across 5+ potential component categories. After thorough codebase analysis, the findings were:
+
+| Original Assumption | Actual Finding |
+|---------------------|----------------|
+| Coverage Analyzer needs updates | Uses `COVERAGE_PRIORITY` from `priorityConstants.js` → Already has armor (ARMSYSANA-004) |
+| Action Text Generation needs updates | Data-driven, no hardcoded layers |
+| Clothing State Manager needs updates | Uses centralized priority constants |
+| Equipment Validators need updates | `BaseEquipmentOperator.js` already includes armor in `isValidLayerName()` |
+| Body Coverage System needs updates | Uses centralized priority constants |
+
+**Correct Scope**: Only **2 files** needed code changes + **1 test file** needed updates.
+
+### What Was Actually Changed vs Originally Planned
+
+**Originally Planned (Overly Broad)**:
+- Expected 5+ component categories requiring manual review
+- Anticipated multiple validation logic updates
+- Assumed many hardcoded layer arrays throughout codebase
+
+**What Was Actually Changed**:
+
+#### 1. LayerCompatibilityService
+**File**: `src/clothing/validation/layerCompatibilityService.js`
+
+**Line 31** - Updated `LAYER_ORDER`:
+```javascript
+// BEFORE
+static LAYER_ORDER = ['underwear', 'base', 'outer', 'accessories'];
+
+// AFTER
+static LAYER_ORDER = ['underwear', 'base', 'armor', 'outer', 'accessories'];
+```
+
+**Lines 38-42** - Added armor to `LAYER_REQUIREMENTS`:
+```javascript
+static LAYER_REQUIREMENTS = {
+  outer: ['base'],
+  armor: [],  // NEW: Armor has no requirements (can be worn directly)
+  accessories: [],
+};
+```
+
+**Rationale**: The LAYER_ORDER defines innermost→outermost ordering. Armor at priority 150 (between outer:100 and base:200) means armor is worn OVER base clothing but UNDER outer garments.
+
+#### 2. SlotAccessResolver
+**File**: `src/scopeDsl/nodes/slotAccessResolver.js`
+
+**Lines 101-107** - Added armor to `getCoveragePriorityFromMode()`:
+```javascript
+const layerToCoverage = {
+  outer: 'outer',
+  armor: 'armor',      // NEW
+  base: 'base',
+  underwear: 'underwear',
+  accessories: 'base',
+};
+```
+
+**Rationale**: This function maps layer types to coverage priorities. Without this, armor items would fall through to 'direct' (priority 400) instead of using 'armor' (priority 150).
+
+#### 3. Test Updates
+**File**: `tests/unit/clothing/validation/layerCompatibilityService.test.js`
+
+- Updated expected `LAYER_ORDER` array from 4 to 5 elements (including 'armor')
+- Added `should have correct armor layer requirements` test
+- Added new `Armor Layer Support` test suite with 4 tests:
+  - `should recognize armor as valid layer in ordering`
+  - `should position armor between base and outer in layer hierarchy`
+  - `should allow equipping armor without base layer (no requirements)`
+  - `should detect conflict when armor layer is already occupied`
+
+### Test Results
+
+| Test Suite | Tests | Status |
+|------------|-------|--------|
+| LayerCompatibilityService unit tests | 36 | ✅ All passing |
+| SlotAccessResolver unit tests | 84 | ✅ All passing |
+| Priority system unit tests | 132 | ✅ All passing |
+| Clothing integration tests | 277 | ✅ All passing |
+
+### Files Modified
+
+| File | Change Type | Lines Changed |
+|------|-------------|---------------|
+| `src/clothing/validation/layerCompatibilityService.js` | Code | 2 edits (line 31, lines 38-42) |
+| `src/scopeDsl/nodes/slotAccessResolver.js` | Code | 1 edit (lines 101-107) |
+| `tests/unit/clothing/validation/layerCompatibilityService.test.js` | Test | 2 edits + new test suite |
+
+### Key Insight
+
+The codebase is well-architected with centralized priority constants in `src/scopeDsl/prioritySystem/priorityConstants.js`. Most components that deal with coverage already use these centralized constants, which were updated in ARMSYSANA-004. This significantly reduced the scope of ARMSYSANA-005.
+
+### Risk Assessment
+
+- **Low Risk**: Changes are additive (adding armor to existing arrays/objects)
+- **No Breaking Changes**: Existing layer handling unchanged
+- **Backward Compatible**: All existing clothing items continue to work

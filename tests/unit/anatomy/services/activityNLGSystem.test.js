@@ -869,6 +869,105 @@ describe('ActivityNLGSystem', () => {
     });
   });
 
+  describe('generateActivityPhrase - multi-target support', () => {
+    let multiTargetEntityManager;
+
+    beforeEach(() => {
+      // Set up entity manager that can resolve multiple item names
+      multiTargetEntityManager = {
+        getEntityInstance: (entityId) => {
+          const entities = {
+            'sword-1': { id: 'sword-1', getComponentData: (cid) => cid === 'core:name' ? { text: 'sword' } : null },
+            'dagger-2': { id: 'dagger-2', getComponentData: (cid) => cid === 'core:name' ? { text: 'dagger' } : null },
+            'staff-3': { id: 'staff-3', getComponentData: (cid) => cid === 'core:name' ? { text: 'staff' } : null },
+          };
+          return entities[entityId] || null;
+        },
+      };
+
+      nlgSystem = new ActivityNLGSystem({
+        logger: mockLogger,
+        entityManager: multiTargetEntityManager,
+        cacheManager: mockCacheManager,
+        config: {},
+      });
+    });
+
+    it('should format single item in targetEntityIds', () => {
+      const activity = {
+        isMultiTarget: true,
+        targetEntityIds: ['sword-1'],
+        template: '{actor} is wielding {targets} threateningly',
+      };
+
+      const result = nlgSystem.generateActivityPhrase('Alice', activity);
+      expect(result).toBe('Alice is wielding sword threateningly');
+    });
+
+    it('should format two items with "and" conjunction', () => {
+      const activity = {
+        isMultiTarget: true,
+        targetEntityIds: ['sword-1', 'dagger-2'],
+        template: '{actor} is wielding {targets} threateningly',
+      };
+
+      const result = nlgSystem.generateActivityPhrase('Alice', activity);
+      expect(result).toBe('Alice is wielding sword and dagger threateningly');
+    });
+
+    it('should format three items with Oxford comma', () => {
+      const activity = {
+        isMultiTarget: true,
+        targetEntityIds: ['sword-1', 'dagger-2', 'staff-3'],
+        template: '{actor} is wielding {targets} threateningly',
+      };
+
+      const result = nlgSystem.generateActivityPhrase('Alice', activity);
+      expect(result).toBe('Alice is wielding sword, dagger, and staff threateningly');
+    });
+
+    it('should handle empty targetEntityIds array gracefully', () => {
+      const activity = {
+        isMultiTarget: true,
+        targetEntityIds: [],
+        template: '{actor} is wielding {targets} threateningly',
+      };
+
+      const result = nlgSystem.generateActivityPhrase('Alice', activity);
+      // With empty list, template becomes "Alice is wielding  threateningly"
+      expect(result).toBe('Alice is wielding  threateningly');
+    });
+
+    it('should use fallback phrase when no template provided', () => {
+      const activity = {
+        isMultiTarget: true,
+        targetEntityIds: ['sword-1', 'dagger-2'],
+      };
+
+      const result = nlgSystem.generateActivityPhrase('Alice', activity);
+      expect(result).toBe('Alice is with sword and dagger');
+    });
+
+    it('should not affect non-multi-target activities (backward compatibility)', () => {
+      // Reset to standard mock that has test-actor-1
+      nlgSystem = new ActivityNLGSystem({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        cacheManager: mockCacheManager,
+        config: {},
+      });
+
+      const activity = {
+        type: 'inline',
+        template: '{actor} thanks {target}',
+        targetEntityId: 'test-actor-1',
+      };
+
+      const result = nlgSystem.generateActivityPhrase('Bob', activity);
+      expect(result).toBe('Bob thanks John Doe');
+    });
+  });
+
   describe('sanitizeVerbPhrase', () => {
     it('should remove leading/trailing whitespace', () => {
       expect(nlgSystem.sanitizeVerbPhrase('  kisses  ')).toBe('kisses');
