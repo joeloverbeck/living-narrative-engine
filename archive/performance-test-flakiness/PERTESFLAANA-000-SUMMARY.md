@@ -1,6 +1,6 @@
 # PERTESFLAANA: Performance Test Flakiness Analysis - Implementation Summary
 
-**Reference**: [Performance Test Flakiness Analysis](../docs/analysis/performance-test-flakiness-analysis.md)
+**Reference**: [Performance Test Flakiness Analysis](./performance-test-flakiness-analysis.md)
 
 ## Overview
 
@@ -215,7 +215,7 @@ No cascading failures expected due to ticket independence.
 
 ## Support Resources
 
-- **Analysis Document**: `docs/analysis/performance-test-flakiness-analysis.md`
+- **Analysis Document**: `performance-test-flakiness-analysis.md`
 - **Individual Tickets**: `tickets/PERTESFLAANA-001` through `006`
 - **Project Context**: `CLAUDE.md`
 - **Testing Guide**: `docs/testing/` (if exists)
