@@ -1,5 +1,26 @@
 # LLMROLPROARCANA-012: Implement Prompt Performance Monitoring and Metrics
 
+---
+
+## 🚫 STATUS: WON'T IMPLEMENT
+
+**Closed:** 2025-11-25
+**Reason:** Premature infrastructure - existing capabilities sufficient
+
+### Closure Rationale
+
+1. **Token counting already exists** - `TokenEstimator` class at `src/llms/services/tokenEstimator.js` provides full token estimation capabilities
+2. **Schema validation exists** - `LLMResponseProcessor` already validates LLM responses against schema with AJV
+3. **No active problem to solve** - No specific LLM quality issues requiring monitoring infrastructure
+4. **Overkill for use case** - A/B testing framework and quality scorers are enterprise-grade features unnecessary for game engine development
+5. **Comprehensive monitoring infrastructure already exists** - `PerformanceMonitor`, `ErrorClassifier`, structured tracing system all in place
+
+### If Token Visibility Needed Later
+
+Add debug logging at LLM request point using existing `TokenEstimator` (~30 minutes vs 8-12 hours).
+
+---
+
 **Reference:** `reports/llm-roleplay-prompt-architecture-analysis.md` - Section 9, Phase 4 (Ongoing), Section 10
 **Priority:** MEDIUM ⭐⭐⭐
 **Estimated Effort:** Medium (8-12 hours)

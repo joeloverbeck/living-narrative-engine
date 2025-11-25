@@ -96,13 +96,19 @@ class XmlElementBuilder {
    * Creates multi-line decorated comment block
    *
    * @param {string[]} lines - Comment lines
-   * @param {'primary'|'secondary'} style - Visual style
+   * @param {'primary'|'secondary'|'critical'|'reference'} style - Visual style
    * @param {number} indent - Indentation level
    * @returns {string} Decorated comment block
    */
   decoratedComment(lines, style, indent = 0) {
     const indentStr = this.#getIndent(indent);
-    const borderChar = style === 'primary' ? '=' : '-';
+    const borderChars = {
+      primary: '=', // Identity emphasis
+      secondary: '-', // Section headers
+      critical: '*', // Mandatory constraints
+      reference: '.' // Context/reference material
+    };
+    const borderChar = borderChars[style] || '-';
     const border = borderChar.repeat(XmlElementBuilder.#BORDER_WIDTH);
 
     const contentIndent = '     '; // 5 spaces for content alignment

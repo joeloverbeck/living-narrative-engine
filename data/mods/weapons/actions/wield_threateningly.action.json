@@ -19,7 +19,7 @@
   ],
   "targets": {
     "primary": {
-      "scope": "weapons:weapons_in_inventory",
+      "scope": "weapons:grabbable_weapons_in_inventory",
       "placeholder": "target",
       "description": "Weapon to wield"
     }

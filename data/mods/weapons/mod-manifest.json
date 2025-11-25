@@ -27,7 +27,8 @@
       "weapon.component.json"
     ],
     "scopes": [
-      "weapons_in_inventory.scope"
+      "weapons_in_inventory.scope",
+      "grabbable_weapons_in_inventory.scope"
     ],
     "conditions": [
       "event-is-action-wield-threateningly.condition.json"

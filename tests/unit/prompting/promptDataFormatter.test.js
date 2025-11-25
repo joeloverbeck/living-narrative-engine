@@ -410,7 +410,7 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
       expect(result.notesVoiceGuidance).toBe(makeNotesGuidance());
     });
 
-    test('preserves all other fields unchanged', () => {
+    test('preserves all other fields (with appropriate hints)', () => {
       const promptData = {
         taskDefinitionContent: 'Test task',
         characterPersonaContent: 'Test persona',
@@ -422,10 +422,16 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
 
       const result = formatter.formatPromptData(promptData);
 
-      // Other fields should be preserved
-      expect(result.taskDefinitionContent).toBe('Test task');
+      // Fields with hints should contain original content plus hint
+      expect(result.taskDefinitionContent).toContain('Test task');
+      expect(result.taskDefinitionContent).toContain('CRITICAL');
+
+      // characterPersonaContent should remain unchanged (no hint)
       expect(result.characterPersonaContent).toBe('Test persona');
-      expect(result.availableActionsInfoContent).toBe('Test actions');
+
+      // availableActionsInfoContent gets a reference hint
+      expect(result.availableActionsInfoContent).toContain('Test actions');
+      expect(result.availableActionsInfoContent).toContain('REFERENCE');
     });
   });
 
@@ -473,6 +479,178 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
       expect(result.thoughtsSection).toBe('');
       expect(result.notesSection).toBe('');
       expect(result.goalsSection).toBe('');
+    });
+  });
+
+  describe('wrapWithProcessingHint', () => {
+    test('should prepend critical marker with hint text', () => {
+      const content = 'Format your output as JSON';
+      const result = formatter.wrapWithProcessingHint(content, 'critical', 'These rules are mandatory');
+
+      expect(result).toBe('<!-- *** CRITICAL: These rules are mandatory -->\nFormat your output as JSON');
+    });
+
+    test('should prepend reference marker with hint text', () => {
+      const content = 'Environmental context data';
+      const result = formatter.wrapWithProcessingHint(content, 'reference', 'Context for decisions');
+
+      expect(result).toBe('<!-- REFERENCE: Context for decisions -->\nEnvironmental context data');
+    });
+
+    test('should prepend system marker with hint text', () => {
+      const content = 'Content permissions';
+      const result = formatter.wrapWithProcessingHint(content, 'system', 'Session permissions');
+
+      expect(result).toBe('<!-- SYSTEM: Session permissions -->\nContent permissions');
+    });
+
+    test('should handle empty content by returning empty string', () => {
+      expect(formatter.wrapWithProcessingHint('', 'critical', 'Test hint')).toBe('');
+      expect(formatter.wrapWithProcessingHint(null, 'critical', 'Test hint')).toBe('');
+      expect(formatter.wrapWithProcessingHint(undefined, 'critical', 'Test hint')).toBe('');
+    });
+
+    test('should handle whitespace-only content by returning original content', () => {
+      expect(formatter.wrapWithProcessingHint('   ', 'critical', 'Test hint')).toBe('   ');
+      expect(formatter.wrapWithProcessingHint('\n\t', 'critical', 'Test hint')).toBe('\n\t');
+    });
+
+    test('should handle unknown hint type by uppercasing it', () => {
+      const content = 'Some content';
+      const result = formatter.wrapWithProcessingHint(content, 'custom', 'Custom hint');
+
+      expect(result).toBe('<!-- CUSTOM: Custom hint -->\nSome content');
+    });
+
+    test('should preserve multiline content after hint', () => {
+      const content = 'Line 1\nLine 2\nLine 3';
+      const result = formatter.wrapWithProcessingHint(content, 'reference', 'Multi-line data');
+
+      expect(result).toBe('<!-- REFERENCE: Multi-line data -->\nLine 1\nLine 2\nLine 3');
+    });
+  });
+
+  describe('formatPromptData - Processing Hints Integration', () => {
+    test('should include critical hint in actionTagRulesContent', () => {
+      const promptData = {
+        actionTagRulesContent: 'Use action tags correctly',
+      };
+
+      const result = formatter.formatPromptData(promptData);
+
+      expect(result.actionTagRulesContent).toBe(
+        '<!-- *** CRITICAL: These format rules MUST be followed for valid output -->\nUse action tags correctly'
+      );
+    });
+
+    test('should include critical hint in taskDefinitionContent', () => {
+      const promptData = {
+        taskDefinitionContent: 'Your task is to roleplay',
+      };
+
+      const result = formatter.formatPromptData(promptData);
+
+      expect(result.taskDefinitionContent).toBe(
+        '<!-- *** CRITICAL: Your core task - all output stems from this -->\nYour task is to roleplay'
+      );
+    });
+
+    test('should include system hint in contentPolicyContent', () => {
+      const promptData = {
+        contentPolicyContent: 'Adult content is permitted',
+      };
+
+      const result = formatter.formatPromptData(promptData);
+
+      expect(result.contentPolicyContent).toBe(
+        '<!-- SYSTEM: Content permissions for this session -->\nAdult content is permitted'
+      );
+    });
+
+    test('should include reference hint in worldContextContent', () => {
+      const promptData = {
+        worldContextContent: 'You are in a medieval tavern',
+      };
+
+      const result = formatter.formatPromptData(promptData);
+
+      expect(result.worldContextContent).toBe(
+        '<!-- REFERENCE: Environmental context for decision-making -->\nYou are in a medieval tavern'
+      );
+    });
+
+    test('should include reference hint in availableActionsInfoContent', () => {
+      const promptData = {
+        availableActionsInfoContent: 'Available: talk, walk, examine',
+      };
+
+      const result = formatter.formatPromptData(promptData);
+
+      expect(result.availableActionsInfoContent).toBe(
+        '<!-- REFERENCE: Choose based on character state, goals, and recent events -->\nAvailable: talk, walk, examine'
+      );
+    });
+
+    test('should not add hints to empty content fields', () => {
+      const promptData = {
+        actionTagRulesContent: '',
+        taskDefinitionContent: '',
+        contentPolicyContent: '',
+        worldContextContent: '',
+        availableActionsInfoContent: '',
+      };
+
+      const result = formatter.formatPromptData(promptData);
+
+      // Empty content should remain empty (no hints added)
+      expect(result.actionTagRulesContent).toBe('');
+      expect(result.taskDefinitionContent).toBe('');
+      expect(result.contentPolicyContent).toBe('');
+      expect(result.worldContextContent).toBe('');
+      expect(result.availableActionsInfoContent).toBe('');
+    });
+
+    test('should not add hints to characterPersonaContent (identity data handled separately)', () => {
+      const promptData = {
+        characterPersonaContent: 'Character persona data',
+      };
+
+      const result = formatter.formatPromptData(promptData);
+
+      // characterPersonaContent should not have hints (character data uses decoratedComments)
+      expect(result.characterPersonaContent).toBe('Character persona data');
+      expect(result.characterPersonaContent).not.toContain('<!--');
+    });
+
+    test('should preserve all fields with appropriate hints or unchanged', () => {
+      const promptData = {
+        actionTagRulesContent: 'Action rules',
+        taskDefinitionContent: 'Task definition',
+        characterPersonaContent: 'Persona',
+        portrayalGuidelinesContent: 'Guidelines',
+        contentPolicyContent: 'Policy',
+        worldContextContent: 'World',
+        availableActionsInfoContent: 'Actions',
+        userInputContent: 'User input',
+        finalInstructionsContent: 'Final instructions',
+        assistantResponsePrefix: 'Prefix',
+      };
+
+      const result = formatter.formatPromptData(promptData);
+
+      // Fields with hints
+      expect(result.actionTagRulesContent).toContain('*** CRITICAL');
+      expect(result.taskDefinitionContent).toContain('*** CRITICAL');
+      expect(result.contentPolicyContent).toContain('SYSTEM');
+      expect(result.worldContextContent).toContain('REFERENCE');
+      expect(result.availableActionsInfoContent).toContain('REFERENCE');
+
+      // Fields without hints (preserved unchanged)
+      expect(result.characterPersonaContent).toBe('Persona');
+      expect(result.portrayalGuidelinesContent).toBe('Guidelines');
+      expect(result.userInputContent).toBe('User input');
+      expect(result.finalInstructionsContent).toBe('Final instructions');
+      expect(result.assistantResponsePrefix).toBe('Prefix');
     });
   });
 });

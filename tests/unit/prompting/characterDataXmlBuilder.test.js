@@ -473,6 +473,45 @@ describe('CharacterDataXmlBuilder', () => {
       });
       expect(result).not.toContain('<speech_patterns>');
     });
+
+    describe('Usage Guidance', () => {
+      it('should include multi-line usage guidance in speech patterns section', () => {
+        const result = builder.buildCharacterDataXml(COMPLETE_CHARACTER_DATA);
+        expect(result).toContain('USAGE GUIDANCE');
+        expect(result).toContain('Apply patterns when appropriate');
+      });
+
+      it('should include anti-rigidity reminders', () => {
+        const result = builder.buildCharacterDataXml(COMPLETE_CHARACTER_DATA);
+        expect(result).toContain('DO NOT cycle through patterns mechanically');
+        expect(result).toContain('Absence of patterns is also authentic');
+      });
+
+      it('should include REFERENCE marker for natural usage guidance', () => {
+        const result = builder.buildCharacterDataXml(COMPLETE_CHARACTER_DATA);
+        expect(result).toContain('REFERENCE');
+        expect(result).toContain('Use these patterns naturally');
+      });
+
+      it('should include guidance comments at start of speech_patterns content', () => {
+        const result = builder.buildCharacterDataXml(COMPLETE_CHARACTER_DATA);
+        const speechPatternsMatch = result.match(
+          /<speech_patterns>([\s\S]*?)<\/speech_patterns>/
+        );
+        expect(speechPatternsMatch).not.toBeNull();
+        const content = speechPatternsMatch[1];
+        // Guidance should come before the pattern content
+        const guidanceIndex = content.indexOf('USAGE GUIDANCE');
+        const felineIndex = content.indexOf('Feline Verbal Tics');
+        expect(guidanceIndex).toBeLessThan(felineIndex);
+      });
+
+      it('should include guidance even with legacy string patterns', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_WITH_LEGACY_SPEECH);
+        expect(result).toContain('USAGE GUIDANCE');
+        expect(result).toContain('DO NOT cycle through patterns mechanically');
+      });
+    });
   });
 
   describe('Current State Section', () => {

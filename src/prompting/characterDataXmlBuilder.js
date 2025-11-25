@@ -14,6 +14,7 @@ import { AgeUtils } from '../utils/ageUtils.js';
 
 /**
  * Default character name when none provided
+ *
  * @type {string}
  */
 const DEFAULT_FALLBACK_CHARACTER_NAME = 'Unknown Character';
@@ -341,8 +342,14 @@ class CharacterDataXmlBuilder {
       return '';
     }
 
-    // Add usage guidance comment inside the section
-    const guidance = this.#xmlBuilder.comment('Use these patterns naturally in dialogue - don\'t force every one.', 2);
+    // Add enhanced usage guidance with anti-rigidity reminders
+    const guidance = [
+      this.#xmlBuilder.comment('REFERENCE: Use these patterns naturally, not mechanically', 2),
+      this.#xmlBuilder.comment('USAGE GUIDANCE:', 2),
+      this.#xmlBuilder.comment('- Apply patterns when appropriate to situation and emotion', 2),
+      this.#xmlBuilder.comment('- DO NOT cycle through patterns mechanically', 2),
+      this.#xmlBuilder.comment('- Absence of patterns is also authentic', 2)
+    ].join('\n');
 
     return `  <speech_patterns>\n${guidance}\n\n${content}\n  </speech_patterns>`;
   }

@@ -11,6 +11,7 @@ import { SUBJECT_TYPES } from '../constants/subjectTypes.js';
 
 /**
  * Maps subject types to display categories with prioritization
+ *
  * @version 2.0 - Updated for simplified 6-type taxonomy (LLMROLPROARCANA-002)
  */
 const SUBJECT_TYPE_DISPLAY_MAPPING = {
@@ -100,6 +101,7 @@ export class PromptDataFormatter {
    * Format voice guidance for perception log section.
    *
    * Reminds the LLM to notice their own recent actions.
+   *
    * @param {Array} perceptionLogArray - Array of perception log entries
    * @returns {string} Formatted voice guidance text
    */
@@ -464,6 +466,29 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
   }
 
   /**
+   * Wrap content with a processing hint comment for LLM attention guidance
+   *
+   * @param {string} content - Content to wrap
+   * @param {'critical'|'reference'|'system'} hintType - Type of processing hint
+   * @param {string} hintText - Guidance text for the LLM
+   * @returns {string} Content with processing hint prepended
+   */
+  wrapWithProcessingHint(content, hintType, hintText) {
+    if (!content || !content.trim()) {
+      return content || '';
+    }
+
+    const hintMarkers = {
+      critical: '*** CRITICAL',
+      reference: 'REFERENCE',
+      system: 'SYSTEM'
+    };
+
+    const marker = hintMarkers[hintType] || hintType.toUpperCase();
+    return `<!-- ${marker}: ${hintText} -->\n${content}`;
+  }
+
+  /**
    * Format all complex prompt data into a flat object for template substitution
    *
    * @param {object} promptData - The prompt data object from AIPromptContentProvider
@@ -475,15 +500,40 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
       return {};
     }
 
-    // Start with the simple string fields
+    // Start with the simple string fields, applying processing hints where needed
     const formattedData = {
-      actionTagRulesContent: promptData.actionTagRulesContent || '',
-      taskDefinitionContent: promptData.taskDefinitionContent || '',
+      // CRITICAL: Format rules must be followed for valid output
+      actionTagRulesContent: this.wrapWithProcessingHint(
+        promptData.actionTagRulesContent || '',
+        'critical',
+        'These format rules MUST be followed for valid output'
+      ),
+      // CRITICAL: Core task - all output stems from this
+      taskDefinitionContent: this.wrapWithProcessingHint(
+        promptData.taskDefinitionContent || '',
+        'critical',
+        'Your core task - all output stems from this'
+      ),
       characterPersonaContent: promptData.characterPersonaContent || '',
       portrayalGuidelinesContent: promptData.portrayalGuidelinesContent || '',
-      contentPolicyContent: promptData.contentPolicyContent || '',
-      worldContextContent: promptData.worldContextContent || '',
-      availableActionsInfoContent: promptData.availableActionsInfoContent || '',
+      // SYSTEM: Content permissions for this session
+      contentPolicyContent: this.wrapWithProcessingHint(
+        promptData.contentPolicyContent || '',
+        'system',
+        'Content permissions for this session'
+      ),
+      // REFERENCE: Environmental context for decision-making
+      worldContextContent: this.wrapWithProcessingHint(
+        promptData.worldContextContent || '',
+        'reference',
+        'Environmental context for decision-making'
+      ),
+      // REFERENCE: Action selection guidance
+      availableActionsInfoContent: this.wrapWithProcessingHint(
+        promptData.availableActionsInfoContent || '',
+        'reference',
+        'Choose based on character state, goals, and recent events'
+      ),
       userInputContent: promptData.userInputContent || '',
       finalInstructionsContent: promptData.finalInstructionsContent || '',
       assistantResponsePrefix: promptData.assistantResponsePrefix || '',
