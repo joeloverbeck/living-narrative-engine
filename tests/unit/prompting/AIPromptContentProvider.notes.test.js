@@ -41,6 +41,10 @@ describe('AIPromptContentProvider.getPromptData → notesArray', () => {
     buildCharacterDataXml: jest.fn(() => '<character_data>Mock XML</character_data>'),
   };
 
+  const stubModActionMetadataProvider = {
+    getMetadataForMod: jest.fn(() => null),
+  };
+
   let provider;
   let logger;
 
@@ -53,6 +57,7 @@ describe('AIPromptContentProvider.getPromptData → notesArray', () => {
       gameStateValidationService: stubGameStateValidationService,
       actionCategorizationService: stubActionCategorizationService,
       characterDataXmlBuilder: stubCharacterDataXmlBuilder,
+      modActionMetadataProvider: stubModActionMetadataProvider,
     });
   });
 

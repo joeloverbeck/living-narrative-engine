@@ -64,6 +64,7 @@ describe('Action Categorization Performance Regression', () => {
       gameStateValidationService: { validate: () => ({ isValid: true }) },
       actionCategorizationService: service,
       characterDataXmlBuilder: { buildCharacterDataXml: () => '<character/>' },
+      modActionMetadataProvider: { getMetadataForMod: () => null },
     });
   });
 

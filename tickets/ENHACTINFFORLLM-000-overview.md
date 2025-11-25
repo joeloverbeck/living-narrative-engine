@@ -61,18 +61,18 @@ ENHACTINFFORLLM-005 (Unit Tests: Service)   ENHACTINFFORLLM-006 (Unit Tests: Pro
 
 ### Phase 3: Testing (Tickets 005-007)
 5. ✅ **ENHACTINFFORLLM-005**: Unit tests for new service
-6. ✅ **ENHACTINFFORLLM-006**: Unit tests for integration
-7. ✅ **ENHACTINFFORLLM-007**: Integration tests
+6. **ENHACTINFFORLLM-006**: Unit tests for integration (pending - separate ticket)
+7. **ENHACTINFFORLLM-007**: Integration tests (pending - separate ticket)
 
 ### Phase 4: Content (Ticket 008)
-8. ✅ **ENHACTINFFORLLM-008**: Add metadata to 5 key mods
+8. **ENHACTINFFORLLM-008**: Add metadata to 5 key mods (pending - separate ticket)
 
 ## Success Criteria (from spec)
 
 1. [x] Two new optional properties in mod-manifest schema (ENHACTINFFORLLM-001 ✅)
 2. [x] New `ModActionMetadataProvider` service with caching (ENHACTINFFORLLM-002 ✅)
-3. [ ] `AIPromptContentProvider` displays Purpose/Consider when available
-4. [ ] Graceful fallback when metadata not present
+3. [x] `AIPromptContentProvider` displays Purpose/Consider when available (ENHACTINFFORLLM-004 ✅)
+4. [x] Graceful fallback when metadata not present (ENHACTINFFORLLM-004 ✅)
 5. [ ] At least 5 mods have actionPurpose and actionConsiderWhen populated
 6. [ ] Unit tests pass with >80% coverage on new code
 7. [ ] Integration tests verify end-to-end formatting

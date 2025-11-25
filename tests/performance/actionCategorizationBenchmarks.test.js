@@ -88,6 +88,7 @@ describe('Action Categorization Performance Benchmarks', () => {
       gameStateValidationService: { validate: () => ({ isValid: true }) },
       actionCategorizationService: service, // This now has UI_CATEGORIZATION_CONFIG
       characterDataXmlBuilder: { buildCharacterDataXml: () => '<character/>' },
+      modActionMetadataProvider: { getMetadataForMod: () => null },
     });
 
     const domElementFactory = new DomElementFactory(documentContext);

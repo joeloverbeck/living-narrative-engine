@@ -81,6 +81,9 @@ describe('Complete Action Categorization Workflow Integration', () => {
       characterDataXmlBuilder: {
         buildCharacterDataXml: () => '<character>Mock XML</character>',
       },
+      modActionMetadataProvider: {
+        getMetadataForMod: jest.fn(() => null),
+      },
     });
   });
 
@@ -417,6 +420,9 @@ describe('Complete Action Categorization Workflow Integration', () => {
         actionCategorizationService: faultyService,
         characterDataXmlBuilder: {
           buildCharacterDataXml: () => '<character>Mock XML</character>',
+        },
+        modActionMetadataProvider: {
+          getMetadataForMod: jest.fn(() => null),
         },
       });
 

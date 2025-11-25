@@ -60,6 +60,8 @@ describe('AIPromptContentProvider', () => {
   let mockActionCategorizationService;
   /** @type {jest.Mocked<any>} */
   let mockCharacterDataXmlBuilder;
+  /** @type {jest.Mocked<any>} */
+  let mockModActionMetadataProvider;
 
   // Spies for instance methods called by getPromptData or other methods
   /** @type {jest.SpyInstance} */
@@ -127,6 +129,10 @@ describe('AIPromptContentProvider', () => {
         .mockReturnValue('<character_data>Mock XML</character_data>'),
     };
 
+    mockModActionMetadataProvider = {
+      getMetadataForMod: jest.fn(() => null), // Default to no metadata
+    };
+
     // Instantiate with all mocks
     provider = new AIPromptContentProvider({
       logger: mockLoggerInstance,
@@ -135,6 +141,7 @@ describe('AIPromptContentProvider', () => {
       gameStateValidationService: mockGameStateValidationServiceInstance,
       actionCategorizationService: mockActionCategorizationService,
       characterDataXmlBuilder: mockCharacterDataXmlBuilder,
+      modActionMetadataProvider: mockModActionMetadataProvider,
     });
 
     // Spy on the provider's own methods that are either delegating or complex internal logic

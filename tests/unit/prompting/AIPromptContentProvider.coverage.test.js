@@ -86,6 +86,10 @@ describe('AIPromptContentProvider - Coverage Improvements', () => {
       getSortedNamespaces: jest.fn().mockReturnValue([]),
     };
 
+    const mockModActionMetadataProvider = {
+      getMetadataForMod: jest.fn().mockReturnValue(null),
+    };
+
     provider = new AIPromptContentProvider({
       logger: mockLogger,
       promptStaticContentService: mockPromptStaticContentService,
@@ -93,6 +97,7 @@ describe('AIPromptContentProvider - Coverage Improvements', () => {
       gameStateValidationService: mockGameStateValidationService,
       actionCategorizationService: mockActionCategorizationService,
       characterDataXmlBuilder: mockCharacterDataXmlBuilder,
+      modActionMetadataProvider: mockModActionMetadataProvider,
     });
   });
 

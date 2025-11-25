@@ -81,6 +81,9 @@ describe('AIPromptContentProvider Performance', () => {
       characterDataXmlBuilder: {
         buildCharacterDataXml: jest.fn(() => '<character/>'),
       },
+      modActionMetadataProvider: {
+        getMetadataForMod: jest.fn(() => null),
+      },
     });
   });
 

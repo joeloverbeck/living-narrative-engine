@@ -9,6 +9,7 @@
 /** @typedef {import('../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
 /** @typedef {import('../turns/dtos/actionComposite.js').ActionComposite} ActionComposite */
 /** @typedef {import('../types/perceptionLogTypes.js').RawPerceptionLogEntry} RawPerceptionLogEntry */
+/** @typedef {import('./services/modActionMetadataProvider.js').ModActionMetadata} ModActionMetadata */
 
 import { IAIPromptContentProvider } from '../turns/interfaces/IAIPromptContentProvider.js';
 import { ensureTerminalPunctuation } from '../utils/textUtils.js';
@@ -50,6 +51,8 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   #characterDataXmlBuilder;
   /** @type {*} */
   #actionCategorizationService;
+  /** @type {import('./services/modActionMetadataProvider.js').ModActionMetadataProvider} */
+  #modActionMetadataProvider;
 
   /**
    * @param {object} dependencies - Object containing required services.
@@ -59,6 +62,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    * @param {IGameStateValidationServiceForPrompting} dependencies.gameStateValidationService - Service to validate game state for prompting.
    * @param {*} dependencies.actionCategorizationService - Service for action categorization.
    * @param {import('./characterDataXmlBuilder.js').CharacterDataXmlBuilder} dependencies.characterDataXmlBuilder - Builder for XML character data.
+   * @param {import('./services/modActionMetadataProvider.js').ModActionMetadataProvider} dependencies.modActionMetadataProvider - Provider for mod action metadata.
    * @returns {void}
    */
   constructor({
@@ -68,6 +72,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     gameStateValidationService,
     actionCategorizationService,
     characterDataXmlBuilder,
+    modActionMetadataProvider,
   }) {
     super();
     validateDependencies(
@@ -113,6 +118,11 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
           name: 'AIPromptContentProvider: characterDataXmlBuilder',
           methods: ['buildCharacterDataXml'],
         },
+        {
+          dependency: modActionMetadataProvider,
+          name: 'AIPromptContentProvider: modActionMetadataProvider',
+          methods: ['getMetadataForMod'],
+        },
       ],
       logger
     );
@@ -123,6 +133,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     this.#gameStateValidationService = gameStateValidationService;
     this.#actionCategorizationService = actionCategorizationService;
     this.#characterDataXmlBuilder = characterDataXmlBuilder;
+    this.#modActionMetadataProvider = modActionMetadataProvider;
     this.#logger.debug(
       'AIPromptContentProvider initialized with XML builder for character data.'
     );
@@ -688,7 +699,30 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
           this.#actionCategorizationService.formatNamespaceDisplayName(
             namespace
           );
-        segments.push(`### ${displayName} Actions`);
+
+        // Look up mod manifest for metadata
+        const metadata =
+          this.#modActionMetadataProvider.getMetadataForMod(namespace);
+
+        // Format header with action count
+        segments.push(
+          `### ${displayName} Actions (${namespaceActions.length} actions)`
+        );
+
+        // Add purpose if available
+        if (metadata?.actionPurpose) {
+          segments.push(`**Purpose:** ${metadata.actionPurpose}`);
+        }
+
+        // Add consider when if available
+        if (metadata?.actionConsiderWhen) {
+          segments.push(`**Consider when:** ${metadata.actionConsiderWhen}`);
+        }
+
+        // Add spacing after header metadata
+        if (metadata?.actionPurpose || metadata?.actionConsiderWhen) {
+          segments.push('');
+        }
 
         for (const action of namespaceActions) {
           segments.push(this._formatSingleAction(action));
