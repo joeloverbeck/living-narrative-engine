@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-  "id": "clothing:dark_brown_leather_belt",
+  "id": "accessories:dark_brown_leather_belt",
   "description": "Dark-brown leather belt with brass buckle",
   "components": {
     "clothing:wearable": {

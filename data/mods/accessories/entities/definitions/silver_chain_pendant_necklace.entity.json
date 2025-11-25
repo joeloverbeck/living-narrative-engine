@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-  "id": "clothing:silver_chain_pendant_necklace",
+  "id": "accessories:silver_chain_pendant_necklace",
   "description": "Gothic silver chain necklace with decorative pendant",
   "components": {
     "clothing:wearable": {

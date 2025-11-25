@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-  "id": "clothing:slate_nylon_baseball_cap",
+  "id": "accessories:slate_nylon_baseball_cap",
   "description": "Slate-colored nylon baseball cap",
   "components": {
     "clothing:wearable": {

@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-  "id": "clothing:black_leather_collar_silver_bell",
+  "id": "accessories:black_leather_collar_silver_bell",
   "description": "Black leather collar with a small silver bell",
   "components": {
     "clothing:wearable": {

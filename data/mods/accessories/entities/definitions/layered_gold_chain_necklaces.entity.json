@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-  "id": "clothing:layered_gold_chain_necklaces",
+  "id": "accessories:layered_gold_chain_necklaces",
   "description": "Layered gold chain necklaces",
   "components": {
     "clothing:wearable": {

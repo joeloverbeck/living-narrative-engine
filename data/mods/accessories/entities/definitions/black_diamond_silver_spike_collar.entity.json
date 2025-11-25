@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-  "id": "clothing:black_diamond_silver_spike_collar",
+  "id": "accessories:black_diamond_silver_spike_collar",
   "description": "Gothic statement collar with black diamonds and silver spikes",
   "components": {
     "clothing:wearable": {
