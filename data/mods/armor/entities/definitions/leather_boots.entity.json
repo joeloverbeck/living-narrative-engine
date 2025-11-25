@@ -1,0 +1,50 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "armor:leather_boots",
+  "description": "Reinforced leather boots",
+  "components": {
+    "clothing:wearable": {
+      "layer": "armor",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": [
+        "base",
+        "armor"
+      ]
+    },
+    "core:material": {
+      "material": "leather",
+      "durability": 65,
+      "properties": [
+        "flexible"
+      ],
+      "careInstructions": [
+        "requires_oiling"
+      ]
+    },
+    "core:name": {
+      "text": "reinforced leather boots"
+    },
+    "core:description": {
+      "text": "Well-crafted leather boots with reinforced soles and metal toe caps. The high tops protect the ankles and lower legs while maintaining flexibility for movement. Sturdy laces ensure a secure fit."
+    },
+    "descriptors:color_basic": {
+      "color": "brown"
+    },
+    "descriptors:texture": {
+      "texture": "rugged"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "feet"
+      ],
+      "coveragePriority": "armor"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 1.8
+    }
+  }
+}

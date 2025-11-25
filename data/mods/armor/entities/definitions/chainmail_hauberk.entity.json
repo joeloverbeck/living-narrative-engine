@@ -1,0 +1,53 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "armor:chainmail_hauberk",
+  "description": "Full-length chainmail shirt",
+  "components": {
+    "clothing:wearable": {
+      "layer": "armor",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": [
+          "left_arm_clothing",
+          "right_arm_clothing"
+        ]
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "armor",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "iron",
+      "durability": 75,
+      "properties": [
+        "flexible"
+      ]
+    },
+    "core:name": {
+      "text": "chainmail hauberk"
+    },
+    "core:description": {
+      "text": "A knee-length shirt of interlocking iron rings. The chainmail provides excellent protection against slashing attacks while remaining flexible enough for combat movement. The weight is distributed across the shoulders and the metal rings create a distinctive sound with every movement."
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper",
+        "torso_lower",
+        "left_arm_clothing",
+        "right_arm_clothing"
+      ],
+      "coveragePriority": "armor"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 12.0
+    }
+  }
+}

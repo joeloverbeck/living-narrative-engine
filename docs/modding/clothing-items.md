@@ -41,7 +41,7 @@ Every clothing item requires these core components:
 - **Purpose**: Defines how and where the item can be worn
 - **Required**: Yes
 - **Properties**:
-  - `layer`: Equipment layer (`outer`, `base`, `underwear`, `accessories`)
+  - `layer`: Equipment layer (`outer`, `armor`, `base`, `underwear`, `accessories`)
   - `equipmentSlots`: Slot configuration (`{ "primary": "slot_name" }`)
 
 ## Equipment Slots
@@ -56,6 +56,46 @@ Available clothing slots:
 - `hands`: Hand clothing (gloves)
 - `left_arm_clothing`: Left arm specific clothing
 - `right_arm_clothing`: Right arm specific clothing
+
+## Armor Layer
+
+The armor layer is a special clothing layer for protective equipment. Armor has priority between outer garments and base clothing.
+
+**Layer Priority Order** (innermost to outermost):
+1. `underwear` - Undergarments
+2. `base` - Regular clothing (shirts, pants, boots)
+3. `armor` - Protective equipment (cuirasses, chainmail, plate armor)
+4. `outer` - Outerwear (cloaks, robes, long coats)
+5. `accessories` - Accessories (jewelry, belts, gloves)
+
+**Coverage Priority Scoring** (lower = higher visibility):
+- `outer`: 100 (highest visibility)
+- `armor`: 150
+- `base`: 200
+- `underwear`: 300
+- `direct`: 400 (fallback, including accessories)
+
+**When to Use Armor Layer**:
+- Protective equipment (cuirasses, chainmail, plate armor)
+- Combat gear (leather armor, bracers, greaves)
+- Defensive items worn for protection rather than fashion
+
+**Armor vs. Outer Layer**:
+- Use `armor` for protective equipment
+- Use `outer` for non-protective outerwear (cloaks, robes)
+- Armor can be worn under or over other layers depending on coverage priority
+
+**Example**:
+```json
+{
+  "clothing:wearable": {
+    "layer": "armor",
+    "equipmentSlots": {
+      "primary": "torso_upper"
+    }
+  }
+}
+```
 
 ## Coverage Mapping (Advanced)
 
@@ -90,10 +130,11 @@ For clothing items that should cover additional body regions beyond their primar
 
 ### Coverage Priority Guidelines
 
-- **`outer`**: Coats, jackets, outer garments
-- **`base`**: Regular clothing like pants, shirts
-- **`underwear`**: Undergarments, intimate clothing
-- **`accessories`**: Accessory items like belts, gloves
+- **`outer`**: Coats, jackets, outer garments (100)
+- **`armor`**: Protective equipment like cuirasses, chainmail (150)
+- **`base`**: Regular clothing like pants, shirts (200)
+- **`underwear`**: Undergarments, intimate clothing (300)
+- **`accessories`**: Accessory items like belts, gloves (falls back to `direct`: 400)
 
 ### Testing Your Coverage
 

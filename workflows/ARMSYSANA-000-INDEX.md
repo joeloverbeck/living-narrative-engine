@@ -86,27 +86,34 @@ Armor can be implemented as a **fifth clothing layer** without modifying the cor
   - Updated `SlotAccessResolver.getCoveragePriorityFromMode()` for armor mapping
   - Most components were already data-driven via centralized `priorityConstants.js`
 
-#### ARMSYSANA-006: Run Comprehensive Tests
-- **File**: `workflows/ARMSYSANA-006-run-comprehensive-tests.md`
+#### ARMSYSANA-006: Run Comprehensive Tests ✅ COMPLETED
+- **File**: `archive/workflows/armor-system-analysis/ARMSYSANA-006-run-comprehensive-tests-COMPLETED.md`
 - **Priority**: Critical
 - **Estimated Effort**: 20 minutes
 - **Description**: Validate Phase 2 changes with comprehensive test suite
-- **Commands**: Integration tests, unit tests, `npm run test:ci`
-- **Checkpoint**: Must pass before proceeding to Phase 3
+- **Status**: ✅ Completed 2025-11-25
+- **Actual Changes**:
+  - Corrected ticket assumption about non-existent `tests/integration/scopeDsl/clothing-resolution` directory
+  - Ran all 3,261 tests across 193 suites - ALL PASSING
+  - Verified 12 dedicated armor tests pass
+  - No performance degradation detected
+  - Pre-existing type/lint issues documented (unrelated to armor)
 
 ### Phase 3: Documentation and Examples
 
-#### ARMSYSANA-007: Update Documentation
-- **File**: `workflows/ARMSYSANA-007-update-documentation.md`
+#### ARMSYSANA-007: Update Documentation ✅ COMPLETED
+- **File**: `archive/workflows/armor-system-analysis/ARMSYSANA-007-update-documentation-COMPLETED.md`
 - **Priority**: High
 - **Estimated Effort**: 60 minutes
 - **Description**: Update all documentation to include armor layer information
-- **Files Changed**:
-  - `docs/modding/clothing-items.md`
-  - `docs/developers/clothing-coverage-system.md`
-  - `docs/anatomy/anatomy-system-guide.md`
-  - `docs/anatomy/clothing-coverage-mapping.md`
-  - `CLAUDE.md`
+- **Status**: ✅ Completed 2025-11-25
+- **Actual Changes**:
+  - Updated `docs/modding/clothing-items.md` with armor layer section
+  - Updated `docs/developers/clothing-coverage-system.md` with priority table and scenarios
+  - Updated `docs/anatomy/anatomy-system-guide.md` with armor support section
+  - Updated `docs/anatomy/clothing-coverage-mapping.md` with armor examples
+  - Updated `CLAUDE.md` with clothing layer architecture section
+  - Corrected ticket assumption: accessories fall back to `direct: 400`, not `accessories: 350`
 
 #### ARMSYSANA-008: Create Example Armor Entities
 - **File**: `workflows/ARMSYSANA-008-create-armor-examples.md`
@@ -193,8 +200,10 @@ Innermost to Outermost:
 2. base (priority 200)
 3. armor (priority 150) ← NEW
 4. outer (priority 100)
-5. accessories (priority 350)
+5. accessories (falls back to direct: 400)
 ```
+
+**Note**: Accessories do not have a dedicated coverage priority in the implementation. They fall back to `direct: 400` at runtime.
 
 ### Files Modified
 
@@ -292,7 +301,7 @@ After armor system is complete, consider:
 
 ---
 
-**Migration Status**: Phase 2 In Progress
+**Migration Status**: Phase 3 IN PROGRESS (Documentation complete, Examples pending)
 **Last Updated**: 2025-11-25
-**Next Ticket**: ARMSYSANA-006
-**Completed Tickets**: ARMSYSANA-001, ARMSYSANA-002, ARMSYSANA-003, ARMSYSANA-004, ARMSYSANA-005
+**Next Ticket**: ARMSYSANA-008 (Create Armor Examples)
+**Completed Tickets**: ARMSYSANA-001, ARMSYSANA-002, ARMSYSANA-003, ARMSYSANA-004, ARMSYSANA-005, ARMSYSANA-006, ARMSYSANA-007

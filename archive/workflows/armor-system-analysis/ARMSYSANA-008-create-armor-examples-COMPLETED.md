@@ -4,6 +4,19 @@
 **Priority**: Medium
 **Risk Level**: None (Example entities only)
 **Estimated Effort**: 45 minutes
+**Status**: ✅ COMPLETED (2025-11-25)
+
+## Assumption Corrections (2025-11-25)
+
+The following discrepancies were identified and corrected during implementation:
+
+1. **`descriptors:condition` component** - Original ticket used this component (e.g., `"condition": "worn"`) but it does NOT exist in the codebase. **REMOVED** from all entity examples.
+
+2. **`descriptors:texture` value `"metallic"`** - Original ticket used `"metallic"` but this is NOT a valid value. Valid options include: `smooth`, `rugged`, `matte`, `glossy`, etc. **CORRECTED** to use valid values.
+
+3. **Mod dependencies** - Original manifest showed `dependencies: ["core", "clothing", "anatomy"]` but `descriptors` mod is also required since entities use `descriptors:texture` and `descriptors:color_basic`. **CORRECTED** to include `descriptors`.
+
+4. **Entity file naming** - Files should use `.entity.json` extension to match existing patterns in `data/mods/clothing/entities/definitions/`.
 
 ## Context
 

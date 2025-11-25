@@ -208,6 +208,35 @@ Because the validators own their `failFast` flag, callers cannot override this b
 
 `ClothingInstantiationService` (`src/clothing/services/clothingInstantiationService.js`) receives a `SlotResolver` (`src/anatomy/integration/SlotResolver.js`). When the event fires, downstream systems can reuse the same resolver and socket data to attach equipment or generate descriptions without touching the anatomy workflow directly.
 
+## Armor Support
+
+The anatomy system natively supports armor as a distinct clothing layer. Armor is defined in:
+- Wearable component (`clothing:wearable`)
+- Slot metadata component (`clothing:slot_metadata`)
+- Coverage mapping component (`clothing:coverage_mapping`)
+
+**Allowed Layers by Slot** (typical configuration):
+- `standard_torso_upper`: `["underwear", "base", "outer", "armor"]`
+- `standard_legs`: `["underwear", "base", "outer", "armor"]`
+- `standard_hands`: `["base", "armor"]`
+- `standard_feet`: `["base", "armor"]`
+
+Most clothing slots support armor by default.
+
+**Layer Hierarchy** (innermost to outermost):
+1. `underwear` - Undergarments
+2. `base` - Regular clothing
+3. `armor` - Protective equipment (cuirasses, chainmail, plate armor)
+4. `outer` - Outerwear (cloaks, robes, long coats)
+5. `accessories` - Accessories (jewelry, belts, gloves)
+
+**Coverage Priority** (lower = higher visibility):
+- `outer`: 100 (highest visibility)
+- `armor`: 150
+- `base`: 200
+- `underwear`: 300
+- `direct`: 400 (fallback, including accessories)
+
 ## Key Services
 
 ### AnatomyGenerationWorkflow

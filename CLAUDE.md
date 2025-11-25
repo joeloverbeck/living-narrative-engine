@@ -405,6 +405,33 @@ import {
 **Documentation**:
 - [Body Descriptors Complete](docs/anatomy/body-descriptors-complete.md) - Complete guide including registry, adding descriptors, and validation
 
+### Clothing Layer Architecture
+
+The clothing system uses a five-layer model:
+
+```
+Layer Hierarchy (innermost to outermost):
+1. underwear  - Undergarments, intimate clothing
+2. base       - Regular clothing (shirts, pants, boots)
+3. armor      - Protective equipment (cuirasses, chainmail, plate armor)
+4. outer      - Outerwear (coats, jackets, cloaks, robes)
+5. accessories - Accessories (jewelry, belts, gloves)
+```
+
+**Coverage Priority Scoring** (lower = higher visibility):
+- `outer`: 100 (highest visibility)
+- `armor`: 150 (protective equipment)
+- `base`: 200
+- `underwear`: 300
+- `direct`: 400 (fallback, including accessories)
+
+**Armor Layer**: Added to support protective equipment in sword & sorcery scenarios. Armor has priority between outer garments and base clothing, allowing realistic layering (e.g., chainmail under a cloak, or visible plate armor).
+
+**Key Files**:
+- Priority constants: `src/scopeDsl/prioritySystem/priorityConstants.js`
+- Layer compatibility: `src/clothing/validation/layerCompatibilityService.js`
+- Coverage analysis: `src/clothing/analysis/coverageAnalyzer.js`
+
 ### Clothing Removal Blocking System
 
 The blocking system enforces realistic clothing physics by preventing removal of items that are secured by other items.

@@ -26,15 +26,16 @@ Priority calculation uses a two-tier system:
 
 ```javascript
 const COVERAGE_PRIORITY = {
-  outer: 100, // Outer layer coverage
-  base: 200, // Base layer coverage
+  outer: 100,     // Outer layer coverage (highest visibility)
+  armor: 150,     // Armor layer coverage (protective equipment)
+  base: 200,      // Base layer coverage
   underwear: 300, // Underwear layer coverage
-  accessories: 350, // Accessory layer coverage
-  direct: 400, // Direct slot equipment (fallback)
+  direct: 400,    // Direct slot equipment (fallback, including accessories)
 };
 
 const LAYER_PRIORITY_WITHIN_COVERAGE = {
-  outer: 10, // Within same coverage, outer wins
+  outer: 10,      // Within same coverage, outer wins
+  armor: 15,      // Armor for tie-breaking
   base: 20,
   underwear: 30,
   accessories: 40,
@@ -42,6 +43,49 @@ const LAYER_PRIORITY_WITHIN_COVERAGE = {
 ```
 
 Final priority = Coverage Priority + Layer Priority (lower = higher priority)
+
+### Coverage Priority Scoring
+
+| Priority | Value | Description | Example Items |
+|----------|-------|-------------|---------------|
+| outer | 100 | Highest visibility | Cloaks, robes, long coats |
+| armor | 150 | Protective equipment | Cuirasses, chainmail, plate armor |
+| base | 200 | Regular clothing | Shirts, pants, boots |
+| underwear | 300 | Undergarments | Intimate clothing |
+| direct | 400 | Fallback (including accessories) | Uncovered body parts, accessories |
+
+**Note**: Accessories do not have a dedicated coverage priority. When `coveragePriority: "accessories"` is used in data, it falls back to `direct` (400) at runtime.
+
+### Armor Coverage Priority
+
+Armor uses a dedicated priority tier (150) between outer and base layers. This allows:
+
+1. **Armor under outer garments**: Chainmail under a cloak (cloak visible)
+2. **Armor over base clothing**: Plate armor over a shirt (armor visible)
+3. **Armor as outer layer**: Full plate with no cloak (armor visible)
+
+**Example Scenarios**:
+
+**Scenario 1**: Warrior with cloak over armor
+```
+Character wearing: shirt (base) → chainmail (armor) → cloak (outer)
+Visible: Cloak (priority 100)
+Hidden: Chainmail, shirt
+```
+
+**Scenario 2**: Warrior without cloak
+```
+Character wearing: shirt (base) → chainmail (armor)
+Visible: Chainmail (priority 150)
+Hidden: Shirt
+```
+
+**Scenario 3**: Civilian with coat
+```
+Character wearing: shirt (base) → leather jacket (outer)
+Visible: Leather jacket (priority 100)
+Hidden: Shirt
+```
 
 ### Performance Optimizations
 
@@ -81,9 +125,10 @@ const PRIORITY_CONFIG = {
    ```json
    "clothing:coverage_mapping": {
      "covers": ["region_name"],
-     "coveragePriority": "outer|base|underwear|accessories"
+     "coveragePriority": "outer|armor|base|underwear"
    }
    ```
+   **Note**: Use `armor` for protective equipment. While `accessories` is valid in the schema, it falls back to `direct` at runtime.
 3. **Test coverage resolution** with realistic equipment combinations
 4. **Validate performance impact** if adding many new items
 
