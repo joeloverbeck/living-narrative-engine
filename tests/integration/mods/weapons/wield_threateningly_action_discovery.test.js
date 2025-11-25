@@ -44,8 +44,8 @@ describe('wield_threateningly action definition', () => {
       expect(actionJson.targets.primary).toBeDefined();
     });
 
-    it('should use weapons_in_inventory scope for primary target', () => {
-      expect(actionJson.targets.primary.scope).toBe('weapons:weapons_in_inventory');
+    it('should use grabbable_weapons_in_inventory scope for primary target', () => {
+      expect(actionJson.targets.primary.scope).toBe('weapons:grabbable_weapons_in_inventory');
     });
 
     it('should use "target" placeholder for primary target', () => {

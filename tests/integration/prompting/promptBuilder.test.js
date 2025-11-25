@@ -94,25 +94,29 @@ describe('PromptBuilder (template-based)', () => {
   test('generates a complete prompt from template and data', async () => {
     const prompt = await builder.build(TEST_LLM_ID, SAMPLE_PROMPT_DATA);
 
-    // Check that all major sections are present
-    expect(prompt).toContain(
-      '<task_definition>\nTest task definition\n</task_definition>'
-    );
+    // Check that all major sections are present (with processing hints where applicable)
+    expect(prompt).toContain('<task_definition>');
+    expect(prompt).toContain('<!-- *** CRITICAL: Your core task - all output stems from this -->');
+    expect(prompt).toContain('Test task definition');
+    expect(prompt).toContain('</task_definition>');
     expect(prompt).toContain(
       '<character_persona>\nTest character persona\n</character_persona>'
     );
     expect(prompt).toContain(
       '<portrayal_guidelines>\nTest portrayal guidelines\n</portrayal_guidelines>'
     );
-    expect(prompt).toContain(
-      '<content_policy>\nTest content policy\n</content_policy>'
-    );
-    expect(prompt).toContain(
-      '<world_context>\nTest world context\n</world_context>'
-    );
-    expect(prompt).toContain(
-      '<available_actions_info>\nTest available actions\n</available_actions_info>'
-    );
+    expect(prompt).toContain('<content_policy>');
+    expect(prompt).toContain('<!-- SYSTEM: Content permissions for this session -->');
+    expect(prompt).toContain('Test content policy');
+    expect(prompt).toContain('</content_policy>');
+    expect(prompt).toContain('<world_context>');
+    expect(prompt).toContain('<!-- REFERENCE: Environmental context for decision-making -->');
+    expect(prompt).toContain('Test world context');
+    expect(prompt).toContain('</world_context>');
+    expect(prompt).toContain('<available_actions_info>');
+    expect(prompt).toContain('<!-- REFERENCE: Choose based on character state, goals, and recent events -->');
+    expect(prompt).toContain('Test available actions');
+    expect(prompt).toContain('</available_actions_info>');
     // user_input section has been removed from AI character templates
     // System constraints now includes action tag rules before final instructions
     expect(prompt).toContain('<system_constraints>');
@@ -210,17 +214,19 @@ describe('PromptBuilder (template-based)', () => {
 
     const prompt = await builder.build(TEST_LLM_ID, minimalData);
 
-    // All sections should still be present but empty
-    expect(prompt).toContain('<task_definition>\n\n</task_definition>');
+    // All sections should still be present (processing hints are only added when content is non-empty)
+    expect(prompt).toContain('<task_definition>');
+    expect(prompt).toContain('</task_definition>');
     expect(prompt).toContain('<character_persona>\n\n</character_persona>');
     expect(prompt).toContain(
       '<portrayal_guidelines>\n\n</portrayal_guidelines>'
     );
-    expect(prompt).toContain('<content_policy>\n\n</content_policy>');
-    expect(prompt).toContain('<world_context>\n\n</world_context>');
-    expect(prompt).toContain(
-      '<available_actions_info>\n\n</available_actions_info>'
-    );
+    expect(prompt).toContain('<content_policy>');
+    expect(prompt).toContain('</content_policy>');
+    expect(prompt).toContain('<world_context>');
+    expect(prompt).toContain('</world_context>');
+    expect(prompt).toContain('<available_actions_info>');
+    expect(prompt).toContain('</available_actions_info>');
     // user_input section has been removed from AI character templates
     // System constraints now has action tag rules (empty) and final instructions (empty)
     expect(prompt).toContain('<system_constraints>');

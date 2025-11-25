@@ -138,7 +138,7 @@ describe('weapons:wield_threateningly prerequisites', () => {
         'wield {target} threateningly'
       );
       expect(wieldThreateninglyAction.targets.primary.scope).toBe(
-        'weapons:weapons_in_inventory'
+        'weapons:grabbable_weapons_in_inventory'
       );
       expect(wieldThreateninglyAction.generateCombinations).toBe(true);
     });

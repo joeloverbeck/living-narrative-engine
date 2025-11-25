@@ -197,6 +197,77 @@ describe('XmlElementBuilder', () => {
       });
     });
 
+    describe('critical style', () => {
+      it('should use asterisk border characters', () => {
+        const result = builder.decoratedComment(['Line 1'], 'critical');
+        expect(result).toContain('***');
+        expect(result).not.toContain('===');
+        expect(result).not.toContain('---');
+      });
+
+      it('should format single line correctly', () => {
+        const result = builder.decoratedComment(['Critical Content'], 'critical');
+        const lines = result.split('\n');
+        expect(lines).toHaveLength(3);
+        expect(lines[0]).toMatch(/^<!-- \*+$/);
+        expect(lines[1]).toContain('Critical Content');
+        expect(lines[2]).toMatch(/\*+ -->$/);
+      });
+
+      it('should format multiple lines correctly', () => {
+        const result = builder.decoratedComment(['Rule 1', 'Rule 2'], 'critical');
+        const lines = result.split('\n');
+        expect(lines).toHaveLength(4);
+        expect(lines[1]).toContain('Rule 1');
+        expect(lines[2]).toContain('Rule 2');
+      });
+    });
+
+    describe('reference style', () => {
+      it('should use dot border characters', () => {
+        const result = builder.decoratedComment(['Line 1'], 'reference');
+        expect(result).toContain('...');
+        expect(result).not.toContain('===');
+        expect(result).not.toContain('---');
+        expect(result).not.toContain('***');
+      });
+
+      it('should format single line correctly', () => {
+        const result = builder.decoratedComment(['Reference Info'], 'reference');
+        const lines = result.split('\n');
+        expect(lines).toHaveLength(3);
+        expect(lines[0]).toMatch(/^<!-- \.+$/);
+        expect(lines[1]).toContain('Reference Info');
+        expect(lines[2]).toMatch(/\.+ -->$/);
+      });
+
+      it('should format multiple lines correctly', () => {
+        const result = builder.decoratedComment(['Context 1', 'Context 2'], 'reference');
+        const lines = result.split('\n');
+        expect(lines).toHaveLength(4);
+        expect(lines[1]).toContain('Context 1');
+        expect(lines[2]).toContain('Context 2');
+      });
+    });
+
+    describe('unknown style fallback', () => {
+      it('should fall back to secondary (dash) for unknown styles', () => {
+        const result = builder.decoratedComment(['Line 1'], 'unknown');
+        expect(result).toContain('---');
+        expect(result).not.toContain('===');
+      });
+
+      it('should fall back to secondary (dash) for undefined style', () => {
+        const result = builder.decoratedComment(['Line 1'], undefined);
+        expect(result).toContain('---');
+      });
+
+      it('should fall back to secondary (dash) for null style', () => {
+        const result = builder.decoratedComment(['Line 1'], null);
+        expect(result).toContain('---');
+      });
+    });
+
     describe('indentation', () => {
       it('should apply indentation to all lines', () => {
         const result = builder.decoratedComment(['Line 1'], 'primary', 1);

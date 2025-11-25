@@ -400,3 +400,84 @@ If markers confuse LLM or degrade quality:
 
 - Report Section 7.2: "Recommendation 6 - Add LLM Processing Hints"
 - Report Section 6.2: "Over-Specification Risks"
+
+---
+
+## Outcome
+
+**Status:** ✅ COMPLETED
+**Completion Date:** 2025-11-25
+
+### Implementation Summary
+
+The ticket's original assumptions were based on a template architecture that doesn't exist in the current codebase. The actual implementation extends existing infrastructure rather than creating a class-based `CharacterPromptTemplate`.
+
+### What Was Implemented
+
+1. **Extended `XmlElementBuilder.decoratedComment()` with new styles:**
+   - Added `'critical': '*'` for mandatory constraints (asterisk borders)
+   - Added `'reference': '.'` for context/reference material (dot borders)
+   - Refactored from ternary to object mapping for cleaner style handling
+
+2. **Added `wrapWithProcessingHint()` to `PromptDataFormatter`:**
+   - New method that prepends processing hints as XML comments
+   - Supports `critical`, `reference`, and `system` hint types
+   - Pattern: `<!-- *** CRITICAL: hint text -->\ncontent`
+
+3. **Updated `formatPromptData()` to inject hints:**
+   - `actionTagRulesContent`: CRITICAL hint ("These format rules MUST be followed")
+   - `taskDefinitionContent`: CRITICAL hint ("Your core task - all output stems from this")
+   - `contentPolicyContent`: SYSTEM hint ("Content permissions for this session")
+   - `worldContextContent`: REFERENCE hint ("Environmental context for decision-making")
+   - `availableActionsInfoContent`: REFERENCE hint ("Choose based on character state, goals, and recent events")
+   - `characterPersonaContent` and `portrayalGuidelinesContent`: No hints (pass-through)
+
+4. **Enhanced `CharacterDataXmlBuilder.#buildSpeechPatternsSection()`:**
+   - Added multi-line usage guidance with anti-rigidity reminders
+   - Included REFERENCE marker for natural pattern usage
+   - Added comments:
+     - "REFERENCE: Use these patterns naturally, not mechanically"
+     - "USAGE GUIDANCE:"
+     - "Apply patterns when appropriate to situation and emotion"
+     - "DO NOT cycle through patterns mechanically"
+     - "Absence of patterns is also authentic"
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `src/prompting/xmlElementBuilder.js` | Added `critical` and `reference` styles to `decoratedComment()` |
+| `src/prompting/promptDataFormatter.js` | Added `wrapWithProcessingHint()`, updated `formatPromptData()` |
+| `src/prompting/characterDataXmlBuilder.js` | Enhanced `#buildSpeechPatternsSection()` with usage guidance |
+| `tests/unit/prompting/xmlElementBuilder.test.js` | Added tests for new decoration styles |
+| `tests/unit/prompting/promptDataFormatter.test.js` | Added tests for `wrapWithProcessingHint()` and integration tests |
+| `tests/unit/prompting/characterDataXmlBuilder.test.js` | Added tests for usage guidance and anti-rigidity reminders |
+
+### Test Results
+
+- All 453 prompting unit tests pass
+- No regressions in existing functionality
+- New tests provide comprehensive coverage for:
+  - Critical/reference/system hint markers
+  - Empty content handling
+  - Multiline content preservation
+  - Unknown hint type fallback
+  - Usage guidance placement and content
+
+### Acceptance Criteria Status
+
+- [x] Critical identity sections marked with `<!-- CRITICAL -->` comments
+- [x] Reference sections marked with `<!-- REFERENCE -->` comments
+- [x] Usage guidance added for speech patterns and other pattern-based content
+- [x] Processing hints added at section boundaries
+- [x] Tests verify markers don't interfere with parsing
+- [ ] Character voice consistency improves (target: >8/10) - *Requires live testing*
+
+### Deviations from Ticket
+
+The ticket proposed a `CharacterPromptTemplate` class that doesn't exist. Instead:
+- Extended existing `XmlElementBuilder` for decorated comment styles
+- Extended existing `PromptDataFormatter` for processing hints
+- Extended existing `CharacterDataXmlBuilder` for speech pattern guidance
+
+This approach maintains backward compatibility and follows the existing architecture.

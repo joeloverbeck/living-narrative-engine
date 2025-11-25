@@ -287,9 +287,11 @@ describe('AIPromptPipeline integration', () => {
     const [promptDto] = promptSpy.mock.calls[0];
     expect(promptDto.availableActions).toBe(availableActions);
 
-    expect(prompt).toContain(
-      '<task_definition>\nCore Task: Resolve the anomaly without escalating conflict.\n</task_definition>'
-    );
+    // Check task_definition with processing hint
+    expect(prompt).toContain('<task_definition>');
+    expect(prompt).toContain('<!-- *** CRITICAL: Your core task - all output stems from this -->');
+    expect(prompt).toContain('Core Task: Resolve the anomaly without escalating conflict.');
+    expect(prompt).toContain('</task_definition>');
     expect(prompt).toContain('YOU ARE Commander Nyra.');
     expect(prompt).toContain(
       '[Index: 1] Command: "raise-shields". Description: Raise the shields to defensive levels.'

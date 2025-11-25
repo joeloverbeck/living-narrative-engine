@@ -1,5 +1,7 @@
 # WEAHANREQFIL-004: Create Grabbable Weapons Scope and Update Manifest
 
+## Status: ✅ COMPLETED
+
 ## Summary
 
 Create a new scope file `grabbable_weapons_in_inventory.scope` that filters weapons by hand availability and held status, and add it to the weapons mod manifest.
@@ -105,3 +107,57 @@ Create `tests/integration/mods/weapons/grabbable_weapons_scope.integration.test.
 - 1 line added to manifest
 - ~150 lines of integration tests
 - Small, focused change
+
+---
+
+## Outcome
+
+### What Was Changed
+
+1. **Created scope file** `data/mods/weapons/scopes/grabbable_weapons_in_inventory.scope`
+   - Implemented exactly as specified in ticket
+   - Single-line scope definition filtering weapons by hand availability and held status
+
+2. **Updated manifest** `data/mods/weapons/mod-manifest.json`
+   - Added `grabbable_weapons_in_inventory.scope` to scopes array
+   - Preserved existing `weapons_in_inventory.scope` entry
+
+3. **Created integration tests** `tests/integration/mods/weapons/grabbable_weapons_scope.integration.test.js`
+   - 13 comprehensive tests across 4 describe blocks:
+     - Basic Filtering (4 tests)
+     - Edge Cases (4 tests)
+     - Scenario Tests (4 tests)
+     - Non-weapon item filtering (1 test)
+   - Covers all acceptance criteria plus additional edge case (non-weapon filtering)
+
+### What Differed from Plan
+
+- **Test count**: Created 13 tests vs. the 12 specified in acceptance criteria
+  - Added `should exclude non-weapon items from results` test for completeness
+- No other deviations from the original ticket
+
+### Validation Results
+
+- ✅ All 13 new tests pass
+- ✅ All 70 existing weapons mod tests pass (7 test suites)
+- ✅ Scope lint passes (103 scope files valid)
+- ✅ `npm run validate` passes
+- ✅ Existing `weapons_in_inventory.scope` unchanged
+
+### New/Modified Tests
+
+| Test | Rationale |
+|------|-----------|
+| `should return weapons when actor has enough free hands` | Core happy path - verifies scope returns weapons when conditions met |
+| `should exclude weapons requiring more hands than actor has free` | Validates canActorGrabItem filtering |
+| `should exclude weapons already being held` | Validates isItemBeingGrabbed filtering |
+| `should return empty array when no weapons are grabbable` | Edge case - all weapons filtered out |
+| `should default to 1 hand for weapons without anatomy:requires_grabbing` | Verifies default behavior from canActorGrabItem operator |
+| `should include weapons with handsRequired: 0 (rings, etc.)` | Edge case - zero-hand items |
+| `should return empty array when actor has no anatomy:body` | Edge case - missing anatomy component |
+| `should handle actor with multiple grabbing appendages` | Complex scenario - multiple hands |
+| `should show 1-hand sword when actor has 1 free hand` | Realistic scenario test |
+| `should hide 2-hand sword when actor has 1 free hand` | Realistic scenario test |
+| `should show 2-hand sword when actor has 2 free hands` | Realistic scenario test |
+| `should hide weapon that actor is currently wielding` | Realistic scenario test |
+| `should exclude non-weapon items from results` | Additional coverage - ensures non-weapons filtered |
