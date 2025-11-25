@@ -911,5 +911,28 @@ describe('aiRegistrations', () => {
         ],
       });
     });
+
+    it('returns the vanilla LlmJsonService when not in test mode', () => {
+      const container = createMockContainer();
+      const originalEnv = process.env.NODE_ENV;
+
+      try {
+        process.env.NODE_ENV = 'development';
+
+        registerMinimalAIForCharacterBuilder(container, logger);
+
+        const minimalCall = container.register.mock.calls.find(
+          ([token]) => token === tokens.LlmJsonService
+        );
+        const minimalFactory = minimalCall[1];
+        const serviceInstance = minimalFactory();
+
+        expect(serviceInstance.generateContent).toBe(
+          LlmJsonServiceMock.mock.instances[0].generateContent
+        );
+      } finally {
+        process.env.NODE_ENV = originalEnv;
+      }
+    });
   });
 });
