@@ -117,6 +117,12 @@ describe('CharacterDataXmlBuilder', () => {
       expect(result).toContain('<name>Unknown Character</name>');
     });
 
+    it('should throw when characterData is not an object', () => {
+      expect(() => builder.buildCharacterDataXml('not-an-object')).toThrow(
+        'characterData must be an object'
+      );
+    });
+
     it('should handle empty name field with fallback', () => {
       const result = builder.buildCharacterDataXml({ name: '' });
       expect(result).toContain('<name>Unknown Character</name>');
@@ -197,6 +203,24 @@ describe('CharacterDataXmlBuilder', () => {
       expect(result).toContain('<apparent_age>');
       // AgeUtils formats age ranges - check for both values
       expect(result).toMatch(/40.*50|forties/i);
+    });
+
+    it('should treat whitespace-only apparent age string as empty', () => {
+      const result = builder.buildCharacterDataXml({
+        name: 'String Age Edge',
+        apparentAge: '   ',
+      });
+
+      expect(result).not.toContain('<apparent_age>');
+    });
+
+    it('should omit apparent_age when provided type is invalid', () => {
+      const result = builder.buildCharacterDataXml({
+        name: 'Type Edge Case',
+        apparentAge: 42,
+      });
+
+      expect(result).not.toContain('<apparent_age>');
     });
 
     it('should handle apparent age as string', () => {
@@ -372,6 +396,26 @@ describe('CharacterDataXmlBuilder', () => {
         expect(result).toContain('casual');
         expect(result).toContain('Examples');
       });
+
+      it('should handle structured patterns without contexts or examples', () => {
+        const result = builder.buildCharacterDataXml({
+          name: 'Pattern Minimalist',
+          speechPatterns: [{ type: 'Minimal Marker' }],
+        });
+
+        expect(result).toContain('Minimal Marker');
+        expect(result).not.toContain('Contexts:');
+        expect(result).not.toContain('Examples:');
+      });
+
+      it('should fallback to default label when type is missing', () => {
+        const result = builder.buildCharacterDataXml({
+          name: 'Pattern Default',
+          speechPatterns: [{ contexts: ['anywhere'] }],
+        });
+
+        expect(result).toContain('**Pattern**');
+      });
     });
 
     describe('Mixed Format', () => {
@@ -382,6 +426,36 @@ describe('CharacterDataXmlBuilder', () => {
         expect(result).toContain('Formal Speech');
         expect(result).toContain('(emotional) Expressive');
       });
+
+      it('should format mixed patterns when strings are blank', () => {
+        const result = builder.buildCharacterDataXml({
+          name: 'Mixed Minimal',
+          speechPatterns: ['   ', { type: 'Hybrid Pattern' }],
+        });
+
+        expect(result).toContain('Hybrid Pattern');
+        expect(result).not.toContain('Additional Patterns:');
+        expect(result).not.toContain('Contexts:');
+        expect(result).not.toContain('Examples:');
+      });
+
+      it('should use default labels for mixed patterns missing type', () => {
+        const result = builder.buildCharacterDataXml({
+          name: 'Mixed Default',
+          speechPatterns: ['Some legacy line', {}],
+        });
+
+        expect(result).toContain('**Pattern**');
+      });
+    });
+
+    it('should omit speech_patterns when patterns format produces no content', () => {
+      const result = builder.buildCharacterDataXml({
+        name: 'Empty Speech Patterns',
+        speechPatterns: ['   ', 123],
+      });
+
+      expect(result).not.toContain('<speech_patterns>');
     });
 
     it('should omit speech_patterns when empty array', () => {
@@ -452,6 +526,55 @@ describe('CharacterDataXmlBuilder', () => {
       });
       expect(result).toContain('<current_state>');
       expect(result).toContain('<goals>');
+      expect(result).not.toContain('<notes>');
+    });
+
+    it('should ignore invalid goal entries', () => {
+      const result = builder.buildCharacterDataXml({
+        name: 'Goal Sanitizer',
+        goals: ['   ', 123, { text: '' }, { text: 'Keep practicing' }],
+      });
+
+      expect(result).toContain('Keep practicing');
+      expect(result).not.toContain('123');
+      expect(result).not.toMatch(/<goals>\s*\n\s*<\/goals>/);
+    });
+
+    it('should support simple string goal entries', () => {
+      const result = builder.buildCharacterDataXml({
+        name: 'String Goal',
+        goals: ['Finish the mission'],
+      });
+
+      expect(result).toContain('Finish the mission');
+    });
+
+    it('should drop notes entries without text content', () => {
+      const result = builder.buildCharacterDataXml({
+        name: 'Note Filter',
+        notes: [{ text: 'Valid note' }, { text: '   ' }, { subject: 'No text' }],
+      });
+
+      expect(result).toContain('Valid note');
+      expect(result).not.toMatch(/No text/);
+      expect(result).not.toMatch(/<notes>\s*\n\s*<\/notes>/);
+    });
+
+    it('should omit goals when all entries are empty or invalid', () => {
+      const result = builder.buildCharacterDataXml({
+        name: 'Goal Filter',
+        goals: ['   ', { text: '   ' }],
+      });
+
+      expect(result).not.toContain('<goals>');
+    });
+
+    it('should omit notes when entries lack text', () => {
+      const result = builder.buildCharacterDataXml({
+        name: 'Note Removal',
+        notes: [{ text: '   ' }, { subject: 'No text' }],
+      });
+
       expect(result).not.toContain('<notes>');
     });
   });
