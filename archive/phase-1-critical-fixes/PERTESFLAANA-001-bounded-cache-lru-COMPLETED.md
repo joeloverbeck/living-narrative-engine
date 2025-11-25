@@ -1,6 +1,6 @@
 # PERTESFLAANA-001: Implement Bounded Cache with LRU Eviction
 
-**Reference**: [Performance Test Flakiness Analysis](../docs/analysis/performance-test-flakiness-analysis.md)
+**Reference**: [Performance Test Flakiness Analysis](../performance-test-flakiness/performance-test-flakiness-analysis.md)
 
 ## Status
 - Completed

@@ -1,6 +1,6 @@
 # PERTESFLAANA-005: Relax SlotGenerator Performance Test Thresholds
 
-**Reference**: [Performance Test Flakiness Analysis](../../docs/analysis/performance-test-flakiness-analysis.md)
+**Reference**: [Performance Test Flakiness Analysis](./performance-test-flakiness-analysis.md)
 
 ## Status
 - Completed (thresholds relaxed and archived after verification)
@@ -95,7 +95,7 @@ it('should generate single slot efficiently (<0.05ms)', () => {
   // Updated thresholds with ~3x CI safety margin
   // Original expectation: ~10-15ms local, ~30ms CI
   // Analysis shows ~0.03ms per call is normal and acceptable
-  // Reference: docs/analysis/performance-test-flakiness-analysis.md
+  // Reference: archive/performance-test-flakiness/performance-test-flakiness-analysis.md
   expect(totalTime).toBeLessThan(50);   // 50ms total for 1000 iterations
   expect(avgTime).toBeLessThan(0.05);   // 0.05ms = 50 microseconds per call
 });
