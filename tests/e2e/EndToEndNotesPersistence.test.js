@@ -140,6 +140,13 @@ describe('End-to-End Notes Persistence Flow', () => {
         getSortedNamespaces: jest.fn(),
         formatNamespaceDisplayName: jest.fn(),
       },
+      characterDataXmlBuilder: {
+        buildCharacterDataXml: jest
+          .fn()
+          .mockReturnValue(
+            '<character_data><identity><name>Test Character</name></identity></character_data>'
+          ),
+      },
     });
 
     const llmConfigService = {

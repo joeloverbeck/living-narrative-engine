@@ -59,6 +59,9 @@ describe('Tag Removal Performance Tests', () => {
         namespace.toUpperCase()
       ),
     },
+    characterDataXmlBuilder: {
+      buildCharacterDataXml: jest.fn(() => '<character/>'),
+    },
   });
 
   const createTestNotesWithTags = (count = 10) => {

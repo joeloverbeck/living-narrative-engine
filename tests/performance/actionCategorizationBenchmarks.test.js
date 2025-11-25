@@ -87,6 +87,7 @@ describe('Action Categorization Performance Benchmarks', () => {
       perceptionLogFormatter: { format: () => 'Log' },
       gameStateValidationService: { validate: () => ({ isValid: true }) },
       actionCategorizationService: service, // This now has UI_CATEGORIZATION_CONFIG
+      characterDataXmlBuilder: { buildCharacterDataXml: () => '<character/>' },
     });
 
     const domElementFactory = new DomElementFactory(documentContext);

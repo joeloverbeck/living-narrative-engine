@@ -37,6 +37,10 @@ describe('AIPromptContentProvider.getPromptData → notesArray', () => {
     formatNamespaceDisplayName: jest.fn((namespace) => namespace),
   };
 
+  const stubCharacterDataXmlBuilder = {
+    buildCharacterDataXml: jest.fn(() => '<character_data>Mock XML</character_data>'),
+  };
+
   let provider;
   let logger;
 
@@ -48,6 +52,7 @@ describe('AIPromptContentProvider.getPromptData → notesArray', () => {
       perceptionLogFormatter: stubPerceptionLogFormatter,
       gameStateValidationService: stubGameStateValidationService,
       actionCategorizationService: stubActionCategorizationService,
+      characterDataXmlBuilder: stubCharacterDataXmlBuilder,
     });
   });
 

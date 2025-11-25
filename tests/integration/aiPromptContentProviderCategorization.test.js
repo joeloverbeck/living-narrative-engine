@@ -76,6 +76,9 @@ describe('AIPromptContentProvider Categorization Integration', () => {
       actionCategorizationService: container.resolve(
         tokens.IActionCategorizationService
       ),
+      characterDataXmlBuilder: {
+        buildCharacterDataXml: jest.fn(() => '<character>Mock XML</character>'),
+      },
     });
   });
 
@@ -347,6 +350,9 @@ describe('AIPromptContentProvider Categorization Integration', () => {
           validate: jest.fn(() => ({ isValid: true })),
         },
         actionCategorizationService: faultyService,
+        characterDataXmlBuilder: {
+          buildCharacterDataXml: jest.fn(() => '<character>Mock XML</character>'),
+        },
       });
 
       const gameState = {

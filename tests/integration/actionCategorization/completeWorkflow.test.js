@@ -78,6 +78,9 @@ describe('Complete Action Categorization Workflow Integration', () => {
         validate: (state) => ({ isValid: true, errors: [] }),
       },
       actionCategorizationService: actionCategorizationService,
+      characterDataXmlBuilder: {
+        buildCharacterDataXml: () => '<character>Mock XML</character>',
+      },
     });
   });
 
@@ -412,6 +415,9 @@ describe('Complete Action Categorization Workflow Integration', () => {
         perceptionLogFormatter: { format: () => 'Log' },
         gameStateValidationService: { validate: () => ({ isValid: true }) },
         actionCategorizationService: faultyService,
+        characterDataXmlBuilder: {
+          buildCharacterDataXml: () => '<character>Mock XML</character>',
+        },
       });
 
       const gameState = {
