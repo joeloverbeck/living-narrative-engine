@@ -833,6 +833,19 @@ describe('GOAPDebugger', () => {
       expect(report).toContain('Warnings:');
       expect(report).toContain('duplicate task id');
     });
+
+    it('falls back to defaults when namespaces are empty and counts are missing', () => {
+      mockController.getTaskLibraryDiagnostics.mockReturnValue({
+        timestamp: Date.now(),
+        namespaces: {},
+        warnings: [],
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Total Tasks: 0');
+      expect(report).toContain('Namespaces: ∅');
+    });
   });
 
   describe('planning state diagnostics formatting', () => {
@@ -1102,6 +1115,41 @@ describe('GOAPDebugger', () => {
       expect(report).toContain('goal=explore');
       expect(goalPathSection).not.toContain('⚠️ STALE');
     });
+
+    it('uses fallback values when violations payload is incomplete', () => {
+      const recentTimestamp = Date.now();
+      mockController.getGoalPathDiagnostics.mockReturnValue({
+        actorId: 'actor-1',
+        entries: 'not-an-array',
+        lastViolationAt: recentTimestamp,
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Last violation recorded:');
+      expect(report).toContain('Total Violations: 0');
+      expect(report).toContain('Recent Violations: ∅');
+    });
+
+    it('falls back to unknown goal identifiers when missing', () => {
+      const recentTimestamp = Date.now();
+      mockController.getGoalPathDiagnostics.mockReturnValue({
+        actorId: 'actor-1',
+        totalViolations: undefined,
+        entries: [
+          {
+            timestamp: recentTimestamp,
+            violations: [{ path: 'actor.missing', expected: 'actor.components.missing' }],
+          },
+        ],
+        lastViolationAt: recentTimestamp,
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Total Violations: 0');
+      expect(report).toContain('goal=unknown');
+    });
   });
 
   describe('effect failure telemetry formatting', () => {
@@ -1200,6 +1248,42 @@ describe('GOAPDebugger', () => {
       expect(report).toContain('Last failure recorded:');
       expect(report).toContain('craft');
       expect(effectTelemetrySection).not.toContain('⚠️ STALE');
+    });
+
+    it('uses fallback labels when failure details are missing', () => {
+      const recentTimestamp = Date.now();
+      mockController.getEffectFailureTelemetry.mockReturnValue({
+        actorId: 'actor-1',
+        failures: [
+          {
+            timestamp: recentTimestamp,
+            taskId: undefined,
+            message: 'missing fields',
+          },
+        ],
+        lastFailureAt: recentTimestamp,
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Last failure recorded:');
+      expect(report).toContain('Total Failures: 0');
+      expect(report).toContain('goal=n/a');
+      expect(report).toContain('phase=n/a');
+    });
+
+    it('handles non-array telemetry failures gracefully', () => {
+      const recentTimestamp = Date.now();
+      mockController.getEffectFailureTelemetry.mockReturnValue({
+        actorId: 'actor-1',
+        failures: 'not-an-array',
+        lastFailureAt: recentTimestamp,
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Recent Failures: ∅');
+      expect(report).toContain('Total Failures: 0');
     });
   });
 
@@ -1322,6 +1406,27 @@ describe('GOAPDebugger', () => {
       expect(report).toContain('TASK_STARTED');
       expect(report).toContain('actor=actor-1');
       expect(report).not.toContain('payload=');
+    });
+
+    it('uses unknown actor label when both actorId and payload are missing', () => {
+      mockEventTraceProbe.getSnapshot.mockReturnValue({
+        actorId: 'actor-1',
+        capturing: false,
+        totalCaptured: 1,
+        totalViolations: 0,
+        events: [
+          {
+            type: 'GENERIC_EVENT',
+            timestamp: Date.now(),
+            violation: false,
+          },
+        ],
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('GENERIC_EVENT');
+      expect(report).toContain('actor=unknown');
     });
   });
 
