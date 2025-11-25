@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "outer-clothing",
+  "version": "1.0.0",
+  "name": "Outer Clothing",
+  "description": "Outer layer clothing entities",
+  "author": "Living Narrative Engine",
+  "dependencies": [
+    { "id": "core", "version": "^1.0.0" },
+    { "id": "descriptors", "version": "^1.0.0" },
+    { "id": "items", "version": "^1.0.0" },
+    { "id": "clothing", "version": "^1.0.0" }
+  ],
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "entities": {
+      "definitions": [],
+      "instances": []
+    }
+  }
+}
