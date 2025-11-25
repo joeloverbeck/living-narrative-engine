@@ -4,6 +4,8 @@
   "version": "1.1.0",
   "name": "Clothing System",
   "description": "Comprehensive clothing and equipment system with multi-layer support, gender-flexible design, and realistic removal blocking",
+  "actionPurpose": "Remove clothing from yourself or others, managing layers and accessibility.",
+  "actionConsiderWhen": "Undressing for intimacy, changing outfits, helping someone remove garments, or exposing body parts.",
   "author": "Living Narrative Engine",
   "dependencies": [
     {

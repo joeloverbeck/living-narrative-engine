@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "name": "Vampirism",
   "description": "Vampire-themed content including blood mechanics, vampire abilities, and supernatural interactions.",
+  "actionPurpose": "Perform vampire-specific actions including baring fangs, biting necks, and drinking blood.",
+  "actionConsiderWhen": "Threatening with fangs, feeding on blood, biting a victim carefully or violently, or withdrawing fangs.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
   "dependencies": [

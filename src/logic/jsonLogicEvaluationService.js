@@ -122,6 +122,8 @@ class JsonLogicEvaluationService extends BaseService {
       'isClosestRightOccupant',
       // Grabbing appendage operators
       'hasFreeGrabbingAppendages',
+      'canActorGrabItem',
+      'isItemBeingGrabbed',
     ]);
 
     // --- ADDED: Register the 'not' operator alias upon instantiation ---

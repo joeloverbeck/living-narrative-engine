@@ -1,5 +1,9 @@
 # ENHACTINFFORLLM-008: Add actionPurpose and actionConsiderWhen to 5 Key Mods
 
+## Status: ✅ COMPLETED
+
+**Completed Date**: 2025-11-25
+
 ## Summary
 Add the actionPurpose and actionConsiderWhen properties to the mod manifests of 5 key mods to demonstrate the feature and provide immediate value.
 
@@ -60,9 +64,16 @@ Add after the `description` field:
 
 ### 5. violence/mod-manifest.json
 
-Add after the `description` field:
+**Note**: This manifest requires additional fixes:
+- Fix `$schema` to use `schema://living-narrative-engine/mod-manifest.schema.json`
+- Add missing `description`, `author`, and `gameVersion` fields
+
+Add after the `name` field (since `description` will be added):
 
 ```json
+"description": "Provides physical violence actions including strikes, grabs, and lethal attacks.",
+"author": "Living Narrative Engine",
+"gameVersion": ">=0.0.1",
 "actionPurpose": "Inflict physical harm through strikes, grabs, and lethal attacks.",
 "actionConsiderWhen": "Combat, assault, self-defense, or when a character intends to cause physical pain or injury to another.",
 ```
@@ -112,3 +123,37 @@ The following 24 mods should receive metadata in future tickets:
 - seduction, sex-anal-penetration, sex-breastplay, sex-dry-intimacy
 - sex-penile-manual, sex-penile-oral, sex-physical-control, sex-vaginal-penetration
 - vampirism, weapons
+
+---
+
+## Outcome
+
+### What Was Actually Changed
+
+**Files Modified:**
+1. `data/mods/positioning/mod-manifest.json` - Added `actionPurpose` and `actionConsiderWhen`
+2. `data/mods/items/mod-manifest.json` - Added `actionPurpose` and `actionConsiderWhen`
+3. `data/mods/affection/mod-manifest.json` - Added `actionPurpose` and `actionConsiderWhen`
+4. `data/mods/core/mod-manifest.json` - Added `actionPurpose` and `actionConsiderWhen`
+5. `data/mods/violence/mod-manifest.json` - Added `actionPurpose`, `actionConsiderWhen`, PLUS fixed pre-existing issues:
+   - Fixed `$schema` (was `http://example.com/...`, now correct)
+   - Added missing `description` field
+   - Added missing `author` field
+   - Added missing `gameVersion` field
+
+### Differences from Original Plan
+
+- **Violence mod required extra fixes**: The ticket originally assumed the violence mod only needed metadata. During implementation, it was discovered the manifest had an incorrect `$schema` and was missing required fields (`description`, `author`, `gameVersion`). These were fixed as part of this ticket.
+
+### Tests Verified
+
+| Test | Result |
+|------|--------|
+| `npm run validate` | ✅ Passes (manifests valid) |
+| `npm run validate:strict` | ✅ Passes |
+| `tests/integration/prompting/actionFormattingWithMetadata.integration.test.js` | ✅ 13 tests pass |
+| `tests/unit/prompting/modActionMetadataProvider.test.js` | ✅ 14 tests pass |
+| `tests/unit/prompting/AIPromptContentProvider.actionMetadata.test.js` | ✅ 11 tests pass |
+| `tests/integration/loaders/modsLoader.integration.test.js` | ✅ 7 tests pass |
+
+**Note**: Pre-existing cross-reference violations (7) in the `core` mod remain. These are unrelated to this ticket and concern missing `items` dependency declarations.

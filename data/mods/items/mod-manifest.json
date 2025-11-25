@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "name": "Items System",
   "description": "Core items, inventory, and container system with multi-target actions",
+  "actionPurpose": "Interact with objects through pickup, examination, use, storage, and transfer between characters and containers.",
+  "actionConsiderWhen": "Managing inventory, examining interesting objects, sharing items with others, storing belongings, or using functional items.",
   "author": "Living Narrative Engine",
   "gameVersion": "0.0.1",
   "dependencies": [
