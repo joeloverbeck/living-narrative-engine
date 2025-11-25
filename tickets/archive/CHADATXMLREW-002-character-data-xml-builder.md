@@ -2,7 +2,7 @@
 
 **Priority:** P1 - HIGH
 **Effort:** 4-5 hours
-**Status:** Not Started
+**Status:** Completed
 **Spec Reference:** [specs/character-data-xml-rework.md](../specs/character-data-xml-rework.md) - "CharacterDataXmlBuilder" section
 **Depends On:** CHADATXMLREW-001 (XmlElementBuilder must exist)
 
@@ -108,26 +108,28 @@ The XML must follow this exact ordering (for LLM attention optimization):
 
 ### Component Mapping
 
-| DTO Field | XML Path |
-|-----------|----------|
-| `name` | `<identity><name>` |
-| `apparentAge` | `<identity><apparent_age>` |
-| `description` | `<identity><description>` |
-| `profile` | `<core_self><profile>` |
-| `personality` | `<core_self><personality>` |
-| `motivations` | `<psychology><core_motivations>` |
-| `internalTensions` | `<psychology><internal_tensions>` |
-| `coreDilemmas` | `<psychology><dilemmas>` |
-| `strengths` | `<traits><strengths>` |
-| `weaknesses` | `<traits><weaknesses>` |
-| `likes` | `<traits><likes>` |
-| `dislikes` | `<traits><dislikes>` |
-| `fears` | `<traits><fears>` |
-| `secrets` | `<traits><secrets>` |
-| `speechPatterns` | `<speech_patterns>` |
-| `goals` | `<current_state><goals>` |
-| `notes` | `<current_state><notes>` |
-| `shortTermMemory` | `<current_state><recent_thoughts>` |
+| DTO Field | XML Path | Data Source |
+|-----------|----------|-------------|
+| `name` | `<identity><name>` | ActorPromptDataDTO |
+| `apparentAge` | `<identity><apparent_age>` | ActorPromptDataDTO (object: `{minAge, maxAge, bestGuess?}`) |
+| `description` | `<identity><description>` | ActorPromptDataDTO |
+| `profile` | `<core_self><profile>` | ActorPromptDataDTO |
+| `personality` | `<core_self><personality>` | ActorPromptDataDTO |
+| `motivations` | `<psychology><core_motivations>` | ActorPromptDataDTO |
+| `internalTensions` | `<psychology><internal_tensions>` | ActorPromptDataDTO |
+| `coreDilemmas` | `<psychology><dilemmas>` | ActorPromptDataDTO |
+| `strengths` | `<traits><strengths>` | ActorPromptDataDTO |
+| `weaknesses` | `<traits><weaknesses>` | ActorPromptDataDTO |
+| `likes` | `<traits><likes>` | ActorPromptDataDTO |
+| `dislikes` | `<traits><dislikes>` | ActorPromptDataDTO |
+| `fears` | `<traits><fears>` | ActorPromptDataDTO |
+| `secrets` | `<traits><secrets>` | ActorPromptDataDTO |
+| `speechPatterns` | `<speech_patterns>` | ActorPromptDataDTO (string[] or object[]) |
+| `goals` | `<current_state><goals>` | Extended data* (array of `{text, timestamp?}`) |
+| `notes` | `<current_state><notes>` | Extended data* (array of `{text, subject?, subjectType?}`) |
+| `shortTermMemory` | `<current_state><recent_thoughts>` | Extended data* (object with `thoughts` array) |
+
+*Extended data fields are passed by the caller (e.g., AIPromptContentProvider in CHADATXMLREW-004) - they are NOT part of the base ActorPromptDataDTO.
 
 ### Private Methods (Suggested)
 
@@ -166,6 +168,17 @@ The XML must follow this exact ordering (for LLM attention optimization):
 
 Create `tests/common/prompting/characterDataFixtures.js`:
 
+**IMPORTANT ASSUMPTION CLARIFICATION (validated 2025-11-25):**
+
+The actual `ActorPromptDataDTO` typedef (in `src/turns/dtos/AIGameStateDTO.js`) shows:
+- `apparentAge` - The `ActorDataExtractor` extracts this as an **object** `{ minAge, maxAge, bestGuess? }` when present
+- `speechPatterns` - Extracted as **string array** by `ActorDataExtractor` (not structured objects)
+- `goals`, `notes`, `shortTermMemory` - These are **NOT part of ActorPromptDataDTO** - they are extracted separately by `AIPromptContentProvider._extractMemoryComponents()` from component data
+
+For this ticket, `CharacterDataXmlBuilder.buildCharacterDataXml()` will accept a **combined character data object** that MAY include goals/notes/shortTermMemory if passed by the caller. The builder should handle both:
+1. Basic `ActorPromptDataDTO` (without current_state data) - `<current_state>` section omitted
+2. Extended data with goals/notes/shortTermMemory - `<current_state>` section included
+
 ```javascript
 export const MINIMAL_CHARACTER_DATA = {
   name: 'Test Character'
@@ -186,6 +199,8 @@ export const COMPLETE_CHARACTER_DATA = {
   dislikes: "Dishonesty, rudeness, small talk",
   fears: "Genuine emotional intimacy",
   secrets: "I write poetry I've never shown anyone",
+  // NOTE: ActorDataExtractor produces string arrays, but structured objects
+  // can also be passed if the caller provides them
   speechPatterns: [
     {
       type: "Feline Verbal Tics",
@@ -193,7 +208,12 @@ export const COMPLETE_CHARACTER_DATA = {
       examples: ["Oh meow-y goodness..."]
     }
   ],
-  goals: ["Compose three pieces", "Find emotional depth"],
+  // NOTE: These are NOT part of base ActorPromptDataDTO but may be passed
+  // by the integration layer (AIPromptContentProvider) in CHADATXMLREW-004
+  goals: [
+    { text: "Compose three pieces", timestamp: "2024-01-15T08:00:00Z" },
+    { text: "Find emotional depth" }
+  ],
   notes: [
     { text: "The lute is my only genuine relationship", subject: "instrument", subjectType: "entity" }
   ],
@@ -226,6 +246,14 @@ export const CHARACTER_WITH_EMPTY_SECTIONS = {
   coreDilemmas: undefined,
   // Some traits present
   strengths: 'Good listener'
+};
+
+// Character data WITHOUT current_state fields (basic ActorPromptDataDTO)
+export const CHARACTER_WITHOUT_CURRENT_STATE = {
+  name: 'Static Character',
+  description: 'A simple character without mutable state',
+  personality: 'Stoic and reserved'
+  // No goals, notes, or shortTermMemory
 };
 ```
 
@@ -322,3 +350,63 @@ npx eslint src/prompting/characterDataXmlBuilder.js tests/common/prompting/chara
 - Follow existing patterns in `CharacterDataFormatter.js` for formatting logic (but output XML not Markdown)
 - Use `validateDependency()` for constructor parameter validation
 - Log at debug level for section building
+
+---
+
+## Outcome
+
+**Completed:** 2025-11-25
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `src/prompting/characterDataXmlBuilder.js` | Main implementation (595 lines) |
+| `tests/unit/prompting/characterDataXmlBuilder.test.js` | Unit tests (71 tests) |
+| `tests/common/prompting/characterDataFixtures.js` | Shared test fixtures (273 lines) |
+
+### Implementation Summary
+
+The `CharacterDataXmlBuilder` class was implemented as specified with the following characteristics:
+
+1. **Dependencies**: Uses constructor injection with `validateDependency()` for logger and xmlElementBuilder
+2. **Uses existing utility**: Leverages `AgeUtils.formatAgeDescription()` from `src/utils/ageUtils.js` for apparent age formatting (named export, not default)
+3. **All 6 sections implemented**: identity, core_self, psychology, traits, speech_patterns, current_state
+4. **Speech pattern formats**: Supports legacy strings, structured objects, and mixed formats with automatic detection
+5. **Empty section omission**: Correctly omits sections when all children are empty
+6. **XML escaping**: Uses `XmlElementBuilder.escape()` for all content
+7. **Fallback name**: Uses "Unknown Character" when name is missing/empty (does not throw)
+
+### Coverage Results
+
+| Metric | Result | Requirement |
+|--------|--------|-------------|
+| Statements | 96.07% | N/A |
+| Branches | 88.2% | ≥80% ✅ |
+| Functions | 100% | ≥90% ✅ |
+| Lines | 95.93% | ≥90% ✅ |
+
+### Deviations from Original Plan
+
+1. **Import fix required**: Original implementation used `import AgeUtils from '../utils/ageUtils.js'` but `AgeUtils` is a named export, not default. Fixed to `import { AgeUtils } from '../utils/ageUtils.js'`
+2. **Fallback behavior for missing name**: Implementation uses "Unknown Character" fallback instead of throwing an error, which is more forgiving for edge cases
+
+### Test Categories (71 total)
+
+- Constructor Validation: 5 tests
+- Input Validation: 6 tests
+- XML Structure: 3 tests
+- Identity Section: 6 tests
+- Core Self Section: 4 tests
+- Psychology Section: 3 tests
+- Traits Section: 4 tests
+- Speech Patterns Section: 7 tests (Legacy, Structured, Mixed)
+- Current State Section: 7 tests
+- Special Character Escaping: 4 tests
+- Comment Structure: 3 tests
+- Empty Section Omission: 3 tests
+- Integration with XmlElementBuilder: 3 tests
+- Logging Behavior: 2 tests
+- Performance and Scale: 3 tests
+- Edge Cases: 7 tests
+- Complete Character Output: 1 test
