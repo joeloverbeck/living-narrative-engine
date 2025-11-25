@@ -110,6 +110,16 @@ jest.mock('../../../../src/prompting/promptDataFormatter.js', () => ({
   PromptDataFormatter: mockCreateClass('PromptDataFormatter'),
 }));
 
+jest.mock('../../../../src/prompting/xmlElementBuilder.js', () => ({
+  __esModule: true,
+  default: mockCreateClass('XmlElementBuilder'),
+}));
+
+jest.mock('../../../../src/prompting/characterDataXmlBuilder.js', () => ({
+  __esModule: true,
+  default: mockCreateClass('CharacterDataXmlBuilder'),
+}));
+
 jest.mock('../../../../src/data/providers/entitySummaryProvider.js', () => ({
   __esModule: true,
   EntitySummaryProvider: mockCreateClass('EntitySummaryProvider'),
@@ -251,6 +261,12 @@ const { PromptTemplateService: PromptTemplateServiceMock } = jest.requireMock(
 const { PromptDataFormatter: PromptDataFormatterMock } = jest.requireMock(
   '../../../../src/prompting/promptDataFormatter.js'
 );
+const XmlElementBuilderMock = jest.requireMock(
+  '../../../../src/prompting/xmlElementBuilder.js'
+).default;
+const CharacterDataXmlBuilderMock = jest.requireMock(
+  '../../../../src/prompting/characterDataXmlBuilder.js'
+).default;
 const { ActorDataExtractor: ActorDataExtractorMock } = jest.requireMock(
   '../../../../src/turns/services/actorDataExtractor.js'
 );
@@ -536,6 +552,32 @@ describe('aiRegistrations', () => {
       );
       formatterDataCall[1](createFactoryContext({ [tokens.ILogger]: logger }));
       expect(PromptDataFormatterMock).toHaveBeenCalledWith({ logger });
+
+      // XmlElementBuilder registration (stateless utility)
+      const xmlElementBuilderCall = container.register.mock.calls.find(
+        ([token]) => token === tokens.XmlElementBuilder
+      );
+      expect(xmlElementBuilderCall).toBeDefined();
+      const xmlElementInstance = xmlElementBuilderCall[1]();
+      expect(XmlElementBuilderMock).toHaveBeenCalled();
+      expect(xmlElementInstance).toBe(XmlElementBuilderMock.mock.instances[0]);
+
+      // CharacterDataXmlBuilder registration (with dependencies)
+      const characterDataXmlBuilderCall = container.register.mock.calls.find(
+        ([token]) => token === tokens.CharacterDataXmlBuilder
+      );
+      expect(characterDataXmlBuilderCall).toBeDefined();
+      const xmlBuilderDependency = { xmlBuilder: true };
+      characterDataXmlBuilderCall[1](
+        createFactoryContext({
+          [tokens.ILogger]: logger,
+          [tokens.XmlElementBuilder]: xmlBuilderDependency,
+        })
+      );
+      expect(CharacterDataXmlBuilderMock).toHaveBeenCalledWith({
+        logger,
+        xmlElementBuilder: xmlBuilderDependency,
+      });
 
       const builderCall = container.register.mock.calls.find(
         ([token]) => token === tokens.IPromptBuilder

@@ -16,6 +16,7 @@
     "components": [
       "blueprintSlot.component.json",
       "body.component.json",
+      "can_grab.component.json",
       "joint.component.json",
       "part.component.json",
       "sockets.component.json"

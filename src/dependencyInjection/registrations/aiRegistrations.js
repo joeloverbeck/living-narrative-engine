@@ -88,6 +88,8 @@ import { ActionIndexerAdapter } from '../../turns/adapters/actionIndexerAdapter.
 import { LLMDecisionProvider } from '../../turns/providers/llmDecisionProvider.js';
 import { GoapDecisionProvider } from '../../turns/providers/goapDecisionProvider.js';
 import { registerActorAwareStrategy } from './registerActorAwareStrategy.js';
+import XmlElementBuilder from '../../prompting/xmlElementBuilder.js';
+import CharacterDataXmlBuilder from '../../prompting/characterDataXmlBuilder.js';
 
 /**
  * Registers LLM infrastructure and adapter services.
@@ -244,6 +246,20 @@ export function registerPromptingEngine(registrar, logger) {
   registrar.singletonFactory(
     tokens.PromptDataFormatter,
     (c) => new PromptDataFormatter({ logger: c.resolve(tokens.ILogger) })
+  );
+
+  registrar.singletonFactory(
+    tokens.XmlElementBuilder,
+    () => new XmlElementBuilder()
+  );
+
+  registrar.singletonFactory(
+    tokens.CharacterDataXmlBuilder,
+    (c) =>
+      new CharacterDataXmlBuilder({
+        logger: c.resolve(tokens.ILogger),
+        xmlElementBuilder: c.resolve(tokens.XmlElementBuilder),
+      })
   );
 
   registrar.singletonFactory(tokens.IPromptBuilder, (c) => {

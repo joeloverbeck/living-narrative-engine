@@ -106,6 +106,7 @@ describe('JSON-Schema – core component data contracts', () => {
     'anatomy:blueprintSlot': { slotId: 'left_breast' },
     'anatomy:prehensile': { strength: 'moderate', dexterity: 'precise' },
     'anatomy:suckered': { rows: 2, adhesion: 'strong' },
+    'anatomy:can_grab': { locked: false },
     'core:owned_by': { ownerId: 'entity-123' },
     'core:material': { material: 'cotton' },
     'core:mouth_engagement': { locked: false },
@@ -153,6 +154,7 @@ describe('JSON-Schema – core component data contracts', () => {
     'anatomy:blueprintSlot': {},
     'anatomy:prehensile': { strength: 'invalid_strength' },
     'anatomy:suckered': { rows: -1 },
+    'anatomy:can_grab': {}, // Missing required 'locked' field
     'core:owned_by': {},
     'core:material': { material: 'invalid_material_not_in_enum' },
     'core:mouth_engagement': { locked: 'not-a-boolean' },
