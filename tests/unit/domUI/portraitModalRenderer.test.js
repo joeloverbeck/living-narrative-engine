@@ -477,6 +477,20 @@ describe('PortraitModalRenderer', () => {
       expect(mockModalElement.classList.add).toHaveBeenCalledWith('fade-in');
     });
 
+    it('should mark the loading spinner as visible and accessible', () => {
+      renderer.showModal(
+        '/path/to/portrait.jpg',
+        'Speaker Name',
+        mockOriginalElement
+      );
+
+      expect(mockLoadingSpinner.style.display).toBe('block');
+      expect(mockLoadingSpinner.setAttribute).toHaveBeenCalledWith(
+        'aria-hidden',
+        'false'
+      );
+    });
+
     it('should dispatch PORTRAIT_MODAL_OPENED event', () => {
       renderer.showModal(
         '/path/to/portrait.jpg',
@@ -763,6 +777,33 @@ describe('PortraitModalRenderer', () => {
 
       expect(mockImageElement.style.width).toBe('1728px');
       expect(mockImageElement.style.height).toBe('auto');
+    });
+
+    it('should use natural dimensions when the image fits within constraints', () => {
+      mockImageInstance.naturalWidth = 400;
+      mockImageInstance.naturalHeight = 300;
+
+      Object.defineProperty(window, 'innerWidth', {
+        value: 1920,
+        writable: true,
+      });
+      Object.defineProperty(window, 'innerHeight', {
+        value: 1080,
+        writable: true,
+      });
+
+      renderer.showModal(
+        '/path/to/portrait.jpg',
+        'Speaker Name',
+        mockOriginalElement
+      );
+
+      if (mockImageInstance.onload) {
+        mockImageInstance.onload();
+      }
+
+      expect(mockImageElement.style.width).toBe('400px');
+      expect(mockImageElement.style.height).toBe('300px');
     });
   });
 
@@ -1144,6 +1185,10 @@ describe('PortraitModalRenderer', () => {
         }
 
         expect(mockLoadingSpinner.style.display).toBe('none');
+        expect(mockLoadingSpinner.setAttribute).toHaveBeenCalledWith(
+          'aria-hidden',
+          'true'
+        );
         expect(renderer._lastStatusMessage.type).toBe('error');
       });
 
@@ -1523,6 +1568,15 @@ describe('PortraitModalRenderer', () => {
       expect(firstElement.focus).toHaveBeenCalled();
     });
 
+    it('should not attempt to wrap focus when no focusable elements exist', () => {
+      mockModalElement.querySelectorAll = jest.fn(() => []);
+      const preventDefault = jest.fn();
+
+      keydownHandler({ key: 'Tab', shiftKey: false, preventDefault });
+
+      expect(preventDefault).not.toHaveBeenCalled();
+    });
+
     it('should close modal on downward swipe gesture', () => {
       const touchStartCall = mockAddDomListener.mock.calls.find(
         ([, eventName]) => eventName === 'touchstart'
@@ -1571,6 +1625,23 @@ describe('PortraitModalRenderer', () => {
         expect.stringContaining('Announced to screen reader')
       );
       expect(renderer._lastStatusMessage).toBeNull();
+    });
+
+    it('should update and clear the live region text content on announcements', () => {
+      const liveRegion =
+        mockDocumentContext.document.body.appendChild.mock.calls[0][0];
+
+      renderer.showModal(
+        '/path/to/portrait.jpg',
+        'Speaker Name',
+        mockOriginalElement
+      );
+
+      jest.advanceTimersByTime(150);
+      expect(liveRegion.textContent).toBe('Portrait image loaded successfully');
+
+      jest.advanceTimersByTime(1000);
+      expect(liveRegion.textContent).toBe('');
     });
 
     it('should announce errors assertively and remove temporary nodes', () => {
