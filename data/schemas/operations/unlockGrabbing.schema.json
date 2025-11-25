@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/operations/unlockGrabbing.schema.json",
+  "title": "UNLOCK_GRABBING Operation",
+  "description": "Unlocks a specified number of grabbing appendages on an actor, optionally filtering by held item.",
+  "allOf": [
+    { "$ref": "../base-operation.schema.json" },
+    {
+      "properties": {
+        "type": { "const": "UNLOCK_GRABBING" },
+        "parameters": { "$ref": "#/$defs/Parameters" }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the UNLOCK_GRABBING operation.",
+      "properties": {
+        "actor_id": {
+          "type": "string",
+          "description": "The ID of the actor whose appendages to unlock"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of grabbing appendages to unlock"
+        },
+        "item_id": {
+          "type": "string",
+          "description": "Optional: Only unlock appendages holding this specific item"
+        }
+      },
+      "required": ["actor_id", "count"],
+      "additionalProperties": false
+    }
+  }
+}

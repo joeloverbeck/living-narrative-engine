@@ -7,8 +7,9 @@ import { CharacterBuilderBootstrap } from '../../../src/characterBuilder/Charact
 import { CoreMotivationsGeneratorController } from '../../../src/coreMotivationsGenerator/controllers/CoreMotivationsGeneratorController.js';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
+import { createFastIndexedDBMock } from '../../common/testContainerConfig.js';
 
-// Mock CoreMotivationsGeneratorController to prevent IndexedDB access
+// Mock CoreMotivationsGeneratorController for faster test execution
 jest.mock(
   '../../../src/coreMotivationsGenerator/controllers/CoreMotivationsGeneratorController.js',
   () => {
@@ -37,8 +38,15 @@ describe('Core Motivations Generator Bootstrap Integration', () => {
   let mockEventBus;
   let mockSchemaValidator;
   let mockElements;
+  let originalIndexedDB;
 
   beforeEach(() => {
+    // Save original IndexedDB
+    originalIndexedDB = global.indexedDB;
+
+    // Set up fast IndexedDB mock to prevent test timeouts
+    global.indexedDB = createFastIndexedDBMock();
+
     bootstrap = new CharacterBuilderBootstrap();
 
     // Set up mock event bus
@@ -152,6 +160,9 @@ describe('Core Motivations Generator Bootstrap Integration', () => {
     jest.restoreAllMocks();
     delete global.fetch;
     delete global.window;
+
+    // Restore original IndexedDB
+    global.indexedDB = originalIndexedDB;
   });
 
   it('should initialize with correct services', async () => {
