@@ -35,17 +35,22 @@ describe('PriorityConstants', () => {
 
     it('should have specific expected values', () => {
       expect(COVERAGE_PRIORITY.outer).toBe(100);
+      expect(COVERAGE_PRIORITY.armor).toBe(150);
       expect(COVERAGE_PRIORITY.base).toBe(200);
       expect(COVERAGE_PRIORITY.underwear).toBe(300);
       expect(COVERAGE_PRIORITY.direct).toBe(400);
     });
 
-    it('should maintain consistent spacing between values', () => {
+    it('should maintain proper ordering with armor between outer and base', () => {
       const values = Object.values(COVERAGE_PRIORITY).sort((a, b) => a - b);
 
-      // Check that differences are consistent (100 apart)
+      // Verify armor fits between outer (100) and base (200)
+      expect(COVERAGE_PRIORITY.outer).toBeLessThan(COVERAGE_PRIORITY.armor);
+      expect(COVERAGE_PRIORITY.armor).toBeLessThan(COVERAGE_PRIORITY.base);
+
+      // Verify overall ordering is strictly increasing
       for (let i = 1; i < values.length; i++) {
-        expect(values[i] - values[i - 1]).toBe(100);
+        expect(values[i]).toBeGreaterThan(values[i - 1]);
       }
     });
   });
@@ -81,19 +86,28 @@ describe('PriorityConstants', () => {
 
     it('should have specific expected values', () => {
       expect(LAYER_PRIORITY_WITHIN_COVERAGE.outer).toBe(10);
+      expect(LAYER_PRIORITY_WITHIN_COVERAGE.armor).toBe(15);
       expect(LAYER_PRIORITY_WITHIN_COVERAGE.base).toBe(20);
       expect(LAYER_PRIORITY_WITHIN_COVERAGE.underwear).toBe(30);
       expect(LAYER_PRIORITY_WITHIN_COVERAGE.accessories).toBe(40);
     });
 
-    it('should maintain consistent spacing between values', () => {
+    it('should maintain proper ordering with armor between outer and base', () => {
       const values = Object.values(LAYER_PRIORITY_WITHIN_COVERAGE).sort(
         (a, b) => a - b
       );
 
-      // Check that differences are consistent (10 apart)
+      // Verify armor fits between outer (10) and base (20)
+      expect(LAYER_PRIORITY_WITHIN_COVERAGE.outer).toBeLessThan(
+        LAYER_PRIORITY_WITHIN_COVERAGE.armor
+      );
+      expect(LAYER_PRIORITY_WITHIN_COVERAGE.armor).toBeLessThan(
+        LAYER_PRIORITY_WITHIN_COVERAGE.base
+      );
+
+      // Verify overall ordering is strictly increasing
       for (let i = 1; i < values.length; i++) {
-        expect(values[i] - values[i - 1]).toBe(10);
+        expect(values[i]).toBeGreaterThan(values[i - 1]);
       }
     });
 
@@ -116,7 +130,7 @@ describe('PriorityConstants', () => {
     it('should contain all coverage priority keys', () => {
       expect(VALID_COVERAGE_PRIORITIES).toBeDefined();
       expect(Array.isArray(VALID_COVERAGE_PRIORITIES)).toBe(true);
-      expect(VALID_COVERAGE_PRIORITIES).toHaveLength(4);
+      expect(VALID_COVERAGE_PRIORITIES).toHaveLength(5);
     });
 
     it('should match all keys from COVERAGE_PRIORITY object', () => {
@@ -128,6 +142,7 @@ describe('PriorityConstants', () => {
 
     it('should contain specific expected values', () => {
       expect(VALID_COVERAGE_PRIORITIES).toContain('outer');
+      expect(VALID_COVERAGE_PRIORITIES).toContain('armor');
       expect(VALID_COVERAGE_PRIORITIES).toContain('base');
       expect(VALID_COVERAGE_PRIORITIES).toContain('underwear');
       expect(VALID_COVERAGE_PRIORITIES).toContain('direct');
@@ -145,7 +160,7 @@ describe('PriorityConstants', () => {
     it('should contain all layer priority keys', () => {
       expect(VALID_LAYERS).toBeDefined();
       expect(Array.isArray(VALID_LAYERS)).toBe(true);
-      expect(VALID_LAYERS).toHaveLength(4);
+      expect(VALID_LAYERS).toHaveLength(5);
     });
 
     it('should match all keys from LAYER_PRIORITY_WITHIN_COVERAGE object', () => {
@@ -159,6 +174,7 @@ describe('PriorityConstants', () => {
 
     it('should contain specific expected values', () => {
       expect(VALID_LAYERS).toContain('outer');
+      expect(VALID_LAYERS).toContain('armor');
       expect(VALID_LAYERS).toContain('base');
       expect(VALID_LAYERS).toContain('underwear');
       expect(VALID_LAYERS).toContain('accessories');
@@ -371,6 +387,58 @@ describe('PriorityConstants', () => {
 
     it('should have contextual modifiers disabled by default', () => {
       expect(PRIORITY_CONFIG.enableContextualModifiers).toBe(false);
+    });
+  });
+
+  describe('Armor Priority Integration', () => {
+    it('should have armor in COVERAGE_PRIORITY between outer and base', () => {
+      expect(COVERAGE_PRIORITY.armor).toBe(150);
+      expect(COVERAGE_PRIORITY.outer).toBeLessThan(COVERAGE_PRIORITY.armor);
+      expect(COVERAGE_PRIORITY.armor).toBeLessThan(COVERAGE_PRIORITY.base);
+    });
+
+    it('should have armor in LAYER_PRIORITY_WITHIN_COVERAGE between outer and base', () => {
+      expect(LAYER_PRIORITY_WITHIN_COVERAGE.armor).toBe(15);
+      expect(LAYER_PRIORITY_WITHIN_COVERAGE.outer).toBeLessThan(
+        LAYER_PRIORITY_WITHIN_COVERAGE.armor
+      );
+      expect(LAYER_PRIORITY_WITHIN_COVERAGE.armor).toBeLessThan(
+        LAYER_PRIORITY_WITHIN_COVERAGE.base
+      );
+    });
+
+    it('should include armor in validation arrays', () => {
+      expect(VALID_COVERAGE_PRIORITIES).toContain('armor');
+      expect(VALID_LAYERS).toContain('armor');
+    });
+
+    it('should produce unique priority calculations with armor', () => {
+      // Verify armor combinations produce unique values
+      const armorCoverageBase =
+        COVERAGE_PRIORITY.armor + LAYER_PRIORITY_WITHIN_COVERAGE.armor;
+      const outerCoverageOuter =
+        COVERAGE_PRIORITY.outer + LAYER_PRIORITY_WITHIN_COVERAGE.outer;
+      const baseCoverageBase =
+        COVERAGE_PRIORITY.base + LAYER_PRIORITY_WITHIN_COVERAGE.base;
+
+      expect(armorCoverageBase).not.toBe(outerCoverageOuter);
+      expect(armorCoverageBase).not.toBe(baseCoverageBase);
+      expect(armorCoverageBase).toBeGreaterThan(outerCoverageOuter);
+      expect(armorCoverageBase).toBeLessThan(baseCoverageBase);
+    });
+
+    it('should allow armor to be worn under outer and over base', () => {
+      // Scenario: Character with outer (cloak), armor (chainmail), base (shirt)
+      // Outer (100+10=110) should beat armor (150+15=165) should beat base (200+20=220)
+      const outerTotal =
+        COVERAGE_PRIORITY.outer + LAYER_PRIORITY_WITHIN_COVERAGE.outer;
+      const armorTotal =
+        COVERAGE_PRIORITY.armor + LAYER_PRIORITY_WITHIN_COVERAGE.armor;
+      const baseTotal =
+        COVERAGE_PRIORITY.base + LAYER_PRIORITY_WITHIN_COVERAGE.base;
+
+      expect(outerTotal).toBeLessThan(armorTotal);
+      expect(armorTotal).toBeLessThan(baseTotal);
     });
   });
 });

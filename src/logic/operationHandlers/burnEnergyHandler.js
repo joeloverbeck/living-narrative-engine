@@ -24,6 +24,7 @@
 import BaseOperationHandler from './baseOperationHandler.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import { resolveEntityId } from '../../utils/entityRefUtils.js';
 
 const METABOLIC_STORE_COMPONENT_ID = 'metabolism:metabolic_store';
 const ENERGY_BURNED_EVENT = 'metabolism:energy_burned';
@@ -63,30 +64,26 @@ class BurnEnergyHandler extends BaseOperationHandler {
    * Validate and normalize parameters for execute.
    *
    * @param {BurnEnergyParams|null|undefined} params - Raw params object
+   * @param {import('../defs.js').ExecutionContext} executionContext - Execution context for entity resolution
    * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for diagnostics
    * @returns {{entityId: string, activityMultiplier: number, turns: number}|null} Normalized values or null when invalid
    * @private
    */
-  #validateParams(params, logger) {
+  #validateParams(params, executionContext, logger) {
     if (!assertParamsObject(params, this.#dispatcher, 'BURN_ENERGY')) {
       return null;
     }
 
     const { entity_ref, activity_multiplier = 1.0, turns = 1 } = params;
 
-    // Validate entity reference
-    let entityId;
-    if (typeof entity_ref === 'string' && entity_ref.trim()) {
-      entityId = entity_ref.trim();
-    } else if (typeof entity_ref === 'object' && entity_ref !== null) {
-      // Handle object references (e.g., from scope resolution)
-      entityId = entity_ref.id || entity_ref.entityId;
-    }
+    // Resolve entity reference using the standard utility
+    // This handles keywords like "actor", "target", "primary", etc.
+    const entityId = resolveEntityId(entity_ref, executionContext);
 
     if (!entityId) {
       safeDispatchError(
         this.#dispatcher,
-        'BURN_ENERGY: entity_ref is required and must be a valid string or object',
+        'BURN_ENERGY: entity_ref is required and must resolve to a valid entity ID',
         { entity_ref },
         logger
       );
@@ -137,7 +134,7 @@ class BurnEnergyHandler extends BaseOperationHandler {
     const log = this.getLogger(executionContext);
 
     // Validation
-    const validated = this.#validateParams(params, log);
+    const validated = this.#validateParams(params, executionContext, log);
     if (!validated) {
       return;
     }

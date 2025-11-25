@@ -290,7 +290,7 @@ describe('BurnEnergyHandler', () => {
       );
     });
 
-    test('handles object entity reference', async () => {
+    test('handles object entity reference with entityId property', async () => {
       const metabolicStore = {
         currentEnergy: 1000,
         maxEnergy: 1000,
@@ -304,7 +304,7 @@ describe('BurnEnergyHandler', () => {
 
       await handler.execute(
         {
-          entity_ref: { id: 'actor1' },
+          entity_ref: { entityId: 'actor1' },
           activity_multiplier: 1.0,
           turns: 1,
         },
@@ -315,6 +315,115 @@ describe('BurnEnergyHandler', () => {
         'actor1',
         METABOLIC_STORE_COMPONENT_ID
       );
+    });
+
+    test('resolves "actor" keyword to actor entity ID from execution context', async () => {
+      const metabolicStore = {
+        currentEnergy: 1000,
+        maxEnergy: 1000,
+        baseBurnRate: 10,
+        activityMultiplier: 1.0,
+        lastUpdateTurn: 0,
+      };
+
+      // Set up execution context with actor
+      executionContext.evaluationContext.actor = { id: 'real-actor-entity-123' };
+
+      em.getComponentData.mockReturnValue(metabolicStore);
+      em.batchAddComponentsOptimized.mockResolvedValue(true);
+
+      await handler.execute(
+        {
+          entity_ref: 'actor',
+          activity_multiplier: 1.2,
+          turns: 1,
+        },
+        executionContext
+      );
+
+      // Should resolve "actor" to the actual actor ID
+      expect(em.getComponentData).toHaveBeenCalledWith(
+        'real-actor-entity-123',
+        METABOLIC_STORE_COMPONENT_ID
+      );
+
+      expect(em.batchAddComponentsOptimized).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            instanceId: 'real-actor-entity-123',
+          }),
+        ]),
+        true
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(ENERGY_BURNED_EVENT, {
+        entityId: 'real-actor-entity-123',
+        energyBurned: 12, // 10 * 1.2 * 1
+        newEnergy: 988,
+        activityMultiplier: 1.2,
+        turns: 1,
+      });
+    });
+
+    test('resolves "target" keyword to target entity ID from execution context', async () => {
+      const metabolicStore = {
+        currentEnergy: 500,
+        maxEnergy: 1000,
+        baseBurnRate: 5,
+        activityMultiplier: 1.0,
+        lastUpdateTurn: 0,
+      };
+
+      // Set up execution context with target
+      executionContext.evaluationContext.target = { id: 'target-entity-456' };
+
+      em.getComponentData.mockReturnValue(metabolicStore);
+      em.batchAddComponentsOptimized.mockResolvedValue(true);
+
+      await handler.execute(
+        {
+          entity_ref: 'target',
+          activity_multiplier: 2.0,
+          turns: 1,
+        },
+        executionContext
+      );
+
+      // Should resolve "target" to the actual target ID
+      expect(em.getComponentData).toHaveBeenCalledWith(
+        'target-entity-456',
+        METABOLIC_STORE_COMPONENT_ID
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(ENERGY_BURNED_EVENT, {
+        entityId: 'target-entity-456',
+        energyBurned: 10,
+        newEnergy: 490,
+        activityMultiplier: 2.0,
+        turns: 1,
+      });
+    });
+
+    test('fails gracefully when "actor" keyword cannot be resolved', async () => {
+      // No actor in execution context
+      executionContext.evaluationContext.actor = null;
+
+      await handler.execute(
+        {
+          entity_ref: 'actor',
+          activity_multiplier: 1.0,
+          turns: 1,
+        },
+        executionContext
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          message: expect.stringContaining('entity_ref is required'),
+        })
+      );
+      expect(em.getComponentData).not.toHaveBeenCalled();
     });
   });
 

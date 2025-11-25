@@ -9,6 +9,7 @@
  */
 export const COVERAGE_PRIORITY = Object.freeze({
   outer: 100,
+  armor: 150,
   base: 200,
   underwear: 300,
   direct: 400,
@@ -20,6 +21,7 @@ export const COVERAGE_PRIORITY = Object.freeze({
  */
 export const LAYER_PRIORITY_WITHIN_COVERAGE = Object.freeze({
   outer: 10,
+  armor: 15,
   base: 20,
   underwear: 30,
   accessories: 40,
@@ -30,6 +32,7 @@ export const LAYER_PRIORITY_WITHIN_COVERAGE = Object.freeze({
  */
 export const VALID_COVERAGE_PRIORITIES = Object.freeze([
   'outer',
+  'armor',
   'base',
   'underwear',
   'direct',
@@ -40,6 +43,7 @@ export const VALID_COVERAGE_PRIORITIES = Object.freeze([
  */
 export const VALID_LAYERS = Object.freeze([
   'outer',
+  'armor',
   'base',
   'underwear',
   'accessories',
