@@ -568,30 +568,22 @@ export class PrerequisiteEvaluationStage extends PipelineStage {
     evaluationResult
   ) {
     try {
+      const { prerequisites, evaluationDetails } = evaluationResult;
+      const prerequisiteCount = Array.isArray(prerequisites)
+        ? prerequisites.length
+        : 1;
       const traceData = {
         stage: 'prerequisite_evaluation',
         actorId: actor.id,
         hasPrerequisites: evaluationResult.hasPrerequisites,
-        prerequisiteCount: evaluationResult.prerequisites
-          ? Array.isArray(evaluationResult.prerequisites)
-            ? evaluationResult.prerequisites.length
-            : 1
-          : 0,
+        prerequisiteCount,
         evaluationPassed: evaluationResult.passed,
         evaluationReason: evaluationResult.reason,
         evaluationTimeMs: evaluationResult.evaluationTime,
         timestamp: Date.now(),
+        prerequisites,
+        evaluationDetails,
       };
-
-      // Include prerequisites if present (filtered by verbosity in ActionAwareStructuredTrace)
-      if (evaluationResult.prerequisites) {
-        traceData.prerequisites = evaluationResult.prerequisites;
-      }
-
-      // Include evaluation details if available
-      if (evaluationResult.evaluationDetails) {
-        traceData.evaluationDetails = evaluationResult.evaluationDetails;
-      }
 
       // Include error information if evaluation failed due to error
       if (evaluationResult.error) {
@@ -765,16 +757,15 @@ export class PrerequisiteEvaluationStage extends PipelineStage {
    * @param {number} passedCandidates - Number of candidates that passed prerequisites
    * @returns {Promise<void>}
    */
-  async #capturePerformanceData(
-    trace,
-    actionDef,
-    startTime,
-    endTime,
-    totalCandidates,
-    passedCandidates
-  ) {
-    try {
-      if (trace && trace.captureActionData) {
+    async #capturePerformanceData(
+      trace,
+      actionDef,
+      startTime,
+      endTime,
+      totalCandidates,
+      passedCandidates
+    ) {
+      try {
         await trace.captureActionData('stage_performance', actionDef.id, {
           stage: 'prerequisite_evaluation',
           duration: endTime - startTime,
@@ -783,12 +774,11 @@ export class PrerequisiteEvaluationStage extends PipelineStage {
           itemsPassed: passedCandidates,
           stageName: this.name,
         });
+      } catch (error) {
+        this.#logger.debug(
+          `Failed to capture performance data for action '${actionDef.id}': ${error.message}`
+        );
       }
-    } catch (error) {
-      this.#logger.debug(
-        `Failed to capture performance data for action '${actionDef.id}': ${error.message}`
-      );
-    }
   }
 }
 
