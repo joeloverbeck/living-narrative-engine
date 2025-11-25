@@ -1666,6 +1666,39 @@ class GoapController {
   }
 
   /**
+   * Expose narrowly scoped test hooks for exercising internal branches.
+   *
+   * @param {GoapController} instance
+   * @returns {object} callable hooks bound to the instance
+   */
+  static __getTestHooks(instance) {
+    return {
+      recordDependencyDiagnostics: (snapshot) =>
+        instance.#recordDependencyDiagnostics(snapshot),
+      createPlan: (goal, tasks, actorId) =>
+        instance.#createPlan(goal, tasks, actorId),
+      setActorPlan: (actorId, plan) => instance.#setActorPlan(actorId, plan),
+      deleteActorPlan: (actorId) => instance.#deleteActorPlan(actorId),
+      getCurrentTask: (actorId) => instance.#getCurrentTask(actorId),
+      validateActivePlan: (actorId, world) =>
+        instance.#validateActivePlan(actorId, world),
+      advancePlan: (actorId) => instance.#advancePlan(actorId),
+      clearPlan: (actorId, reason) => instance.#clearPlan(actorId, reason),
+      cleanupActorDiagnostics: (actorId) =>
+        instance.#cleanupActorDiagnostics(actorId),
+      extractActionHint: (refinementResult, task, actor, goalId) =>
+        instance.#extractActionHint(refinementResult, task, actor, goalId),
+      pruneFailureMap: (map, expiryMs, now) =>
+        instance.#pruneFailureMap(map, expiryMs, now),
+      handleRefinementFailure: (task, result, actorId, planGoalId) =>
+        instance.#handleRefinementFailure(task, result, actorId, planGoalId),
+      setEventDispatcher: (dispatcher) => {
+        instance.#eventDispatcher = dispatcher;
+      },
+    };
+  }
+
+  /**
    * Expose dependency diagnostics captured during construction.
    *
    * @returns {Array<object>} Snapshot entries per dependency.
