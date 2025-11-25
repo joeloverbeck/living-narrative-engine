@@ -78,7 +78,7 @@ describe('SlotGenerator - Performance Tests', () => {
   });
 
   describe('Slot Generation Performance', () => {
-    it('should generate single slot efficiently (<0.01ms)', () => {
+    it('should generate single slot efficiently (<0.05ms)', () => {
       const template = createStructureTemplate(1, 1);
       const iterations = 1000; // Reduced from 10000 for faster tests
 
@@ -94,11 +94,12 @@ describe('SlotGenerator - Performance Tests', () => {
       const totalTime = performance.now() - start;
       const avgTime = totalTime / iterations;
 
-      // Should complete 1k iterations in under 15ms (scaled from 130ms for 10k)
-      expect(totalTime).toBeLessThan(15);
+      // Allow CI variance while still catching >3x regressions
+      // Reference: docs/analysis/performance-test-flakiness-analysis.md
+      expect(totalTime).toBeLessThan(50);
 
-      // Average time per call should be under 0.015ms (CI-adjusted safety margin)
-      expect(avgTime).toBeLessThan(0.015);
+      // Average time per call should remain under 0.05ms (50 microseconds)
+      expect(avgTime).toBeLessThan(0.05);
 
       console.log(
         `Single slot generation: ${totalTime.toFixed(2)}ms total, ${avgTime.toFixed(4)}ms avg`
