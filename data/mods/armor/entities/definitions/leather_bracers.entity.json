@@ -1,0 +1,55 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "armor:leather_bracers",
+  "description": "Hardened leather arm protection",
+  "components": {
+    "clothing:wearable": {
+      "layer": "armor",
+      "equipmentSlots": {
+        "primary": "left_arm_clothing",
+        "secondary": [
+          "right_arm_clothing"
+        ]
+      },
+      "allowedLayers": [
+        "base",
+        "armor",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "leather",
+      "durability": 60,
+      "properties": [
+        "flexible"
+      ],
+      "careInstructions": [
+        "requires_oiling"
+      ]
+    },
+    "core:name": {
+      "text": "leather bracers"
+    },
+    "core:description": {
+      "text": "Sturdy leather bracers that protect the forearms. The hardened leather is reinforced with metal studs and provides protection without restricting arm movement."
+    },
+    "descriptors:color_basic": {
+      "color": "brown"
+    },
+    "descriptors:texture": {
+      "texture": "rugged"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "left_arm_clothing",
+        "right_arm_clothing"
+      ],
+      "coveragePriority": "armor"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 1.2
+    }
+  }
+}

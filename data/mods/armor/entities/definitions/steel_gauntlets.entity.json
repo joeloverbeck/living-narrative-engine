@@ -1,0 +1,44 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "armor:steel_gauntlets",
+  "description": "Articulated steel hand protection",
+  "components": {
+    "clothing:wearable": {
+      "layer": "armor",
+      "equipmentSlots": {
+        "primary": "hands"
+      },
+      "allowedLayers": [
+        "base",
+        "armor"
+      ]
+    },
+    "core:material": {
+      "material": "steel",
+      "durability": 80,
+      "properties": [
+        "rigid"
+      ]
+    },
+    "core:name": {
+      "text": "steel gauntlets"
+    },
+    "core:description": {
+      "text": "Finely crafted steel gauntlets with articulated fingers. The metal plates are joined with leather straps and rivets, allowing for surprisingly good dexterity while providing excellent protection for the hands and wrists."
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "hands"
+      ],
+      "coveragePriority": "armor"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 1.5
+    }
+  }
+}

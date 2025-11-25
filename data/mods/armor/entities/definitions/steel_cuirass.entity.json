@@ -1,0 +1,47 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "armor:steel_cuirass",
+  "description": "Polished steel chest armor",
+  "components": {
+    "clothing:wearable": {
+      "layer": "armor",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "armor",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "steel",
+      "durability": 85,
+      "properties": [
+        "rigid",
+        "reflective"
+      ]
+    },
+    "core:name": {
+      "text": "steel cuirass"
+    },
+    "core:description": {
+      "text": "A finely crafted steel cuirass that protects the torso. The polished metal gleams in the light, and articulated plates allow for reasonable mobility while providing substantial protection against bladed weapons."
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper"
+      ],
+      "coveragePriority": "armor"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 8.5
+    }
+  }
+}

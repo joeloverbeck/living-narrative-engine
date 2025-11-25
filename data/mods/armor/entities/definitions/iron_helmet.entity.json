@@ -1,0 +1,47 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "armor:iron_helmet",
+  "description": "Simple iron helmet",
+  "components": {
+    "clothing:wearable": {
+      "layer": "armor",
+      "equipmentSlots": {
+        "primary": "head_gear"
+      },
+      "allowedLayers": [
+        "base",
+        "armor"
+      ]
+    },
+    "core:material": {
+      "material": "iron",
+      "durability": 70,
+      "properties": [
+        "rigid"
+      ]
+    },
+    "core:name": {
+      "text": "iron helmet"
+    },
+    "core:description": {
+      "text": "A simple but effective iron helmet that protects the head. The metal is thick enough to deflect most blows while maintaining a reasonable weight. A padded interior provides comfort during extended wear."
+    },
+    "descriptors:color_basic": {
+      "color": "gray"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "head_gear"
+      ],
+      "coveragePriority": "armor"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 2.5
+    }
+  }
+}

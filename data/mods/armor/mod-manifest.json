@@ -1,0 +1,42 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "armor",
+  "version": "1.0.0",
+  "name": "Armor Entities",
+  "description": "Collection of armor entities for sword & sorcery games demonstrating the armor layer system",
+  "actionPurpose": "Equip and wear protective armor for combat and defense.",
+  "actionConsiderWhen": "Preparing for battle, equipping protective gear, or layering armor over clothing.",
+  "author": "Living Narrative Engine",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "descriptors",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "items",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "clothing",
+      "version": "^1.0.0"
+    }
+  ],
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "entities": {
+      "definitions": [
+        "chainmail_hauberk.entity.json",
+        "iron_helmet.entity.json",
+        "leather_boots.entity.json",
+        "leather_bracers.entity.json",
+        "steel_cuirass.entity.json",
+        "steel_gauntlets.entity.json"
+      ],
+      "instances": []
+    }
+  }
+}
