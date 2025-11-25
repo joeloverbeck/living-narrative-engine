@@ -35,6 +35,14 @@ const FAILURE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
 export const GOAP_CONTROLLER_DIAGNOSTICS_CONTRACT_VERSION =
   GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.version;
 
+const DEFAULT_MEMORY_PRESSURE_THRESHOLDS = {
+  goalPathNormalizationCache: { warning: 80, critical: 95 },
+  failedGoals: { warning: 20, critical: 50 },
+  failedTasks: { warning: 20, critical: 50 },
+  goalPathDiagnostics: { warning: 20, critical: 50 },
+  effectFailureTelemetry: { warning: 80, critical: 160 },
+};
+
 /**
  * @typedef {import('../planner/goapPlanner.js').default} GoapPlanner
  * @typedef {import('../refinement/refinementEngine.js').default} RefinementEngine
@@ -1666,6 +1674,123 @@ class GoapController {
   }
 
   /**
+   * Aggregate cache and failure-tracking sizes for lightweight memory monitoring.
+   *
+   * @param {{thresholds?: Record<string, {warning?: number, critical?: number}>, now?: number}} [options]
+   * @returns {{
+   *   pressureLevel: 'none'|'warning'|'critical',
+   *   caches: Record<string, {size: number, maxSize?: number, utilization?: number}>,
+   *   failureTracking: {failedGoals: number, failedTasks: number},
+   *   diagnostics: {goalPathDiagnostics: number, effectFailureTelemetry: number},
+   *   breaches: Array<{metric: string, level: 'warning'|'critical', value: number, threshold: number}>
+   * }}
+   */
+  getMemoryPressureSnapshot(options = {}) {
+    const { thresholds = {}, now = Date.now() } = options;
+    const resolveThreshold = (metric) => ({
+      ...(DEFAULT_MEMORY_PRESSURE_THRESHOLDS[metric] || {}),
+      ...(thresholds[metric] || {}),
+    });
+
+    this.#pruneFailureMap(this.#failedGoals, FAILURE_EXPIRY_MS, now);
+    this.#pruneFailureMap(this.#failedTasks, FAILURE_EXPIRY_MS, now);
+
+    const plannerCacheMetrics =
+      typeof this.#planner?.getCacheMetrics === 'function'
+        ? this.#planner.getCacheMetrics()
+        : {};
+
+    const caches = {};
+    let pressureLevel = 'none';
+    const breaches = [];
+
+    const trackLevel = (metric, value, thresholdConfig) => {
+      if (!thresholdConfig) {
+        return;
+      }
+
+      if (
+        thresholdConfig.critical !== undefined &&
+        value >= thresholdConfig.critical
+      ) {
+        pressureLevel = 'critical';
+        breaches.push({
+          metric,
+          level: 'critical',
+          value,
+          threshold: thresholdConfig.critical,
+        });
+        return;
+      }
+
+      if (
+        pressureLevel !== 'critical' &&
+        thresholdConfig.warning !== undefined &&
+        value >= thresholdConfig.warning
+      ) {
+        pressureLevel = pressureLevel === 'none' ? 'warning' : pressureLevel;
+        breaches.push({
+          metric,
+          level: 'warning',
+          value,
+          threshold: thresholdConfig.warning,
+        });
+      }
+    };
+
+    if (plannerCacheMetrics.goalPathNormalizationCache) {
+      const cache = plannerCacheMetrics.goalPathNormalizationCache;
+      const utilization =
+        cache.maxSize && cache.maxSize > 0
+          ? (cache.size / cache.maxSize) * 100
+          : cache.size;
+
+      caches.goalPathNormalizationCache = {
+        ...cache,
+        utilization,
+      };
+
+      trackLevel(
+        'goalPathNormalizationCache',
+        utilization,
+        resolveThreshold('goalPathNormalizationCache')
+      );
+    }
+
+    const failureTracking = {
+      failedGoals: this.#failedGoals.size,
+      failedTasks: this.#failedTasks.size,
+    };
+
+    trackLevel('failedGoals', failureTracking.failedGoals, resolveThreshold('failedGoals'));
+    trackLevel('failedTasks', failureTracking.failedTasks, resolveThreshold('failedTasks'));
+
+    const diagnostics = {
+      goalPathDiagnostics: this.#goalPathDiagnostics.size,
+      effectFailureTelemetry: this.#effectFailureTelemetry.size,
+    };
+
+    trackLevel(
+      'goalPathDiagnostics',
+      diagnostics.goalPathDiagnostics,
+      resolveThreshold('goalPathDiagnostics')
+    );
+    trackLevel(
+      'effectFailureTelemetry',
+      diagnostics.effectFailureTelemetry,
+      resolveThreshold('effectFailureTelemetry')
+    );
+
+    return {
+      pressureLevel,
+      caches,
+      failureTracking,
+      diagnostics,
+      breaches,
+    };
+  }
+
+  /**
    * Expose narrowly scoped test hooks for exercising internal branches.
    *
    * @param {GoapController} instance
@@ -1692,6 +1817,10 @@ class GoapController {
         instance.#pruneFailureMap(map, expiryMs, now),
       handleRefinementFailure: (task, result, actorId, planGoalId) =>
         instance.#handleRefinementFailure(task, result, actorId, planGoalId),
+      trackFailedGoal: (goalId, reason, code) =>
+        instance.#trackFailedGoal(goalId, reason, code),
+      trackFailedTask: (taskId, reason, code) =>
+        instance.#trackFailedTask(taskId, reason, code),
       setEventDispatcher: (dispatcher) => {
         instance.#eventDispatcher = dispatcher;
       },

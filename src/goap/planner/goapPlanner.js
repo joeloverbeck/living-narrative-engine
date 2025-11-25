@@ -35,6 +35,8 @@ import { normalizePlanningPreconditions } from '../utils/planningPreconditionUti
 import { validateGoalPaths, shouldEnforceGoalPathLint } from './goalPathValidator.js';
 import BoundedCache from '../utils/boundedCache.js';
 
+const GOAL_PATH_NORMALIZATION_CACHE_MAX_SIZE = 100;
+
 const SAFE_HEURISTIC_MAX_COST = Number.MAX_SAFE_INTEGER;
 
 /**
@@ -115,6 +117,9 @@ class GoapPlanner {
   /** @type {BoundedCache} */
   #goalPathNormalizationCache;
 
+  /** @type {number} */
+  #goalPathNormalizationCacheMaxSize;
+
   /** @type {Set<string>} */
   #heuristicWarningCache;
 
@@ -181,7 +186,10 @@ class GoapPlanner {
     this.#externalTaskLibraryDiagnostics = null;
     this.#goalPathDiagnostics = new Map();
     this.#effectFailureTelemetry = new Map();
-    this.#goalPathNormalizationCache = new BoundedCache(100);
+    this.#goalPathNormalizationCacheMaxSize = GOAL_PATH_NORMALIZATION_CACHE_MAX_SIZE;
+    this.#goalPathNormalizationCache = new BoundedCache(
+      this.#goalPathNormalizationCacheMaxSize
+    );
     this.#heuristicWarningCache = new Set();
   }
 
@@ -1025,6 +1033,20 @@ class GoapPlanner {
 
     this.#effectFailureTelemetry.delete(actorId);
     return deepClone(entry);
+  }
+
+  /**
+   * Surface bounded cache metrics for monitoring.
+   *
+   * @returns {{goalPathNormalizationCache: {size: number, maxSize: number}}}
+   */
+  getCacheMetrics() {
+    return {
+      goalPathNormalizationCache: {
+        size: this.#goalPathNormalizationCache?.size ?? 0,
+        maxSize: this.#goalPathNormalizationCacheMaxSize,
+      },
+    };
   }
 
   clearActorDiagnostics(actorId) {
