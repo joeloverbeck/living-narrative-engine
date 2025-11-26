@@ -16,24 +16,32 @@ describe('Action Validation Integration', () => {
     };
 
     const mockRule = {
-      id: 'positioning:test_rule',
-      operations: [],
+      rule_id: 'handle_test_action',
+      event_type: 'core:attempt_action',
+      condition: { condition_ref: 'positioning:event-is-action-test-action' },
+      actions: [
+        {
+          type: 'LOG',
+          parameters: { message: 'Test action', level: 'info' },
+        },
+      ],
     };
 
     const mockCondition = {
       id: 'positioning:event-is-action-test-action',
+      description: 'Test condition for action validation',
       logic: { '==': [true, true] },
     };
 
     await expect(async () => {
       testFixture = await ModTestFixture.forAction(
         'positioning',
-        'positioning:test_action',
+        'test_action',
         mockRule,
         mockCondition,
         { actionDefinition: invalidAction }
       );
-    }).rejects.toThrow(/Invalid property 'action_id'/);
+    }).rejects.toThrow(/Invalid property 'action_id'.*Did you mean 'id'/);
   });
 
   it('should provide helpful suggestions for typos', async () => {
@@ -46,23 +54,31 @@ describe('Action Validation Integration', () => {
     };
 
     const mockRule = {
-      id: 'positioning:test_rule',
-      operations: [],
+      rule_id: 'handle_test_action_typo',
+      event_type: 'core:attempt_action',
+      condition: { condition_ref: 'positioning:event-is-action-test-action' },
+      actions: [
+        {
+          type: 'LOG',
+          parameters: { message: 'Test action', level: 'info' },
+        },
+      ],
     };
 
     const mockCondition = {
       id: 'positioning:event-is-action-test-action',
+      description: 'Test condition for typo validation',
       logic: { '==': [true, true] },
     };
 
     await expect(async () => {
       testFixture = await ModTestFixture.forAction(
         'positioning',
-        'positioning:test_action',
+        'test_action',
         mockRule,
         mockCondition,
         { actionDefinition: invalidAction }
       );
-    }).rejects.toThrow(/Invalid property/);
+    }).rejects.toThrow(/Invalid property 'requiredComponents'.*Did you mean 'required_components'/);
   });
 });

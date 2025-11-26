@@ -45,6 +45,14 @@ const makeDummyActionCategorizationService = () => ({
   formatNamespaceDisplayName: jest.fn((namespace) => namespace),
 });
 
+const makeDummyCharacterDataXmlBuilder = () => ({
+  buildCharacterDataXml: jest.fn(() => '<character_data>Mock XML</character_data>'),
+});
+
+const makeDummyModActionMetadataProvider = () => ({
+  getMetadataForMod: jest.fn(() => null),
+});
+
 // ---- Test Suite ---- //
 describe('AIPromptContentProvider.getPromptData → Goals without timestamps bug fix', () => {
   let provider;
@@ -58,6 +66,8 @@ describe('AIPromptContentProvider.getPromptData → Goals without timestamps bug
       perceptionLogFormatter: makeDummyPerceptionLogFormatter(),
       gameStateValidationService: makeDummyGameStateValidationService(),
       actionCategorizationService: makeDummyActionCategorizationService(),
+      characterDataXmlBuilder: makeDummyCharacterDataXmlBuilder(),
+      modActionMetadataProvider: makeDummyModActionMetadataProvider(),
     });
   });
 

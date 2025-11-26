@@ -1,0 +1,43 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:black_breeches_tapered_knee",
+  "description": "Black breeches tapered at the knee",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "legs"
+      },
+      "allowedLayers": [
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "cotton"
+    },
+    "core:name": {
+      "text": "tapered breeches"
+    },
+    "core:description": {
+      "text": "Classic black breeches cut in the traditional style, fitted through the hips and thighs before tapering dramatically at the knee. The snug fit below the knee creates a sleek silhouette that works beautifully with tall boots or wraps. Made from durable cotton twill with a subtle stretch for freedom of movement, these breeches combine period aesthetic with practical comfort. The dark color and clean lines make them a versatile foundation for any performance ensemble."
+    },
+    "descriptors:color_basic": {
+      "color": "black"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_lower"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.52
+    }
+  }
+}

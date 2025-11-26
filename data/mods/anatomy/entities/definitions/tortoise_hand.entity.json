@@ -3,14 +3,19 @@
   "id": "anatomy:tortoise_hand",
   "description": "Thick-skinned hand with three prominent claws",
   "components": {
+    "anatomy:can_grab": {
+      "gripStrength": 0.8,
+      "heldItemId": null,
+      "locked": false
+    },
     "anatomy:part": {
       "subType": "tortoise_hand"
     },
     "core:name": {
       "text": "hand"
     },
-    "descriptors:texture": {
-      "texture": "leathery"
+    "descriptors:color_extended": {
+      "color": "sickly-gray-green"
     },
     "descriptors:digit_count": {
       "count": "3"
@@ -18,8 +23,8 @@
     "descriptors:projection": {
       "projection": "clawed"
     },
-    "descriptors:color_extended": {
-      "color": "sickly-gray-green"
+    "descriptors:texture": {
+      "texture": "leathery"
     }
   }
 }

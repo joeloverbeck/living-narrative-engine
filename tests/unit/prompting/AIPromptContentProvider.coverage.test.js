@@ -4,7 +4,6 @@
  */
 
 import { AIPromptContentProvider } from '../../../src/prompting/AIPromptContentProvider.js';
-import { CharacterDataFormatter } from '../../../src/prompting/CharacterDataFormatter.js';
 import {
   DEFAULT_FALLBACK_CHARACTER_NAME,
   DEFAULT_FALLBACK_ACTION_COMMAND,
@@ -21,14 +20,10 @@ import {
   afterEach,
 } from '@jest/globals';
 
-// Mock the CharacterDataFormatter module
-jest.mock('../../../src/prompting/CharacterDataFormatter.js');
-
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../src/interfaces/IPromptStaticContentService.js').IPromptStaticContentService} IPromptStaticContentService */
 /** @typedef {import('../../../src/interfaces/IPerceptionLogFormatter.js').IPerceptionLogFormatter} IPerceptionLogFormatter */
 /** @typedef {import('../../../src/interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
-/** @typedef {import('../../../src/interfaces/ICharacterDataFormatter.js').ICharacterDataFormatter} ICharacterDataFormatter */
 /** @typedef {import('../../../src/interfaces/IActionCategorizationService.js').IActionCategorizationService} IActionCategorizationService */
 /** @typedef {import('../../../src/turns/dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO */
 
@@ -53,8 +48,8 @@ describe('AIPromptContentProvider - Coverage Improvements', () => {
   let mockPerceptionLogFormatter;
   /** @type {jest.Mocked<IGameStateValidationServiceForPrompting>} */
   let mockGameStateValidationService;
-  /** @type {jest.Mocked<ICharacterDataFormatter>} */
-  let mockCharacterDataFormatter;
+  /** @type {jest.Mocked<any>} */
+  let mockCharacterDataXmlBuilder;
   /** @type {jest.Mocked<IActionCategorizationService>} */
   let mockActionCategorizationService;
 
@@ -78,13 +73,10 @@ describe('AIPromptContentProvider - Coverage Improvements', () => {
       validate: jest.fn(),
     };
 
-    // Setup mock for CharacterDataFormatter
-    mockCharacterDataFormatter = {
-      formatCharacterPersona: jest.fn().mockReturnValue('Formatted persona'),
+    // Setup mock for CharacterDataXmlBuilder
+    mockCharacterDataXmlBuilder = {
+      buildCharacterDataXml: jest.fn().mockReturnValue('<character_data>Formatted persona</character_data>'),
     };
-
-    // Mock the constructor to return our mock instance
-    CharacterDataFormatter.mockImplementation(() => mockCharacterDataFormatter);
 
     mockActionCategorizationService = {
       extractNamespace: jest.fn().mockReturnValue('default'),
@@ -94,12 +86,18 @@ describe('AIPromptContentProvider - Coverage Improvements', () => {
       getSortedNamespaces: jest.fn().mockReturnValue([]),
     };
 
+    const mockModActionMetadataProvider = {
+      getMetadataForMod: jest.fn().mockReturnValue(null),
+    };
+
     provider = new AIPromptContentProvider({
       logger: mockLogger,
       promptStaticContentService: mockPromptStaticContentService,
       perceptionLogFormatter: mockPerceptionLogFormatter,
       gameStateValidationService: mockGameStateValidationService,
       actionCategorizationService: mockActionCategorizationService,
+      characterDataXmlBuilder: mockCharacterDataXmlBuilder,
+      modActionMetadataProvider: mockModActionMetadataProvider,
     });
   });
 
@@ -108,13 +106,13 @@ describe('AIPromptContentProvider - Coverage Improvements', () => {
   });
 
   describe('getCharacterPersonaContent edge cases', () => {
-    test('should use fallback when CharacterDataFormatter returns empty string (lines 520-523)', () => {
+    test('should use fallback when CharacterDataXmlBuilder returns empty string', () => {
       // Arrange
-      mockCharacterDataFormatter.formatCharacterPersona.mockReturnValue('');
+      mockCharacterDataXmlBuilder.buildCharacterDataXml.mockReturnValue('');
       const gameState = {
         actorPromptData: {
           name: 'TestCharacter',
-          description: 'Test description', // Need non-minimal details to reach formatter
+          description: 'Test description', // Need non-minimal details to reach builder
         },
       };
 
@@ -123,20 +121,20 @@ describe('AIPromptContentProvider - Coverage Improvements', () => {
 
       // Assert
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        'AIPromptContentProvider: CharacterDataFormatter returned empty result. Using fallback.'
+        'AIPromptContentProvider: CharacterDataXmlBuilder returned empty result. Using fallback.'
       );
       expect(result).toBe(PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS);
     });
 
-    test('should use fallback when CharacterDataFormatter returns whitespace-only string (lines 520-523)', () => {
+    test('should use fallback when CharacterDataXmlBuilder returns whitespace-only string', () => {
       // Arrange
-      mockCharacterDataFormatter.formatCharacterPersona.mockReturnValue(
+      mockCharacterDataXmlBuilder.buildCharacterDataXml.mockReturnValue(
         '   \n\t  '
       );
       const gameState = {
         actorPromptData: {
           name: 'TestCharacter',
-          personality: 'Test personality', // Need non-minimal details to reach formatter
+          personality: 'Test personality', // Need non-minimal details to reach builder
         },
       };
 
@@ -145,15 +143,15 @@ describe('AIPromptContentProvider - Coverage Improvements', () => {
 
       // Assert
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        'AIPromptContentProvider: CharacterDataFormatter returned empty result. Using fallback.'
+        'AIPromptContentProvider: CharacterDataXmlBuilder returned empty result. Using fallback.'
       );
       expect(result).toBe(PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS);
     });
 
-    test('should handle error in CharacterDataFormatter and use fallback (lines 531-536)', () => {
+    test('should handle error in CharacterDataXmlBuilder and use fallback', () => {
       // Arrange
-      const testError = new Error('Formatter error');
-      mockCharacterDataFormatter.formatCharacterPersona.mockImplementation(
+      const testError = new Error('Builder error');
+      mockCharacterDataXmlBuilder.buildCharacterDataXml.mockImplementation(
         () => {
           throw testError;
         }
@@ -161,7 +159,7 @@ describe('AIPromptContentProvider - Coverage Improvements', () => {
       const gameState = {
         actorPromptData: {
           name: 'TestCharacter',
-          profile: 'Test profile', // Need non-minimal details to reach formatter
+          profile: 'Test profile', // Need non-minimal details to reach builder
         },
       };
 
@@ -170,7 +168,7 @@ describe('AIPromptContentProvider - Coverage Improvements', () => {
 
       // Assert
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'AIPromptContentProvider: Error formatting character persona with CharacterDataFormatter.',
+        'AIPromptContentProvider: Error formatting character persona with CharacterDataXmlBuilder.',
         testError
       );
       expect(result).toBe(
@@ -178,10 +176,10 @@ describe('AIPromptContentProvider - Coverage Improvements', () => {
       );
     });
 
-    test('should use default name in fallback when name is missing (lines 531-536)', () => {
+    test('should use default name in fallback when name is missing', () => {
       // Arrange
-      const testError = new Error('Formatter error');
-      mockCharacterDataFormatter.formatCharacterPersona.mockImplementation(
+      const testError = new Error('Builder error');
+      mockCharacterDataXmlBuilder.buildCharacterDataXml.mockImplementation(
         () => {
           throw testError;
         }

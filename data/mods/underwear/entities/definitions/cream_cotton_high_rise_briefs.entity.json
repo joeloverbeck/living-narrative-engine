@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:cream_cotton_high_rise_briefs",
+  "description": "Cream-colored high-rise full-coverage cotton briefs",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "torso_lower"
+      },
+      "allowedLayers": [
+        "underwear"
+      ]
+    },
+    "core:material": {
+      "material": "cotton"
+    },
+    "core:name": {
+      "text": "high-rise briefs"
+    },
+    "core:description": {
+      "text": "Classic high-rise briefs in soft cream-colored cotton with full coverage design. These comfortable underwear sit high on the natural waist, providing coverage and support that's both practical and flattering. The breathable cotton fabric ensures all-day comfort, while the full-coverage cut offers secure, modest wear. The neutral cream tone makes these versatile everyday essentials that work under any outfit."
+    },
+    "descriptors:color_extended": {
+      "color": "cream"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.07
+    }
+  }
+}

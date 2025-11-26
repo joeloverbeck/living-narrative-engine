@@ -9,9 +9,20 @@
       "items:inventory"
     ]
   },
+  "forbidden_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
+      },
+      "failure_message": "You need at least one free hand or appendage to wield a weapon."
+    }
+  ],
   "targets": {
     "primary": {
-      "scope": "weapons:weapons_in_inventory",
+      "scope": "weapons:grabbable_weapons_in_inventory",
       "placeholder": "target",
       "description": "Weapon to wield"
     }

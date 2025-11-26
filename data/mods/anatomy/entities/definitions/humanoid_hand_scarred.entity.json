@@ -3,14 +3,19 @@
   "id": "anatomy:humanoid_hand_scarred",
   "description": "A scarred humanoid hand",
   "components": {
+    "anatomy:can_grab": {
+      "gripStrength": 1.0,
+      "heldItemId": null,
+      "locked": false
+    },
     "anatomy:part": {
       "subType": "hand"
     },
-    "descriptors:texture": {
-      "texture": "scarred"
-    },
     "core:name": {
       "text": "hand"
+    },
+    "descriptors:texture": {
+      "texture": "scarred"
     }
   }
 }

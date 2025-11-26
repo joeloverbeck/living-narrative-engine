@@ -26,7 +26,7 @@
                 "description": "Clothing layers allowed for this slot",
                 "items": {
                   "type": "string",
-                  "enum": ["underwear", "base", "outer", "accessory", "armor"]
+                  "enum": ["underwear", "base", "outer", "accessories", "armor"]
                 }
               }
             },

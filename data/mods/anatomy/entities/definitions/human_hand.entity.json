@@ -3,6 +3,11 @@
   "id": "anatomy:human_hand",
   "description": "A human hand",
   "components": {
+    "anatomy:can_grab": {
+      "gripStrength": 1.0,
+      "heldItemId": null,
+      "locked": false
+    },
     "anatomy:part": {
       "subType": "hand"
     },

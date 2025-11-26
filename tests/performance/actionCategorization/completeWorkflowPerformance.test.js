@@ -78,6 +78,8 @@ describe('Complete Action Categorization Workflow Performance', () => {
         validate: (state) => ({ isValid: true, errors: [] }),
       },
       actionCategorizationService: actionCategorizationService,
+      characterDataXmlBuilder: { buildCharacterDataXml: () => '<character/>' },
+      modActionMetadataProvider: { getMetadataForMod: () => null },
     });
   });
 

@@ -19,17 +19,37 @@ import { TraceQueueProcessor } from '../../../../src/actions/tracing/traceQueueP
 import { TracePriority } from '../../../../src/actions/tracing/tracePriority.js';
 import { createMockLogger } from '../../../common/mockFactories/loggerMocks.js';
 import { createMockIndexedDBStorageAdapter } from '../../../common/mockFactories/actionTracing.js';
+import { TestTimerService } from '../../../../src/actions/tracing/timerService.js';
+
+const flushProcessing = async (processor, timerService) => {
+  let safetyCounter = 0;
+
+  while (safetyCounter < 20) {
+    await timerService.triggerAll();
+    await Promise.resolve();
+
+    const { totalSize, isProcessing } = processor.getQueueStats();
+    if (!timerService.hasPending() && totalSize === 0 && !isProcessing) {
+      break;
+    }
+
+    safetyCounter++;
+  }
+};
 
 describe('TraceQueueProcessor - Latency Performance Tests', () => {
   let processor;
   let mockLogger;
   let mockStorageAdapter;
   let mockEventBus;
+  let timerService;
 
   beforeEach(() => {
-    // Use real timers for performance measurements
+    // Use controlled timers to eliminate unnecessary waiting in performance checks
     mockLogger = createMockLogger();
     mockStorageAdapter = createMockIndexedDBStorageAdapter();
+
+    timerService = new TestTimerService();
 
     mockEventBus = {
       dispatch: jest.fn(),
@@ -45,6 +65,8 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
       }
     }
     processor = null;
+    timerService?.clearAll();
+    timerService = null;
   });
 
   describe('Latency Metrics Tracking', () => {
@@ -53,6 +75,7 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
         storageAdapter: mockStorageAdapter,
         logger: mockLogger,
         eventBus: mockEventBus,
+        timerService,
         config: {
           maxQueueSize: 100,
           batchSize: 5,
@@ -80,8 +103,8 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
         processor.enqueue(trace, TracePriority.CRITICAL);
       }
 
-      // Wait for processing to complete
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Wait for processing to complete using controlled timers
+      await flushProcessing(processor, timerService);
 
       const metrics = processor.getMetrics();
 
@@ -109,6 +132,7 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
         storageAdapter: mockStorageAdapter,
         logger: mockLogger,
         eventBus: mockEventBus,
+        timerService,
         config: {
           maxQueueSize: 200,
           batchSize: 10,
@@ -141,8 +165,8 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
         }
       }
 
-      // Wait for processing to complete
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Wait for processing to complete using controlled timers
+      await flushProcessing(processor, timerService);
 
       const metrics = processor.getMetrics();
 
@@ -180,10 +204,12 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
       const results = [];
 
       for (const batchSize of batchSizes) {
+        timerService = new TestTimerService();
         processor = new TraceQueueProcessor({
           storageAdapter: mockStorageAdapter,
           logger: mockLogger,
           eventBus: mockEventBus,
+          timerService,
           config: {
             maxQueueSize: 100,
             batchSize,
@@ -210,7 +236,7 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
         }
 
         // Wait for processing
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        await flushProcessing(processor, timerService);
         const endTime = performance.now();
 
         const metrics = processor.getMetrics();
@@ -229,6 +255,7 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
         // Cleanup for next iteration
         await processor.shutdown();
         processor = null;
+        timerService.clearAll();
       }
 
       // Log comparison results
@@ -257,6 +284,7 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
         storageAdapter: mockStorageAdapter,
         logger: mockLogger,
         eventBus: mockEventBus,
+        timerService,
         config: {
           maxQueueSize: 500,
           batchSize: 25,
@@ -293,12 +321,13 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
           processor.enqueue(trace, priority);
 
           if (load.delay > 0) {
-            await new Promise((resolve) => setTimeout(resolve, load.delay));
+            await timerService.advanceTime(load.delay);
+            await flushProcessing(processor, timerService);
           }
         }
 
         // Wait for queue to drain
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await flushProcessing(processor, timerService);
 
         const metrics = processor.getMetrics();
         const endTime = performance.now();
@@ -330,10 +359,12 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
       const results = [];
 
       for (const config of configs) {
+        timerService = new TestTimerService();
         processor = new TraceQueueProcessor({
           storageAdapter: mockStorageAdapter,
           logger: mockLogger,
           eventBus: mockEventBus,
+          timerService,
           config: {
             maxQueueSize: 100,
             batchSize: 10,
@@ -360,7 +391,7 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
         }
 
         // Wait for processing
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        await flushProcessing(processor, timerService);
 
         const endTime = performance.now();
         const metrics = processor.getMetrics();

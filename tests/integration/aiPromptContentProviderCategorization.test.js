@@ -76,6 +76,12 @@ describe('AIPromptContentProvider Categorization Integration', () => {
       actionCategorizationService: container.resolve(
         tokens.IActionCategorizationService
       ),
+      characterDataXmlBuilder: {
+        buildCharacterDataXml: jest.fn(() => '<character>Mock XML</character>'),
+      },
+      modActionMetadataProvider: {
+        getMetadataForMod: jest.fn(() => null),
+      },
     });
   });
 
@@ -347,6 +353,12 @@ describe('AIPromptContentProvider Categorization Integration', () => {
           validate: jest.fn(() => ({ isValid: true })),
         },
         actionCategorizationService: faultyService,
+        characterDataXmlBuilder: {
+          buildCharacterDataXml: jest.fn(() => '<character>Mock XML</character>'),
+        },
+        modActionMetadataProvider: {
+          getMetadataForMod: jest.fn(() => null),
+        },
       });
 
       const gameState = {
@@ -458,7 +470,7 @@ describe('AIPromptContentProvider Categorization Integration', () => {
 
       // Check markdown structure
       expect(result).toMatch(/^## Available Actions\s*$/m);
-      expect(result).toMatch(/^### [A-Z]+ Actions$/m);
+      expect(result).toMatch(/^### [A-Z]+ Actions \(\d+ actions?\)$/m);
 
       // Check action format exists in the result
       expect(result).toContain(

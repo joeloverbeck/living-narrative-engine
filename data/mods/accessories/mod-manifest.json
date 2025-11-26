@@ -1,0 +1,51 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "accessories",
+  "version": "1.0.0",
+  "name": "Accessories Clothing",
+  "description": "Accessories layer clothing entities",
+  "author": "Living Narrative Engine",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "descriptors",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "items",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "clothing",
+      "version": "^1.0.0"
+    }
+  ],
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "entities": {
+      "definitions": [
+        "black_calfskin_belt.entity.json",
+        "black_diamond_silver_spike_collar.entity.json",
+        "black_leather_collar_silver_bell.entity.json",
+        "black_tactical_work_belt.entity.json",
+        "dark_brown_leather_belt.entity.json",
+        "goatskin_fingerless_gloves.entity.json",
+        "layered_gold_chain_necklaces.entity.json",
+        "layered_pearl_choker.entity.json",
+        "leather_baldric.entity.json",
+        "mikimoto_delicate_pearl_strand.entity.json",
+        "platinum_necklace.entity.json",
+        "silver_chain_pendant_necklace.entity.json",
+        "slate_nylon_baseball_cap.entity.json",
+        "small_steel_huggie_hoops.entity.json",
+        "south_sea_pearl_necklace_16mm.entity.json",
+        "twisted_black_metal_crown_blood_red_gems.entity.json",
+        "wide_dark_leather_belt.entity.json"
+      ],
+      "instances": []
+    }
+  }
+}

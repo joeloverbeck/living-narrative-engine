@@ -1,0 +1,37 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:white_platform_sneakers",
+  "description": "White platform sneakers",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": [
+        "underwear",
+        "base"
+      ]
+    },
+    "core:material": {
+      "material": "leather"
+    },
+    "core:name": {
+      "text": "platform sneakers"
+    },
+    "core:description": {
+      "text": "Trendy white leather platform sneakers that add both height and style. The thick platform sole provides extra elevation while maintaining the comfort and versatility of classic sneakers. The clean white leather upper offers a fresh, modern look that pairs well with casual or dressy outfits."
+    },
+    "descriptors:color_basic": {
+      "color": "white"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.95
+    }
+  }
+}

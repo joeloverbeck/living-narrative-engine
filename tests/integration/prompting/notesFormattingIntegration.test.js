@@ -52,9 +52,19 @@ describe('Notes Formatting Integration', () => {
     mockLogger = createMockLogger();
     const mockServices = createMockServices();
 
+    const characterDataXmlBuilder = {
+      buildCharacterDataXml: jest.fn(() => '<character_data>Mock XML</character_data>'),
+    };
+
+    const modActionMetadataProvider = {
+      getMetadataForMod: jest.fn(() => null),
+    };
+
     promptContentProvider = new AIPromptContentProvider({
       logger: mockLogger,
       ...mockServices,
+      characterDataXmlBuilder,
+      modActionMetadataProvider,
     });
 
     promptDataFormatter = new PromptDataFormatter({ logger: mockLogger });

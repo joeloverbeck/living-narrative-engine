@@ -159,7 +159,13 @@
           "$ref": "./operations/unequipClothing.schema.json"
         },
         {
+          "$ref": "./operations/lockGrabbing.schema.json"
+        },
+        {
           "$ref": "./operations/lockMovement.schema.json"
+        },
+        {
+          "$ref": "./operations/unlockGrabbing.schema.json"
         },
         {
           "$ref": "./operations/unlockMovement.schema.json"

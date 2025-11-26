@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/operations/lockGrabbing.schema.json",
+  "title": "LOCK_GRABBING Operation",
+  "description": "Locks a specified number of grabbing appendages on an actor, optionally associating them with a held item.",
+  "allOf": [
+    { "$ref": "../base-operation.schema.json" },
+    {
+      "properties": {
+        "type": { "const": "LOCK_GRABBING" },
+        "parameters": { "$ref": "#/$defs/Parameters" }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the LOCK_GRABBING operation.",
+      "properties": {
+        "actor_id": {
+          "type": "string",
+          "description": "The ID of the actor whose appendages to lock"
+        },
+        "count": {
+          "oneOf": [
+            { "type": "integer", "minimum": 1 },
+            { "type": "string", "pattern": "^\\{.+\\}$" }
+          ],
+          "description": "Number of grabbing appendages to lock (integer or template string)"
+        },
+        "item_id": {
+          "type": "string",
+          "description": "Optional: The ID of the item being held. Will be stored in heldItemId on locked appendages."
+        }
+      },
+      "required": ["actor_id", "count"],
+      "additionalProperties": false
+    }
+  }
+}

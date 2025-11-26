@@ -28,11 +28,35 @@
       "version": "^1.0.0"
     },
     {
+      "id": "accessories",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "outer-clothing",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "underwear",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "base-clothing",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "furniture",
+      "version": "^1.0.0"
+    },
+    {
       "id": "music",
       "version": "^1.0.0"
     },
     {
       "id": "weapons",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "armor",
       "version": "^1.0.0"
     }
   ],

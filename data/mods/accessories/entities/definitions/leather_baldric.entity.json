@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "accessories:leather_baldric",
+  "description": "A leather baldric worn diagonally across the chest for carrying a sword",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": [
+        "accessories"
+      ]
+    },
+    "core:material": {
+      "material": "leather"
+    },
+    "core:name": {
+      "text": "baldric"
+    },
+    "core:description": {
+      "text": "A broad leather strap worn diagonally from shoulder to hip, designed to carry a sword at the wearer's back or side. The leather has been oiled to a warm brown sheen and reinforced at the stress points with rivets. An adjustable frog allows the sword to hang at the perfect height for a quick draw, whether standing or mounted."
+    },
+    "descriptors:color_extended": {
+      "color": "warm-brown"
+    },
+    "descriptors:texture": {
+      "texture": "rugged"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.25
+    }
+  }
+}

@@ -756,7 +756,7 @@ class GOAPDebugger {
       lines.push(
         `⚠️ STALE — last violation recorded ${meta.lastUpdated || 'unknown'} (enable GOAP_GOAL_PATH_LINT=1 to enforce).`
       );
-    } else if (meta.lastUpdated) {
+    } else {
       lines.push(`Last violation recorded: ${meta.lastUpdated}`);
     }
 
@@ -790,7 +790,7 @@ class GOAPDebugger {
       lines.push(
         `⚠️ STALE — last failure recorded ${meta.lastUpdated || 'unknown'} (see docs/goap/debugging-tools.md#Planner Contract Checklist).`
       );
-    } else if (meta.lastUpdated) {
+    } else {
       lines.push(`Last failure recorded: ${meta.lastUpdated}`);
     }
 

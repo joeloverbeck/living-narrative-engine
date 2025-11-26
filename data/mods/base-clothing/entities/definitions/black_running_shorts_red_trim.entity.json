@@ -1,0 +1,47 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:black_running_shorts_red_trim",
+  "description": "Black running shorts with red trim",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "legs"
+      },
+      "allowedLayers": [
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "synthetic",
+      "properties": [
+        "breathable",
+        "flexible"
+      ]
+    },
+    "core:name": {
+      "text": "running shorts"
+    },
+    "core:description": {
+      "text": "Sleek black running shorts designed for peak athletic performance, featuring striking red trim along the sides and hem. The lightweight synthetic fabric offers superior moisture management and quick-drying properties. Built-in liner provides comfortable support, while the elastic waistband with internal drawstring ensures a secure, customizable fit. Side splits enhance freedom of movement, and a small zippered pocket keeps essentials secure during your run."
+    },
+    "descriptors:color_basic": {
+      "color": "black"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_lower"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.16
+    }
+  }
+}

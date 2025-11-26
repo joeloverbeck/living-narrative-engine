@@ -62,6 +62,12 @@ describe('AI Prompt Output Regression', () => {
       actionCategorizationService: container.resolve(
         tokens.IActionCategorizationService
       ),
+      characterDataXmlBuilder: {
+        buildCharacterDataXml: () => '<character>Mock XML</character>',
+      },
+      modActionMetadataProvider: {
+        getMetadataForMod: jest.fn(() => null),
+      },
     });
   });
 

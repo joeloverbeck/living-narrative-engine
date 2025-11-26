@@ -102,7 +102,7 @@ describe('JSON Logic Operator Registration', () => {
       const registered = customOperators.getRegisteredOperators();
 
       // Verify count matches known operators
-      expect(registered.size).toBe(16);
+      expect(registered.size).toBe(19);
     });
 
     it('should register expected operator names', () => {
@@ -137,6 +137,9 @@ describe('JSON Logic Operator Registration', () => {
         'is_hungry',
         'predicted_energy',
         'can_consume',
+        'hasFreeGrabbingAppendages',
+        'canActorGrabItem',
+        'isItemBeingGrabbed',
       ];
 
       for (const op of expectedOperators) {
@@ -439,6 +442,13 @@ describe('JSON Logic Operator Registration', () => {
       expect(
         evaluationService.isOperatorAllowed('hasOtherActorsAtLocation')
       ).toBe(true);
+    });
+
+    it('should return true for weapon hand grabbing operators', () => {
+      expect(evaluationService.isOperatorAllowed('canActorGrabItem')).toBe(true);
+      expect(evaluationService.isOperatorAllowed('isItemBeingGrabbed')).toBe(
+        true
+      );
     });
   });
 });

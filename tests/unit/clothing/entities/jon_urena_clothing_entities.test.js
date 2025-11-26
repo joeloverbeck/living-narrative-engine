@@ -11,7 +11,8 @@ import Ajv from 'ajv';
 describe('Jon Ureña Clothing Entities Unit Tests', () => {
   let ajv;
   let entitySchema;
-  const clothingEntitiesPath = 'data/mods/clothing/entities/definitions';
+  // Entities migrated from clothing to base-clothing mod (CLOLAYMIG-013)
+  const clothingEntitiesPath = 'data/mods/base-clothing/entities/definitions';
 
   beforeEach(() => {
     ajv = new Ajv({ strict: false });
@@ -22,7 +23,7 @@ describe('Jon Ureña Clothing Entities Unit Tests', () => {
       required: ['$schema', 'id', 'description', 'components'],
       properties: {
         $schema: { type: 'string' },
-        id: { type: 'string', pattern: '^clothing:' },
+        id: { type: 'string', pattern: '^base-clothing:' },
         description: { type: 'string', minLength: 1 },
         components: {
           type: 'object',
@@ -99,75 +100,8 @@ describe('Jon Ureña Clothing Entities Unit Tests', () => {
     };
   });
 
-  describe('Dark-Olive Cotton Twill Chore Jacket', () => {
-    let entity;
-
-    beforeEach(() => {
-      const filePath = join(
-        process.cwd(),
-        clothingEntitiesPath,
-        'dark_olive_cotton_twill_chore_jacket.entity.json'
-      );
-      const fileContent = readFileSync(filePath, 'utf8');
-      entity = JSON.parse(fileContent);
-    });
-
-    it('should have valid JSON structure', () => {
-      expect(entity).toBeDefined();
-      expect(typeof entity).toBe('object');
-    });
-
-    it('should pass schema validation', () => {
-      const validate = ajv.compile(entitySchema);
-      const valid = validate(entity);
-
-      expect(valid).toBe(true);
-      if (!valid) {
-        console.error('Validation errors:', validate.errors);
-      }
-    });
-
-    it('should have correct entity metadata', () => {
-      expect(entity.id).toBe('clothing:dark_olive_cotton_twill_chore_jacket');
-      expect(entity.description).toBe(
-        'Dark-olive cotton twill chore jacket with utilitarian design'
-      );
-      expect(entity.$schema).toBe(
-        'schema://living-narrative-engine/entity-definition.schema.json'
-      );
-    });
-
-    it('should have correct wearable properties', () => {
-      const wearable = entity.components['clothing:wearable'];
-
-      expect(wearable.layer).toBe('outer');
-      expect(wearable.equipmentSlots.primary).toBe('torso_upper');
-      expect(wearable.equipmentSlots.secondary).toEqual([
-        'left_arm_clothing',
-        'right_arm_clothing',
-      ]);
-      expect(wearable.allowedLayers).toEqual(['underwear', 'base', 'outer']);
-    });
-
-    it('should have correct material and descriptors', () => {
-      expect(entity.components['core:material'].material).toBe('cotton');
-      expect(entity.components['descriptors:color_basic'].color).toBe('green');
-      expect(entity.components['descriptors:texture'].texture).toBe('rugged');
-    });
-
-    it('should have descriptive name and description', () => {
-      expect(entity.components['core:name'].text).toBe('chore jacket');
-      expect(entity.components['core:description'].text).toContain(
-        'dark-olive'
-      );
-      expect(entity.components['core:description'].text).toContain(
-        'cotton twill'
-      );
-      expect(entity.components['core:description'].text).toContain(
-        'utilitarian'
-      );
-    });
-  });
+  // Note: Dark-Olive Cotton Twill Chore Jacket tests removed - entity migrated to outer-clothing mod
+  // See CLOLAYMIG-007 for migration details
 
   describe('Forest-Green Cotton-Linen Button-Down', () => {
     let entity;
@@ -195,7 +129,7 @@ describe('Jon Ureña Clothing Entities Unit Tests', () => {
     });
 
     it('should have correct entity metadata', () => {
-      expect(entity.id).toBe('clothing:forest_green_cotton_linen_button_down');
+      expect(entity.id).toBe('base-clothing:forest_green_cotton_linen_button_down');
       expect(entity.description).toBe(
         'Forest-green cotton-linen button-down shirt'
       );
@@ -251,7 +185,7 @@ describe('Jon Ureña Clothing Entities Unit Tests', () => {
     });
 
     it('should have correct entity metadata', () => {
-      expect(entity.id).toBe('clothing:charcoal_wool_tshirt');
+      expect(entity.id).toBe('base-clothing:charcoal_wool_tshirt');
       expect(entity.description).toBe('Charcoal merino wool T-shirt');
     });
 
@@ -374,69 +308,21 @@ describe('Jon Ureña Clothing Entities Unit Tests', () => {
     });
   });
 
-  describe('Dark-Brown Leather Belt', () => {
-    let entity;
-
-    beforeEach(() => {
-      const filePath = join(
-        process.cwd(),
-        clothingEntitiesPath,
-        'dark_brown_leather_belt.entity.json'
-      );
-      const fileContent = readFileSync(filePath, 'utf8');
-      entity = JSON.parse(fileContent);
-    });
-
-    it('should have valid JSON structure', () => {
-      expect(entity).toBeDefined();
-      expect(typeof entity).toBe('object');
-    });
-
-    it('should pass schema validation', () => {
-      const validate = ajv.compile(entitySchema);
-      const valid = validate(entity);
-
-      expect(valid).toBe(true);
-    });
-
-    it('should be accessories layer with torso_lower slot', () => {
-      const wearable = entity.components['clothing:wearable'];
-
-      expect(wearable.layer).toBe('accessories');
-      expect(wearable.equipmentSlots.primary).toBe('torso_lower');
-      expect(wearable.allowedLayers).toEqual(['accessories']);
-    });
-
-    it('should use leather material and brown color', () => {
-      expect(entity.components['core:material'].material).toBe('leather');
-      expect(entity.components['descriptors:color_basic'].color).toBe('brown');
-      expect(entity.components['descriptors:texture'].texture).toBe('smooth');
-    });
-
-    it('should describe full-grain leather and brass buckle', () => {
-      expect(entity.components['core:description'].text).toContain(
-        'full-grain leather'
-      );
-      expect(entity.components['core:description'].text).toContain(
-        'brass buckle'
-      );
-      expect(entity.components['core:description'].text).toContain(
-        'dark-brown'
-      );
-    });
-  });
+  // Note: Dark-Brown Leather Belt tests removed - entity migrated to accessories mod
+  // See CLOLAYMIG-004 for migration details
 
   describe('Cross-Entity Validation', () => {
     let allEntities;
 
     beforeEach(() => {
+      // Note: dark_brown_leather_belt.entity.json removed - migrated to accessories mod
+      // Note: dark_olive_cotton_twill_chore_jacket.entity.json removed - migrated to outer-clothing mod
+      // See CLOLAYMIG-004 and CLOLAYMIG-007 for migration details
       const entityFiles = [
-        'dark_olive_cotton_twill_chore_jacket.entity.json',
         'forest_green_cotton_linen_button_down.entity.json',
         'charcoal_wool_tshirt.entity.json',
         'dark_indigo_denim_jeans.entity.json',
         'sand_suede_chukka_boots.entity.json',
-        'dark_brown_leather_belt.entity.json',
       ];
 
       allEntities = entityFiles.map((filename) => {
@@ -467,7 +353,6 @@ describe('Jon Ureña Clothing Entities Unit Tests', () => {
         torso_upper: 0,
         legs: 0,
         feet: 0,
-        torso_lower: 0,
       };
 
       for (const entity of allEntities) {
@@ -478,17 +363,17 @@ describe('Jon Ureña Clothing Entities Unit Tests', () => {
         }
       }
 
-      expect(slotCoverage.torso_upper).toBe(3); // T-shirt, button-down, jacket
+      expect(slotCoverage.torso_upper).toBe(2); // T-shirt, button-down (jacket migrated to outer-clothing)
       expect(slotCoverage.legs).toBe(1); // Jeans
       expect(slotCoverage.feet).toBe(1); // Boots
-      expect(slotCoverage.torso_lower).toBe(1); // Belt
+      // Note: torso_lower (Belt) removed - migrated to accessories mod
+      // Note: jacket removed - migrated to outer-clothing mod
     });
 
     it('should have appropriate layer distribution', () => {
       const layerCounts = {
         base: 0,
         outer: 0,
-        accessories: 0,
       };
 
       for (const entity of allEntities) {
@@ -499,8 +384,9 @@ describe('Jon Ureña Clothing Entities Unit Tests', () => {
       }
 
       expect(layerCounts.base).toBe(4); // T-shirt, button-down, jeans, boots
-      expect(layerCounts.outer).toBe(1); // Jacket
-      expect(layerCounts.accessories).toBe(1); // Belt
+      expect(layerCounts.outer).toBe(0); // Jacket migrated to outer-clothing mod
+      // Note: accessories (Belt) removed - migrated to accessories mod
+      // Note: outer (Jacket) removed - migrated to outer-clothing mod
     });
 
     it('should use diverse but valid materials', () => {

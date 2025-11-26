@@ -62,6 +62,7 @@ describe('LayerCompatibilityService', () => {
       expect(LayerCompatibilityService.LAYER_ORDER).toEqual([
         'underwear',
         'base',
+        'armor',
         'outer',
         'accessories',
       ]);
@@ -73,6 +74,101 @@ describe('LayerCompatibilityService', () => {
       ]);
       expect(LayerCompatibilityService.LAYER_REQUIREMENTS.accessories).toEqual(
         []
+      );
+    });
+
+    it('should have correct armor layer requirements', () => {
+      expect(LayerCompatibilityService.LAYER_REQUIREMENTS.armor).toEqual([]);
+    });
+  });
+
+  describe('Armor Layer Support', () => {
+    it('should recognize armor as valid layer in ordering', async () => {
+      const isValid = await service.validateLayerOrdering('entity1', 'armor', {});
+      expect(isValid).toBe(true);
+    });
+
+    it('should position armor between base and outer in layer hierarchy', () => {
+      const order = LayerCompatibilityService.LAYER_ORDER;
+      const baseIndex = order.indexOf('base');
+      const armorIndex = order.indexOf('armor');
+      const outerIndex = order.indexOf('outer');
+
+      expect(armorIndex).toBeGreaterThan(baseIndex);
+      expect(armorIndex).toBeLessThan(outerIndex);
+    });
+
+    it('should allow equipping armor without base layer (no requirements)', async () => {
+      entityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'clothing:equipment') {
+            return {
+              equipped: {
+                torso_clothing: {},
+              },
+            };
+          }
+          if (componentId === 'clothing:wearable') {
+            return {
+              wearableType: 'chainmail',
+              layer: 'armor',
+              equipmentSlots: { primary: 'torso_clothing', secondary: [] },
+            };
+          }
+          return null;
+        }
+      );
+
+      const result = await service.checkLayerConflicts(
+        'entity1',
+        'chainmail_item',
+        'armor',
+        'torso_clothing'
+      );
+
+      expect(result.hasConflicts).toBe(false);
+      expect(result.conflicts).toEqual([]);
+    });
+
+    it('should detect conflict when armor layer is already occupied', async () => {
+      entityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'clothing:equipment') {
+            return {
+              equipped: {
+                torso_clothing: {
+                  armor: 'existing_chainmail',
+                },
+              },
+            };
+          }
+          if (componentId === 'clothing:wearable') {
+            return {
+              wearableType: 'plate_armor',
+              layer: 'armor',
+              equipmentSlots: { primary: 'torso_clothing', secondary: [] },
+            };
+          }
+          return null;
+        }
+      );
+
+      const result = await service.checkLayerConflicts(
+        'entity1',
+        'plate_armor_item',
+        'armor',
+        'torso_clothing'
+      );
+
+      expect(result.hasConflicts).toBe(true);
+      expect(result.conflicts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'layer_overlap',
+            conflictingItemId: 'existing_chainmail',
+            layer: 'armor',
+          }),
+        ])
       );
     });
   });

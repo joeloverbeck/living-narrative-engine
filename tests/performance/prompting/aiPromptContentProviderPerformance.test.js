@@ -78,6 +78,12 @@ describe('AIPromptContentProvider Performance', () => {
       actionCategorizationService: container.resolve(
         tokens.IActionCategorizationService
       ),
+      characterDataXmlBuilder: {
+        buildCharacterDataXml: jest.fn(() => '<character/>'),
+      },
+      modActionMetadataProvider: {
+        getMetadataForMod: jest.fn(() => null),
+      },
     });
   });
 

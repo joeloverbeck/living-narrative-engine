@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "name": "Movement System",
   "description": "Provides core movement mechanics including navigation, pathfinding, and spatial transitions.",
+  "actionPurpose": "Move between locations, teleport, or travel through dimensional portals.",
+  "actionConsiderWhen": "Traveling to a new location, using teleportation abilities, or accessing dimensional gateways.",
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
   "dependencies": [

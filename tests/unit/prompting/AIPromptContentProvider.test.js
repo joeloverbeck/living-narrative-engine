@@ -58,6 +58,10 @@ describe('AIPromptContentProvider', () => {
   let mockGameStateValidationServiceInstance;
   /** @type {jest.Mocked<any>} */
   let mockActionCategorizationService;
+  /** @type {jest.Mocked<any>} */
+  let mockCharacterDataXmlBuilder;
+  /** @type {jest.Mocked<any>} */
+  let mockModActionMetadataProvider;
 
   // Spies for instance methods called by getPromptData or other methods
   /** @type {jest.SpyInstance} */
@@ -119,6 +123,16 @@ describe('AIPromptContentProvider', () => {
       ),
     };
 
+    mockCharacterDataXmlBuilder = {
+      buildCharacterDataXml: jest
+        .fn()
+        .mockReturnValue('<character_data>Mock XML</character_data>'),
+    };
+
+    mockModActionMetadataProvider = {
+      getMetadataForMod: jest.fn(() => null), // Default to no metadata
+    };
+
     // Instantiate with all mocks
     provider = new AIPromptContentProvider({
       logger: mockLoggerInstance,
@@ -126,6 +140,8 @@ describe('AIPromptContentProvider', () => {
       perceptionLogFormatter: mockPerceptionLogFormatterInstance,
       gameStateValidationService: mockGameStateValidationServiceInstance,
       actionCategorizationService: mockActionCategorizationService,
+      characterDataXmlBuilder: mockCharacterDataXmlBuilder,
+      modActionMetadataProvider: mockModActionMetadataProvider,
     });
 
     // Spy on the provider's own methods that are either delegating or complex internal logic
@@ -181,7 +197,7 @@ describe('AIPromptContentProvider', () => {
     test('should initialize correctly with all mocked dependencies', () => {
       expect(provider).toBeInstanceOf(AIPromptContentProvider);
       expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
-        'AIPromptContentProvider initialized with new services.'
+        'AIPromptContentProvider initialized with XML builder for character data.'
       );
     });
 
@@ -194,6 +210,8 @@ describe('AIPromptContentProvider', () => {
             promptStaticContentService: mockPromptStaticContentService,
             perceptionLogFormatter: mockPerceptionLogFormatterInstance,
             gameStateValidationService: mockGameStateValidationServiceInstance,
+            actionCategorizationService: mockActionCategorizationService,
+            characterDataXmlBuilder: mockCharacterDataXmlBuilder,
           })
       ).toThrow(
         'Missing required dependency: AIPromptContentProvider: logger.'
@@ -209,6 +227,8 @@ describe('AIPromptContentProvider', () => {
             promptStaticContentService: null,
             perceptionLogFormatter: mockPerceptionLogFormatterInstance,
             gameStateValidationService: mockGameStateValidationServiceInstance,
+            actionCategorizationService: mockActionCategorizationService,
+            characterDataXmlBuilder: mockCharacterDataXmlBuilder,
           })
       ).toThrow(
         'Missing required dependency: AIPromptContentProvider: promptStaticContentService.'
@@ -224,6 +244,8 @@ describe('AIPromptContentProvider', () => {
             // @ts-ignore
             perceptionLogFormatter: null,
             gameStateValidationService: mockGameStateValidationServiceInstance,
+            actionCategorizationService: mockActionCategorizationService,
+            characterDataXmlBuilder: mockCharacterDataXmlBuilder,
           })
       ).toThrow(
         'Missing required dependency: AIPromptContentProvider: perceptionLogFormatter.'
@@ -239,9 +261,45 @@ describe('AIPromptContentProvider', () => {
             perceptionLogFormatter: mockPerceptionLogFormatterInstance,
             // @ts-ignore
             gameStateValidationService: null,
+            actionCategorizationService: mockActionCategorizationService,
+            characterDataXmlBuilder: mockCharacterDataXmlBuilder,
           })
       ).toThrow(
         'Missing required dependency: AIPromptContentProvider: gameStateValidationService.'
+      );
+    });
+
+    test('should throw error if characterDataXmlBuilder is not provided', () => {
+      expect(
+        () =>
+          new AIPromptContentProvider({
+            logger: mockLoggerInstance,
+            promptStaticContentService: mockPromptStaticContentService,
+            perceptionLogFormatter: mockPerceptionLogFormatterInstance,
+            gameStateValidationService: mockGameStateValidationServiceInstance,
+            actionCategorizationService: mockActionCategorizationService,
+            // @ts-ignore
+            characterDataXmlBuilder: null,
+          })
+      ).toThrow(
+        'Missing required dependency: AIPromptContentProvider: characterDataXmlBuilder.'
+      );
+    });
+
+    test('should throw error if characterDataXmlBuilder lacks buildCharacterDataXml method', () => {
+      expect(
+        () =>
+          new AIPromptContentProvider({
+            logger: mockLoggerInstance,
+            promptStaticContentService: mockPromptStaticContentService,
+            perceptionLogFormatter: mockPerceptionLogFormatterInstance,
+            gameStateValidationService: mockGameStateValidationServiceInstance,
+            actionCategorizationService: mockActionCategorizationService,
+            // Missing buildCharacterDataXml method
+            characterDataXmlBuilder: {},
+          })
+      ).toThrow(
+        "Invalid or missing method 'buildCharacterDataXml' on dependency 'AIPromptContentProvider: characterDataXmlBuilder'."
       );
     });
   });
@@ -633,7 +691,7 @@ describe('AIPromptContentProvider', () => {
     });
 
     describe('getCharacterPersonaContent', () => {
-      test('should return full persona string with all details in markdown format', () => {
+      test('should call characterDataXmlBuilder.buildCharacterDataXml and return XML output', () => {
         const dto = {
           ...minimalGameStateDto,
           actorPromptData: {
@@ -649,27 +707,14 @@ describe('AIPromptContentProvider', () => {
         };
         const result = provider.getCharacterPersonaContent(dto);
 
-        expect(result).toContain('YOU ARE Sir Reginald.');
-        expect(result).toContain('## Your Description');
-        expect(result).toContain('**Description**: A brave knight.');
-        expect(result).toContain('## Your Personality');
-        expect(result).toContain('Gallant and Stoic.');
-        expect(result).toContain('## Your Profile');
-        expect(result).toContain(
-          'Born in a noble family, trained in swordsmanship.'
+        // Verify the builder was called with the actorPromptData
+        expect(mockCharacterDataXmlBuilder.buildCharacterDataXml).toHaveBeenCalledWith(
+          dto.actorPromptData
         );
-        expect(result).toContain('## Your Likes');
-        expect(result).toContain('Justice, good ale.');
-        expect(result).toContain('## Your Dislikes');
-        expect(result).toContain('Dragons, injustice.');
-        expect(result).toContain('## Your Secrets');
-        expect(result).toContain('Afraid of spiders.');
-        expect(result).toContain('<speech_patterns>');
-        expect(result).toContain('- Verily!');
-        expect(result).toContain('- Forsooth!');
-        expect(result).toContain('</speech_patterns>');
+        // Verify XML output is returned (from mock)
+        expect(result).toContain('<character_data>');
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
-          'AIPromptContentProvider: Formatting character persona content with markdown structure.'
+          'AIPromptContentProvider: Formatting character persona content with XML structure.'
         );
       });
 
@@ -699,13 +744,18 @@ describe('AIPromptContentProvider', () => {
         );
       });
 
-      test('should use DEFAULT_FALLBACK_CHARACTER_NAME if name is missing', () => {
+      test('should call characterDataXmlBuilder when name is missing (builder handles defaults)', () => {
         const dto = {
           ...minimalGameStateDto,
           actorPromptData: { description: 'A wanderer.' },
         };
         const result = provider.getCharacterPersonaContent(dto);
-        expect(result).toContain(`YOU ARE ${DEFAULT_FALLBACK_CHARACTER_NAME}.`);
+        // The builder is called with the actorPromptData; builder handles default name internally
+        expect(mockCharacterDataXmlBuilder.buildCharacterDataXml).toHaveBeenCalledWith(
+          dto.actorPromptData
+        );
+        // Verify we get XML output from the mock
+        expect(result).toContain('<character_data>');
       });
 
       test('should return PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS for truly minimal/default data', () => {
@@ -728,25 +778,25 @@ describe('AIPromptContentProvider', () => {
         expect(result).toBe(PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS);
       });
 
-      test('should correctly format optional attributes, skipping empty ones', () => {
+      test('should call characterDataXmlBuilder with all actorPromptData attributes', () => {
         const dto = {
           ...minimalGameStateDto,
           actorPromptData: {
             name: 'Test Character',
             description: 'Desc.',
             personality: '  Friendly  ',
-            profile: '', // empty
-            likes: null, // null
+            profile: '', // empty - builder will handle
+            likes: null, // null - builder will handle
             secrets: 'A big one.',
           },
         };
         const result = provider.getCharacterPersonaContent(dto);
-        expect(result).toContain('## Your Personality');
-        expect(result).toContain('Friendly');
-        expect(result).not.toContain('## Your Profile');
-        expect(result).not.toContain('## Your Likes');
-        expect(result).toContain('## Your Secrets');
-        expect(result).toContain('A big one.');
+        // Verify builder receives all data; builder handles optional attributes internally
+        expect(mockCharacterDataXmlBuilder.buildCharacterDataXml).toHaveBeenCalledWith(
+          dto.actorPromptData
+        );
+        // Verify we get XML output from the mock
+        expect(result).toContain('<character_data>');
       });
     });
 

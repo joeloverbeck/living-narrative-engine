@@ -37,14 +37,15 @@ describe('Coverage Mapping Runtime Integration', () => {
 
   describe('Entity File Loading', () => {
     it('should load clothing entities with coverage mapping from file system', async () => {
+      // Entity migrated to base-clothing mod (CLOLAYMIG-013)
       const entityPath = path.resolve(
-        './data/mods/clothing/entities/definitions/dark_indigo_denim_jeans.entity.json'
+        './data/mods/base-clothing/entities/definitions/dark_indigo_denim_jeans.entity.json'
       );
 
       const content = await fs.readFile(entityPath, 'utf8');
       const entity = JSON.parse(content);
 
-      expect(entity.id).toBe('clothing:dark_indigo_denim_jeans');
+      expect(entity.id).toBe('base-clothing:dark_indigo_denim_jeans');
       expect(entity.components['clothing:coverage_mapping']).toBeDefined();
       expect(entity.components['clothing:coverage_mapping'].covers).toEqual([
         'torso_lower',
@@ -55,25 +56,25 @@ describe('Coverage Mapping Runtime Integration', () => {
     });
 
     it('should validate all clothing items with coverage mapping', async () => {
+      // Note: indigo_denim_trucker_jacket, dark_olive_cotton_twill_chore_jacket, white_structured_linen_blazer
+      // migrated to outer-clothing mod - see CLOLAYMIG-007
+      // Note: white_thigh_high_socks_pink_hearts migrated to underwear mod - see CLOLAYMIG-010
+      // Note: All base-clothing items migrated to base-clothing mod - see CLOLAYMIG-013
       const itemIds = [
         'dark_indigo_denim_jeans',
         'graphite_wool_wide_leg_trousers',
-        'white_thigh_high_socks_pink_hearts',
-        'indigo_denim_trucker_jacket',
-        'dark_olive_cotton_twill_chore_jacket',
         'pink_off_shoulder_crop_top',
         'charcoal_wool_tshirt',
         'white_cotton_crew_tshirt',
         'forest_green_cotton_linen_button_down',
         'high_compression_leggings',
         'black_stretch_silk_bodysuit',
-        'white_structured_linen_blazer',
         'sand_beige_cotton_chinos',
       ];
 
       for (const itemId of itemIds) {
         const entityPath = path.resolve(
-          `./data/mods/clothing/entities/definitions/${itemId}.entity.json`
+          `./data/mods/base-clothing/entities/definitions/${itemId}.entity.json`
         );
 
         const content = await fs.readFile(entityPath, 'utf8');
@@ -99,19 +100,19 @@ describe('Coverage Mapping Runtime Integration', () => {
     });
 
     it('should validate coverage mapping data structure for all items', async () => {
+      // Note: indigo_denim_trucker_jacket, dark_olive_cotton_twill_chore_jacket, white_structured_linen_blazer
+      // migrated to outer-clothing mod - see CLOLAYMIG-007
+      // Note: white_thigh_high_socks_pink_hearts migrated to underwear mod - see CLOLAYMIG-010
+      // Note: All base-clothing items migrated to base-clothing mod - see CLOLAYMIG-013
       const itemIds = [
         'dark_indigo_denim_jeans',
         'graphite_wool_wide_leg_trousers',
-        'white_thigh_high_socks_pink_hearts',
-        'indigo_denim_trucker_jacket',
-        'dark_olive_cotton_twill_chore_jacket',
         'pink_off_shoulder_crop_top',
         'charcoal_wool_tshirt',
         'white_cotton_crew_tshirt',
         'forest_green_cotton_linen_button_down',
         'high_compression_leggings',
         'black_stretch_silk_bodysuit',
-        'white_structured_linen_blazer',
         'sand_beige_cotton_chinos',
       ];
 
@@ -128,7 +129,7 @@ describe('Coverage Mapping Runtime Integration', () => {
 
       for (const itemId of itemIds) {
         const entityPath = path.resolve(
-          `./data/mods/clothing/entities/definitions/${itemId}.entity.json`
+          `./data/mods/base-clothing/entities/definitions/${itemId}.entity.json`
         );
 
         const content = await fs.readFile(entityPath, 'utf8');

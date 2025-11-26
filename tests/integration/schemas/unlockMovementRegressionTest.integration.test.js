@@ -145,8 +145,8 @@ describe('UNLOCK_MOVEMENT Schema Regression Test', () => {
     expect(Array.isArray(operationSchema.$defs.Operation.anyOf)).toBe(true);
 
     // Verify we have a reasonable number of operations (we added unlockMovement to the existing set)
+    // Only check lower bound - upper bound would break as system naturally grows with new operations
     expect(operationSchema.$defs.Operation.anyOf.length).toBeGreaterThan(30);
-    expect(operationSchema.$defs.Operation.anyOf.length).toBeLessThanOrEqual(60);
 
     // Verify all entries have the expected $ref format
     operationSchema.$defs.Operation.anyOf.forEach((item) => {

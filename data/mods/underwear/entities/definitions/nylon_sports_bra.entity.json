@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:nylon_sports_bra",
+  "description": "High-performance nylon sports bra for athletic activities",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": [
+        "underwear"
+      ]
+    },
+    "core:material": {
+      "material": "nylon"
+    },
+    "core:name": {
+      "text": "sports bra"
+    },
+    "core:description": {
+      "text": "A high-performance sports bra crafted from moisture-wicking nylon fabric designed for intense athletic activities. Features medium support with a comfortable compression fit that moves with your body. The breathable construction and seamless design provide all-day comfort during workouts while maintaining shape and support."
+    },
+    "descriptors:color_extended": {
+      "color": "navy"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.11
+    }
+  }
+}

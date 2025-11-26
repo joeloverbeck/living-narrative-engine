@@ -52,6 +52,12 @@ describe('Backwards Compatibility Integration Tests', () => {
         namespace.toUpperCase()
       ),
     },
+    characterDataXmlBuilder: {
+      buildCharacterDataXml: jest.fn(() => '<character_data></character_data>'),
+    },
+    modActionMetadataProvider: {
+      getMetadataForMod: jest.fn(() => null),
+    },
   });
 
   beforeEach(async () => {

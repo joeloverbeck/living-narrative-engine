@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "name": "Sex - Physical Control",
   "description": "Sexual actions involving physical guidance and control of a partner's body.",
+  "actionPurpose": "Physically guide or control a partner's body during sexual encounters through directing hands or head.",
+  "actionConsiderWhen": "Directing a partner's hands to intimate areas, guiding their head toward genitals, or asserting physical control during sex.",
   "author": "Living Narrative Engine Team",
   "gameVersion": ">=0.0.1",
   "dependencies": [

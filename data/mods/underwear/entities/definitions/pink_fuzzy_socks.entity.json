@@ -1,0 +1,39 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:pink_fuzzy_socks",
+  "description": "Plush pink socks with fuzzy texture that transforms cold feet into cozy companions",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": ["underwear"]
+    },
+    "core:material": {
+      "material": "synthetic",
+      "properties": ["flexible"]
+    },
+    "descriptors:color_basic": {
+      "color": "pink"
+    },
+    "descriptors:texture": {
+      "texture": "fuzzy"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["feet"],
+      "coveragePriority": "underwear"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.09
+    },
+    "core:name": {
+      "text": "Pink Fuzzy Socks"
+    },
+    "core:description": {
+      "text": "Plush pink socks with a fuzzy texture that transforms cold feet into cozy companions. The synthetic fibers create a soft, almost velvety feel while maintaining enough structure to stay in place throughout the day. These socks are a cheerful addition to any loungewear ensemble, adding both warmth and a pop of color."
+    }
+  }
+}

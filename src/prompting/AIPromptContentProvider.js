@@ -9,10 +9,10 @@
 /** @typedef {import('../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
 /** @typedef {import('../turns/dtos/actionComposite.js').ActionComposite} ActionComposite */
 /** @typedef {import('../types/perceptionLogTypes.js').RawPerceptionLogEntry} RawPerceptionLogEntry */
+/** @typedef {import('./services/modActionMetadataProvider.js').ModActionMetadata} ModActionMetadata */
 
 import { IAIPromptContentProvider } from '../turns/interfaces/IAIPromptContentProvider.js';
 import { ensureTerminalPunctuation } from '../utils/textUtils.js';
-import { CharacterDataFormatter } from './CharacterDataFormatter.js';
 import {
   DEFAULT_FALLBACK_CHARACTER_NAME,
   DEFAULT_FALLBACK_DESCRIPTION_RAW,
@@ -47,10 +47,12 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   #perceptionLogFormatter;
   /** @type {IGameStateValidationServiceForPrompting} */
   #gameStateValidationService;
-  /** @type {CharacterDataFormatter} */
-  #characterDataFormatter;
+  /** @type {import('./characterDataXmlBuilder.js').CharacterDataXmlBuilder} */
+  #characterDataXmlBuilder;
   /** @type {*} */
   #actionCategorizationService;
+  /** @type {import('./services/modActionMetadataProvider.js').ModActionMetadataProvider} */
+  #modActionMetadataProvider;
 
   /**
    * @param {object} dependencies - Object containing required services.
@@ -59,6 +61,8 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    * @param {IPerceptionLogFormatter} dependencies.perceptionLogFormatter - Service to format perception logs.
    * @param {IGameStateValidationServiceForPrompting} dependencies.gameStateValidationService - Service to validate game state for prompting.
    * @param {*} dependencies.actionCategorizationService - Service for action categorization.
+   * @param {import('./characterDataXmlBuilder.js').CharacterDataXmlBuilder} dependencies.characterDataXmlBuilder - Builder for XML character data.
+   * @param {import('./services/modActionMetadataProvider.js').ModActionMetadataProvider} dependencies.modActionMetadataProvider - Provider for mod action metadata.
    * @returns {void}
    */
   constructor({
@@ -67,6 +71,8 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     perceptionLogFormatter,
     gameStateValidationService,
     actionCategorizationService,
+    characterDataXmlBuilder,
+    modActionMetadataProvider,
   }) {
     super();
     validateDependencies(
@@ -107,6 +113,16 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
             'formatNamespaceDisplayName',
           ],
         },
+        {
+          dependency: characterDataXmlBuilder,
+          name: 'AIPromptContentProvider: characterDataXmlBuilder',
+          methods: ['buildCharacterDataXml'],
+        },
+        {
+          dependency: modActionMetadataProvider,
+          name: 'AIPromptContentProvider: modActionMetadataProvider',
+          methods: ['getMetadataForMod'],
+        },
       ],
       logger
     );
@@ -116,9 +132,10 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     this.#perceptionLogFormatter = perceptionLogFormatter;
     this.#gameStateValidationService = gameStateValidationService;
     this.#actionCategorizationService = actionCategorizationService;
-    this.#characterDataFormatter = new CharacterDataFormatter({ logger });
+    this.#characterDataXmlBuilder = characterDataXmlBuilder;
+    this.#modActionMetadataProvider = modActionMetadataProvider;
     this.#logger.debug(
-      'AIPromptContentProvider initialized with new services.'
+      'AIPromptContentProvider initialized with XML builder for character data.'
     );
   }
 
@@ -484,7 +501,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    */
   getCharacterPersonaContent(gameState) {
     this.#logger.debug(
-      'AIPromptContentProvider: Formatting character persona content with markdown structure.'
+      'AIPromptContentProvider: Formatting character persona content with XML structure.'
     );
     const { actorPromptData } = gameState;
 
@@ -511,28 +528,28 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
       return PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS;
     }
 
-    // Use the new CharacterDataFormatter for markdown structure
+    // Use CharacterDataXmlBuilder for XML structure
     try {
       const formattedPersona =
-        this.#characterDataFormatter.formatCharacterPersona(actorPromptData);
+        this.#characterDataXmlBuilder.buildCharacterDataXml(actorPromptData);
 
       if (!formattedPersona || formattedPersona.trim().length === 0) {
         this.#logger.warn(
-          'AIPromptContentProvider: CharacterDataFormatter returned empty result. Using fallback.'
+          'AIPromptContentProvider: CharacterDataXmlBuilder returned empty result. Using fallback.'
         );
         return PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS;
       }
 
       this.#logger.debug(
-        'AIPromptContentProvider: Successfully formatted character persona with markdown structure.'
+        'AIPromptContentProvider: Successfully formatted character persona with XML structure.'
       );
       return formattedPersona;
     } catch (error) {
       this.#logger.error(
-        'AIPromptContentProvider: Error formatting character persona with CharacterDataFormatter.',
+        'AIPromptContentProvider: Error formatting character persona with CharacterDataXmlBuilder.',
         error
       );
-      // Fallback to basic format if formatter fails
+      // Fallback to basic format if builder fails
       return `YOU ARE ${actorPromptData.name || DEFAULT_FALLBACK_CHARACTER_NAME}.\nThis is your identity. All thoughts, actions, and words must stem from this core truth.`;
     }
   }
@@ -682,7 +699,30 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
           this.#actionCategorizationService.formatNamespaceDisplayName(
             namespace
           );
-        segments.push(`### ${displayName} Actions`);
+
+        // Look up mod manifest for metadata
+        const metadata =
+          this.#modActionMetadataProvider.getMetadataForMod(namespace);
+
+        // Format header with action count
+        segments.push(
+          `### ${displayName} Actions (${namespaceActions.length} actions)`
+        );
+
+        // Add purpose if available
+        if (metadata?.actionPurpose) {
+          segments.push(`**Purpose:** ${metadata.actionPurpose}`);
+        }
+
+        // Add consider when if available
+        if (metadata?.actionConsiderWhen) {
+          segments.push(`**Consider when:** ${metadata.actionConsiderWhen}`);
+        }
+
+        // Add spacing after header metadata
+        if (metadata?.actionPurpose || metadata?.actionConsiderWhen) {
+          segments.push('');
+        }
 
         for (const action of namespaceActions) {
           segments.push(this._formatSingleAction(action));

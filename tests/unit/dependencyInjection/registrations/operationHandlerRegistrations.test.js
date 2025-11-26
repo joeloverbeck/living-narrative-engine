@@ -113,11 +113,13 @@ const handlerModuleDefinitions = [
     `${handlerBasePath}/hasBodyPartWithComponentValueHandler.js`,
   ],
   ['UnequipClothingHandler', `${handlerBasePath}/unequipClothingHandler.js`],
+  ['LockGrabbingHandler', `${handlerBasePath}/lockGrabbingHandler.js`],
   ['LockMovementHandler', `${handlerBasePath}/lockMovementHandler.js`],
   [
     'LockMouthEngagementHandler',
     `${handlerBasePath}/lockMouthEngagementHandler.js`,
   ],
+  ['UnlockGrabbingHandler', `${handlerBasePath}/unlockGrabbingHandler.js`],
   ['UnlockMovementHandler', `${handlerBasePath}/unlockMovementHandler.js`],
   [
     'UnlockMouthEngagementHandler',
@@ -659,6 +661,15 @@ beforeAll(async () => {
       ],
     },
     {
+      token: tokens.LockGrabbingHandler,
+      handlerName: 'LockGrabbingHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
       token: tokens.LockMovementHandler,
       handlerName: 'LockMovementHandler',
       dependencies: [
@@ -670,6 +681,15 @@ beforeAll(async () => {
     {
       token: tokens.LockMouthEngagementHandler,
       handlerName: 'LockMouthEngagementHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.UnlockGrabbingHandler,
+      handlerName: 'UnlockGrabbingHandler',
       dependencies: [
         { property: 'logger', token: ILogger },
         { property: 'entityManager', token: IEntityManager },

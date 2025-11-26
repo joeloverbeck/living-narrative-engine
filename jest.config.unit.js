@@ -25,7 +25,7 @@ module.exports = {
   // Unit tests should be fast, set a reasonable timeout
   testTimeout: 15000, // Increased slightly to handle performance tests
   // Memory management to prevent OOM kills
-  maxWorkers: 8, // Limit concurrent workers
+  maxWorkers: 6, // Limit concurrent workers
   workerIdleMemoryLimit: '512MB', // Kill idle workers consuming too much memory
   // Unit tests should have high coverage (skip for CSS tests)
   ...(runningCssTests

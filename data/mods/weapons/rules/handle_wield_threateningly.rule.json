@@ -22,6 +22,25 @@
     },
     {
       "type": "QUERY_COMPONENT",
+      "comment": "Get target's grabbing requirements to know how many appendages to lock",
+      "parameters": {
+        "entity_ref": "target",
+        "component_type": "anatomy:requires_grabbing",
+        "result_variable": "targetGrabbingReqs",
+        "missing_value": { "handsRequired": 1 }
+      }
+    },
+    {
+      "type": "LOCK_GRABBING",
+      "comment": "Lock the required number of grabbing appendages for this weapon",
+      "parameters": {
+        "actor_id": "{event.payload.actorId}",
+        "count": "{context.targetGrabbingReqs.handsRequired}",
+        "item_id": "{event.payload.targetId}"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
       "parameters": {
         "entity_ref": "actor",
         "component_type": "core:position",
@@ -55,6 +74,54 @@
         "variable_name": "targetId",
         "value": "{event.payload.targetId}"
       }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Check if actor already has wielding component",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "positioning:wielding",
+        "result_variable": "existingWielding",
+        "missing_value": null
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Add to existing array or create new component",
+      "parameters": {
+        "condition": { "var": "context.existingWielding" },
+        "then_actions": [
+          {
+            "type": "MODIFY_ARRAY_FIELD",
+            "comment": "Append weapon to existing wielded_item_ids array",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "positioning:wielding",
+              "field": "wielded_item_ids",
+              "mode": "push_unique",
+              "value": "{event.payload.targetId}"
+            }
+          }
+        ],
+        "else_actions": [
+          {
+            "type": "ADD_COMPONENT",
+            "comment": "Create new wielding component with weapon in array",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "positioning:wielding",
+              "value": {
+                "wielded_item_ids": ["{event.payload.targetId}"]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "REGENERATE_DESCRIPTION",
+      "comment": "Update actor description to include wielding activity",
+      "parameters": { "entity_ref": "actor" }
     },
     {
       "comment": "Log success and end turn",

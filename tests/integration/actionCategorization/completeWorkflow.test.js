@@ -78,6 +78,12 @@ describe('Complete Action Categorization Workflow Integration', () => {
         validate: (state) => ({ isValid: true, errors: [] }),
       },
       actionCategorizationService: actionCategorizationService,
+      characterDataXmlBuilder: {
+        buildCharacterDataXml: () => '<character>Mock XML</character>',
+      },
+      modActionMetadataProvider: {
+        getMetadataForMod: jest.fn(() => null),
+      },
     });
   });
 
@@ -412,6 +418,12 @@ describe('Complete Action Categorization Workflow Integration', () => {
         perceptionLogFormatter: { format: () => 'Log' },
         gameStateValidationService: { validate: () => ({ isValid: true }) },
         actionCategorizationService: faultyService,
+        characterDataXmlBuilder: {
+          buildCharacterDataXml: () => '<character>Mock XML</character>',
+        },
+        modActionMetadataProvider: {
+          getMetadataForMod: jest.fn(() => null),
+        },
       });
 
       const gameState = {

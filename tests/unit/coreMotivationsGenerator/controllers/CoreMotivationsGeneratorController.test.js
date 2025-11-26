@@ -280,6 +280,252 @@ describe('CoreMotivationsGeneratorController', () => {
     });
   });
 
+  describe('UI helpers and accessibility coverage', () => {
+    const originalIntersectionObserver = global.IntersectionObserver;
+
+    afterEach(() => {
+      global.IntersectionObserver = originalIntersectionObserver;
+    });
+
+    it('extracts concept titles safely when concept text is missing or long', () => {
+      const directions = [
+        { concept: { id: 'c-1', text: null } },
+        {
+          concept: {
+            id: 'c-2',
+            text: 'First line title\nThe rest of the description. And even more.',
+          },
+        },
+        {
+          concept: {
+            id: 'c-3',
+            text: 'A'.repeat(80),
+          },
+        },
+      ];
+
+      const organized = testBed.controller.organizeDirectionsByConcept(directions);
+
+      expect(organized.find((group) => group.conceptId === 'c-1').conceptTitle).toBe(
+        'Unknown Concept'
+      );
+      expect(organized.find((group) => group.conceptId === 'c-2').conceptTitle).toBe(
+        'First line title'
+      );
+      expect(
+        organized.find((group) => group.conceptId === 'c-3').conceptTitle.endsWith('...')
+      ).toBe(true);
+    });
+
+    it('selects a direction via DOM interaction and caches concept/direction data', async () => {
+      const motivations = [{ id: 'm-1', createdAt: new Date() }];
+      await testBed.loadDirectionWithMotivations('test-direction-1', motivations);
+
+      await testBed.selectDirection('test-direction-1');
+
+      const selector = document.getElementById('direction-selector');
+      expect(selector.value).toBe('test-direction-1');
+      expect(testBed.controller.currentDirection.id).toBe('test-direction-1');
+      expect(testBed.controller.currentConcept.id).toBe('concept-1');
+    });
+
+    it('handles null motivation responses gracefully when loading existing items', async () => {
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValueOnce(
+        null
+      );
+
+      await testBed.loadDirectionWithMotivations('test-direction-1', []);
+      await testBed.selectDirection('test-direction-1');
+
+      const retrievedEvent = testBed.getLastEventOfType('core:core_motivations_retrieved');
+      expect(retrievedEvent.payload.count).toBe(0);
+    });
+
+    it('performs lazy loading when many motivations are present', async () => {
+      const manyMotivations = Array.from({ length: 55 }).map((_, index) => ({
+        id: `m-${index + 1}`,
+        coreDesire: `Desire ${index + 1}`,
+        internalContradiction: 'Conflict',
+        centralQuestion: 'Why?',
+        createdAt: new Date(Date.now() - index * 1000).toISOString(),
+      }));
+
+      let observerCallback;
+      const disconnectMock = jest.fn();
+      global.IntersectionObserver = jest.fn((callback) => {
+        observerCallback = callback;
+        return {
+          observe: jest.fn(),
+          disconnect: disconnectMock,
+        };
+      });
+
+      testBed.setupMotivationsDisplay(manyMotivations);
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+        manyMotivations
+      );
+
+      await testBed.loadDirectionWithMotivations('test-direction-1', manyMotivations);
+      await testBed.selectDirection('test-direction-1');
+
+      const loadMoreTrigger = document.getElementById('load-more-trigger');
+      expect(loadMoreTrigger).toBeTruthy();
+      expect(global.IntersectionObserver).toHaveBeenCalled();
+
+      // Trigger observer twice to exhaust items
+      observerCallback([{ isIntersecting: true }]);
+      observerCallback([{ isIntersecting: true }]);
+
+      expect(document.querySelectorAll('.motivation-block').length).toBe(55);
+      expect(document.getElementById('load-more-trigger')).toBeNull();
+      expect(disconnectMock).toHaveBeenCalled();
+    });
+
+    it('filters and sorts motivations alphabetically using accessible controls', async () => {
+      const motivations = [
+        {
+          id: 'm-1',
+          coreDesire: 'Zest',
+          internalContradiction: '',
+          centralQuestion: '',
+          createdAt: '2023-01-01T00:00:00Z',
+        },
+        {
+          id: 'm-2',
+          coreDesire: 'a new hope',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+
+      testBed.setupMotivationsDisplay(motivations);
+      await testBed.loadDirectionWithMotivations('test-direction-1', motivations);
+      await testBed.selectDirection('test-direction-1');
+
+      jest.useFakeTimers();
+
+      const searchInput = document.getElementById('motivation-search');
+      searchInput.value = 'hope';
+      searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+      jest.runAllTimers();
+
+      const sortSelect = document.getElementById('motivation-sort');
+      sortSelect.value = 'alphabetical';
+      sortSelect.dispatchEvent(new Event('change', { bubbles: true }));
+
+      jest.runAllTimers();
+      jest.useRealTimers();
+
+      const displayed = testBed.getDisplayedMotivations();
+      expect(displayed[0].coreDesire).toBe('a new hope');
+      expect(testBed.controller.currentDirection).not.toBeNull();
+    });
+
+    it('exports motivations with fallback filename when direction is missing', async () => {
+      Object.assign(navigator, {
+        clipboard: {
+          writeText: jest.fn().mockResolvedValue(),
+        },
+      });
+
+      const motivations = [
+        { id: 'm-1', coreDesire: 'Drive', createdAt: new Date().toISOString() },
+      ];
+
+      testBed.setupMotivationsDisplay(motivations);
+      await testBed.loadDirectionWithMotivations('test-direction-1', motivations);
+      await testBed.selectDirection('test-direction-1');
+
+      // Remove eligible directions so the export filename path uses the fallback
+      testBed.controller.eligibleDirections = [];
+
+      const downloadSpy = jest.spyOn(URL, 'createObjectURL');
+      testBed.controller.showSuccess = jest.fn();
+
+      const exportBtn = document.getElementById('export-btn');
+      exportBtn.click();
+
+      await testBed.waitForAsyncOperations();
+
+      expect(downloadSpy).toHaveBeenCalled();
+      expect(testBed.controller.showSuccess).toHaveBeenCalled();
+    });
+
+    it('loads user preferences and applies saved sort selection', async () => {
+      window.localStorage.getItem.mockReturnValue('alphabetical');
+
+      await testBed.controller.initialize();
+
+      const sortSelect = document.getElementById('motivation-sort');
+      expect(sortSelect.value).toBe('alphabetical');
+    });
+
+    it('honors keyboard shortcuts for closing modal and restoring focus', async () => {
+      await testBed.controller.initialize();
+      const { modal, confirmBtn } = testBed.setupConfirmationModal();
+
+      modal.style.display = 'flex';
+      confirmBtn.focus();
+      const cancelBtn = document.getElementById('cancel-clear');
+
+      const tabEvent = new KeyboardEvent('keydown', {
+        key: 'Tab',
+        shiftKey: true,
+        bubbles: true,
+      });
+      modal.dispatchEvent(tabEvent);
+      expect(document.activeElement).toBe(cancelBtn);
+
+      const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
+      document.dispatchEvent(escapeEvent);
+
+      expect(modal.style.display).toBe('none');
+      expect(['clear-all-btn', 'cancel-clear']).toContain(
+        document.activeElement.id
+      );
+    });
+
+    it('updates button states and loading indicators during generation', async () => {
+      const mockMotivations = [
+        { id: 'motivation-1', coreDesire: 'Grow', createdAt: new Date() },
+      ];
+      let resolveGeneration;
+      const pendingGeneration = new Promise((resolve) => {
+        resolveGeneration = resolve;
+      });
+
+      testBed.mockCoreMotivationsGenerator.generate.mockReturnValue(pendingGeneration);
+
+      await testBed.controller.initialize();
+      await testBed.selectDirection('test-direction-1');
+
+      const generateBtn = document.getElementById('generate-btn');
+      const clearBtn = document.getElementById('clear-all-btn');
+      const exportBtn = document.getElementById('export-btn');
+      const loadingIndicator = document.getElementById('loading-indicator');
+      const loadingText = loadingIndicator.querySelector('p');
+
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+        mockMotivations
+      );
+
+      generateBtn.click();
+      await testBed.waitForAsyncOperations();
+
+      expect(generateBtn.disabled).toBe(true);
+      expect(clearBtn.classList.contains('loading-disabled')).toBe(true);
+      expect(loadingIndicator.style.display).toBe('flex');
+      expect(loadingText.textContent).toContain('Generating');
+
+      resolveGeneration(mockMotivations);
+      await testBed.waitForAsyncOperations();
+
+      expect(generateBtn.disabled).toBe(false);
+      expect(clearBtn.disabled).toBe(false);
+      expect(exportBtn.disabled).toBe(false);
+      expect(loadingIndicator.style.display).toBe('none');
+    });
+  });
+
   describe('Direction Management', () => {
     beforeEach(async () => {
       testBed.setupSuccessfulDirectionLoad();
@@ -3756,6 +4002,45 @@ describe('CoreMotivationsGeneratorController', () => {
 
       expect(preventDefaultSpy).toHaveBeenCalled();
       expect(modal.style.display).toBe('flex');
+    });
+
+    it('should export motivations when pressing Ctrl+E', async () => {
+      const originalClipboard = navigator.clipboard;
+      const originalCreateObjectUrl = URL.createObjectURL;
+      const originalRevokeObjectUrl = URL.revokeObjectURL;
+
+      navigator.clipboard = {
+        writeText: jest.fn().mockResolvedValue(undefined),
+      };
+      URL.createObjectURL = jest.fn(() => 'blob:mock-url');
+      URL.revokeObjectURL = jest.fn();
+
+      const motivations = [
+        {
+          id: 'motivation-1',
+          text: 'Stay curious',
+          category: 'Growth',
+          createdAt: new Date(),
+        },
+      ];
+
+      await testBed.loadDirectionWithMotivations('dir-export', motivations);
+
+      document.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'e', ctrlKey: true, bubbles: true })
+      );
+
+      await testBed.waitForAsyncOperations();
+
+      const [exportedMotivations] =
+        testBed.mockDisplayEnhancer.formatMotivationsForExport.mock.calls[0];
+      expect(exportedMotivations).toEqual(motivations);
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('Exported motivations');
+      expect(URL.createObjectURL).toHaveBeenCalled();
+
+      navigator.clipboard = originalClipboard;
+      URL.createObjectURL = originalCreateObjectUrl;
+      URL.revokeObjectURL = originalRevokeObjectUrl;
     });
 
     it('should attach focus indicators for dynamic elements on Tab navigation', async () => {

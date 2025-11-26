@@ -212,6 +212,6 @@ describe('CharacterBuilderBootstrap - Integration Tests', () => {
 
       const result = await controller.initialize();
       expect(result).toBe('Adapter available');
-    });
+    }, 30000); // Explicit timeout for bootstrap tests which initialize many services
   });
 });

@@ -38,7 +38,7 @@ const slotMetadataComponentSchema = {
                 description: 'Clothing layers allowed for this slot',
                 items: {
                   type: 'string',
-                  enum: ['underwear', 'base', 'outer', 'accessory', 'armor'],
+                  enum: ['underwear', 'base', 'outer', 'accessories', 'armor'],
                 },
               },
             },
@@ -115,7 +115,7 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
         slotMappings: {
           head: {
             coveredSockets: ['head_top', 'head_sides'],
-            allowedLayers: ['base', 'outer', 'accessory'],
+            allowedLayers: ['base', 'outer', 'accessories'],
           },
           feet: {
             coveredSockets: ['left_foot', 'right_foot'],
@@ -123,7 +123,7 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
           },
           back_accessory: {
             coveredSockets: ['upper_back', 'lower_back'],
-            allowedLayers: ['accessory', 'armor'],
+            allowedLayers: ['accessories', 'armor'],
           },
         },
       };
@@ -132,12 +132,12 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
       expect(ok).toBe(true);
     });
 
-    test('should validate back_accessory with "accessory" layer (regression test)', () => {
+    test('should validate back_accessory with "accessories" layer (regression test)', () => {
       const validData = {
         slotMappings: {
           back_accessory: {
             coveredSockets: ['upper_back', 'lower_back'],
-            allowedLayers: ['accessory', 'armor'], // Correct: singular form
+            allowedLayers: ['accessories', 'armor'], // Correct: plural form (standardized)
           },
         },
       };
@@ -240,12 +240,12 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
       );
     });
 
-    test('should reject plural "accessories" (schema expects singular "accessory")', () => {
+    test('should reject singular "accessory" (schema expects plural "accessories")', () => {
       const invalidData = {
         slotMappings: {
           back_accessory: {
             coveredSockets: ['upper_back', 'lower_back'],
-            allowedLayers: ['accessories'], // Wrong: plural form
+            allowedLayers: ['accessory'], // Wrong: singular form (schema standardized to plural)
           },
         },
       };
@@ -304,7 +304,7 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
         slotMappings: {
           decorative_slot: {
             coveredSockets: [],
-            allowedLayers: ['accessory'],
+            allowedLayers: ['accessories'],
           },
         },
       };
@@ -318,7 +318,7 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
         slotMappings: {
           multi_layer: {
             coveredSockets: ['test'],
-            allowedLayers: ['underwear', 'base', 'outer', 'accessory', 'armor'],
+            allowedLayers: ['underwear', 'base', 'outer', 'accessories', 'armor'],
           },
         },
       };

@@ -1600,5 +1600,257 @@ describe('PrerequisiteEvaluationStage', () => {
         );
       });
     });
+
+    describe('action-aware tracing coverage', () => {
+      it('should capture detailed prerequisite and performance data with action-aware tracing', async () => {
+        const candidateActions = [
+          {
+            id: 'trace-action',
+            name: 'Trace Action',
+            prerequisites: [{ condition: 'needs trace' }],
+          },
+        ];
+
+        const traceContext = {
+          ...mockActionAwareTrace,
+          captureActionData: jest.fn().mockResolvedValue(),
+        };
+
+        mockPrerequisiteService.evaluate.mockImplementation(
+          (prerequisites, actionDef, actor, trace) => {
+            trace.captureJsonLogicTrace(
+              { rule: 'test-rule' },
+              { actorId: actor.id },
+              true,
+              ['step-1']
+            );
+            trace.captureJsonLogicTrace(
+              { rule: 'test-rule-2' },
+              { actorId: actor.id, second: true },
+              false,
+              ['step-2']
+            );
+            trace.captureEvaluationContext({
+              actorId: actor.id,
+              actionName: actionDef.name,
+            });
+
+            return {
+              passed: false,
+              reason: 'Service provided reason',
+              prerequisites,
+              hasPrerequisites: false,
+              evaluationTime: 42,
+            };
+          }
+        );
+
+        const result = await stage.executeInternal({
+          actor: mockActor,
+          candidateActions,
+          trace: traceContext,
+          actionContext: { contextKey: 'context-value' },
+        });
+
+        expect(result.success).toBe(true);
+        expect(result.data.candidateActions).toEqual([]);
+
+        expect(traceContext.captureActionData).toHaveBeenCalledWith(
+          'prerequisite_evaluation',
+          'trace-action',
+          expect.objectContaining({
+            prerequisites: candidateActions[0].prerequisites,
+            evaluationDetails: expect.objectContaining({
+              hasJsonLogicTraces: true,
+              hasEvaluationContext: true,
+            }),
+            evaluationPassed: false,
+            evaluationReason: 'Service provided reason',
+          })
+        );
+
+        expect(traceContext.captureActionData).toHaveBeenCalledWith(
+          'stage_performance',
+          'trace-action',
+          expect.objectContaining({
+            itemsProcessed: 1,
+            itemsPassed: 0,
+            stage: 'prerequisite_evaluation',
+          })
+        );
+
+        const postSummaryCall = mockLogger.debug.mock.calls.find(
+          ([message]) =>
+            message ===
+            'PrerequisiteEvaluationStage: Captured post-evaluation summary'
+        );
+
+        expect(postSummaryCall?.[1]).toEqual(
+          expect.objectContaining({ evaluationSuccessRate: 0 })
+        );
+      });
+
+      it('should capture prerequisite errors when tracing supports action data', async () => {
+        const candidateActions = [
+          {
+            id: 'error-action',
+            name: 'Error Action',
+            prerequisites: [{ condition: 'throws' }],
+          },
+        ];
+
+        const traceContext = {
+          ...mockActionAwareTrace,
+          success: jest.fn(() => {
+            throw new Error('Tracing failure');
+          }),
+          captureActionData: jest.fn().mockResolvedValue(),
+        };
+
+        mockPrerequisiteService.evaluate.mockReturnValue(true);
+
+        const result = await stage.executeInternal({
+          actor: mockActor,
+          candidateActions,
+          trace: traceContext,
+        });
+
+        expect(result.data.prerequisiteErrors).toHaveLength(1);
+
+        expect(traceContext.captureActionData).toHaveBeenCalledWith(
+          'prerequisite_evaluation',
+          'error-action',
+          expect.objectContaining({
+            evaluationFailed: true,
+            error: 'Tracing failure',
+            errorType: 'Error',
+          })
+        );
+      });
+    });
+
+    describe('branch coverage scenarios', () => {
+      it('should use default candidate actions and report full success rate when none provided', async () => {
+        const traceContext = {
+          ...mockActionAwareTrace,
+          captureActionData: jest.fn().mockResolvedValue(),
+        };
+
+        const result = await stage.executeInternal({
+          actor: mockActor,
+          trace: traceContext,
+        });
+
+        expect(result.data.candidateActions).toEqual([]);
+        expect(traceContext.captureActionData).not.toHaveBeenCalled();
+
+        const summaryCall = mockLogger.debug.mock.calls.find(
+          ([message]) =>
+            message ===
+            'PrerequisiteEvaluationStage: Captured post-evaluation summary'
+        );
+
+        expect(summaryCall?.[1]).toEqual(
+          expect.objectContaining({ evaluationSuccessRate: 1 })
+        );
+      });
+
+      it('should handle errors without action-aware tracing and skip trace capture', async () => {
+        const candidateActions = [
+          {
+            id: 'non-trace-error',
+            name: 'Non Trace Error',
+            prerequisites: [{ condition: 'throw' }],
+          },
+        ];
+
+        const trace = {
+          step: jest.fn(),
+          info: jest.fn(),
+          success: jest.fn(() => {
+            throw new Error('Non action-aware tracing failure');
+          }),
+        };
+
+        mockPrerequisiteService.evaluate.mockReturnValue(true);
+
+        const result = await stage.executeInternal({
+          actor: mockActor,
+          candidateActions,
+          trace,
+        });
+
+        expect(result.data.prerequisiteErrors).toHaveLength(1);
+        expect(trace.success).toHaveBeenCalled();
+        expect(mockLogger.error).toHaveBeenCalled();
+      });
+
+      it('should treat object results without passed flag as successful and reuse original prerequisites', async () => {
+        const candidateActions = [
+          {
+            id: 'missing-passed',
+            name: 'Missing Passed',
+            prerequisites: [{ condition: 'implicit' }],
+          },
+        ];
+
+        mockPrerequisiteService.evaluate.mockReturnValue({
+          hasPrerequisites: true,
+        });
+
+        const result = await stage.executeInternal({
+          actor: mockActor,
+          candidateActions,
+          trace: mockTrace,
+        });
+
+        expect(result.data.candidateActions).toEqual(candidateActions);
+        expect(mockTrace.success).toHaveBeenCalledWith(
+          "Action 'missing-passed' passed prerequisite check",
+          'PrerequisiteEvaluationStage.execute'
+        );
+      });
+
+      it('should capture object-based prerequisites when tracing evaluation data', async () => {
+        const traceContext = {
+          ...mockActionAwareTrace,
+          captureActionData: jest.fn().mockResolvedValue(),
+        };
+
+        mockPrerequisiteService.evaluate.mockReturnValue({
+          passed: true,
+          prerequisites: { type: 'object-prerequisite' },
+          hasPrerequisites: true,
+          evaluationDetails: { custom: true },
+        });
+
+        const candidateActions = [
+          {
+            id: 'object-prereq',
+            name: 'Object Prereq',
+            prerequisites: { type: 'object-prerequisite' },
+          },
+        ];
+
+        const result = await stage.executeInternal({
+          actor: mockActor,
+          candidateActions,
+          trace: traceContext,
+        });
+
+        expect(result.success).toBe(true);
+
+        const captureCall = traceContext.captureActionData.mock.calls.find(
+          ([type]) => type === 'prerequisite_evaluation'
+        );
+
+        expect(captureCall?.[2]).toEqual(
+          expect.objectContaining({
+            prerequisiteCount: 1,
+            prerequisites: { type: 'object-prerequisite' },
+          })
+        );
+      });
+    });
   });
 });

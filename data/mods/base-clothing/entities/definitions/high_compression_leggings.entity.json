@@ -1,0 +1,47 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:high_compression_leggings",
+  "description": "High-compression athletic leggings for performance training",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "legs",
+        "secondary": [
+          "torso_lower"
+        ]
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "synthetic"
+    },
+    "core:name": {
+      "text": "compression leggings"
+    },
+    "core:description": {
+      "text": "High-performance compression leggings engineered with advanced synthetic fabrics for maximum support and muscle stabilization. The high-waisted design provides core support while the graduated compression technology enhances blood flow and reduces muscle fatigue. Four-way stretch fabric ensures unrestricted movement during intense training sessions."
+    },
+    "descriptors:color_extended": {
+      "color": "navy"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_lower"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.32
+    }
+  }
+}

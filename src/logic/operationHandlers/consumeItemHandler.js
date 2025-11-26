@@ -30,6 +30,7 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 const FUEL_SOURCE_COMPONENT_ID = 'metabolism:fuel_source';
 const METABOLIC_STORE_COMPONENT_ID = 'metabolism:metabolic_store';
+const FUEL_CONVERTER_COMPONENT_ID = 'metabolism:fuel_converter';
 const ITEM_CONSUMED_EVENT = 'metabolism:item_consumed';
 
 /**
@@ -51,7 +52,12 @@ class ConsumeItemHandler extends BaseOperationHandler {
       logger: { value: logger },
       entityManager: {
         value: entityManager,
-        requiredMethods: ['getComponentData', 'addComponent', 'removeEntityInstance'],
+        requiredMethods: [
+          'getComponentData',
+          'addComponent',
+          'removeEntityInstance',
+          'hasEntity',
+        ],
       },
       safeEventDispatcher: {
         value: safeEventDispatcher,
@@ -138,6 +144,17 @@ class ConsumeItemHandler extends BaseOperationHandler {
     const { consumerId, itemId } = validated;
 
     try {
+      // Edge Case 8: Verify item still exists before consuming (prevents race conditions)
+      if (!this.#entityManager.hasEntity(itemId)) {
+        safeDispatchError(
+          this.#dispatcher,
+          'CONSUME_ITEM: Item no longer available',
+          { itemId },
+          log
+        );
+        return;
+      }
+
       // Get fuel source component from item
       const fuelSource = this.#entityManager.getComponentData(
         itemId,
@@ -165,6 +182,41 @@ class ConsumeItemHandler extends BaseOperationHandler {
           this.#dispatcher,
           `CONSUME_ITEM: Consumer does not have ${METABOLIC_STORE_COMPONENT_ID} component`,
           { consumerId },
+          log
+        );
+        return;
+      }
+
+      // Get fuel converter component for fuel tag validation
+      const fuelConverter = this.#entityManager.getComponentData(
+        consumerId,
+        FUEL_CONVERTER_COMPONENT_ID
+      );
+
+      if (!fuelConverter) {
+        safeDispatchError(
+          this.#dispatcher,
+          `CONSUME_ITEM: Consumer does not have ${FUEL_CONVERTER_COMPONENT_ID} component`,
+          { consumerId },
+          log
+        );
+        return;
+      }
+
+      // Edge Case 3: Validate fuel tags are compatible
+      const itemFuelTags = fuelSource.fuel_tags || [fuelSource.fuel_type];
+      const acceptedFuelTags = fuelConverter.accepted_fuel_tags || [];
+      const hasMatchingTag = itemFuelTags.some((tag) =>
+        acceptedFuelTags.includes(tag)
+      );
+
+      if (!hasMatchingTag) {
+        safeDispatchError(
+          this.#dispatcher,
+          `CONSUME_ITEM: Incompatible fuel type. ` +
+            `Accepts: ${acceptedFuelTags.join(', ')}. ` +
+            `Item has: ${itemFuelTags.join(', ')}`,
+          { consumerId, itemId, acceptedFuelTags, itemFuelTags },
           log
         );
         return;

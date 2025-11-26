@@ -100,6 +100,7 @@ export default function createSlotAccessResolver({
     // Map layer directly to coverage priority in most cases
     const layerToCoverage = {
       outer: 'outer',
+      armor: 'armor',
       base: 'base',
       underwear: 'underwear',
       accessories: 'base', // Accessories treated as base coverage

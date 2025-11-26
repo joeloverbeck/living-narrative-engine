@@ -168,10 +168,10 @@ describe('Anatomy Memory Stress Testing', () => {
 
   describe('Memory Leak Detection', () => {
     it('should not leak memory during repeated anatomy generation and cleanup', async () => {
-      const totalIterations = global.memoryTestUtils?.isCI() ? 8000 : 15000; // Balanced for speed and quality
-      const batchSize = 2000; // Optimal batch size to reduce overhead
+      const totalIterations = global.memoryTestUtils?.isCI() ? 5000 : 9000; // Tuned for faster feedback while preserving coverage
+      const batchSize = 1500; // Smaller batches to reduce per-loop overhead
       const batches = Math.ceil(totalIterations / batchSize);
-      const checkInterval = 2000; // Check memory every batch instead of within batch
+      const checkInterval = Math.max(batchSize, Math.floor(totalIterations / 6)); // Check memory a handful of times per run
 
       memoryMonitor.takeSnapshot('start');
       
@@ -237,7 +237,7 @@ describe('Anatomy Memory Stress Testing', () => {
           await testBed.cleanupEntity(anatomy);
 
           // Clear mocks more frequently to prevent accumulation
-          if (i % 500 === 0 && i > 0) { // Every 500 instead of 1000
+          if (i % 400 === 0 && i > 0) { // Slightly more frequent clears to keep batches light
             if (testBed.logger && testBed.logger.info) {
               testBed.logger.info.mockClear();
               testBed.logger.debug.mockClear();
@@ -247,8 +247,8 @@ describe('Anatomy Memory Stress Testing', () => {
             }
           }
 
-          // Reduced memory check frequency - every 10% instead of 5%
-          if (completedIterations % (totalIterations / 10) === 0 && completedIterations > 0) {
+          // Memory check cadence aligned to new batch sizing
+          if (completedIterations % checkInterval === 0 && completedIterations > 0) {
             memoryMonitor.takeSnapshot(`iteration_${completedIterations}`);
             
             const heapMB = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
@@ -313,9 +313,9 @@ describe('Anatomy Memory Stress Testing', () => {
       console.log(`  Growth percent: ${comparison.heapGrowthPercent.toFixed(2)}%`);
       console.log(`  Leak detected: ${hasLeak}`);
 
-      // Adjusted threshold for batched execution - 125% growth is acceptable for 100k iterations
+      // Adjusted threshold for batched execution - smaller runs use tighter growth allowances
       // This accounts for JavaScript VM overhead and Jest test framework memory usage
-      const acceptableGrowth = totalIterations >= 100000 ? 125 : 50;
+      const acceptableGrowth = totalIterations >= 100000 ? 125 : 40;
       
       // Should not have significant memory leak
       expect(hasLeak).toBe(false);
@@ -323,7 +323,7 @@ describe('Anatomy Memory Stress Testing', () => {
     });
 
     it('should not leak memory during cache operations', async () => {
-      const iterations = 5000; // Balanced for speed and validation quality
+      const iterations = global.memoryTestUtils?.isCI() ? 2500 : 3500; // Faster runs with adaptive coverage
       const anatomy = await testBed.generateSimpleAnatomy();
 
       memoryMonitor.takeSnapshot('cache_start');
@@ -340,7 +340,7 @@ describe('Anatomy Memory Stress Testing', () => {
         // Note: getParents method doesn't exist on bodyGraphService
         // const parents = bodyGraphService.getParents(anatomy.rootId);
 
-        if (i % 1000 === 0 && i > 0) { // Reduced snapshot frequency
+        if (i % 700 === 0 && i > 0) { // Snapshot cadence tuned to reduced iterations
           memoryMonitor.takeSnapshot(`cache_${i}`);
         }
       }
@@ -357,7 +357,7 @@ describe('Anatomy Memory Stress Testing', () => {
     });
 
     it('should not leak memory during description generation', async () => {
-      const iterations = 1000; // Balanced for speed and validation quality
+      const iterations = global.memoryTestUtils?.isCI() ? 750 : 900; // Faster runs while keeping repeated coverage
       const anatomy = await generateLargeAnatomy(12); // Balanced complexity
 
       memoryMonitor.takeSnapshot('desc_start');

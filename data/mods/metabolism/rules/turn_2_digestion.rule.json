@@ -29,7 +29,7 @@
           "and": [
             { "var": "context.metabolicStore" },
             { "var": "context.fuelConverter" },
-            { ">": [{ "var": "context.fuelConverter.buffer_storage" }, 0] }
+            { ">": [{ "var": "context.metabolicStore.buffer_storage.length" }, 0] }
           ]
         },
         "then_actions": [

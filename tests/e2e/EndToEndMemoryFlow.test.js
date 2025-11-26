@@ -112,6 +112,16 @@ describe('End-to-End Short-Term Memory Flow', () => {
         getSortedNamespaces: jest.fn(),
         formatNamespaceDisplayName: jest.fn(),
       },
+      characterDataXmlBuilder: {
+        buildCharacterDataXml: jest
+          .fn()
+          .mockReturnValue(
+            '<character_data><identity><name>Test Character</name></identity></character_data>'
+          ),
+      },
+      modActionMetadataProvider: {
+        getMetadataForMod: jest.fn().mockReturnValue(null),
+      },
     });
 
     const llmConfigService = {

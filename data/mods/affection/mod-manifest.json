@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "name": "Affection - Gentle Physical Contact",
   "description": "Caring, supportive physical interactions that can be platonic or romantic. These actions express warmth and comfort without necessarily implying romantic interest.",
+  "actionPurpose": "Express caring, supportive physical contact that conveys warmth and comfort, from platonic to romantic gestures.",
+  "actionConsiderWhen": "Showing tenderness, providing comfort, expressing affection without overt romantic or sexual intent, or building emotional closeness.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
   "dependencies": [

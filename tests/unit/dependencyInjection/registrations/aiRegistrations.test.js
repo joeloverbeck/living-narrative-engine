@@ -110,6 +110,21 @@ jest.mock('../../../../src/prompting/promptDataFormatter.js', () => ({
   PromptDataFormatter: mockCreateClass('PromptDataFormatter'),
 }));
 
+jest.mock('../../../../src/prompting/xmlElementBuilder.js', () => ({
+  __esModule: true,
+  default: mockCreateClass('XmlElementBuilder'),
+}));
+
+jest.mock('../../../../src/prompting/characterDataXmlBuilder.js', () => ({
+  __esModule: true,
+  default: mockCreateClass('CharacterDataXmlBuilder'),
+}));
+
+jest.mock('../../../../src/prompting/modActionMetadataProvider.js', () => ({
+  __esModule: true,
+  ModActionMetadataProvider: mockCreateClass('ModActionMetadataProvider'),
+}));
+
 jest.mock('../../../../src/data/providers/entitySummaryProvider.js', () => ({
   __esModule: true,
   EntitySummaryProvider: mockCreateClass('EntitySummaryProvider'),
@@ -250,6 +265,15 @@ const { PromptTemplateService: PromptTemplateServiceMock } = jest.requireMock(
 );
 const { PromptDataFormatter: PromptDataFormatterMock } = jest.requireMock(
   '../../../../src/prompting/promptDataFormatter.js'
+);
+const XmlElementBuilderMock = jest.requireMock(
+  '../../../../src/prompting/xmlElementBuilder.js'
+).default;
+const CharacterDataXmlBuilderMock = jest.requireMock(
+  '../../../../src/prompting/characterDataXmlBuilder.js'
+).default;
+const { ModActionMetadataProvider: ModActionMetadataProviderMock } = jest.requireMock(
+  '../../../../src/prompting/modActionMetadataProvider.js'
 );
 const { ActorDataExtractor: ActorDataExtractorMock } = jest.requireMock(
   '../../../../src/turns/services/actorDataExtractor.js'
@@ -537,6 +561,32 @@ describe('aiRegistrations', () => {
       formatterDataCall[1](createFactoryContext({ [tokens.ILogger]: logger }));
       expect(PromptDataFormatterMock).toHaveBeenCalledWith({ logger });
 
+      // XmlElementBuilder registration (stateless utility)
+      const xmlElementBuilderCall = container.register.mock.calls.find(
+        ([token]) => token === tokens.XmlElementBuilder
+      );
+      expect(xmlElementBuilderCall).toBeDefined();
+      const xmlElementInstance = xmlElementBuilderCall[1]();
+      expect(XmlElementBuilderMock).toHaveBeenCalled();
+      expect(xmlElementInstance).toBe(XmlElementBuilderMock.mock.instances[0]);
+
+      // CharacterDataXmlBuilder registration (with dependencies)
+      const characterDataXmlBuilderCall = container.register.mock.calls.find(
+        ([token]) => token === tokens.CharacterDataXmlBuilder
+      );
+      expect(characterDataXmlBuilderCall).toBeDefined();
+      const xmlBuilderDependency = { xmlBuilder: true };
+      characterDataXmlBuilderCall[1](
+        createFactoryContext({
+          [tokens.ILogger]: logger,
+          [tokens.XmlElementBuilder]: xmlBuilderDependency,
+        })
+      );
+      expect(CharacterDataXmlBuilderMock).toHaveBeenCalledWith({
+        logger,
+        xmlElementBuilder: xmlBuilderDependency,
+      });
+
       const builderCall = container.register.mock.calls.find(
         ([token]) => token === tokens.IPromptBuilder
       );
@@ -645,6 +695,22 @@ describe('aiRegistrations', () => {
 
       registerAITurnPipeline(registrar, logger);
 
+      // IModActionMetadataProvider registration
+      const metadataProviderCall = container.register.mock.calls.find(
+        ([token]) => token === tokens.IModActionMetadataProvider
+      );
+      expect(metadataProviderCall).toBeDefined();
+      metadataProviderCall[1](
+        createFactoryContext({
+          [tokens.IDataRegistry]: { registry: true },
+          [tokens.ILogger]: logger,
+        })
+      );
+      expect(ModActionMetadataProviderMock).toHaveBeenCalledWith({
+        dataRegistry: { registry: true },
+        logger,
+      });
+
       const contentCall = container.register.mock.calls.find(
         ([token]) => token === tokens.IAIPromptContentProvider
       );
@@ -655,6 +721,8 @@ describe('aiRegistrations', () => {
           [tokens.IPerceptionLogFormatter]: { formatter: true },
           [tokens.IGameStateValidationServiceForPrompting]: { validation: true },
           [tokens.IActionCategorizationService]: { categorization: true },
+          [tokens.CharacterDataXmlBuilder]: { xmlBuilder: true },
+          [tokens.IModActionMetadataProvider]: { metadataProvider: true },
         })
       );
       expect(AIPromptContentProviderMock).toHaveBeenCalledWith({
@@ -663,6 +731,8 @@ describe('aiRegistrations', () => {
         perceptionLogFormatter: { formatter: true },
         gameStateValidationService: { validation: true },
         actionCategorizationService: { categorization: true },
+        characterDataXmlBuilder: { xmlBuilder: true },
+        modActionMetadataProvider: { metadataProvider: true },
       });
 
       const llmJsonCall = container.register.mock.calls.find(
@@ -868,6 +938,29 @@ describe('aiRegistrations', () => {
           },
         ],
       });
+    });
+
+    it('returns the vanilla LlmJsonService when not in test mode', () => {
+      const container = createMockContainer();
+      const originalEnv = process.env.NODE_ENV;
+
+      try {
+        process.env.NODE_ENV = 'development';
+
+        registerMinimalAIForCharacterBuilder(container, logger);
+
+        const minimalCall = container.register.mock.calls.find(
+          ([token]) => token === tokens.LlmJsonService
+        );
+        const minimalFactory = minimalCall[1];
+        const serviceInstance = minimalFactory();
+
+        expect(serviceInstance.generateContent).toBe(
+          LlmJsonServiceMock.mock.instances[0].generateContent
+        );
+      } finally {
+        process.env.NODE_ENV = originalEnv;
+      }
     });
   });
 });

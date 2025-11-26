@@ -5,35 +5,32 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
+import { ScopeTracingTestBed } from '../../common/scopeDsl/scopeTracingTestBed.js';
 
 describe('Tracer Performance Overhead', () => {
-  let testFixture;
+  let testBed;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
-    );
+    testBed = await ScopeTracingTestBed.create();
 
     // Register scope for tracing
-    await testFixture.registerCustomScope('positioning', 'close_actors');
+    await testBed.registerCustomScope('positioning', 'close_actors');
   });
 
   afterEach(() => {
-    testFixture.cleanup();
+    testBed.cleanup();
   });
 
   it('should have minimal overhead when disabled', () => {
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
+    const scenario = testBed.createCloseActors(['Alice', 'Bob']);
+    const actorEntity = testBed.testEnv.entityManager.getEntityInstance(
       scenario.actor.id
     );
 
     // Baseline: no tracer
     const start1 = performance.now();
     for (let i = 0; i < 1000; i++) {
-      testFixture.testEnv.unifiedScopeResolver.resolveSync(
+      testBed.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
         actorEntity
       );
@@ -41,10 +38,10 @@ describe('Tracer Performance Overhead', () => {
     const duration1 = performance.now() - start1;
 
     // With tracer disabled
-    testFixture.scopeTracer.disable();
+    testBed.scopeTracer.disable();
     const start2 = performance.now();
     for (let i = 0; i < 1000; i++) {
-      testFixture.testEnv.unifiedScopeResolver.resolveSync(
+      testBed.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
         actorEntity
       );
@@ -52,24 +49,24 @@ describe('Tracer Performance Overhead', () => {
     const duration2 = performance.now() - start2;
 
     const overhead = ((duration2 - duration1) / duration1) * 100;
-     
+
     console.log('Disabled tracer overhead: ' + overhead.toFixed(2) + '%');
-     
+
     console.log('Baseline: ' + duration1.toFixed(2) + 'ms, With tracer disabled: ' + duration2.toFixed(2) + 'ms');
-    
+
     expect(overhead).toBeLessThan(5); // Less than 5% overhead
   });
 
   it('should have acceptable overhead when enabled', () => {
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
+    const scenario = testBed.createCloseActors(['Alice', 'Bob']);
+    const actorEntity = testBed.testEnv.entityManager.getEntityInstance(
       scenario.actor.id
     );
 
     // Baseline: disabled
     const start1 = performance.now();
     for (let i = 0; i < 100; i++) {
-      testFixture.testEnv.unifiedScopeResolver.resolveSync(
+      testBed.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
         actorEntity
       );
@@ -77,14 +74,14 @@ describe('Tracer Performance Overhead', () => {
     const duration1 = performance.now() - start1;
 
     // With tracer enabled
-    testFixture.enableScopeTracing();
+    testBed.enableScopeTracing();
     const start2 = performance.now();
     for (let i = 0; i < 100; i++) {
-      testFixture.testEnv.unifiedScopeResolver.resolveSync(
+      testBed.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
         actorEntity
       );
-      testFixture.clearScopeTrace();
+      testBed.clearScopeTrace();
     }
     const duration2 = performance.now() - start2;
 
@@ -106,49 +103,48 @@ describe('Tracer Performance Overhead', () => {
   });
 
   it('should not leak memory with repeated tracing', () => {
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
+    const scenario = testBed.createCloseActors(['Alice', 'Bob']);
+    const actorEntity = testBed.testEnv.entityManager.getEntityInstance(
       scenario.actor.id
     );
 
-    testFixture.enableScopeTracing();
+    testBed.enableScopeTracing();
 
     // Run many iterations with clear between
     for (let i = 0; i < 1000; i++) {
-      testFixture.testEnv.unifiedScopeResolver.resolveSync(
+      testBed.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
         actorEntity
       );
-      testFixture.clearScopeTrace();
+      testBed.clearScopeTrace();
     }
 
     // Verify trace is cleared and no memory growth
-    const trace = testFixture.getScopeTraceData();
+    const trace = testBed.getScopeTraceData();
     expect(trace.steps.length).toBe(0);
   });
 
   it('should handle large trace data efficiently', () => {
     // Create many entities to generate large trace
     const names = Array.from({ length: 50 }, (_, i) => 'Actor' + i);
-    const scenario = testFixture.createCloseActors(names);
-    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
+    const scenario = testBed.createCloseActors(names);
+    const actorEntity = testBed.testEnv.entityManager.getEntityInstance(
       scenario.actor.id
     );
 
-    testFixture.enableScopeTracing();
+    testBed.enableScopeTracing();
 
     const start = performance.now();
-    testFixture.testEnv.unifiedScopeResolver.resolveSync(
+    testBed.testEnv.unifiedScopeResolver.resolveSync(
       'positioning:close_actors',
       actorEntity
     );
     const duration = performance.now() - start;
 
-    const trace = testFixture.getScopeTraceData();
-    
-     
+    const trace = testBed.getScopeTraceData();
+
     console.log('Large trace (' + trace.steps.length + ' steps) took ' + duration.toFixed(2) + 'ms');
-    
+
     // Should complete in reasonable time even with many steps
     expect(duration).toBeLessThan(1000); // Less than 1 second
 
@@ -157,27 +153,26 @@ describe('Tracer Performance Overhead', () => {
   });
 
   it('should format output efficiently', () => {
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
+    const scenario = testBed.createCloseActors(['Alice', 'Bob']);
+    const actorEntity = testBed.testEnv.entityManager.getEntityInstance(
       scenario.actor.id
     );
 
-    testFixture.enableScopeTracing();
+    testBed.enableScopeTracing();
 
     // Generate trace data
-    testFixture.testEnv.unifiedScopeResolver.resolveSync(
+    testBed.testEnv.unifiedScopeResolver.resolveSync(
       'positioning:close_actors',
       actorEntity
     );
 
     // Measure formatting performance
     const start = performance.now();
-    const formatted = testFixture.getScopeTrace();
+    const formatted = testBed.getScopeTrace();
     const duration = performance.now() - start;
 
-     
     console.log('Formatting took ' + duration.toFixed(2) + 'ms for ' + formatted.split('\n').length + ' lines');
-    
+
     // Formatting should be fast
     expect(duration).toBeLessThan(100); // Less than 100ms
     expect(formatted.length).toBeGreaterThan(0);

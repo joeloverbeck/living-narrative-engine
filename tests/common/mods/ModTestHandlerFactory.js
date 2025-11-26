@@ -530,6 +530,11 @@ export class ModTestHandlerFactory {
         logger,
         safeEventDispatcher: safeDispatcher,
       }),
+      MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
     };
   }
 
@@ -612,6 +617,7 @@ export class ModTestHandlerFactory {
       patrol: this.createHandlersWithPerceptionLogging.bind(this),
       movement: this.createHandlersWithPerceptionLogging.bind(this),
       metabolism: this.createHandlersWithPerceptionLogging.bind(this),
+      weapons: this.createHandlersWithPerceptionLogging.bind(this),
     };
 
     if (typeof modCategory === 'string' && modCategory.startsWith('sex-')) {
@@ -741,6 +747,21 @@ export class ModTestHandlerFactory {
         if (typeof entityManager.deleteEntity === 'function') {
           entityManager.deleteEntity(entityId);
         }
+      };
+    }
+
+    // Ensure entityManager has hasEntity for ConsumeItemHandler
+    if (typeof entityManager.hasEntity !== 'function') {
+      entityManager.hasEntity = (entityId) => {
+        // Delegate to getEntityIds if available, otherwise return true as safe default
+        if (typeof entityManager.getEntityIds === 'function') {
+          return entityManager.getEntityIds().includes(entityId);
+        }
+        // Fallback: Check if entity has any components
+        if (typeof entityManager.hasComponent === 'function') {
+          return true; // Assume entity exists if we can check components
+        }
+        return true;
       };
     }
 

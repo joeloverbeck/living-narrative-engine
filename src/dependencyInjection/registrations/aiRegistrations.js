@@ -88,6 +88,9 @@ import { ActionIndexerAdapter } from '../../turns/adapters/actionIndexerAdapter.
 import { LLMDecisionProvider } from '../../turns/providers/llmDecisionProvider.js';
 import { GoapDecisionProvider } from '../../turns/providers/goapDecisionProvider.js';
 import { registerActorAwareStrategy } from './registerActorAwareStrategy.js';
+import XmlElementBuilder from '../../prompting/xmlElementBuilder.js';
+import CharacterDataXmlBuilder from '../../prompting/characterDataXmlBuilder.js';
+import { ModActionMetadataProvider } from '../../prompting/modActionMetadataProvider.js';
 
 /**
  * Registers LLM infrastructure and adapter services.
@@ -246,6 +249,20 @@ export function registerPromptingEngine(registrar, logger) {
     (c) => new PromptDataFormatter({ logger: c.resolve(tokens.ILogger) })
   );
 
+  registrar.singletonFactory(
+    tokens.XmlElementBuilder,
+    () => new XmlElementBuilder()
+  );
+
+  registrar.singletonFactory(
+    tokens.CharacterDataXmlBuilder,
+    (c) =>
+      new CharacterDataXmlBuilder({
+        logger: c.resolve(tokens.ILogger),
+        xmlElementBuilder: c.resolve(tokens.XmlElementBuilder),
+      })
+  );
+
   registrar.singletonFactory(tokens.IPromptBuilder, (c) => {
     return new PromptBuilder({
       logger: c.resolve(tokens.ILogger),
@@ -318,6 +335,16 @@ export function registerAIGameStateProviders(registrar, logger) {
  * @returns {void}
  */
 export function registerAITurnPipeline(registrar, logger) {
+  registrar.singletonFactory(tokens.IModActionMetadataProvider, (c) => {
+    return new ModActionMetadataProvider({
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `AI Systems Registration: Registered ${tokens.IModActionMetadataProvider}.`
+  );
+
   registrar.singletonFactory(tokens.IAIPromptContentProvider, (c) => {
     return new AIPromptContentProvider({
       logger: c.resolve(tokens.ILogger),
@@ -329,6 +356,8 @@ export function registerAITurnPipeline(registrar, logger) {
       actionCategorizationService: c.resolve(
         tokens.IActionCategorizationService
       ),
+      characterDataXmlBuilder: c.resolve(tokens.CharacterDataXmlBuilder),
+      modActionMetadataProvider: c.resolve(tokens.IModActionMetadataProvider),
     });
   });
   registrar.singletonFactory(tokens.LlmJsonService, () => new LlmJsonService());

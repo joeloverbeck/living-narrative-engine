@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:linen_footwraps",
+  "description": "Cream-colored linen strips for wrapping feet",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": [
+        "underwear"
+      ]
+    },
+    "core:material": {
+      "material": "linen"
+    },
+    "core:name": {
+      "text": "footwraps"
+    },
+    "core:description": {
+      "text": "Long strips of cream-colored linen meant to be wrapped around the feet before donning boots. The traditional footwear of soldiers and travelers, these wraps cushion the feet against the hard leather of boots while wicking away moisture. When wrapped properly, they prevent blisters on long marches better than any sock."
+    },
+    "descriptors:color_extended": {
+      "color": "cream"
+    },
+    "descriptors:texture": {
+      "texture": "soft"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.04
+    }
+  }
+}

@@ -614,7 +614,8 @@
       "Bash(tickets/audit-goap-registrations.txt)",
       "Bash(tickets/audit-goal-references.txt)",
       "Bash(tickets/GOADISANA-003-audit-results.txt)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "mcp__morphllm-fast-apply__list_directory_with_sizes"
     ],
     "deny": [],
     "ask": []

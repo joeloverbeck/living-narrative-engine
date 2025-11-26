@@ -45,9 +45,11 @@ if (typeof global.structuredClone === 'undefined') {
   };
 }
 
-// Set reasonable default Jest test timeout - reduced from 30s to prevent hanging
-// Individual test files can override this for specific performance tests
-jest.setTimeout(15000);
+// Note: Jest test timeout is now configured per-config file:
+// - jest.config.unit.js: 15000ms (unit tests should be fast)
+// - jest.config.integration.js: 30000ms (integration tests need more time)
+// - jest.config.e2e.js: 60000ms (e2e tests need most time)
+// Removed global jest.setTimeout() override to respect per-config testTimeout settings
 
 // Import the fetch polyfill. This will automatically add fetch, Headers, Request, Response
 // to the global scope (window in jsdom) if they don't exist.

@@ -1,0 +1,45 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:white_thigh_high_socks_pink_hearts",
+  "description": "White thigh-high socks with pink heart pattern",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": [
+        "underwear"
+      ]
+    },
+    "core:material": {
+      "material": "cotton"
+    },
+    "core:name": {
+      "text": "thigh-high socks"
+    },
+    "core:description": {
+      "text": "Adorable white cotton thigh-high socks decorated with a delicate pink heart pattern. These soft, stretchy socks extend elegantly up the thighs, featuring cute pink hearts scattered across the white fabric. The comfortable cotton blend provides breathability while the playful heart design adds a touch of sweetness to any outfit."
+    },
+    "descriptors:color_basic": {
+      "color": "white"
+    },
+    "descriptors:pattern": {
+      "pattern": "heart"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_lower"
+      ],
+      "coveragePriority": "underwear"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.13
+    }
+  }
+}

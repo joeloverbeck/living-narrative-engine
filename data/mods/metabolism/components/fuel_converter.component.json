@@ -12,8 +12,8 @@
       },
       "conversion_rate": {
         "type": "number",
-        "minimum": 0,
-        "description": "Energy points converted per turn during digestion."
+        "exclusiveMinimum": 0,
+        "description": "Energy points converted per turn during digestion. Must be greater than 0."
       },
       "efficiency": {
         "type": "number",

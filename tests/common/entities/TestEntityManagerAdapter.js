@@ -14,6 +14,7 @@ import SimpleEntityManager from './simpleEntityManager.js';
 export default class TestEntityManagerAdapter {
   #simple;
   #logger;
+  #registry;
 
   /**
    * Creates a new TestEntityManagerAdapter instance.
@@ -22,9 +23,11 @@ export default class TestEntityManagerAdapter {
    * @param {object} config.logger - Logger instance
    * @param {SimpleEntityManager} [config.simpleManager] - Existing SimpleEntityManager to wrap
    * @param {Array<object>} [config.initialEntities] - Initial entities to load
+   * @param {object} [config.registry] - Data registry for looking up entity definitions
    */
-  constructor({ logger, simpleManager, initialEntities = [] }) {
+  constructor({ logger, simpleManager, initialEntities = [], registry = null }) {
     this.#logger = logger;
+    this.#registry = registry;
     // Note: SimpleEntityManager constructor takes array of entities, not config object
     this.#simple = simpleManager || new SimpleEntityManager(initialEntities);
   }
@@ -83,6 +86,17 @@ export default class TestEntityManagerAdapter {
    */
   getEntityInstance(entityId) {
     return this.#simple.getEntityInstance(entityId);
+  }
+
+  /**
+   * Check if an entity exists.
+   * This matches the production EntityManager.hasEntity() method.
+   *
+   * @param {string} entityId - The entity ID
+   * @returns {boolean} True if entity exists
+   */
+  hasEntity(entityId) {
+    return this.#simple.hasEntity(entityId);
   }
 
   // ============================================================================
@@ -232,6 +246,38 @@ export default class TestEntityManagerAdapter {
    */
   createEntity(entityId) {
     return this.#simple.createEntity(entityId);
+  }
+
+  /**
+   * Create an entity instance from a definition.
+   * This matches the production EntityManager.createEntityInstance() method.
+   *
+   * @param {string} definitionId - The entity definition ID
+   * @param {object} [opts] - Optional creation options
+   * @param {string} [opts.instanceId] - Custom instance ID (defaults to generated)
+   * @param {string} [opts.definitionId] - Definition ID override
+   * @returns {Promise<object>} The created entity instance
+   */
+  async createEntityInstance(definitionId, opts = {}) {
+    const instanceId = opts.instanceId || definitionId;
+    const defId = opts.definitionId || definitionId;
+
+    // Create the entity first
+    const entity = this.#simple.createEntity(instanceId);
+
+    // If we have a registry, look up the definition and add components
+    if (this.#registry) {
+      const definition = this.#registry.get('entityDefinitions', defId);
+      if (definition && definition.components) {
+        // Add each component from the definition to the entity
+        for (const [componentType, componentData] of Object.entries(definition.components)) {
+          await this.#simple.addComponent(instanceId, componentType, componentData);
+        }
+      }
+    }
+
+    // Return the created entity with components
+    return this.#simple.getEntityInstance(instanceId);
   }
 
   /**

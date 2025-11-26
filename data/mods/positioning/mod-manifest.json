@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "name": "Positioning System",
   "description": "Provides physical positioning and spatial relationship mechanics for actors, including closeness circles, facing directions, and movement actions.",
+  "actionPurpose": "Change body position, spatial relationships, and physical arrangement relative to others and furniture.",
+  "actionConsiderWhen": "Getting closer or farther from someone, changing posture (sitting, standing, lying, kneeling), or adjusting facing direction.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
   "dependencies": [
@@ -34,7 +36,8 @@
       "lying_down.component.json",
       "receiving_blowjob.component.json",
       "sitting_on.component.json",
-      "straddling_waist.component.json"
+      "straddling_waist.component.json",
+      "wielding.component.json"
     ],
     "actions": [
       "bend_over.action.json",

@@ -25,7 +25,7 @@ describe('Wield Threateningly Rule - Validation', () => {
     // Assert: Rule should exist and be properly structured
     expect(ruleFile).toBeDefined();
     expect(ruleFile.rule_id).toBe('handle_wield_threateningly');
-    expect(ruleFile.actions).toHaveLength(8);
+    expect(ruleFile.actions).toHaveLength(13);
 
     // Assert: First two operations should get names
     expect(ruleFile.actions[0].type).toBe('GET_NAME');
@@ -36,10 +36,22 @@ describe('Wield Threateningly Rule - Validation', () => {
     expect(ruleFile.actions[1].parameters.entity_ref).toBe('target');
     expect(ruleFile.actions[1].parameters.result_variable).toBe('targetName');
 
-    // Assert: Third operation queries position for locationId
+    // Assert: Third operation queries grabbing requirements (added for LOCK_GRABBING)
     expect(ruleFile.actions[2].type).toBe('QUERY_COMPONENT');
-    expect(ruleFile.actions[2].parameters.component_type).toBe('core:position');
-    expect(ruleFile.actions[2].parameters.result_variable).toBe('actorPosition');
+    expect(ruleFile.actions[2].parameters.component_type).toBe('anatomy:requires_grabbing');
+    expect(ruleFile.actions[2].parameters.result_variable).toBe('targetGrabbingReqs');
+    expect(ruleFile.actions[2].parameters.missing_value).toEqual({ handsRequired: 1 });
+
+    // Assert: Fourth operation locks grabbing appendages
+    expect(ruleFile.actions[3].type).toBe('LOCK_GRABBING');
+    expect(ruleFile.actions[3].parameters.actor_id).toBe('{event.payload.actorId}');
+    expect(ruleFile.actions[3].parameters.count).toBe('{context.targetGrabbingReqs.handsRequired}');
+    expect(ruleFile.actions[3].parameters.item_id).toBe('{event.payload.targetId}');
+
+    // Assert: Fifth operation queries position for locationId
+    expect(ruleFile.actions[4].type).toBe('QUERY_COMPONENT');
+    expect(ruleFile.actions[4].parameters.component_type).toBe('core:position');
+    expect(ruleFile.actions[4].parameters.result_variable).toBe('actorPosition');
   });
 
   it('should set required context variables for logSuccessAndEndTurn macro', () => {

@@ -1,0 +1,42 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "accessories:slate_nylon_baseball_cap",
+  "description": "Slate-colored nylon baseball cap",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "head_gear"
+      },
+      "allowedLayers": [
+        "accessories"
+      ]
+    },
+    "core:material": {
+      "material": "nylon"
+    },
+    "core:name": {
+      "text": "baseball cap"
+    },
+    "core:description": {
+      "text": "A practical slate-colored baseball cap constructed from lightweight, quick-drying nylon. Features a curved brim for sun protection and an adjustable strap at the back for a customized fit. The breathable mesh panels provide ventilation while the moisture-wicking sweatband keeps perspiration at bay during active use. The neutral slate color offers understated versatility for outdoor activities, casual wear, or fieldwork."
+    },
+    "descriptors:color_basic": {
+      "color": "gray"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "head_gear"
+      ],
+      "coveragePriority": "accessories"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.08
+    }
+  }
+}

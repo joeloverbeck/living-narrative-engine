@@ -15,14 +15,17 @@ describe('Core Material Component Migration Integration', () => {
   describe('entity loading with core:material component', () => {
     it('should load clothing entities with core:material component', () => {
       // Test that all clothing entities can be loaded with the new component structure
+      // Note: black_calfskin_belt migrated from clothing to accessories mod (see CLOLAYMIG-004)
+      // Note: white_structured_linen_blazer migrated from clothing to outer-clothing mod (see CLOLAYMIG-007)
+      // Note: Other clothing items migrated to base-clothing and underwear mods (see CLOLAYMIG-011 to CLOLAYMIG-013)
       const clothingEntityIds = [
-        'clothing:white_structured_linen_blazer',
-        'clothing:black_calfskin_belt',
-        'clothing:leather_stiletto_pumps',
-        'clothing:graphite_wool_wide_leg_trousers',
-        'clothing:black_stretch_silk_bodysuit',
-        'clothing:nude_thong',
-        'clothing:underwired_plunge_bra_nude_silk',
+        'outer-clothing:white_structured_linen_blazer',
+        'accessories:black_calfskin_belt',
+        'base-clothing:leather_stiletto_pumps',
+        'base-clothing:graphite_wool_wide_leg_trousers',
+        'base-clothing:black_stretch_silk_bodysuit',
+        'underwear:nude_thong',
+        'underwear:underwired_plunge_bra_nude_silk',
       ];
 
       clothingEntityIds.forEach((entityId) => {
@@ -45,14 +48,17 @@ describe('Core Material Component Migration Integration', () => {
     });
 
     it('should verify specific material values for migrated entities', () => {
+      // Note: black_calfskin_belt migrated from clothing to accessories mod (see CLOLAYMIG-004)
+      // Note: white_structured_linen_blazer migrated from clothing to outer-clothing mod (see CLOLAYMIG-007)
+      // Note: Other clothing items migrated to base-clothing and underwear mods (see CLOLAYMIG-011 to CLOLAYMIG-013)
       const expectedMaterials = {
-        'clothing:white_structured_linen_blazer': 'linen',
-        'clothing:black_calfskin_belt': 'calfskin',
-        'clothing:leather_stiletto_pumps': 'leather',
-        'clothing:graphite_wool_wide_leg_trousers': 'wool',
-        'clothing:black_stretch_silk_bodysuit': 'stretch-silk',
-        'clothing:nude_thong': 'silk',
-        'clothing:underwired_plunge_bra_nude_silk': 'silk',
+        'outer-clothing:white_structured_linen_blazer': 'linen',
+        'accessories:black_calfskin_belt': 'calfskin',
+        'base-clothing:leather_stiletto_pumps': 'leather',
+        'base-clothing:graphite_wool_wide_leg_trousers': 'wool',
+        'base-clothing:black_stretch_silk_bodysuit': 'stretch-silk',
+        'underwear:nude_thong': 'silk',
+        'underwear:underwired_plunge_bra_nude_silk': 'silk',
       };
 
       Object.entries(expectedMaterials).forEach(
@@ -68,8 +74,9 @@ describe('Core Material Component Migration Integration', () => {
 
   describe('AnatomyVisualizerUI integration', () => {
     it('should extract material from core:material component', () => {
+      // Note: white_structured_linen_blazer migrated from clothing to outer-clothing mod (see CLOLAYMIG-007)
       const mockEntity = testBed.createMockEntity(
-        'clothing:white_structured_linen_blazer'
+        'outer-clothing:white_structured_linen_blazer'
       );
 
       // Mock the AnatomyVisualizerUI method behavior
@@ -109,8 +116,9 @@ describe('Core Material Component Migration Integration', () => {
     });
 
     it('should generate equipment descriptions with core:material data', () => {
+      // Note: black_calfskin_belt migrated from clothing to accessories mod (see CLOLAYMIG-004)
       const mockEntity = testBed.createMockEntity(
-        'clothing:black_calfskin_belt'
+        'accessories:black_calfskin_belt'
       );
 
       // Verify the entity has the expected component structure

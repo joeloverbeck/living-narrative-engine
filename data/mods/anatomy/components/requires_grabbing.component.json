@@ -1,0 +1,23 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "anatomy:requires_grabbing",
+  "description": "Specifies how many grabbing appendages are needed to hold/wield this item.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "handsRequired": {
+        "description": "Number of grabbing appendages required to hold this item (e.g., 1 for dagger, 2 for longsword, 0 for rings).",
+        "type": "integer",
+        "minimum": 0,
+        "default": 1
+      },
+      "minGripStrength": {
+        "description": "Minimum total grip strength required. If set, the sum of gripStrength from all assigned appendages must meet this threshold.",
+        "type": "number",
+        "minimum": 0
+      }
+    },
+    "required": ["handsRequired"],
+    "additionalProperties": false
+  }
+}

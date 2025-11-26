@@ -166,31 +166,70 @@ class DigestFoodHandler extends BaseOperationHandler {
         return;
       }
 
-      // Extract component data
-      const bufferStorage = fuelConverter.bufferStorage || 0;
-      const conversionRate = fuelConverter.conversionRate || 0;
+      // Extract component data (using snake_case to match component schemas)
+      // Buffer storage is on metabolic_store, not fuel_converter
+      const bufferStorage = metabolicStore.buffer_storage || [];
+      // Edge Case 7: Ensure minimum conversion_rate to prevent division by zero
+      // Schema requires exclusiveMinimum: 0, but add defensive check for runtime safety
+      const conversionRate = Math.max(0.1, fuelConverter.conversion_rate || 0);
       const efficiency = fuelConverter.efficiency || 0;
-      const activityMultiplier = fuelConverter.activityMultiplier || 1.0;
+      const metabolicEfficiencyMultiplier = fuelConverter.metabolic_efficiency_multiplier || 1.0;
 
-      const currentEnergy = metabolicStore.currentEnergy || 0;
-      const maxEnergy = metabolicStore.maxEnergy;
+      // Log warning if conversion_rate was adjusted
+      if (fuelConverter.conversion_rate !== undefined && fuelConverter.conversion_rate <= 0) {
+        log.warn('DIGEST_FOOD: conversion_rate was zero or negative, using minimum 0.1', {
+          entityId,
+          originalRate: fuelConverter.conversion_rate,
+          adjustedRate: conversionRate,
+        });
+      }
+
+      const currentEnergy = metabolicStore.current_energy || 0;
+      const maxEnergy = metabolicStore.max_energy;
+
+      // Calculate total bulk in buffer
+      const totalBulk = bufferStorage.reduce((sum, item) => sum + (item.bulk || 0), 0);
 
       // Calculate maximum digestion potential
-      const maxDigestion = conversionRate * activityMultiplier * turns;
+      const maxDigestion = conversionRate * metabolicEfficiencyMultiplier * turns;
 
-      // Calculate actual digestion (cannot exceed buffer storage)
-      const actualDigestion = Math.min(bufferStorage, maxDigestion);
+      // Calculate actual digestion (cannot exceed total buffer bulk)
+      const actualDigestion = Math.min(totalBulk, maxDigestion);
 
-      // Calculate energy gained with efficiency
-      const energyGained = actualDigestion * efficiency;
+      // Calculate energy gained from buffer items (based on energy content proportional to bulk digested)
+      let energyGained = 0;
+      let remainingDigestion = actualDigestion;
+      const newBufferStorage = [];
 
-      // Calculate new buffer storage
-      const newBuffer = bufferStorage - actualDigestion;
+      for (const item of bufferStorage) {
+        if (remainingDigestion <= 0) {
+          newBufferStorage.push({ ...item });
+          continue;
+        }
+
+        const itemBulk = item.bulk || 0;
+        const itemEnergy = item.energy_content || 0;
+
+        if (itemBulk <= remainingDigestion) {
+          // Digest entire item
+          energyGained += itemEnergy * efficiency;
+          remainingDigestion -= itemBulk;
+        } else {
+          // Partially digest item
+          const digestedFraction = remainingDigestion / itemBulk;
+          energyGained += itemEnergy * digestedFraction * efficiency;
+          newBufferStorage.push({
+            bulk: itemBulk - remainingDigestion,
+            energy_content: itemEnergy * (1 - digestedFraction),
+          });
+          remainingDigestion = 0;
+        }
+      }
 
       // Calculate new energy (capped at maxEnergy)
       const newEnergy = Math.min(maxEnergy, currentEnergy + energyGained);
 
-      // Update both components atomically
+      // Update both components atomically (using snake_case to match schemas)
       await this.#entityManager.batchAddComponentsOptimized(
         [
           {
@@ -198,22 +237,23 @@ class DigestFoodHandler extends BaseOperationHandler {
             componentTypeId: FUEL_CONVERTER_COMPONENT_ID,
             componentData: {
               capacity: fuelConverter.capacity,
-              bufferStorage: newBuffer,
-              conversionRate,
+              conversion_rate: conversionRate,
               efficiency,
-              acceptedFuelTags: fuelConverter.acceptedFuelTags,
-              activityMultiplier,
+              accepted_fuel_tags: fuelConverter.accepted_fuel_tags,
+              metabolic_efficiency_multiplier: metabolicEfficiencyMultiplier,
             },
           },
           {
             instanceId: entityId,
             componentTypeId: METABOLIC_STORE_COMPONENT_ID,
             componentData: {
-              currentEnergy: newEnergy,
-              maxEnergy,
-              baseBurnRate: metabolicStore.baseBurnRate,
-              activityMultiplier: metabolicStore.activityMultiplier,
-              lastUpdateTurn: metabolicStore.lastUpdateTurn,
+              current_energy: newEnergy,
+              max_energy: maxEnergy,
+              base_burn_rate: metabolicStore.base_burn_rate,
+              activity_multiplier: metabolicStore.activity_multiplier,
+              last_update_turn: metabolicStore.last_update_turn,
+              buffer_storage: newBufferStorage,
+              buffer_capacity: metabolicStore.buffer_capacity,
             },
           },
         ],
@@ -225,7 +265,7 @@ class DigestFoodHandler extends BaseOperationHandler {
         entityId,
         bufferReduced: actualDigestion,
         energyGained,
-        newBuffer,
+        newBuffer: newBufferStorage.reduce((sum, item) => sum + (item.bulk || 0), 0),
         newEnergy,
         efficiency,
       });
@@ -234,7 +274,7 @@ class DigestFoodHandler extends BaseOperationHandler {
         entityId,
         bufferReduced: actualDigestion,
         energyGained,
-        newBuffer,
+        newBuffer: newBufferStorage.reduce((sum, item) => sum + (item.bulk || 0), 0),
         newEnergy,
         efficiency,
         turns,

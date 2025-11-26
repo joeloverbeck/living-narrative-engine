@@ -811,6 +811,41 @@ describe('GOAPDebugger', () => {
       expect(report).toContain('No task library diagnostics captured');
       expect(report).toContain('see docs/goap/debugging-tools.md#diagnostics-contract');
     });
+
+    it('shows last updated timestamp and namespace counts when fresh', () => {
+      const now = Date.now();
+      mockController.getTaskLibraryDiagnostics.mockReturnValue({
+        timestamp: now,
+        totalTasks: 3,
+        namespaces: {
+          core: { taskCount: 2 },
+          mods: { taskCount: 1 },
+        },
+        warnings: ['duplicate task id'],
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Last updated:');
+      expect(report).toContain('Total Tasks: 3');
+      expect(report).toContain('core: 2 tasks');
+      expect(report).toContain('mods: 1 tasks');
+      expect(report).toContain('Warnings:');
+      expect(report).toContain('duplicate task id');
+    });
+
+    it('falls back to defaults when namespaces are empty and counts are missing', () => {
+      mockController.getTaskLibraryDiagnostics.mockReturnValue({
+        timestamp: Date.now(),
+        namespaces: {},
+        warnings: [],
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Total Tasks: 0');
+      expect(report).toContain('Namespaces: ∅');
+    });
   });
 
   describe('planning state diagnostics formatting', () => {
@@ -821,6 +856,37 @@ describe('GOAPDebugger', () => {
 
       expect(report).toContain('No planning-state diagnostics captured');
       expect(report).toContain('see docs/goap/debugging-tools.md#planning-state-assertions');
+    });
+
+    it('shows recent misses and last updated when data is fresh', () => {
+      const missTimestamp = Date.now();
+      mockController.getPlanningStateDiagnostics.mockReturnValue({
+        totalMisses: 2,
+        lastMisses: [
+          {
+            timestamp: missTimestamp,
+            path: 'actor.components.health',
+            origin: 'validator',
+            reason: 'missing component',
+          },
+          {
+            timestamp: missTimestamp - 1000,
+            path: 'actor.components.energy',
+            origin: 'validator',
+            reason: 'missing energy value',
+          },
+        ],
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Last miss recorded:');
+      expect(report).toContain('Total Misses: 2');
+      expect(report).toContain('Recent Misses (max 5):');
+      expect(report).toContain('path=actor.components.health');
+      expect(report).toContain('reason=missing component');
+      expect(report).toContain('path=actor.components.energy');
+      expect(report).toContain('reason=missing energy value');
     });
   });
 
@@ -910,6 +976,38 @@ describe('GOAPDebugger', () => {
       expect(report).toContain('docs/goap/debugging-tools.md#Planner Contract Checklist');
     });
 
+    it('shows stale warning when last violation is old', () => {
+      const oldTimestamp =
+        Date.now() - GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.staleThresholdMs - 1000;
+      mockController.getEventComplianceDiagnostics.mockReturnValue({
+        actor: {
+          actorId: 'actor-1',
+          totalEvents: 5,
+          missingPayloads: 0,
+          lastViolation: {
+            timestamp: oldTimestamp,
+            code: 'OLD',
+            eventType: 'EVENT',
+            reason: 'late',
+          },
+        },
+        global: {
+          totalEvents: 5,
+          missingPayloads: 0,
+          lastViolation: {
+            timestamp: oldTimestamp,
+            code: 'OLD',
+            eventType: 'EVENT',
+            reason: 'late',
+          },
+        },
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('⚠️ STALE — last violation recorded');
+    });
+
     it('shows satisfied message when no violations', () => {
       mockController.getEventComplianceDiagnostics.mockReturnValue({
         actor: {
@@ -990,6 +1088,68 @@ describe('GOAPDebugger', () => {
       expect(report).toContain('Recent Violations: ∅');
       expect(report).toContain('all goals follow actor.components.* contract');
     });
+
+    it('formats fresh violations without stale warning', () => {
+      const recentTimestamp = Date.now();
+      mockController.getGoalPathDiagnostics.mockReturnValue({
+        actorId: 'actor-1',
+        totalViolations: 1,
+        entries: [
+          {
+            timestamp: recentTimestamp,
+            goalId: 'explore',
+            violations: [{ path: 'actor.location', expected: 'actor.components.location' }],
+          },
+        ],
+        lastViolationAt: recentTimestamp,
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      const goalPathSection = report
+        .split('--- Goal Path Violations ---')[1]
+        .split('--- Effect Failure Telemetry ---')[0];
+
+      expect(report).toContain('Last violation recorded:');
+      expect(report).toContain('Total Violations: 1');
+      expect(report).toContain('goal=explore');
+      expect(goalPathSection).not.toContain('⚠️ STALE');
+    });
+
+    it('uses fallback values when violations payload is incomplete', () => {
+      const recentTimestamp = Date.now();
+      mockController.getGoalPathDiagnostics.mockReturnValue({
+        actorId: 'actor-1',
+        entries: 'not-an-array',
+        lastViolationAt: recentTimestamp,
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Last violation recorded:');
+      expect(report).toContain('Total Violations: 0');
+      expect(report).toContain('Recent Violations: ∅');
+    });
+
+    it('falls back to unknown goal identifiers when missing', () => {
+      const recentTimestamp = Date.now();
+      mockController.getGoalPathDiagnostics.mockReturnValue({
+        actorId: 'actor-1',
+        totalViolations: undefined,
+        entries: [
+          {
+            timestamp: recentTimestamp,
+            violations: [{ path: 'actor.missing', expected: 'actor.components.missing' }],
+          },
+        ],
+        lastViolationAt: recentTimestamp,
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Total Violations: 0');
+      expect(report).toContain('goal=unknown');
+    });
   });
 
   describe('effect failure telemetry formatting', () => {
@@ -1060,6 +1220,70 @@ describe('GOAPDebugger', () => {
       const report = goapDebugger.generateReport('actor-1');
 
       expect(report).toContain('Recent Failures: ∅');
+    });
+
+    it('shows last failure when telemetry is fresh', () => {
+      const recentTimestamp = Date.now();
+      mockController.getEffectFailureTelemetry.mockReturnValue({
+        actorId: 'actor-1',
+        totalFailures: 1,
+        failures: [
+          {
+            timestamp: recentTimestamp,
+            taskId: 'craft',
+            phase: 'execution',
+            goalId: 'build',
+            message: 'craft failed',
+          },
+        ],
+        lastFailureAt: recentTimestamp,
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      const effectTelemetrySection = report
+        .split('--- Effect Failure Telemetry ---')[1]
+        .split('--- Event Stream ---')[0];
+
+      expect(report).toContain('Last failure recorded:');
+      expect(report).toContain('craft');
+      expect(effectTelemetrySection).not.toContain('⚠️ STALE');
+    });
+
+    it('uses fallback labels when failure details are missing', () => {
+      const recentTimestamp = Date.now();
+      mockController.getEffectFailureTelemetry.mockReturnValue({
+        actorId: 'actor-1',
+        failures: [
+          {
+            timestamp: recentTimestamp,
+            taskId: undefined,
+            message: 'missing fields',
+          },
+        ],
+        lastFailureAt: recentTimestamp,
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Last failure recorded:');
+      expect(report).toContain('Total Failures: 0');
+      expect(report).toContain('goal=n/a');
+      expect(report).toContain('phase=n/a');
+    });
+
+    it('handles non-array telemetry failures gracefully', () => {
+      const recentTimestamp = Date.now();
+      mockController.getEffectFailureTelemetry.mockReturnValue({
+        actorId: 'actor-1',
+        failures: 'not-an-array',
+        lastFailureAt: recentTimestamp,
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('Recent Failures: ∅');
+      expect(report).toContain('Total Failures: 0');
     });
   });
 
@@ -1159,6 +1383,50 @@ describe('GOAPDebugger', () => {
       expect(report).toContain('EVENT_9');
       expect(report).not.toContain('EVENT_0');
       expect(report).not.toContain('EVENT_4');
+    });
+
+    it('falls back to top-level actorId when payload is missing', () => {
+      mockEventTraceProbe.getSnapshot.mockReturnValue({
+        actorId: 'actor-1',
+        capturing: false,
+        totalCaptured: 1,
+        totalViolations: 0,
+        events: [
+          {
+            type: 'TASK_STARTED',
+            timestamp: Date.now(),
+            actorId: 'actor-1',
+            violation: false,
+          },
+        ],
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('TASK_STARTED');
+      expect(report).toContain('actor=actor-1');
+      expect(report).not.toContain('payload=');
+    });
+
+    it('uses unknown actor label when both actorId and payload are missing', () => {
+      mockEventTraceProbe.getSnapshot.mockReturnValue({
+        actorId: 'actor-1',
+        capturing: false,
+        totalCaptured: 1,
+        totalViolations: 0,
+        events: [
+          {
+            type: 'GENERIC_EVENT',
+            timestamp: Date.now(),
+            violation: false,
+          },
+        ],
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('GENERIC_EVENT');
+      expect(report).toContain('actor=unknown');
     });
   });
 
@@ -1322,6 +1590,23 @@ describe('GOAPDebugger', () => {
       const report = goapDebugger.generateReport('actor-1');
 
       expect(report).toContain('unknown: status=error');
+    });
+
+    it('handles dependency diagnostics with undefined method arrays', () => {
+      mockInspector.inspect.mockReturnValue('');
+      mockController.getDependencyDiagnostics.mockReturnValue([
+        {
+          dependency: 'IMissingArrays',
+          status: 'warn',
+          timestamp: Date.now(),
+        },
+      ]);
+
+      const report = goapDebugger.generateReport('actor-1');
+
+      expect(report).toContain('IMissingArrays: status=warn');
+      expect(report).toContain('required: ∅');
+      expect(report).toContain('provided: ∅');
     });
   });
 

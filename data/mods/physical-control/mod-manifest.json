@@ -3,6 +3,9 @@
   "id": "physical-control",
   "version": "1.0.0",
   "name": "physical-control",
+  "description": "Actions for physically controlling or manipulating another person's body position.",
+  "actionPurpose": "Physically force or manipulate someone into different positions through direct physical control.",
+  "actionConsiderWhen": "Asserting physical dominance, forcing someone into a position, pushing someone away, or physically controlling another.",
   "dependencies": [
     {
       "id": "anatomy",

@@ -1,0 +1,48 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "outer-clothing:charcoal_heather_zip_up_hoodie",
+  "description": "Charcoal heather zip-up hoodie with cotton-polyester fleece blend",
+  "components": {
+    "clothing:wearable": {
+      "layer": "outer",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": [
+          "left_arm_clothing",
+          "right_arm_clothing"
+        ]
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "cotton"
+    },
+    "core:name": {
+      "text": "zip-up hoodie"
+    },
+    "core:description": {
+      "text": "A comfortable charcoal heather zip-up hoodie crafted from a soft cotton-polyester fleece blend. The matte finish provides a casual, understated look while the full-length zipper allows for easy layering. Features a drawstring hood, kangaroo pocket, and ribbed cuffs and hem for a snug fit. The heathered texture adds visual interest to this versatile everyday essential."
+    },
+    "descriptors:color_basic": {
+      "color": "gray"
+    },
+    "descriptors:texture": {
+      "texture": "matte"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper"
+      ],
+      "coveragePriority": "outer"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.65
+    }
+  }
+}

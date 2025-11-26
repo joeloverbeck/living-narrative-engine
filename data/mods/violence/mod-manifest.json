@@ -1,8 +1,13 @@
 {
-  "$schema": "http://example.com/schemas/mod-manifest.schema.json",
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "violence",
   "version": "1.0.0",
   "name": "violence",
+  "description": "Provides physical violence actions including strikes, grabs, and lethal attacks.",
+  "actionPurpose": "Inflict physical harm through strikes, grabs, and lethal attacks.",
+  "actionConsiderWhen": "Combat, assault, self-defense, or when a character intends to cause physical pain or injury to another.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
   "dependencies": [
     {
       "id": "anatomy",

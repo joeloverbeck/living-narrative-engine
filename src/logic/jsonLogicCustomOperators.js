@@ -17,6 +17,9 @@ import { HasComponentOperator } from './operators/hasComponentOperator.js';
 import { IsHungryOperator } from './operators/isHungryOperator.js';
 import { PredictedEnergyOperator } from './operators/predictedEnergyOperator.js';
 import { CanConsumeOperator } from './operators/canConsumeOperator.js';
+import { HasFreeGrabbingAppendagesOperator } from './operators/hasFreeGrabbingAppendagesOperator.js';
+import { CanActorGrabItemOperator } from './operators/canActorGrabItemOperator.js';
+import { IsItemBeingGrabbedOperator } from './operators/isItemBeingGrabbedOperator.js';
 import { validateOperatorWhitelist } from './operatorRegistrationValidator.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -179,6 +182,21 @@ export class JsonLogicCustomOperators extends BaseService {
     });
 
     const canConsumeOp = new CanConsumeOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
+    const hasFreeGrabbingAppendagesOp = new HasFreeGrabbingAppendagesOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
+    const canActorGrabItemOp = new CanActorGrabItemOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
+    const isItemBeingGrabbedOp = new IsItemBeingGrabbedOperator({
       entityManager: this.#entityManager,
       logger: this.#logger,
     });
@@ -363,6 +381,39 @@ export class JsonLogicCustomOperators extends BaseService {
       function (consumerPath, itemPath) {
         // 'this' is the evaluation context
         return canConsumeOp.evaluate([consumerPath, itemPath], this);
+      },
+      jsonLogicEvaluationService
+    );
+
+    // Register hasFreeGrabbingAppendages operator
+    this.#registerOperator(
+      'hasFreeGrabbingAppendages',
+      function (entityPath, requiredCount) {
+        // 'this' is the evaluation context
+        return hasFreeGrabbingAppendagesOp.evaluate(
+          [entityPath, requiredCount],
+          this
+        );
+      },
+      jsonLogicEvaluationService
+    );
+
+    // Register canActorGrabItem operator
+    this.#registerOperator(
+      'canActorGrabItem',
+      function (actorPath, itemPath) {
+        // 'this' is the evaluation context
+        return canActorGrabItemOp.evaluate([actorPath, itemPath], this);
+      },
+      jsonLogicEvaluationService
+    );
+
+    // Register isItemBeingGrabbed operator
+    this.#registerOperator(
+      'isItemBeingGrabbed',
+      function (actorPath, itemPath) {
+        // 'this' is the evaluation context
+        return isItemBeingGrabbedOp.evaluate([actorPath, itemPath], this);
       },
       jsonLogicEvaluationService
     );

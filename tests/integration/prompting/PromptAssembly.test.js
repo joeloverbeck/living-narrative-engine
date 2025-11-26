@@ -39,6 +39,14 @@ describe('Prompt Assembly with template-based system', () => {
   beforeEach(() => {
     logger = mockLogger();
 
+    const characterDataXmlBuilder = {
+      buildCharacterDataXml: jest.fn(() => '<character_data>Mock XML</character_data>'),
+    };
+
+    const modActionMetadataProvider = {
+      getMetadataForMod: jest.fn(() => null),
+    };
+
     provider = new AIPromptContentProvider({
       logger,
       promptStaticContentService: {
@@ -64,6 +72,8 @@ describe('Prompt Assembly with template-based system', () => {
           namespace.toUpperCase()
         ),
       },
+      characterDataXmlBuilder,
+      modActionMetadataProvider,
     });
 
     llmConfigService = {

@@ -3,23 +3,28 @@
   "id": "anatomy:eldritch_malformed_hand",
   "description": "Grotesque hand with wrong number of digits and malformed joints",
   "components": {
+    "anatomy:can_grab": {
+      "gripStrength": 0.7,
+      "heldItemId": null,
+      "locked": false
+    },
     "anatomy:part": {
       "subType": "eldritch_hand"
     },
     "core:name": {
       "text": "malformed hand"
     },
-    "descriptors:digit_count": {
-      "count": "abnormal"
-    },
-    "descriptors:texture": {
-      "texture": "webbed-clawed"
-    },
     "descriptors:color_extended": {
       "color": "mottled-gray"
     },
     "descriptors:deformity": {
       "deformity": "extra-joints"
+    },
+    "descriptors:digit_count": {
+      "count": "abnormal"
+    },
+    "descriptors:texture": {
+      "texture": "webbed-clawed"
     }
   }
 }

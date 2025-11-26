@@ -239,7 +239,7 @@ describe('Template-Blueprint Integration - Dragon (Winged Quadruped)', () => {
       clothingSlotMappings: {
         saddle: {
           anatomySockets: ['back_mount'],
-          allowedLayers: ['accessory'],
+          allowedLayers: ['accessories'],
         },
       },
     };
@@ -478,11 +478,11 @@ describe('Template-Blueprint Integration - AdditionalSlots Validation', () => {
       clothingSlotMappings: {
         saddle: {
           anatomySockets: ['back_mount'],
-          allowedLayers: ['accessory'],
+          allowedLayers: ['accessories'],
         },
         reins: {
           anatomySockets: ['neck_mount'],
-          allowedLayers: ['accessory'],
+          allowedLayers: ['accessories'],
         },
       },
     };

@@ -4,6 +4,8 @@
   "version": "0.1.0",
   "name": "Distress – Vulnerable Gestures",
   "description": "Emotionally charged gestures that express desperation, pleading, or internalized overwhelm.",
+  "actionPurpose": "Express emotional vulnerability through desperate or overwhelmed physical gestures.",
+  "actionConsiderWhen": "Feeling overwhelmed, seeking comfort, expressing desperation, or showing emotional vulnerability.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
   "dependencies": [

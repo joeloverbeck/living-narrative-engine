@@ -1,0 +1,42 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:white_knee_high_socks_pink_bows",
+  "description": "Pristine white cotton socks that reach just below the knee with delicate pink bows",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": ["underwear"]
+    },
+    "core:material": {
+      "material": "cotton",
+      "properties": ["breathable"]
+    },
+    "descriptors:color_basic": {
+      "color": "white"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "descriptors:length_category": {
+      "length": "long"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["feet"],
+      "coveragePriority": "underwear"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.09
+    },
+    "core:name": {
+      "text": "knee-high socks with pink bows"
+    },
+    "core:description": {
+      "text": "Pristine white cotton socks that reach just below the knee, finished with delicate pink satin bows at the top of each cuff. The soft knit fabric hugs the leg gently without binding, while the decorative bows add a sweet, feminine touch to an otherwise simple design."
+    }
+  }
+}

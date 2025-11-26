@@ -238,10 +238,10 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
       const result2 = engine.resolve(ast2, actorEntity, mockRuntimeCtx);
       expect(result2).toEqual(new Set([10]));
 
-      // Test with null/missing field - null is a valid value
+      // Test with null/missing field - null represents "no value" and should be excluded
       mockEntityManager.getComponentData.mockReturnValue(null);
       const result3 = engine.resolve(ast1, actorEntity, mockRuntimeCtx);
-      expect(result3).toEqual(new Set([null]));
+      expect(result3).toEqual(new Set());
     });
 
     test('should handle entities source without hasComponent method - lines 144-145', () => {

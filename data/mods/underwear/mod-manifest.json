@@ -1,0 +1,70 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "underwear",
+  "version": "1.0.0",
+  "name": "Underwear Clothing",
+  "description": "Underwear layer clothing entities",
+  "author": "Living Narrative Engine",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "descriptors",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "items",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "clothing",
+      "version": "^1.0.0"
+    }
+  ],
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "entities": {
+      "definitions": [
+        "aubade_bahia_balconette_bra_pale_pink.entity.json",
+        "black_cotton_boxer_briefs.entity.json",
+        "black_leather_codpiece.entity.json",
+        "black_longline_sports_bra_medium_support.entity.json",
+        "charcoal_nylon_sports_bra.entity.json",
+        "cream_cotton_high_rise_briefs.entity.json",
+        "cream_cotton_soft_cup_bralette.entity.json",
+        "dark_gray_wool_boot_socks.entity.json",
+        "fitted_navy_cotton_boxer_briefs.entity.json",
+        "fuzzy_peach_socks.entity.json",
+        "graphite_wool_briefs.entity.json",
+        "gray_ribknit_cotton_socks.entity.json",
+        "high_waisted_ivory_tap_pants.entity.json",
+        "ivory_plunge_balconette_bra_french_lace.entity.json",
+        "la_perla_black_silk_triangle_bra.entity.json",
+        "lavender_fitted_camisole_lace_trim.entity.json",
+        "linen_chest_wrap.entity.json",
+        "linen_drawers.entity.json",
+        "linen_footwraps.entity.json",
+        "matte_sheer_tights_smoke_black.entity.json",
+        "nude_microfiber_seamless_thong.entity.json",
+        "nude_thong.entity.json",
+        "nylon_sports_bra.entity.json",
+        "pink_fuzzy_socks.entity.json",
+        "power_mesh_boxer_brief.entity.json",
+        "red_satin_bikini_briefs.entity.json",
+        "satin_cowl_neck_camisole.entity.json",
+        "seamless_plunge_bra_microfiber_nude.entity.json",
+        "spanx_high_waisted_control_briefs.entity.json",
+        "underwired_plunge_bra_nude_silk.entity.json",
+        "white_ankle_socks_ruffled_edges.entity.json",
+        "white_cotton_panties.entity.json",
+        "white_knee_high_socks_pink_bows.entity.json",
+        "white_midcrew_cotton_athletic_socks.entity.json",
+        "white_terry_lined_grip_socks.entity.json",
+        "white_thigh_high_socks_pink_hearts.entity.json"
+      ],
+      "instances": []
+    }
+  }
+}

@@ -135,31 +135,51 @@
   ],
   "clothingEntities": [
     {
-      "entityId": "clothing:graphite_wool_briefs",
+      "entityId": "underwear:linen_chest_wrap",
       "equip": true
     },
     {
-      "entityId": "clothing:charcoal_nylon_sports_bra",
+      "entityId": "underwear:linen_drawers",
       "equip": true
     },
     {
-      "entityId": "clothing:shale_gray_nylon_field_pants",
+      "entityId": "underwear:linen_footwraps",
       "equip": true
     },
     {
-      "entityId": "clothing:black_tactical_work_belt",
+      "entityId": "base-clothing:sleeveless_linen_tunic_charcoal",
       "equip": true
     },
     {
-      "entityId": "clothing:dark_gray_wool_boot_socks",
+      "entityId": "base-clothing:wool_linen_trousers",
       "equip": true
     },
     {
-      "entityId": "clothing:black_leather_duty_boots",
+      "entityId": "base-clothing:black_leather_duty_boots",
       "equip": true
     },
     {
-      "entityId": "clothing:battle_scarred_leather_jacket",
+      "entityId": "armor:hardened_leather_cuirass_black_brown",
+      "equip": true
+    },
+    {
+      "entityId": "armor:leather_bracers_black_brown",
+      "equip": true
+    },
+    {
+      "entityId": "accessories:wide_dark_leather_belt",
+      "equip": true
+    },
+    {
+      "entityId": "accessories:leather_baldric",
+      "equip": true
+    },
+    {
+      "entityId": "accessories:goatskin_fingerless_gloves",
+      "equip": true
+    },
+    {
+      "entityId": "outer-clothing:buff_leather_field_jacket_repaired",
       "equip": true
     }
   ]

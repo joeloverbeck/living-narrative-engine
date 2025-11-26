@@ -34,6 +34,12 @@ describe('AIPromptContentProvider.getPromptData basic scenarios', () => {
       getSortedNamespaces: jest.fn(() => []),
       formatNamespaceDisplayName: jest.fn((namespace) => namespace),
     };
+    const characterDataXmlBuilder = {
+      buildCharacterDataXml: jest.fn(() => '<character_data>Mock XML</character_data>'),
+    };
+    const modActionMetadataProvider = {
+      getMetadataForMod: jest.fn(() => null),
+    };
 
     provider = new AIPromptContentProvider({
       logger,
@@ -41,6 +47,8 @@ describe('AIPromptContentProvider.getPromptData basic scenarios', () => {
       perceptionLogFormatter,
       gameStateValidationService,
       actionCategorizationService,
+      characterDataXmlBuilder,
+      modActionMetadataProvider,
     });
   });
 

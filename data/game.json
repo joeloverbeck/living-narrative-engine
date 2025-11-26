@@ -12,6 +12,11 @@
     "anatomy",
     "metabolism",
     "clothing",
+    "underwear",
+    "base-clothing",
+    "outer-clothing",
+    "accessories",
+    "armor",
     "exercise",
     "distress",
     "violence",
@@ -26,8 +31,7 @@
     "ballet",
     "gymnastics",
     "music",
-    "fantasy",
-    "p_erotica"
+    "fantasy"
   ],
   "startWorld": "fantasy:vespera"
 }

@@ -43,6 +43,14 @@ const makeDummyActionCategorizationService = () => ({
   formatNamespaceDisplayName: jest.fn((namespace) => namespace),
 });
 
+const makeDummyCharacterDataXmlBuilder = () => ({
+  buildCharacterDataXml: jest.fn(() => '<character_data>Mock XML</character_data>'),
+});
+
+const makeDummyModActionMetadataProvider = () => ({
+  getMetadataForMod: jest.fn(() => null),
+});
+
 // ---- Test Suite ---- //
 describe('AIPromptContentProvider.getPromptData → goalsArray behavior', () => {
   let provider;
@@ -56,6 +64,8 @@ describe('AIPromptContentProvider.getPromptData → goalsArray behavior', () => 
       perceptionLogFormatter: makeDummyPerceptionLogFormatter(),
       gameStateValidationService: makeDummyGameStateValidationService(),
       actionCategorizationService: makeDummyActionCategorizationService(),
+      characterDataXmlBuilder: makeDummyCharacterDataXmlBuilder(),
+      modActionMetadataProvider: makeDummyModActionMetadataProvider(),
     });
   });
 

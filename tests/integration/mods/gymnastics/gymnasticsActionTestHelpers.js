@@ -110,7 +110,7 @@ export function runGymnasticsActionIntegrationTests(config) {
       });
 
       it('configures narrative variable assignments and macro usage', () => {
-        expect(ruleFile.actions).toHaveLength(7);
+        expect(ruleFile.actions).toHaveLength(8);
 
         const [
           getName,
@@ -119,6 +119,7 @@ export function runGymnasticsActionIntegrationTests(config) {
           setPerception,
           setLocation,
           setTarget,
+          burnEnergy,
           macro,
         ] = ruleFile.actions;
 
@@ -148,6 +149,10 @@ export function runGymnasticsActionIntegrationTests(config) {
         expect(setTarget.type).toBe('SET_VARIABLE');
         expect(setTarget.parameters.variable_name).toBe('targetId');
         expect(setTarget.parameters.value).toBeNull();
+
+        expect(burnEnergy.type).toBe('BURN_ENERGY');
+        expect(burnEnergy.parameters.entity_ref).toBe('actor');
+        expect(burnEnergy.parameters.activity_multiplier).toBe(3);
 
         expect(macro.macro).toBe('core:logSuccessAndEndTurn');
       });

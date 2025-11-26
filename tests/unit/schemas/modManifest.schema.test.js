@@ -116,6 +116,34 @@ describe('JSON-Schema – Mod Manifest', () => {
       }
       expect(ok).toBe(true);
     });
+
+    test('✓ should validate with actionPurpose and actionConsiderWhen properties', () => {
+      const manifestWithActionMetadata = {
+        id: 'positioning_mod',
+        version: '1.0.0',
+        name: 'Positioning Mod',
+        actionPurpose: 'Actions for character positioning and movement in physical space.',
+        actionConsiderWhen: 'When characters need to move, sit, stand, or change positions.',
+      };
+      const ok = validate(manifestWithActionMetadata);
+      if (!ok) {
+        console.error('Validation Errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('✓ should validate without actionPurpose and actionConsiderWhen (optional properties)', () => {
+      const manifestWithoutActionMetadata = {
+        id: 'simple_mod',
+        version: '1.0.0',
+        name: 'Simple Mod',
+      };
+      const ok = validate(manifestWithoutActionMetadata);
+      if (!ok) {
+        console.error('Validation Errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
   });
 
   /* ── INVALID CASES ────────────────────────────────────────────────────── */
@@ -245,6 +273,86 @@ describe('JSON-Schema – Mod Manifest', () => {
         expect.objectContaining({
           instancePath: '/content/portraits/0',
           message: 'must match pattern "^(?!/)(?!.*\\.\\.)[^\\s]+\\.(png|jpg|jpeg|gif|webp|svg|bmp)$"',
+        })
+      );
+    });
+
+    test('✗ should NOT validate actionPurpose that is too short (< 10 chars)', () => {
+      const invalidManifest = {
+        id: 'test_mod',
+        version: '1.0.0',
+        name: 'Test Mod',
+        actionPurpose: 'Too short', // Only 9 characters
+      };
+      expect(validate(invalidManifest)).toBe(false);
+      expect(validate.errors).toContainEqual(
+        expect.objectContaining({
+          instancePath: '/actionPurpose',
+          message: 'must NOT have fewer than 10 characters',
+        })
+      );
+    });
+
+    test('✗ should NOT validate actionConsiderWhen that is too short (< 10 chars)', () => {
+      const invalidManifest = {
+        id: 'test_mod',
+        version: '1.0.0',
+        name: 'Test Mod',
+        actionConsiderWhen: 'Short', // Only 5 characters
+      };
+      expect(validate(invalidManifest)).toBe(false);
+      expect(validate.errors).toContainEqual(
+        expect.objectContaining({
+          instancePath: '/actionConsiderWhen',
+          message: 'must NOT have fewer than 10 characters',
+        })
+      );
+    });
+
+    test('✗ should NOT validate actionPurpose that is too long (> 200 chars)', () => {
+      const invalidManifest = {
+        id: 'test_mod',
+        version: '1.0.0',
+        name: 'Test Mod',
+        actionPurpose: 'A'.repeat(201), // 201 characters
+      };
+      expect(validate(invalidManifest)).toBe(false);
+      expect(validate.errors).toContainEqual(
+        expect.objectContaining({
+          instancePath: '/actionPurpose',
+          message: 'must NOT have more than 200 characters',
+        })
+      );
+    });
+
+    test('✗ should NOT validate actionConsiderWhen that is too long (> 200 chars)', () => {
+      const invalidManifest = {
+        id: 'test_mod',
+        version: '1.0.0',
+        name: 'Test Mod',
+        actionConsiderWhen: 'B'.repeat(201), // 201 characters
+      };
+      expect(validate(invalidManifest)).toBe(false);
+      expect(validate.errors).toContainEqual(
+        expect.objectContaining({
+          instancePath: '/actionConsiderWhen',
+          message: 'must NOT have more than 200 characters',
+        })
+      );
+    });
+
+    test('✗ should NOT validate actionPurpose with wrong type', () => {
+      const invalidManifest = {
+        id: 'test_mod',
+        version: '1.0.0',
+        name: 'Test Mod',
+        actionPurpose: 12345, // Not a string
+      };
+      expect(validate(invalidManifest)).toBe(false);
+      expect(validate.errors).toContainEqual(
+        expect.objectContaining({
+          instancePath: '/actionPurpose',
+          message: 'must be string',
         })
       );
     });

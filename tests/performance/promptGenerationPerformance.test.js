@@ -1,4 +1,8 @@
 /**
+ * @jest-environment jsdom
+ */
+
+/**
  * @file Performance benchmarks for prompt generation
  * @description Tests focused on measuring and validating prompt generation performance
  */

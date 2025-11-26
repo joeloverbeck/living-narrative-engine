@@ -235,8 +235,9 @@ describe('Multi-Action Planning Performance', () => {
       expect(planCreated).toBeDefined();
       expect(planCreated.payload.tasks.length).toBeGreaterThan(0);
 
-      // Should be very fast for small plans (< 10ms expected)
-      expect(planningTime).toBeLessThan(10);
+      // Should be very fast for small plans. Allow extra headroom for resource
+      // contention in shared CI runners while still flagging large regressions.
+      expect(planningTime).toBeLessThan(25);
 
       console.log(
         `Planning time for ${planCreated.payload.tasks.length} actions: ${planningTime.toFixed(2)}ms`

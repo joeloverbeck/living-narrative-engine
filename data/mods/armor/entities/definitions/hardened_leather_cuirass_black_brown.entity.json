@@ -1,0 +1,52 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "armor:hardened_leather_cuirass_black_brown",
+  "description": "A hardened leather cuirass in dark black-brown",
+  "components": {
+    "clothing:wearable": {
+      "layer": "armor",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "armor",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "leather",
+      "durability": 70,
+      "properties": [
+        "flexible"
+      ],
+      "careInstructions": [
+        "requires_oiling"
+      ]
+    },
+    "core:name": {
+      "text": "cuirass"
+    },
+    "core:description": {
+      "text": "A veteran's cuirass of boiled and hardened leather, darkened to a near-black brown from years of oil treatments and battlefield smoke. The leather has been molded to fit a female warrior's form without unnecessary embellishment. Scratches and scoring mark where blades have been turned aside, and the buckles at the sides show the wear of being donned and removed countless times."
+    },
+    "descriptors:color_extended": {
+      "color": "black-brown"
+    },
+    "descriptors:texture": {
+      "texture": "rugged"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper"
+      ],
+      "coveragePriority": "armor"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 4.5
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "accessories:south_sea_pearl_necklace_16mm",
+  "description": "South Sea pearl necklace with 16mm pearls",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "head_gear"
+      },
+      "allowedLayers": [
+        "accessories"
+      ]
+    },
+    "core:material": {
+      "material": "pearl"
+    },
+    "core:name": {
+      "text": "South Sea pearl necklace"
+    },
+    "core:description": {
+      "text": "An opulent strand of luminous South Sea pearls, each generous 16mm orb radiating soft iridescence. The necklace nestles against the collarbone with a gentle weight that speaks to its rarity, finished with a discreet clasp that keeps the focus on the pearls themselves. A statement piece destined for gala entrances and heirloom moments."
+    },
+    "descriptors:color_extended": {
+      "color": "pearl-white"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "descriptors:size_specific": {
+      "size": "16mm pearls"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "head_gear"
+      ],
+      "coveragePriority": "accessories"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.2
+    }
+  }
+}

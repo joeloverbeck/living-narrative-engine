@@ -49,6 +49,12 @@ describe('Tag Removal Memory Efficiency Tests', () => {
         namespace.toUpperCase()
       ),
     },
+    characterDataXmlBuilder: {
+      buildCharacterDataXml: jest.fn(() => '<character><name>Test Character</name></character>'),
+    },
+    modActionMetadataProvider: {
+      getMetadataForMod: jest.fn(() => null),
+    },
   });
 
   const createTestNotesWithoutTags = (count = 10) => {

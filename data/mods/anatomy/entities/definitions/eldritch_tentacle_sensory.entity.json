@@ -3,20 +3,16 @@
   "id": "anatomy:eldritch_tentacle_sensory",
   "description": "Sensory tentacle covered in receptor nodes and tasting organs",
   "components": {
+    "anatomy:can_grab": {
+      "gripStrength": 0.3,
+      "heldItemId": null,
+      "locked": false
+    },
     "anatomy:part": {
       "subType": "eldritch_tentacle"
     },
     "core:name": {
       "text": "sensory tentacle"
-    },
-    "descriptors:size_category": {
-      "size": "large"
-    },
-    "descriptors:length_category": {
-      "length": "long"
-    },
-    "descriptors:texture": {
-      "texture": "nodular-receptors"
     },
     "descriptors:color_extended": {
       "color": "pale-translucent"
@@ -24,8 +20,17 @@
     "descriptors:flexibility": {
       "flexibility": "extremely-flexible"
     },
+    "descriptors:length_category": {
+      "length": "long"
+    },
     "descriptors:sensory_capability": {
       "capability": "chemoreceptive"
+    },
+    "descriptors:size_category": {
+      "size": "large"
+    },
+    "descriptors:texture": {
+      "texture": "nodular-receptors"
     }
   }
 }

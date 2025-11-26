@@ -486,6 +486,26 @@ describe('LoggerStrategy near-complete coverage', () => {
     );
   });
 
+  it('falls back to an empty namespace set and disables global debug when options are not provided as a Set', () => {
+    mockConsoleLoggerFactory.mockClear();
+
+    createStrategy({
+      mode: LoggerMode.CONSOLE,
+      config: { debugNamespaces: { enabled: ['ui'], global: '' } },
+    });
+
+    expect(mockConsoleLoggerFactory).toHaveBeenCalledWith(
+      'INFO',
+      expect.objectContaining({
+        enabledNamespaces: expect.any(Set),
+        globalDebug: false,
+      })
+    );
+
+    const options = mockConsoleLoggerFactory.mock.calls[0][1];
+    expect(Array.from(options.enabledNamespaces)).toEqual([]);
+  });
+
   it('delegates debug namespace helper methods and reports status back to callers', () => {
     const providedLogger = createConsoleLoggerInstance();
     providedLogger.getEnabledNamespaces.mockReturnValue(['ai:memory']);
@@ -520,6 +540,12 @@ describe('LoggerStrategy near-complete coverage', () => {
     expect(providedLogger.setGlobalDebug).toHaveBeenCalledWith(true);
     expect(providedLogger.info).toHaveBeenCalledWith(
       '[LoggerStrategy] Global debug mode enabled'
+    );
+
+    strategy.setGlobalDebug(false);
+    expect(providedLogger.setGlobalDebug).toHaveBeenCalledWith(false);
+    expect(providedLogger.info).toHaveBeenCalledWith(
+      '[LoggerStrategy] Global debug mode disabled'
     );
   });
 

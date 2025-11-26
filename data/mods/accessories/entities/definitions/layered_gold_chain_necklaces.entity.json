@@ -1,0 +1,48 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "accessories:layered_gold_chain_necklaces",
+  "description": "Layered gold chain necklaces",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "head_gear"
+      },
+      "allowedLayers": [
+        "accessories"
+      ]
+    },
+    "core:material": {
+      "material": "gold"
+    },
+    "core:name": {
+      "text": "layered gold chain necklaces"
+    },
+    "core:description": {
+      "text": "A trio of delicate gold chains cascading at staggered lengths, each link polished to a warm glow. The layering brings instant dimension to plunging necklines and elevates everyday tees with discreet opulence. Lightweight construction means the chains sway softly with every movement."
+    },
+    "descriptors:color_extended": {
+      "color": "gold"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "descriptors:size_specific": {
+      "size": "tiered lengths"
+    },
+    "descriptors:embellishment": {
+      "embellishment": "metal chains"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "head_gear"
+      ],
+      "coveragePriority": "accessories"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.15
+    }
+  }
+}

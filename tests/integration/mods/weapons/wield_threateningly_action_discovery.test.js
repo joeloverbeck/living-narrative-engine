@@ -3,7 +3,7 @@
  * Tests action structure, scope configuration, and discoverability
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import actionJson from '../../../../data/mods/weapons/actions/wield_threateningly.action.json' assert { type: 'json' };
 
 describe('wield_threateningly action definition', () => {
@@ -38,14 +38,25 @@ describe('wield_threateningly action definition', () => {
     });
   });
 
+  describe('Forbidden Components', () => {
+    it('should have forbidden_components defined for actor', () => {
+      expect(actionJson.forbidden_components).toBeDefined();
+      expect(actionJson.forbidden_components.actor).toBeInstanceOf(Array);
+    });
+
+    it('should include positioning:closeness in forbidden list', () => {
+      expect(actionJson.forbidden_components.actor).toContain('positioning:closeness');
+    });
+  });
+
   describe('Target Configuration', () => {
     it('should have primary target defined', () => {
       expect(actionJson.targets).toBeDefined();
       expect(actionJson.targets.primary).toBeDefined();
     });
 
-    it('should use weapons_in_inventory scope for primary target', () => {
-      expect(actionJson.targets.primary.scope).toBe('weapons:weapons_in_inventory');
+    it('should use grabbable_weapons_in_inventory scope for primary target', () => {
+      expect(actionJson.targets.primary.scope).toBe('weapons:grabbable_weapons_in_inventory');
     });
 
     it('should use "target" placeholder for primary target', () => {

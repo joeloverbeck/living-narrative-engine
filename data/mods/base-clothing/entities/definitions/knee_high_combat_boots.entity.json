@@ -1,0 +1,46 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:knee_high_combat_boots",
+  "description": "Military-style knee-high combat boots",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": [
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "leather",
+      "properties": [
+        "flexible"
+      ]
+    },
+    "core:name": {
+      "text": "knee-high combat boots"
+    },
+    "core:description": {
+      "text": "Sturdy knee-high combat boots built for both durability and gothic style. Heavy-duty soles provide excellent traction while the lace-up front allows for a customized fit from toe to knee. Reinforced toe and heel areas offer protection without sacrificing flexibility, making these boots practical for action while maintaining dark aesthetic appeal. The rugged black leather combines military functionality with gothic sensibility, perfect for pairing with leather trousers or worn beneath flowing skirts for an unexpected edge."
+    },
+    "descriptors:color_basic": {
+      "color": "black"
+    },
+    "descriptors:texture": {
+      "texture": "rugged"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "feet"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 1.4
+    }
+  }
+}

@@ -136,6 +136,9 @@ describe('JsonLogicCustomOperators - Whitelist Validation', () => {
         'is_hungry',
         'predicted_energy',
         'can_consume',
+        'hasFreeGrabbingAppendages',
+        'canActorGrabItem',
+        'isItemBeingGrabbed',
       ];
 
       for (const op of expectedOperators) {

@@ -1,0 +1,33 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:underwired_plunge_bra_nude_silk",
+  "description": "Luxurious underwired plunge bra in nude silk",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": [
+        "underwear"
+      ]
+    },
+    "core:material": {
+      "material": "silk"
+    },
+    "core:name": {
+      "text": "underwired plunge bra"
+    },
+    "core:description": {
+      "text": "A luxurious underwired plunge bra crafted from the finest nude silk, designed to enhance and support while maintaining elegance and comfort. The plunge design creates an alluring silhouette while the underwire provides perfect support and lift."
+    },
+    "descriptors:color_extended": {
+      "color": "nude"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.1
+    }
+  }
+}
