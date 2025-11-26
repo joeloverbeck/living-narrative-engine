@@ -381,4 +381,5 @@ export const coreTokens = freeze({
   SkillResolverService: 'SkillResolverService',
   ProbabilityCalculatorService: 'ProbabilityCalculatorService',
   OutcomeDeterminerService: 'OutcomeDeterminerService',
+  ResolveOutcomeHandler: 'ResolveOutcomeHandler',
 });

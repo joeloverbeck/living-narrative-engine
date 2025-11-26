@@ -32,6 +32,8 @@ const registrationModulePaths = {
     '../../../src/dependencyInjection/registrations/runtimeRegistrations.js',
   registerGoapServices:
     '../../../src/dependencyInjection/registrations/goapRegistrations.js',
+  registerCombatServices:
+    '../../../src/dependencyInjection/registrations/combatRegistrations.js',
   registerActionCategorization:
     '../../../src/dependencyInjection/registrations/actionCategorizationRegistrations.js',
   registerTurnLifecycle:
@@ -134,6 +136,10 @@ const failureScenarios = [
   {
     key: 'registerGoapServices',
     messagePrefix: 'Failed to register GOAP services',
+  },
+  {
+    key: 'registerCombatServices',
+    messagePrefix: 'Failed to register combat services',
   },
   {
     key: 'registerActionCategorization',

@@ -12,6 +12,12 @@
   "prerequisites": [
     {
       "logic": {
+        "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
+      },
+      "failure_message": "You need a free hand to brush your hair."
+    },
+    {
+      "logic": {
         "hasPartOfType": ["actor", "hair"]
       },
       "failure_message": "You need hair to perform this action."

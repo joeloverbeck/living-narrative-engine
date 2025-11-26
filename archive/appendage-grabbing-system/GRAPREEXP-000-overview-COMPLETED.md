@@ -1,5 +1,7 @@
 # GRAPREEXP-000: Overview - Add Free Grabbing Appendage Prerequisites
 
+## Status: ✅ ALL TICKETS COMPLETED
+
 ## Summary
 
 This ticket series adds free grabbing appendage prerequisites to 5 existing actions. All actions require at least 1 free grabbing appendage (hand/tentacle/claw) to perform, using the existing `anatomy:actor-has-free-grabbing-appendage` condition.
@@ -12,13 +14,13 @@ This ticket series adds free grabbing appendage prerequisites to 5 existing acti
 
 ## Ticket Breakdown
 
-| Ticket | Action | Mod | Complexity |
-|--------|--------|-----|------------|
-| GRAPREEXP-001 | `violence:slap` | violence | Simple - add new prerequisites array |
-| GRAPREEXP-002 | `violence:sucker_punch` | violence | Simple - add new prerequisites array |
-| GRAPREEXP-003 | `seduction:brush_hair_back_coyly` | seduction | Moderate - insert into existing array |
-| GRAPREEXP-004 | `items:put_in_container` | items | Simple - add new prerequisites array |
-| GRAPREEXP-005 | `items:give_item` | items | Simple - add new prerequisites array |
+| Ticket | Action | Mod | Complexity | Status |
+|--------|--------|-----|------------|--------|
+| GRAPREEXP-001 | `violence:slap` | violence | Simple - add new prerequisites array | ✅ COMPLETED |
+| GRAPREEXP-002 | `violence:sucker_punch` | violence | Simple - add new prerequisites array | ✅ COMPLETED |
+| GRAPREEXP-003 | `seduction:brush_hair_back_coyly` | seduction | Moderate - insert into existing array | ✅ COMPLETED |
+| GRAPREEXP-004 | `items:put_in_container` | items | Simple - add new prerequisites array | ✅ COMPLETED |
+| GRAPREEXP-005 | `items:give_item` | items | Simple - add new prerequisites array | ✅ COMPLETED |
 
 ## Implementation Order
 
@@ -61,12 +63,12 @@ npx eslint data/mods/violence/actions/slap.action.json \
 ## Completion Criteria
 
 All tickets complete when:
-- [ ] All 5 action files modified with prerequisites
-- [ ] All 5 test files created and passing
-- [ ] `npm run validate` passes
-- [ ] `npm run test:integration -- --testPathPattern="prerequisites"` passes
-- [ ] ESLint passes on all modified/created files
+- [x] All 5 action files modified with prerequisites
+- [x] All 5 test files created and passing
+- [x] `npm run validate` passes
+- [x] `npm run test:integration -- --testPathPattern="prerequisites"` passes
+- [x] ESLint passes on all modified/created files
 
 ## Source Specification
 
-See `specs/grabbing-prerequisites-expansion.md` for the complete specification.
+See `archive/appendage-grabbing-system/grabbing-prerequisites-expansion-spec.md` for the complete specification.

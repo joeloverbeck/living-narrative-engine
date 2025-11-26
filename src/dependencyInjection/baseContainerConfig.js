@@ -14,6 +14,7 @@ import { registerInitializers } from './registrations/initializerRegistrations.j
 import { registerRuntime } from './registrations/runtimeRegistrations.js';
 import { registerPipelineServices } from './registrations/pipelineServiceRegistrations.js';
 import { registerGoapServices } from './registrations/goapRegistrations.js';
+import { registerCombatServices } from './registrations/combatRegistrations.js';
 
 // Game-specific registrations (conditionally imported)
 import {
@@ -145,6 +146,16 @@ export async function configureBaseContainer(container, options = {}) {
       registerGoapServices(container);
     } catch (error) {
       const errorMessage = `Failed to register GOAP services: ${error.message}`;
+      if (logger) logger.error(`[BaseContainerConfig] ${errorMessage}`, error);
+      throw new Error(errorMessage);
+    }
+
+    if (logger)
+      logger.debug('[BaseContainerConfig] Registering combat services...');
+    try {
+      registerCombatServices(container);
+    } catch (error) {
+      const errorMessage = `Failed to register combat services: ${error.message}`;
       if (logger) logger.error(`[BaseContainerConfig] ${errorMessage}`, error);
       throw new Error(errorMessage);
     }

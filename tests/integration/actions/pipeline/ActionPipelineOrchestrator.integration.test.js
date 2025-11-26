@@ -197,6 +197,8 @@ describe('ActionPipelineOrchestrator integration', () => {
       getEntityDisplayNameFn: dependencies.getEntityDisplayNameFn,
       errorContextBuilder: dependencies.errorBuilder,
       logger,
+      skillResolverService: null,
+      probabilityCalculatorService: null,
     });
 
     expect(stages[2]).toBe(dependencies.multiTargetResolutionStage);

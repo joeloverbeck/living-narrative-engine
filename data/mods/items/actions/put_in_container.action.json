@@ -7,6 +7,14 @@
   "required_components": {
     "actor": ["items:inventory"]
   },
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
+      },
+      "failure_message": "You need a free hand to put an item in a container."
+    }
+  ],
   "targets": {
     "primary": {
       "scope": "items:open_containers_at_location",

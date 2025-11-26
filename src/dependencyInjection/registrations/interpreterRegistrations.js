@@ -204,6 +204,7 @@ export function registerInterpreters(container) {
       bind(tokens.RegenerateDescriptionHandler)
     );
     registry.register('RESOLVE_DIRECTION', bind(tokens.ResolveDirectionHandler));
+    registry.register('RESOLVE_OUTCOME', bind(tokens.ResolveOutcomeHandler));
     registry.register('SEQUENCE', bind(tokens.SequenceHandler));
     registry.register('TRANSFER_ITEM', bind(tokens.TransferItemHandler));
     registry.register(

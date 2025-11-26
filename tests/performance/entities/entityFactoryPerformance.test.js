@@ -9,21 +9,34 @@
  * - Large-scale entity creation performance
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  beforeAll,
+  afterAll,
+} from '@jest/globals';
 import EntityWorkflowTestBed from '../../e2e/entities/common/entityWorkflowTestBed.js';
 
 describe('Entity Factory Performance Tests', () => {
+  // Share a single testbed across all tests to reduce container initialization overhead
   let testBed;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     testBed = new EntityWorkflowTestBed();
     await testBed.initialize();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     if (testBed) {
       await testBed.cleanup();
     }
+  });
+
+  beforeEach(() => {
+    // Clear transient state between tests for isolation without rebuilding the container
+    testBed.clearTransientState();
   });
 
   describe('Construction Pipeline Performance', () => {

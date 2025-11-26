@@ -29,6 +29,8 @@ import ContextUpdateEmitter from './pipeline/services/implementations/ContextUpd
 /** @typedef {import('./pipeline/stages/MultiTargetResolutionStage.js').MultiTargetResolutionStage} MultiTargetResolutionStage */
 /** @typedef {import('./validation/TargetComponentValidator.js').TargetComponentValidator} TargetComponentValidator */
 /** @typedef {import('./validation/TargetRequiredComponentsValidator.js').default} TargetRequiredComponentsValidator */
+/** @typedef {import('../combat/services/SkillResolverService.js').default} SkillResolverService */
+/** @typedef {import('../combat/services/ProbabilityCalculatorService.js').default} ProbabilityCalculatorService */
 
 /**
  * @class ActionPipelineOrchestrator
@@ -53,6 +55,10 @@ export class ActionPipelineOrchestrator {
   #targetValidationConfigProvider;
   #targetValidationReporter;
   #contextUpdateEmitter;
+  /** @type {SkillResolverService|null} */
+  #skillResolverService;
+  /** @type {ProbabilityCalculatorService|null} */
+  #probabilityCalculatorService;
 
   /**
    * Creates an ActionPipelineOrchestrator instance
@@ -76,6 +82,8 @@ export class ActionPipelineOrchestrator {
    * @param {TargetValidationConfigProvider} [deps.targetValidationConfigProvider] - Optional configuration snapshot provider
    * @param {TargetValidationReporter} [deps.targetValidationReporter] - Optional reporter for trace and telemetry output
    * @param {ContextUpdateEmitter} [deps.contextUpdateEmitter] - Optional emitter for applying validation results to context
+   * @param {SkillResolverService} [deps.skillResolverService] - Optional skill resolver service for chance-based actions
+   * @param {ProbabilityCalculatorService} [deps.probabilityCalculatorService] - Optional probability calculator for chance-based actions
    */
   constructor({
     actionIndex,
@@ -96,6 +104,8 @@ export class ActionPipelineOrchestrator {
     targetValidationConfigProvider = null,
     targetValidationReporter = null,
     contextUpdateEmitter = null,
+    skillResolverService = null,
+    probabilityCalculatorService = null,
   }) {
     this.#actionIndex = actionIndex;
     this.#prerequisiteService = prerequisiteService;
@@ -119,6 +129,8 @@ export class ActionPipelineOrchestrator {
       targetValidationReporter ?? new TargetValidationReporter({ logger });
     this.#contextUpdateEmitter =
       contextUpdateEmitter ?? new ContextUpdateEmitter();
+    this.#skillResolverService = skillResolverService;
+    this.#probabilityCalculatorService = probabilityCalculatorService;
   }
 
   /**
@@ -197,6 +209,8 @@ export class ActionPipelineOrchestrator {
         getEntityDisplayNameFn: this.#getEntityDisplayNameFn,
         errorContextBuilder: this.#errorBuilder,
         logger: this.#logger,
+        skillResolverService: this.#skillResolverService,
+        probabilityCalculatorService: this.#probabilityCalculatorService,
       }),
     ];
 

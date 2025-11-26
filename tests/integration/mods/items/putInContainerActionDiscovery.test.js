@@ -44,13 +44,15 @@ describe('Put In Container Action Discovery Integration Tests', () => {
       .asRoom('Test Location')
       .build();
 
-    // Create actor with inventory
-    const actor = new ModEntityBuilder('actor1')
+    // Create actor with inventory and free grabbing appendages (for prerequisite)
+    const actorBuilder = new ModEntityBuilder('actor1')
       .withName('Test Actor')
       .atLocation('location1')
       .asActor()
       .withComponent('items:inventory', { items: ['item1'] })
-      .build();
+      .withGrabbingHands(2);
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
 
     // Create item
     const item = new ModEntityBuilder('item1')
@@ -71,7 +73,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
       .withComponent('items:openable', {})
       .build();
 
-    testFixture.reset([location, actor, item, chest]);
+    testFixture.reset([location, actor, ...handEntities, item, chest]);
     configureActionDiscovery();
 
     // Act: Get available actions
@@ -205,15 +207,17 @@ describe('Put In Container Action Discovery Integration Tests', () => {
       .asRoom('Test Location')
       .build();
 
-    // Create actor with multiple items
-    const actor = new ModEntityBuilder('actor1')
+    // Create actor with multiple items and free grabbing appendages (for prerequisite)
+    const actorBuilder = new ModEntityBuilder('actor1')
       .withName('Test Actor')
       .atLocation('location1')
       .asActor()
       .withComponent('items:inventory', {
         items: ['item1', 'item2'],
       })
-      .build();
+      .withGrabbingHands(2);
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
 
     // Create items
     const item1 = new ModEntityBuilder('item1')
@@ -251,7 +255,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
       .withComponent('items:openable', {})
       .build();
 
-    testFixture.reset([location, actor, item1, item2, chest1, chest2]);
+    testFixture.reset([location, actor, ...handEntities, item1, item2, chest1, chest2]);
     configureActionDiscovery();
 
     // Act: Get available actions

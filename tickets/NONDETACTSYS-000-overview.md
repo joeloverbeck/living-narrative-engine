@@ -34,16 +34,16 @@ This epic implements a non-deterministic (chance-based) actions system for the L
 | Ticket | Description | Status |
 |--------|-------------|--------|
 | [NONDETACTSYS-006](../archive/NONDETACTSYS/NONDETACTSYS-006-resolve-outcome-schema.md) | Create RESOLVE_OUTCOME operation schema | ✅ |
-| [NONDETACTSYS-007](./NONDETACTSYS-007-resolve-outcome-handler.md) | Implement ResolveOutcomeHandler | ⬜ |
-| [NONDETACTSYS-008](./NONDETACTSYS-008-resolve-outcome-di-registration.md) | Register RESOLVE_OUTCOME in DI system | ⬜ |
+| [NONDETACTSYS-007](../archive/NONDETACTSYS/NONDETACTSYS-007-resolve-outcome-handler.md) | Implement ResolveOutcomeHandler | ✅ |
+| [NONDETACTSYS-008](../archive/NONDETACTSYS/NONDETACTSYS-008-resolve-outcome-di-registration.md) | Register RESOLVE_OUTCOME in DI system | ✅ |
 
 ### Phase 3: Action Discovery Integration
 
 | Ticket | Description | Status |
 |--------|-------------|--------|
-| [NONDETACTSYS-009](./NONDETACTSYS-009-action-schema-chancebased.md) | Extend action.schema.json with chanceBased property | ⬜ |
+| [NONDETACTSYS-009](../archive/NONDETACTSYS/NONDETACTSYS-009-action-schema-chancebased-COMPLETED.md) | Extend action.schema.json with chanceBased property | ✅ |
 | [NONDETACTSYS-010](./NONDETACTSYS-010-get-skill-value-operator.md) | Create getSkillValue JSON Logic operator | ⬜ |
-| [NONDETACTSYS-011](./NONDETACTSYS-011-action-formatting-chance-injection.md) | Modify ActionFormattingStage for {chance} placeholder | ⬜ |
+| [NONDETACTSYS-011](../archive/NONDETACTSYS/NONDETACTSYS-011-action-formatting-chance-injection-COMPLETED.md) | Modify ActionFormattingStage for {chance} placeholder | ✅ |
 
 ### Phase 4: Combat Action Implementation
 

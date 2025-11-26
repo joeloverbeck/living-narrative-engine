@@ -62,18 +62,29 @@ describe('seduction:brush_hair_back_coyly action discovery', () => {
   });
 
   describe('Prerequisite handling', () => {
-    it('should require hair body part', () => {
+    it('should have three prerequisites in correct order', () => {
       expect(brushHairBackCoylyAction.prerequisites).toBeDefined();
       expect(Array.isArray(brushHairBackCoylyAction.prerequisites)).toBe(true);
-      expect(brushHairBackCoylyAction.prerequisites).toHaveLength(2);
+      expect(brushHairBackCoylyAction.prerequisites).toHaveLength(3);
 
-      const hairPrerequisite = brushHairBackCoylyAction.prerequisites[0];
+      // First: grabbing appendage prerequisite (physical capability)
+      const grabbingPrerequisite = brushHairBackCoylyAction.prerequisites[0];
+      expect(grabbingPrerequisite.logic.condition_ref).toBe(
+        'anatomy:actor-has-free-grabbing-appendage'
+      );
+      expect(grabbingPrerequisite.failure_message).toBe(
+        'You need a free hand to brush your hair.'
+      );
+
+      // Second: hair prerequisite
+      const hairPrerequisite = brushHairBackCoylyAction.prerequisites[1];
       expect(hairPrerequisite.logic.hasPartOfType).toEqual(['actor', 'hair']);
       expect(hairPrerequisite.failure_message).toBe(
         'You need hair to perform this action.'
       );
 
-      const otherActorsPrerequisite = brushHairBackCoylyAction.prerequisites[1];
+      // Third: other actors at location prerequisite
+      const otherActorsPrerequisite = brushHairBackCoylyAction.prerequisites[2];
       expect(otherActorsPrerequisite.logic.hasOtherActorsAtLocation).toEqual([
         'actor',
       ]);

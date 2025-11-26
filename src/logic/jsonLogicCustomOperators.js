@@ -20,6 +20,7 @@ import { CanConsumeOperator } from './operators/canConsumeOperator.js';
 import { HasFreeGrabbingAppendagesOperator } from './operators/hasFreeGrabbingAppendagesOperator.js';
 import { CanActorGrabItemOperator } from './operators/canActorGrabItemOperator.js';
 import { IsItemBeingGrabbedOperator } from './operators/isItemBeingGrabbedOperator.js';
+import { GetSkillValueOperator } from './operators/getSkillValueOperator.js';
 import { validateOperatorWhitelist } from './operatorRegistrationValidator.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -197,6 +198,11 @@ export class JsonLogicCustomOperators extends BaseService {
     });
 
     const isItemBeingGrabbedOp = new IsItemBeingGrabbedOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
+    const getSkillValueOp = new GetSkillValueOperator({
       entityManager: this.#entityManager,
       logger: this.#logger,
     });
@@ -414,6 +420,19 @@ export class JsonLogicCustomOperators extends BaseService {
       function (actorPath, itemPath) {
         // 'this' is the evaluation context
         return isItemBeingGrabbedOp.evaluate([actorPath, itemPath], this);
+      },
+      jsonLogicEvaluationService
+    );
+
+    // Register getSkillValue operator
+    this.#registerOperator(
+      'getSkillValue',
+      function (entityPath, componentId, propertyPath, defaultValue) {
+        // 'this' is the evaluation context
+        return getSkillValueOp.evaluate(
+          [entityPath, componentId, propertyPath, defaultValue],
+          this
+        );
       },
       jsonLogicEvaluationService
     );
