@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../common/mods/ModEntityBuilder.js';
 
 describe('Blocking System Edge Cases', () => {
   let fixture;
@@ -23,7 +24,17 @@ describe('Blocking System Edge Cases', () => {
 
   it('should not allow item to block itself', async () => {
     // Arrange: Belt with self-referential blocking (should be ignored)
-    const { actor } = fixture.createStandardActorTarget(['John', 'Unused']);
+    // Create actor with 2 grabbing hands (required for remove_clothing prerequisite)
+    const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
+    const actorBuilder = new ModEntityBuilder('actor1')
+      .withName('John')
+      .atLocation('room1')
+      .asActor()
+      .withGrabbingHands(2);
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
+
+    fixture.reset([room, actor, ...handEntities]);
 
     const belt = fixture.createEntity({
       id: 'belt',
@@ -70,7 +81,17 @@ describe('Blocking System Edge Cases', () => {
 
   it('should handle empty equipment gracefully', async () => {
     // Arrange: Actor with no clothing
-    const { actor } = fixture.createStandardActorTarget(['John', 'Unused']);
+    // Create actor with 2 grabbing hands (required for remove_clothing prerequisite)
+    const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
+    const actorBuilder = new ModEntityBuilder('actor1')
+      .withName('John')
+      .atLocation('room1')
+      .asActor()
+      .withGrabbingHands(2);
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
+
+    fixture.reset([room, actor, ...handEntities]);
 
     // Initialize empty equipment component
     await fixture.modifyComponent(actor.id, 'clothing:equipment', {
@@ -92,7 +113,17 @@ describe('Blocking System Edge Cases', () => {
 
   it('should handle malformed blocking component', async () => {
     // Arrange: Item with missing fields in blocking component
-    const { actor } = fixture.createStandardActorTarget(['John', 'Unused']);
+    // Create actor with 2 grabbing hands (required for remove_clothing prerequisite)
+    const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
+    const actorBuilder = new ModEntityBuilder('actor1')
+      .withName('John')
+      .atLocation('room1')
+      .asActor()
+      .withGrabbingHands(2);
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
+
+    fixture.reset([room, actor, ...handEntities]);
 
     const item = fixture.createEntity({
       id: 'malformed_item',
@@ -135,7 +166,17 @@ describe('Blocking System Edge Cases', () => {
 
   it('should handle state changes between discovery and execution', async () => {
     // Arrange
-    const { actor } = fixture.createStandardActorTarget(['John', 'Unused']);
+    // Create actor with 2 grabbing hands (required for remove_clothing prerequisite)
+    const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
+    const actorBuilder = new ModEntityBuilder('actor1')
+      .withName('John')
+      .atLocation('room1')
+      .asActor()
+      .withGrabbingHands(2);
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
+
+    fixture.reset([room, actor, ...handEntities]);
 
     const belt = fixture.createEntity({
       id: 'belt',

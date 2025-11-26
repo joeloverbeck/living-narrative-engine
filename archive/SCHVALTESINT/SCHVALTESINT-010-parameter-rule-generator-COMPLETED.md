@@ -53,21 +53,37 @@ Create `parameterRuleGenerator.js` that automatically generates parameter valida
 ### Current Manual Structure
 
 ```javascript
-// src/utils/preValidationUtils.js - current manual approach
+// src/utils/preValidationUtils.js - current manual approach (lines 220-249)
+// NOTE: The actual structure focuses on typo detection/correction, not schema metadata
 const OPERATION_PARAMETER_RULES = {
-  SET_COMPONENT: {
-    required: ['entity_id', 'component_type_id'],
-    optional: ['value'],
-    templateFields: ['entity_id', 'component_type_id', 'value']
+  GET_NAME: {
+    required: ['entity_ref', 'result_variable'],
+    invalidFields: ['entity_id'], // Common mistake
+    fieldCorrections: { entity_id: 'entity_ref' }
+  },
+  QUERY_COMPONENT: {
+    required: ['entity_ref', 'component_type', 'result_variable'],
+    invalidFields: ['entity_id'],
+    fieldCorrections: { entity_id: 'entity_ref' }
+  },
+  ADD_COMPONENT: {
+    required: ['entity_ref', 'component_type'],
+    invalidFields: ['entity_id'],
+    fieldCorrections: { entity_id: 'entity_ref' }
   },
   REMOVE_COMPONENT: {
-    required: ['entity_id', 'component_type_id'],
-    optional: [],
-    templateFields: ['entity_id', 'component_type_id']
-  },
-  // Only 4 of 62 operations defined...
+    required: ['entity_ref', 'component_type'],
+    invalidFields: ['entity_id'],
+    fieldCorrections: { entity_id: 'entity_ref' }
+  }
+  // Only 4 of 62 operations have rules defined
 };
 ```
+
+> **Note**: The auto-generated structure below is intentionally different from the manual structure above.
+> The manual structure focuses on typo correction (`invalidFields`, `fieldCorrections`), while the
+> generated structure provides schema-derived metadata (`optional`, `templateFields`, `schemaId`).
+> SCHVALTESINT-011 will handle integration of both structures.
 
 ### Generated Structure Target
 
@@ -323,11 +339,83 @@ describe('parameterRuleGenerator', () => {
 
 ## Review Checklist
 
-- [ ] All 62 operation schemas generate rules
-- [ ] Required/optional arrays match schema `required` property
-- [ ] Template fields correctly identified
-- [ ] schemaId included in each rule
-- [ ] Coverage validation works correctly
-- [ ] Unit tests comprehensive
-- [ ] JSDoc documentation complete
-- [ ] No runtime file I/O (schemas read at startup/build)
+- [x] All 62 operation schemas generate rules
+- [x] Required/optional arrays match schema `required` property
+- [x] Template fields correctly identified
+- [x] schemaId included in each rule
+- [x] Coverage validation works correctly
+- [x] Unit tests comprehensive
+- [x] JSDoc documentation complete
+- [x] No runtime file I/O (schemas read at startup/build)
+
+---
+
+## Outcome
+
+**Status**: ✅ COMPLETED
+
+### What Was Actually Changed vs Originally Planned
+
+1. **Ticket Correction** (Pre-implementation):
+   - The "Current Manual Structure" section was corrected to reflect the actual code in `preValidationUtils.js`
+   - Original ticket showed fictional `SET_COMPONENT` with `optional`/`templateFields`
+   - Corrected to show actual operations (`GET_NAME`, `QUERY_COMPONENT`, `ADD_COMPONENT`, `REMOVE_COMPONENT`) with `invalidFields`/`fieldCorrections`
+   - Added clarifying note that the generated structure is intentionally different from the manual structure
+
+2. **Implementation**:
+   - Created `src/utils/parameterRuleGenerator.js` following the suggested implementation pattern
+   - Modified schema navigation to use `$defs.Parameters` (actual schema structure) instead of inline `parameters.properties`
+   - Added `TEMPLATE_DEFINITIONS` Set for precise template type matching
+   - Enhanced template detection to support all common.schema.json template types
+
+3. **Tests**:
+   - Created comprehensive unit tests with 31 test cases
+   - Tests cover all acceptance criteria and edge cases
+   - Integration test validates coverage against KNOWN_OPERATION_TYPES
+
+### Test Results Summary
+
+```
+Test Suites: 1 passed, 1 total
+Tests:       31 passed, 31 total
+```
+
+**Coverage Verification**:
+- Generated rules: 62 operations (matches 62 schema files)
+- Known operation types: 64
+- Missing schemas: `HAS_BODY_PART_WITH_COMPONENT_VALUE`, `SEQUENCE` (operations in whitelist but no schema files)
+- Extra schemas: None
+- Coverage: 96.9% (62/64 known types have schemas)
+
+### New Tests Added
+
+| Test File | Test Count | Purpose |
+|-----------|------------|---------|
+| `tests/unit/utils/parameterRuleGenerator.test.js` | 31 | Comprehensive unit tests for all exported functions |
+
+**Test Categories**:
+- `extractRuleFromSchema` - 9 tests covering schema parsing, edge cases, missing fields
+- `detectTemplateFields` - 10 tests covering template type detection, edge cases
+- `generateParameterRules` - 6 tests covering full generation, structure validation
+- `validateCoverage` - 5 tests covering coverage validation logic
+- Integration - 1 test validating against actual KNOWN_OPERATION_TYPES
+
+### Files Created
+
+| File | Lines | Purpose |
+|------|-------|---------|
+| `src/utils/parameterRuleGenerator.js` | 236 | Schema parser and rule generator |
+| `tests/unit/utils/parameterRuleGenerator.test.js` | 450 | Unit tests |
+
+### Sample Generated Rule
+
+```javascript
+{
+  "LOCK_GRABBING": {
+    "required": ["actor_id", "count"],
+    "optional": ["item_id"],
+    "templateFields": ["actor_id", "count", "item_id"],
+    "schemaId": "schema://living-narrative-engine/operations/lockGrabbing.schema.json"
+  }
+}
+```

@@ -16,16 +16,16 @@ This epic adds anatomy-based grabbing prerequisites to 9 action files across 4 m
 
 | Ticket | Mod | Actions | Appendages | Status |
 |--------|-----|---------|------------|--------|
-| [GRAPREFORACT-001](./GRAPREFORACT-001-clothing-mod-prerequisites.md) | clothing | `remove_clothing`, `remove_others_clothing` | 2 | ⬜ |
-| [GRAPREFORACT-002](./GRAPREFORACT-002-distress-mod-prerequisites.md) | distress | `bury_face_in_hands`, `clutch_onto_upper_clothing` | 2, 1 | ⬜ |
-| [GRAPREFORACT-003](./GRAPREFORACT-003-exercise-mod-prerequisites.md) | exercise | `show_off_biceps` | 2 (append) | ⬜ |
+| [GRAPREFORACT-001](../archive/appendage-grabbing-system/GRAPREFORACT-001-clothing-mod-prerequisites.md) | clothing | `remove_clothing`, `remove_others_clothing` | 2 | ✅ |
+| [GRAPREFORACT-002](../archive/appendage-grabbing-system/GRAPREFORACT-002-distress-mod-prerequisites-COMPLETED.md) | distress | `bury_face_in_hands`, `clutch_onto_upper_clothing` | 2, 1 | ✅ |
+| [GRAPREFORACT-003](../archive/appendage-grabbing-system/GRAPREFORACT-003-exercise-mod-prerequisites-COMPLETED.md) | exercise | `show_off_biceps` | 2 (append) | ✅ |
 | [GRAPREFORACT-004](./GRAPREFORACT-004-items-mod-prerequisites.md) | items | `drink_entirely`, `drink_from`, `pick_up_item`, `take_from_container` | 1 | ⬜ |
 
 ### Test Tickets (Integration Test Creation)
 
 | Ticket | Mod | Test Files | Status |
 |--------|-----|------------|--------|
-| [GRAPREFORACT-005](./GRAPREFORACT-005-clothing-mod-tests.md) | clothing | 2 test files | ⬜ |
+| [GRAPREFORACT-005](./GRAPREFORACT-005-clothing-mod-tests.md) | clothing | 2 test files | ✅ |
 | [GRAPREFORACT-006](./GRAPREFORACT-006-distress-mod-tests.md) | distress | 2 test files | ⬜ |
 | [GRAPREFORACT-007](./GRAPREFORACT-007-exercise-mod-tests.md) | exercise | 1 test file (combined prereqs) | ⬜ |
 | [GRAPREFORACT-008](./GRAPREFORACT-008-items-mod-tests.md) | items | 4 test files | ⬜ |

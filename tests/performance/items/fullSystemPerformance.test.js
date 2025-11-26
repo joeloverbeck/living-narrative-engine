@@ -186,24 +186,51 @@ describe('Items System - Performance', () => {
       console.log('Scaling measurements:', measurements);
     });
 
-    it('should handle container operations efficiently', () => {
+    it('should handle large entity counts efficiently', () => {
       const location = new ModEntityBuilder('warehouse')
         .asRoom('Warehouse')
         .build();
 
+      // Worker with items in inventory (required for give_item action)
       const actor = new ModEntityBuilder('worker')
         .withName('Warehouse Worker')
         .atLocation('warehouse')
         .asActor()
         .withComponent('items:inventory', {
-          items: [],
+          items: ['worker-item-1', 'worker-item-2'],
           capacity: { maxWeight: 200, maxItems: 50 },
         })
         .build();
 
-      const entities = [location, actor];
+      // Recipient actor (required for give_item action - needs someone to give to)
+      const recipient = new ModEntityBuilder('recipient')
+        .withName('Recipient Worker')
+        .atLocation('warehouse')
+        .asActor()
+        .withComponent('items:inventory', {
+          items: [],
+          capacity: { maxWeight: 100, maxItems: 20 },
+        })
+        .build();
 
-      // Create 20 containers with 10 items each
+      // Items in worker's inventory
+      const workerItem1 = new ModEntityBuilder('worker-item-1')
+        .withName('Worker Item 1')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('items:weight', { weight: 1.0 })
+        .build();
+
+      const workerItem2 = new ModEntityBuilder('worker-item-2')
+        .withName('Worker Item 2')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('items:weight', { weight: 1.0 })
+        .build();
+
+      const entities = [location, actor, recipient, workerItem1, workerItem2];
+
+      // Create 20 containers with 10 items each (environmental complexity)
       for (let i = 0; i < 20; i++) {
         const container = new ModEntityBuilder(`crate-${i}`)
           .withName(`Crate ${i}`)
@@ -237,14 +264,15 @@ describe('Items System - Performance', () => {
       const actions = fixture.discoverActions('worker');
       const duration = performance.now() - startTime;
 
-      // Should discover actions with many containers efficiently
+      // Should discover actions with many entities efficiently
       expect(duration).toBeLessThan(500);
       expect(actions.length).toBeGreaterThan(0);
 
-      console.log(`Container discovery performance:
+      console.log(`Large entity count discovery performance:
+        - Actors: 2 (worker + recipient)
         - Containers: 20
         - Items per container: 10
-        - Total items: 200
+        - Total entities: ${entities.length}
         - Discovery time: ${duration.toFixed(2)}ms
         - Actions discovered: ${actions.length}
       `);

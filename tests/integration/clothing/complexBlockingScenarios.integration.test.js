@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../common/mods/ModEntityBuilder.js';
 
 describe('Complex Blocking Scenarios', () => {
   let fixture;
@@ -30,7 +31,17 @@ describe('Complex Blocking Scenarios', () => {
 
   it('should handle multiple items blocking the same target', async () => {
     // Arrange: Belt AND suspenders both block pants
-    const { actor } = fixture.createStandardActorTarget(['John', 'Unused']);
+    // Create actor with 2 grabbing hands (required for remove_clothing prerequisite)
+    const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
+    const actorBuilder = new ModEntityBuilder('actor1')
+      .withName('John')
+      .atLocation('room1')
+      .asActor()
+      .withGrabbingHands(2);
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
+
+    fixture.reset([room, actor, ...handEntities]);
 
     const belt = fixture.createEntity({
       id: 'belt',
@@ -151,7 +162,17 @@ describe('Complex Blocking Scenarios', () => {
 
   it('should handle armor blocking multiple layers', async () => {
     // Arrange: Armor blocks both base and underwear layers
-    const { actor } = fixture.createStandardActorTarget(['John', 'Unused']);
+    // Create actor with 2 grabbing hands (required for remove_clothing prerequisite)
+    const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
+    const actorBuilder = new ModEntityBuilder('actor1')
+      .withName('John')
+      .atLocation('room1')
+      .asActor()
+      .withGrabbingHands(2);
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
+
+    fixture.reset([room, actor, ...handEntities]);
 
     const armor = fixture.createEntity({
       id: 'cuirass',
@@ -222,7 +243,17 @@ describe('Complex Blocking Scenarios', () => {
 
   it('should handle explicit item ID blocking', async () => {
     // Arrange: Cursed ring blocks specific artifact
-    const { actor } = fixture.createStandardActorTarget(['John', 'Unused']);
+    // Create actor with 2 grabbing hands (required for remove_clothing prerequisite)
+    const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
+    const actorBuilder = new ModEntityBuilder('actor1')
+      .withName('John')
+      .atLocation('room1')
+      .asActor()
+      .withGrabbingHands(2);
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
+
+    fixture.reset([room, actor, ...handEntities]);
 
     const cursedRing = fixture.createEntity({
       id: 'cursed_ring',

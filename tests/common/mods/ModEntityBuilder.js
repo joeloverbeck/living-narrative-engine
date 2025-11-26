@@ -349,6 +349,61 @@ export class ModEntityBuilder {
   }
 
   /**
+   * Creates anatomy body structure with grabbing hands for the entity.
+   * Automatically creates separate hand entities and links them via anatomy:body component.
+   *
+   * This is useful for tests that require action prerequisites involving grabbing appendages,
+   * such as pick_up_item (1 hand) or remove_clothing (2 hands).
+   *
+   * @param {number} [numHands=2] - Number of hands to create (default 2)
+   * @returns {ModEntityBuilder} This builder for chaining
+   * @example
+   * const actorBuilder = new ModEntityBuilder('actor1')
+   *   .withName('Test Actor')
+   *   .asActor()
+   *   .withGrabbingHands(2);
+   * const actor = actorBuilder.build();
+   * const handEntities = actorBuilder.getHandEntities();
+   * testFixture.reset([actor, ...handEntities]);
+   */
+  withGrabbingHands(numHands = 2) {
+    const bodyParts = {};
+    this._handEntities = [];
+
+    for (let i = 0; i < numHands; i++) {
+      const handId = `${this.entityData.id}-hand-${i}`;
+      const handName = i === 0 ? 'rightHand' : i === 1 ? 'leftHand' : `hand${i}`;
+      bodyParts[handName] = handId;
+
+      this._handEntities.push(
+        new ModEntityBuilder(handId)
+          .withComponent('anatomy:can_grab', {
+            gripStrength: 1.0,
+            locked: false,
+            heldItemId: null,
+          })
+          .build()
+      );
+    }
+
+    this.entityData.components['anatomy:body'] = {
+      body: { parts: bodyParts },
+    };
+
+    return this;
+  }
+
+  /**
+   * Returns hand entities created by withGrabbingHands().
+   * Must be called after withGrabbingHands() and before or after build().
+   *
+   * @returns {Array<object>} Hand entities or empty array if withGrabbingHands() was not called
+   */
+  getHandEntities() {
+    return this._handEntities || [];
+  }
+
+  /**
    * Sets the entity's location component for close proximity checks.
    *
    * @param {string} locationId - The location ID

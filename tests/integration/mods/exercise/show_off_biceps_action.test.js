@@ -12,7 +12,6 @@ import eventIsActionShowOffBiceps from '../../../../data/mods/exercise/condition
 import {
   validateActionProperties,
   validateVisualStyling,
-  validatePrerequisites,
   validateComponentRequirements,
   validateRequiredActionProperties,
   validateAccessibilityCompliance,
@@ -46,25 +45,45 @@ describe('Exercise Mod: Show Off Biceps Action', () => {
       });
     });
 
-    it('should have prerequisites for muscular/hulking arms', () => {
-      validatePrerequisites(showOffBicepsAction.prerequisites, {
-        count: 1,
-        failureMessage: "You don't have the muscular arms needed to show off.",
-        validator: (prerequisite) => {
-          expect(prerequisite.logic.or).toBeDefined();
-          expect(prerequisite.logic.or).toHaveLength(2);
+    it('should have prerequisites for muscular/hulking arms AND free grabbing appendages', () => {
+      // The action now has 2 prerequisites (GRAPREFORACT-003)
+      expect(showOffBicepsAction.prerequisites).toHaveLength(2);
 
-          // Check for muscular arms condition
-          expect(
-            prerequisite.logic.or[0].hasPartOfTypeWithComponentValue
-          ).toEqual(['actor', 'arm', 'descriptors:build', 'build', 'muscular']);
+      // First prerequisite: muscular/hulking arms check
+      const firstPrereq = showOffBicepsAction.prerequisites[0];
+      expect(firstPrereq.logic.or).toBeDefined();
+      expect(firstPrereq.logic.or).toHaveLength(2);
 
-          // Check for hulking arms condition
-          expect(
-            prerequisite.logic.or[1].hasPartOfTypeWithComponentValue
-          ).toEqual(['actor', 'arm', 'descriptors:build', 'build', 'hulking']);
-        },
-      });
+      // Check for muscular arms condition
+      expect(firstPrereq.logic.or[0].hasPartOfTypeWithComponentValue).toEqual([
+        'actor',
+        'arm',
+        'descriptors:build',
+        'build',
+        'muscular',
+      ]);
+
+      // Check for hulking arms condition
+      expect(firstPrereq.logic.or[1].hasPartOfTypeWithComponentValue).toEqual([
+        'actor',
+        'arm',
+        'descriptors:build',
+        'build',
+        'hulking',
+      ]);
+
+      expect(firstPrereq.failure_message).toBe(
+        "You don't have the muscular arms needed to show off."
+      );
+
+      // Second prerequisite: two free grabbing appendages check (added by GRAPREFORACT-003)
+      const secondPrereq = showOffBicepsAction.prerequisites[1];
+      expect(secondPrereq.logic.condition_ref).toBe(
+        'anatomy:actor-has-two-free-grabbing-appendages'
+      );
+      expect(secondPrereq.failure_message).toBe(
+        'You need both arms free to show off your biceps.'
+      );
     });
   });
 

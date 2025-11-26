@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
@@ -136,14 +136,35 @@ describe('ModTestFixture - Auto-Registration Integration', () => {
       }
     );
 
-    const scenario = testFixture.createPickupScenario({
-      actorName: 'Alice',
-      itemName: 'Sword',
-      location: 'room1',
-    });
+    // Create room manually to control the scenario
+    const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
+
+    // Create actor with grabbing hands (required for pick_up_item prerequisite)
+    const actorBuilder = new ModEntityBuilder('actor_pickup')
+      .withName('Alice')
+      .atLocation('room1')
+      .asActor()
+      .withGrabbingHands(1)
+      .withComponent('items:inventory', {
+        items: [],
+        capacity: { maxWeight: 50, maxItems: 10 },
+      });
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
+
+    // Create item on the ground
+    const sword = new ModEntityBuilder('sword1')
+      .withName('Sword')
+      .atLocation('room1')
+      .withComponent('items:item', {})
+      .withComponent('items:portable', {})
+      .withComponent('items:weight', { weight: 2 })
+      .build();
+
+    testFixture.reset([room, actor, ...handEntities, sword]);
 
     // Act
-    const availableActions = testFixture.discoverActions(scenario.actor.id);
+    const availableActions = testFixture.discoverActions('actor_pickup');
 
     // Assert
     expect(availableActions.map((a) => a.id)).toContain('items:pick_up_item');

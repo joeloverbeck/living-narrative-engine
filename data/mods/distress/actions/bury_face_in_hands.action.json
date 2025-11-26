@@ -9,7 +9,14 @@
     "actor": ["positioning:biting_neck", "positioning:hugging", "positioning:doing_complex_performance"]
   },
   "template": "bury your face in your hands",
-  "prerequisites": [],
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-two-free-grabbing-appendages"
+      },
+      "failure_message": "You need both hands free to bury your face in them."
+    }
+  ],
   "visual": {
     "backgroundColor": "#0b132b",
     "textColor": "#f2f4f8",

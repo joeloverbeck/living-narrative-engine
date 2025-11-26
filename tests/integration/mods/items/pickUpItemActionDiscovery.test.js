@@ -40,10 +40,16 @@ describe('items:pick_up_item action definition', () => {
     expect(pickUpItemAction.targets.primary.description).toBe('Item to pick up');
   });
 
-  it('should have empty prerequisites array', () => {
+  it('should have grabbing prerequisite', () => {
     expect(pickUpItemAction.prerequisites).toBeDefined();
     expect(Array.isArray(pickUpItemAction.prerequisites)).toBe(true);
-    expect(pickUpItemAction.prerequisites).toEqual([]);
+    expect(pickUpItemAction.prerequisites.length).toBe(1);
+    expect(pickUpItemAction.prerequisites[0].logic.condition_ref).toBe(
+      'anatomy:actor-has-free-grabbing-appendage'
+    );
+    expect(pickUpItemAction.prerequisites[0].failure_message).toBe(
+      'You need a free hand to pick up items.'
+    );
   });
 
   describe('Expected action discovery behavior (manual testing)', () => {

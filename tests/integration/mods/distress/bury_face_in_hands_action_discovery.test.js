@@ -54,10 +54,16 @@ describe('distress:bury_face_in_hands action discovery', () => {
   });
 
   describe('Prerequisite handling', () => {
-    it('should expose an empty prerequisites array', () => {
+    it('should require two free grabbing appendages', () => {
       expect(buryFaceInHandsAction.prerequisites).toBeDefined();
       expect(Array.isArray(buryFaceInHandsAction.prerequisites)).toBe(true);
-      expect(buryFaceInHandsAction.prerequisites).toHaveLength(0);
+      expect(buryFaceInHandsAction.prerequisites).toHaveLength(1);
+      expect(buryFaceInHandsAction.prerequisites[0].logic.condition_ref).toBe(
+        'anatomy:actor-has-two-free-grabbing-appendages'
+      );
+      expect(buryFaceInHandsAction.prerequisites[0].failure_message).toBe(
+        'You need both hands free to bury your face in them.'
+      );
     });
   });
 

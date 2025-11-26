@@ -23,6 +23,14 @@
       "contextFrom": "primary"
     }
   },
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
+      },
+      "failure_message": "You need a free hand to take items from the container."
+    }
+  ],
   "template": "take {secondary.name} from {primary.name}",
   "visual": {
     "backgroundColor": "#004d61",
