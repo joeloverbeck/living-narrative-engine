@@ -51,9 +51,9 @@ describe('Seduction Mod: Brush Hair Back Coyly Action', () => {
     });
 
     // eslint-disable-next-line jest/expect-expect -- validatePrerequisites contains assertions
-    it('should have prerequisite for hair', () => {
+    it('should have three prerequisites (grabbing, hair, other actors)', () => {
       validatePrerequisites(brushHairBackCoylyAction.prerequisites, {
-        count: 2,
+        count: 3,
       });
     });
   });
@@ -92,25 +92,38 @@ describe('Seduction Mod: Brush Hair Back Coyly Action', () => {
   });
 
   describe('Prerequisites Logic Validation', () => {
-    it('should require hair body part', () => {
-      const hairPrerequisite = brushHairBackCoylyAction.prerequisites[0];
+    it('should require free grabbing appendage (first prerequisite)', () => {
+      const grabbingPrerequisite = brushHairBackCoylyAction.prerequisites[0];
+      expect(grabbingPrerequisite.logic.condition_ref).toBeDefined();
+      expect(grabbingPrerequisite.logic.condition_ref).toBe(
+        'anatomy:actor-has-free-grabbing-appendage'
+      );
+    });
+
+    it('should require hair body part (second prerequisite)', () => {
+      const hairPrerequisite = brushHairBackCoylyAction.prerequisites[1];
       expect(hairPrerequisite.logic.hasPartOfType).toBeDefined();
       expect(hairPrerequisite.logic.hasPartOfType).toEqual(['actor', 'hair']);
     });
 
-    it('should require other actors at location', () => {
-      const otherActorsPrerequisite = brushHairBackCoylyAction.prerequisites[1];
+    it('should require other actors at location (third prerequisite)', () => {
+      const otherActorsPrerequisite = brushHairBackCoylyAction.prerequisites[2];
       expect(otherActorsPrerequisite.logic.hasOtherActorsAtLocation).toBeDefined();
       expect(otherActorsPrerequisite.logic.hasOtherActorsAtLocation).toEqual([
         'actor',
       ]);
     });
 
-    it('should have meaningful failure message', () => {
-      const hairFailure = brushHairBackCoylyAction.prerequisites[0].failure_message;
-      const otherActorsFailure =
+    it('should have meaningful failure messages', () => {
+      const grabbingFailure =
+        brushHairBackCoylyAction.prerequisites[0].failure_message;
+      const hairFailure =
         brushHairBackCoylyAction.prerequisites[1].failure_message;
+      const otherActorsFailure =
+        brushHairBackCoylyAction.prerequisites[2].failure_message;
 
+      expect(grabbingFailure).toContain('free hand');
+      expect(grabbingFailure.length).toBeGreaterThan(20);
       expect(hairFailure).toContain('hair');
       expect(hairFailure.length).toBeGreaterThan(20);
       expect(otherActorsFailure).toContain('nobody here');

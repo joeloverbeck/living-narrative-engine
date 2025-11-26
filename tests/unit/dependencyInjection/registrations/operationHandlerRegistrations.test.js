@@ -137,6 +137,10 @@ const handlerModuleDefinitions = [
     'AtomicModifyComponentHandler',
     `${handlerBasePath}/atomicModifyComponentHandler.js`,
   ],
+  [
+    'ResolveOutcomeHandler',
+    `${handlerBasePath}/resolveOutcomeHandler.js`,
+  ],
   ['SequenceHandler', `${handlerBasePath}/sequenceHandler.js`],
   ['TransferItemHandler', `${handlerBasePath}/transferItemHandler.js`],
   [
@@ -220,6 +224,9 @@ beforeAll(async () => {
     EquipmentOrchestrator: EquipmentOrchestratorToken,
     BodyDescriptionComposer: BodyDescriptionComposerToken,
     ActionSequence: ActionSequenceToken,
+    SkillResolverService: SkillResolverServiceToken,
+    ProbabilityCalculatorService: ProbabilityCalculatorServiceToken,
+    OutcomeDeterminerService: OutcomeDeterminerServiceToken,
   } = tokens;
 
   handlerExpectations = [
@@ -743,6 +750,22 @@ beforeAll(async () => {
         { property: 'entityManager', token: IEntityManager },
         { property: 'logger', token: ILogger },
         { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.ResolveOutcomeHandler,
+      handlerName: 'ResolveOutcomeHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'skillResolverService', token: SkillResolverServiceToken },
+        {
+          property: 'probabilityCalculatorService',
+          token: ProbabilityCalculatorServiceToken,
+        },
+        {
+          property: 'outcomeDeterminerService',
+          token: OutcomeDeterminerServiceToken,
+        },
       ],
     },
     {

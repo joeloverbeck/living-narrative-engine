@@ -667,5 +667,212 @@ describe('ConsumeItemHandler', () => {
         })
       );
     });
+
+    // Branch coverage: Line 91 - consumer_ref as object with id property
+    test('extracts consumerId from object with id property', async () => {
+      const fuelSource = {
+        energy_content: 200,
+        bulk: 30,
+        fuel_tags: ['food'],
+      };
+
+      const metabolicStore = {
+        current_energy: 50,
+        max_energy: 100,
+        base_burn_rate: 1.0,
+        buffer_storage: [],
+        buffer_capacity: 100,
+      };
+
+      const fuelConverter = {
+        capacity: 100,
+        conversion_rate: 10,
+        efficiency: 0.8,
+        accepted_fuel_tags: ['food'],
+        metabolic_efficiency_multiplier: 1.0,
+      };
+
+      em.getComponentData
+        .mockReturnValueOnce(fuelSource)
+        .mockReturnValueOnce(metabolicStore)
+        .mockReturnValueOnce(fuelConverter);
+
+      const executionContext = { evaluationContext: { context: {} } };
+      await handler.execute(
+        {
+          consumer_ref: { id: 'actor_from_object' }, // Object with id property
+          item_ref: 'bread_1',
+        },
+        executionContext
+      );
+
+      expect(em.getComponentData).toHaveBeenCalledWith(
+        'actor_from_object',
+        METABOLIC_STORE_COMPONENT_ID
+      );
+      expect(em.addComponent).toHaveBeenCalledWith(
+        'actor_from_object',
+        METABOLIC_STORE_COMPONENT_ID,
+        expect.any(Object)
+      );
+      expect(em.removeEntityInstance).toHaveBeenCalledWith('bread_1');
+    });
+
+    // Branch coverage: Line 109 - item_ref as object with id property
+    test('extracts itemId from object with id property', async () => {
+      const fuelSource = {
+        energy_content: 200,
+        bulk: 30,
+        fuel_tags: ['food'],
+      };
+
+      const metabolicStore = {
+        current_energy: 50,
+        max_energy: 100,
+        base_burn_rate: 1.0,
+        buffer_storage: [],
+        buffer_capacity: 100,
+      };
+
+      const fuelConverter = {
+        capacity: 100,
+        conversion_rate: 10,
+        efficiency: 0.8,
+        accepted_fuel_tags: ['food'],
+        metabolic_efficiency_multiplier: 1.0,
+      };
+
+      em.getComponentData
+        .mockReturnValueOnce(fuelSource)
+        .mockReturnValueOnce(metabolicStore)
+        .mockReturnValueOnce(fuelConverter);
+
+      const executionContext = { evaluationContext: { context: {} } };
+      await handler.execute(
+        {
+          consumer_ref: 'actor_1',
+          item_ref: { id: 'bread_from_object' }, // Object with id property
+        },
+        executionContext
+      );
+
+      expect(em.getComponentData).toHaveBeenCalledWith(
+        'bread_from_object',
+        FUEL_SOURCE_COMPONENT_ID
+      );
+      expect(em.removeEntityInstance).toHaveBeenCalledWith('bread_from_object');
+    });
+
+    // Branch coverage: Lines 149-155 - Item no longer exists (race condition)
+    test('errors when item no longer exists', async () => {
+      em.hasEntity.mockReturnValue(false); // Item was deleted before consumption
+
+      const executionContext = { evaluationContext: { context: {} } };
+      await handler.execute(
+        {
+          consumer_ref: 'actor_1',
+          item_ref: 'bread_1',
+        },
+        executionContext
+      );
+
+      expect(em.hasEntity).toHaveBeenCalledWith('bread_1');
+      expect(em.getComponentData).not.toHaveBeenCalled();
+      expect(em.removeEntityInstance).not.toHaveBeenCalled();
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          message: expect.stringContaining('Item no longer available'),
+        })
+      );
+    });
+
+    // Branch coverage: Lines 197-203 - Consumer missing fuel_converter component
+    test('errors when consumer has no fuel_converter component', async () => {
+      const fuelSource = {
+        energy_content: 200,
+        bulk: 30,
+        fuel_tags: ['food'],
+      };
+
+      const metabolicStore = {
+        current_energy: 50,
+        max_energy: 100,
+        base_burn_rate: 1.0,
+        buffer_storage: [],
+        buffer_capacity: 100,
+      };
+
+      em.getComponentData
+        .mockReturnValueOnce(fuelSource) // item fuel_source
+        .mockReturnValueOnce(metabolicStore) // consumer metabolic_store
+        .mockReturnValueOnce(null); // consumer has NO fuel_converter
+
+      const executionContext = { evaluationContext: { context: {} } };
+      await handler.execute(
+        {
+          consumer_ref: 'actor_1',
+          item_ref: 'bread_1',
+        },
+        executionContext
+      );
+
+      expect(em.addComponent).not.toHaveBeenCalled();
+      expect(em.removeEntityInstance).not.toHaveBeenCalled();
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          message: expect.stringContaining('fuel_converter'),
+        })
+      );
+    });
+
+    // Branch coverage: Lines 214-222 - Incompatible fuel tags
+    test('errors when fuel tags are incompatible', async () => {
+      const fuelSource = {
+        energy_content: 200,
+        bulk: 30,
+        fuel_tags: ['synthetic', 'inorganic'], // Consumer only accepts organic
+      };
+
+      const metabolicStore = {
+        current_energy: 50,
+        max_energy: 100,
+        base_burn_rate: 1.0,
+        buffer_storage: [],
+        buffer_capacity: 100,
+      };
+
+      const fuelConverter = {
+        capacity: 100,
+        conversion_rate: 10,
+        efficiency: 0.8,
+        accepted_fuel_tags: ['organic', 'food'], // Does not accept synthetic
+        metabolic_efficiency_multiplier: 1.0,
+      };
+
+      em.getComponentData
+        .mockReturnValueOnce(fuelSource) // item fuel_source
+        .mockReturnValueOnce(metabolicStore) // consumer metabolic_store
+        .mockReturnValueOnce(fuelConverter); // consumer fuel_converter
+
+      const executionContext = { evaluationContext: { context: {} } };
+      await handler.execute(
+        {
+          consumer_ref: 'actor_1',
+          item_ref: 'synthetic_fuel_1',
+        },
+        executionContext
+      );
+
+      expect(em.addComponent).not.toHaveBeenCalled();
+      expect(em.removeEntityInstance).not.toHaveBeenCalled();
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          message: expect.stringContaining('Incompatible fuel type'),
+        })
+      );
+    });
   });
 });

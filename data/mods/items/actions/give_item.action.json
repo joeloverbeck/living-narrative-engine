@@ -10,6 +10,14 @@
   "forbidden_components": {
     "actor": ["positioning:bending_over"]
   },
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
+      },
+      "failure_message": "You need a free hand to give an item."
+    }
+  ],
   "targets": {
     "primary": {
       "scope": "core:actors_in_location",

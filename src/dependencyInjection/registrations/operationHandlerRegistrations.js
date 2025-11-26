@@ -41,6 +41,7 @@ import QueryComponentHandler from '../../logic/operationHandlers/queryComponentH
 import QueryComponentsHandler from '../../logic/operationHandlers/queryComponentsHandler.js';
 import QueryLookupHandler from '../../logic/operationHandlers/queryLookupHandler.js';
 import RemoveComponentHandler from '../../logic/operationHandlers/removeComponentHandler.js';
+import ResolveOutcomeHandler from '../../logic/operationHandlers/resolveOutcomeHandler.js';
 import SetVariableHandler from '../../logic/operationHandlers/setVariableHandler.js';
 import EndTurnHandler from '../../logic/operationHandlers/endTurnHandler.js';
 import ForEachHandler from '../../logic/operationHandlers/forEachHandler.js';
@@ -648,6 +649,19 @@ export function registerOperationHandlers(registrar) {
           entityManager: c.resolve(tokens.IEntityManager),
           logger: c.resolve(tokens.ILogger),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.ResolveOutcomeHandler,
+      ResolveOutcomeHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          skillResolverService: c.resolve(tokens.SkillResolverService),
+          probabilityCalculatorService: c.resolve(
+            tokens.ProbabilityCalculatorService
+          ),
+          outcomeDeterminerService: c.resolve(tokens.OutcomeDeterminerService),
         }),
     ],
     [

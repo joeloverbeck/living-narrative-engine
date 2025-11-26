@@ -279,6 +279,28 @@ export function registerCommandAndAction(container) {
   // --- Action Pipeline Orchestrator ---
   // Must be registered before ActionDiscoveryService
   registrar.singletonFactory(tokens.ActionPipelineOrchestrator, (c) => {
+    // Try to resolve optional combat services for chance-based actions
+    let skillResolverService = null;
+    let probabilityCalculatorService = null;
+
+    try {
+      if (c.isRegistered(tokens.SkillResolverService)) {
+        skillResolverService = c.resolve(tokens.SkillResolverService);
+      }
+    } catch {
+      // Combat services may not be registered yet
+    }
+
+    try {
+      if (c.isRegistered(tokens.ProbabilityCalculatorService)) {
+        probabilityCalculatorService = c.resolve(
+          tokens.ProbabilityCalculatorService
+        );
+      }
+    } catch {
+      // Combat services may not be registered yet
+    }
+
     return new ActionPipelineOrchestrator({
       actionIndex: c.resolve(tokens.ActionIndex),
       prerequisiteService: c.resolve(tokens.PrerequisiteEvaluationService),
@@ -293,7 +315,11 @@ export function registerCommandAndAction(container) {
       targetContextBuilder: c.resolve(tokens.ITargetContextBuilder),
       multiTargetResolutionStage: c.resolve(tokens.IMultiTargetResolutionStage),
       targetComponentValidator: c.resolve(tokens.ITargetComponentValidator),
-      targetRequiredComponentsValidator: c.resolve(tokens.ITargetRequiredComponentsValidator),
+      targetRequiredComponentsValidator: c.resolve(
+        tokens.ITargetRequiredComponentsValidator
+      ),
+      skillResolverService,
+      probabilityCalculatorService,
     });
   });
   logger.debug(

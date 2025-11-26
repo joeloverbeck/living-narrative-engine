@@ -21,6 +21,8 @@ import { ActionFormattingCoordinator } from './actionFormatting/ActionFormatting
 /** @typedef {import('../../errors/actionErrorContextBuilder.js').ActionErrorContextBuilder} ActionErrorContextBuilder */
 /** @typedef {import('../../../logging/consoleLogger.js').default} ILogger */
 /** @typedef {import('../../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../../../combat/services/SkillResolverService.js').default} SkillResolverService */
+/** @typedef {import('../../../combat/services/ProbabilityCalculatorService.js').default} ProbabilityCalculatorService */
 
 /**
  * @class ActionFormattingStage
@@ -45,6 +47,12 @@ export class ActionFormattingStage extends PipelineStage {
 
   #decider;
 
+  /** @type {SkillResolverService|null} */
+  #skillResolverService;
+
+  /** @type {ProbabilityCalculatorService|null} */
+  #probabilityCalculatorService;
+
   /**
    * Creates an ActionFormattingStage instance
    *
@@ -55,6 +63,8 @@ export class ActionFormattingStage extends PipelineStage {
    * @param {Function} deps.getEntityDisplayNameFn - Function to get entity display names
    * @param {ActionErrorContextBuilder} deps.errorContextBuilder - Builder for error contexts
    * @param {ILogger} deps.logger - Logger for diagnostic output
+   * @param {SkillResolverService} [deps.skillResolverService] - Service for resolving skill values (optional)
+   * @param {ProbabilityCalculatorService} [deps.probabilityCalculatorService] - Service for calculating probabilities (optional)
    */
   constructor({
     commandFormatter,
@@ -63,6 +73,8 @@ export class ActionFormattingStage extends PipelineStage {
     getEntityDisplayNameFn,
     errorContextBuilder,
     logger,
+    skillResolverService,
+    probabilityCalculatorService,
   }) {
     super('ActionFormatting');
     /*
@@ -84,6 +96,10 @@ export class ActionFormattingStage extends PipelineStage {
     this.#getEntityDisplayNameFn = getEntityDisplayNameFn;
     this.#errorContextBuilder = errorContextBuilder;
     this.#logger = logger;
+
+    // Optional combat services for chance-based actions
+    this.#skillResolverService = skillResolverService ?? null;
+    this.#probabilityCalculatorService = probabilityCalculatorService ?? null;
 
     this.#targetNormalizationService = new TargetNormalizationService({
       logger: this.#logger,
@@ -156,6 +172,11 @@ export class ActionFormattingStage extends PipelineStage {
       ? new TraceAwareInstrumentation(trace)
       : new NoopInstrumentation();
 
+    // Inject chance percentages into templates for chance-based actions
+    if (this.#skillResolverService && this.#probabilityCalculatorService) {
+      this.#injectChanceIntoTemplates(context);
+    }
+
     const coordinator = new ActionFormattingCoordinator({
       context,
       instrumentation,
@@ -225,6 +246,105 @@ export class ActionFormattingStage extends PipelineStage {
     }
 
     return true;
+  }
+
+  /**
+   * Injects calculated chance percentages into action templates for chance-based actions.
+   * Replaces `{chance}` placeholder with the calculated probability percentage.
+   *
+   * @param {object} context - Pipeline context
+   * @private
+   */
+  #injectChanceIntoTemplates(context) {
+    const { actor, actionsWithTargets = [] } = context;
+
+    for (const actionWithTarget of actionsWithTargets) {
+      const { actionDef } = actionWithTarget;
+
+      // Skip if not a chance-based action
+      if (!actionDef?.chanceBased?.enabled) continue;
+
+      // Skip if template doesn't have {chance} placeholder
+      if (!actionDef.template?.includes('{chance}')) continue;
+
+      // Get target ID from resolvedTargets or targetContexts
+      const targetId = this.#extractTargetId(actionWithTarget, context);
+
+      const chance = this.#calculateChance(actionDef, actor.id, targetId);
+      actionDef.template = actionDef.template.replace(
+        '{chance}',
+        String(chance)
+      );
+
+      this.#logger.debug(
+        `ActionFormattingStage: Injected chance ${chance}% into template for action '${actionDef.id}'`
+      );
+    }
+  }
+
+  /**
+   * Extracts the primary target ID from action target resolution data.
+   *
+   * @param {object} actionWithTarget - Action with target data
+   * @param {object} context - Pipeline context
+   * @returns {string|null} Target entity ID or null if not found
+   * @private
+   */
+  #extractTargetId(actionWithTarget, context) {
+    // Try resolvedTargets first (multi-target path)
+    const resolvedTargets =
+      actionWithTarget.resolvedTargets ?? context.resolvedTargets;
+    if (resolvedTargets?.primary?.[0]?.entityId) {
+      return resolvedTargets.primary[0].entityId;
+    }
+    // Fall back to targetContexts (legacy path)
+    return actionWithTarget.targetContexts?.[0]?.entityId ?? null;
+  }
+
+  /**
+   * Calculates the success probability for a chance-based action.
+   *
+   * @param {object} actionDef - Action definition with chanceBased configuration
+   * @param {string} actorId - Actor entity ID
+   * @param {string|null} targetId - Target entity ID (for opposed checks)
+   * @returns {number} Calculated chance percentage (rounded)
+   * @private
+   */
+  #calculateChance(actionDef, actorId, targetId) {
+    const { chanceBased } = actionDef;
+
+    // Get actor skill
+    const actorResult = this.#skillResolverService.getSkillValue(
+      actorId,
+      chanceBased.actorSkill?.component,
+      chanceBased.actorSkill?.default ?? 0
+    );
+
+    // Get target skill (if opposed)
+    let targetSkillValue = 0;
+    if (
+      chanceBased.contestType === 'opposed' &&
+      chanceBased.targetSkill &&
+      targetId
+    ) {
+      const targetResult = this.#skillResolverService.getSkillValue(
+        targetId,
+        chanceBased.targetSkill.component,
+        chanceBased.targetSkill.default ?? 0
+      );
+      targetSkillValue = targetResult.baseValue;
+    }
+
+    // Calculate probability
+    const result = this.#probabilityCalculatorService.calculate({
+      actorSkill: actorResult.baseValue,
+      targetSkill: targetSkillValue,
+      difficulty: chanceBased.fixedDifficulty ?? 0,
+      formula: chanceBased.formula ?? 'ratio',
+      bounds: chanceBased.bounds,
+    });
+
+    return Math.round(result.finalChance);
   }
 }
 

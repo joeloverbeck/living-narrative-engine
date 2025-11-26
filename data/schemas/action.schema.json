@@ -31,6 +31,26 @@
       },
       "required": ["scope", "placeholder"],
       "additionalProperties": false
+    },
+    "chanceModifier": {
+      "type": "object",
+      "description": "Conditional modifier to action success probability",
+      "properties": {
+        "condition": {
+          "$ref": "./condition-container.schema.json#",
+          "description": "Condition that must be true for modifier to apply"
+        },
+        "modifier": {
+          "type": "integer",
+          "description": "Flat modifier to success chance (can be negative)"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of modifier"
+        }
+      },
+      "required": ["condition", "modifier"],
+      "additionalProperties": false
     }
   },
   "properties": {
@@ -232,6 +252,126 @@
           "pattern": "^(#([0-9A-Fa-f]{3}){1,2}|rgb\\(\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*\\)|rgba\\(\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(0|0\\.[0-9]+|1(\\.0+)?)\\s*\\)|(aliceblue|antiquewhite|aqua|aquamarine|azure|beige|bisque|black|blanchedalmond|blue|blueviolet|brown|burlywood|cadetblue|chartreuse|chocolate|coral|cornflowerblue|cornsilk|crimson|cyan|darkblue|darkcyan|darkgoldenrod|darkgray|darkgrey|darkgreen|darkkhaki|darkmagenta|darkolivegreen|darkorange|darkorchid|darkred|darksalmon|darkseagreen|darkslateblue|darkslategray|darkslategrey|darkturquoise|darkviolet|deeppink|deepskyblue|dimgray|dimgrey|dodgerblue|firebrick|floralwhite|forestgreen|fuchsia|gainsboro|ghostwhite|gold|goldenrod|gray|grey|green|greenyellow|honeydew|hotpink|indianred|indigo|ivory|khaki|lavender|lavenderblush|lawngreen|lemonchiffon|lightblue|lightcoral|lightcyan|lightgoldenrodyellow|lightgray|lightgrey|lightgreen|lightpink|lightsalmon|lightseagreen|lightskyblue|lightslategray|lightslategrey|lightsteelblue|lightyellow|lime|limegreen|linen|magenta|maroon|mediumaquamarine|mediumblue|mediumorchid|mediumpurple|mediumseagreen|mediumslateblue|mediumspringgreen|mediumturquoise|mediumvioletred|midnightblue|mintcream|mistyrose|moccasin|navajowhite|navy|oldlace|olive|olivedrab|orange|orangered|orchid|palegoldenrod|palegreen|paleturquoise|palevioletred|papayawhip|peachpuff|peru|pink|plum|powderblue|purple|red|rosybrown|royalblue|saddlebrown|salmon|sandybrown|seagreen|seashell|sienna|silver|skyblue|slateblue|slategray|slategrey|snow|springgreen|steelblue|tan|teal|thistle|tomato|turquoise|violet|wheat|white|whitesmoke|yellow|yellowgreen))$"
         }
       },
+      "additionalProperties": false
+    },
+    "chanceBased": {
+      "type": "object",
+      "description": "Configuration for non-deterministic action with probability calculation",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether this action uses chance-based resolution"
+        },
+        "contestType": {
+          "type": "string",
+          "enum": ["opposed", "fixed_difficulty"],
+          "description": "opposed: actor vs target skill, fixed_difficulty: actor vs static value"
+        },
+        "actorSkill": {
+          "type": "object",
+          "description": "Actor's skill configuration",
+          "properties": {
+            "component": {
+              "$ref": "./common.schema.json#/definitions/namespacedId",
+              "description": "Component ID for skill (e.g., 'skills:melee_skill')"
+            },
+            "property": {
+              "type": "string",
+              "default": "value",
+              "description": "Property path within component"
+            },
+            "default": {
+              "type": "number",
+              "default": 0,
+              "description": "Default value if component missing"
+            }
+          },
+          "required": ["component"],
+          "additionalProperties": false
+        },
+        "targetSkill": {
+          "type": "object",
+          "description": "Target's skill configuration (for opposed checks)",
+          "properties": {
+            "component": {
+              "$ref": "./common.schema.json#/definitions/namespacedId"
+            },
+            "property": {
+              "type": "string",
+              "default": "value"
+            },
+            "default": {
+              "type": "number",
+              "default": 0
+            }
+          },
+          "required": ["component"],
+          "additionalProperties": false
+        },
+        "fixedDifficulty": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Static difficulty for fixed_difficulty contest type"
+        },
+        "difficultyModifier": {
+          "type": "integer",
+          "default": 0,
+          "description": "Static modifier applied to difficulty"
+        },
+        "formula": {
+          "type": "string",
+          "enum": ["ratio", "logistic", "linear"],
+          "default": "ratio",
+          "description": "Probability calculation formula"
+        },
+        "bounds": {
+          "type": "object",
+          "description": "Probability bounds (min/max chance)",
+          "properties": {
+            "min": {
+              "type": "integer",
+              "default": 5,
+              "minimum": 0,
+              "maximum": 100
+            },
+            "max": {
+              "type": "integer",
+              "default": 95,
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "additionalProperties": false
+        },
+        "modifiers": {
+          "type": "array",
+          "description": "Conditional modifiers to probability",
+          "items": {
+            "$ref": "#/definitions/chanceModifier"
+          }
+        },
+        "outcomes": {
+          "type": "object",
+          "description": "Critical success/failure thresholds",
+          "properties": {
+            "criticalSuccessThreshold": {
+              "type": "integer",
+              "default": 5,
+              "minimum": 1,
+              "maximum": 100
+            },
+            "criticalFailureThreshold": {
+              "type": "integer",
+              "default": 95,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": ["enabled", "contestType", "actorSkill"],
       "additionalProperties": false
     }
   },

@@ -598,5 +598,208 @@ describe('DigestFoodHandler', () => {
         FUEL_CONVERTER_COMPONENT_ID
       );
     });
+
+    // Branch coverage: Line 73 - assertParamsObject returns false (null params)
+    test('returns early when params is null', async () => {
+      await handler.execute(null, executionContext);
+
+      expect(em.getComponentData).not.toHaveBeenCalled();
+      expect(em.batchAddComponentsOptimized).not.toHaveBeenCalled();
+    });
+
+    // Branch coverage: Lines 179-185 - conversion_rate is zero or negative (warning branch)
+    test('warns and uses minimum 0.1 when conversion_rate is zero', async () => {
+      const entityId = 'actor_1';
+      const fuelConverter = {
+        capacity: 100,
+        conversion_rate: 0, // Zero conversion rate - triggers warning
+        efficiency: 0.8,
+        accepted_fuel_tags: ['organic'],
+        metabolic_efficiency_multiplier: 1.0,
+      };
+      const metabolicStore = {
+        current_energy: 500,
+        max_energy: 1000,
+        base_burn_rate: 1.0,
+        activity_multiplier: 1.0,
+        last_update_turn: 0,
+        buffer_storage: [{ bulk: 10, energy_content: 10 }],
+        buffer_capacity: 100,
+      };
+
+      em.getComponentData
+        .mockReturnValueOnce(fuelConverter)
+        .mockReturnValueOnce(metabolicStore);
+
+      await handler.execute(
+        { entity_ref: entityId, turns: 1 },
+        executionContext
+      );
+
+      // Should log warning about zero conversion rate
+      expect(log.warn).toHaveBeenCalledWith(
+        expect.stringContaining('conversion_rate was zero or negative'),
+        expect.objectContaining({
+          entityId,
+          originalRate: 0,
+          adjustedRate: 0.1,
+        })
+      );
+
+      // Should still process with minimum rate of 0.1
+      expect(em.batchAddComponentsOptimized).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            componentData: expect.objectContaining({
+              conversion_rate: 0.1, // Adjusted to minimum
+            }),
+          }),
+        ]),
+        true
+      );
+    });
+
+    // Branch coverage: Lines 179-185 - conversion_rate is negative
+    test('warns and uses minimum 0.1 when conversion_rate is negative', async () => {
+      const entityId = 'actor_1';
+      const fuelConverter = {
+        capacity: 100,
+        conversion_rate: -5, // Negative conversion rate - triggers warning
+        efficiency: 0.8,
+        accepted_fuel_tags: ['organic'],
+        metabolic_efficiency_multiplier: 1.0,
+      };
+      const metabolicStore = {
+        current_energy: 500,
+        max_energy: 1000,
+        base_burn_rate: 1.0,
+        activity_multiplier: 1.0,
+        last_update_turn: 0,
+        buffer_storage: [{ bulk: 10, energy_content: 10 }],
+        buffer_capacity: 100,
+      };
+
+      em.getComponentData
+        .mockReturnValueOnce(fuelConverter)
+        .mockReturnValueOnce(metabolicStore);
+
+      await handler.execute(
+        { entity_ref: entityId, turns: 1 },
+        executionContext
+      );
+
+      // Should log warning about negative conversion rate
+      expect(log.warn).toHaveBeenCalledWith(
+        expect.stringContaining('conversion_rate was zero or negative'),
+        expect.objectContaining({
+          entityId,
+          originalRate: -5,
+          adjustedRate: 0.1,
+        })
+      );
+    });
+
+    // Branch coverage: Lines 205-207 - remainingDigestion <= 0 (preserves items when capacity exhausted)
+    test('preserves buffer items when digestion capacity exhausted', async () => {
+      const entityId = 'actor_1';
+      const fuelConverter = {
+        capacity: 100,
+        conversion_rate: 2, // Low conversion rate
+        efficiency: 0.8,
+        accepted_fuel_tags: ['organic'],
+        metabolic_efficiency_multiplier: 1.0,
+      };
+      // Buffer with 3 items totaling 60 bulk - but only 2 bulk can be digested per turn
+      const metabolicStore = {
+        current_energy: 500,
+        max_energy: 1000,
+        base_burn_rate: 1.0,
+        activity_multiplier: 1.0,
+        last_update_turn: 0,
+        buffer_storage: [
+          { bulk: 2, energy_content: 20 }, // This will be fully digested
+          { bulk: 30, energy_content: 300 }, // This will be pushed unchanged
+          { bulk: 28, energy_content: 280 }, // This will also be pushed unchanged
+        ],
+        buffer_capacity: 100,
+      };
+
+      em.getComponentData
+        .mockReturnValueOnce(fuelConverter)
+        .mockReturnValueOnce(metabolicStore);
+
+      await handler.execute(
+        { entity_ref: entityId, turns: 1 },
+        executionContext
+      );
+
+      // Digested: min(60 total bulk, 2 * 1.0 * 1) = 2
+      // Only first item is consumed, remaining items pushed unchanged
+      expect(em.batchAddComponentsOptimized).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            componentData: expect.objectContaining({
+              buffer_storage: [
+                { bulk: 30, energy_content: 300 }, // Pushed unchanged
+                { bulk: 28, energy_content: 280 }, // Pushed unchanged
+              ],
+            }),
+          }),
+        ]),
+        true
+      );
+    });
+
+    // Branch coverage: Lines 283-287 - Exception in try block (catch branch)
+    test('dispatches error when batchAddComponentsOptimized throws', async () => {
+      const entityId = 'actor_1';
+      const fuelConverter = {
+        capacity: 100,
+        conversion_rate: 5,
+        efficiency: 0.8,
+        accepted_fuel_tags: ['organic'],
+        metabolic_efficiency_multiplier: 1.0,
+      };
+      const metabolicStore = {
+        current_energy: 500,
+        max_energy: 1000,
+        base_burn_rate: 1.0,
+        activity_multiplier: 1.0,
+        last_update_turn: 0,
+        buffer_storage: [{ bulk: 10, energy_content: 10 }],
+        buffer_capacity: 100,
+      };
+
+      em.getComponentData
+        .mockReturnValueOnce(fuelConverter)
+        .mockReturnValueOnce(metabolicStore);
+
+      em.batchAddComponentsOptimized.mockRejectedValueOnce(
+        new Error('Database connection failed')
+      );
+
+      await handler.execute(
+        { entity_ref: entityId, turns: 1 },
+        executionContext
+      );
+
+      // Should log the error
+      expect(log.error).toHaveBeenCalledWith(
+        expect.stringContaining('Digest food operation failed'),
+        expect.any(Error),
+        expect.objectContaining({
+          entityId,
+          turns: 1,
+        })
+      );
+
+      // Should dispatch error event
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          message: expect.stringContaining('Operation failed'),
+        })
+      );
+    });
   });
 });

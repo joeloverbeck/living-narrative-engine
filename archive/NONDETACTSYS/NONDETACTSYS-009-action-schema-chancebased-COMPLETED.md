@@ -1,8 +1,59 @@
-# NONDETACTSYS-009: Extend action.schema.json with chanceBased Property
+# NONDETACTSYS-009: Extend action.schema.json with chanceBased Property ✅
 
 ## Summary
 
 Extend the action schema to support the `chanceBased` optional property that configures non-deterministic action behavior. This allows actions to declare skill-based probability calculations and outcome thresholds.
+
+## Status: COMPLETED
+
+## Outcome
+
+### Changes Made
+
+1. **Added `chanceModifier` definition** to `data/schemas/action.schema.json` in the `definitions` section
+2. **Added `chanceBased` property** to `data/schemas/action.schema.json` in the `properties` section
+3. **Created comprehensive schema validation tests** at `tests/unit/schemas/action.chanceBased.schema.test.js` with 32 test cases
+
+### Ticket Discrepancies Corrected
+
+During implementation, the following discrepancies were identified and the ticket was updated:
+
+1. **`$defs` vs `definitions`**: Original ticket used `$defs` syntax, but the existing `action.schema.json` uses `definitions` (JSON Schema Draft-07 convention). Updated ticket examples to use `definitions`.
+
+2. **Test file creation**: Original ticket mentioned "DO NOT create tests" but user explicitly requested tests be created. Updated ticket to include test file in scope.
+
+### Validation Results
+
+- `npm run validate`: ✅ PASSED (325.72ms)
+- Schema validation tests: ✅ 32/32 tests pass
+- Backward compatibility tests: ✅ 226/226 existing actions validate
+- ESLint: ✅ No errors
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `data/schemas/action.schema.json` | Added `chanceModifier` definition and `chanceBased` property |
+| `tickets/NONDETACTSYS-009-action-schema-chancebased.md` | Fixed `$defs` → `definitions`, added test file to scope |
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `tests/unit/schemas/action.chanceBased.schema.test.js` | 32 schema validation tests covering backward compatibility, valid configs, invalid configs, and additionalProperties enforcement |
+
+### Test Coverage
+
+The new test file covers:
+- **Backward compatibility** (2 tests): Actions without `chanceBased` continue to validate
+- **Valid configurations** (12 tests): Minimal, full, all formula types, bounds, outcomes, modifiers
+- **Missing required fields** (6 tests): `enabled`, `contestType`, `actorSkill`, `actorSkill.component`, modifier `condition`/`modifier`
+- **Invalid values** (9 tests): Invalid enums, out-of-range bounds, wrong types
+- **Additional properties** (3 tests): Unknown properties correctly rejected
+
+---
+
+## Original Ticket Content
 
 ## Files to Modify
 
@@ -109,7 +160,7 @@ Add to `action.schema.json` properties:
         "type": "array",
         "description": "Conditional modifiers to probability",
         "items": {
-          "$ref": "#/$defs/chanceModifier"
+          "$ref": "#/definitions/chanceModifier"
         }
       },
       "outcomes": {
@@ -138,11 +189,11 @@ Add to `action.schema.json` properties:
 
 ### chanceModifier Definition
 
-Add to `$defs` section:
+Add to `definitions` section (this schema uses `definitions` not `$defs`):
 
 ```json
 {
-  "$defs": {
+  "definitions": {
     "chanceModifier": {
       "type": "object",
       "description": "Conditional modifier to action success probability",
@@ -171,7 +222,12 @@ Add to `$defs` section:
 - **DO NOT** modify any action definition files
 - **DO NOT** create any service files
 - **DO NOT** modify ActionFormattingStage (NONDETACTSYS-011)
-- **DO NOT** create tests (schema validation covers this)
+
+## Test Files to Create
+
+| File | Purpose |
+|------|---------|
+| `tests/unit/schemas/action.chanceBased.schema.test.js` | Schema validation tests for chanceBased property |
 
 ## Acceptance Criteria
 
@@ -260,12 +316,12 @@ The following action definition should pass validation:
 
 ### Invariants That Must Remain True
 
-- [ ] Existing action definitions continue to validate
-- [ ] `chanceBased` is optional (actions without it still work)
-- [ ] All `$ref` references resolve correctly
-- [ ] Common schema references work for namespacedId
-- [ ] No breaking changes to existing action properties
-- [ ] Schema maintains backward compatibility
+- [x] Existing action definitions continue to validate
+- [x] `chanceBased` is optional (actions without it still work)
+- [x] All `$ref` references resolve correctly
+- [x] Common schema references work for namespacedId
+- [x] No breaking changes to existing action properties
+- [x] Schema maintains backward compatibility
 
 ## Dependencies
 

@@ -61,8 +61,14 @@ describe('items:give_item action definition', () => {
     expect(giveItemAction.targets.secondary.contextFrom).toBeUndefined();
   });
 
-  it('should not have prerequisites (portability filtering handled by scope)', () => {
-    expect(giveItemAction.prerequisites).toBeUndefined();
+  it('should have prerequisites for free grabbing appendage', () => {
+    // GRAPREEXP-005: give_item now requires a free grabbing appendage
+    expect(giveItemAction.prerequisites).toBeDefined();
+    expect(Array.isArray(giveItemAction.prerequisites)).toBe(true);
+    expect(giveItemAction.prerequisites.length).toBeGreaterThan(0);
+    expect(giveItemAction.prerequisites[0].logic.condition_ref).toBe(
+      'anatomy:actor-has-free-grabbing-appendage'
+    );
   });
 
   it('should generate combinations for multiple targets', () => {

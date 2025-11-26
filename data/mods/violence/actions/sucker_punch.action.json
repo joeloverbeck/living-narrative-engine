@@ -13,6 +13,14 @@
   "forbidden_components": {
     "actor": ["positioning:hugging", "positioning:giving_blowjob", "positioning:doing_complex_performance", "positioning:bending_over"]
   },
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
+      },
+      "failure_message": "You need a free hand to throw a punch."
+    }
+  ],
   "template": "sucker-punch {target}",
   "visual": {
     "backgroundColor": "#8b0000",
