@@ -2,13 +2,14 @@
 // -----------------------------------------------------------------------------
 // Contract tests for LLM_TURN_ACTION_RESPONSE_SCHEMA.
 // Ensures the schema correctly enforces the presence and type of the `thoughts` field
-// and the `chosenIndex` field of the LLM’s output.
+// and the `chosenIndex` field of the LLM's output.
 // -----------------------------------------------------------------------------
 
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import { LLM_TURN_ACTION_RESPONSE_SCHEMA } from '../../../src/turns/schemas/llmOutputSchemas.js';
-import { jest, describe, test, expect, beforeAll } from '@jest/globals';
+import { SUBJECT_TYPE_ENUM_VALUES } from '../../../src/constants/subjectTypes.js';
+import { describe, test, expect, beforeAll } from '@jest/globals';
 
 // -----------------------------------------------------------------------------
 // Helper – compile the schema once for all tests to keep things DRY.
@@ -83,7 +84,7 @@ describe('LLM_TURN_ACTION_RESPONSE_SCHEMA contract', () => {
           {
             text: 'This is a note',
             subject: 'Test Subject',
-            subjectType: 'character',
+            subjectType: 'entity',
             context: 'Testing context',
           },
         ],
@@ -103,7 +104,7 @@ describe('LLM_TURN_ACTION_RESPONSE_SCHEMA contract', () => {
           {
             text: 'This is a note',
             subject: 'Test Subject',
-            subjectType: 'character',
+            subjectType: 'entity',
             context: 'Testing context',
             tags: ['emotion', 'politics'], // This should cause validation failure
           },
@@ -185,7 +186,7 @@ describe('LLM_TURN_ACTION_RESPONSE_SCHEMA contract', () => {
           {
             text: 'Valid note',
             subject: 'Valid Subject',
-            subjectType: 'character',
+            subjectType: 'entity',
           },
           {
             text: 'Invalid note with tags',
@@ -207,6 +208,39 @@ describe('LLM_TURN_ACTION_RESPONSE_SCHEMA contract', () => {
           err.params?.additionalProperty === 'tags'
       );
       expect(additionalPropsError).toBeTruthy();
+    });
+
+    test('should reject notes with legacy subjectType values', () => {
+      const data = {
+        chosenIndex: 1,
+        speech: 'Hello',
+        thoughts: 'Internal monologue',
+        notes: [
+          {
+            text: 'Note with legacy type',
+            subject: 'Legacy Subject',
+            subjectType: 'character', // Legacy type - should be 'entity'
+          },
+        ],
+      };
+
+      const isValid = validate(data);
+      expect(isValid).toBe(false);
+      expect(validate.errors).toBeDefined();
+
+      // Should reject because 'character' is not in the new enum
+      const enumError = validate.errors.find(
+        (err) => err.keyword === 'enum' && err.instancePath === '/notes/0/subjectType'
+      );
+      expect(enumError).toBeTruthy();
+    });
+
+    test('subjectType enum should match SUBJECT_TYPE_ENUM_VALUES constant', () => {
+      // Extract the enum from the schema
+      const schemaEnum = LLM_TURN_ACTION_RESPONSE_SCHEMA.properties.notes.items.properties.subjectType.enum;
+
+      // Verify the schema enum matches the constants
+      expect(schemaEnum.sort()).toEqual([...SUBJECT_TYPE_ENUM_VALUES].sort());
     });
   });
 });

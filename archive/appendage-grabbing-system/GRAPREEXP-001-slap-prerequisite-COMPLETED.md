@@ -1,5 +1,7 @@
 # GRAPREEXP-001: Add Free Grabbing Appendage Prerequisite to Slap Action
 
+**Status**: ✅ COMPLETED
+
 ## Summary
 
 Add a prerequisite to the `violence:slap` action requiring the actor to have at least one free grabbing appendage (hand/tentacle/claw). Uses the existing `anatomy:actor-has-free-grabbing-appendage` condition.
@@ -111,13 +113,13 @@ npx eslint data/mods/violence/actions/slap.action.json tests/integration/mods/vi
 
 ### Invariants That Must Remain True
 
-- [ ] Action ID remains `violence:slap`
-- [ ] Template remains `slap {target}`
-- [ ] Targets remain unchanged (`core:actors_in_location`)
-- [ ] `forbidden_components` remain unchanged
-- [ ] `visual` properties remain unchanged
-- [ ] Existing tests in the project continue to pass
-- [ ] JSON schema validation passes
+- [x] Action ID remains `violence:slap`
+- [x] Template remains `slap {target}`
+- [x] Targets remain unchanged (`core:actors_in_location`)
+- [x] `forbidden_components` remain unchanged
+- [x] `visual` properties remain unchanged
+- [x] Existing tests in the project continue to pass
+- [x] JSON schema validation passes
 
 ## Dependencies
 
@@ -132,3 +134,30 @@ npx eslint data/mods/violence/actions/slap.action.json tests/integration/mods/vi
 | `tests/integration/mods/weapons/wield_threateningly_prerequisites.test.js` | Test pattern template |
 | `data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json` | Condition to reference |
 | `specs/grabbing-prerequisites-expansion.md` | Full specification |
+
+---
+
+## Outcome
+
+**Completed**: 2025-11-26
+
+### What was changed
+
+1. **Modified** `data/mods/violence/actions/slap.action.json`:
+   - Added `prerequisites` array with `anatomy:actor-has-free-grabbing-appendage` condition reference
+   - No other properties modified
+
+2. **Created** `tests/integration/mods/violence/slap_prerequisites.test.js`:
+   - 13 tests covering action definition structure, pass cases, fail cases, edge cases, and condition validation
+   - Follows the established pattern from `wield_threateningly_prerequisites.test.js`
+
+### Validation Results
+
+- ✅ All 13 new tests pass
+- ✅ Existing `slap_action.test.js` tests (7 tests) continue to pass
+- ✅ `npm run validate` passes
+- ✅ ESLint passes (only JSDoc warnings matching the reference pattern)
+
+### Discrepancies from original plan
+
+**None** - Implementation matched the ticket exactly. All assumptions about file locations, current state, and required changes were accurate.

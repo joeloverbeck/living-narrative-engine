@@ -380,4 +380,5 @@ export const coreTokens = freeze({
   // Combat Services (NONDETACTSYS)
   SkillResolverService: 'SkillResolverService',
   ProbabilityCalculatorService: 'ProbabilityCalculatorService',
+  OutcomeDeterminerService: 'OutcomeDeterminerService',
 });

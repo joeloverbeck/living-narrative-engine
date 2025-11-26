@@ -1,7 +1,7 @@
 // src/turns/schemas/llmOutputSchemas.js
 
 // -----------------------------------------------------------------------------
-// Defines the consolidated (v3) JSON‐Schema that describes the shape of an LLM’s turn output.
+// Defines the consolidated (v3) JSON‐Schema that describes the shape of an LLM's turn output.
 // Replaces both v1 and v2 schemas. Enforces exactly:
 //   • actionDefinitionId: non‐empty string
 //   • commandString: non‐empty string
@@ -9,6 +9,8 @@
 //   • thoughts: string
 //   • notes (optional): array of strings (minLength: 1)
 // -----------------------------------------------------------------------------
+
+import { SUBJECT_TYPE_ENUM_VALUES } from '../../constants/subjectTypes.js';
 
 /**
  * v4 schema – chosenIndex is the only required selector now.
@@ -57,26 +59,7 @@ export const LLM_TURN_ACTION_RESPONSE_SCHEMA = {
           },
           subjectType: {
             type: 'string',
-            enum: [
-              'character',
-              'location',
-              'item',
-              'creature',
-              'event',
-              'concept',
-              'relationship',
-              'organization',
-              'quest',
-              'skill',
-              'emotion',
-              'plan',
-              'timeline',
-              'theory',
-              'observation',
-              'knowledge_state',
-              'psychological_state',
-              'other',
-            ],
+            enum: SUBJECT_TYPE_ENUM_VALUES,
             description: "Explicit categorization of the note's subject type",
           },
           context: {
