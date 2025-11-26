@@ -6,10 +6,22 @@
   "description": "Base layer clothing entities",
   "author": "Living Narrative Engine",
   "dependencies": [
-    { "id": "core", "version": "^1.0.0" },
-    { "id": "descriptors", "version": "^1.0.0" },
-    { "id": "items", "version": "^1.0.0" },
-    { "id": "clothing", "version": "^1.0.0" }
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "descriptors",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "items",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "clothing",
+      "version": "^1.0.0"
+    }
   ],
   "gameVersion": ">=0.0.1",
   "content": {
@@ -71,6 +83,7 @@
         "shale_gray_nylon_field_pants.entity.json",
         "shawl_collar_blush_pink_robe.entity.json",
         "slate_gray_wool_long_sleeve_top.entity.json",
+        "sleeveless_linen_tunic_charcoal.entity.json",
         "soft_gray_sweatpants.entity.json",
         "structured_bodice_deep_crimson_steel_boning.entity.json",
         "thigh_high_steel_tipped_boots.entity.json",
@@ -81,6 +94,7 @@
         "white_leather_sneakers.entity.json",
         "white_platform_sneakers.entity.json",
         "white_slippers_bow_detail.entity.json",
+        "wool_linen_trousers.entity.json",
         "ysl_black_tuxedo_trousers.entity.json",
         "zimmermann_powder_pink_linen_midi_dress.entity.json"
       ],

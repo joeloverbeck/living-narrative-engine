@@ -30,9 +30,11 @@
     "entities": {
       "definitions": [
         "chainmail_hauberk.entity.json",
+        "hardened_leather_cuirass_black_brown.entity.json",
         "iron_helmet.entity.json",
         "leather_boots.entity.json",
         "leather_bracers.entity.json",
+        "leather_bracers_black_brown.entity.json",
         "steel_cuirass.entity.json",
         "steel_gauntlets.entity.json"
       ],

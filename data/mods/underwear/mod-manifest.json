@@ -6,10 +6,22 @@
   "description": "Underwear layer clothing entities",
   "author": "Living Narrative Engine",
   "dependencies": [
-    { "id": "core", "version": "^1.0.0" },
-    { "id": "descriptors", "version": "^1.0.0" },
-    { "id": "items", "version": "^1.0.0" },
-    { "id": "clothing", "version": "^1.0.0" }
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "descriptors",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "items",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "clothing",
+      "version": "^1.0.0"
+    }
   ],
   "gameVersion": ">=0.0.1",
   "content": {
@@ -31,6 +43,9 @@
         "ivory_plunge_balconette_bra_french_lace.entity.json",
         "la_perla_black_silk_triangle_bra.entity.json",
         "lavender_fitted_camisole_lace_trim.entity.json",
+        "linen_chest_wrap.entity.json",
+        "linen_drawers.entity.json",
+        "linen_footwraps.entity.json",
         "matte_sheer_tights_smoke_black.entity.json",
         "nude_microfiber_seamless_thong.entity.json",
         "nude_thong.entity.json",

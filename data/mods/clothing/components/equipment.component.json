@@ -13,7 +13,7 @@
             "type": "object",
             "description": "Equipment slot with layered items",
             "patternProperties": {
-              "^(underwear|base|outer|accessories)$": {
+              "^(underwear|base|armor|outer|accessories)$": {
                 "oneOf": [
                   {
                     "type": "string",

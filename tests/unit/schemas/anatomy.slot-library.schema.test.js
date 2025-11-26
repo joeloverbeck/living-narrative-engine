@@ -167,7 +167,7 @@ describe('JSON-Schema – Anatomy Slot Library Definition', () => {
           },
           magic_cloak: {
             anatomySockets: ['back_mount', 'neck_clasp'],
-            allowedLayers: ['outer', 'accessory'],
+            allowedLayers: ['outer', 'accessories'],
           },
         },
       };
@@ -405,7 +405,7 @@ describe('JSON-Schema – Anatomy Slot Library Definition', () => {
         clothingDefinitions: {
           all_layers: {
             blueprintSlots: ['torso'],
-            allowedLayers: ['underwear', 'base', 'outer', 'armor', 'accessory'],
+            allowedLayers: ['underwear', 'base', 'outer', 'armor', 'accessories'],
           },
         },
       };

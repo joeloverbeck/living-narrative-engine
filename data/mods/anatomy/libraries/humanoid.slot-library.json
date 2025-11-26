@@ -118,7 +118,7 @@
     },
     "standard_face_gear": {
       "blueprintSlots": ["head"],
-      "allowedLayers": ["accessory"]
+      "allowedLayers": ["accessories"]
     },
     "standard_torso_upper": {
       "anatomySockets": [
@@ -135,7 +135,7 @@
     },
     "standard_hands": {
       "blueprintSlots": ["left_hand", "right_hand"],
-      "allowedLayers": ["base", "armor"]
+      "allowedLayers": ["base", "armor", "accessories"]
     },
     "standard_legs": {
       "blueprintSlots": ["left_leg", "right_leg"],
@@ -162,7 +162,7 @@
     },
     "standard_back_accessory": {
       "anatomySockets": ["upper_back", "lower_back"],
-      "allowedLayers": ["accessory", "armor"]
+      "allowedLayers": ["accessories", "armor"]
     }
   }
 }

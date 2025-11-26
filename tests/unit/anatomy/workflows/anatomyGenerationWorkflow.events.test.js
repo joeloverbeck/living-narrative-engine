@@ -49,7 +49,7 @@ describe('AnatomyGenerationWorkflow - Events', () => {
   });
 
   describe('Event Publication', () => {
-    it('should publish ANATOMY_GENERATED event when eventBus and socketIndex are provided', async () => {
+    it('should publish anatomy:anatomy_generated event when eventBus and socketIndex are provided', async () => {
       // Setup mocks
       const blueprintId = 'core:humanoid_body';
       const recipeId = 'core:adult_human';
@@ -104,7 +104,7 @@ describe('AnatomyGenerationWorkflow - Events', () => {
 
       // Verify event was published
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'ANATOMY_GENERATED',
+        'anatomy:anatomy_generated',
         expect.objectContaining({
           entityId: ownerId,
           blueprintId: blueprintId,
@@ -264,7 +264,7 @@ describe('AnatomyGenerationWorkflow - Events', () => {
 
       // Verify error was logged
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to publish ANATOMY_GENERATED event'),
+        expect.stringContaining('Failed to publish anatomy:anatomy_generated event'),
         expect.any(Error)
       );
     });
@@ -350,7 +350,7 @@ describe('AnatomyGenerationWorkflow - Events', () => {
 
       // Verify event payload includes partsMap and slotEntityMappings
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'ANATOMY_GENERATED',
+        'anatomy:anatomy_generated',
         expect.objectContaining({
           partsMap: expect.any(Object),
           slotEntityMappings: expect.any(Object),

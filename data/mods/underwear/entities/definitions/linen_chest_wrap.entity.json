@@ -16,13 +16,13 @@
       "material": "linen"
     },
     "core:name": {
-      "text": "linen chest wrap"
+      "text": "chest wrap"
     },
     "core:description": {
       "text": "A simple chest wrap fashioned from cream-colored linen. The soft, breathable fabric winds snugly around the torso, providing practical support without restricting movement. Common among soldiers and laborers who favor function over fashion, the unbleached linen shows the marks of frequent washing and hard use."
     },
-    "descriptors:color_basic": {
-      "color": "beige"
+    "descriptors:color_extended": {
+      "color": "cream"
     },
     "descriptors:texture": {
       "texture": "soft"

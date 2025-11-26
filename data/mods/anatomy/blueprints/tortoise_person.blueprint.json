@@ -79,11 +79,11 @@
   "clothingSlotMappings": {
     "shell_armor": {
       "anatomySockets": ["carapace_mount"],
-      "allowedLayers": ["armor", "accessory"]
+      "allowedLayers": ["armor", "accessories"]
     },
     "torso_upper": {
       "anatomySockets": ["torso"],
-      "allowedLayers": ["base", "outer", "accessory"]
+      "allowedLayers": ["base", "outer", "accessories"]
     },
     "torso_lower": {
       "anatomySockets": ["torso"],
@@ -91,19 +91,19 @@
     },
     "head_accessory": {
       "anatomySockets": ["head"],
-      "allowedLayers": ["accessory"]
+      "allowedLayers": ["accessories"]
     },
     "head_gear": {
       "anatomySockets": ["head"],
-      "allowedLayers": ["accessory"]
+      "allowedLayers": ["accessories"]
     },
     "left_arm_clothing": {
       "anatomySockets": ["arm_left"],
-      "allowedLayers": ["base", "accessory"]
+      "allowedLayers": ["base", "accessories"]
     },
     "right_arm_clothing": {
       "anatomySockets": ["arm_right"],
-      "allowedLayers": ["base", "accessory"]
+      "allowedLayers": ["base", "accessories"]
     }
   }
 }

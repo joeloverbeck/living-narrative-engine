@@ -7,7 +7,7 @@
   "clothingSlotMappings": {
     "saddle": {
       "anatomySockets": ["back_mount"],
-      "allowedLayers": ["armor", "accessory"]
+      "allowedLayers": ["armor", "accessories"]
     },
     "wing_harness": {
       "blueprintSlots": ["wing_left", "wing_right"],

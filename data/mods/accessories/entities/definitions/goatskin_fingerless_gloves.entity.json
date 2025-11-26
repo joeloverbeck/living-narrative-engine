@@ -6,10 +6,7 @@
     "clothing:wearable": {
       "layer": "accessories",
       "equipmentSlots": {
-        "primary": "left_hand_clothing",
-        "secondary": [
-          "right_hand_clothing"
-        ]
+        "primary": "hands"
       },
       "allowedLayers": [
         "accessories"

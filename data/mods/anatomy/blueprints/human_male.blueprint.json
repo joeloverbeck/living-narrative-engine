@@ -34,7 +34,7 @@
   "clothingSlotMappings": {
     "back_accessory": {
       "anatomySockets": ["upper_back", "lower_back"],
-      "allowedLayers": ["accessory", "armor"]
+      "allowedLayers": ["accessories", "armor"]
     },
     "torso_lower": {
       "anatomySockets": [

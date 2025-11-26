@@ -430,7 +430,14 @@ class ModReferenceExtractor {
    */
   _addScopeReference(modId, componentId, references) {
     // Skip core references and special cases
-    if (modId === 'core' || modId === 'none' || modId === 'self') {
+    // limbSet and appendage are anatomy group matching prefixes, not mod references
+    if (
+      modId === 'core' ||
+      modId === 'none' ||
+      modId === 'self' ||
+      modId === 'limbSet' ||
+      modId === 'appendage'
+    ) {
       return;
     }
 
@@ -510,7 +517,14 @@ class ModReferenceExtractor {
         const [, modId, componentId] = match;
 
         // Skip core references and special cases
-        if (modId === 'core' || modId === 'none' || modId === 'self') {
+        // limbSet and appendage are anatomy group matching prefixes, not mod references
+        if (
+          modId === 'core' ||
+          modId === 'none' ||
+          modId === 'self' ||
+          modId === 'limbSet' ||
+          modId === 'appendage'
+        ) {
           continue;
         }
 
@@ -1314,7 +1328,14 @@ class ModReferenceExtractor {
         const [, modId, componentId] = match;
 
         // Skip core and special references
-        if (modId === 'core' || modId === 'none' || modId === 'self') {
+        // limbSet and appendage are anatomy group matching prefixes, not mod references
+        if (
+          modId === 'core' ||
+          modId === 'none' ||
+          modId === 'self' ||
+          modId === 'limbSet' ||
+          modId === 'appendage'
+        ) {
           continue;
         }
 
