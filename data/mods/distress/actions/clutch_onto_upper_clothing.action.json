@@ -25,7 +25,14 @@
     "primary": ["positioning:giving_blowjob"],
     "secondary": []
   },
-  "prerequisites": [],
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
+      },
+      "failure_message": "You need at least one free hand to clutch onto clothing."
+    }
+  ],
   "visual": {
     "backgroundColor": "#0b132b",
     "textColor": "#f2f4f8",

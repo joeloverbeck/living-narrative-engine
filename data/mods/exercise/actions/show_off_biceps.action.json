@@ -34,6 +34,12 @@
         ]
       },
       "failure_message": "You don't have the muscular arms needed to show off."
+    },
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-two-free-grabbing-appendages"
+      },
+      "failure_message": "You need both arms free to show off your biceps."
     }
   ],
   "visual": {

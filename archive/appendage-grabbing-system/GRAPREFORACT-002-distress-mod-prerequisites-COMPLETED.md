@@ -57,12 +57,21 @@ The grabbing limitation system ensures actions requiring hands are only availabl
 
 **Rationale**: Clutching can be done with a single hand.
 
+## Additional Scope (discovered during implementation)
+
+The following existing tests contain assumptions about empty prerequisites that must be updated:
+
+| File | Change Required |
+|------|-----------------|
+| `tests/integration/mods/distress/bury_face_in_hands_action_discovery.test.js` | Update test at line ~60 expecting empty prerequisites to expect 1 prerequisite |
+| `tests/integration/mods/distress/clutch_onto_upper_clothing_discovery.test.js` | Add grabbing mock to discovery test to ensure prerequisite passes |
+
 ## Out of Scope
 
 - **DO NOT** modify any other properties in these action files (targets, required_components, forbidden_components, visual, template, etc.)
 - **DO NOT** modify any condition files in `data/mods/anatomy/conditions/`
 - **DO NOT** modify the grabbing operators in `src/logic/operators/`
-- **DO NOT** create test files (covered in GRAPREFORACT-006)
+- **DO NOT** create NEW test files (covered in GRAPREFORACT-006) - but DO fix existing tests that break
 - **DO NOT** modify any other mod's action files
 
 ## Acceptance Criteria

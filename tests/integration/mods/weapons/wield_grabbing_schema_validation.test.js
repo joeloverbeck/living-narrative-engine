@@ -13,7 +13,7 @@ describe('Grabbing Operation Schema Validation', () => {
 
   beforeEach(async () => {
     testBed = new IntegrationTestBed();
-    await testBed.initialize();
+    await testBed.initialize({ useRealSchemas: true });
     schemaValidator = testBed.container.resolve('ISchemaValidator');
   });
 
@@ -50,13 +50,14 @@ describe('Grabbing Operation Schema Validation', () => {
         }
       };
 
-      // Act & Assert
-      expect(() => {
-        schemaValidator.validateAgainstSchema(
-          operation,
-          'schema://living-narrative-engine/operations/lockGrabbing.schema.json'
-        );
-      }).not.toThrow();
+      // Act
+      const isValid = schemaValidator.validateAgainstSchema(
+        operation,
+        'schema://living-narrative-engine/operations/lockGrabbing.schema.json'
+      );
+
+      // Assert
+      expect(isValid).toBe(true);
     });
 
     it('should accept template string values for count parameter', () => {
@@ -70,13 +71,77 @@ describe('Grabbing Operation Schema Validation', () => {
         }
       };
 
-      // Act & Assert
-      expect(() => {
-        schemaValidator.validateAgainstSchema(
-          operation,
-          'schema://living-narrative-engine/operations/lockGrabbing.schema.json'
-        );
-      }).not.toThrow();
+      // Act
+      const isValid = schemaValidator.validateAgainstSchema(
+        operation,
+        'schema://living-narrative-engine/operations/lockGrabbing.schema.json'
+      );
+
+      // Assert
+      expect(isValid).toBe(true);
+    });
+
+    it('should reject plain string (non-template) for count parameter', () => {
+      // Arrange
+      const operation = {
+        type: 'LOCK_GRABBING',
+        parameters: {
+          actor_id: 'test-actor',
+          count: 'two', // Invalid: plain string, not template
+          item_id: 'test-item'
+        }
+      };
+
+      // Act
+      const isValid = schemaValidator.validateAgainstSchema(
+        operation,
+        'schema://living-narrative-engine/operations/lockGrabbing.schema.json'
+      );
+
+      // Assert
+      expect(isValid).toBe(false);
+    });
+
+    it('should reject zero for count parameter (must be ≥1)', () => {
+      // Arrange
+      const operation = {
+        type: 'LOCK_GRABBING',
+        parameters: {
+          actor_id: 'test-actor',
+          count: 0, // Invalid: must be ≥1
+          item_id: 'test-item'
+        }
+      };
+
+      // Act
+      const isValid = schemaValidator.validateAgainstSchema(
+        operation,
+        'schema://living-narrative-engine/operations/lockGrabbing.schema.json'
+      );
+
+      // Assert
+      expect(isValid).toBe(false);
+    });
+
+    it('should reject negative integer for count parameter', () => {
+      // Arrange
+      const operation = {
+        type: 'LOCK_GRABBING',
+        parameters: {
+          actor_id: 'test-actor',
+          count: -1, // Invalid: must be positive
+          item_id: 'test-item'
+        }
+      };
+
+      // Act
+      const isValid = schemaValidator.validateAgainstSchema(
+        operation,
+        'schema://living-narrative-engine/operations/lockGrabbing.schema.json'
+      );
+
+      // Assert
+      expect(isValid).toBe(false);
     });
 
   });
@@ -110,13 +175,14 @@ describe('Grabbing Operation Schema Validation', () => {
         }
       };
 
-      // Act & Assert
-      expect(() => {
-        schemaValidator.validateAgainstSchema(
-          operation,
-          'schema://living-narrative-engine/operations/unlockGrabbing.schema.json'
-        );
-      }).not.toThrow();
+      // Act
+      const isValid = schemaValidator.validateAgainstSchema(
+        operation,
+        'schema://living-narrative-engine/operations/unlockGrabbing.schema.json'
+      );
+
+      // Assert
+      expect(isValid).toBe(true);
     });
 
     it('should accept template string values for count parameter', () => {
@@ -130,13 +196,77 @@ describe('Grabbing Operation Schema Validation', () => {
         }
       };
 
-      // Act & Assert
-      expect(() => {
-        schemaValidator.validateAgainstSchema(
-          operation,
-          'schema://living-narrative-engine/operations/unlockGrabbing.schema.json'
-        );
-      }).not.toThrow();
+      // Act
+      const isValid = schemaValidator.validateAgainstSchema(
+        operation,
+        'schema://living-narrative-engine/operations/unlockGrabbing.schema.json'
+      );
+
+      // Assert
+      expect(isValid).toBe(true);
+    });
+
+    it('should reject plain string (non-template) for count parameter', () => {
+      // Arrange
+      const operation = {
+        type: 'UNLOCK_GRABBING',
+        parameters: {
+          actor_id: 'test-actor',
+          count: 'two', // Invalid: plain string, not template
+          item_id: 'test-item'
+        }
+      };
+
+      // Act
+      const isValid = schemaValidator.validateAgainstSchema(
+        operation,
+        'schema://living-narrative-engine/operations/unlockGrabbing.schema.json'
+      );
+
+      // Assert
+      expect(isValid).toBe(false);
+    });
+
+    it('should reject zero for count parameter (must be ≥1)', () => {
+      // Arrange
+      const operation = {
+        type: 'UNLOCK_GRABBING',
+        parameters: {
+          actor_id: 'test-actor',
+          count: 0, // Invalid: must be ≥1
+          item_id: 'test-item'
+        }
+      };
+
+      // Act
+      const isValid = schemaValidator.validateAgainstSchema(
+        operation,
+        'schema://living-narrative-engine/operations/unlockGrabbing.schema.json'
+      );
+
+      // Assert
+      expect(isValid).toBe(false);
+    });
+
+    it('should reject negative integer for count parameter', () => {
+      // Arrange
+      const operation = {
+        type: 'UNLOCK_GRABBING',
+        parameters: {
+          actor_id: 'test-actor',
+          count: -1, // Invalid: must be positive
+          item_id: 'test-item'
+        }
+      };
+
+      // Act
+      const isValid = schemaValidator.validateAgainstSchema(
+        operation,
+        'schema://living-narrative-engine/operations/unlockGrabbing.schema.json'
+      );
+
+      // Assert
+      expect(isValid).toBe(false);
     });
 
   });

@@ -22,7 +22,14 @@
   },
   "generateCombinations": true,
   "template": "remove {person}'s {item}",
-  "prerequisites": [],
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-two-free-grabbing-appendages"
+      },
+      "failure_message": "You need both hands free to remove someone else's clothing."
+    }
+  ],
   "visual": {
     "backgroundColor": "#6d4c41",
     "textColor": "#ffffff",

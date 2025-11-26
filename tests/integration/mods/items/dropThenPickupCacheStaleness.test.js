@@ -10,9 +10,12 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 import { clearEntityCache } from '../../../../src/scopeDsl/core/entityHelpers.js';
 import dropItemRule from '../../../../data/mods/items/rules/handle_drop_item.rule.json' assert { type: 'json' };
 import eventIsActionDropItem from '../../../../data/mods/items/conditions/event-is-action-drop-item.condition.json' assert { type: 'json' };
+import pickUpItemAction from '../../../../data/mods/items/actions/pick_up_item.action.json' assert { type: 'json' };
+import actorHasFreeGrabbingCondition from '../../../../data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json' assert { type: 'json' };
 
 describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
   let testFixture;
@@ -24,6 +27,23 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       dropItemRule,
       eventIsActionDropItem
     );
+    // Register inventory scopes needed for drop and pickup actions
+    ScopeResolverHelpers.registerInventoryScopes(testFixture.testEnv);
+    // Register pick_up_item action so it can be discovered after drop
+    if (testFixture.testEnv && testFixture.testEnv.actionIndex) {
+      testFixture.testEnv.actionIndex.buildIndex([pickUpItemAction]);
+    }
+    // Register the grabbing prerequisite condition needed by pick_up_item action
+    // This is necessary because we're using forAction with drop_item, not pick_up_item
+    if (testFixture.testEnv && testFixture.testEnv.dataRegistry) {
+      const originalGetCondition = testFixture.testEnv.dataRegistry.getConditionDefinition;
+      testFixture.testEnv.dataRegistry.getConditionDefinition = (conditionId) => {
+        if (conditionId === 'anatomy:actor-has-free-grabbing-appendage') {
+          return actorHasFreeGrabbingCondition;
+        }
+        return originalGetCondition(conditionId);
+      };
+    }
     // Clear cache before each test for isolation
     clearEntityCache();
   });
@@ -39,6 +59,14 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
   it('CONTROL: should find pickup action when cache is clear', async () => {
     // Setup
     const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
+    // Create hand entity for grabbing prerequisite
+    const handEntity = new ModEntityBuilder('actor1-hand-1')
+      .withComponent('anatomy:can_grab', {
+        gripStrength: 1.0,
+        locked: false,
+        heldItemId: null,
+      })
+      .build();
     const actor = new ModEntityBuilder('test:actor1')
       .withName('Alice')
       .atLocation('saloon1')
@@ -46,6 +74,9 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .withComponent('items:inventory', {
         items: ['letter-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
+      })
+      .withComponent('anatomy:body', {
+        body: { parts: { rightHand: 'actor1-hand-1' } },
       })
       .build();
     const item = new ModEntityBuilder('letter-1')
@@ -55,7 +86,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .withComponent('items:weight', { weight: 0.05 })
       .build();
 
-    testFixture.reset([room, actor, item]);
+    testFixture.reset([room, actor, item, handEntity]);
 
     // Execute drop action
     const dropResult = await testFixture.executeAction('test:actor1', 'letter-1');
@@ -79,6 +110,14 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
   it('FIXED: should succeed with automatic cache invalidation', async () => {
     // Setup
     const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
+    // Create hand entity for grabbing prerequisite
+    const handEntity = new ModEntityBuilder('actor1-hand-1')
+      .withComponent('anatomy:can_grab', {
+        gripStrength: 1.0,
+        locked: false,
+        heldItemId: null,
+      })
+      .build();
     const actor = new ModEntityBuilder('test:actor1')
       .withName('Alice')
       .atLocation('saloon1')
@@ -86,6 +125,9 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .withComponent('items:inventory', {
         items: ['letter-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
+      })
+      .withComponent('anatomy:body', {
+        body: { parts: { rightHand: 'actor1-hand-1' } },
       })
       .build();
     const item = new ModEntityBuilder('letter-1')
@@ -95,7 +137,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .withComponent('items:weight', { weight: 0.05 })
       .build();
 
-    testFixture.reset([room, actor, item]);
+    testFixture.reset([room, actor, item, handEntity]);
 
     // CRITICAL STEP: Prime cache with item BEFORE drop
     // Force scope evaluation that caches the item WITHOUT position
@@ -140,6 +182,14 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
   it('should demonstrate cache invalidation allows finding dropped items', async () => {
     // Setup
     const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
+    // Create hand entity for grabbing prerequisite
+    const handEntity = new ModEntityBuilder('actor1-hand-1')
+      .withComponent('anatomy:can_grab', {
+        gripStrength: 1.0,
+        locked: false,
+        heldItemId: null,
+      })
+      .build();
     const actor = new ModEntityBuilder('test:actor1')
       .withName('Alice')
       .atLocation('saloon1')
@@ -147,6 +197,9 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .withComponent('items:inventory', {
         items: ['letter-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
+      })
+      .withComponent('anatomy:body', {
+        body: { parts: { rightHand: 'actor1-hand-1' } },
       })
       .build();
     const item = new ModEntityBuilder('letter-1')
@@ -156,7 +209,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .withComponent('items:weight', { weight: 0.05 })
       .build();
 
-    testFixture.reset([room, actor, item]);
+    testFixture.reset([room, actor, item, handEntity]);
 
     // Prime cache by discovering actions before drop
     await testFixture.discoverActions('test:actor1');
@@ -185,6 +238,14 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
   it('should work correctly if cache is cleared between operations', async () => {
     // Setup
     const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
+    // Create hand entity for grabbing prerequisite
+    const handEntity = new ModEntityBuilder('actor1-hand-1')
+      .withComponent('anatomy:can_grab', {
+        gripStrength: 1.0,
+        locked: false,
+        heldItemId: null,
+      })
+      .build();
     const actor = new ModEntityBuilder('test:actor1')
       .withName('Alice')
       .atLocation('saloon1')
@@ -192,6 +253,9 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .withComponent('items:inventory', {
         items: ['letter-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
+      })
+      .withComponent('anatomy:body', {
+        body: { parts: { rightHand: 'actor1-hand-1' } },
       })
       .build();
     const item = new ModEntityBuilder('letter-1')
@@ -201,7 +265,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .withComponent('items:weight', { weight: 0.05 })
       .build();
 
-    testFixture.reset([room, actor, item]);
+    testFixture.reset([room, actor, item, handEntity]);
 
     // Discover actions (primes cache)
     await testFixture.discoverActions('test:actor1');
@@ -227,6 +291,14 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
   it('should handle multiple drop/pickup cycles with cache clearing', async () => {
     // Setup
     const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
+    // Create hand entity for grabbing prerequisite
+    const handEntity = new ModEntityBuilder('actor1-hand-1')
+      .withComponent('anatomy:can_grab', {
+        gripStrength: 1.0,
+        locked: false,
+        heldItemId: null,
+      })
+      .build();
     const actor = new ModEntityBuilder('test:actor1')
       .withName('Alice')
       .atLocation('saloon1')
@@ -234,6 +306,9 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .withComponent('items:inventory', {
         items: ['letter-1', 'gun-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
+      })
+      .withComponent('anatomy:body', {
+        body: { parts: { rightHand: 'actor1-hand-1' } },
       })
       .build();
     const letter = new ModEntityBuilder('letter-1')
@@ -249,7 +324,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .withComponent('items:weight', { weight: 1.2 })
       .build();
 
-    testFixture.reset([room, actor, letter, gun]);
+    testFixture.reset([room, actor, letter, gun, handEntity]);
 
     // Drop letter
     await testFixture.executeAction('test:actor1', 'letter-1');

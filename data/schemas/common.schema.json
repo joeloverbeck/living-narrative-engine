@@ -154,6 +154,58 @@
       },
       "required": ["text", "subject", "subjectType"],
       "additionalProperties": false
+    },
+    "templateString": {
+      "description": "A runtime template string resolved at execution. Format: {path.to.value}",
+      "type": "string",
+      "pattern": "^\\{[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)*\\}$",
+      "examples": [
+        "{context.value}",
+        "{event.payload.actorId}",
+        "{context.targetGrabbingReqs.handsRequired}"
+      ]
+    },
+    "integerOrTemplate": {
+      "description": "Either a literal integer or a template string that resolves to integer at runtime",
+      "oneOf": [
+        { "type": "integer" },
+        { "$ref": "#/definitions/templateString" }
+      ]
+    },
+    "positiveIntegerOrTemplate": {
+      "description": "Either a positive integer (≥1) or a template string that resolves to positive integer at runtime",
+      "oneOf": [
+        { "type": "integer", "minimum": 1 },
+        { "$ref": "#/definitions/templateString" }
+      ]
+    },
+    "stringOrTemplate": {
+      "description": "Either a literal string or a template string",
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "not": { "pattern": "^\\{.*\\}$" }
+        },
+        { "$ref": "#/definitions/templateString" }
+      ]
+    },
+    "booleanOrTemplate": {
+      "description": "Either a literal boolean or a template string that resolves to boolean at runtime",
+      "oneOf": [
+        { "type": "boolean" },
+        { "$ref": "#/definitions/templateString" }
+      ]
+    },
+    "entityIdOrTemplate": {
+      "description": "Either a literal entity ID (modId:identifier) or a template string",
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*:[a-z][a-z0-9_]*$"
+        },
+        { "$ref": "#/definitions/templateString" }
+      ]
     }
   }
 }

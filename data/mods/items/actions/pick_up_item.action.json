@@ -16,7 +16,14 @@
   "forbidden_components": {
     "actor": ["positioning:bending_over", "positioning:being_fucked_vaginally"]
   },
-  "prerequisites": [],
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
+      },
+      "failure_message": "You need a free hand to pick up items."
+    }
+  ],
   "template": "pick up {item}",
   "visual": {
     "backgroundColor": "#004d61",

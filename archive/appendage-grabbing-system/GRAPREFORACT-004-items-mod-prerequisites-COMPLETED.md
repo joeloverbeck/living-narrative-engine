@@ -155,3 +155,30 @@ cat data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.jso
 
 - The `take_from_container.action.json` file is unique in that it doesn't have a `prerequisites` key at all - it needs to be added, not just populated
 - All 4 actions use the **1-appendage** condition since manipulating items requires only one hand
+
+## Outcome
+
+**Status**: COMPLETED
+
+### Changes Made
+
+1. **drink_entirely.action.json** - Added grabbing prerequisite with failure message "You need a free hand to drink."
+2. **drink_from.action.json** - Added grabbing prerequisite with failure message "You need a free hand to drink."
+3. **pick_up_item.action.json** - Added grabbing prerequisite with failure message "You need a free hand to pick up items."
+4. **take_from_container.action.json** - Added new `prerequisites` key with grabbing prerequisite (file previously had no prerequisites key)
+
+### Tests Updated
+
+| Test File | Changes Made | Rationale |
+|-----------|--------------|-----------|
+| `tests/integration/mods/items/pickUpItemActionDiscovery.test.js` | Updated assertion to verify prerequisite structure | Test now validates the new prerequisite exists |
+| `tests/integration/mods/items/pickUpItemForbiddenComponents.test.js` | Added hand entity with `anatomy:can_grab` component | Actor needs free grabbing appendage for prerequisite to pass |
+| `tests/integration/mods/items/takeFromContainerActionDiscovery.test.js` | Added hand entity with `anatomy:can_grab` component | Actor needs free grabbing appendage for prerequisite to pass |
+| `tests/integration/mods/items/dropThenPickupCacheStaleness.test.js` | Added hand entities, registered grabbing condition, registered pick_up_item action | Complex test that tests drop→pickup workflow needed complete setup for both actions |
+
+### Verification
+
+- ✅ `npm run validate` passes
+- ✅ All 67 items mod integration tests pass (457 tests total)
+- ✅ ESLint passes on modified files
+- ✅ All acceptance criteria met

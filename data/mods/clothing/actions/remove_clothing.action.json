@@ -17,7 +17,14 @@
     "actor": ["positioning:doing_complex_performance"]
   },
   "template": "remove {target}",
-  "prerequisites": [],
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-two-free-grabbing-appendages"
+      },
+      "failure_message": "You need both hands free to remove your clothing."
+    }
+  ],
   "visual": {
     "backgroundColor": "#6d4c41",
     "textColor": "#ffffff",

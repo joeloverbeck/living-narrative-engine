@@ -98,7 +98,19 @@ describe('items:pick_up_item - Forbidden components validation', () => {
       // Actor in same room (no being_fucked_vaginally component)
       scenario.actor.components['positioning:at_location'] = { location_id: room.id };
 
-      testFixture.reset([room, item, scenario.actor]);
+      // Add grabbing appendages so the prerequisite passes
+      const handEntity = new ModEntityBuilder('alice-hand-1')
+        .withComponent('anatomy:can_grab', {
+          gripStrength: 1.0,
+          locked: false,
+          heldItemId: null
+        })
+        .build();
+      scenario.actor.components['anatomy:body'] = {
+        body: { parts: { rightHand: 'alice-hand-1' } }
+      };
+
+      testFixture.reset([room, item, scenario.actor, handEntity]);
 
       const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
       const actionIds = actions.map((action) => action.id);

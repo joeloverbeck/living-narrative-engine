@@ -32,9 +32,12 @@ describe('Mixed Action Types Discovery - Integration', () => {
     // This mod contains both single-target and multi-target actions:
     // - Single-target: examine_owned_item, drop_item, pick_up_item, open_container
     // - Multi-target: give_item, take_from_container
+    // Note: Using take_from_container as the target action ensures the anatomy
+    // prerequisite condition (anatomy:actor-has-free-grabbing-appendage) is loaded,
+    // which is required for both take_from_container and give_item actions.
     testFixture = await ModTestFixture.forAction(
       'items',
-      'items:examine_owned_item'
+      'items:take_from_container'
     );
 
     // Use specific entity IDs for action discovery
@@ -72,18 +75,20 @@ describe('Mixed Action Types Discovery - Integration', () => {
       .build();
 
     // Create actor (the one performing actions) with items in inventory
-    const actor = new ModEntityBuilder(actorId)
+    const actorBuilder = new ModEntityBuilder(actorId)
       .withName('Alice')
       .asActor()
       .atLocation('room1')
+      .withGrabbingHands(1) // Required for take_from_container prerequisite
       .withComponent('positioning:closeness', {
         targetId: recipientActorId,
       })
       .withComponent('items:inventory', {
         items: [coinId, letterId],
         capacity: { maxWeight: 50, maxItems: 10 },
-      })
-      .build();
+      });
+    const actor = actorBuilder.build();
+    const actorHandEntities = actorBuilder.getHandEntities();
 
     // Create recipient actor (close to actor, for give_item)
     const recipient = new ModEntityBuilder(recipientActorId)
@@ -163,6 +168,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
     testFixture.reset([
       room,
       actor,
+      ...actorHandEntities,
       recipient,
       coin,
       letter,

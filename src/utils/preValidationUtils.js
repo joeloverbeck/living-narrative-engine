@@ -10,6 +10,10 @@ import {
   toTokenName,
   toHandlerClassName,
 } from './operationNamingUtils.js';
+import {
+  generateParameterRules,
+  validateCoverage,
+} from './parameterRuleGenerator.js';
 
 /**
  * CRITICAL: Pre-validation whitelist for operation types
@@ -95,6 +99,114 @@ export const KNOWN_OPERATION_TYPES = [
   'VALIDATE_CONTAINER_CAPACITY',
   'VALIDATE_INVENTORY_CAPACITY',
 ];
+
+// ============================================================================
+// Schema-Derived Parameter Rules (Lazy Initialization)
+// ============================================================================
+
+/** @type {object|null} Auto-generated rules from schemas, initialized lazily */
+let _schemaGeneratedRules = null;
+
+/** @type {boolean} Whether schema-derived rules have been initialized */
+let _rulesInitialized = false;
+
+/**
+ * Gets the combined operation parameter rules (schema + manual)
+ *
+ * @returns {object} Map of operation type to parameter rules
+ * @throws {Error} If rules have not been initialized via initializeParameterRules()
+ */
+export function getOperationParameterRules() {
+  if (!_rulesInitialized) {
+    throw new Error(
+      'Operation parameter rules not initialized. ' +
+        'Call initializeParameterRules() during startup.'
+    );
+  }
+  return _schemaGeneratedRules;
+}
+
+/**
+ * Initializes operation parameter rules from schemas
+ *
+ * Should be called during application startup before any validation that
+ * requires schema-derived parameter rules. If not called, the existing
+ * manual OPERATION_PARAMETER_RULES continue to function.
+ *
+ * @param {object} [options] - Initialization options
+ * @param {boolean} [options.assertCoverage] - Assert all known types have rules (default: true)
+ * @returns {Promise<void>}
+ * @throws {Error} If assertCoverage is true and coverage is incomplete (INV-3)
+ */
+export async function initializeParameterRules(options = {}) {
+  const { assertCoverage = true } = options;
+
+  if (_rulesInitialized) {
+    return; // Already initialized
+  }
+
+  const schemaRules = await generateParameterRules();
+
+  // Merge schema-derived rules with manual typo-detection rules
+  // Manual rules take precedence for invalidFields/fieldCorrections
+  _schemaGeneratedRules = {};
+  for (const [type, rule] of Object.entries(schemaRules)) {
+    const manualRule = OPERATION_PARAMETER_RULES[type];
+    _schemaGeneratedRules[type] = {
+      ...rule,
+      // Preserve manual typo-detection features if they exist
+      invalidFields: manualRule?.invalidFields || [],
+      fieldCorrections: manualRule?.fieldCorrections || {},
+    };
+  }
+
+  _rulesInitialized = true;
+
+  if (assertCoverage) {
+    const { missing, extra } = validateCoverage(
+      _schemaGeneratedRules,
+      KNOWN_OPERATION_TYPES
+    );
+
+    if (missing.length > 0) {
+      throw new Error(
+        `INV-3 Violation: Missing parameter rules for operation types: ${missing.join(', ')}. ` +
+          `Ensure all operations have schemas in data/schemas/operations/`
+      );
+    }
+
+    if (extra.length > 0) {
+      // eslint-disable-next-line no-console -- Intentional warning for schema drift detection
+      console.warn(
+        `Warning: Found parameter rules for types not in KNOWN_OPERATION_TYPES: ${extra.join(', ')}. ` +
+          `Consider adding to KNOWN_OPERATION_TYPES if these are valid operations.`
+      );
+    }
+  }
+}
+
+/**
+ * Resets initialization state (for testing only)
+ *
+ * @internal
+ */
+export function _resetParameterRulesForTesting() {
+  _schemaGeneratedRules = null;
+  _rulesInitialized = false;
+}
+
+/**
+ * Checks if parameter rules have been initialized
+ *
+ * @returns {boolean} True if initializeParameterRules() has been called
+ */
+export function isParameterRulesInitialized() {
+  return _rulesInitialized;
+}
+
+// ============================================================================
+// Existing Validation Infrastructure
+// ============================================================================
 
 /**
  * Detailed operation validation result

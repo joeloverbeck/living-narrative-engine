@@ -22,10 +22,7 @@
           "description": "The ID of the actor whose appendages to lock"
         },
         "count": {
-          "oneOf": [
-            { "type": "integer", "minimum": 1 },
-            { "type": "string", "pattern": "^\\{.+\\}$" }
-          ],
+          "$ref": "../common.schema.json#/definitions/positiveIntegerOrTemplate",
           "description": "Number of grabbing appendages to lock (integer or template string)"
         },
         "item_id": {

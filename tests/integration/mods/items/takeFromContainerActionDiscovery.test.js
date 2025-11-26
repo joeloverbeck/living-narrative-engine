@@ -175,6 +175,15 @@ describe('items:take_from_container action definition', () => {
     it('should appear when actor has inventory and open container with items exists', () => {
       const room = ModEntityScenarios.createRoom('storage', 'Storage Room');
 
+      // Create hand entity for grabbing prerequisite
+      const handEntity = new ModEntityBuilder('alice-hand-1')
+        .withComponent('anatomy:can_grab', {
+          gripStrength: 1.0,
+          locked: false,
+          heldItemId: null,
+        })
+        .build();
+
       const actor = new ModEntityBuilder('actor_with_inventory')
         .withName('Alice')
         .atLocation('storage')
@@ -182,6 +191,9 @@ describe('items:take_from_container action definition', () => {
         .withComponent('items:inventory', {
           items: [],
           capacity: { maxWeight: 20, maxItems: 5 },
+        })
+        .withComponent('anatomy:body', {
+          body: { parts: { rightHand: 'alice-hand-1' } },
         })
         .build();
 
@@ -203,7 +215,7 @@ describe('items:take_from_container action definition', () => {
         .withComponent('items:portable', {})
         .build();
 
-      testFixture.reset([room, actor, container, potion]);
+      testFixture.reset([room, actor, container, potion, handEntity]);
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(

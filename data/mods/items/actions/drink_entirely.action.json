@@ -21,7 +21,14 @@
       "items:empty"
     ]
   },
-  "prerequisites": [],
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
+      },
+      "failure_message": "You need a free hand to drink."
+    }
+  ],
   "template": "drink entirety of {primary}",
   "visual": {
     "backgroundColor": "#004d61",
