@@ -31,7 +31,9 @@
     "ballet",
     "gymnastics",
     "music",
-    "fantasy"
+    "fantasy",
+    "skills",
+    "damage-types"
   ],
   "startWorld": "fantasy:vespera"
 }

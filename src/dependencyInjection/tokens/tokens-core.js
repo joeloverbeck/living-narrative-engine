@@ -377,4 +377,7 @@ export const coreTokens = freeze({
   IGOAPDebugger: 'IGOAPDebugger',
   // GOAP Numeric Constraint Evaluator (MODCOMPLASUP-001)
   INumericConstraintEvaluator: 'INumericConstraintEvaluator',
+  // Combat Services (NONDETACTSYS)
+  SkillResolverService: 'SkillResolverService',
+  ProbabilityCalculatorService: 'ProbabilityCalculatorService',
 });

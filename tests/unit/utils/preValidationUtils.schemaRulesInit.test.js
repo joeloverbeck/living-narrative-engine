@@ -10,8 +10,8 @@ import {
   getOperationParameterRules,
   isParameterRulesInitialized,
   _resetParameterRulesForTesting,
-  KNOWN_OPERATION_TYPES,
-} from '../../../src/utils/preValidationUtils.js';
+} from '../../../src/utils/preValidationTestUtils.js';
+import { KNOWN_OPERATION_TYPES } from '../../../src/utils/preValidationUtils.js';
 
 describe('preValidationUtils - Schema Rules Initialization', () => {
   afterEach(() => {
