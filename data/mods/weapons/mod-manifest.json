@@ -36,19 +36,15 @@
     ],
     "scopes": [
       "grabbable_weapons_in_inventory.scope",
-      "weapons_in_inventory.scope",
-      "wielded_items.scope"
+      "weapons_in_inventory.scope"
     ],
     "conditions": [
-      "event-is-action-unwield-item.condition.json",
       "event-is-action-wield-threateningly.condition.json"
     ],
     "actions": [
-      "unwield_item.action.json",
       "wield_threateningly.action.json"
     ],
     "rules": [
-      "handle_unwield_item.rule.json",
       "handle_wield_threateningly.rule.json"
     ],
     "entities": {

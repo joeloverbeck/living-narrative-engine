@@ -1,14 +1,14 @@
 /**
  * @jest-environment node
  *
- * @file Integration tests for weapons:wielded_items scope
+ * @file Integration tests for items:wielded_items scope
  * @description Tests the scope that returns entity IDs of items currently being wielded
  *
  * The scope:
  * - Accesses actor's positioning:wielding component
  * - Returns wielded_item_ids array via [] iterator
  *
- * @see data/mods/weapons/scopes/wielded_items.scope
+ * @see data/mods/items/scopes/wielded_items.scope
  * @see tickets/UNWITEACT-001-create-scope-file.md
  */
 
@@ -18,7 +18,7 @@ import ScopeEngine from '../../../../src/scopeDsl/engine.js';
 import ScopeRegistry from '../../../../src/scopeDsl/scopeRegistry.js';
 import { parseDslExpression } from '../../../../src/scopeDsl/parser/parser.js';
 
-describe('weapons:wielded_items scope', () => {
+describe('items:wielded_items scope', () => {
   let scopeEngine;
   let scopeRegistry;
   let mockLogger;
@@ -67,14 +67,14 @@ describe('weapons:wielded_items scope', () => {
 
     const wieldedItemsScope = readFileSync(
       new URL(
-        '../../../../data/mods/weapons/scopes/wielded_items.scope',
+        '../../../../data/mods/items/scopes/wielded_items.scope',
         import.meta.url
       ),
       'utf8'
     ).trim();
 
     const scopeDefinitions = {
-      'weapons:wielded_items': wieldedItemsScope,
+      'items:wielded_items': wieldedItemsScope,
     };
 
     const parsedScopes = {};
@@ -119,7 +119,7 @@ describe('weapons:wielded_items scope', () => {
         actor,
       };
 
-      const scopeDef = scopeRegistry.getScope('weapons:wielded_items');
+      const scopeDef = scopeRegistry.getScope('items:wielded_items');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
 
@@ -145,7 +145,7 @@ describe('weapons:wielded_items scope', () => {
         actor,
       };
 
-      const scopeDef = scopeRegistry.getScope('weapons:wielded_items');
+      const scopeDef = scopeRegistry.getScope('items:wielded_items');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
 
@@ -171,7 +171,7 @@ describe('weapons:wielded_items scope', () => {
         actor,
       };
 
-      const scopeDef = scopeRegistry.getScope('weapons:wielded_items');
+      const scopeDef = scopeRegistry.getScope('items:wielded_items');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
 
@@ -195,7 +195,7 @@ describe('weapons:wielded_items scope', () => {
         actor,
       };
 
-      const scopeDef = scopeRegistry.getScope('weapons:wielded_items');
+      const scopeDef = scopeRegistry.getScope('items:wielded_items');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
 
@@ -219,7 +219,7 @@ describe('weapons:wielded_items scope', () => {
         actor,
       };
 
-      const scopeDef = scopeRegistry.getScope('weapons:wielded_items');
+      const scopeDef = scopeRegistry.getScope('items:wielded_items');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
 
@@ -250,7 +250,7 @@ describe('weapons:wielded_items scope', () => {
         actor,
       };
 
-      const scopeDef = scopeRegistry.getScope('weapons:wielded_items');
+      const scopeDef = scopeRegistry.getScope('items:wielded_items');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
 
@@ -277,7 +277,7 @@ describe('weapons:wielded_items scope', () => {
         actor,
       };
 
-      const scopeDef = scopeRegistry.getScope('weapons:wielded_items');
+      const scopeDef = scopeRegistry.getScope('items:wielded_items');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
 

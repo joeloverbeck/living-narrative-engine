@@ -4,12 +4,12 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import actionJson from '../../../../data/mods/weapons/actions/unwield_item.action.json' assert { type: 'json' };
+import actionJson from '../../../../data/mods/items/actions/unwield_item.action.json' assert { type: 'json' };
 
 describe('unwield_item action definition', () => {
   describe('Action Structure', () => {
     it('should have correct action ID', () => {
-      expect(actionJson.id).toBe('weapons:unwield_item');
+      expect(actionJson.id).toBe('items:unwield_item');
     });
 
     it('should have correct name', () => {
@@ -61,7 +61,7 @@ describe('unwield_item action definition', () => {
     });
 
     it('should use wielded_items scope for primary target', () => {
-      expect(actionJson.targets.primary.scope).toBe('weapons:wielded_items');
+      expect(actionJson.targets.primary.scope).toBe('items:wielded_items');
     });
 
     it('should use "target" placeholder for primary target', () => {

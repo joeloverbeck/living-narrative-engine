@@ -122,8 +122,8 @@ describe('metabolism scalability performance', () => {
       entityId,
       entityType: 'ai',
     });
-    // Wait for async rule processing
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    // Yield to event loop for async rule processing without artificial delay
+    await new Promise((resolve) => setImmediate(resolve));
   };
 
   /**

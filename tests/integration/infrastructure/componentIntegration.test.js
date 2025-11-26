@@ -38,6 +38,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
       const mockConditionFile = {
         id: 'test:event-is-action-test',
+        description: 'Test condition for action test',
         logic: { '==': [{ var: 'event.payload.actionId' }, 'test:action'] },
       };
 
@@ -83,6 +84,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
         const mockConditionFile = {
           id: `${category}:event-is-action-test`,
+          description: `Test condition for ${category} action`,
           logic: {
             '==': [{ var: 'event.payload.actionId' }, `${category}:action`],
           },
@@ -116,6 +118,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
       const mockConditionFile = {
         id: 'test:condition',
+        description: 'Test condition for entity manager integration',
         logic: { '==': [{ var: 'event.payload.actionId' }, 'test:action'] },
       };
 
@@ -158,6 +161,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
       const mockConditionFile = {
         id: 'kissing:event-is-action-kiss-cheek',
+        description: 'Test condition for kiss cheek action',
         logic: {
           '==': [{ var: 'event.payload.actionId' }, 'kissing:kiss_cheek'],
         },
@@ -205,6 +209,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
       const mockConditionFile = {
         id: 'test:condition',
+        description: 'Test condition for anatomy action',
         logic: { '==': [{ var: 'event.payload.actionId' }, 'test:action'] },
       };
 
@@ -255,6 +260,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
       const mockConditionFile = {
         id: 'test:condition',
+        description: 'Test condition for multi-actor scenario',
         logic: { '==': [{ var: 'event.payload.actionId' }, 'test:action'] },
       };
 
@@ -301,7 +307,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
         condition: { condition_ref: 'test:event-is-action-test' },
         actions: [
           {
-            type: 'LOG_MESSAGE',
+            type: 'LOG',
             parameters: {
               message: 'Test action executed successfully',
               level: 'info',
@@ -319,6 +325,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
       const mockConditionFile = {
         id: 'test:event-is-action-test',
+        description: 'Test condition for event validation',
         logic: { '==': [{ var: 'event.payload.actionId' }, 'test:action'] },
       };
 
@@ -344,7 +351,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
       expect(() => {
         ModAssertionHelpers.assertOnlyExpectedEvents(fixture.events, [
           'core:attempt_action',
-          'LOG_MESSAGE',
+          'LOG',
           'test:action_completed',
         ]);
       }).not.toThrow();
@@ -369,6 +376,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
       const mockConditionFile = {
         id: 'test:condition',
+        description: 'Test condition for component test',
         logic: { '==': [{ var: 'event.payload.actionId' }, 'test:action'] },
       };
 
@@ -410,6 +418,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
       const mockConditionFile = {
         id: 'test:never-match',
+        description: 'Test condition that never matches',
         logic: { '==': [{ var: 'event.payload.actionId' }, 'never:matches'] },
       };
 
@@ -444,7 +453,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
             parameters: { entity_ref: 'actor', result_variable: 'test_name' },
           },
           {
-            type: 'LOG_MESSAGE',
+            type: 'LOG',
             parameters: {
               message: 'Orchestration test successful',
               level: 'info',
@@ -455,6 +464,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
       const mockConditionFile = {
         id: 'test:orchestration-condition',
+        description: 'Test condition for orchestration test',
         logic: {
           '==': [{ var: 'event.payload.actionId' }, 'test:orchestration'],
         },
@@ -509,6 +519,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
       const mockConditionFile = {
         id: 'test:inheritance-condition',
+        description: 'Test condition for inheritance test',
         logic: {
           '==': [{ var: 'event.payload.actionId' }, 'test:inheritance'],
         },
@@ -564,6 +575,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
       const mockConditionFile = {
         id: 'test:state-condition',
+        description: 'Test condition for state test',
         logic: { '==': [{ var: 'event.payload.actionId' }, 'test:state'] },
       };
 
@@ -630,6 +642,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
         const mockConditionFile = {
           id: `${category}:test-condition`,
+          description: `Test condition for ${category} test`,
           logic: {
             '==': [{ var: 'event.payload.actionId' }, `${category}:test`],
           },
@@ -669,6 +682,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
       const mockConditionFile = {
         id: 'positioning:auto-detect-condition',
+        description: 'Test condition for auto-detect',
         logic: {
           '==': [{ var: 'event.payload.actionId' }, 'positioning:auto_detect'],
         },
@@ -705,7 +719,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
             parameters: { entity_ref: 'actor', result_variable: 'test_name' },
           },
           {
-            type: 'LOG_MESSAGE',
+            type: 'LOG',
             parameters: {
               message: 'Configuration successful',
               level: 'info',
@@ -716,6 +730,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
       const mockConditionFile = {
         id: 'affection:seamless-condition',
+        description: 'Test condition for seamless integration',
         logic: {
           '==': [{ var: 'event.payload.actionId' }, 'affection:seamless'],
         },

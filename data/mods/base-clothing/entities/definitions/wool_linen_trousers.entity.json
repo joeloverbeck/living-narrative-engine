@@ -1,0 +1,44 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:wool_linen_trousers",
+  "description": "Charcoal-gray wool trousers with linen lining",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_lower"
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "wool"
+    },
+    "core:name": {
+      "text": "wool trousers"
+    },
+    "core:description": {
+      "text": "Sturdy trousers of charcoal-dyed wool, lined with linen for comfort against the skin. Cut in the military style with reinforced knees and a high waist that sits well under armor. Multiple pockets are cleverly hidden in the seams, and the fabric is thick enough to turn a glancing blade."
+    },
+    "descriptors:color_basic": {
+      "color": "gray"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_lower"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.45
+    }
+  }
+}

@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "weapons:unwield_item",
+  "id": "items:unwield_item",
   "name": "Unwield Item",
   "description": "Stop wielding an item, freeing up your hands",
   "generateCombinations": true,
@@ -12,7 +12,7 @@
   },
   "targets": {
     "primary": {
-      "scope": "weapons:wielded_items",
+      "scope": "items:wielded_items",
       "placeholder": "target",
       "description": "Item to stop wielding"
     }

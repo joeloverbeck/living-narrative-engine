@@ -85,7 +85,7 @@ describe('Grabbing Operation Schema Validation', () => {
     it('should validate handle_unwield_item.rule.json with UNLOCK_GRABBING using template string for count', async () => {
       // Arrange
       const ruleDataContent = await readFile(
-        'data/mods/weapons/rules/handle_unwield_item.rule.json',
+        'data/mods/items/rules/handle_unwield_item.rule.json',
         'utf8'
       );
       const ruleData = JSON.parse(ruleDataContent);
