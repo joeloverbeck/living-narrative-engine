@@ -168,4 +168,187 @@ describe('ErrorHandlingStrategy', () => {
       })
     );
   });
+
+  it('runs recovery flow through handleError for recoverable categories', () => {
+    const recoveryHandler = jest.fn();
+    const { strategy } = createStrategy({
+      recoveryHandlers: { [ERROR_CATEGORIES.NETWORK]: recoveryHandler },
+    });
+
+    strategy.handleError(new Error('network down'), {
+      category: ERROR_CATEGORIES.NETWORK,
+      showToUser: false,
+    });
+
+    expect(recoveryHandler).toHaveBeenCalled();
+  });
+
+  it('propagates service errors after logging with system context', () => {
+    const { strategy } = createStrategy();
+    const spy = jest.spyOn(strategy, 'handleError');
+    const error = new Error('service failed');
+
+    expect(() =>
+      strategy.handleServiceError(error, 'saveProfile', 'Could not save')
+    ).toThrow(error);
+
+    expect(spy).toHaveBeenCalledWith(
+      error,
+      expect.objectContaining({
+        operation: 'saveProfile',
+        category: ERROR_CATEGORIES.SYSTEM,
+        userMessage: 'Could not save',
+        showToUser: true,
+      })
+    );
+  });
+
+  it('returns supplied user message directly before category heuristics', () => {
+    const { strategy } = createStrategy();
+    const message = strategy.generateUserMessage(new Error('ignored'), {
+      userMessage: 'Custom user message',
+    });
+
+    expect(message).toBe('Custom user message');
+  });
+
+  it('covers permission and not found user message branches', () => {
+    const { strategy } = createStrategy();
+    expect(
+      strategy.generateUserMessage(new Error('forbidden'), {
+        category: ERROR_CATEGORIES.PERMISSION,
+      })
+    ).toContain("don't have permission");
+    expect(
+      strategy.generateUserMessage(new Error('404 item'), {
+        category: ERROR_CATEGORIES.NOT_FOUND,
+      })
+    ).toContain('not found');
+  });
+
+  it('logs error details respecting severity levels', () => {
+    const { strategy, logger } = createStrategy();
+    const baseDetails = {
+      message: 'msg',
+      operation: 'op',
+      category: ERROR_CATEGORIES.SYSTEM,
+      metadata: {},
+      severity: ERROR_SEVERITY.INFO,
+    };
+
+    strategy.logError(baseDetails);
+    strategy.logError({ ...baseDetails, severity: ERROR_SEVERITY.WARNING });
+    strategy.logError({ ...baseDetails, severity: ERROR_SEVERITY.CRITICAL });
+    strategy.logError({ ...baseDetails, severity: 'UNKNOWN' });
+
+    expect(logger.info).toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalledTimes(2);
+  });
+
+  it('surfaces errors to UI through multiple fallback channels', () => {
+    const showState = jest.fn();
+    const uiStateManager = { showState: jest.fn() };
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    const { strategy: firstStrategy } = createStrategy({
+      showError: null,
+      showState,
+    });
+    firstStrategy.showErrorToUser({
+      userMessage: 'state path',
+      category: ERROR_CATEGORIES.SYSTEM,
+      severity: ERROR_SEVERITY.ERROR,
+    });
+    expect(showState).toHaveBeenCalledWith('error', {
+      message: 'state path',
+      category: ERROR_CATEGORIES.SYSTEM,
+      severity: ERROR_SEVERITY.ERROR,
+    });
+
+    const { strategy: secondStrategy } = createStrategy({
+      showError: null,
+      showState: null,
+      uiStateManager,
+    });
+    secondStrategy.showErrorToUser({
+      userMessage: 'ui manager',
+      category: ERROR_CATEGORIES.SYSTEM,
+      severity: ERROR_SEVERITY.ERROR,
+    });
+    expect(uiStateManager.showState).toHaveBeenCalledWith(
+      'error',
+      'ui manager'
+    );
+
+    const { strategy: thirdStrategy } = createStrategy({
+      showError: null,
+      showState: null,
+      uiStateManager: null,
+    });
+    thirdStrategy.showErrorToUser({
+      userMessage: 'console fallback',
+      category: ERROR_CATEGORIES.SYSTEM,
+      severity: ERROR_SEVERITY.ERROR,
+    });
+    expect(consoleSpy).toHaveBeenCalledWith(
+      'Error display not available:',
+      'console fallback'
+    );
+
+    consoleSpy.mockRestore();
+  });
+
+  it('marks temporary or network errors as recoverable and others as not', () => {
+    const { strategy } = createStrategy();
+    expect(
+      strategy.determineRecoverability(new Error('temporary glitch'), {})
+    ).toBe(true);
+    expect(
+      strategy.determineRecoverability(new Error('no access'), {
+        category: ERROR_CATEGORIES.PERMISSION,
+      })
+    ).toBe(false);
+  });
+
+  it('logs recovery handler failures while still continuing flow', () => {
+    const failingHandler = jest.fn(() => {
+      throw new Error('recovery blew up');
+    });
+    const { strategy, logger } = createStrategy({
+      recoveryHandlers: { [ERROR_CATEGORIES.NETWORK]: failingHandler },
+    });
+
+    strategy.attemptErrorRecovery({
+      category: ERROR_CATEGORIES.NETWORK,
+    });
+
+    expect(logger.info).toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalled();
+  });
+
+  it('creates wrapped errors with metadata helpers', () => {
+    const { strategy } = createStrategy();
+    const created = strategy.createError('msg', ERROR_CATEGORIES.SYSTEM, {
+      id: 1,
+    });
+    expect(created.category).toBe(ERROR_CATEGORIES.SYSTEM);
+    expect(created.metadata).toEqual({ id: 1 });
+    expect(created.controller).toBe('TestController');
+
+    const original = new Error('boom');
+    original.stack = 'stacktrace';
+    const wrapped = strategy.wrapError(original, 'context');
+    expect(wrapped.message).toBe('context: boom');
+    expect(wrapped.originalError).toBe(original);
+    expect(wrapped.stack).toBe('stacktrace');
+  });
+
+  it('resets last error state explicitly', () => {
+    const { strategy } = createStrategy();
+    strategy.handleError(new Error('oops'));
+    expect(strategy.lastError).not.toBeNull();
+    strategy.resetLastError();
+    expect(strategy.lastError).toBeNull();
+  });
 });
