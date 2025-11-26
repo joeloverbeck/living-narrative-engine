@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "skills:ranged_skill",
+  "description": "Ranged combat proficiency. Determines effectiveness with bows, crossbows, and thrown weapons.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 0,
+        "description": "Skill level from 0 (untrained) to 100 (master)"
+      }
+    },
+    "required": ["value"],
+    "additionalProperties": false
+  }
+}

@@ -24,9 +24,9 @@ This epic implements a non-deterministic (chance-based) actions system for the L
 | Ticket | Description | Status |
 |--------|-------------|--------|
 | [NONDETACTSYS-001](./NONDETACTSYS-001-skills-mod.md) | Create skills mod with skill components | ⬜ |
-| [NONDETACTSYS-002](./NONDETACTSYS-002-damage-types-mod.md) | Create damage-types mod with marker components | ⬜ |
-| [NONDETACTSYS-003](./NONDETACTSYS-003-skill-resolver-service.md) | Implement SkillResolverService | ⬜ |
-| [NONDETACTSYS-004](./NONDETACTSYS-004-probability-calculator-service.md) | Implement ProbabilityCalculatorService | ⬜ |
+| [NONDETACTSYS-002](../archive/NONDETACTSYS/NONDETACTSYS-002-damage-types-mod.md) | Create damage-types mod with marker components | ✅ |
+| [NONDETACTSYS-003](../archive/NONDETACTSYS/NONDETACTSYS-003-skill-resolver-service.md) | Implement SkillResolverService | ✅ |
+| [NONDETACTSYS-004](../archive/NONDETACTSYS/NONDETACTSYS-004-probability-calculator-service.md) | Implement ProbabilityCalculatorService | ✅ |
 | [NONDETACTSYS-005](./NONDETACTSYS-005-outcome-determiner-service.md) | Implement OutcomeDeterminerService | ⬜ |
 
 ### Phase 2: Operation Handler

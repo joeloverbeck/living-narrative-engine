@@ -1,5 +1,7 @@
 # NONDETACTSYS-004: Implement ProbabilityCalculatorService
 
+**Status: ✅ COMPLETED**
+
 ## Summary
 
 Create the `ProbabilityCalculatorService` that calculates success probability using configurable formulas (ratio, logistic, linear). This service is a core building block for the non-deterministic action system.
@@ -153,12 +155,12 @@ npx eslint src/combat/services/ProbabilityCalculatorService.js
 
 ### Invariants That Must Remain True
 
-- [ ] Service follows existing DI patterns
-- [ ] All methods have JSDoc comments
-- [ ] Formula calculations are mathematically correct
-- [ ] Bounds are always respected (no chance < min or > max)
-- [ ] Unit test coverage >= 90%
-- [ ] No modifications to existing files except tokens-core.js and combat/index.js
+- [x] Service follows existing DI patterns
+- [x] All methods have JSDoc comments
+- [x] Formula calculations are mathematically correct
+- [x] Bounds are always respected (no chance < min or > max)
+- [x] Unit test coverage >= 90%
+- [x] No modifications to existing files except tokens-core.js and combat/index.js
 
 ## Dependencies
 
@@ -172,3 +174,64 @@ npx eslint src/combat/services/ProbabilityCalculatorService.js
 |------|---------|
 | `src/clothing/services/clothingAccessibilityService.js` | Service pattern reference |
 | `src/logic/jsonLogicEvaluationService.js` | Pure calculation service pattern |
+
+---
+
+## Outcome
+
+**Completed: 2025-11-26**
+
+### What Was Actually Changed vs Originally Planned
+
+**All changes matched the plan exactly:**
+
+1. **Created** `src/combat/services/ProbabilityCalculatorService.js` (~320 lines)
+   - Pure calculation service with only logger dependency
+   - Implements all three formulas: ratio, logistic, linear
+   - Full modifier support (flat and percentage)
+   - Configurable bounds with defaults (5-95)
+   - Comprehensive input validation and error handling
+
+2. **Created** `tests/unit/combat/services/ProbabilityCalculatorService.test.js` (~510 lines)
+   - 48 unit tests covering all acceptance criteria
+   - Constructor validation (6 tests)
+   - Ratio formula (7 tests including both skills = 0 edge case)
+   - Logistic formula (4 tests)
+   - Linear formula (4 tests)
+   - Bounds (7 tests)
+   - Modifiers (7 tests including negative and percentage < 1)
+   - Edge cases (9 tests)
+   - Breakdown structure (2 tests)
+
+3. **Modified** `src/dependencyInjection/tokens/tokens-core.js`
+   - Added `ProbabilityCalculatorService: 'ProbabilityCalculatorService'` (line 382)
+
+4. **Modified** `src/combat/index.js`
+   - Added export for ProbabilityCalculatorService
+
+### Test Results
+
+```
+PASS tests/unit/combat/services/ProbabilityCalculatorService.test.js
+Test Suites: 1 passed, 1 total
+Tests:       48 passed, 48 total
+```
+
+### Additional Test Cases Added Beyond Requirements
+
+| Test Case | Rationale |
+|-----------|-----------|
+| Both skills = 0 returns 50% | Edge case for ratio formula division by zero |
+| NaN actorSkill handling | Defensive programming for invalid input |
+| Empty modifiers/bounds objects | Graceful handling of empty objects |
+| Negative flat modifiers | Support for debuffs |
+| Percentage modifiers < 1 | Support for percentage penalties |
+| Very large skill values | Numerical stability verification |
+| Logistic with difficulty fallback | targetSkill = 0 uses difficulty |
+
+### Notes
+
+- Typecheck passes for new files (pre-existing CLI validation errors unrelated)
+- ESLint passes with 0 errors/warnings after auto-fix
+- Service follows established SkillResolverService patterns exactly
+- No breaking changes to any existing APIs
