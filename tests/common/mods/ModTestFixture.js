@@ -451,14 +451,18 @@ export class ModTestFixture {
    *
    * Enhanced version that supports auto-loading of rule and condition files
    * when they are not provided, while maintaining full backward compatibility.
+   * Validates rule and condition files against their JSON schemas by default
+   * (SCHVALTESINT-002).
    *
    * @param {string} modId - The mod identifier
    * @param {string} ruleId - The rule identifier
    * @param {object|null} [ruleFile] - The rule definition JSON (auto-loaded if null/undefined)
    * @param {object|null} [conditionFile] - The condition definition JSON (auto-loaded if null/undefined)
    * @param {object} [options] - Additional configuration options
+   * @param {boolean} [options.skipValidation=false] - Skip schema validation (not recommended)
    * @returns {Promise<ModRuleTestFixture>} Configured test fixture for the rule
    * @throws {Error} If auto-loading fails when files are not provided
+   * @throws {Error} If schema validation fails (unless skipValidation: true)
    */
   static async forRule(
     modId,
@@ -468,6 +472,8 @@ export class ModTestFixture {
     options = {}
   ) {
     try {
+      const { skipValidation = false, ...otherOptions } = options;
+
       let finalRuleFile = ruleFile;
       let finalConditionFile = conditionFile;
 
@@ -515,13 +521,23 @@ export class ModTestFixture {
         finalConditionFile = JSON.parse(content);
       }
 
+      // Validate files against schemas (SCHVALTESINT-002)
+      if (!skipValidation && finalRuleFile && finalConditionFile) {
+        await this.#validateModFiles(
+          modId,
+          ruleId,
+          finalRuleFile,
+          finalConditionFile
+        );
+      }
+
       // Use existing ModRuleTestFixture constructor
       const fixture = new ModRuleTestFixture(
         modId,
         ruleId,
         finalRuleFile,
         finalConditionFile,
-        options
+        otherOptions
       );
 
       // Setup environment must be called after construction since it's async

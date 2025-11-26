@@ -513,3 +513,242 @@ describe('ModTestFixture.forAction() Schema Validation', () => {
     });
   });
 });
+
+/**
+ * Tests for ModTestFixture.forRule() schema validation (SCHVALTESINT-002)
+ */
+describe('ModTestFixture.forRule() Schema Validation', () => {
+  // Valid rule file that conforms to rule.schema.json
+  const validRuleFile = {
+    rule_id: 'test_handle_rule',
+    event_type: 'core:attempt_action',
+    condition: { condition_ref: 'test:event-is-action-test' },
+    actions: [
+      {
+        type: 'LOG',
+        parameters: {
+          message: 'Test rule executed',
+          level: 'info',
+        },
+      },
+    ],
+  };
+
+  // Valid condition file that conforms to condition.schema.json
+  const validConditionFile = {
+    id: 'test:event-is-action-test',
+    description: 'Checks if the triggering event is for the test action.',
+    logic: {
+      '==': [{ var: 'event.payload.actionId' }, 'test:test_rule'],
+    },
+  };
+
+  beforeEach(() => {
+    // Reset the validator to ensure clean state between tests
+    ModTestFixture.resetSchemaValidator();
+  });
+
+  afterEach(() => {
+    ModTestFixture.resetSchemaValidator();
+  });
+
+  describe('valid files', () => {
+    it('should succeed for valid rule and condition files', async () => {
+      // Arrange & Act
+      const fixture = await ModTestFixture.forRule(
+        'test',
+        'test:test_rule',
+        validRuleFile,
+        validConditionFile
+      );
+
+      // Assert
+      expect(fixture).toBeDefined();
+      expect(fixture.modId).toBe('test');
+      expect(fixture.ruleId).toBe('test:test_rule');
+
+      // Cleanup
+      fixture.cleanup();
+    });
+  });
+
+  describe('invalid rule files', () => {
+    it('should throw ValidationError when rule file violates schema', async () => {
+      // Arrange
+      const invalidRuleFile = {
+        rule_id: 'test_handle_rule',
+        // Missing required: event_type
+        actions: [{ type: 'LOG', parameters: { message: 'Test' } }],
+      };
+
+      // Act & Assert
+      await expect(
+        ModTestFixture.forRule(
+          'test',
+          'test:test_rule',
+          invalidRuleFile,
+          validConditionFile
+        )
+      ).rejects.toThrow(/Schema validation failed for rule file/);
+    });
+
+    it('should include rule ID in error message', async () => {
+      // Arrange
+      const invalidRuleFile = {
+        rule_id: 'test_handle_rule',
+        // Missing event_type
+        actions: [{ type: 'LOG', parameters: { message: 'Test' } }],
+      };
+
+      // Act & Assert
+      await expect(
+        ModTestFixture.forRule(
+          'mymod',
+          'mymod:my_rule',
+          invalidRuleFile,
+          validConditionFile
+        )
+      ).rejects.toThrow(/mymod:my_rule/);
+    });
+  });
+
+  describe('invalid condition files', () => {
+    it('should throw ValidationError when condition file violates schema', async () => {
+      // Arrange
+      const invalidConditionFile = {
+        // Missing required: id
+        description: 'Test condition',
+        logic: { '==': [1, 1] },
+      };
+
+      // Act & Assert
+      await expect(
+        ModTestFixture.forRule(
+          'test',
+          'test:test_rule',
+          validRuleFile,
+          invalidConditionFile
+        )
+      ).rejects.toThrow(/Schema validation failed for condition file/);
+    });
+  });
+
+  describe('skipValidation option', () => {
+    it('should skip validation when skipValidation: true', async () => {
+      // Arrange - invalid rule file that would normally fail validation
+      const invalidRuleFile = {
+        rule_id: 'test_handle_rule',
+        // Missing event_type and actions - should fail validation
+      };
+
+      // Note: This test validates that skipValidation bypasses schema validation.
+      // The constructor may still fail for other reasons, but schema validation is skipped.
+      // We wrap in try/catch to distinguish schema validation errors from other errors.
+
+      let caughtError = null;
+      try {
+        await ModTestFixture.forRule(
+          'test',
+          'test:test_rule',
+          invalidRuleFile,
+          validConditionFile,
+          { skipValidation: true }
+        );
+      } catch (error) {
+        caughtError = error;
+      }
+
+      // Assert - verify that any error thrown is NOT a schema validation error
+      const errorMessage = caughtError?.message ?? '';
+      expect(errorMessage).not.toContain('Schema validation failed');
+    });
+
+    it('should perform validation when skipValidation is not set (default false)', async () => {
+      // Arrange
+      const invalidRuleFile = {
+        rule_id: 'test_handle_rule',
+        // Missing event_type - invalid
+        actions: [{ type: 'LOG', parameters: { message: 'Test' } }],
+      };
+
+      // Act & Assert - should throw because validation is on by default
+      await expect(
+        ModTestFixture.forRule(
+          'test',
+          'test:test_rule',
+          invalidRuleFile,
+          validConditionFile
+          // No options - skipValidation defaults to false
+        )
+      ).rejects.toThrow(/Schema validation failed for rule file/);
+    });
+
+    it('should perform validation when skipValidation is explicitly false', async () => {
+      // Arrange
+      const invalidRuleFile = {
+        rule_id: 'test_handle_rule',
+        // Missing event_type - invalid
+        actions: [{ type: 'LOG', parameters: { message: 'Test' } }],
+      };
+
+      // Act & Assert
+      await expect(
+        ModTestFixture.forRule(
+          'test',
+          'test:test_rule',
+          invalidRuleFile,
+          validConditionFile,
+          { skipValidation: false }
+        )
+      ).rejects.toThrow(/Schema validation failed for rule file/);
+    });
+  });
+
+  describe('edge cases', () => {
+    it('should handle rule file with only required fields', async () => {
+      // Arrange - minimal valid rule file
+      const minimalRuleFile = {
+        event_type: 'core:attempt_action',
+        actions: [
+          {
+            type: 'LOG',
+            parameters: { message: 'Minimal test' },
+          },
+        ],
+      };
+
+      // Act
+      const fixture = await ModTestFixture.forRule(
+        'test',
+        'test:minimal_rule',
+        minimalRuleFile,
+        validConditionFile
+      );
+
+      // Assert
+      expect(fixture).toBeDefined();
+      fixture.cleanup();
+    });
+
+    it('should handle condition file with only required fields', async () => {
+      // Arrange - minimal valid condition file
+      const minimalConditionFile = {
+        id: 'test:minimal-condition',
+        description: 'Minimal condition',
+        logic: { '==': [1, 1] },
+      };
+
+      // Act
+      const fixture = await ModTestFixture.forRule(
+        'test',
+        'test:test_rule',
+        validRuleFile,
+        minimalConditionFile
+      );
+
+      // Assert
+      expect(fixture).toBeDefined();
+      fixture.cleanup();
+    });
+  });
+});
