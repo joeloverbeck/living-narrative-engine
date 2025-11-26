@@ -201,7 +201,7 @@ describe('JSON-Schema – Anatomy Blueprint Part Definition', () => {
           },
           weapon_sheath: {
             anatomySockets: ['back_mount', 'hip_mount'],
-            allowedLayers: ['accessory'],
+            allowedLayers: ['accessories'],
           },
         },
       };

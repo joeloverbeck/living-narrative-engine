@@ -1,9 +1,9 @@
 /**
- * @file Stage for publishing ANATOMY_GENERATED event
+ * @file Stage for publishing anatomy:anatomy_generated event
  */
 
 /**
- * Publishes ANATOMY_GENERATED event if eventBus and socketIndex available
+ * Publishes anatomy:anatomy_generated event if eventBus and socketIndex available
  *
  * @param {object} context - Generation context
  * @param {string} context.ownerId - Owner entity ID
@@ -32,7 +32,7 @@ export async function executeEventPublication(context, dependencies) {
   }
 
   logger.debug(
-    `EventPublicationStage: Publishing ANATOMY_GENERATED event for entity '${ownerId}'`
+    `EventPublicationStage: Publishing anatomy:anatomy_generated event for entity '${ownerId}'`
   );
 
   try {
@@ -40,7 +40,7 @@ export async function executeEventPublication(context, dependencies) {
     const sockets = await socketIndex.getEntitySockets(ownerId);
 
     // Build and dispatch event
-    eventBus.dispatch('ANATOMY_GENERATED', {
+    eventBus.dispatch('anatomy:anatomy_generated', {
       entityId: ownerId,
       blueprintId: blueprintId,
       sockets: sockets,
@@ -55,12 +55,12 @@ export async function executeEventPublication(context, dependencies) {
     });
 
     logger.debug(
-      `EventPublicationStage: Successfully published ANATOMY_GENERATED event for entity '${ownerId}'`
+      `EventPublicationStage: Successfully published anatomy:anatomy_generated event for entity '${ownerId}'`
     );
   } catch (error) {
     // Don't fail the generation if event publication fails
     logger.error(
-      `EventPublicationStage: Failed to publish ANATOMY_GENERATED event for entity '${ownerId}'`,
+      `EventPublicationStage: Failed to publish anatomy:anatomy_generated event for entity '${ownerId}'`,
       error
     );
   }

@@ -16,13 +16,13 @@
       "material": "linen"
     },
     "core:name": {
-      "text": "linen footwraps"
+      "text": "footwraps"
     },
     "core:description": {
       "text": "Long strips of cream-colored linen meant to be wrapped around the feet before donning boots. The traditional footwear of soldiers and travelers, these wraps cushion the feet against the hard leather of boots while wicking away moisture. When wrapped properly, they prevent blisters on long marches better than any sock."
     },
-    "descriptors:color_basic": {
-      "color": "beige"
+    "descriptors:color_extended": {
+      "color": "cream"
     },
     "descriptors:texture": {
       "texture": "soft"

@@ -166,13 +166,15 @@ describe('CLOLAYMIG-008 & CLOLAYMIG-010: Underwear Entity Migration', () => {
   });
 
   describe('Mod Manifest', () => {
-    it('should have underwear mod manifest with all 33 entity definitions', async () => {
+    it('should have underwear mod manifest with entity definitions', async () => {
       const manifestPath = path.join(underwearModPath, 'mod-manifest.json');
       const content = await fs.readFile(manifestPath, 'utf8');
       const manifest = JSON.parse(content);
 
       expect(manifest.id).toBe('underwear');
-      expect(manifest.content.entities.definitions).toHaveLength(33);
+      // At least the original 33 entities from migration should be present
+      // (count will grow as more underwear items are added)
+      expect(manifest.content.entities.definitions.length).toBeGreaterThanOrEqual(33);
     });
 
     it('should reference all entity files in manifest', async () => {

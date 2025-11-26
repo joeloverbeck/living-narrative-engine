@@ -139,7 +139,7 @@ export class AnatomyGenerationWorkflow extends BaseService {
       this.#getDependencies()
     );
 
-    // Step 5: Publish ANATOMY_GENERATED event (optional - for subscribers)
+    // Step 5: Publish anatomy:anatomy_generated event (optional - for subscribers)
     await executeEventPublication(
       { ownerId, blueprintId, graphResult, partsMap, slotEntityMappings },
       this.#getDependencies()

@@ -54,6 +54,10 @@
     {
       "id": "weapons",
       "version": "^1.0.0"
+    },
+    {
+      "id": "armor",
+      "version": "^1.0.0"
     }
   ],
   "content": {

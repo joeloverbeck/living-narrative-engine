@@ -16,13 +16,13 @@
       "material": "linen"
     },
     "core:name": {
-      "text": "linen drawers"
+      "text": "drawers"
     },
     "core:description": {
       "text": "Practical linen drawers in natural cream color, loose-fitting and comfortable for long days on the road or in battle. The lightweight fabric breathes well in heat and dries quickly when washed in streams. A drawstring waist allows for adjustment, and the reinforced seams speak to the hands of a skilled seamstress."
     },
-    "descriptors:color_basic": {
-      "color": "beige"
+    "descriptors:color_extended": {
+      "color": "cream"
     },
     "descriptors:texture": {
       "texture": "soft"

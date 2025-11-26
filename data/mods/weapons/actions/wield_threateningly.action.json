@@ -9,6 +9,9 @@
       "items:inventory"
     ]
   },
+  "forbidden_components": {
+    "actor": ["positioning:closeness"]
+  },
   "prerequisites": [
     {
       "logic": {
