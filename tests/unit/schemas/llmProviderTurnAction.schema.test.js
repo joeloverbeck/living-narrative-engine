@@ -46,7 +46,7 @@ describe('JSON‑Schema – LLM_PROVIDER_TURN_ACTION_SCHEMA', () => {
           {
             text: 'another note',
             subject: 'another_subject',
-            subjectType: 'concept',
+            subjectType: 'knowledge',
           },
         ],
       },

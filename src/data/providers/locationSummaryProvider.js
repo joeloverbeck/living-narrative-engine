@@ -96,10 +96,13 @@ export class LocationSummaryProvider extends ILocationSummaryProvider {
         try {
           const otherEntity =
             await this.#entityManager.getEntityInstance(entityId);
+          // Only include entities with core:actor component (actual characters)
+          // This filters out non-character entities like bulletin boards, items, etc.
+          if (!otherEntity?.hasComponent('core:actor')) {
+            return null;
+          }
           // The summary DTO has id, name, and description, which matches AICharacterInLocationDTO
-          return otherEntity
-            ? this.#summaryProvider.getSummary(otherEntity)
-            : null;
+          return this.#summaryProvider.getSummary(otherEntity);
         } catch (err) {
           logger.warn(
             `LocationSummaryProvider: Could not retrieve entity '${entityId}' in location '${locationId}': ${err.message}`

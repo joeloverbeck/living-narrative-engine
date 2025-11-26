@@ -28,13 +28,13 @@ describe('LLM Output Validation Pipeline Integration', () => {
           {
             text: 'Player expressed worry about upcoming battle',
             subject: 'Player Character',
-            subjectType: 'character',
+            subjectType: 'entity',
             context: 'Pre-battle conversation',
           },
           {
             text: 'Castle defenses appear well-maintained',
             subject: 'Castle Defenses',
-            subjectType: 'location',
+            subjectType: 'entity',
           },
         ],
       };
@@ -54,7 +54,7 @@ describe('LLM Output Validation Pipeline Integration', () => {
           {
             text: 'Merchant seems nervous about recent events',
             subject: 'Merchant',
-            subjectType: 'character',
+            subjectType: 'entity',
             context: 'Marketplace observation',
             tags: ['emotion', 'merchant', 'nervous'], // This should cause validation failure
           },
@@ -115,7 +115,7 @@ describe('LLM Output Validation Pipeline Integration', () => {
           {
             text: 'Second observation - has tags',
             subject: 'Character',
-            subjectType: 'character',
+            subjectType: 'entity',
             tags: ['problem'], // This should cause validation failure
           },
         ],

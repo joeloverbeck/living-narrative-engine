@@ -33,7 +33,7 @@ This epic implements a non-deterministic (chance-based) actions system for the L
 
 | Ticket | Description | Status |
 |--------|-------------|--------|
-| [NONDETACTSYS-006](./NONDETACTSYS-006-resolve-outcome-schema.md) | Create RESOLVE_OUTCOME operation schema | ⬜ |
+| [NONDETACTSYS-006](../archive/NONDETACTSYS/NONDETACTSYS-006-resolve-outcome-schema.md) | Create RESOLVE_OUTCOME operation schema | ✅ |
 | [NONDETACTSYS-007](./NONDETACTSYS-007-resolve-outcome-handler.md) | Implement ResolveOutcomeHandler | ⬜ |
 | [NONDETACTSYS-008](./NONDETACTSYS-008-resolve-outcome-di-registration.md) | Register RESOLVE_OUTCOME in DI system | ⬜ |
 

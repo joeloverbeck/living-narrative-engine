@@ -38,12 +38,12 @@ class XmlElementBuilder {
     if (str === '') {
       return '';
     }
+    // Only escape structurally-necessary XML characters
+    // Quotes and apostrophes are safe inside element content and should remain readable
     return str
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;');
+      .replace(/>/g, '&gt;');
   }
 
   /**
