@@ -1,0 +1,44 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:sleeveless_linen_tunic_charcoal",
+  "description": "A charcoal-gray sleeveless linen tunic",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "linen"
+    },
+    "core:name": {
+      "text": "sleeveless linen tunic"
+    },
+    "core:description": {
+      "text": "A practical sleeveless tunic of charcoal-dyed linen, cut loose for freedom of movement. The armholes are wide enough to allow full range of motion for sword work, while the hem falls to mid-thigh. The fabric has been softened through countless washings, and the dye has faded slightly at the seams from sun and sweat."
+    },
+    "descriptors:color_basic": {
+      "color": "gray"
+    },
+    "descriptors:texture": {
+      "texture": "soft"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.22
+    }
+  }
+}

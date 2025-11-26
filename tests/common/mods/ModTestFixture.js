@@ -107,8 +107,197 @@ function extractActionName(actionId) {
  *
  * Enhanced with auto-loading capabilities to reduce manual file imports while
  * maintaining full backward compatibility.
+ *
+ * Schema validation (SCHVALTESINT-001): Now validates rule and condition files
+ * against their JSON schemas before test setup. Use `skipValidation: true` in
+ * options to bypass validation for debugging edge cases.
  */
 export class ModTestFixture {
+  /** @type {import('ajv').default|null} */
+  static #schemaValidator = null;
+
+  /** @type {boolean} */
+  static #schemasLoaded = false;
+
+  /**
+   * Ensures the schema validator is initialized with AJV and required schemas.
+   * Uses lazy loading to only initialize when first needed.
+   *
+   * @returns {Promise<import('ajv').default>} Initialized AJV instance
+   * @private
+   */
+  static async #ensureSchemaValidator() {
+    if (!this.#schemaValidator) {
+      const Ajv = (await import('ajv')).default;
+      const addFormats = (await import('ajv-formats')).default;
+
+      const ajv = new Ajv({
+        allErrors: true,
+        strict: false,
+        strictTypes: false,
+        verbose: true,
+      });
+      addFormats(ajv);
+
+      this.#schemaValidator = ajv;
+    }
+
+    if (!this.#schemasLoaded) {
+      await this.#loadRequiredSchemas();
+      this.#schemasLoaded = true;
+    }
+
+    return this.#schemaValidator;
+  }
+
+  /**
+   * Loads required schemas for rule and condition validation.
+   * Includes all schema dependencies to ensure proper $ref resolution.
+   *
+   * @private
+   */
+  static async #loadRequiredSchemas() {
+    const fsPromises = (await import('fs')).promises;
+    const { resolve: resolvePath } = await import('path');
+
+    const schemasDir = resolvePath(process.cwd(), 'data/schemas');
+
+    // Order matters: base schemas first, then schemas that reference them
+    // nested-operation.schema.json is required by operations/if.schema.json
+    const schemaFiles = [
+      'common.schema.json',
+      'json-logic.schema.json',
+      'condition-container.schema.json',
+      'condition.schema.json',
+      'base-operation.schema.json',
+      'nested-operation.schema.json',
+    ];
+
+    // Load base schemas first
+    for (const filename of schemaFiles) {
+      const schemaPath = resolvePath(schemasDir, filename);
+      try {
+        const content = await fsPromises.readFile(schemaPath, 'utf8');
+        const schema = JSON.parse(content);
+        if (schema.$id && !this.#schemaValidator.getSchema(schema.$id)) {
+          this.#schemaValidator.addSchema(schema, schema.$id);
+        }
+      } catch {
+        // Schema load failure is non-fatal - validation will be skipped for that schema
+      }
+    }
+
+    // Load operation schemas from operations subdirectory
+    const operationsDir = resolvePath(schemasDir, 'operations');
+    try {
+      const operationFiles = await fsPromises.readdir(operationsDir);
+      for (const file of operationFiles) {
+        if (file.endsWith('.schema.json')) {
+          const schemaPath = resolvePath(operationsDir, file);
+          try {
+            const content = await fsPromises.readFile(schemaPath, 'utf8');
+            const schema = JSON.parse(content);
+            if (schema.$id && !this.#schemaValidator.getSchema(schema.$id)) {
+              this.#schemaValidator.addSchema(schema, schema.$id);
+            }
+          } catch {
+            // Individual operation schema load failure is non-fatal
+          }
+        }
+      }
+    } catch {
+      // Operations directory may not exist in all test environments
+    }
+
+    // Load operation.schema.json (depends on operation schemas)
+    const operationSchemaPath = resolvePath(schemasDir, 'operation.schema.json');
+    try {
+      const content = await fsPromises.readFile(operationSchemaPath, 'utf8');
+      const schema = JSON.parse(content);
+      if (schema.$id && !this.#schemaValidator.getSchema(schema.$id)) {
+        this.#schemaValidator.addSchema(schema, schema.$id);
+      }
+    } catch {
+      // Non-fatal
+    }
+
+    // Load rule.schema.json (depends on operation.schema.json)
+    const ruleSchemaPath = resolvePath(schemasDir, 'rule.schema.json');
+    try {
+      const content = await fsPromises.readFile(ruleSchemaPath, 'utf8');
+      const schema = JSON.parse(content);
+      if (schema.$id && !this.#schemaValidator.getSchema(schema.$id)) {
+        this.#schemaValidator.addSchema(schema, schema.$id);
+      }
+    } catch {
+      // Non-fatal
+    }
+  }
+
+  /**
+   * Validates mod files against their JSON schemas.
+   *
+   * @param {string} modId - The mod identifier
+   * @param {string} actionId - The action identifier
+   * @param {object} ruleFile - The rule file content
+   * @param {object} conditionFile - The condition file content
+   * @throws {Error} If validation fails with detailed error messages
+   * @private
+   */
+  static async #validateModFiles(modId, actionId, ruleFile, conditionFile) {
+    const validator = await this.#ensureSchemaValidator();
+
+    // Validate rule file
+    const ruleSchemaId = 'schema://living-narrative-engine/rule.schema.json';
+    const ruleValidator = validator.getSchema(ruleSchemaId);
+    if (ruleValidator) {
+      const isRuleValid = ruleValidator(ruleFile);
+      if (!isRuleValid) {
+        const errors = ruleValidator.errors || [];
+        const errorDetails = errors
+          .map((e) => `    ${e.instancePath || '/'}: ${e.message}`)
+          .join('\n');
+        throw new Error(
+          `Schema validation failed for rule file\n` +
+            `  Action: ${modId}:${actionId}\n` +
+            `  Schema: ${ruleSchemaId}\n` +
+            `  Validation errors:\n${errorDetails}`
+        );
+      }
+    }
+
+    // Validate condition file
+    const conditionSchemaId =
+      'schema://living-narrative-engine/condition.schema.json';
+    const conditionValidator = validator.getSchema(conditionSchemaId);
+    if (conditionValidator) {
+      const isConditionValid = conditionValidator(conditionFile);
+      if (!isConditionValid) {
+        const errors = conditionValidator.errors || [];
+        const errorDetails = errors
+          .map((e) => `    ${e.instancePath || '/'}: ${e.message}`)
+          .join('\n');
+        throw new Error(
+          `Schema validation failed for condition file\n` +
+            `  Action: ${modId}:${actionId}\n` +
+            `  Schema: ${conditionSchemaId}\n` +
+            `  Validation errors:\n${errorDetails}`
+        );
+      }
+    }
+  }
+
+  /**
+   * Resets the schema validator cache.
+   * Useful for testing the validation system itself.
+   *
+   * @static
+   */
+  static resetSchemaValidator() {
+    this.#schemaValidator = null;
+    this.#schemasLoaded = false;
+  }
+
   /**
    * Creates a test fixture for a mod action.
    *
@@ -120,12 +309,14 @@ export class ModTestFixture {
    * @param {object|null} [ruleFile] - The rule definition JSON (auto-loaded if null/undefined)
    * @param {object|null} [conditionFile] - The condition definition JSON (auto-loaded if null/undefined)
    * @param {object} [options] - Configuration options
+   * @param {boolean} [options.skipValidation=false] - Skip schema validation (for debugging)
    * @param {boolean} [options.autoRegisterScopes] - Auto-register dependency mod scopes
    * @param {string[]} [options.scopeCategories] - Which scope categories to register (positioning, inventory, items, anatomy)
    * @param {Array<string>} [options.supportingActions] - Additional action IDs whose rules
    *   and conditions should be loaded into the environment for multi-action workflows
    * @returns {Promise<ModActionTestFixture>} Configured test fixture for the action
    * @throws {Error} If auto-loading fails when files are not provided
+   * @throws {Error} If schema validation fails (unless skipValidation is true)
    * @example
    * // Manual scope registration (backward compatible)
    * const fixture = await ModTestFixture.forAction('violence', 'violence:grab_neck');
@@ -164,6 +355,7 @@ export class ModTestFixture {
       this._validateForActionOptions(options);
 
       const {
+        skipValidation = false,
         autoRegisterScopes = false,
         scopeCategories = ['positioning'],
         ...otherOptions
@@ -217,6 +409,16 @@ export class ModTestFixture {
         const resolvedPath = resolve(finalConditionFile);
         const content = await fs.readFile(resolvedPath, 'utf8');
         finalConditionFile = JSON.parse(content);
+      }
+
+      // Validate files against schemas (SCHVALTESINT-001)
+      if (!skipValidation && finalRuleFile && finalConditionFile) {
+        await this.#validateModFiles(
+          modId,
+          actionId,
+          finalRuleFile,
+          finalConditionFile
+        );
       }
 
       // Use existing ModActionTestFixture constructor
@@ -637,7 +839,11 @@ export class ModTestFixture {
       throw new Error('Options must be an object');
     }
 
-    const { autoRegisterScopes, scopeCategories } = options;
+    const { skipValidation, autoRegisterScopes, scopeCategories } = options;
+
+    if (skipValidation !== undefined && typeof skipValidation !== 'boolean') {
+      throw new Error('skipValidation must be a boolean');
+    }
 
     if (autoRegisterScopes !== undefined && typeof autoRegisterScopes !== 'boolean') {
       throw new Error('autoRegisterScopes must be a boolean');

@@ -94,11 +94,14 @@ describe('CLOLAYMIG-011: Base-Clothing Entity Migration', () => {
   ];
 
   describe('Entity File Existence', () => {
-    it('should have exactly 68 base-clothing entity files', async () => {
+    it('should have at least the expected base-clothing entity files', async () => {
       const files = await fs.readdir(baseClothingEntitiesPath);
       const entityFiles = files.filter((f) => f.endsWith('.entity.json'));
 
-      expect(entityFiles).toHaveLength(68);
+      // Should have at least the originally migrated entities (may grow over time)
+      expect(entityFiles.length).toBeGreaterThanOrEqual(
+        baseClothingEntityFiles.length
+      );
     });
 
     it('should have all expected entity files', async () => {
@@ -205,13 +208,16 @@ describe('CLOLAYMIG-011: Base-Clothing Entity Migration', () => {
   });
 
   describe('Mod Manifest', () => {
-    it('should have base-clothing mod manifest with all 68 entity definitions', async () => {
+    it('should have base-clothing mod manifest with at least the expected entity definitions', async () => {
       const manifestPath = path.join(baseClothingModPath, 'mod-manifest.json');
       const content = await fs.readFile(manifestPath, 'utf8');
       const manifest = JSON.parse(content);
 
       expect(manifest.id).toBe('base-clothing');
-      expect(manifest.content.entities.definitions).toHaveLength(68);
+      // Should have at least the originally migrated entities (may grow over time)
+      expect(manifest.content.entities.definitions.length).toBeGreaterThanOrEqual(
+        baseClothingEntityFiles.length
+      );
     });
 
     it('should reference all entity files in manifest', async () => {

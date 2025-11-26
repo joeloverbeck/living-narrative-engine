@@ -51,7 +51,8 @@
       "pick_up_item.action.json",
       "put_in_container.action.json",
       "read_item.action.json",
-      "take_from_container.action.json"
+      "take_from_container.action.json",
+      "unwield_item.action.json"
     ],
     "rules": [
       "handle_aim_item.rule.json",
@@ -69,7 +70,8 @@
       "handle_pick_up_item.rule.json",
       "handle_put_in_container.rule.json",
       "handle_read_item.rule.json",
-      "handle_take_from_container.rule.json"
+      "handle_take_from_container.rule.json",
+      "handle_unwield_item.rule.json"
     ],
     "conditions": [
       "event-is-action-aim-item.condition.json",
@@ -88,6 +90,7 @@
       "event-is-action-put-in-container.condition.json",
       "event-is-action-read-item.condition.json",
       "event-is-action-take-from-container.condition.json",
+      "event-is-action-unwield-item.condition.json",
       "secondary-has-portable.condition.json"
     ],
     "scopes": [
@@ -102,7 +105,8 @@
       "items_at_location.scope",
       "non_portable_items_at_location.scope",
       "open_containers_at_location.scope",
-      "openable_containers_at_location.scope"
+      "openable_containers_at_location.scope",
+      "wielded_items.scope"
     ],
     "events": [
       "aim_lowered.event.json",

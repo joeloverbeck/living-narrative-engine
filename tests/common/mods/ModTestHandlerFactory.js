@@ -530,6 +530,11 @@ export class ModTestHandlerFactory {
         logger,
         safeEventDispatcher: safeDispatcher,
       }),
+      MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
     };
   }
 

@@ -54,11 +54,12 @@ describe('CLOLAYMIG-008 & CLOLAYMIG-010: Underwear Entity Migration', () => {
   ];
 
   describe('Entity File Existence', () => {
-    it('should have exactly 33 underwear entity files', async () => {
+    it('should have underwear entity files', async () => {
       const files = await fs.readdir(underwearEntitiesPath);
       const entityFiles = files.filter((f) => f.endsWith('.entity.json'));
 
-      expect(entityFiles).toHaveLength(33);
+      // At least the original 33 entities from migration should exist
+      expect(entityFiles.length).toBeGreaterThanOrEqual(33);
     });
 
     it('should have all expected entity files', async () => {
@@ -217,6 +218,18 @@ describe('CLOLAYMIG-008 & CLOLAYMIG-010: Underwear Entity Migration', () => {
         const content = await fs.readFile(filePath, 'utf8');
         const entity = JSON.parse(content);
         underwearIds.add(entity.id);
+      }
+
+      // Check if clothing entities directory exists - if not, migration is complete
+      // (clothing entities were split into base-clothing, outer-clothing, etc.)
+      const clothingEntitiesDirExists = await fs
+        .access(clothingEntitiesPath)
+        .then(() => true)
+        .catch(() => false);
+
+      if (!clothingEntitiesDirExists) {
+        // Migration complete - clothing mod no longer has entities directory
+        return;
       }
 
       // Get all entity IDs from clothing mod and check for overlap

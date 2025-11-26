@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:linen_drawers",
+  "description": "Cream-colored linen drawers for everyday wear",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "torso_lower"
+      },
+      "allowedLayers": [
+        "underwear"
+      ]
+    },
+    "core:material": {
+      "material": "linen"
+    },
+    "core:name": {
+      "text": "linen drawers"
+    },
+    "core:description": {
+      "text": "Practical linen drawers in natural cream color, loose-fitting and comfortable for long days on the road or in battle. The lightweight fabric breathes well in heat and dries quickly when washed in streams. A drawstring waist allows for adjustment, and the reinforced seams speak to the hands of a skilled seamstress."
+    },
+    "descriptors:color_basic": {
+      "color": "beige"
+    },
+    "descriptors:texture": {
+      "texture": "soft"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.07
+    }
+  }
+}

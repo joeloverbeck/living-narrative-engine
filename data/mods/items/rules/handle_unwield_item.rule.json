@@ -3,7 +3,7 @@
   "rule_id": "handle_unwield_item",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "weapons:event-is-action-unwield-item"
+    "condition_ref": "items:event-is-action-unwield-item"
   },
   "actions": [
     {

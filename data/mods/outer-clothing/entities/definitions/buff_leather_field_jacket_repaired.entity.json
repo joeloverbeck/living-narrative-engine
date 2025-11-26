@@ -1,0 +1,55 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "outer-clothing:buff_leather_field_jacket_repaired",
+  "description": "A fitted leather field jacket with visible repairs",
+  "components": {
+    "clothing:wearable": {
+      "layer": "outer",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": [
+          "left_arm_clothing",
+          "right_arm_clothing"
+        ]
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "armor",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "leather",
+      "properties": [
+        "flexible"
+      ],
+      "careInstructions": [
+        "requires_oiling"
+      ]
+    },
+    "core:name": {
+      "text": "leather field jacket"
+    },
+    "core:description": {
+      "text": "A fitted field jacket of black-brown leather, burnished to a soft sheen from years of wear and careful maintenance. The cut is military in origin, with broad shoulders and a cinched waist that allows for ease of movement. Visible stitch repairs mark where the leather has been mended after battle damage, the newer thread slightly lighter against the aged hide. Despite the repairs, the jacket remains serviceable and well-fitted, a testament to its owner's stubborn practicality."
+    },
+    "descriptors:color_extended": {
+      "color": "black-brown"
+    },
+    "descriptors:texture": {
+      "texture": "burnished"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper"
+      ],
+      "coveragePriority": "outer"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 1.4
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "accessories:goatskin_fingerless_gloves",
+  "description": "Soft goatskin gloves with exposed fingers for dexterity",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "left_hand_clothing",
+        "secondary": [
+          "right_hand_clothing"
+        ]
+      },
+      "allowedLayers": [
+        "accessories"
+      ]
+    },
+    "core:material": {
+      "material": "goatskin"
+    },
+    "core:name": {
+      "text": "fingerless gloves"
+    },
+    "core:description": {
+      "text": "Supple fingerless gloves of goatskin leather, cut away at the first knuckle to allow full dexterity of the fingers while protecting the palms and wrists. The soft leather conforms to the hand like a second skin, providing a sure grip on sword hilts and reins. The palms show the calluses of their pattern, worn smooth where they grip the most often."
+    },
+    "descriptors:color_extended": {
+      "color": "warm-brown"
+    },
+    "descriptors:texture": {
+      "texture": "soft"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.12
+    }
+  }
+}

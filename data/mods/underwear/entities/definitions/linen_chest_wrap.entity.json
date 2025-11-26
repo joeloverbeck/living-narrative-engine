@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:linen_chest_wrap",
+  "description": "A cream-colored linen chest wrap for breast support",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": [
+        "underwear"
+      ]
+    },
+    "core:material": {
+      "material": "linen"
+    },
+    "core:name": {
+      "text": "linen chest wrap"
+    },
+    "core:description": {
+      "text": "A simple chest wrap fashioned from cream-colored linen. The soft, breathable fabric winds snugly around the torso, providing practical support without restricting movement. Common among soldiers and laborers who favor function over fashion, the unbleached linen shows the marks of frequent washing and hard use."
+    },
+    "descriptors:color_basic": {
+      "color": "beige"
+    },
+    "descriptors:texture": {
+      "texture": "soft"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.05
+    }
+  }
+}
