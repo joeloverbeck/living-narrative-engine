@@ -1,8 +1,14 @@
 /**
  * @file ajvAnyOfErrorFormatter.js
  * @description Enhanced AJV error formatter that handles anyOf/oneOf validation errors more intelligently
- * with early pattern detection for common issues
+ * with early pattern detection for common issues, "Did you mean?" suggestions, and optional file context support.
+ * @see validationErrorContext.js for rich error context
+ * @see suggestionUtils.js for Levenshtein-based suggestions
  */
+
+import { createValidationErrorContext } from '../validation/validationErrorContext.js';
+import { suggestOperationType } from './suggestionUtils.js';
+import { KNOWN_OPERATION_TYPES } from './preValidationUtils.js';
 
 /**
  * Formats entity_id typo error with correction guidance
@@ -516,6 +522,13 @@ function formatOperationTypeSummary(groupedErrors, data, errors) {
 
   if (failingItem?.type) {
     lines.push(`Unknown or invalid operation type: '${failingItem.type}'`);
+
+    // Add "Did you mean?" suggestion for typos
+    const suggestion = suggestOperationType(failingItem.type, KNOWN_OPERATION_TYPES);
+    if (suggestion) {
+      lines.push(suggestion);
+    }
+
     lines.push('Valid operation types include:');
     const types = Array.from(groupedErrors.keys());
     // Show more types for better debugging
@@ -550,14 +563,18 @@ function formatOperationTypeSummary(groupedErrors, data, errors) {
 }
 
 /**
- * Enhances the existing formatAjvErrors function with anyOf intelligence
- * and early pattern detection for common issues
+ * Enhances the existing formatAjvErrors function with anyOf intelligence,
+ * early pattern detection for common issues, and optional rich context support.
  *
  * @param {import('ajv').ErrorObject[]} errors - AJV validation errors
  * @param {any} [data] - The data being validated (optional)
+ * @param {Object} [context] - Optional context for enhanced error formatting
+ * @param {string} [context.filePath] - Path to the file being validated
+ * @param {string} [context.fileContent] - Content of the file being validated
+ * @param {string} [context.ruleId] - Rule or action ID being validated
  * @returns {string} Formatted error message
  */
-export function formatAjvErrorsEnhanced(errors, data) {
+export function formatAjvErrorsEnhanced(errors, data, context = null) {
   if (!errors || errors.length === 0) {
     return 'No validation errors';
   }
@@ -566,7 +583,7 @@ export function formatAjvErrorsEnhanced(errors, data) {
   // This provides fast, targeted error messages for common issues
   const patternResult = detectCommonPatterns(errors, data);
   if (patternResult) {
-    return patternResult;
+    return wrapWithContext(patternResult, errors, context);
   }
 
   // Early detection for common issues that should have been caught by pre-validation
@@ -590,7 +607,8 @@ export function formatAjvErrorsEnhanced(errors, data) {
         Object.prototype.hasOwnProperty.call(failingData, 'type') &&
         typeof failingData.type !== 'string'
       ) {
-        return `Critical structural issue: Invalid "type" field value.\n\nThe "type" field must be a string, but got ${typeof failingData.type}. Use a valid operation type like "QUERY_COMPONENT" or "DISPATCH_EVENT".\n\nNote: Pre-validation should have caught this - consider checking pre-validation configuration.`;
+        const message = `Critical structural issue: Invalid "type" field value.\n\nThe "type" field must be a string, but got ${typeof failingData.type}. Use a valid operation type like "QUERY_COMPONENT" or "DISPATCH_EVENT".\n\nNote: Pre-validation should have caught this - consider checking pre-validation configuration.`;
+        return wrapWithContext(message, errors, context);
       }
     }
   }
@@ -604,9 +622,43 @@ export function formatAjvErrorsEnhanced(errors, data) {
 
   if (hasAnyOfErrors || errors.length > 50) {
     // Try the intelligent anyOf formatter
-    return formatAnyOfErrors(errors, data);
+    const result = formatAnyOfErrors(errors, data);
+    return wrapWithContext(result, errors, context);
   }
 
   // For standard errors, use standard formatting
-  return formatStandardErrors(errors);
+  const result = formatStandardErrors(errors);
+  return wrapWithContext(result, errors, context);
+}
+
+/**
+ * Wraps an error message with rich context information if context is provided.
+ * When context includes filePath and fileContent, uses createValidationErrorContext
+ * to provide line numbers and code snippets.
+ *
+ * @param {string} message - The formatted error message
+ * @param {import('ajv').ErrorObject[]} errors - AJV validation errors (for extracting instancePath)
+ * @param {Object|null} context - Optional context for enhanced formatting
+ * @returns {string} Error message, optionally wrapped with rich context
+ */
+function wrapWithContext(message, errors, context) {
+  // If no context provided, return message as-is (backward compatible)
+  if (!context?.filePath || !context?.fileContent) {
+    return message;
+  }
+
+  // Get the primary error's instance path for line number extraction
+  const primaryError = errors?.find((e) => e.instancePath) || errors?.[0];
+  const instancePath = primaryError?.instancePath || '';
+
+  // Use createValidationErrorContext for rich formatting
+  const richContext = createValidationErrorContext({
+    filePath: context.filePath,
+    fileContent: context.fileContent,
+    instancePath,
+    message,
+    ruleId: context.ruleId || null,
+  });
+
+  return richContext.toString();
 }

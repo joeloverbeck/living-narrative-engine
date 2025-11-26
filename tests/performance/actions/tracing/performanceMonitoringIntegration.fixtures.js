@@ -237,7 +237,7 @@ export const LOAD_TEST_PATTERNS = {
 
   // Sustained pattern - consistent activity over time
   SUSTAINED_PATTERN: {
-    durationMs: 2500, // Reduced from 10000
+    durationMs: 1200, // Reduced from 2500 (was 10000) - sufficient for drift detection
     actionsPerSecond: 15, // Kept same for rate testing
     actionPattern: 'COMBAT',
   },

@@ -235,8 +235,8 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
         });
       }
 
-      // Wait a moment for alert processing
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      // Wait a moment for alert processing (reduced from 200ms - alerts process synchronously)
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Validate alert generation
       const alerts = monitoringSession.getAlerts();
@@ -310,8 +310,9 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
         );
       }
 
-      // Wait a moment for concurrency detection
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      // Wait a moment for concurrency detection (reduced from 200ms)
+      // Needs to be long enough for concurrent actions to overlap and trigger alerts
+      await new Promise((resolve) => setTimeout(resolve, 120));
 
       // Check for concurrency alerts before actions complete
       let alerts = monitoringSession.getAlerts();
@@ -530,57 +531,58 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
       monitoringSession = testBed.startMonitoring();
 
       // Simulate complex nested workflow (e.g., combat with inventory management)
+      // Note: Durations reduced for faster test execution while preserving relative bottleneck detection
       const complexWorkflow = [
         // Initial setup actions (reduced durations)
         {
           actionId: 'setup:initialize_combat',
-          expectedDuration: 8,
+          expectedDuration: 4,
           critical: false,
         },
         {
           actionId: 'setup:load_inventory',
-          expectedDuration: 10,
+          expectedDuration: 5,
           critical: false,
         },
 
         // Critical path: main combat loop
         {
           actionId: 'combat:calculate_damage',
-          expectedDuration: 35,
+          expectedDuration: 28,
           critical: true,
         }, // Guaranteed slow (25ms threshold + margin)
         {
           actionId: 'combat:apply_effects',
-          expectedDuration: 15,
+          expectedDuration: 8,
           critical: true,
         },
         {
           actionId: 'combat:update_stats',
-          expectedDuration: 11,
+          expectedDuration: 6,
           critical: true,
         },
 
         // Nested inventory operations
         {
           actionId: 'inventory:check_durability',
-          expectedDuration: 6,
+          expectedDuration: 3,
           critical: false,
         },
         {
           actionId: 'inventory:auto_repair',
-          expectedDuration: 45,
+          expectedDuration: 32,
           critical: true,
         }, // Guaranteed bottleneck (well above 25ms threshold)
 
         // Final combat resolution
         {
           actionId: 'combat:determine_outcome',
-          expectedDuration: 9,
+          expectedDuration: 5,
           critical: true,
         },
         {
           actionId: 'combat:award_experience',
-          expectedDuration: 5,
+          expectedDuration: 3,
           critical: false,
         },
       ];
@@ -622,7 +624,7 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
       );
 
       // Validate that we found a bottleneck (any slow operation is fine for this test)
-      expect(slowestAction.actualDuration).toBeGreaterThan(30); // Should be significantly slow (expect auto_repair to be slowest at ~45ms)
+      expect(slowestAction.actualDuration).toBeGreaterThan(25); // Should be significantly slow (expect auto_repair to be slowest at ~32ms)
       expect(slowestAction.actionId).toBeDefined();
 
       // Log the actual bottleneck for verification
