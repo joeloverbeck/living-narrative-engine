@@ -1,0 +1,39 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:pink_cotton_shorts_white_piping",
+  "description": "Casual cotton shorts in soft pink with crisp white piping trim",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "legs"
+      },
+      "allowedLayers": ["underwear", "base"]
+    },
+    "core:material": {
+      "material": "cotton",
+      "properties": ["breathable", "flexible"]
+    },
+    "descriptors:color_basic": {
+      "color": "pink"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["legs"],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.16
+    },
+    "core:name": {
+      "text": "Pink Cotton Shorts with White Piping"
+    },
+    "core:description": {
+      "text": "Casual cotton shorts in a soft pink hue, trimmed with crisp white piping along the leg openings and waistband. The lightweight fabric breathes easily against the skin, making them ideal for warm days or lounging indoors. An elastic waistband with a drawstring ensures a comfortable, adjustable fit."
+    }
+  }
+}

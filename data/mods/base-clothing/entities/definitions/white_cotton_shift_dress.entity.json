@@ -1,0 +1,41 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:white_cotton_shift_dress",
+  "description": "White cotton shift dress",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "full_body"
+      },
+      "allowedLayers": [
+        "underwear",
+        "base"
+      ]
+    },
+    "core:material": {
+      "material": "cotton"
+    },
+    "core:name": {
+      "text": "shift dress"
+    },
+    "core:description": {
+      "text": "A simple white cotton shift dress with a relaxed, loose-fitting silhouette. The classic design features a straight cut that skims the body without clinging, falling gracefully from the shoulders to mid-thigh. The soft cotton fabric provides breathability and comfort for all-day wear. Perfect for casual occasions, this versatile dress can be dressed up or down with accessories."
+    },
+    "descriptors:color_basic": {
+      "color": "white"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper",
+        "torso_lower"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.42
+    }
+  }
+}

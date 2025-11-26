@@ -1,6 +1,10 @@
 /**
  * @file Unit tests for new clothing item entity definitions
  * Tests pink/white clothing collection including off-shoulder crop top, flared skirt, thigh-high socks, panties, and platform sneakers
+ *
+ * Note: Entities have been migrated to layer-specific mods (CLOLAYMIG migration):
+ * - Base layer items → base-clothing mod
+ * - Underwear layer items → underwear mod
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
@@ -10,19 +14,23 @@ import Ajv from 'ajv';
 
 describe('New Clothing Items Unit Tests', () => {
   let ajv;
-  let entitySchema;
-  const clothingEntitiesPath = 'data/mods/clothing/entities/definitions';
+  let baseClothingEntitySchema;
+  let underwearEntitySchema;
+
+  // Entity paths after migration (CLOLAYMIG-013)
+  const baseClothingEntitiesPath = 'data/mods/base-clothing/entities/definitions';
+  const underwearEntitiesPath = 'data/mods/underwear/entities/definitions';
 
   beforeEach(() => {
     ajv = new Ajv({ strict: false });
 
-    // Mock entity schema - in real implementation this would be loaded from schema files
-    entitySchema = {
+    // Schema for base-clothing mod entities
+    baseClothingEntitySchema = {
       type: 'object',
       required: ['$schema', 'id', 'description', 'components'],
       properties: {
         $schema: { type: 'string' },
-        id: { type: 'string', pattern: '^clothing:' },
+        id: { type: 'string', pattern: '^base-clothing:' },
         description: { type: 'string', minLength: 1 },
         components: {
           type: 'object',
@@ -158,6 +166,15 @@ describe('New Clothing Items Unit Tests', () => {
         },
       },
     };
+
+    // Schema for underwear mod entities
+    underwearEntitySchema = {
+      ...baseClothingEntitySchema,
+      properties: {
+        ...baseClothingEntitySchema.properties,
+        id: { type: 'string', pattern: '^underwear:' },
+      },
+    };
   });
 
   describe('Pink Off-The-Shoulder Crop Top', () => {
@@ -166,7 +183,7 @@ describe('New Clothing Items Unit Tests', () => {
     beforeEach(() => {
       const filePath = join(
         process.cwd(),
-        clothingEntitiesPath,
+        baseClothingEntitiesPath,
         'pink_off_shoulder_crop_top.entity.json'
       );
       const fileContent = readFileSync(filePath, 'utf8');
@@ -179,7 +196,7 @@ describe('New Clothing Items Unit Tests', () => {
     });
 
     it('should pass schema validation', () => {
-      const validate = ajv.compile(entitySchema);
+      const validate = ajv.compile(baseClothingEntitySchema);
       const valid = validate(entity);
 
       expect(valid).toBe(true);
@@ -189,7 +206,7 @@ describe('New Clothing Items Unit Tests', () => {
     });
 
     it('should have correct entity metadata', () => {
-      expect(entity.id).toBe('clothing:pink_off_shoulder_crop_top');
+      expect(entity.id).toBe('base-clothing:pink_off_shoulder_crop_top');
       expect(entity.description).toBe('Pink off-the-shoulder crop top');
       expect(entity.$schema).toBe(
         'schema://living-narrative-engine/entity-definition.schema.json'
@@ -233,7 +250,7 @@ describe('New Clothing Items Unit Tests', () => {
     beforeEach(() => {
       const filePath = join(
         process.cwd(),
-        clothingEntitiesPath,
+        baseClothingEntitiesPath,
         'pink_short_flared_skirt.entity.json'
       );
       const fileContent = readFileSync(filePath, 'utf8');
@@ -246,14 +263,14 @@ describe('New Clothing Items Unit Tests', () => {
     });
 
     it('should pass schema validation', () => {
-      const validate = ajv.compile(entitySchema);
+      const validate = ajv.compile(baseClothingEntitySchema);
       const valid = validate(entity);
 
       expect(valid).toBe(true);
     });
 
     it('should have correct entity metadata', () => {
-      expect(entity.id).toBe('clothing:pink_short_flared_skirt');
+      expect(entity.id).toBe('base-clothing:pink_short_flared_skirt');
       expect(entity.description).toBe('Pink short flared skirt');
     });
 
@@ -286,7 +303,7 @@ describe('New Clothing Items Unit Tests', () => {
     beforeEach(() => {
       const filePath = join(
         process.cwd(),
-        clothingEntitiesPath,
+        underwearEntitiesPath,
         'white_thigh_high_socks_pink_hearts.entity.json'
       );
       const fileContent = readFileSync(filePath, 'utf8');
@@ -299,14 +316,14 @@ describe('New Clothing Items Unit Tests', () => {
     });
 
     it('should pass schema validation', () => {
-      const validate = ajv.compile(entitySchema);
+      const validate = ajv.compile(underwearEntitySchema);
       const valid = validate(entity);
 
       expect(valid).toBe(true);
     });
 
     it('should have correct entity metadata', () => {
-      expect(entity.id).toBe('clothing:white_thigh_high_socks_pink_hearts');
+      expect(entity.id).toBe('underwear:white_thigh_high_socks_pink_hearts');
       expect(entity.description).toBe(
         'White thigh-high socks with pink heart pattern'
       );
@@ -347,7 +364,7 @@ describe('New Clothing Items Unit Tests', () => {
     beforeEach(() => {
       const filePath = join(
         process.cwd(),
-        clothingEntitiesPath,
+        underwearEntitiesPath,
         'white_cotton_panties.entity.json'
       );
       const fileContent = readFileSync(filePath, 'utf8');
@@ -360,14 +377,14 @@ describe('New Clothing Items Unit Tests', () => {
     });
 
     it('should pass schema validation', () => {
-      const validate = ajv.compile(entitySchema);
+      const validate = ajv.compile(underwearEntitySchema);
       const valid = validate(entity);
 
       expect(valid).toBe(true);
     });
 
     it('should have correct entity metadata', () => {
-      expect(entity.id).toBe('clothing:white_cotton_panties');
+      expect(entity.id).toBe('underwear:white_cotton_panties');
       expect(entity.description).toBe('White cotton panties');
     });
 
@@ -400,7 +417,7 @@ describe('New Clothing Items Unit Tests', () => {
     beforeEach(() => {
       const filePath = join(
         process.cwd(),
-        clothingEntitiesPath,
+        baseClothingEntitiesPath,
         'white_platform_sneakers.entity.json'
       );
       const fileContent = readFileSync(filePath, 'utf8');
@@ -413,14 +430,14 @@ describe('New Clothing Items Unit Tests', () => {
     });
 
     it('should pass schema validation', () => {
-      const validate = ajv.compile(entitySchema);
+      const validate = ajv.compile(baseClothingEntitySchema);
       const valid = validate(entity);
 
       expect(valid).toBe(true);
     });
 
     it('should have correct entity metadata', () => {
-      expect(entity.id).toBe('clothing:white_platform_sneakers');
+      expect(entity.id).toBe('base-clothing:white_platform_sneakers');
       expect(entity.description).toBe('White platform sneakers');
     });
 
@@ -450,19 +467,32 @@ describe('New Clothing Items Unit Tests', () => {
     let allNewEntities;
 
     beforeEach(() => {
-      const entityFiles = [
+      // Load base-clothing entities
+      const baseClothingFiles = [
         'pink_off_shoulder_crop_top.entity.json',
         'pink_short_flared_skirt.entity.json',
-        'white_thigh_high_socks_pink_hearts.entity.json',
-        'white_cotton_panties.entity.json',
         'white_platform_sneakers.entity.json',
       ];
 
-      allNewEntities = entityFiles.map((filename) => {
-        const filePath = join(process.cwd(), clothingEntitiesPath, filename);
+      // Load underwear entities
+      const underwearFiles = [
+        'white_thigh_high_socks_pink_hearts.entity.json',
+        'white_cotton_panties.entity.json',
+      ];
+
+      const baseClothingEntities = baseClothingFiles.map((filename) => {
+        const filePath = join(process.cwd(), baseClothingEntitiesPath, filename);
         const fileContent = readFileSync(filePath, 'utf8');
         return JSON.parse(fileContent);
       });
+
+      const underwearEntities = underwearFiles.map((filename) => {
+        const filePath = join(process.cwd(), underwearEntitiesPath, filename);
+        const fileContent = readFileSync(filePath, 'utf8');
+        return JSON.parse(fileContent);
+      });
+
+      allNewEntities = [...baseClothingEntities, ...underwearEntities];
     });
 
     it('should have unique entity IDs', () => {
@@ -526,10 +556,10 @@ describe('New Clothing Items Unit Tests', () => {
 
       expect(pinkItems.length).toBe(2); // Crop top and skirt
       expect(pinkItems.map((e) => e.id)).toContain(
-        'clothing:pink_off_shoulder_crop_top'
+        'base-clothing:pink_off_shoulder_crop_top'
       );
       expect(pinkItems.map((e) => e.id)).toContain(
-        'clothing:pink_short_flared_skirt'
+        'base-clothing:pink_short_flared_skirt'
       );
     });
 
@@ -540,7 +570,7 @@ describe('New Clothing Items Unit Tests', () => {
 
       expect(patternedItems.length).toBe(1);
       expect(patternedItems[0].id).toBe(
-        'clothing:white_thigh_high_socks_pink_hearts'
+        'underwear:white_thigh_high_socks_pink_hearts'
       );
       expect(patternedItems[0].components['descriptors:pattern'].pattern).toBe(
         'heart'
@@ -590,27 +620,37 @@ describe('New Clothing Items Unit Tests', () => {
 
   describe('Pattern Component Integration', () => {
     it('should only use pattern component where appropriate', () => {
-      const entityFiles = [
+      // Base clothing entities
+      const baseClothingFiles = [
         'pink_off_shoulder_crop_top.entity.json',
         'pink_short_flared_skirt.entity.json',
-        'white_thigh_high_socks_pink_hearts.entity.json',
-        'white_cotton_panties.entity.json',
         'white_platform_sneakers.entity.json',
       ];
 
-      for (const filename of entityFiles) {
-        const filePath = join(process.cwd(), clothingEntitiesPath, filename);
+      for (const filename of baseClothingFiles) {
+        const filePath = join(process.cwd(), baseClothingEntitiesPath, filename);
         const fileContent = readFileSync(filePath, 'utf8');
         const entity = JSON.parse(fileContent);
 
-        if (filename === 'white_thigh_high_socks_pink_hearts.entity.json') {
-          // Only the socks should have pattern component
+        // None of the base clothing items should have pattern
+        expect(entity.components['descriptors:pattern']).toBeUndefined();
+      }
+
+      // Underwear entities
+      const underwearFiles = [
+        { file: 'white_thigh_high_socks_pink_hearts.entity.json', hasPattern: true },
+        { file: 'white_cotton_panties.entity.json', hasPattern: false },
+      ];
+
+      for (const { file, hasPattern } of underwearFiles) {
+        const filePath = join(process.cwd(), underwearEntitiesPath, file);
+        const fileContent = readFileSync(filePath, 'utf8');
+        const entity = JSON.parse(fileContent);
+
+        if (hasPattern) {
           expect(entity.components['descriptors:pattern']).toBeDefined();
-          expect(entity.components['descriptors:pattern'].pattern).toBe(
-            'heart'
-          );
+          expect(entity.components['descriptors:pattern'].pattern).toBe('heart');
         } else {
-          // Other items should not have pattern component
           expect(entity.components['descriptors:pattern']).toBeUndefined();
         }
       }
@@ -625,7 +665,7 @@ describe('New Clothing Items Unit Tests', () => {
       ];
 
       for (const filename of entityFiles) {
-        const filePath = join(process.cwd(), clothingEntitiesPath, filename);
+        const filePath = join(process.cwd(), baseClothingEntitiesPath, filename);
         const fileContent = readFileSync(filePath, 'utf8');
         const entity = JSON.parse(fileContent);
 

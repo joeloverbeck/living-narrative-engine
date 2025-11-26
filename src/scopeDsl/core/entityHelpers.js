@@ -259,6 +259,8 @@ export function createEvaluationContext(
   if (item === null || item === undefined) return null;
 
   // Normalize inventory reference objects ({ itemId, ... }) into entity-like objects
+  // Track original item for preserving metadata (quantity, detail, etc.) after entity resolution
+  let originalInventoryReference = null;
   if (
     item &&
     typeof item === 'object' &&
@@ -268,6 +270,7 @@ export function createEvaluationContext(
     const trimmedItemId = item.itemId.trim();
 
     if (trimmedItemId.length > 0) {
+      originalInventoryReference = item;
       item = {
         ...item,
         id: trimmedItemId,
@@ -539,6 +542,17 @@ export function createEvaluationContext(
     // This is a plain object (not an entity with components)
     // Expose all its properties at the root level for JSON Logic access
     Object.assign(flattenedContext, item);
+  }
+
+  // Preserve inventory reference metadata (quantity, detail, etc.) even after entity resolution
+  // This ensures that {"var": "quantity"} works for inventory references that resolve to entities
+  if (originalInventoryReference) {
+    // Copy non-id, non-itemId properties from the original inventory reference
+    for (const key of Object.keys(originalInventoryReference)) {
+      if (key !== 'id' && key !== 'itemId' && !(key in flattenedContext)) {
+        flattenedContext[key] = originalInventoryReference[key];
+      }
+    }
   }
 
   // Add target context if available

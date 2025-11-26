@@ -1,0 +1,47 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:white_cotton_crew_tshirt",
+  "description": "White cotton crew-neck T-shirt",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": [
+          "left_arm_clothing",
+          "right_arm_clothing"
+        ]
+      },
+      "allowedLayers": [
+        "underwear",
+        "base"
+      ]
+    },
+    "core:material": {
+      "material": "cotton"
+    },
+    "core:name": {
+      "text": "crew-neck T-shirt"
+    },
+    "core:description": {
+      "text": "A classic white cotton crew-neck T-shirt with a comfortable fit. The soft cotton fabric provides breathability and comfort for everyday wear. Features short sleeves and a traditional round neckline that complements any casual outfit."
+    },
+    "descriptors:color_basic": {
+      "color": "white"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.2
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "turn_3_update_hunger_state",
+  "comment": "Updates hunger state each turn based on current energy percentage",
+  "event_type": "core:turn_started",
+  "actions": [
+    {
+      "type": "QUERY_COMPONENTS",
+      "comment": "Get metabolism components to check existence for state update",
+      "parameters": {
+        "entity_ref": "{event.payload.entityId}",
+        "pairs": [
+          {
+            "component_type": "metabolism:metabolic_store",
+            "result_variable": "metabolicStore"
+          },
+          {
+            "component_type": "metabolism:hunger_state",
+            "result_variable": "hungerState"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Only update hunger state if entity has both components",
+      "parameters": {
+        "condition": {
+          "and": [
+            { "var": "context.metabolicStore" },
+            { "var": "context.hungerState" }
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "UPDATE_HUNGER_STATE",
+            "parameters": {
+              "entity_ref": "{event.payload.entityId}"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

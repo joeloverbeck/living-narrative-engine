@@ -224,6 +224,44 @@ describe('Wielding Component Workflow', () => {
     });
   });
 
+  describe('Grabbing Appendage Locking', () => {
+    it('should have LOCK_GRABBING operation in rule for appendage tracking', () => {
+      // Assert: Rule should contain LOCK_GRABBING operation
+      const lockGrabbingOp = wieldThreateninglyRule.actions.find(
+        (action) => action.type === 'LOCK_GRABBING'
+      );
+      expect(lockGrabbingOp).toBeDefined();
+      expect(lockGrabbingOp.parameters.actor_id).toBe('{event.payload.actorId}');
+      expect(lockGrabbingOp.parameters.count).toBe('{context.targetGrabbingReqs.handsRequired}');
+      expect(lockGrabbingOp.parameters.item_id).toBe('{event.payload.targetId}');
+    });
+
+    it('should query target grabbing requirements before LOCK_GRABBING', () => {
+      // Assert: Query for anatomy:requires_grabbing should come before LOCK_GRABBING
+      const queryGrabbingReqsIndex = wieldThreateninglyRule.actions.findIndex(
+        (action) =>
+          action.type === 'QUERY_COMPONENT' &&
+          action.parameters?.component_type === 'anatomy:requires_grabbing'
+      );
+      const lockGrabbingIndex = wieldThreateninglyRule.actions.findIndex(
+        (action) => action.type === 'LOCK_GRABBING'
+      );
+
+      expect(queryGrabbingReqsIndex).toBeGreaterThan(-1);
+      expect(lockGrabbingIndex).toBeGreaterThan(-1);
+      expect(queryGrabbingReqsIndex).toBeLessThan(lockGrabbingIndex);
+    });
+
+    it('should use missing_value for weapons without explicit grabbing requirements', () => {
+      const queryGrabbingReqsOp = wieldThreateninglyRule.actions.find(
+        (action) =>
+          action.type === 'QUERY_COMPONENT' &&
+          action.parameters?.component_type === 'anatomy:requires_grabbing'
+      );
+      expect(queryGrabbingReqsOp.parameters.missing_value).toEqual({ handsRequired: 1 });
+    });
+  });
+
   describe('Rule Structure Validation', () => {
     it('should have QUERY_COMPONENT for existing wielding check', () => {
       const queryWieldingOp = wieldThreateninglyRule.actions.find(

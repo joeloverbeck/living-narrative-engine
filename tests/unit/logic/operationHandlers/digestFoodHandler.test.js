@@ -107,18 +107,19 @@ describe('DigestFoodHandler', () => {
       const entityId = 'actor_1';
       const fuelConverter = {
         capacity: 100,
-        bufferStorage: 40,
-        conversionRate: 5,
+        conversion_rate: 5,
         efficiency: 0.8,
-        acceptedFuelTags: ['organic'],
-        activityMultiplier: 1.0,
+        accepted_fuel_tags: ['organic'],
+        metabolic_efficiency_multiplier: 1.0,
       };
       const metabolicStore = {
-        currentEnergy: 600,
-        maxEnergy: 1000,
-        baseBurnRate: 1.0,
-        activityMultiplier: 1.0,
-        lastUpdateTurn: 0,
+        current_energy: 600,
+        max_energy: 1000,
+        base_burn_rate: 1.0,
+        activity_multiplier: 1.0,
+        last_update_turn: 0,
+        buffer_storage: [{ bulk: 40, energy_content: 40 }], // 40 bulk, 40 energy
+        buffer_capacity: 100,
       };
 
       em.getComponentData
@@ -130,8 +131,8 @@ describe('DigestFoodHandler', () => {
         executionContext
       );
 
-      // Digested: min(40, 5 * 1.0 * 1) = 5
-      // Energy gained: 5 * 0.8 = 4
+      // Digested: min(40 total bulk, 5 * 1.0 * 1) = 5
+      // Energy gained: 5 bulk * 0.8 efficiency = 4 energy (proportional to bulk digested)
       expect(em.batchAddComponentsOptimized).toHaveBeenCalledWith(
         [
           {
@@ -139,22 +140,23 @@ describe('DigestFoodHandler', () => {
             componentTypeId: FUEL_CONVERTER_COMPONENT_ID,
             componentData: {
               capacity: 100,
-              bufferStorage: 35, // 40 - 5
-              conversionRate: 5,
+              conversion_rate: 5,
               efficiency: 0.8,
-              acceptedFuelTags: ['organic'],
-              activityMultiplier: 1.0,
+              accepted_fuel_tags: ['organic'],
+              metabolic_efficiency_multiplier: 1.0,
             },
           },
           {
             instanceId: entityId,
             componentTypeId: METABOLIC_STORE_COMPONENT_ID,
             componentData: {
-              currentEnergy: 604, // 600 + 4
-              maxEnergy: 1000,
-              baseBurnRate: 1.0,
-              activityMultiplier: 1.0,
-              lastUpdateTurn: 0,
+              current_energy: 604, // 600 + 4
+              max_energy: 1000,
+              base_burn_rate: 1.0,
+              activity_multiplier: 1.0,
+              last_update_turn: 0,
+              buffer_storage: [{ bulk: 35, energy_content: 35 }], // 40 - 5
+              buffer_capacity: 100,
             },
           },
         ],
@@ -175,18 +177,19 @@ describe('DigestFoodHandler', () => {
       const entityId = 'actor_1';
       const fuelConverter = {
         capacity: 100,
-        bufferStorage: 50,
-        conversionRate: 5,
+        conversion_rate: 5,
         efficiency: 0.9,
-        acceptedFuelTags: ['organic'],
-        activityMultiplier: 1.0,
+        accepted_fuel_tags: ['organic'],
+        metabolic_efficiency_multiplier: 1.0,
       };
       const metabolicStore = {
-        currentEnergy: 500,
-        maxEnergy: 1000,
-        baseBurnRate: 1.0,
-        activityMultiplier: 1.0,
-        lastUpdateTurn: 0,
+        current_energy: 500,
+        max_energy: 1000,
+        base_burn_rate: 1.0,
+        activity_multiplier: 1.0,
+        last_update_turn: 0,
+        buffer_storage: [{ bulk: 50, energy_content: 50 }],
+        buffer_capacity: 100,
       };
 
       em.getComponentData
@@ -204,12 +207,13 @@ describe('DigestFoodHandler', () => {
         expect.arrayContaining([
           expect.objectContaining({
             componentData: expect.objectContaining({
-              bufferStorage: 35, // 50 - 15
+              conversion_rate: 5,
             }),
           }),
           expect.objectContaining({
             componentData: expect.objectContaining({
-              currentEnergy: 513.5, // 500 + 13.5
+              current_energy: 513.5, // 500 + 13.5
+              buffer_storage: [{ bulk: 35, energy_content: 35 }], // 50 - 15
             }),
           }),
         ]),
@@ -221,18 +225,19 @@ describe('DigestFoodHandler', () => {
       const entityId = 'actor_1';
       const fuelConverter = {
         capacity: 100,
-        bufferStorage: 3, // Very little in buffer
-        conversionRate: 10, // High conversion rate
+        conversion_rate: 10, // High conversion rate
         efficiency: 0.8,
-        acceptedFuelTags: ['organic'],
-        activityMultiplier: 1.0,
+        accepted_fuel_tags: ['organic'],
+        metabolic_efficiency_multiplier: 1.0,
       };
       const metabolicStore = {
-        currentEnergy: 500,
-        maxEnergy: 1000,
-        baseBurnRate: 1.0,
-        activityMultiplier: 1.0,
-        lastUpdateTurn: 0,
+        current_energy: 500,
+        max_energy: 1000,
+        base_burn_rate: 1.0,
+        activity_multiplier: 1.0,
+        last_update_turn: 0,
+        buffer_storage: [{ bulk: 3, energy_content: 3 }], // Very little in buffer
+        buffer_capacity: 100,
       };
 
       em.getComponentData
@@ -249,12 +254,13 @@ describe('DigestFoodHandler', () => {
         expect.arrayContaining([
           expect.objectContaining({
             componentData: expect.objectContaining({
-              bufferStorage: 0, // 3 - 3
+              conversion_rate: 10,
             }),
           }),
           expect.objectContaining({
             componentData: expect.objectContaining({
-              currentEnergy: 502.4, // 500 + (3 * 0.8)
+              current_energy: 502.4, // 500 + (3 * 0.8)
+              buffer_storage: [], // All consumed
             }),
           }),
         ]),
@@ -266,18 +272,19 @@ describe('DigestFoodHandler', () => {
       const entityId = 'actor_1';
       const fuelConverter = {
         capacity: 100,
-        bufferStorage: 50,
-        conversionRate: 10,
+        conversion_rate: 10,
         efficiency: 1.0, // Perfect efficiency
-        acceptedFuelTags: ['organic'],
-        activityMultiplier: 1.0,
+        accepted_fuel_tags: ['organic'],
+        metabolic_efficiency_multiplier: 1.0,
       };
       const metabolicStore = {
-        currentEnergy: 995,
-        maxEnergy: 1000,
-        baseBurnRate: 1.0,
-        activityMultiplier: 1.0,
-        lastUpdateTurn: 0,
+        current_energy: 995,
+        max_energy: 1000,
+        base_burn_rate: 1.0,
+        activity_multiplier: 1.0,
+        last_update_turn: 0,
+        buffer_storage: [{ bulk: 50, energy_content: 50 }],
+        buffer_capacity: 100,
       };
 
       em.getComponentData
@@ -294,7 +301,7 @@ describe('DigestFoodHandler', () => {
         expect.arrayContaining([
           expect.objectContaining({
             componentData: expect.objectContaining({
-              currentEnergy: 1000, // Capped at maxEnergy
+              current_energy: 1000, // Capped at maxEnergy
             }),
           }),
         ]),
@@ -306,18 +313,19 @@ describe('DigestFoodHandler', () => {
       const entityId = 'actor_1';
       const fuelConverter = {
         capacity: 100,
-        bufferStorage: 0, // Empty buffer
-        conversionRate: 5,
+        conversion_rate: 5,
         efficiency: 0.8,
-        acceptedFuelTags: ['organic'],
-        activityMultiplier: 1.0,
+        accepted_fuel_tags: ['organic'],
+        metabolic_efficiency_multiplier: 1.0,
       };
       const metabolicStore = {
-        currentEnergy: 600,
-        maxEnergy: 1000,
-        baseBurnRate: 1.0,
-        activityMultiplier: 1.0,
-        lastUpdateTurn: 0,
+        current_energy: 600,
+        max_energy: 1000,
+        base_burn_rate: 1.0,
+        activity_multiplier: 1.0,
+        last_update_turn: 0,
+        buffer_storage: [], // Empty buffer
+        buffer_capacity: 100,
       };
 
       em.getComponentData
@@ -334,12 +342,13 @@ describe('DigestFoodHandler', () => {
         expect.arrayContaining([
           expect.objectContaining({
             componentData: expect.objectContaining({
-              bufferStorage: 0,
+              conversion_rate: 5,
             }),
           }),
           expect.objectContaining({
             componentData: expect.objectContaining({
-              currentEnergy: 600,
+              current_energy: 600,
+              buffer_storage: [],
             }),
           }),
         ]),
@@ -347,22 +356,23 @@ describe('DigestFoodHandler', () => {
       );
     });
 
-    test('should use activityMultiplier correctly', async () => {
+    test('should use metabolic_efficiency_multiplier correctly', async () => {
       const entityId = 'actor_1';
       const fuelConverter = {
         capacity: 100,
-        bufferStorage: 50,
-        conversionRate: 5,
+        conversion_rate: 5,
         efficiency: 1.0,
-        acceptedFuelTags: ['organic'],
-        activityMultiplier: 2.0, // Doubled activity
+        accepted_fuel_tags: ['organic'],
+        metabolic_efficiency_multiplier: 2.0, // Doubled efficiency
       };
       const metabolicStore = {
-        currentEnergy: 500,
-        maxEnergy: 1000,
-        baseBurnRate: 1.0,
-        activityMultiplier: 1.0,
-        lastUpdateTurn: 0,
+        current_energy: 500,
+        max_energy: 1000,
+        base_burn_rate: 1.0,
+        activity_multiplier: 1.0,
+        last_update_turn: 0,
+        buffer_storage: [{ bulk: 50, energy_content: 50 }],
+        buffer_capacity: 100,
       };
 
       em.getComponentData
@@ -380,12 +390,13 @@ describe('DigestFoodHandler', () => {
         expect.arrayContaining([
           expect.objectContaining({
             componentData: expect.objectContaining({
-              bufferStorage: 40, // 50 - 10
+              conversion_rate: 5,
             }),
           }),
           expect.objectContaining({
             componentData: expect.objectContaining({
-              currentEnergy: 510, // 500 + 10
+              current_energy: 510, // 500 + 10
+              buffer_storage: [{ bulk: 40, energy_content: 40 }], // 50 - 10
             }),
           }),
         ]),
@@ -428,11 +439,10 @@ describe('DigestFoodHandler', () => {
     test('throws error when metabolic_store component missing', async () => {
       const fuelConverter = {
         capacity: 100,
-        bufferStorage: 40,
-        conversionRate: 5,
+        conversion_rate: 5,
         efficiency: 0.8,
-        acceptedFuelTags: ['organic'],
-        activityMultiplier: 1.0,
+        accepted_fuel_tags: ['organic'],
+        metabolic_efficiency_multiplier: 1.0,
       };
 
       em.getComponentData
@@ -514,18 +524,19 @@ describe('DigestFoodHandler', () => {
       const entityId = 'actor_1';
       const fuelConverter = {
         capacity: 100,
-        bufferStorage: 40,
-        conversionRate: 5,
+        conversion_rate: 5,
         efficiency: 0.8,
-        acceptedFuelTags: ['organic'],
-        activityMultiplier: 1.0,
+        accepted_fuel_tags: ['organic'],
+        metabolic_efficiency_multiplier: 1.0,
       };
       const metabolicStore = {
-        currentEnergy: 600,
-        maxEnergy: 1000,
-        baseBurnRate: 1.0,
-        activityMultiplier: 1.0,
-        lastUpdateTurn: 0,
+        current_energy: 600,
+        max_energy: 1000,
+        base_burn_rate: 1.0,
+        activity_multiplier: 1.0,
+        last_update_turn: 0,
+        buffer_storage: [{ bulk: 40, energy_content: 40 }],
+        buffer_capacity: 100,
       };
 
       em.getComponentData
@@ -558,18 +569,19 @@ describe('DigestFoodHandler', () => {
       const entityId = 'actor_1';
       const fuelConverter = {
         capacity: 100,
-        bufferStorage: 40,
-        conversionRate: 5,
+        conversion_rate: 5,
         efficiency: 0.8,
-        acceptedFuelTags: ['organic'],
-        activityMultiplier: 1.0,
+        accepted_fuel_tags: ['organic'],
+        metabolic_efficiency_multiplier: 1.0,
       };
       const metabolicStore = {
-        currentEnergy: 600,
-        maxEnergy: 1000,
-        baseBurnRate: 1.0,
-        activityMultiplier: 1.0,
-        lastUpdateTurn: 0,
+        current_energy: 600,
+        max_energy: 1000,
+        base_burn_rate: 1.0,
+        activity_multiplier: 1.0,
+        last_update_turn: 0,
+        buffer_storage: [{ bulk: 40, energy_content: 40 }],
+        buffer_capacity: 100,
       };
 
       em.getComponentData

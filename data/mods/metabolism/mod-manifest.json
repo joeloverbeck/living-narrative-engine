@@ -35,7 +35,8 @@
       "handle_eat_food.rule.json",
       "handle_rest.rule.json",
       "turn_1_energy_burn.rule.json",
-      "turn_2_digestion.rule.json"
+      "turn_2_digestion.rule.json",
+      "turn_3_update_hunger_state.rule.json"
     ],
     "conditions": [
       "can-consume.condition.json",

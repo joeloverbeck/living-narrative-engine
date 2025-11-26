@@ -1,0 +1,51 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "outer-clothing:battle_scarred_leather_jacket",
+  "description": "Weathered leather jacket bearing battle scars",
+  "components": {
+    "clothing:wearable": {
+      "layer": "outer",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": [
+          "left_arm_clothing",
+          "right_arm_clothing"
+        ]
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "leather",
+      "properties": [
+        "flexible"
+      ]
+    },
+    "core:name": {
+      "text": "battle-scarred leather jacket"
+    },
+    "core:description": {
+      "text": "A weathered black leather jacket that wears its history on its surface, each scratch and scar telling stories of past conflicts. The worn-in leather has grown supple with use, moving naturally with the body while retaining its protective qualities. Asymmetric closures and rugged detailing emphasize the combat-ready aesthetic, yet the piece remains stylish rather than purely utilitarian. This jacket captures the essence of gothic warrior style, combining practicality with dark romance for those who embrace both strength and shadow."
+    },
+    "descriptors:color_basic": {
+      "color": "black"
+    },
+    "descriptors:texture": {
+      "texture": "scarred"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper"
+      ],
+      "coveragePriority": "outer"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 1.5
+    }
+  }
+}

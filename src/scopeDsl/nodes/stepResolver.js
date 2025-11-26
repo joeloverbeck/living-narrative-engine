@@ -286,7 +286,7 @@ export default function createStepResolver({
             );
             if (node.field === 'components') {
               if (val) result.add(val);
-            } else if (val !== undefined) {
+            } else if (val !== undefined && val !== null) {
               result.add(val);
             }
           }
@@ -301,7 +301,7 @@ export default function createStepResolver({
                   node.field,
                   runtimeLogger
                 );
-                if (val !== undefined) {
+                if (val !== undefined && val !== null) {
                   result.add(val);
                 }
               }
@@ -313,7 +313,7 @@ export default function createStepResolver({
               node.field,
               runtimeLogger
             );
-            if (val !== undefined) {
+            if (val !== undefined && val !== null) {
               result.add(val);
             }
           }

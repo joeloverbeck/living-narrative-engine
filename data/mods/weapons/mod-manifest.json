@@ -14,6 +14,10 @@
       "version": "1.0.0"
     },
     {
+      "id": "anatomy",
+      "version": "1.0.0"
+    },
+    {
       "id": "items",
       "version": "1.0.0"
     },
@@ -31,16 +35,20 @@
       "weapon.component.json"
     ],
     "scopes": [
+      "grabbable_weapons_in_inventory.scope",
       "weapons_in_inventory.scope",
-      "grabbable_weapons_in_inventory.scope"
+      "wielded_items.scope"
     ],
     "conditions": [
+      "event-is-action-unwield-item.condition.json",
       "event-is-action-wield-threateningly.condition.json"
     ],
     "actions": [
+      "unwield_item.action.json",
       "wield_threateningly.action.json"
     ],
     "rules": [
+      "handle_unwield_item.rule.json",
       "handle_wield_threateningly.rule.json"
     ],
     "entities": {

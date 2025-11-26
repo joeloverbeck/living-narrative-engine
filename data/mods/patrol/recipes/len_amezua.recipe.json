@@ -113,15 +113,15 @@
   ],
   "clothingEntities": [
     {
-      "entityId": "clothing:charcoal_nylon_sports_bra",
+      "entityId": "underwear:charcoal_nylon_sports_bra",
       "equip": true
     },
     {
-      "entityId": "clothing:graphite_wool_briefs",
+      "entityId": "underwear:graphite_wool_briefs",
       "equip": true
     },
     {
-      "entityId": "clothing:shale_gray_nylon_field_pants",
+      "entityId": "base-clothing:shale_gray_nylon_field_pants",
       "equip": true
     },
     {
@@ -129,11 +129,11 @@
       "equip": true
     },
     {
-      "entityId": "clothing:dark_gray_wool_boot_socks",
+      "entityId": "underwear:dark_gray_wool_boot_socks",
       "equip": true
     },
     {
-      "entityId": "clothing:black_leather_duty_boots",
+      "entityId": "base-clothing:black_leather_duty_boots",
       "equip": true
     },
     {

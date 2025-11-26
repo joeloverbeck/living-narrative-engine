@@ -1,0 +1,51 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:versace_barocco_black_gold_slip_dress",
+  "description": "Versace Barocco black and gold silk slip dress",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "full_body"
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "silk"
+    },
+    "core:name": {
+      "text": "Barocco slip dress"
+    },
+    "core:description": {
+      "text": "A decadent Versace Barocco slip dress awash in black silk with gilded scrollwork. The draped cowl neckline and bias-cut skirt skim the figure, capturing the house's sensual glamour while allowing the ornate motif to take center stage. Ideal for dramatic entrances paired with sky-high stilettos and polished gold jewels."
+    },
+    "descriptors:color_basic": {
+      "color": "black"
+    },
+    "descriptors:pattern": {
+      "pattern": "baroque-scroll"
+    },
+    "descriptors:texture": {
+      "texture": "silky"
+    },
+    "descriptors:size_specific": {
+      "size": "draped cowl neckline"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper",
+        "torso_lower"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.48
+    }
+  }
+}

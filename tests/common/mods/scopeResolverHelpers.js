@@ -1200,19 +1200,27 @@ export class ScopeResolverHelpers {
         entityManager: testEnv.entityManager,
         jsonLogicEval: testEnv.jsonLogic,
         logger: testEnv.logger,
+        tracer: context?.tracer, // Pass tracer from context for scope tracing
       };
 
       try {
         // Extract actorEntity from context - ScopeEngine expects just actorEntity, not full context
+        // The context can be:
+        // 1. An entity directly (has id, components)
+        // 2. An enriched context object (has actorEntity property from _registerResolvers)
+        // 3. An actor context (has actor property)
         const actorEntity = context.actorEntity || context.actor || context;
 
-        // Validate the ORIGINAL context (not the extracted actorEntity) to detect
-        // common mistakes like passing action context or scope context
-        // This provides better error messages for test development
-        ParameterValidator.validateActorEntity(
-          context,
-          `ScopeResolverHelpers.registerCustomScope[${fullScopeName}]`
-        );
+        // Validate the extracted actorEntity to ensure it's an entity instance
+        // Skip validation if context was enriched by _registerResolvers (has tracer + actorEntity)
+        // In that case, the entity was already validated as having id/components
+        const isEnrichedContext = context?.tracer && context?.actorEntity;
+        if (!isEnrichedContext) {
+          ParameterValidator.validateActorEntity(
+            actorEntity,
+            `ScopeResolverHelpers.registerCustomScope[${fullScopeName}]`
+          );
+        }
 
         const result = scopeEngine.resolve(scopeData.ast, actorEntity, runtimeCtx);
         return { success: true, value: result };
@@ -1275,17 +1283,43 @@ export class ScopeResolverHelpers {
     });
 
     // Override resolveSync to use registered resolvers with fallback
-    testEnv.unifiedScopeResolver.resolveSync = (scopeName, context) => {
+    // The second parameter can be either an actorEntity or a context object.
+    // We need to ensure the tracer is available to the custom resolvers.
+    testEnv.unifiedScopeResolver.resolveSync = (scopeName, contextOrActor) => {
+      // Check if the input already has a tracer
+      // If not, and we have a testEnv._scopeTracer, inject it
+      let enrichedInput = contextOrActor;
+
+      // Only inject tracer if:
+      // 1. testEnv._scopeTracer exists
+      // 2. Input doesn't already have a tracer
+      if (testEnv._scopeTracer && !contextOrActor?.tracer) {
+        // Don't modify the original, create a shallow copy with tracer
+        // If it's an entity (has id and components), wrap in context
+        if (contextOrActor?.id && contextOrActor?.components) {
+          enrichedInput = {
+            actorEntity: contextOrActor,
+            tracer: testEnv._scopeTracer,
+          };
+        } else if (contextOrActor && typeof contextOrActor === 'object') {
+          // It's likely a context object, add tracer to it
+          enrichedInput = {
+            ...contextOrActor,
+            tracer: testEnv._scopeTracer,
+          };
+        }
+      }
+
       // Check if we have a registered resolver for this scope
       if (testEnv._registeredResolvers.has(scopeName)) {
-        return testEnv._registeredResolvers.get(scopeName)(context);
+        return testEnv._registeredResolvers.get(scopeName)(enrichedInput);
       }
 
       // Fall back to original resolver
       return testEnv._originalResolveSync.call(
         testEnv.unifiedScopeResolver,
         scopeName,
-        context
+        enrichedInput
       );
     };
   }

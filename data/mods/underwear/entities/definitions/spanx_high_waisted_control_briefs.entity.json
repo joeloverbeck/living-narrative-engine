@@ -1,0 +1,45 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:spanx_high_waisted_control_briefs",
+  "description": "Spanx high-waisted control briefs",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "torso_lower"
+      },
+      "allowedLayers": [
+        "underwear"
+      ]
+    },
+    "core:material": {
+      "material": "power-mesh"
+    },
+    "core:name": {
+      "text": "high-waisted control briefs"
+    },
+    "core:description": {
+      "text": "Sleek high-waisted control briefs inspired by Spanx shapewear, engineered to smooth and sculpt the midsection. The supportive power-mesh panels hug the waist without digging in, delivering a seamless foundation beneath tailored dresses and evening gowns. Breathable stretch keeps the fit comfortable from first step to last dance."
+    },
+    "descriptors:color_extended": {
+      "color": "nude"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "descriptors:size_specific": {
+      "size": "waist-cinching control panel"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_lower"
+      ],
+      "coveragePriority": "underwear"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.11
+    }
+  }
+}

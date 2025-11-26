@@ -107,11 +107,13 @@ describe('BurnEnergyHandler', () => {
 
     test('reduces energy based on burn rate and activity multiplier', async () => {
       const metabolicStore = {
-        currentEnergy: 1000,
-        maxEnergy: 1000,
-        baseBurnRate: 10,
-        activityMultiplier: 1.0,
-        lastUpdateTurn: 0,
+        current_energy: 1000,
+        max_energy: 1000,
+        base_burn_rate: 10,
+        activity_multiplier: 1.0,
+        last_update_turn: 0,
+        buffer_storage: [],
+        buffer_capacity: 100,
       };
 
       em.getComponentData.mockReturnValue(metabolicStore);
@@ -132,7 +134,7 @@ describe('BurnEnergyHandler', () => {
             instanceId: 'actor1',
             componentTypeId: METABOLIC_STORE_COMPONENT_ID,
             componentData: expect.objectContaining({
-              currentEnergy: 980, // 1000 - (10 * 2.0 * 1)
+              current_energy: 980, // 1000 - (10 * 2.0 * 1)
             }),
           }),
         ]),
@@ -150,11 +152,13 @@ describe('BurnEnergyHandler', () => {
 
     test('handles multiple turns correctly', async () => {
       const metabolicStore = {
-        currentEnergy: 1000,
-        maxEnergy: 1000,
-        baseBurnRate: 10,
-        activityMultiplier: 1.0,
-        lastUpdateTurn: 0,
+        current_energy: 1000,
+        max_energy: 1000,
+        base_burn_rate: 10,
+        activity_multiplier: 1.0,
+        last_update_turn: 0,
+        buffer_storage: [],
+        buffer_capacity: 100,
       };
 
       em.getComponentData.mockReturnValue(metabolicStore);
@@ -175,7 +179,7 @@ describe('BurnEnergyHandler', () => {
             instanceId: 'actor1',
             componentTypeId: METABOLIC_STORE_COMPONENT_ID,
             componentData: expect.objectContaining({
-              currentEnergy: 955, // 1000 - (10 * 1.5 * 3) = 1000 - 45
+              current_energy: 955, // 1000 - (10 * 1.5 * 3) = 1000 - 45
             }),
           }),
         ]),
@@ -185,11 +189,13 @@ describe('BurnEnergyHandler', () => {
 
     test('does not reduce energy below zero', async () => {
       const metabolicStore = {
-        currentEnergy: 5,
-        maxEnergy: 1000,
-        baseBurnRate: 10,
-        activityMultiplier: 1.0,
-        lastUpdateTurn: 0,
+        current_energy: 5,
+        max_energy: 1000,
+        base_burn_rate: 10,
+        activity_multiplier: 1.0,
+        last_update_turn: 0,
+        buffer_storage: [],
+        buffer_capacity: 100,
       };
 
       em.getComponentData.mockReturnValue(metabolicStore);
@@ -210,7 +216,7 @@ describe('BurnEnergyHandler', () => {
             instanceId: 'actor1',
             componentTypeId: METABOLIC_STORE_COMPONENT_ID,
             componentData: expect.objectContaining({
-              currentEnergy: 0,
+              current_energy: 0,
             }),
           }),
         ]),
@@ -227,11 +233,13 @@ describe('BurnEnergyHandler', () => {
 
     test('dispatches energy_burned event with correct data', async () => {
       const metabolicStore = {
-        currentEnergy: 500,
-        maxEnergy: 1000,
-        baseBurnRate: 15,
-        activityMultiplier: 1.0,
-        lastUpdateTurn: 0,
+        current_energy: 500,
+        max_energy: 1000,
+        base_burn_rate: 15,
+        activity_multiplier: 1.0,
+        last_update_turn: 0,
+        buffer_storage: [],
+        buffer_capacity: 100,
       };
 
       em.getComponentData.mockReturnValue(metabolicStore);
@@ -257,11 +265,13 @@ describe('BurnEnergyHandler', () => {
 
     test('handles default parameters correctly', async () => {
       const metabolicStore = {
-        currentEnergy: 1000,
-        maxEnergy: 1000,
-        baseBurnRate: 10,
-        activityMultiplier: 1.0,
-        lastUpdateTurn: 0,
+        current_energy: 1000,
+        max_energy: 1000,
+        base_burn_rate: 10,
+        activity_multiplier: 1.0,
+        last_update_turn: 0,
+        buffer_storage: [],
+        buffer_capacity: 100,
       };
 
       em.getComponentData.mockReturnValue(metabolicStore);
@@ -282,7 +292,7 @@ describe('BurnEnergyHandler', () => {
             instanceId: 'actor1',
             componentTypeId: METABOLIC_STORE_COMPONENT_ID,
             componentData: expect.objectContaining({
-              currentEnergy: 990, // 1000 - (10 * 1.0 * 1)
+              current_energy: 990, // 1000 - (10 * 1.0 * 1)
             }),
           }),
         ]),
@@ -292,11 +302,13 @@ describe('BurnEnergyHandler', () => {
 
     test('handles object entity reference with entityId property', async () => {
       const metabolicStore = {
-        currentEnergy: 1000,
-        maxEnergy: 1000,
-        baseBurnRate: 10,
-        activityMultiplier: 1.0,
-        lastUpdateTurn: 0,
+        current_energy: 1000,
+        max_energy: 1000,
+        base_burn_rate: 10,
+        activity_multiplier: 1.0,
+        last_update_turn: 0,
+        buffer_storage: [],
+        buffer_capacity: 100,
       };
 
       em.getComponentData.mockReturnValue(metabolicStore);
@@ -319,11 +331,13 @@ describe('BurnEnergyHandler', () => {
 
     test('resolves "actor" keyword to actor entity ID from execution context', async () => {
       const metabolicStore = {
-        currentEnergy: 1000,
-        maxEnergy: 1000,
-        baseBurnRate: 10,
-        activityMultiplier: 1.0,
-        lastUpdateTurn: 0,
+        current_energy: 1000,
+        max_energy: 1000,
+        base_burn_rate: 10,
+        activity_multiplier: 1.0,
+        last_update_turn: 0,
+        buffer_storage: [],
+        buffer_capacity: 100,
       };
 
       // Set up execution context with actor
@@ -367,11 +381,13 @@ describe('BurnEnergyHandler', () => {
 
     test('resolves "target" keyword to target entity ID from execution context', async () => {
       const metabolicStore = {
-        currentEnergy: 500,
-        maxEnergy: 1000,
-        baseBurnRate: 5,
-        activityMultiplier: 1.0,
-        lastUpdateTurn: 0,
+        current_energy: 500,
+        max_energy: 1000,
+        base_burn_rate: 5,
+        activity_multiplier: 1.0,
+        last_update_turn: 0,
+        buffer_storage: [],
+        buffer_capacity: 100,
       };
 
       // Set up execution context with target

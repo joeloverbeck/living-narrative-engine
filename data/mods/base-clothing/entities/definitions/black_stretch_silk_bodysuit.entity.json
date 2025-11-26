@@ -1,0 +1,42 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:black_stretch_silk_bodysuit",
+  "description": "Black stretch-silk plunge bodysuit",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "full_body"
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "stretch-silk"
+    },
+    "core:name": {
+      "text": "bodysuit"
+    },
+    "core:description": {
+      "text": "A sleek black bodysuit crafted from luxurious stretch-silk that hugs every curve perfectly. The plunge neckline creates a bold, sophisticated silhouette while the stretch fabric ensures comfort and freedom of movement. This versatile piece transitions seamlessly from day to evening wear."
+    },
+    "descriptors:color_basic": {
+      "color": "black"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper",
+        "torso_lower"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.22
+    }
+  }
+}

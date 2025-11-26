@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:cream_cotton_soft_cup_bralette",
+  "description": "Cream-colored cotton soft-cup pull-on bralette",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": [
+        "underwear"
+      ]
+    },
+    "core:material": {
+      "material": "cotton"
+    },
+    "core:name": {
+      "text": "soft-cup bralette"
+    },
+    "core:description": {
+      "text": "A comfortable cream-colored cotton bralette with soft cups and a pull-on design. This wire-free style offers gentle support without the structure of traditional bras, making it perfect for relaxed wear. The soft cotton fabric is breathable and moves with your body, while the pull-on construction ensures easy wearing. The warm cream tone is subtle and versatile, working seamlessly under most clothing."
+    },
+    "descriptors:color_extended": {
+      "color": "cream"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.08
+    }
+  }
+}

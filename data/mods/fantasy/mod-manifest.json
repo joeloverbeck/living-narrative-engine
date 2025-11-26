@@ -32,6 +32,18 @@
       "version": "^1.0.0"
     },
     {
+      "id": "outer-clothing",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "underwear",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "base-clothing",
+      "version": "^1.0.0"
+    },
+    {
       "id": "furniture",
       "version": "^1.0.0"
     },

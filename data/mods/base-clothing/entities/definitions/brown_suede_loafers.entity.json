@@ -1,0 +1,37 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:brown_suede_loafers",
+  "description": "Brown suede loafers",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": [
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "suede"
+    },
+    "core:name": {
+      "text": "loafers"
+    },
+    "core:description": {
+      "text": "Elegant brown suede loafers with a slip-on design and subtle moccasin stitching. The soft suede upper provides comfort and sophisticated style, while the cushioned leather sole ensures all-day wearability. These versatile loafers transition seamlessly from casual to smart-casual settings, offering effortless refinement."
+    },
+    "descriptors:color_basic": {
+      "color": "brown"
+    },
+    "descriptors:texture": {
+      "texture": "velvety"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.78
+    }
+  }
+}

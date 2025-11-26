@@ -14,7 +14,18 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "entities": {
-      "definitions": [],
+      "definitions": [
+        "battle_scarred_leather_jacket.entity.json",
+        "charcoal_heather_zip_up_hoodie.entity.json",
+        "dark_olive_cotton_twill_chore_jacket.entity.json",
+        "floor_length_black_leather_coat.entity.json",
+        "flowing_cape_blood_red.entity.json",
+        "indigo_denim_trucker_jacket.entity.json",
+        "leather_work_apron.entity.json",
+        "military_coat_midnight_blue_gold_epaulettes.entity.json",
+        "pale_pink_fleece_hoodie_heart_patches.entity.json",
+        "white_structured_linen_blazer.entity.json"
+      ],
       "instances": []
     }
   }

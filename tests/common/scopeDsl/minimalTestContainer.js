@@ -10,7 +10,7 @@ import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 // Lightweight service implementations for testing
 import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
 import DataRegistry from '../../../src/data/inMemoryDataRegistry.js';
-import EntityManager from '../../../src/entities/entityManager.js';
+import TestEntityManagerAdapter from '../entities/TestEntityManagerAdapter.js';
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import DslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
@@ -57,13 +57,10 @@ export async function createMinimalTestContainer(options = {}) {
   const dataRegistry = new DataRegistry(logger);
   container.register(tokens.IDataRegistry, dataRegistry);
 
-  // Entity manager for entity lifecycle - note: registry param name, not dataRegistry
-  const entityManager = new EntityManager({
-    logger,
-    registry: dataRegistry,
-    validator: { validate: () => ({ valid: true }) }, // Minimal validator
-    dispatcher: { dispatch: () => {} }, // Minimal event dispatcher
-  });
+  // Entity manager for entity lifecycle - using TestEntityManagerAdapter for test flexibility
+  // TestEntityManagerAdapter wraps SimpleEntityManager and provides addEntity/deleteEntity methods
+  // Pass registry so createEntityInstance can look up entity definitions
+  const entityManager = new TestEntityManagerAdapter({ logger, registry: dataRegistry });
   container.register(tokens.IEntityManager, entityManager);
 
   // JSON Logic evaluation service for filters

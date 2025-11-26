@@ -8,13 +8,15 @@
     "coreTaskDescriptionText": { "type": "string" },
     "characterPortrayalGuidelinesTemplate": { "type": "string" },
     "nc21ContentPolicyText": { "type": "string" },
-    "finalLlmInstructionText": { "type": "string" }
+    "finalLlmInstructionText": { "type": "string" },
+    "actionTagRulesContent": { "type": "string" }
   },
   "required": [
     "coreTaskDescriptionText",
     "characterPortrayalGuidelinesTemplate",
     "nc21ContentPolicyText",
-    "finalLlmInstructionText"
+    "finalLlmInstructionText",
+    "actionTagRulesContent"
   ],
   "additionalProperties": false
 }

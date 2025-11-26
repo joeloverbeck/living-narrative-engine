@@ -22,9 +22,11 @@
           "description": "The ID of the actor whose appendages to unlock"
         },
         "count": {
-          "type": "integer",
-          "minimum": 1,
-          "description": "Number of grabbing appendages to unlock"
+          "oneOf": [
+            { "type": "integer", "minimum": 1 },
+            { "type": "string", "pattern": "^\\{.+\\}$" }
+          ],
+          "description": "Number of grabbing appendages to unlock (integer or template string)"
         },
         "item_id": {
           "type": "string",

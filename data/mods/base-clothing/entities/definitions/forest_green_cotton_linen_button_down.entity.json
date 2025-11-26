@@ -1,0 +1,48 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:forest_green_cotton_linen_button_down",
+  "description": "Forest-green cotton-linen button-down shirt",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": [
+          "left_arm_clothing",
+          "right_arm_clothing"
+        ]
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "cotton"
+    },
+    "core:name": {
+      "text": "button-down shirt"
+    },
+    "core:description": {
+      "text": "A sophisticated forest-green button-down shirt crafted from a premium cotton-linen blend. The natural fiber combination offers breathability and a refined drape, while the deep green hue provides rich, earthy sophistication. Features a classic collar, button placket, and tailored fit."
+    },
+    "descriptors:color_basic": {
+      "color": "green"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.3
+    }
+  }
+}

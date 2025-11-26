@@ -1,0 +1,47 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:black_leather_duty_boots",
+  "description": "Black leather tactical duty boots",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": [
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "leather",
+      "properties": [
+        "breathable",
+        "waterproof"
+      ]
+    },
+    "core:name": {
+      "text": "duty boots"
+    },
+    "core:description": {
+      "text": "Professional black leather tactical duty boots engineered for demanding operational environments. Features full-grain leather construction with a waterproof membrane, providing protection from the elements while maintaining breathability. The aggressive tread pattern ensures reliable traction on varied terrain, while the cushioned midsole reduces fatigue during extended wear. Reinforced toe and heel caps offer impact protection, and the side zipper allows for quick donning. Built to withstand the rigors of law enforcement, security work, or outdoor operations."
+    },
+    "descriptors:color_basic": {
+      "color": "black"
+    },
+    "descriptors:texture": {
+      "texture": "matte"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "feet"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 1.2
+    }
+  }
+}

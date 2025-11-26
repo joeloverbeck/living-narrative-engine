@@ -254,6 +254,10 @@
       "structure_octopoid.structure-template.json",
       "structure_tortoise_biped.structure-template.json",
       "structure_winged_quadruped.structure-template.json"
+    ],
+    "conditions": [
+      "actor-has-free-grabbing-appendage.condition.json",
+      "actor-has-two-free-grabbing-appendages.condition.json"
     ]
   }
 }

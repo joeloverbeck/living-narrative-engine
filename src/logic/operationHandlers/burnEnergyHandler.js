@@ -158,10 +158,10 @@ class BurnEnergyHandler extends BaseOperationHandler {
         return;
       }
 
-      // Extract metabolic data
-      const currentEnergy = metabolicStore.currentEnergy || 0;
-      const baseBurnRate = metabolicStore.baseBurnRate || 0;
-      const maxEnergy = metabolicStore.maxEnergy;
+      // Extract metabolic data (using snake_case to match component schema)
+      const currentEnergy = metabolicStore.current_energy || 0;
+      const baseBurnRate = metabolicStore.base_burn_rate || 0;
+      const maxEnergy = metabolicStore.max_energy;
 
       // Calculate energy burned
       const energyBurned = baseBurnRate * activityMultiplier * turns;
@@ -169,18 +169,20 @@ class BurnEnergyHandler extends BaseOperationHandler {
       // Calculate new energy, clamped to minimum 0
       const newEnergy = Math.max(0, currentEnergy - energyBurned);
 
-      // Update metabolic store component
+      // Update metabolic store component (using snake_case to match schema)
       await this.#entityManager.batchAddComponentsOptimized(
         [
           {
             instanceId: entityId,
             componentTypeId: METABOLIC_STORE_COMPONENT_ID,
             componentData: {
-              currentEnergy: newEnergy,
-              maxEnergy,
-              baseBurnRate,
-              activityMultiplier: metabolicStore.activityMultiplier,
-              lastUpdateTurn: metabolicStore.lastUpdateTurn,
+              current_energy: newEnergy,
+              max_energy: maxEnergy,
+              base_burn_rate: baseBurnRate,
+              activity_multiplier: metabolicStore.activity_multiplier,
+              last_update_turn: metabolicStore.last_update_turn,
+              buffer_storage: metabolicStore.buffer_storage || [],
+              buffer_capacity: metabolicStore.buffer_capacity || 0,
             },
           },
         ],

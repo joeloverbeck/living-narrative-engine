@@ -1,0 +1,43 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:structured_bodice_deep_crimson_steel_boning",
+  "description": "Corseted bodice in deep crimson with steel boning",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": [
+        "underwear",
+        "base"
+      ]
+    },
+    "core:material": {
+      "material": "fabric"
+    },
+    "core:name": {
+      "text": "structured crimson bodice"
+    },
+    "core:description": {
+      "text": "A dramatically corseted bodice in a rich deep crimson hue, reinforced with hidden steel boning that cinches and defines the waist. The structured fabric holds its shape beautifully, creating a romantic silhouette reminiscent of historical gothic fashion. Lace-up closures or concealed clasps provide a secure fit while allowing for adjustment. This piece captures the essence of gothic elegance, combining Victorian-inspired structure with bold color for a striking foundation to any dark romantic ensemble."
+    },
+    "descriptors:color_extended": {
+      "color": "deep-crimson"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.5
+    }
+  }
+}

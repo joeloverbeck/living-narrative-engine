@@ -1,0 +1,47 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:white_cotton_linen_trousers",
+  "description": "White cotton-linen trousers",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "legs",
+        "secondary": [
+          "torso_lower"
+        ]
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "cotton"
+    },
+    "core:name": {
+      "text": "trousers"
+    },
+    "core:description": {
+      "text": "Crisp white trousers crafted from a premium cotton-linen blend. The natural fiber combination offers excellent breathability and a relaxed drape, perfect for warm weather. The clean white color and tailored fit create a sophisticated yet comfortable look suitable for both casual and semi-formal summer occasions."
+    },
+    "descriptors:color_basic": {
+      "color": "white"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_lower"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.56
+    }
+  }
+}
