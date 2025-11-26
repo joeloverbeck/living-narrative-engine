@@ -17,7 +17,7 @@
     "ajv-formats": "^3.0.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "glob": "^11.1.0",
+    "glob": "^13.0.0",
     "gpt-tokenizer": "^3.4.0",
     "jest-mock-extended": "^4.0.0-beta1",
     "jsdom": "^27.2.0",
