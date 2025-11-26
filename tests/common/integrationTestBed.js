@@ -9,12 +9,23 @@ import { configureBaseContainer } from '../../src/dependencyInjection/baseContai
 import ConsoleLogger from '../../src/logging/consoleLogger.js';
 import { tokens } from '../../src/dependencyInjection/tokens.js';
 import { jest } from '@jest/globals';
+import { readFile } from 'node:fs/promises';
+import SchemaLoader from '../../src/loaders/schemaLoader.js';
+import StaticConfiguration from '../../src/configuration/staticConfiguration.js';
+import DefaultPathResolver from '../../src/pathing/defaultPathResolver.js';
 
 /**
  * Integration test bed that provides full DI container functionality for integration tests.
  * This class sets up a real DI container with actual services for testing integration scenarios.
  */
 export class IntegrationTestBed extends BaseTestBed {
+  /**
+   * Whether real schemas from data/schemas/ are loaded instead of test-only schemas.
+   *
+   * @type {boolean}
+   */
+  #useRealSchemas = false;
+
   constructor() {
     super();
     /** @type {AppContainer} */
@@ -26,9 +37,13 @@ export class IntegrationTestBed extends BaseTestBed {
   /**
    * Initializes the integration test bed with a full DI container
    *
+   * @param {object} [options] - Initialization options
+   * @param {boolean} [options.useRealSchemas] - Load all production schemas from data/schemas/ via SchemaLoader instead of simplified test-only schemas. This enables validation against real schema definitions but is slower.
    * @returns {Promise<void>}
    */
-  async initialize() {
+  async initialize(options = {}) {
+    const { useRealSchemas = false } = options;
+    this.#useRealSchemas = useRealSchemas;
     await super.setup();
 
     // Create and configure DI container
@@ -97,13 +112,50 @@ export class IntegrationTestBed extends BaseTestBed {
     );
     registerCharacterBuilder(this.container);
 
-    // For integration tests, manually register schemas and definitions instead of loading mods
-    // This avoids network requests during testing
-    await this._registerTestComponentSchemas();
-    await this._registerTestEventDefinitions();
+    if (this.#useRealSchemas) {
+      // Load ALL production schemas from data/schemas/ via SchemaLoader
+      // This enables validation against real schema definitions.
+      // Note: We create a custom SchemaLoader with a file-based fetcher because
+      // the DI-wired SchemaLoader uses WorkspaceDataFetcher which relies on fetch(),
+      // which doesn't work in jsdom test environment.
+      const config = new StaticConfiguration();
+      const resolver = new DefaultPathResolver(config);
+      const validator = this.container.resolve(tokens.ISchemaValidator);
+
+      // File-based fetcher for Node.js test environment
+      const fileFetcher = {
+        async fetch(path) {
+          const data = await readFile(path, { encoding: 'utf-8' });
+          return JSON.parse(data);
+        },
+      };
+
+      const schemaLoader = new SchemaLoader(
+        config,
+        resolver,
+        fileFetcher,
+        validator,
+        mockLogger
+      );
+      await schemaLoader.loadAndCompileAllSchemas();
+    } else {
+      // Default: For integration tests, manually register simplified test schemas
+      // This avoids network requests during testing and is faster
+      await this._registerTestComponentSchemas();
+      await this._registerTestEventDefinitions();
+    }
 
     // Store reference to mock logger for test assertions
     this.mockLogger = mockLogger;
+  }
+
+  /**
+   * Check if using real schema validation from data/schemas/
+   *
+   * @returns {boolean} True if real schemas are loaded, false if using test-only schemas
+   */
+  isUsingRealSchemas() {
+    return this.#useRealSchemas;
   }
 
   /**

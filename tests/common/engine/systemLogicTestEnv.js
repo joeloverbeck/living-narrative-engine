@@ -55,6 +55,8 @@ import ScopeEngine from '../../../src/scopeDsl/engine.js';
  * @param {object} [options.lookups] - Lookup definitions for QUERY_LOOKUP operations
  * @param {boolean} [options.debugPrerequisites] - Enable debug mode for enhanced prerequisite error messages
  * @param {boolean} [options.useAdapterEntityManager] - Use TestEntityManagerAdapter for production API compatibility
+ * @param {import('ajv').default|null} [options.schemaValidator=null] - Optional AJV instance for rule validation (SCHVALTESINT-003)
+ * @param {boolean} [options.validateOnSetup=true] - Validate rules on setup when schemaValidator is provided
  * @returns {{
  *   eventBus: import('../../../src/events/eventBus.js').default,
  *   events: any[],
@@ -66,7 +68,9 @@ import ScopeEngine from '../../../src/scopeDsl/engine.js';
  *   logger: any,
  *   dataRegistry: any,
  *   cleanup: () => void,
- *   initializeEnv: (entities: Array<{id:string,components:object}>) => any
+ *   initializeEnv: (entities: Array<{id:string,components:object}>) => any,
+ *   validateRule: (ruleData: object) => void,
+ *   hasValidation: () => boolean
  * }} Base environment pieces used for tests.
  */
 export function createBaseRuleEnvironment({
@@ -86,6 +90,8 @@ export function createBaseRuleEnvironment({
   createEventBus = null,
   debugPrerequisites = false,
   useAdapterEntityManager = true,
+  schemaValidator = null,
+  validateOnSetup = true,
 }) {
   // Create a debug logger that silences debug output for performance tests
   const debugLogger = {
@@ -120,6 +126,29 @@ export function createBaseRuleEnvironment({
     }
     return rule;
   });
+
+  // Validate rules on setup if schema validator is provided (SCHVALTESINT-003)
+  if (schemaValidator && validateOnSetup && rules.length > 0) {
+    const ruleSchemaId = 'schema://living-narrative-engine/rule.schema.json';
+    const ruleValidate = schemaValidator.getSchema(ruleSchemaId);
+    if (ruleValidate) {
+      for (const rule of rules) {
+        const valid = ruleValidate(rule);
+        if (!valid) {
+          const errors = ruleValidate.errors || [];
+          const errorDetails = errors
+            .map((e) => `    ${e.instancePath || '/'}: ${e.message}`)
+            .join('\n');
+          throw new Error(
+            `Schema validation failed for rule\n` +
+              `  Rule ID: ${rule.rule_id || rule.id || 'unknown'}\n` +
+              `  Schema: ${ruleSchemaId}\n` +
+              `  Validation errors:\n${errorDetails}`
+          );
+        }
+      }
+    }
+  }
 
   const testDataRegistry =
     dataRegistry ||
@@ -1098,6 +1127,45 @@ export function createBaseRuleEnvironment({
       interpreter.shutdown();
     },
     initializeEnv,
+
+    /**
+     * Validates a single rule against the rule schema.
+     * Requires schemaValidator to be provided during environment creation.
+     *
+     * @param {Object} ruleData - Rule to validate
+     * @throws {Error} If validator not provided or validation fails
+     */
+    validateRule(ruleData) {
+      if (!schemaValidator) {
+        throw new Error('Schema validator not provided to test environment');
+      }
+      const ruleSchemaId = 'schema://living-narrative-engine/rule.schema.json';
+      const ruleValidate = schemaValidator.getSchema(ruleSchemaId);
+      if (!ruleValidate) {
+        throw new Error(`Rule schema not found: ${ruleSchemaId}`);
+      }
+      const valid = ruleValidate(ruleData);
+      if (!valid) {
+        const errors = ruleValidate.errors || [];
+        const errorDetails = errors
+          .map((e) => `    ${e.instancePath || '/'}: ${e.message}`)
+          .join('\n');
+        throw new Error(
+          `Schema validation failed for rule\n` +
+            `  Rule ID: ${ruleData.rule_id || ruleData.id || 'unknown'}\n` +
+            `  Schema: ${ruleSchemaId}\n` +
+            `  Validation errors:\n${errorDetails}`
+        );
+      }
+    },
+
+    /**
+     * Checks if schema validation is available.
+     * @returns {boolean} True if schemaValidator was provided
+     */
+    hasValidation() {
+      return schemaValidator !== null;
+    },
   };
 }
 
