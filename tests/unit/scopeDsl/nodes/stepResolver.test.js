@@ -195,7 +195,7 @@ describe('StepResolver', () => {
         expect(result).toEqual(new Set());
       });
 
-      it('should handle null field values from objects', () => {
+      it('should handle null field values from objects by excluding them', () => {
         const node = { type: 'Step', field: 'nullable', parent: {} };
         const actorEntity = createTestEntity('test-actor', {
           'core:actor': {},
@@ -207,7 +207,8 @@ describe('StepResolver', () => {
 
         const result = resolver.resolve(node, ctx);
 
-        expect(result).toEqual(new Set([null]));
+        // null values should be excluded from results (same as undefined)
+        expect(result).toEqual(new Set());
       });
 
       it('should search within all component data when field not found as component', () => {

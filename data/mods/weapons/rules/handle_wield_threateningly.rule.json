@@ -22,6 +22,25 @@
     },
     {
       "type": "QUERY_COMPONENT",
+      "comment": "Get target's grabbing requirements to know how many appendages to lock",
+      "parameters": {
+        "entity_ref": "target",
+        "component_type": "anatomy:requires_grabbing",
+        "result_variable": "targetGrabbingReqs",
+        "missing_value": { "handsRequired": 1 }
+      }
+    },
+    {
+      "type": "LOCK_GRABBING",
+      "comment": "Lock the required number of grabbing appendages for this weapon",
+      "parameters": {
+        "actor_id": "{event.payload.actorId}",
+        "count": "{context.targetGrabbingReqs.handsRequired}",
+        "item_id": "{event.payload.targetId}"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
       "parameters": {
         "entity_ref": "actor",
         "component_type": "core:position",

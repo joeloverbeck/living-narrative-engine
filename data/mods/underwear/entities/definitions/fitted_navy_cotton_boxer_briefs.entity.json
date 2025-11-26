@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:fitted_navy_cotton_boxer_briefs",
+  "description": "Fitted deep-navy cotton boxer briefs",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "torso_lower"
+      },
+      "allowedLayers": [
+        "underwear"
+      ]
+    },
+    "core:material": {
+      "material": "cotton"
+    },
+    "core:name": {
+      "text": "fitted boxer briefs"
+    },
+    "core:description": {
+      "text": "Fitted deep-navy cotton boxer briefs with a smooth finish. These comfortable underwear provide excellent support and coverage while maintaining a sleek, athletic silhouette. The premium cotton fabric ensures breathability and all-day comfort."
+    },
+    "descriptors:color_extended": {
+      "color": "deep-navy"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.09
+    }
+  }
+}

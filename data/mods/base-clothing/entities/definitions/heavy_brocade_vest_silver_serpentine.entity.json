@@ -1,0 +1,47 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:heavy_brocade_vest_silver_serpentine",
+  "description": "Ornate brocade vest with silver serpentine patterns",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "brocade"
+    },
+    "core:name": {
+      "text": "brocade vest with serpentine pattern"
+    },
+    "core:description": {
+      "text": "An exquisite vest crafted from heavy brocade fabric, its surface alive with silver serpentine patterns that wind and coil across the rich textile. The ornate weaving creates a raised texture, with silver threads forming sinuous snake-like motifs that catch the light. This luxurious formal piece features a structured drape that holds its shape beautifully, making it ideal for elegant gothic ensembles. The vest pairs perfectly with flowing coats or dramatic capes for a commanding regal aesthetic."
+    },
+    "descriptors:color_extended": {
+      "color": "silver"
+    },
+    "descriptors:pattern": {
+      "pattern": "serpentine"
+    },
+    "descriptors:texture": {
+      "texture": "glossy"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.8
+    }
+  }
+}

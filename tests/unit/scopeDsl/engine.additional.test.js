@@ -326,14 +326,14 @@ describe('ScopeEngine - Additional Coverage Tests', () => {
   });
 
   describe('Field access edge cases', () => {
-    test('should handle null field values through public API', () => {
+    test('should handle null field values through public API by excluding them', () => {
       const ast = parseDslExpression('actor.core:missing_component');
       mockEntityManager.getComponentData.mockReturnValue(null);
 
       const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
 
-      // null is a valid value, so it should be included in the result
-      expect(result).toEqual(new Set([null]));
+      // null values should be excluded from results (same as undefined) - represents "no value"
+      expect(result).toEqual(new Set());
     });
 
     test('should handle undefined field values in _extractFieldValue', () => {

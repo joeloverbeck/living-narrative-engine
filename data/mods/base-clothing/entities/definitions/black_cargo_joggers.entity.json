@@ -1,0 +1,43 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:black_cargo_joggers",
+  "description": "Black cargo joggers with utility pockets",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "legs"
+      },
+      "allowedLayers": [
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "cotton"
+    },
+    "core:name": {
+      "text": "cargo joggers"
+    },
+    "core:description": {
+      "text": "Modern black cargo joggers that blend utility with athletic comfort. Features multiple cargo pockets on the thighs for practical storage, along with traditional side pockets. The tapered leg with elastic cuffs creates a streamlined silhouette while the elastic waistband with drawstring ensures a secure, adjustable fit. Made from durable yet flexible fabric that moves freely with your body."
+    },
+    "descriptors:color_basic": {
+      "color": "black"
+    },
+    "descriptors:texture": {
+      "texture": "matte"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_lower"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.45
+    }
+  }
+}

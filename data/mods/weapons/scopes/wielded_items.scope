@@ -1,0 +1,1 @@
+weapons:wielded_items := actor.components.positioning:wielding.wielded_item_ids[]

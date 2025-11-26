@@ -1,0 +1,51 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:ribbed_cotton_tank_slim_red",
+  "description": "Slim red ribbed cotton tank",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": [
+          "left_arm_clothing",
+          "right_arm_clothing"
+        ]
+      },
+      "allowedLayers": [
+        "underwear",
+        "base"
+      ]
+    },
+    "core:material": {
+      "material": "cotton",
+      "properties": [
+        "breathable",
+        "flexible"
+      ]
+    },
+    "core:name": {
+      "text": "ribbed tank top"
+    },
+    "core:description": {
+      "text": "A slim-fitting red tank knit from ribbed cotton that skims the body without feeling restrictive. The fine rib-knit texture and breathable fibers keep air flowing during warmups or layered looks. Subtle stretch in the cotton blend makes it easy to move, with a scoop neckline that layers cleanly over the black longline sports bra. Pair it with the red matte Lycra bike shorts for a coordinated studio ensemble or slip it beneath a lightweight hoodie for cooldowns."
+    },
+    "descriptors:color_basic": {
+      "color": "red"
+    },
+    "descriptors:texture": {
+      "texture": "rib-knit"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.22
+    }
+  }
+}

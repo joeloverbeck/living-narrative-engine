@@ -1,0 +1,47 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:slate_gray_wool_long_sleeve_top",
+  "description": "Slate gray merino wool long-sleeve top",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": [
+          "left_arm_clothing",
+          "right_arm_clothing"
+        ]
+      },
+      "allowedLayers": [
+        "underwear",
+        "base"
+      ]
+    },
+    "core:material": {
+      "material": "wool"
+    },
+    "core:name": {
+      "text": "long-sleeve top"
+    },
+    "core:description": {
+      "text": "A premium slate gray merino wool long-sleeve top combining exceptional comfort with technical performance. The fine merino fibers provide natural temperature regulation, moisture-wicking capabilities, and odor resistance ideal for extended wear in varying conditions. The fitted cut moves naturally with the body while the crew neckline offers classic versatility. The neutral slate gray color pairs seamlessly with any tactical or outdoor wardrobe."
+    },
+    "descriptors:color_basic": {
+      "color": "gray"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.28
+    }
+  }
+}

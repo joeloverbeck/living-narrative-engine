@@ -1,0 +1,44 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:fitted_burgundy_vest_brass_buttons",
+  "description": "Fitted burgundy vest with tarnished brass buttons",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "cotton"
+    },
+    "core:name": {
+      "text": "burgundy vest"
+    },
+    "core:description": {
+      "text": "A fitted burgundy vest that follows the contours of the body with tailored precision. The rich burgundy fabric is accented by a row of tarnished brass buttons down the front, their weathered patina adding character and a sense of lived-in elegance. The structured cut provides a sleek silhouette that works beautifully under jackets or on its own. Perfect for a bard's performance attire, combining sophistication with just a hint of bohemian charm."
+    },
+    "descriptors:color_extended": {
+      "color": "crimson"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.4
+    }
+  }
+}

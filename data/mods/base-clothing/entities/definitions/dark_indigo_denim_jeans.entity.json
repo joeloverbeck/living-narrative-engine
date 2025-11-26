@@ -1,0 +1,43 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:dark_indigo_denim_jeans",
+  "description": "Dark-indigo raw denim jeans",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "legs"
+      },
+      "allowedLayers": [
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "denim"
+    },
+    "core:name": {
+      "text": "jeans"
+    },
+    "core:description": {
+      "text": "Classic dark-indigo raw denim jeans with a straight-leg cut. These premium jeans feature deep indigo coloring that will develop unique fading patterns over time. The heavyweight denim construction offers durability and structure, while the timeless styling ensures lasting versatility in any wardrobe."
+    },
+    "descriptors:color_extended": {
+      "color": "indigo"
+    },
+    "descriptors:texture": {
+      "texture": "rugged"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_lower"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.75
+    }
+  }
+}

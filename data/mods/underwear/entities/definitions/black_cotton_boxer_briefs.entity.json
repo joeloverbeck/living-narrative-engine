@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:black_cotton_boxer_briefs",
+  "description": "Black cotton boxer briefs",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "torso_lower"
+      },
+      "allowedLayers": [
+        "underwear"
+      ]
+    },
+    "core:material": {
+      "material": "cotton"
+    },
+    "core:name": {
+      "text": "boxer briefs"
+    },
+    "core:description": {
+      "text": "Classic black cotton boxer briefs offering the perfect balance of support and comfort. The soft, breathable cotton fabric sits comfortably against the skin while providing reliable coverage and a secure fit. Features a comfortable elastic waistband and contoured pouch design for all-day wearability. The timeless black color and quality construction make these an essential wardrobe staple."
+    },
+    "descriptors:color_basic": {
+      "color": "black"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.09
+    }
+  }
+}

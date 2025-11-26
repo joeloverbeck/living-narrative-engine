@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:white_terry_lined_grip_socks",
+  "description": "White terry-lined cotton grip socks",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": [
+        "underwear"
+      ]
+    },
+    "core:material": {
+      "material": "cotton"
+    },
+    "core:name": {
+      "text": "grip socks"
+    },
+    "core:description": {
+      "text": "Functional white cotton grip socks with a soft terry-lined interior for extra comfort. The terry cloth lining provides cushioning and moisture absorption, making these ideal for athletic activities or casual wear. Small grip elements on the sole prevent slipping on smooth surfaces. The breathable cotton construction keeps feet comfortable, while the classic white color works with any outfit. Perfect for yoga, pilates, or lounging at home."
+    },
+    "descriptors:color_basic": {
+      "color": "white"
+    },
+    "descriptors:texture": {
+      "texture": "terry"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.1
+    }
+  }
+}

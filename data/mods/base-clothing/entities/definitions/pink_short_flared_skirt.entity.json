@@ -1,0 +1,37 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:pink_short_flared_skirt",
+  "description": "Pink short flared skirt",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_lower"
+      },
+      "allowedLayers": [
+        "underwear",
+        "base"
+      ]
+    },
+    "core:material": {
+      "material": "cotton"
+    },
+    "core:name": {
+      "text": "short flared skirt"
+    },
+    "core:description": {
+      "text": "A cute pink cotton skirt with a flared silhouette that creates graceful movement with each step. The short length sits comfortably at mid-thigh, while the flared design adds feminine flair and allows for easy movement. The soft cotton fabric ensures comfort throughout the day."
+    },
+    "descriptors:color_basic": {
+      "color": "pink"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.31
+    }
+  }
+}

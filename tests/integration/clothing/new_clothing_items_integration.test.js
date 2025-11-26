@@ -8,20 +8,28 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 describe('New Clothing Items Integration Tests', () => {
+  // Base clothing items migrated to base-clothing mod (CLOLAYMIG-013)
+  const baseClothingFiles = [
+    'pink_off_shoulder_crop_top.entity.json',
+    'pink_short_flared_skirt.entity.json',
+    'white_platform_sneakers.entity.json',
+  ];
+
+  // Underwear items migrated to underwear mod (CLOLAYMIG-010)
+  const underwearFiles = [
+    'white_thigh_high_socks_pink_hearts.entity.json',
+    'white_cotton_panties.entity.json',
+  ];
+
   describe('Entity Definition Files', () => {
-    const newClothingFiles = [
-      'pink_off_shoulder_crop_top.entity.json',
-      'pink_short_flared_skirt.entity.json',
-      'white_thigh_high_socks_pink_hearts.entity.json',
-      'white_cotton_panties.entity.json',
-      'white_platform_sneakers.entity.json',
-    ];
+    const newClothingFiles = [...baseClothingFiles];
 
     it('should have all new clothing entity definition files', () => {
+      // Base clothing items migrated to base-clothing mod (CLOLAYMIG-013)
       for (const filename of newClothingFiles) {
         const filePath = join(
           process.cwd(),
-          'data/mods/clothing/entities/definitions',
+          'data/mods/base-clothing/entities/definitions',
           filename
         );
 
@@ -39,10 +47,11 @@ describe('New Clothing Items Integration Tests', () => {
     });
 
     it('should have valid JSON structure in all entity files', () => {
+      // Base clothing items migrated to base-clothing mod (CLOLAYMIG-013)
       for (const filename of newClothingFiles) {
         const filePath = join(
           process.cwd(),
-          'data/mods/clothing/entities/definitions',
+          'data/mods/base-clothing/entities/definitions',
           filename
         );
 
@@ -63,16 +72,17 @@ describe('New Clothing Items Integration Tests', () => {
     });
 
     it('should have correct component structure for pink off-shoulder crop top', () => {
+      // Entity migrated to base-clothing mod (CLOLAYMIG-013)
       const filePath = join(
         __dirname,
-        '../../../data/mods/clothing/entities/definitions',
+        '../../../data/mods/base-clothing/entities/definitions',
         'pink_off_shoulder_crop_top.entity.json'
       );
 
       const content = readFileSync(filePath, 'utf8');
       const entityData = JSON.parse(content);
 
-      expect(entityData.id).toBe('clothing:pink_off_shoulder_crop_top');
+      expect(entityData.id).toBe('base-clothing:pink_off_shoulder_crop_top');
       expect(entityData.components['clothing:wearable']).toEqual({
         layer: 'base',
         equipmentSlots: {
@@ -88,16 +98,17 @@ describe('New Clothing Items Integration Tests', () => {
     });
 
     it('should have correct component structure for pink skirt', () => {
+      // Entity migrated to base-clothing mod (CLOLAYMIG-013)
       const filePath = join(
         __dirname,
-        '../../../data/mods/clothing/entities/definitions',
+        '../../../data/mods/base-clothing/entities/definitions',
         'pink_short_flared_skirt.entity.json'
       );
 
       const content = readFileSync(filePath, 'utf8');
       const entityData = JSON.parse(content);
 
-      expect(entityData.id).toBe('clothing:pink_short_flared_skirt');
+      expect(entityData.id).toBe('base-clothing:pink_short_flared_skirt');
       expect(entityData.components['clothing:wearable']).toEqual({
         layer: 'base',
         equipmentSlots: {
@@ -111,17 +122,17 @@ describe('New Clothing Items Integration Tests', () => {
       );
     });
 
-    it('should have correct component structure for white thigh-high socks', () => {
+    it('should have correct component structure for white thigh-high socks (underwear mod)', () => {
       const filePath = join(
         __dirname,
-        '../../../data/mods/clothing/entities/definitions',
+        '../../../data/mods/underwear/entities/definitions',
         'white_thigh_high_socks_pink_hearts.entity.json'
       );
 
       const content = readFileSync(filePath, 'utf8');
       const entityData = JSON.parse(content);
 
-      expect(entityData.id).toBe('clothing:white_thigh_high_socks_pink_hearts');
+      expect(entityData.id).toBe('underwear:white_thigh_high_socks_pink_hearts');
       expect(entityData.components['clothing:wearable']).toEqual({
         layer: 'underwear',
         equipmentSlots: {
@@ -138,17 +149,17 @@ describe('New Clothing Items Integration Tests', () => {
       );
     });
 
-    it('should have correct component structure for white cotton panties', () => {
+    it('should have correct component structure for white cotton panties (underwear mod)', () => {
       const filePath = join(
         __dirname,
-        '../../../data/mods/clothing/entities/definitions',
+        '../../../data/mods/underwear/entities/definitions',
         'white_cotton_panties.entity.json'
       );
 
       const content = readFileSync(filePath, 'utf8');
       const entityData = JSON.parse(content);
 
-      expect(entityData.id).toBe('clothing:white_cotton_panties');
+      expect(entityData.id).toBe('underwear:white_cotton_panties');
       expect(entityData.components['clothing:wearable']).toEqual({
         layer: 'underwear',
         equipmentSlots: {
@@ -163,16 +174,17 @@ describe('New Clothing Items Integration Tests', () => {
     });
 
     it('should have correct component structure for white platform sneakers', () => {
+      // Entity migrated to base-clothing mod (CLOLAYMIG-013)
       const filePath = join(
         __dirname,
-        '../../../data/mods/clothing/entities/definitions',
+        '../../../data/mods/base-clothing/entities/definitions',
         'white_platform_sneakers.entity.json'
       );
 
       const content = readFileSync(filePath, 'utf8');
       const entityData = JSON.parse(content);
 
-      expect(entityData.id).toBe('clothing:white_platform_sneakers');
+      expect(entityData.id).toBe('base-clothing:white_platform_sneakers');
       expect(entityData.components['clothing:wearable']).toEqual({
         layer: 'base',
         equipmentSlots: {
@@ -226,22 +238,11 @@ describe('New Clothing Items Integration Tests', () => {
 
   describe('Layering System Validation', () => {
     it('should respect underwear and base layering rules', () => {
-      const underwearItems = [
-        'white_cotton_panties.entity.json',
-        'white_thigh_high_socks_pink_hearts.entity.json',
-      ];
-
-      const baseItems = [
-        'pink_off_shoulder_crop_top.entity.json',
-        'pink_short_flared_skirt.entity.json',
-        'white_platform_sneakers.entity.json',
-      ];
-
-      // Check underwear items
-      for (const filename of underwearItems) {
+      // Underwear items in underwear mod (CLOLAYMIG-010)
+      for (const filename of underwearFiles) {
         const filePath = join(
           process.cwd(),
-          'data/mods/clothing/entities/definitions',
+          'data/mods/underwear/entities/definitions',
           filename
         );
         const content = readFileSync(filePath, 'utf8');
@@ -255,11 +256,11 @@ describe('New Clothing Items Integration Tests', () => {
         ).toEqual(['underwear']);
       }
 
-      // Check base layer items
-      for (const filename of baseItems) {
+      // Base layer items migrated to base-clothing mod (CLOLAYMIG-013)
+      for (const filename of baseClothingFiles) {
         const filePath = join(
           process.cwd(),
-          'data/mods/clothing/entities/definitions',
+          'data/mods/base-clothing/entities/definitions',
           filename
         );
         const content = readFileSync(filePath, 'utf8');
@@ -276,33 +277,45 @@ describe('New Clothing Items Integration Tests', () => {
     });
 
     it('should allow complete outfit composition without slot conflicts', () => {
-      const outfitItems = [
+      // Underwear items from underwear mod
+      const underwearOutfitItems = [
         {
           file: 'white_cotton_panties.entity.json',
           expectedSlot: 'torso_lower',
           layer: 'underwear',
+          mod: 'underwear',
         },
         {
           file: 'white_thigh_high_socks_pink_hearts.entity.json',
           expectedSlot: 'feet',
           layer: 'underwear',
+          mod: 'underwear',
         },
+      ];
+
+      // Base clothing items migrated to base-clothing mod (CLOLAYMIG-013)
+      const baseOutfitItems = [
         {
           file: 'pink_off_shoulder_crop_top.entity.json',
           expectedSlot: 'torso_upper',
           layer: 'base',
+          mod: 'base-clothing',
         },
         {
           file: 'pink_short_flared_skirt.entity.json',
           expectedSlot: 'torso_lower',
           layer: 'base',
+          mod: 'base-clothing',
         },
         {
           file: 'white_platform_sneakers.entity.json',
           expectedSlot: 'feet',
           layer: 'base',
+          mod: 'base-clothing',
         },
       ];
+
+      const outfitItems = [...underwearOutfitItems, ...baseOutfitItems];
 
       const slotsByLayer = {
         underwear: [],
@@ -312,7 +325,7 @@ describe('New Clothing Items Integration Tests', () => {
       for (const item of outfitItems) {
         const filePath = join(
           process.cwd(),
-          'data/mods/clothing/entities/definitions',
+          `data/mods/${item.mod}/entities/definitions`,
           item.file
         );
         const content = readFileSync(filePath, 'utf8');
@@ -342,7 +355,8 @@ describe('New Clothing Items Integration Tests', () => {
 
   describe('Material Properties', () => {
     it('should use appropriate materials for each item', () => {
-      const materialExpectations = [
+      // Base clothing materials migrated to base-clothing mod (CLOLAYMIG-013)
+      const clothingMaterialExpectations = [
         {
           file: 'pink_off_shoulder_crop_top.entity.json',
           expectedMaterial: 'cotton',
@@ -352,6 +366,14 @@ describe('New Clothing Items Integration Tests', () => {
           expectedMaterial: 'cotton',
         },
         {
+          file: 'white_platform_sneakers.entity.json',
+          expectedMaterial: 'leather',
+        },
+      ];
+
+      // Underwear materials (underwear mod)
+      const underwearMaterialExpectations = [
+        {
           file: 'white_thigh_high_socks_pink_hearts.entity.json',
           expectedMaterial: 'cotton',
         },
@@ -359,16 +381,26 @@ describe('New Clothing Items Integration Tests', () => {
           file: 'white_cotton_panties.entity.json',
           expectedMaterial: 'cotton',
         },
-        {
-          file: 'white_platform_sneakers.entity.json',
-          expectedMaterial: 'leather',
-        },
       ];
 
-      for (const item of materialExpectations) {
+      for (const item of clothingMaterialExpectations) {
         const filePath = join(
           process.cwd(),
-          'data/mods/clothing/entities/definitions',
+          'data/mods/base-clothing/entities/definitions',
+          item.file
+        );
+        const content = readFileSync(filePath, 'utf8');
+        const entityData = JSON.parse(content);
+
+        expect(entityData.components['core:material'].material).toBe(
+          item.expectedMaterial
+        );
+      }
+
+      for (const item of underwearMaterialExpectations) {
+        const filePath = join(
+          process.cwd(),
+          'data/mods/underwear/entities/definitions',
           item.file
         );
         const content = readFileSync(filePath, 'utf8');

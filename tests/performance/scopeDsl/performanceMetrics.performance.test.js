@@ -6,42 +6,39 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
+import { ScopeTracingTestBed } from '../../common/scopeDsl/scopeTracingTestBed.js';
 
 describe('Performance Metrics - Timing Accuracy', () => {
-  let testFixture;
+  let testBed;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
-    );
+    testBed = await ScopeTracingTestBed.create();
 
     // Register scopes needed for action discovery
-    await testFixture.registerCustomScope('positioning', 'close_actors');
+    await testBed.registerCustomScope('positioning', 'close_actors');
   });
 
   afterEach(() => {
-    testFixture.cleanup();
+    testBed.cleanup();
   });
 
   it('should have accurate timing measurements', async () => {
     // Create scenario BEFORE enabling tracing to avoid including setup time
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
+    const scenario = testBed.createCloseActors(['Alice', 'Bob']);
+    const actorEntity = testBed.testEnv.entityManager.getEntityInstance(
       scenario.actor.id
     );
 
     // Measure wall clock time from when tracing starts
     const wallClockStart = performance.now();
-    testFixture.enableScopeTracing();
+    testBed.enableScopeTracing();
 
-    testFixture.testEnv.unifiedScopeResolver.resolveSync(
+    testBed.testEnv.unifiedScopeResolver.resolveSync(
       'positioning:close_actors',
       actorEntity
     );
 
-    const metrics = testFixture.getScopePerformanceMetrics();
+    const metrics = testBed.getScopePerformanceMetrics();
     const wallClockEnd = performance.now();
     const wallClockDuration = wallClockEnd - wallClockStart;
 
@@ -56,19 +53,19 @@ describe('Performance Metrics - Timing Accuracy', () => {
   });
 
   it('should have step durations sum to reasonable total', async () => {
-    testFixture.enableScopeTracing();
+    testBed.enableScopeTracing();
 
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
+    const scenario = testBed.createCloseActors(['Alice', 'Bob']);
+    const actorEntity = testBed.testEnv.entityManager.getEntityInstance(
       scenario.actor.id
     );
 
-    testFixture.testEnv.unifiedScopeResolver.resolveSync(
+    testBed.testEnv.unifiedScopeResolver.resolveSync(
       'positioning:close_actors',
       actorEntity
     );
 
-    const metrics = testFixture.getScopePerformanceMetrics();
+    const metrics = testBed.getScopePerformanceMetrics();
 
     // Sum of resolver times
     const resolverTimeSum = metrics.resolverStats.reduce(
@@ -82,19 +79,19 @@ describe('Performance Metrics - Timing Accuracy', () => {
   });
 
   it('should have percentages sum to approximately 100%', async () => {
-    testFixture.enableScopeTracing();
+    testBed.enableScopeTracing();
 
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
+    const scenario = testBed.createCloseActors(['Alice', 'Bob']);
+    const actorEntity = testBed.testEnv.entityManager.getEntityInstance(
       scenario.actor.id
     );
 
-    testFixture.testEnv.unifiedScopeResolver.resolveSync(
+    testBed.testEnv.unifiedScopeResolver.resolveSync(
       'positioning:close_actors',
       actorEntity
     );
 
-    const metrics = testFixture.getScopePerformanceMetrics();
+    const metrics = testBed.getScopePerformanceMetrics();
 
     const percentageSum = metrics.resolverStats.reduce(
       (sum, stat) => sum + stat.percentage,
@@ -109,36 +106,33 @@ describe('Performance Metrics - Timing Accuracy', () => {
 });
 
 describe('Performance Metrics - Overhead', () => {
-  let testFixture;
+  let testBed;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
-    );
+    testBed = await ScopeTracingTestBed.create();
 
     // Register scopes needed for action discovery
-    await testFixture.registerCustomScope('positioning', 'close_actors');
+    await testBed.registerCustomScope('positioning', 'close_actors');
   });
 
   afterEach(() => {
-    testFixture.cleanup();
+    testBed.cleanup();
   });
 
   it('should calculate reasonable tracing overhead', async () => {
-    testFixture.enableScopeTracing();
+    testBed.enableScopeTracing();
 
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
+    const scenario = testBed.createCloseActors(['Alice', 'Bob']);
+    const actorEntity = testBed.testEnv.entityManager.getEntityInstance(
       scenario.actor.id
     );
 
-    testFixture.testEnv.unifiedScopeResolver.resolveSync(
+    testBed.testEnv.unifiedScopeResolver.resolveSync(
       'positioning:close_actors',
       actorEntity
     );
 
-    const metrics = testFixture.getScopePerformanceMetrics();
+    const metrics = testBed.getScopePerformanceMetrics();
 
     // Overhead should be reasonable (< 50% of total)
     expect(metrics.overhead.percentage).toBeLessThan(50);
@@ -146,15 +140,15 @@ describe('Performance Metrics - Overhead', () => {
   });
 
   it('should have minimal overhead when disabled', () => {
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
+    const scenario = testBed.createCloseActors(['Alice', 'Bob']);
+    const actorEntity = testBed.testEnv.entityManager.getEntityInstance(
       scenario.actor.id
     );
 
     // Baseline: no tracer
     const start1 = performance.now();
     for (let i = 0; i < 1000; i++) {
-      testFixture.testEnv.unifiedScopeResolver.resolveSync(
+      testBed.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
         actorEntity
       );
@@ -162,10 +156,10 @@ describe('Performance Metrics - Overhead', () => {
     const duration1 = performance.now() - start1;
 
     // With tracing disabled
-    testFixture.scopeTracer.disable();
+    testBed.scopeTracer.disable();
     const start2 = performance.now();
     for (let i = 0; i < 1000; i++) {
-      testFixture.testEnv.unifiedScopeResolver.resolveSync(
+      testBed.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
         actorEntity
       );
@@ -177,15 +171,15 @@ describe('Performance Metrics - Overhead', () => {
   });
 
   it('should have acceptable overhead when enabled', () => {
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
+    const scenario = testBed.createCloseActors(['Alice', 'Bob']);
+    const actorEntity = testBed.testEnv.entityManager.getEntityInstance(
       scenario.actor.id
     );
 
     // Baseline: disabled
     const start1 = performance.now();
     for (let i = 0; i < 100; i++) {
-      testFixture.testEnv.unifiedScopeResolver.resolveSync(
+      testBed.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
         actorEntity
       );
@@ -193,14 +187,14 @@ describe('Performance Metrics - Overhead', () => {
     const duration1 = performance.now() - start1;
 
     // With tracing enabled
-    testFixture.enableScopeTracing();
+    testBed.enableScopeTracing();
     const start2 = performance.now();
     for (let i = 0; i < 100; i++) {
-      testFixture.testEnv.unifiedScopeResolver.resolveSync(
+      testBed.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
         actorEntity
       );
-      testFixture.clearScopeTrace();
+      testBed.clearScopeTrace();
     }
     const duration2 = performance.now() - start2;
 
@@ -213,36 +207,33 @@ describe('Performance Metrics - Overhead', () => {
 });
 
 describe('Performance Metrics - Calculations', () => {
-  let testFixture;
+  let testBed;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
-    );
+    testBed = await ScopeTracingTestBed.create();
 
     // Register scopes needed for action discovery
-    await testFixture.registerCustomScope('positioning', 'close_actors');
+    await testBed.registerCustomScope('positioning', 'close_actors');
   });
 
   afterEach(() => {
-    testFixture.cleanup();
+    testBed.cleanup();
   });
 
   it('should calculate per-resolver statistics correctly', async () => {
-    testFixture.enableScopeTracing();
+    testBed.enableScopeTracing();
 
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
+    const scenario = testBed.createCloseActors(['Alice', 'Bob']);
+    const actorEntity = testBed.testEnv.entityManager.getEntityInstance(
       scenario.actor.id
     );
 
-    testFixture.testEnv.unifiedScopeResolver.resolveSync(
+    testBed.testEnv.unifiedScopeResolver.resolveSync(
       'positioning:close_actors',
       actorEntity
     );
 
-    const metrics = testFixture.getScopePerformanceMetrics();
+    const metrics = testBed.getScopePerformanceMetrics();
 
     metrics.resolverStats.forEach(stat => {
       expect(stat.resolver).toBeTruthy();
@@ -258,19 +249,19 @@ describe('Performance Metrics - Calculations', () => {
   });
 
   it('should calculate filter evaluation statistics', async () => {
-    testFixture.enableScopeTracing();
+    testBed.enableScopeTracing();
 
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
+    const scenario = testBed.createCloseActors(['Alice', 'Bob']);
+    const actorEntity = testBed.testEnv.entityManager.getEntityInstance(
       scenario.actor.id
     );
 
-    testFixture.testEnv.unifiedScopeResolver.resolveSync(
+    testBed.testEnv.unifiedScopeResolver.resolveSync(
       'positioning:close_actors',
       actorEntity
     );
 
-    const metrics = testFixture.getScopePerformanceMetrics();
+    const metrics = testBed.getScopePerformanceMetrics();
 
     expect(metrics.filterEvaluation.count).toBeGreaterThan(0);
     expect(metrics.filterEvaluation.totalTime).toBeGreaterThan(0);
@@ -286,19 +277,19 @@ describe('Performance Metrics - Calculations', () => {
   });
 
   it('should identify slowest operations', async () => {
-    testFixture.enableScopeTracing();
+    testBed.enableScopeTracing();
 
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
+    const scenario = testBed.createCloseActors(['Alice', 'Bob']);
+    const actorEntity = testBed.testEnv.entityManager.getEntityInstance(
       scenario.actor.id
     );
 
-    testFixture.testEnv.unifiedScopeResolver.resolveSync(
+    testBed.testEnv.unifiedScopeResolver.resolveSync(
       'positioning:close_actors',
       actorEntity
     );
 
-    const metrics = testFixture.getScopePerformanceMetrics();
+    const metrics = testBed.getScopePerformanceMetrics();
 
     // Should have slowest steps
     expect(metrics.slowestOperations.steps.length).toBeGreaterThan(0);
@@ -314,44 +305,41 @@ describe('Performance Metrics - Calculations', () => {
 });
 
 describe('Performance Metrics - Regression Detection', () => {
-  let testFixture;
+  let testBed;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
-    );
+    testBed = await ScopeTracingTestBed.create();
 
     // Register scopes needed for action discovery
-    await testFixture.registerCustomScope('positioning', 'close_actors');
+    await testBed.registerCustomScope('positioning', 'close_actors');
   });
 
   afterEach(() => {
-    testFixture.cleanup();
+    testBed.cleanup();
   });
 
   it('should detect performance regression in scope resolution', async () => {
-    testFixture.enableScopeTracing();
+    testBed.enableScopeTracing();
 
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
+    const scenario = testBed.createCloseActors(['Alice', 'Bob']);
+    const actorEntity = testBed.testEnv.entityManager.getEntityInstance(
       scenario.actor.id
     );
 
     // Baseline measurement
-    testFixture.testEnv.unifiedScopeResolver.resolveSync(
+    testBed.testEnv.unifiedScopeResolver.resolveSync(
       'positioning:close_actors',
       actorEntity
     );
-    const baselineMetrics = testFixture.getScopePerformanceMetrics();
-    testFixture.clearScopeTrace();
+    const baselineMetrics = testBed.getScopePerformanceMetrics();
+    testBed.clearScopeTrace();
 
     // Second measurement (should be similar)
-    testFixture.testEnv.unifiedScopeResolver.resolveSync(
+    testBed.testEnv.unifiedScopeResolver.resolveSync(
       'positioning:close_actors',
       actorEntity
     );
-    const secondMetrics = testFixture.getScopePerformanceMetrics();
+    const secondMetrics = testBed.getScopePerformanceMetrics();
 
     // Durations should be within reasonable variance (±100%)
     // Performance timing can vary significantly in test environments
@@ -363,38 +351,38 @@ describe('Performance Metrics - Regression Detection', () => {
   });
 
   it('should identify when filter evaluation becomes slow', async () => {
-    testFixture.enableScopeTracing();
+    testBed.enableScopeTracing();
 
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
+    const scenario = testBed.createCloseActors(['Alice', 'Bob']);
+    const actorEntity = testBed.testEnv.entityManager.getEntityInstance(
       scenario.actor.id
     );
 
-    testFixture.testEnv.unifiedScopeResolver.resolveSync(
+    testBed.testEnv.unifiedScopeResolver.resolveSync(
       'positioning:close_actors',
       actorEntity
     );
 
-    const metrics = testFixture.getScopePerformanceMetrics();
+    const metrics = testBed.getScopePerformanceMetrics();
 
     // Filter eval should not dominate total time (< 50%)
     expect(metrics.filterEvaluation.percentage).toBeLessThan(50);
   });
 
   it('should warn when tracing overhead is excessive', async () => {
-    testFixture.enableScopeTracing();
+    testBed.enableScopeTracing();
 
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
+    const scenario = testBed.createCloseActors(['Alice', 'Bob']);
+    const actorEntity = testBed.testEnv.entityManager.getEntityInstance(
       scenario.actor.id
     );
 
-    testFixture.testEnv.unifiedScopeResolver.resolveSync(
+    testBed.testEnv.unifiedScopeResolver.resolveSync(
       'positioning:close_actors',
       actorEntity
     );
 
-    const metrics = testFixture.getScopePerformanceMetrics();
+    const metrics = testBed.getScopePerformanceMetrics();
 
     // Overhead should be reasonable
     if (metrics.overhead.percentage > 30) {
@@ -406,37 +394,34 @@ describe('Performance Metrics - Regression Detection', () => {
 });
 
 describe('Performance Metrics - Formatted Output', () => {
-  let testFixture;
+  let testBed;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
-    );
+    testBed = await ScopeTracingTestBed.create();
 
     // Register scopes needed for action discovery
-    await testFixture.registerCustomScope('positioning', 'close_actors');
+    await testBed.registerCustomScope('positioning', 'close_actors');
   });
 
   afterEach(() => {
-    testFixture.cleanup();
+    testBed.cleanup();
   });
 
   it('should format performance metrics efficiently', async () => {
-    testFixture.enableScopeTracing();
+    testBed.enableScopeTracing();
 
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
+    const scenario = testBed.createCloseActors(['Alice', 'Bob']);
+    const actorEntity = testBed.testEnv.entityManager.getEntityInstance(
       scenario.actor.id
     );
 
-    testFixture.testEnv.unifiedScopeResolver.resolveSync(
+    testBed.testEnv.unifiedScopeResolver.resolveSync(
       'positioning:close_actors',
       actorEntity
     );
 
     const start = performance.now();
-    const formatted = testFixture.getScopeTraceWithPerformance();
+    const formatted = testBed.getScopeTraceWithPerformance();
     const formatDuration = performance.now() - start;
 
     // Formatting should be fast (< 10ms)
@@ -446,19 +431,19 @@ describe('Performance Metrics - Formatted Output', () => {
   });
 
   it('should include all performance sections in output', async () => {
-    testFixture.enableScopeTracing();
+    testBed.enableScopeTracing();
 
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
+    const scenario = testBed.createCloseActors(['Alice', 'Bob']);
+    const actorEntity = testBed.testEnv.entityManager.getEntityInstance(
       scenario.actor.id
     );
 
-    testFixture.testEnv.unifiedScopeResolver.resolveSync(
+    testBed.testEnv.unifiedScopeResolver.resolveSync(
       'positioning:close_actors',
       actorEntity
     );
 
-    const formatted = testFixture.getScopeTraceWithPerformance();
+    const formatted = testBed.getScopeTraceWithPerformance();
 
     expect(formatted).toContain('Resolver Timing');
     expect(formatted).toContain('Filter Evaluation');

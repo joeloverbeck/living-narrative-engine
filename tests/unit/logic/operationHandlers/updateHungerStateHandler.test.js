@@ -109,8 +109,8 @@ describe('UpdateHungerStateHandler', () => {
 
     test('calculates gluttonous state when energy > 100%', async () => {
       const metabolicStore = {
-        currentEnergy: 1200,
-        maxEnergy: 1000,
+        current_energy: 1200,
+        max_energy: 1000,
       };
       const hungerState = {
         state: 'satiated',
@@ -152,8 +152,8 @@ describe('UpdateHungerStateHandler', () => {
 
     test('calculates satiated state when energy is 75-100%', async () => {
       const metabolicStore = {
-        currentEnergy: 900,
-        maxEnergy: 1000,
+        current_energy: 900,
+        max_energy: 1000,
       };
       const hungerState = {
         state: 'neutral',
@@ -187,8 +187,8 @@ describe('UpdateHungerStateHandler', () => {
 
     test('calculates neutral state when energy is 30-75%', async () => {
       const metabolicStore = {
-        currentEnergy: 500,
-        maxEnergy: 1000,
+        current_energy: 500,
+        max_energy: 1000,
       };
       const hungerState = {
         state: 'satiated',
@@ -222,8 +222,8 @@ describe('UpdateHungerStateHandler', () => {
 
     test('calculates hungry state when energy is 10-30%', async () => {
       const metabolicStore = {
-        currentEnergy: 200,
-        maxEnergy: 1000,
+        current_energy: 200,
+        max_energy: 1000,
       };
       const hungerState = {
         state: 'neutral',
@@ -257,8 +257,8 @@ describe('UpdateHungerStateHandler', () => {
 
     test('calculates starving state when energy is 0.1-10%', async () => {
       const metabolicStore = {
-        currentEnergy: 50,
-        maxEnergy: 1000,
+        current_energy: 50,
+        max_energy: 1000,
       };
       const hungerState = {
         state: 'hungry',
@@ -292,8 +292,8 @@ describe('UpdateHungerStateHandler', () => {
 
     test('calculates critical state when energy is 0%', async () => {
       const metabolicStore = {
-        currentEnergy: 0,
-        maxEnergy: 1000,
+        current_energy: 0,
+        max_energy: 1000,
       };
       const hungerState = {
         state: 'starving',
@@ -347,8 +347,8 @@ describe('UpdateHungerStateHandler', () => {
 
     test('increments turnsInState when state remains the same', async () => {
       const metabolicStore = {
-        currentEnergy: 850,
-        maxEnergy: 1000,
+        current_energy: 850,
+        max_energy: 1000,
       };
       const hungerState = {
         state: 'satiated',
@@ -387,8 +387,8 @@ describe('UpdateHungerStateHandler', () => {
 
     test('resets turnsInState to 0 when state changes', async () => {
       const metabolicStore = {
-        currentEnergy: 700,
-        maxEnergy: 1000,
+        current_energy: 700,
+        max_energy: 1000,
       };
       const hungerState = {
         state: 'satiated',
@@ -431,8 +431,8 @@ describe('UpdateHungerStateHandler', () => {
 
     test('dispatches event with correct data when state changes', async () => {
       const metabolicStore = {
-        currentEnergy: 150,
-        maxEnergy: 1000,
+        current_energy: 150,
+        max_energy: 1000,
       };
       const hungerState = {
         state: 'neutral',
@@ -464,8 +464,8 @@ describe('UpdateHungerStateHandler', () => {
 
     test('does not dispatch event when state unchanged', async () => {
       const metabolicStore = {
-        currentEnergy: 900,
-        maxEnergy: 1000,
+        current_energy: 900,
+        max_energy: 1000,
       };
       const hungerState = {
         state: 'satiated',
@@ -497,8 +497,8 @@ describe('UpdateHungerStateHandler', () => {
 
     test('preserves starvationDamage when updating component', async () => {
       const metabolicStore = {
-        currentEnergy: 30,
-        maxEnergy: 1000,
+        current_energy: 30,
+        max_energy: 1000,
       };
       const hungerState = {
         state: 'starving',
@@ -549,8 +549,8 @@ describe('UpdateHungerStateHandler', () => {
 
     test('handles string entity reference', async () => {
       const metabolicStore = {
-        currentEnergy: 500,
-        maxEnergy: 1000,
+        current_energy: 500,
+        max_energy: 1000,
       };
       const hungerState = {
         state: 'neutral',
@@ -580,8 +580,8 @@ describe('UpdateHungerStateHandler', () => {
 
     test('handles object entity reference with id field', async () => {
       const metabolicStore = {
-        currentEnergy: 500,
-        maxEnergy: 1000,
+        current_energy: 500,
+        max_energy: 1000,
       };
       const hungerState = {
         state: 'neutral',
@@ -610,8 +610,8 @@ describe('UpdateHungerStateHandler', () => {
 
     test('handles object entity reference with entityId field', async () => {
       const metabolicStore = {
-        currentEnergy: 500,
-        maxEnergy: 1000,
+        current_energy: 500,
+        max_energy: 1000,
       };
       const hungerState = {
         state: 'neutral',
@@ -673,8 +673,8 @@ describe('UpdateHungerStateHandler', () => {
 
     test('handles missing hunger_state component', async () => {
       const metabolicStore = {
-        currentEnergy: 500,
-        maxEnergy: 1000,
+        current_energy: 500,
+        max_energy: 1000,
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
@@ -746,8 +746,8 @@ describe('UpdateHungerStateHandler', () => {
 
     test('handles exception during component update', async () => {
       const metabolicStore = {
-        currentEnergy: 500,
-        maxEnergy: 1000,
+        current_energy: 500,
+        max_energy: 1000,
       };
       const hungerState = {
         state: 'neutral',

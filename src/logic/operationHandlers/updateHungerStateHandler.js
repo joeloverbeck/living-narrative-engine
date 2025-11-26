@@ -174,9 +174,9 @@ class UpdateHungerStateHandler extends BaseOperationHandler {
         return;
       }
 
-      // Extract metabolic data
-      const currentEnergy = metabolicStore.currentEnergy || 0;
-      const maxEnergy = metabolicStore.maxEnergy;
+      // Extract metabolic data (using snake_case to match metabolic_store schema)
+      const currentEnergy = metabolicStore.current_energy || 0;
+      const maxEnergy = metabolicStore.max_energy;
 
       // Calculate energy percentage
       const energyPercentage = (currentEnergy / maxEnergy) * 100;
@@ -186,10 +186,11 @@ class UpdateHungerStateHandler extends BaseOperationHandler {
       const previousState = hungerState.state;
 
       // Update turnsInState: increment if same state, reset to 0 if changed
+      // hunger_state schema uses camelCase (energyPercentage, turnsInState, starvationDamage)
       const turnsInState =
         newState === previousState ? hungerState.turnsInState + 1 : 0;
 
-      // Update hunger state component
+      // Update hunger state component (using camelCase to match hunger_state schema)
       await this.#entityManager.batchAddComponentsOptimized(
         [
           {

@@ -745,6 +745,21 @@ export class ModTestHandlerFactory {
       };
     }
 
+    // Ensure entityManager has hasEntity for ConsumeItemHandler
+    if (typeof entityManager.hasEntity !== 'function') {
+      entityManager.hasEntity = (entityId) => {
+        // Delegate to getEntityIds if available, otherwise return true as safe default
+        if (typeof entityManager.getEntityIds === 'function') {
+          return entityManager.getEntityIds().includes(entityId);
+        }
+        // Fallback: Check if entity has any components
+        if (typeof entityManager.hasComponent === 'function') {
+          return true; // Assume entity exists if we can check components
+        }
+        return true;
+      };
+    }
+
     const baseHandlers = this.createStandardHandlers(
       entityManager,
       eventBus,

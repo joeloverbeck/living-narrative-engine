@@ -43,6 +43,7 @@ beforeEach(() => {
     hasComponent: jest.fn(),
     removeEntityInstance: jest.fn(),
     getEntityInstance: jest.fn(),
+    hasEntity: jest.fn().mockReturnValue(true), // Default: entity exists
   };
 
   dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
@@ -102,6 +103,12 @@ describe('ConsumeItemHandler', () => {
     });
 
     test('successfully consumes compatible food and adds to buffer', async () => {
+      const fuelSource = {
+        energy_content: 200,
+        bulk: 30,
+        fuel_tags: ['food'],
+      };
+
       const metabolicStore = {
         current_energy: 50,
         max_energy: 100,
@@ -110,14 +117,18 @@ describe('ConsumeItemHandler', () => {
         buffer_capacity: 100,
       };
 
-      const fuelSource = {
-        energy_content: 200,
-        bulk: 30,
+      const fuelConverter = {
+        capacity: 100,
+        conversion_rate: 10,
+        efficiency: 0.8,
+        accepted_fuel_tags: ['food', 'organic'],
+        metabolic_efficiency_multiplier: 1.0,
       };
 
       em.getComponentData
         .mockReturnValueOnce(fuelSource) // item fuel_source
-        .mockReturnValueOnce(metabolicStore); // consumer metabolic_store
+        .mockReturnValueOnce(metabolicStore) // consumer metabolic_store
+        .mockReturnValueOnce(fuelConverter); // consumer fuel_converter
 
       const executionContext = { evaluationContext: { context: {} } };
       await handler.execute(
@@ -157,6 +168,12 @@ describe('ConsumeItemHandler', () => {
     });
 
     test('handles multiple fuel tags correctly', async () => {
+      const fuelSource = {
+        energy_content: 150,
+        bulk: 20,
+        fuel_tags: ['blood', 'organic'],
+      };
+
       const metabolicStore = {
         current_energy: 50,
         max_energy: 100,
@@ -165,14 +182,18 @@ describe('ConsumeItemHandler', () => {
         buffer_capacity: 100,
       };
 
-      const fuelSource = {
-        energy_content: 150,
-        bulk: 20,
+      const fuelConverter = {
+        capacity: 100,
+        conversion_rate: 10,
+        efficiency: 0.8,
+        accepted_fuel_tags: ['blood', 'organic'],
+        metabolic_efficiency_multiplier: 1.0,
       };
 
       em.getComponentData
         .mockReturnValueOnce(fuelSource)
-        .mockReturnValueOnce(metabolicStore);
+        .mockReturnValueOnce(metabolicStore)
+        .mockReturnValueOnce(fuelConverter);
 
       const executionContext = { evaluationContext: { context: {} } };
       await handler.execute(
@@ -197,6 +218,12 @@ describe('ConsumeItemHandler', () => {
     });
 
     test('validates capacity boundary - exactly at limit', async () => {
+      const fuelSource = {
+        energy_content: 200,
+        bulk: 30, // Exactly fills remaining capacity
+        fuel_tags: ['food'],
+      };
+
       const metabolicStore = {
         current_energy: 50,
         max_energy: 100,
@@ -205,14 +232,18 @@ describe('ConsumeItemHandler', () => {
         buffer_capacity: 100,
       };
 
-      const fuelSource = {
-        energy_content: 200,
-        bulk: 30, // Exactly fills remaining capacity
+      const fuelConverter = {
+        capacity: 100,
+        conversion_rate: 10,
+        efficiency: 0.8,
+        accepted_fuel_tags: ['food', 'organic'],
+        metabolic_efficiency_multiplier: 1.0,
       };
 
       em.getComponentData
         .mockReturnValueOnce(fuelSource)
-        .mockReturnValueOnce(metabolicStore);
+        .mockReturnValueOnce(metabolicStore)
+        .mockReturnValueOnce(fuelConverter);
 
       const executionContext = { evaluationContext: { context: {} } };
       await handler.execute(
@@ -358,6 +389,12 @@ describe('ConsumeItemHandler', () => {
 
 
     test('rejects when buffer capacity is exceeded', async () => {
+      const fuelSource = {
+        energy_content: 300,
+        bulk: 50, // Too large for remaining space
+        fuel_tags: ['food'],
+      };
+
       const metabolicStore = {
         current_energy: 50,
         max_energy: 100,
@@ -366,14 +403,18 @@ describe('ConsumeItemHandler', () => {
         buffer_capacity: 100,
       };
 
-      const fuelSource = {
-        energy_content: 300,
-        bulk: 50, // Too large for remaining space
+      const fuelConverter = {
+        capacity: 100,
+        conversion_rate: 10,
+        efficiency: 0.8,
+        accepted_fuel_tags: ['food'],
+        metabolic_efficiency_multiplier: 1.0,
       };
 
       em.getComponentData
         .mockReturnValueOnce(fuelSource)
-        .mockReturnValueOnce(metabolicStore);
+        .mockReturnValueOnce(metabolicStore)
+        .mockReturnValueOnce(fuelConverter);
 
       const executionContext = { evaluationContext: { context: {} } };
       await handler.execute(
@@ -415,6 +456,12 @@ describe('ConsumeItemHandler', () => {
     });
 
     test('handles errors during buffer update gracefully', async () => {
+      const fuelSource = {
+        energy_content: 200,
+        bulk: 30,
+        fuel_tags: ['food'],
+      };
+
       const metabolicStore = {
         current_energy: 50,
         max_energy: 100,
@@ -423,14 +470,18 @@ describe('ConsumeItemHandler', () => {
         buffer_capacity: 100,
       };
 
-      const fuelSource = {
-        energy_content: 200,
-        bulk: 30,
+      const fuelConverter = {
+        capacity: 100,
+        conversion_rate: 10,
+        efficiency: 0.8,
+        accepted_fuel_tags: ['food'],
+        metabolic_efficiency_multiplier: 1.0,
       };
 
       em.getComponentData
         .mockReturnValueOnce(fuelSource) // item fuel_source
-        .mockReturnValueOnce(metabolicStore); // consumer metabolic_store
+        .mockReturnValueOnce(metabolicStore) // consumer metabolic_store
+        .mockReturnValueOnce(fuelConverter); // consumer fuel_converter
       em.addComponent.mockRejectedValueOnce(
         new Error('Database error')
       );
@@ -474,6 +525,12 @@ describe('ConsumeItemHandler', () => {
     });
 
     test('handles empty buffer consumption', async () => {
+      const fuelSource = {
+        energy_content: 150,
+        bulk: 20,
+        fuel_tags: ['food'],
+      };
+
       const metabolicStore = {
         current_energy: 50,
         max_energy: 100,
@@ -482,14 +539,18 @@ describe('ConsumeItemHandler', () => {
         buffer_capacity: 100,
       };
 
-      const fuelSource = {
-        energy_content: 150,
-        bulk: 20,
+      const fuelConverter = {
+        capacity: 100,
+        conversion_rate: 10,
+        efficiency: 0.8,
+        accepted_fuel_tags: ['food'],
+        metabolic_efficiency_multiplier: 1.0,
       };
 
       em.getComponentData
         .mockReturnValueOnce(fuelSource) // item fuel_source
-        .mockReturnValueOnce(metabolicStore); // consumer metabolic_store
+        .mockReturnValueOnce(metabolicStore) // consumer metabolic_store
+        .mockReturnValueOnce(fuelConverter); // consumer fuel_converter
 
       const executionContext = { evaluationContext: { context: {} } };
       await handler.execute(
@@ -510,6 +571,12 @@ describe('ConsumeItemHandler', () => {
     });
 
     test('handles fuel tag with single matching tag', async () => {
+      const fuelSource = {
+        energy_content: 100,
+        bulk: 10,
+        fuel_tags: ['electric'],
+      };
+
       const metabolicStore = {
         current_energy: 50,
         max_energy: 100,
@@ -518,14 +585,18 @@ describe('ConsumeItemHandler', () => {
         buffer_capacity: 100,
       };
 
-      const fuelSource = {
-        energy_content: 100,
-        bulk: 10,
+      const fuelConverter = {
+        capacity: 100,
+        conversion_rate: 10,
+        efficiency: 0.8,
+        accepted_fuel_tags: ['electric'],
+        metabolic_efficiency_multiplier: 1.0,
       };
 
       em.getComponentData
         .mockReturnValueOnce(fuelSource) // item fuel_source
-        .mockReturnValueOnce(metabolicStore); // consumer metabolic_store
+        .mockReturnValueOnce(metabolicStore) // consumer metabolic_store
+        .mockReturnValueOnce(fuelConverter); // consumer fuel_converter
 
       const executionContext = { evaluationContext: { context: {} } };
       await handler.execute(
@@ -547,6 +618,12 @@ describe('ConsumeItemHandler', () => {
     });
 
     test('preserves all metabolic store properties during update', async () => {
+      const fuelSource = {
+        energy_content: 200,
+        bulk: 20,
+        fuel_tags: ['food'],
+      };
+
       const metabolicStore = {
         current_energy: 50,
         max_energy: 100,
@@ -556,14 +633,18 @@ describe('ConsumeItemHandler', () => {
         custom_property: 'preserved',
       };
 
-      const fuelSource = {
-        energy_content: 200,
-        bulk: 20,
+      const fuelConverter = {
+        capacity: 100,
+        conversion_rate: 10,
+        efficiency: 0.8,
+        accepted_fuel_tags: ['food'],
+        metabolic_efficiency_multiplier: 1.0,
       };
 
       em.getComponentData
         .mockReturnValueOnce(fuelSource) // item fuel_source
-        .mockReturnValueOnce(metabolicStore); // consumer metabolic_store
+        .mockReturnValueOnce(metabolicStore) // consumer metabolic_store
+        .mockReturnValueOnce(fuelConverter); // consumer fuel_converter
 
       const executionContext = { evaluationContext: { context: {} } };
       await handler.execute(

@@ -1,0 +1,39 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:soft_gray_sweatpants",
+  "description": "Classic gray sweatpants crafted from soft cotton blend",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "legs"
+      },
+      "allowedLayers": ["underwear", "base"]
+    },
+    "core:material": {
+      "material": "cotton",
+      "properties": ["breathable", "flexible"]
+    },
+    "descriptors:color_basic": {
+      "color": "gray"
+    },
+    "descriptors:texture": {
+      "texture": "soft"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["legs"],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.45
+    },
+    "core:name": {
+      "text": "Soft Gray Sweatpants"
+    },
+    "core:description": {
+      "text": "Classic gray sweatpants crafted from a soft cotton blend that feels like a warm embrace. An elastic waistband with drawstring ensures a secure, customizable fit, while roomy pockets provide convenient storage. The relaxed leg tapers slightly at the ankle, creating a modern silhouette perfect for lounging at home or casual outings."
+    }
+  }
+}

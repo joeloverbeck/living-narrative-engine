@@ -1,0 +1,50 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:fitted_black_leather_trousers",
+  "description": "Sleek fitted leather trousers in black",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "legs",
+        "secondary": [
+          "torso_lower"
+        ]
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "leather",
+      "properties": [
+        "flexible"
+      ]
+    },
+    "core:name": {
+      "text": "fitted black leather trousers"
+    },
+    "core:description": {
+      "text": "Supple black leather trousers that fit like a second skin, hugging the form from waist to ankle. The leather's smooth surface has a subtle sheen that catches light with movement, while its flexibility ensures comfort without sacrificing the sleek silhouette. These versatile bottoms serve as a gothic wardrobe staple, pairing effortlessly with everything from flowing robes to structured jackets. The ankle-length cut showcases dramatic footwear while maintaining a streamlined aesthetic."
+    },
+    "descriptors:color_basic": {
+      "color": "black"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_lower"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.9
+    }
+  }
+}

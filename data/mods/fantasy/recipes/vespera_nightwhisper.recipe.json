@@ -146,15 +146,15 @@
   ],
   "clothingEntities": [
     {
-      "entityId": "clothing:cream_poets_shirt_billowing_sleeves",
+      "entityId": "base-clothing:cream_poets_shirt_billowing_sleeves",
       "equip": true
     },
     {
-      "entityId": "clothing:black_breeches_tapered_knee",
+      "entityId": "base-clothing:black_breeches_tapered_knee",
       "equip": true
     },
     {
-      "entityId": "clothing:digitigrade_foot_wraps_burgundy",
+      "entityId": "base-clothing:digitigrade_foot_wraps_burgundy",
       "equip": true
     },
     {

@@ -1,0 +1,48 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "outer-clothing:dark_olive_cotton_twill_chore_jacket",
+  "description": "Dark-olive cotton twill chore jacket with utilitarian design",
+  "components": {
+    "clothing:wearable": {
+      "layer": "outer",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": [
+          "left_arm_clothing",
+          "right_arm_clothing"
+        ]
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "cotton"
+    },
+    "core:name": {
+      "text": "chore jacket"
+    },
+    "core:description": {
+      "text": "A classic dark-olive cotton twill chore jacket featuring a boxy, utilitarian cut. This workwear-inspired piece includes chest pockets, side pockets, and sturdy button closures. The dense cotton twill construction provides durability while the earthy olive tone adds versatile color to any outfit."
+    },
+    "descriptors:color_basic": {
+      "color": "green"
+    },
+    "descriptors:texture": {
+      "texture": "rugged"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper"
+      ],
+      "coveragePriority": "outer"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.95
+    }
+  }
+}
