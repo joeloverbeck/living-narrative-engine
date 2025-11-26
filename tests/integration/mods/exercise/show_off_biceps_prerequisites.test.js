@@ -339,4 +339,132 @@ describe('exercise:show_off_biceps prerequisites', () => {
       );
     });
   });
+
+  describe('combined prerequisites evaluation', () => {
+    /**
+     * Helper to set up mocks for combined prerequisite testing.
+     * The hasPartOfTypeWithComponentValue operator uses:
+     * - entityManager.getComponentData() to get the body component (anatomy:body)
+     * - bodyGraphService.findPartsByType() to find arm parts
+     * - entityManager.getComponentData() again to get component data from each arm part
+     *
+     * @param {string} actorId - The actor ID
+     * @param {string} buildValue - The build value ('muscular', 'hulking', 'thin', etc.)
+     * @param {number} freeAppendages - Number of free grabbing appendages
+     */
+    const setupCombinedMocks = (actorId, buildValue, freeAppendages) => {
+      // Set up grabbing prerequisite
+      mockCountFreeGrabbingAppendages.mockReturnValue(freeAppendages);
+
+      // Set up body graph service for arm detection
+      mockBodyGraphService.buildAdjacencyCache.mockReturnValue(undefined);
+      mockBodyGraphService.findPartsByType.mockImplementation(
+        (rootId, partType) => {
+          if (partType === 'arm') {
+            return ['left_arm_part', 'right_arm_part'];
+          }
+          return [];
+        }
+      );
+
+      // Set up entity manager for component data
+      // First call: get body component (anatomy:body) → returns root
+      // Subsequent calls: get arm component (descriptors:build) → returns build value
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'anatomy:body') {
+            return { root: `${actorId}_body_root` };
+          }
+          if (componentId === 'descriptors:build') {
+            return { build: buildValue };
+          }
+          return null;
+        }
+      );
+    };
+
+    test('should pass when actor has muscular build AND 2 free appendages', () => {
+      const actor = { id: 'muscular_flexer', components: {} };
+      mockEntityManager.getEntityInstance.mockReturnValue(actor);
+      setupCombinedMocks('muscular_flexer', 'muscular', 2);
+
+      const result = prerequisiteService.evaluate(
+        showOffBicepsAction.prerequisites,
+        showOffBicepsAction,
+        actor
+      );
+
+      expect(result).toBe(true);
+    });
+
+    test('should pass when actor has hulking build AND 2 free appendages', () => {
+      const actor = { id: 'hulking_brute', components: {} };
+      mockEntityManager.getEntityInstance.mockReturnValue(actor);
+      setupCombinedMocks('hulking_brute', 'hulking', 2);
+
+      const result = prerequisiteService.evaluate(
+        showOffBicepsAction.prerequisites,
+        showOffBicepsAction,
+        actor
+      );
+
+      expect(result).toBe(true);
+    });
+
+    test('should fail when actor has muscular build BUT 0 free appendages', () => {
+      const actor = { id: 'busy_bodybuilder', components: {} };
+      mockEntityManager.getEntityInstance.mockReturnValue(actor);
+      setupCombinedMocks('busy_bodybuilder', 'muscular', 0);
+
+      const result = prerequisiteService.evaluate(
+        showOffBicepsAction.prerequisites,
+        showOffBicepsAction,
+        actor
+      );
+
+      expect(result).toBe(false);
+    });
+
+    test('should fail when actor has muscular build BUT only 1 free appendage', () => {
+      const actor = { id: 'one_handed_muscle', components: {} };
+      mockEntityManager.getEntityInstance.mockReturnValue(actor);
+      setupCombinedMocks('one_handed_muscle', 'muscular', 1);
+
+      const result = prerequisiteService.evaluate(
+        showOffBicepsAction.prerequisites,
+        showOffBicepsAction,
+        actor
+      );
+
+      expect(result).toBe(false);
+    });
+
+    test('should fail when actor has 2 free appendages BUT NOT muscular/hulking build', () => {
+      const actor = { id: 'skinny_free_hands', components: {} };
+      mockEntityManager.getEntityInstance.mockReturnValue(actor);
+      setupCombinedMocks('skinny_free_hands', 'thin', 2);
+
+      const result = prerequisiteService.evaluate(
+        showOffBicepsAction.prerequisites,
+        showOffBicepsAction,
+        actor
+      );
+
+      expect(result).toBe(false);
+    });
+
+    test('should fail when both conditions fail (no muscles AND no free appendages)', () => {
+      const actor = { id: 'skinny_busy_person', components: {} };
+      mockEntityManager.getEntityInstance.mockReturnValue(actor);
+      setupCombinedMocks('skinny_busy_person', 'thin', 0);
+
+      const result = prerequisiteService.evaluate(
+        showOffBicepsAction.prerequisites,
+        showOffBicepsAction,
+        actor
+      );
+
+      expect(result).toBe(false);
+    });
+  });
 });

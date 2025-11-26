@@ -540,4 +540,182 @@ describe('ajvAnyOfErrorFormatter - Pattern Detection', () => {
       expect(result).not.toBe('No validation errors');
     });
   });
+
+  describe('SCHVALTESINT-014: Enhanced Error Integration', () => {
+    describe('Did you mean? suggestions for unknown operation types', () => {
+      it('should suggest similar operation type for typos', () => {
+        const errors = [
+          {
+            keyword: 'const',
+            schemaPath: '#/anyOf/0/properties/type/const',
+            params: { allowedValue: 'LOCK_GRABBING' },
+          },
+          {
+            keyword: 'const',
+            schemaPath: '#/anyOf/1/properties/type/const',
+            params: { allowedValue: 'UNLOCK_GRABBING' },
+          },
+        ];
+        const data = { type: 'LOCK_GRABB' }; // Typo
+
+        const result = formatAjvErrorsEnhanced(errors, data);
+
+        expect(result).toContain("Unknown or invalid operation type: 'LOCK_GRABB'");
+        expect(result).toContain('Did you mean');
+        expect(result).toContain('LOCK_GRABBING');
+      });
+
+      it('should not suggest when no similar types exist', () => {
+        const errors = [
+          {
+            keyword: 'const',
+            schemaPath: '#/anyOf/0/properties/type/const',
+            params: { allowedValue: 'QUERY_COMPONENT' },
+          },
+        ];
+        const data = { type: 'COMPLETELY_DIFFERENT_XYZ123' }; // No similar types
+
+        const result = formatAjvErrorsEnhanced(errors, data);
+
+        expect(result).toContain("Unknown or invalid operation type: 'COMPLETELY_DIFFERENT_XYZ123'");
+        expect(result).not.toContain('Did you mean');
+      });
+
+      it('should suggest QUERY_COMPONENT for QUEYR_COMPONENT typo', () => {
+        const errors = [
+          {
+            keyword: 'const',
+            schemaPath: '#/anyOf/0/properties/type/const',
+            params: { allowedValue: 'QUERY_COMPONENT' },
+          },
+        ];
+        const data = { type: 'QUEYR_COMPONENT' }; // Common typo
+
+        const result = formatAjvErrorsEnhanced(errors, data);
+
+        expect(result).toContain('Did you mean');
+        expect(result).toContain('QUERY_COMPONENT');
+      });
+    });
+
+    describe('Rich context support', () => {
+      it('should include file context when provided', () => {
+        const errors = [
+          {
+            keyword: 'required',
+            params: { missingProperty: 'parameters' },
+            instancePath: '/actions/0',
+            schemaPath: '#/required',
+          },
+        ];
+        const data = { type: 'QUERY_COMPONENT' };
+        const context = {
+          filePath: '/path/to/rule.json',
+          fileContent: '{\n  "actions": [\n    { "type": "QUERY_COMPONENT" }\n  ]\n}',
+          ruleId: 'test_rule',
+        };
+
+        const result = formatAjvErrorsEnhanced(errors, data, context);
+
+        expect(result).toContain('Validation Error');
+        expect(result).toContain('/path/to/rule.json');
+        expect(result).toContain('test_rule');
+        expect(result).toContain('Line:');
+      });
+
+      it('should include code snippet in context', () => {
+        const errors = [
+          {
+            keyword: 'additionalProperties',
+            params: { additionalProperty: 'badField' },
+            instancePath: '/parameters',
+            schemaPath: '#/properties/parameters/additionalProperties',
+          },
+        ];
+        const data = { type: 'LOG', parameters: { badField: 'value' } };
+        const fileContent = JSON.stringify(
+          {
+            type: 'LOG',
+            parameters: {
+              badField: 'value',
+            },
+          },
+          null,
+          2
+        );
+        const context = {
+          filePath: '/path/to/file.json',
+          fileContent,
+          ruleId: 'my_rule',
+        };
+
+        const result = formatAjvErrorsEnhanced(errors, data, context);
+
+        expect(result).toContain('Context:');
+        expect(result).toContain('|'); // Line number indicator
+      });
+
+      it('should format without context when not provided (backward compatible)', () => {
+        const errors = [
+          {
+            keyword: 'required',
+            params: { missingProperty: 'type' },
+            instancePath: '',
+            schemaPath: '#/required',
+          },
+        ];
+        const data = { parameters: {} };
+
+        // Call without context
+        const result = formatAjvErrorsEnhanced(errors, data);
+
+        expect(result).toBeTruthy();
+        expect(result).not.toContain('File:');
+        expect(result).not.toContain('Line:');
+        expect(result).not.toContain('Context:');
+      });
+
+      it('should handle null context gracefully', () => {
+        const errors = [
+          {
+            keyword: 'type',
+            params: { type: 'string' },
+            data: 123,
+            instancePath: '/name',
+            schemaPath: '#/properties/name/type',
+          },
+        ];
+        const data = { name: 123 };
+
+        const result = formatAjvErrorsEnhanced(errors, data, null);
+
+        expect(result).toBeTruthy();
+        expect(result).not.toContain('File:');
+      });
+
+      it('should handle partial context (filePath but no fileContent)', () => {
+        const errors = [
+          {
+            keyword: 'enum',
+            params: { allowedValues: ['A', 'B'] },
+            data: 'C',
+            instancePath: '/field',
+            schemaPath: '#/properties/field/enum',
+          },
+        ];
+        const data = { type: 'TEST', field: 'C' };
+        const context = {
+          filePath: '/path/to/file.json',
+          // No fileContent
+        };
+
+        const result = formatAjvErrorsEnhanced(errors, data, context);
+
+        expect(result).toBeTruthy();
+        // Should fall back to basic formatting without rich context
+        expect(result).not.toContain('Line:');
+        expect(result).not.toContain('Context:');
+      });
+    });
+  });
 });
