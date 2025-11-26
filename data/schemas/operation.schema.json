@@ -102,6 +102,9 @@
           "$ref": "./operations/resolveDirection.schema.json"
         },
         {
+          "$ref": "./operations/resolveOutcome.schema.json"
+        },
+        {
           "$ref": "./operations/systemMoveEntity.schema.json"
         },
         {

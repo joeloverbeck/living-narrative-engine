@@ -23,12 +23,12 @@ describe('XmlElementBuilder', () => {
       expect(builder.escape('<tag>')).toBe('&lt;tag&gt;');
     });
 
-    it('should escape double quotes', () => {
-      expect(builder.escape('"quoted"')).toBe('&quot;quoted&quot;');
+    it('should preserve double quotes (readable for LLM prompts)', () => {
+      expect(builder.escape('"quoted"')).toBe('"quoted"');
     });
 
-    it('should escape single quotes (apostrophe)', () => {
-      expect(builder.escape("it's")).toBe('it&apos;s');
+    it('should preserve single quotes/apostrophes (readable for LLM prompts)', () => {
+      expect(builder.escape("it's")).toBe("it's");
     });
 
     it('should escape mixed special characters', () => {
@@ -48,7 +48,8 @@ describe('XmlElementBuilder', () => {
     });
 
     it('should handle text with all special characters', () => {
-      expect(builder.escape('&<>"\'all')).toBe('&amp;&lt;&gt;&quot;&apos;all');
+      // Only &, <, > are escaped; quotes/apostrophes remain readable for LLM prompts
+      expect(builder.escape('&<>"\'all')).toBe('&amp;&lt;&gt;"\'all');
     });
 
     it('should preserve normal text unchanged', () => {

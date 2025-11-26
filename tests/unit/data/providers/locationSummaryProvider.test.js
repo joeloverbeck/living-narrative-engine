@@ -66,6 +66,8 @@ describe('LocationSummaryProvider', () => {
       [NAME_COMPONENT_ID]: { text: 'Npc' },
       [DESCRIPTION_COMPONENT_ID]: { text: 'npc desc' },
     });
+    // Add hasComponent method to simulate an actual character (with core:actor)
+    npcEntity.hasComponent = (componentId) => componentId === 'core:actor';
 
     entityManager.getEntityInstance.mockImplementation(async (id) => {
       if (id === 'loc1') return locationEntity;

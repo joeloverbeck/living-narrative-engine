@@ -191,6 +191,8 @@ describe('End-to-End Notes Persistence Flow', () => {
     expect(prompt1).not.toContain('Remember the password');
 
     // simulate LLM response writing a note
+    // Note: subjectType must be one of the valid SUBJECT_TYPE_ENUM_VALUES:
+    // 'entity', 'event', 'plan', 'knowledge', 'state', 'other'
     const response = {
       chosenIndex: 1,
       speech: '',
@@ -199,7 +201,7 @@ describe('End-to-End Notes Persistence Flow', () => {
         {
           text: 'Remember the password',
           subject: 'Password reminder',
-          subjectType: 'concept',
+          subjectType: 'knowledge',
         },
       ],
     };
@@ -214,7 +216,7 @@ describe('End-to-End Notes Persistence Flow', () => {
       {
         text: 'Remember the password',
         subject: 'Password reminder',
-        subjectType: 'concept',
+        subjectType: 'knowledge',
       },
     ]);
 

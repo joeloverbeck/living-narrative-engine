@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/operations/resolveOutcome.schema.json",
+  "title": "RESOLVE_OUTCOME Operation",
+  "allOf": [
+    { "$ref": "../base-operation.schema.json" },
+    {
+      "properties": {
+        "type": { "const": "RESOLVE_OUTCOME" },
+        "parameters": { "$ref": "#/$defs/Parameters" }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the RESOLVE_OUTCOME operation. Resolves a non-deterministic action outcome using skill-based probability.",
+      "properties": {
+        "actor_skill_component": {
+          "type": "string",
+          "description": "Component ID for actor's skill (e.g., 'skills:melee_skill')"
+        },
+        "target_skill_component": {
+          "type": "string",
+          "description": "Component ID for target's skill (for opposed checks)"
+        },
+        "actor_skill_default": {
+          "type": "integer",
+          "default": 0,
+          "description": "Default value if actor lacks skill component"
+        },
+        "target_skill_default": {
+          "type": "integer",
+          "default": 0,
+          "description": "Default value if target lacks skill component"
+        },
+        "formula": {
+          "type": "string",
+          "enum": ["ratio", "logistic", "linear"],
+          "default": "ratio",
+          "description": "Probability calculation formula"
+        },
+        "difficulty_modifier": {
+          "type": "integer",
+          "default": 0,
+          "description": "Static modifier to difficulty"
+        },
+        "result_variable": {
+          "type": "string",
+          "description": "Context variable to store result object"
+        }
+      },
+      "required": ["actor_skill_component", "result_variable"],
+      "additionalProperties": false
+    }
+  }
+}

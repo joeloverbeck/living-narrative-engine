@@ -231,7 +231,7 @@ describe('CharacterDataXmlBuilder', () => {
     it('should include description in identity section', () => {
       const result = builder.buildCharacterDataXml(COMPLETE_CHARACTER_DATA);
       expect(result).toContain('<description>');
-      // Note: apostrophe is escaped to &apos;
+      // Note: apostrophes are preserved for LLM readability
       expect(result).toContain('dancer');
       expect(result).toContain('build');
     });
@@ -623,7 +623,8 @@ describe('CharacterDataXmlBuilder', () => {
       const result = builder.buildCharacterDataXml(CHARACTER_WITH_SPECIAL_CHARS);
       expect(result).toContain('&lt;Character&gt;');
       expect(result).toContain('&amp;');
-      expect(result).toContain('&quot;Friends&quot;');
+      // Quotes are NOT escaped for LLM readability
+      expect(result).toContain('"Friends"');
     });
 
     it('should escape special characters in description', () => {
@@ -632,10 +633,10 @@ describe('CharacterDataXmlBuilder', () => {
       expect(result).toContain('&amp; ampersands');
     });
 
-    it('should escape apostrophes correctly', () => {
+    it('should preserve apostrophes for readability', () => {
       const result = builder.buildCharacterDataXml(CHARACTER_WITH_SPECIAL_CHARS);
-      // Apostrophes are escaped to &apos;
-      expect(result).toContain('Quote&apos;s here');
+      // Apostrophes are NOT escaped for LLM readability
+      expect(result).toContain("Quote's here");
     });
 
     it('should handle unicode characters', () => {
