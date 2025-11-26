@@ -172,7 +172,7 @@
     },
     "core:actor": {},
     "core:player_type": {
-      "type": "human"
+      "type": "llm"
     },
     "core:notes": {
       "notes": [
