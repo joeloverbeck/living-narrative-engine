@@ -1,5 +1,7 @@
 # ROBOPEHANVAL-005: Integrate Handler Validation into Rule Loader
 
+## Status: ✅ COMPLETED
+
 ## Summary
 
 Integrate the `HandlerCompletenessValidator` into the rule loading pipeline so that rules are validated for handler completeness at load time, before they can be executed.
@@ -149,3 +151,56 @@ The `OperationRegistry` must be populated with handlers BEFORE rules are loaded.
 ## Dependents
 
 - ROBOPEHANVAL-007 (ModTestHandlerFactory) may need updates to ensure handlers are registered before rules in tests
+
+---
+
+## Outcome
+
+### What Was Actually Changed
+
+**1. `src/loaders/ruleLoader.js`** (~20 lines modified):
+- Added 2 private fields: `#handlerValidator` and `#operationRegistry`
+- Extended constructor to accept 2 optional parameters (with default `null` for backward compatibility)
+- Added handler validation call in `_processFetchedItem()` after macro expansion, before storage
+
+**2. `src/dependencyInjection/registrations/loadersRegistrations.js`** (~25 lines added):
+- Added import for `HandlerCompletenessValidator`
+- Registered `HandlerCompletenessValidator` as singleton factory with logger dependency
+- Replaced `registerLoader` helper for RuleLoader with custom factory registration to inject 8 dependencies (original 6 + validator + registry)
+
+**3. `tests/integration/validation/ruleLoaderHandlerValidation.integration.test.js`** (~395 lines created):
+- 9 integration tests covering:
+  - Valid operations loading successfully
+  - Nested IF block validation
+  - Missing handler error throwing with ConfigurationError
+  - Error message containing rule ID
+  - Error message containing operation type
+  - Nested IF then_actions missing handlers
+  - Backward compatibility without validator
+  - Backward compatibility with validator but no registry
+  - Multiple missing handlers collection
+
+### Comparison to Original Plan
+
+| Aspect | Planned | Actual |
+|--------|---------|--------|
+| Implementation lines | ~30 | ~45 |
+| Test lines | ~80 | ~395 |
+| Architecture | Option B (validator service) | Option B ✓ |
+| Validation timing | After macro expansion | After macro expansion ✓ |
+| Optional dependencies | Yes | Yes ✓ |
+| DI changes required | Yes | Yes ✓ |
+
+### Test Results
+
+All tests pass:
+- `tests/unit/loaders/ruleLoader.test.js`: 4/4 passed
+- `tests/unit/dependencyInjection/registrations/loadersRegistrations.test.js`: 4/4 passed
+- `tests/unit/validation/handlerCompletenessValidator.test.js`: 25/25 passed
+- `tests/integration/validation/ruleLoaderHandlerValidation.integration.test.js`: 9/9 passed
+
+### Key Implementation Decisions
+
+1. **Optional parameters with null defaults**: Maintains backward compatibility - existing code creating RuleLoader without validator continues to work
+2. **Conditional validation**: Only validates if both `handlerValidator` AND `operationRegistry` are provided
+3. **Custom DI registration**: Replaced `registerLoader` helper with direct factory registration since RuleLoader now needs 8 params vs helper's 6 params

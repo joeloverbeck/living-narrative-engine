@@ -304,6 +304,12 @@
             "default": {
               "type": "number",
               "default": 0
+            },
+            "targetRole": {
+              "type": "string",
+              "enum": ["primary", "secondary", "tertiary"],
+              "default": "secondary",
+              "description": "Which target role provides this skill for opposed checks. For multi-target actions where primary might be an item (e.g., weapon), set to 'secondary' to use the character target."
             }
           },
           "required": ["component"],

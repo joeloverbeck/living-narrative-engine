@@ -1,5 +1,6 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import RuleLoader from '../../../src/loaders/ruleLoader.js';
+import { MacroExpansionError } from '../../../src/utils/macroUtils.js';
 
 const createMockDeps = () => {
   const config = {
@@ -75,6 +76,65 @@ describe('RuleLoader macro expansion', () => {
         actions: [{ type: 'LOG', parameters: { msg: 'hi' } }],
       }),
       'file.rule.json'
+    );
+  });
+
+  it('throws MacroExpansionError when referenced macro is not found', async () => {
+    const data = {
+      rule_id: 'test',
+      event_type: 'some:event',
+      actions: [{ macro: 'core:nonexistent' }],
+    };
+
+    await expect(
+      loader._processFetchedItem(
+        'core',
+        'file.rule.json',
+        '/tmp/file.rule.json',
+        data,
+        'rules'
+      )
+    ).rejects.toThrow(MacroExpansionError);
+  });
+
+  it('includes macro ID in error message when macro not found', async () => {
+    const data = {
+      rule_id: 'test',
+      event_type: 'some:event',
+      actions: [{ macro: 'core:missingMacro' }],
+    };
+
+    await expect(
+      loader._processFetchedItem(
+        'core',
+        'file.rule.json',
+        '/tmp/file.rule.json',
+        data,
+        'rules'
+      )
+    ).rejects.toThrow("macro 'core:missingMacro' not found");
+  });
+
+  it('logs error when macro expansion fails', async () => {
+    const data = {
+      rule_id: 'test',
+      event_type: 'some:event',
+      actions: [{ macro: 'core:missingMacro' }],
+    };
+
+    await expect(
+      loader._processFetchedItem(
+        'core',
+        'file.rule.json',
+        '/tmp/file.rule.json',
+        data,
+        'rules'
+      )
+    ).rejects.toThrow();
+
+    expect(deps.logger.error).toHaveBeenCalledWith(
+      expect.stringContaining("macro 'core:missingMacro' not found"),
+      expect.any(Object)
     );
   });
 });

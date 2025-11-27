@@ -130,11 +130,15 @@
     "portraits": [
       "back_of_tannery.png",
       "bertram.png",
+      "bertram_old.png",
       "mudbrook.png",
       "mudbrook_municipal_aid_registry.png",
       "registrar_copperplate.png",
+      "registrar_copperplate_old.png",
       "threadscar_melissa.png",
-      "vespera_nightwhisper.png"
+      "threadscar_melissa_old.png",
+      "vespera_nightwhisper.png",
+      "vespera_nightwhisper_old.png"
     ],
     "worlds": [
       "vespera.world.json"

@@ -178,7 +178,9 @@
     "macros": [
       "displaySuccessAndEndTurn.macro.json",
       "logFailureAndEndTurn.macro.json",
-      "logSuccessAndEndTurn.macro.json"
+      "logFailureOutcomeAndEndTurn.macro.json",
+      "logSuccessAndEndTurn.macro.json",
+      "logSuccessOutcomeAndEndTurn.macro.json"
     ],
     "rules": [
       "entity_speech.rule.json",

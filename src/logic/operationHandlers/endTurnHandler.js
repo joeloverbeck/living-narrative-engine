@@ -11,6 +11,10 @@
  * 4. Dispatch core:turn_ended event through safe event dispatcher
  * 5. Handle async dispatch results and report failures
  *
+ * FAIL-FAST: This handler throws EndTurnOperationError on invalid parameters
+ * rather than silently returning. This makes debugging turn-end failures
+ * immediately visible instead of causing cryptic 3000ms timeouts.
+ *
  * Related files:
  * @see data/schemas/operations/endTurn.schema.json - Operation schema
  * @see src/dependencyInjection/tokens/tokens-core.js - EndTurnHandler token
@@ -25,8 +29,23 @@
 
 import { TURN_ENDED_ID } from '../../constants/eventIds.js';
 
-import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+
+/**
+ * Error thrown when END_TURN operation fails due to invalid parameters.
+ * Includes diagnostic details to help identify the root cause.
+ */
+export class EndTurnOperationError extends Error {
+  /**
+   * @param {string} message - Error message
+   * @param {object} details - Diagnostic details about the failure
+   */
+  constructor(message, details = {}) {
+    super(message);
+    this.name = 'EndTurnOperationError';
+    this.details = details;
+  }
+}
 
 /**
  * Parameters for {@link EndTurnHandler#execute}.
@@ -69,22 +88,45 @@ class EndTurnHandler {
 
   /**
    * Dispatch the core:turn_ended event.
+   * Uses queueMicrotask to defer dispatch until current operation handlers complete,
+   * then awaits the dispatch to ensure event delivery before returning.
+   *
+   * FAIL-FAST: Throws EndTurnOperationError on invalid params instead of
+   * silently returning. This ensures turn-end failures are immediately visible.
    *
    * @param {EndTurnParameters} params - Resolved parameters.
-   * @param {ExecutionContext} executionContext - Execution context (unused).
+   * @param {ExecutionContext} executionContext - Execution context.
+   * @throws {EndTurnOperationError} If params or entityId are invalid.
    */
-  execute(params, executionContext) {
+  async execute(params, executionContext) {
     const logger = executionContext?.logger ?? this.#logger;
-    if (!assertParamsObject(params, logger, 'END_TURN')) return;
 
-    if (typeof params.entityId !== 'string' || !params.entityId.trim()) {
-      safeDispatchError(
-        this.#safeEventDispatcher,
-        'END_TURN: Invalid or missing "entityId" parameter.',
-        { params },
-        logger
+    // FAIL-FAST: Throw on invalid params instead of silent return
+    if (!params || typeof params !== 'object') {
+      const error = new EndTurnOperationError(
+        'END_TURN: params must be a non-null object.',
+        { receivedParams: params, paramsType: typeof params }
       );
-      return;
+      logger.error(error.message, error.details);
+      throw error;
+    }
+
+    // FAIL-FAST: Throw on invalid entityId instead of silent return
+    if (typeof params.entityId !== 'string' || !params.entityId.trim()) {
+      const error = new EndTurnOperationError(
+        'END_TURN: Invalid or missing "entityId" parameter. ' +
+          'This usually means placeholder resolution failed for {event.payload.actorId}.',
+        {
+          receivedEntityId: params.entityId,
+          entityIdType: typeof params.entityId,
+          allParams: params,
+          hasExecutionContext: !!executionContext,
+          hasEvent: !!executionContext?.evaluationContext?.event,
+          eventPayload: executionContext?.evaluationContext?.event?.payload,
+        }
+      );
+      logger.error(error.message, error.details);
+      throw error;
     }
 
     const payload = {
@@ -101,25 +143,36 @@ class EndTurnHandler {
       { payload }
     );
 
+    // Note: Previously had queueMicrotask deferral here to allow IF handlers to complete,
+    // but this was causing race conditions with the timeout in AwaitingExternalTurnEndState.
+    // The early listener pattern (Phase 7) now captures events regardless of timing,
+    // so immediate dispatch is safe and preferred.
+
+    // Await the dispatch to ensure event is delivered before returning.
+    // This is critical for the Promise.race pattern in AwaitingExternalTurnEndState
+    // to work correctly - the event must be delivered before any timeout can fire.
     const dispatchResult = this.#safeEventDispatcher.dispatch(
       TURN_ENDED_ID,
       payload
     );
+
+    // Handle both Promise-based and synchronous dispatch results
     if (dispatchResult && typeof dispatchResult.then === 'function') {
-      dispatchResult.then((success) => {
-        if (!success) {
-          safeDispatchError(
-            this.#safeEventDispatcher,
-            'END_TURN: Failed to dispatch turn ended event.',
-            { payload }
-          );
-        }
-      });
+      const success = await dispatchResult;
+      if (!success) {
+        safeDispatchError(
+          this.#safeEventDispatcher,
+          'END_TURN: Failed to dispatch turn ended event.',
+          { payload },
+          logger
+        );
+      }
     } else if (dispatchResult === false) {
       safeDispatchError(
         this.#safeEventDispatcher,
         'END_TURN: Failed to dispatch turn ended event.',
-        { payload }
+        { payload },
+        logger
       );
     }
   }

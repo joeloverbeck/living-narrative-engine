@@ -3,8 +3,15 @@
 
 /**
  * @file Unit tests for TurnEndingState.
- * Verifies its use of ITurnContext for accessing services like ILogger and ITurnEndPort,
- * and its interaction with BaseTurnHandler for resource resetting and state transitions.
+ *
+ * TurnEndingState is now a TERMINAL STATE - it does not dispatch events or request
+ * transitions. Instead, it performs cleanup and signals normal termination.
+ * BaseTurnHandler.destroy() handles the turn-ended notification and the
+ * transition back to Idle state.
+ *
+ * This design eliminates the race condition where the notification triggered
+ * handler destruction mid-state-entry.
+ *
  * Ticket: Refactor TurnEndingState to Use ITurnContext
  * Parent Epic: PTH-REFACTOR-001 (DecoupleHumanTurnHandler)
  * Related Ticket: PTH-REFACTOR-002 (Refactor Core Turn States to Utilize ITurnContext Exclusively)
@@ -196,12 +203,10 @@ describe('TurnEndingState', () => {
         expect(superEnterSpy).toHaveBeenCalledWith(mockHandler, null);
       });
 
-      it('should call ITurnEndPort.notifyTurnEnded with correct parameters via ITurnContext', () => {
-        expect(testTurnContext.getTurnEndPort).toHaveBeenCalled();
-        expect(mockTurnEndPortInstance.notifyTurnEnded).toHaveBeenCalledWith(
-          actorId,
-          true
-        );
+      // NOTE: notifyTurnEnded has been moved to BaseTurnHandler.destroy()
+      // to eliminate the race condition. It is no longer called in enterState.
+      it('should NOT call ITurnEndPort.notifyTurnEnded (moved to BaseTurnHandler.destroy)', () => {
+        expect(mockTurnEndPortInstance.notifyTurnEnded).not.toHaveBeenCalled();
       });
 
       it('should call handler.signalNormalApparentTermination if function exists and context actor matches', () => {
@@ -214,8 +219,10 @@ describe('TurnEndingState', () => {
         );
       });
 
-      it('should request idle state transition via context', () => {
-        expect(testTurnContext.requestIdleStateTransition).toHaveBeenCalled();
+      // NOTE: requestIdleStateTransition has been moved to BaseTurnHandler.destroy()
+      // TurnEndingState is now a terminal state that awaits destruction.
+      it('should NOT request idle state transition (now handled by BaseTurnHandler.destroy)', () => {
+        expect(testTurnContext.requestIdleStateTransition).not.toHaveBeenCalled();
       });
     });
 
@@ -229,20 +236,19 @@ describe('TurnEndingState', () => {
         await turnEndingState.enterState(mockHandler, null);
       });
 
-      it('should call ITurnEndPort.notifyTurnEnded with the error status (false) via ITurnContext', () => {
-        expect(mockTurnEndPortInstance.notifyTurnEnded).toHaveBeenCalledWith(
-          actorId,
-          false
-        );
+      // NOTE: notifyTurnEnded has been moved to BaseTurnHandler.destroy()
+      it('should NOT call ITurnEndPort.notifyTurnEnded (moved to BaseTurnHandler.destroy)', () => {
+        expect(mockTurnEndPortInstance.notifyTurnEnded).not.toHaveBeenCalled();
       });
 
       it('should still call handler.signalNormalApparentTermination', () => {
         expect(mockHandler.signalNormalApparentTermination).toHaveBeenCalled();
       });
 
-      it('should call handler._resetTurnStateAndResources and request idle transition via context', () => {
+      // NOTE: requestIdleStateTransition has been moved to BaseTurnHandler.destroy()
+      it('should call handler._resetTurnStateAndResources but NOT request idle transition', () => {
         expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalled();
-        expect(testTurnContext.requestIdleStateTransition).toHaveBeenCalled();
+        expect(testTurnContext.requestIdleStateTransition).not.toHaveBeenCalled();
       });
     });
 
@@ -255,11 +261,9 @@ describe('TurnEndingState', () => {
         await turnEndingState.enterState(mockHandler, null);
       });
 
-      it('should NOT call ITurnEndPort.notifyTurnEnded and log a warning', () => {
+      // NOTE: notifyTurnEnded is no longer called in enterState - moved to BaseTurnHandler.destroy()
+      it('should NOT call ITurnEndPort.notifyTurnEnded (notification moved to destroy)', () => {
         expect(mockTurnEndPortInstance.notifyTurnEnded).not.toHaveBeenCalled();
-        expect(mockSystemLogger.warn).toHaveBeenCalledWith(
-          `TurnEndingState: TurnEndPort not notified for actor ${actorId}. Reason: ITurnContext not available.`
-        );
       });
 
       it('should NOT call handler.signalNormalApparentTermination (as context actor cannot be confirmed)', () => {
@@ -293,11 +297,9 @@ describe('TurnEndingState', () => {
         await turnEndingState.enterState(mockHandler, null);
       });
 
-      it('should NOT call ITurnEndPort.notifyTurnEnded and log warning', () => {
+      // NOTE: notifyTurnEnded is no longer called in enterState - moved to BaseTurnHandler.destroy()
+      it('should NOT call ITurnEndPort.notifyTurnEnded (notification moved to destroy)', () => {
         expect(mockTurnEndPortInstance.notifyTurnEnded).not.toHaveBeenCalled();
-        expect(mockContextSpecificLogger.warn).toHaveBeenCalledWith(
-          `TurnEndingState: TurnEndPort not notified for actor ${actorId}. Reason: ITurnContext actor mismatch (context: ${differentActorId}, target: ${actorId}).`
-        );
       });
 
       it('should NOT call handler.signalNormalApparentTermination due to actor mismatch', () => {
@@ -309,31 +311,27 @@ describe('TurnEndingState', () => {
         );
       });
 
-      it('should call handler._resetTurnStateAndResources and request idle transition via context', () => {
+      // NOTE: requestIdleStateTransition is no longer called - now handled by BaseTurnHandler.destroy()
+      it('should call handler._resetTurnStateAndResources but NOT request idle transition', () => {
         expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalled();
-        expect(mismatchedContext.requestIdleStateTransition).toHaveBeenCalled();
+        expect(mismatchedContext.requestIdleStateTransition).not.toHaveBeenCalled();
       });
     });
 
-    it('should proceed with cleanup if ITurnEndPort.notifyTurnEnded throws an error', async () => {
+    // NOTE: This test no longer applies - notifyTurnEnded is now called in BaseTurnHandler.destroy()
+    // The test verifies the simplified behavior where cleanup continues even without notification
+    it('should proceed with cleanup without calling notifyTurnEnded (moved to BaseTurnHandler.destroy)', async () => {
       mockHandler._TEST_setCurrentTurnContext(testTurnContext);
-      const notifyError = new Error('Notify Failed');
-      mockTurnEndPortInstance.notifyTurnEnded.mockRejectedValueOnce(
-        notifyError
-      );
 
       turnEndingState = createTestState(actorId, null);
       await turnEndingState.enterState(mockHandler, null);
 
-      expect(safeDispatchError).toHaveBeenCalledWith(
-        mockSafeEventDispatcher,
-        `TurnEndingState: Failed notifying TurnEndPort for actor ${actorId}: ${notifyError.message}`,
-        expect.any(Object),
-        mockContextSpecificLogger
-      );
+      // notifyTurnEnded is not called in enterState anymore
+      expect(mockTurnEndPortInstance.notifyTurnEnded).not.toHaveBeenCalled();
       expect(mockHandler.signalNormalApparentTermination).toHaveBeenCalled();
       expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalled();
-      expect(testTurnContext.requestIdleStateTransition).toHaveBeenCalled();
+      // requestIdleStateTransition is not called in enterState anymore
+      expect(testTurnContext.requestIdleStateTransition).not.toHaveBeenCalled();
     });
 
     it('should skip calling signalNormalApparentTermination if method does not exist, without error', async () => {
@@ -343,12 +341,11 @@ describe('TurnEndingState', () => {
       turnEndingState = createTestState(actorId, null);
       await turnEndingState.enterState(mockHandler, null);
 
-      expect(mockTurnEndPortInstance.notifyTurnEnded).toHaveBeenCalledWith(
-        actorId,
-        true
-      );
+      // notifyTurnEnded is not called in enterState anymore
+      expect(mockTurnEndPortInstance.notifyTurnEnded).not.toHaveBeenCalled();
       expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalled();
-      expect(testTurnContext.requestIdleStateTransition).toHaveBeenCalled();
+      // requestIdleStateTransition is not called in enterState anymore
+      expect(testTurnContext.requestIdleStateTransition).not.toHaveBeenCalled();
       const signalLogFound = mockContextSpecificLogger.debug.mock.calls.some(
         (call) =>
           call[0].includes('Signaling normal apparent termination') ||
@@ -359,19 +356,31 @@ describe('TurnEndingState', () => {
   });
 
   describe('destroy()', () => {
+    // NOTE: TurnEndingState.destroy() has been simplified.
+    // Being destroyed while in TurnEndingState is now the expected flow.
+    // BaseTurnHandler.destroy() handles the notification and transition to Idle.
+
     beforeEach(() => {
       turnEndingState = createTestState(actorId, null);
       mockHandler._currentState = turnEndingState;
     });
 
-    it('should call handler._resetTurnStateAndResources', async () => {
+    // NOTE: The old test expected resetStateAndResources to be called in TurnEndingState.destroy()
+    // This is no longer the case - cleanup is now simpler and handled by BaseTurnHandler.destroy()
+    it('should NOT call handler._resetTurnStateAndResources (cleanup moved to BaseTurnHandler.destroy)', async () => {
       await turnEndingState.destroy(mockHandler);
-      expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalledWith(
-        `destroy-TurnEndingState-actor-${actorId}`
-      );
+      // The simplified destroy() only logs and calls super.destroy()
+      // Resource cleanup is now handled by BaseTurnHandler.destroy()
+      // We check that the state-specific resetStateAndResources is NOT called
+      // (Though the handler's beforeEach may have called it)
+      mockHandler._resetTurnStateAndResources.mockClear();
+      await turnEndingState.destroy(mockHandler);
+      expect(mockHandler._resetTurnStateAndResources).not.toHaveBeenCalled();
     });
 
-    it('should request idle transition via context if handler._currentState is not TurnIdleState and not itself', async () => {
+    // NOTE: requestIdleStateTransition is no longer called from TurnEndingState.destroy()
+    // This is now handled by BaseTurnHandler.destroy()
+    it('should NOT request idle transition (now handled by BaseTurnHandler.destroy)', async () => {
       const someOtherState = {
         getStateName: () => 'SomeOtherState',
         constructor: { name: 'SomeOtherState' },
@@ -379,46 +388,42 @@ describe('TurnEndingState', () => {
       mockHandler._currentState = someOtherState;
 
       await turnEndingState.destroy(mockHandler);
-      expect(testTurnContext.requestIdleStateTransition).toHaveBeenCalled();
+      expect(testTurnContext.requestIdleStateTransition).not.toHaveBeenCalled();
     });
 
-    it('should NOT attempt self-transition if handler._currentState is itself during destroy', async () => {
+    // NOTE: The warning has been changed to debug - being destroyed in TurnEndingState is now expected
+    it('should log debug (not warning) since being destroyed in TurnEndingState is now expected', async () => {
       mockHandler._currentState = turnEndingState;
       mockHandler._transitionToState.mockClear();
 
       await turnEndingState.destroy(mockHandler);
-      expect(mockContextSpecificLogger.warn).toHaveBeenCalledWith(
+      expect(mockContextSpecificLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('TurnEndingState.destroy() called for actor')
+      );
+      // Should NOT log a warning anymore
+      expect(mockContextSpecificLogger.warn).not.toHaveBeenCalledWith(
         expect.stringContaining('Handler destroyed while in TurnEndingState')
       );
     });
 
-    it('should log a warning and call super.destroy()', async () => {
+    it('should log debug and call super.destroy()', async () => {
       await turnEndingState.destroy(mockHandler);
-      expect(mockContextSpecificLogger.warn).toHaveBeenCalledWith(
+      expect(mockContextSpecificLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          `Handler destroyed while in TurnEndingState for actor ${actorId}.`
+          `TurnEndingState.destroy() called for actor ${actorId}.`
         )
       );
       expect(superDestroySpy).toHaveBeenCalledWith(mockHandler);
     });
 
-    it('should handle forced transition failure during destroy by logging an error', async () => {
+    // NOTE: This test is no longer applicable - we don't call requestIdleStateTransition from destroy()
+    it('should NOT dispatch errors for transition failures (transition moved to BaseTurnHandler)', async () => {
       mockHandler._currentState = { getStateName: () => 'AnotherState' };
-      const transitionError = new Error('Forced transition failed');
-      testTurnContext.requestIdleStateTransition.mockRejectedValueOnce(
-        transitionError
-      );
 
       await turnEndingState.destroy(mockHandler);
 
-      expect(safeDispatchError).toHaveBeenCalledWith(
-        mockSafeEventDispatcher,
-        expect.stringContaining(
-          `Failed forced transition to TurnIdleState during destroy for actor ${actorId}: ${transitionError.message}`
-        ),
-        expect.any(Object),
-        mockContextSpecificLogger
-      );
+      // safeDispatchError should not be called since we don't request transitions
+      expect(safeDispatchError).not.toHaveBeenCalled();
     });
   });
 

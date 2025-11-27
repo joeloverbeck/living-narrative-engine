@@ -11,6 +11,9 @@ import { createRuleTestEnvironment } from '../engine/systemLogicTestEnv.js';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import displaySuccessMacro from '../../../data/mods/core/macros/displaySuccessAndEndTurn.macro.json';
+import logFailureMacro from '../../../data/mods/core/macros/logFailureAndEndTurn.macro.json';
+import logSuccessOutcomeMacro from '../../../data/mods/core/macros/logSuccessOutcomeAndEndTurn.macro.json';
+import logFailureOutcomeMacro from '../../../data/mods/core/macros/logFailureOutcomeAndEndTurn.macro.json';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 import { promises as fs } from 'fs';
 import { resolve } from 'path';
@@ -986,6 +989,9 @@ class BaseModTestFixture {
     const macros = {
       'core:logSuccessAndEndTurn': logSuccessMacro,
       'core:displaySuccessAndEndTurn': displaySuccessMacro,
+      'core:logFailureAndEndTurn': logFailureMacro,
+      'core:logSuccessOutcomeAndEndTurn': logSuccessOutcomeMacro,
+      'core:logFailureOutcomeAndEndTurn': logFailureOutcomeMacro,
     };
 
     // Load action definitions for the mod to enable action discovery

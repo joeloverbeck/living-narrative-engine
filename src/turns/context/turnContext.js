@@ -52,6 +52,10 @@ export class TurnContext extends ITurnContext {
   /** @type {AbortController}     */ #promptAbortController;
   /** @type {{speech:string|null, thoughts:string|null, notes:Array<{text: string, subject: string, context?: string, timestamp?: string}>|null}|null} */
   #decisionMeta = null;
+  /** @type {object|null} - Pending turn_ended event captured before AwaitingExternalTurnEndState was ready */
+  #pendingTurnEndEvent = null;
+  /** @type {function|null} - Early listener unsubscribe function stored for AwaitingExternalTurnEndState to call */
+  #earlyListenerUnsubscribe = null;
 
   /**
    * @param {object} deps
@@ -201,6 +205,73 @@ export class TurnContext extends ITurnContext {
     this.#logger.debug(
       `TurnContext for ${this.#actor.id} awaitingExternalEvent → ${this.#isAwaitingExternalEvent}`
     );
+  }
+
+  /* ───────────────── PENDING TURN END EVENT MANAGEMENT ──────────────────── */
+
+  /**
+   * Stores a turn_ended event that arrived before the listener was ready.
+   * This handles the race condition where the event is dispatched during
+   * action execution but before AwaitingExternalTurnEndState sets up its listener.
+   *
+   * @param {object} event - The turn_ended event payload
+   */
+  setPendingTurnEndEvent(event) {
+    this.#pendingTurnEndEvent = event;
+    this.#logger.debug(
+      `TurnContext for ${this.#actor.id}: stored pending turn_ended event`
+    );
+  }
+
+  /**
+   * Retrieves and clears the pending turn_ended event.
+   *
+   * @returns {object|null} The pending event or null if none was captured
+   */
+  consumePendingTurnEndEvent() {
+    const event = this.#pendingTurnEndEvent;
+    this.#pendingTurnEndEvent = null;
+    if (event) {
+      this.#logger.debug(
+        `TurnContext for ${this.#actor.id}: consumed pending turn_ended event`
+      );
+    }
+    return event;
+  }
+
+  /* ───────────────── EARLY LISTENER UNSUBSCRIBE MANAGEMENT ──────────────── */
+
+  /**
+   * Stores the early listener unsubscribe function for later cleanup.
+   * Called by CommandProcessingWorkflow to pass the unsubscribe function
+   * so AwaitingExternalTurnEndState can call it when entering.
+   *
+   * @param {function|null} unsubscribe - The unsubscribe function or null
+   */
+  setEarlyListenerUnsubscribe(unsubscribe) {
+    this.#earlyListenerUnsubscribe = unsubscribe;
+    if (unsubscribe) {
+      this.#logger.debug(
+        `TurnContext for ${this.#actor.id}: stored early listener unsubscribe function`
+      );
+    }
+  }
+
+  /**
+   * Retrieves and clears the early listener unsubscribe function.
+   * Called by AwaitingExternalTurnEndState to clean up the early listener.
+   *
+   * @returns {function|null} The unsubscribe function or null if none was stored
+   */
+  consumeEarlyListenerUnsubscribe() {
+    const unsubscribe = this.#earlyListenerUnsubscribe;
+    this.#earlyListenerUnsubscribe = null;
+    if (unsubscribe) {
+      this.#logger.debug(
+        `TurnContext for ${this.#actor.id}: consumed early listener unsubscribe function`
+      );
+    }
+    return unsubscribe;
   }
 
   /* ───────────────────────── ACTION + META STORAGE ────────────────────── */

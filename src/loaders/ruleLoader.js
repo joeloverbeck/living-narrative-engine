@@ -14,6 +14,8 @@ import { isNonBlankString } from '../utils/textUtils.js';
  * @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../interfaces/manifestItems.js').ModManifest} ModManifest
+ * @typedef {import('../validation/handlerCompletenessValidator.js').HandlerCompletenessValidator} HandlerCompletenessValidator
+ * @typedef {import('../logic/operationRegistry.js').default} OperationRegistry
  */
 
 /**
@@ -26,6 +28,12 @@ import { isNonBlankString } from '../utils/textUtils.js';
  * @augments BaseManifestItemLoader
  */
 class RuleLoader extends BaseManifestItemLoader {
+  /** @type {HandlerCompletenessValidator|null} */
+  #handlerValidator;
+
+  /** @type {OperationRegistry|null} */
+  #operationRegistry;
+
   /**
    * Constructs a RuleLoader instance.
    * Calls the parent constructor, specifying the content type 'rules' and passing dependencies.
@@ -36,14 +44,24 @@ class RuleLoader extends BaseManifestItemLoader {
    * @param {ISchemaValidator} validator - Schema validation service instance.
    * @param {IDataRegistry} registry - Data registry service instance.
    * @param {ILogger} logger - Logging service instance.
+   * @param {HandlerCompletenessValidator} [handlerValidator=null] - Optional handler validation service.
+   * @param {OperationRegistry} [operationRegistry=null] - Optional operation registry for handler lookup.
    */
-  constructor(config, pathResolver, fetcher, validator, registry, logger) {
+  constructor(
+    config,
+    pathResolver,
+    fetcher,
+    validator,
+    registry,
+    logger,
+    handlerValidator = null,
+    operationRegistry = null
+  ) {
     // AC: Call super() passing 'rules' as the first argument, followed by dependencies.
     super('rules', config, pathResolver, fetcher, validator, registry, logger);
 
-    // Log initialization (Base class constructor handles logging)
-    // this._logger.debug(`RuleLoader: Initialized.`); // Optional: Add specific RuleLoader init log if needed after super()
-    // Don't import 'path' here yet.
+    this.#handlerValidator = handlerValidator;
+    this.#operationRegistry = operationRegistry;
   }
 
   /**
@@ -111,12 +129,15 @@ class RuleLoader extends BaseManifestItemLoader {
         this._logger
       );
 
-      // Validate that all macros were properly expanded
+      // FAIL-FAST: Validate that all macros were properly expanded
+      // Note: expandMacros() now throws MacroExpansionError on missing macros,
+      // so this validation is a safety net for edge cases (e.g., macro found but no actions)
       if (
         !validateMacroExpansion(data.actions, this._dataRegistry, this._logger)
       ) {
-        this._logger.warn(
-          `RuleLoader [${modId}]: Some macros may not have been fully expanded in ${filename}.`
+        throw new Error(
+          `RuleLoader [${modId}]: Failed to expand all macros in ${filename}. ` +
+            'Check that all referenced macros exist and are loaded before rules.'
         );
       } else {
         this._logger.debug(
@@ -124,6 +145,20 @@ class RuleLoader extends BaseManifestItemLoader {
         );
       }
     }
+
+    // --- Handler Validation ---
+    if (this.#handlerValidator && this.#operationRegistry) {
+      const qualifiedRuleId = `${modId}:${baseRuleId}`;
+      this._logger.debug(
+        `RuleLoader [${modId}]: Validating handler completeness for rule '${qualifiedRuleId}'.`
+      );
+      // Throws ConfigurationError if any operation lacks a registered handler
+      this.#handlerValidator.validateRuleHandlerCompleteness(
+        { id: qualifiedRuleId, actions: data.actions },
+        this.#operationRegistry
+      );
+    }
+    // --- End Handler Validation ---
 
     // --- Storage ---
     this._logger.debug(

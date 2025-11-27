@@ -170,6 +170,19 @@ export class ActionFormattingStage extends PipelineStage {
       this.#injectChanceIntoTemplates(context);
     }
 
+    // Build formatter options with chance calculation support for combination actions
+    const formatterOptions = {
+      logger: this.#logger,
+      debug: true,
+      safeEventDispatcher: this.#safeEventDispatcher,
+    };
+
+    // Add chance calculation service for per-combination injection in formatters
+    if (this.#chanceCalculationService) {
+      formatterOptions.chanceCalculationService = this.#chanceCalculationService;
+      formatterOptions.actorId = context.actor?.id;
+    }
+
     const coordinator = new ActionFormattingCoordinator({
       context,
       instrumentation,
@@ -185,6 +198,7 @@ export class ActionFormattingStage extends PipelineStage {
       logger: this.#logger,
       validateVisualProperties: (visual, actionId) =>
         this.#validateVisualProperties(visual, actionId),
+      formatterOptions,
     });
 
     return coordinator.run();
@@ -245,6 +259,10 @@ export class ActionFormattingStage extends PipelineStage {
    * Injects calculated chance percentages into action templates for chance-based actions.
    * Replaces `{chance}` placeholder with the calculated probability percentage.
    *
+   * NOTE: For actions with `generateCombinations: true`, chance injection is deferred
+   * to the MultiTargetActionFormatter where it's calculated per-combination with the
+   * specific target for each combination, not the first target from all available.
+   *
    * @param {object} context - Pipeline context
    * @private
    */
@@ -259,6 +277,11 @@ export class ActionFormattingStage extends PipelineStage {
 
       // Skip if template doesn't have {chance} placeholder
       if (!actionDef.template?.includes('{chance}')) continue;
+
+      // Skip combination actions - they get per-combination injection in the formatter
+      // At this point, resolvedTargets contains ALL targets, not the specific one for
+      // each combination. The formatter handles per-combination chance calculation.
+      if (actionDef.generateCombinations) continue;
 
       // Get target ID from resolvedTargets or targetContexts
       const targetId = this.#extractTargetId(actionWithTarget, context);
@@ -285,7 +308,13 @@ export class ActionFormattingStage extends PipelineStage {
   }
 
   /**
-   * Extracts the primary target ID from action target resolution data.
+   * Extracts the target ID from action target resolution data based on
+   * the configured target role for chance-based skill lookups.
+   *
+   * For multi-target actions (e.g., swing_at_target), the primary target
+   * may be an item (weapon) while the secondary is the character being
+   * attacked. The targetRole config allows specifying which target
+   * provides the opposing skill.
    *
    * @param {object} actionWithTarget - Action with target data
    * @param {object} context - Pipeline context
@@ -293,13 +322,27 @@ export class ActionFormattingStage extends PipelineStage {
    * @private
    */
   #extractTargetId(actionWithTarget, context) {
-    // Try resolvedTargets first (multi-target path)
+    const { actionDef } = actionWithTarget;
     const resolvedTargets =
       actionWithTarget.resolvedTargets ?? context.resolvedTargets;
-    if (resolvedTargets?.primary?.[0]?.entityId) {
-      return resolvedTargets.primary[0].entityId;
+
+    // Get configured target role from chanceBased.targetSkill, default to 'secondary'
+    // This handles multi-target actions where primary might be an item (weapon)
+    // and secondary is the character being targeted
+    const targetRole =
+      actionDef?.chanceBased?.targetSkill?.targetRole ?? 'secondary';
+
+    // Try the configured target role first
+    if (resolvedTargets?.[targetRole]?.[0]?.id) {
+      return resolvedTargets[targetRole][0].id;
     }
-    // Fall back to targetContexts (legacy path)
+
+    // Fall back to primary if configured role not available
+    if (resolvedTargets?.primary?.[0]?.id) {
+      return resolvedTargets.primary[0].id;
+    }
+
+    // Legacy path for single-target actions
     return actionWithTarget.targetContexts?.[0]?.entityId ?? null;
   }
 }

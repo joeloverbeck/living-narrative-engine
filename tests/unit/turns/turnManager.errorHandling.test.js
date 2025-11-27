@@ -32,12 +32,11 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
     testBed.resetMocks();
 
     // Mock the stop method to prevent infinite loops in error scenarios
-    const stopSpy = jest
-      .spyOn(testBed.turnManager, 'stop')
-      .mockImplementation(async () => {
-        // Access private field through a workaround - mark manager as stopped
-        testBed.turnManager.isRunning = false;
-      });
+    // The spy is accessed via testBed.turnManager.stop in individual tests
+    jest.spyOn(testBed.turnManager, 'stop').mockImplementation(async () => {
+      // Access private field through a workaround - mark manager as stopped
+      testBed.turnManager.isRunning = false;
+    });
   });
 
   test('should stop advancing if handlerResolver fails', async () => {
@@ -93,9 +92,6 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
   });
 
   test('should handle handler startTurn failure gracefully', async () => {
-    // Get reference to the stop spy
-    const stopSpy = testBed.turnManager.stop;
-
     // --- Test-Specific Mock Setup ---
     testBed.mockNextActor(ai1);
     testBed.mocks.turnOrderService.getNextEntity
@@ -125,7 +121,14 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
     // Now run all the timers to ensure async operations complete
     jest.runAllTimers();
 
-    // Let promises resolve
+    // Let promises resolve - need more iterations for async destroy flow
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    // Run any additional timers scheduled by the async flow
+    jest.runAllTimers();
     await Promise.resolve();
     await Promise.resolve();
 
@@ -215,9 +218,11 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
       .mockResolvedValueOnce(ai1)
       .mockResolvedValue(null);
 
-    testBed.setupHandlerForActor(ai1, {
+    const handler = testBed.setupHandlerForActor(ai1, {
       includeSignalTermination: true,
     });
+    // Mock destroy to resolve immediately for the async handler flow
+    handler.destroy = jest.fn().mockResolvedValue();
 
     testBed.mocks.dispatcher.dispatch.mockImplementation((eventType) => {
       if (eventType === TURN_PROCESSING_ENDED) {
@@ -235,8 +240,13 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
       success: true,
     });
 
-    await Promise.resolve();
+    // The async callback in TurnEventSubscription schedules with setTimeout(0)
+    // so we need to run timers first
     jest.runOnlyPendingTimers();
+
+    // Then flush promise queue for async #handleTurnEndedEvent to complete
+    await Promise.resolve();
+    await Promise.resolve();
     await Promise.resolve();
     await Promise.resolve();
 

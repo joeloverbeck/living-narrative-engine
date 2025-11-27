@@ -99,7 +99,7 @@ describe('ModifierCollectorService', () => {
 
   describe('collectModifiers', () => {
     describe('empty modifiers', () => {
-      it('should return empty collection with zero totals when no modifiers configured', () => {
+      it('should return empty collection with identity totals when no modifiers configured', () => {
         const result = service.collectModifiers({
           actorId: 'actor-123',
         });
@@ -107,7 +107,7 @@ describe('ModifierCollectorService', () => {
         expect(result).toEqual({
           modifiers: [],
           totalFlat: 0,
-          totalPercentage: 0,
+          totalPercentage: 1, // Identity for multiplication (not 0 which would zero out)
         });
       });
 
@@ -120,7 +120,7 @@ describe('ModifierCollectorService', () => {
         expect(result).toEqual({
           modifiers: [],
           totalFlat: 0,
-          totalPercentage: 0,
+          totalPercentage: 1, // Identity for multiplication
         });
       });
 
@@ -133,7 +133,7 @@ describe('ModifierCollectorService', () => {
         expect(result).toEqual({
           modifiers: [],
           totalFlat: 0,
-          totalPercentage: 0,
+          totalPercentage: 1, // Identity for multiplication
         });
       });
 
@@ -146,7 +146,7 @@ describe('ModifierCollectorService', () => {
         expect(result).toEqual({
           modifiers: [],
           totalFlat: 0,
-          totalPercentage: 0,
+          totalPercentage: 1, // Identity for multiplication
         });
       });
     });
@@ -188,7 +188,7 @@ describe('ModifierCollectorService', () => {
           expect.stringContaining('flat=0')
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
-          expect.stringContaining('percentage=0')
+          expect.stringContaining('percentage=1') // Identity value for no modifiers
         );
       });
     });
@@ -212,7 +212,7 @@ describe('ModifierCollectorService', () => {
         expect(result).toEqual({
           modifiers: [],
           totalFlat: 0,
-          totalPercentage: 0,
+          totalPercentage: 1, // Identity for multiplication
         });
       });
     });
@@ -246,11 +246,11 @@ describe('ModifierCollectorService', () => {
     // Since private methods are tested through public interface
     // These tests verify the totals calculation structure
 
-    it('should return zero totals for empty modifiers', () => {
+    it('should return identity totals for empty modifiers', () => {
       const result = service.collectModifiers({ actorId: 'actor-123' });
 
       expect(result.totalFlat).toBe(0);
-      expect(result.totalPercentage).toBe(0);
+      expect(result.totalPercentage).toBe(1); // Identity for multiplication
     });
 
     it('should return proper structure with all required properties', () => {
@@ -275,7 +275,7 @@ describe('ModifierCollectorService', () => {
       expect(result).toEqual({
         modifiers: [],
         totalFlat: 0,
-        totalPercentage: 0,
+        totalPercentage: 1, // Identity for multiplication
       });
     });
 
@@ -290,7 +290,7 @@ describe('ModifierCollectorService', () => {
       expect(result).toEqual({
         modifiers: [],
         totalFlat: 0,
-        totalPercentage: 0,
+        totalPercentage: 1, // Identity for multiplication
       });
     });
   });

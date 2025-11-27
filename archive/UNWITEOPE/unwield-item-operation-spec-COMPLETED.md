@@ -1,5 +1,7 @@
 # Unwield Item Operation Specification
 
+## Status: IMPLEMENTED
+
 ## Overview
 
 This specification documents the `UNWIELD_ITEM` operation handler, which encapsulates all logic for stopping wielding an item, including releasing grabbing appendages and cleaning up the wielding component.
@@ -49,18 +51,18 @@ Create a new `UNWIELD_ITEM` operation handler that:
     "Parameters": {
       "type": "object",
       "properties": {
-        "actor_id": {
+        "actorEntity": {
           "type": "string",
           "minLength": 1,
           "description": "Entity ID of the actor currently wielding the item"
         },
-        "item_id": {
+        "itemEntity": {
           "type": "string",
           "minLength": 1,
           "description": "Entity ID of the item to stop wielding"
         }
       },
-      "required": ["actor_id", "item_id"],
+      "required": ["actorEntity", "itemEntity"],
       "additionalProperties": false
     }
   }
@@ -71,8 +73,10 @@ Create a new `UNWIELD_ITEM` operation handler that:
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `actor_id` | string | Yes | Entity ID of the actor who may be wielding the item |
-| `item_id` | string | Yes | Entity ID of the item to stop wielding |
+| `actorEntity` | string | Yes | Entity ID of the actor who may be wielding the item |
+| `itemEntity` | string | Yes | Entity ID of the item to stop wielding |
+
+**Note**: Original spec used `actor_id` and `item_id`, but actual implementation uses `actorEntity` and `itemEntity` for consistency with other handlers.
 
 ## Handler Behavior
 
@@ -81,39 +85,35 @@ Create a new `UNWIELD_ITEM` operation handler that:
 ### Execution Flow
 
 1. **Validate Parameters**
-   - Verify `actor_id` is a non-empty string
-   - Verify `item_id` is a non-empty string
-   - On validation failure, dispatch error and return `{ success: false }`
+   - Verify `actorEntity` is a non-empty string
+   - Verify `itemEntity` is a non-empty string
+   - On validation failure, return `{ success: false, error: 'validation_failed' }`
 
 2. **Check Wielding Component**
    - Get `positioning:wielding` component from actor
-   - If component doesn't exist, return `{ success: true, wasWielding: false }` (idempotent)
+   - If component doesn't exist, return `{ success: true }` (idempotent)
 
 3. **Check If Item Is Wielded**
-   - Check if `item_id` is in `wielded_item_ids` array
-   - If not found, return `{ success: true, wasWielding: false }` (idempotent)
+   - Check if `itemEntity` is in `wielded_item_ids` array
+   - If not found, return `{ success: true }` (idempotent)
 
-4. **Get Grabbing Requirements**
-   - Get `anatomy:requires_grabbing` component from item
-   - Use `handsRequired` value (default: 1 if component missing)
-
-5. **Unlock Grabbing Appendages**
-   - Call `unlockAppendagesHoldingItem(entityManager, actorId, itemId)` from grabbingUtils
+4. **Unlock Grabbing Appendages**
+   - Call `unlockAppendagesHoldingItem(entityManager, actorEntity, itemEntity)` from grabbingUtils
    - This unlocks ALL appendages holding the specific item
 
-6. **Update Wielding Component**
-   - Remove `item_id` from `wielded_item_ids` array
+5. **Update Wielding Component**
+   - Remove `itemEntity` from `wielded_item_ids` array
    - If array becomes empty, remove `positioning:wielding` component entirely
    - Otherwise, update component with remaining items
 
-7. **Dispatch Event**
+6. **Dispatch Event**
    - Dispatch `items:item_unwielded` event with:
-     - `actorId`: The actor who stopped wielding
-     - `itemId`: The item that was unwielded
+     - `actorEntity`: The actor who stopped wielding
+     - `itemEntity`: The item that was unwielded
      - `remainingWieldedItems`: Array of items still being wielded
 
-8. **Return Result**
-   - Return `{ success: true, wasWielding: true }`
+7. **Return Result**
+   - Return `{ success: true }`
 
 ### Idempotent Design
 
@@ -123,11 +123,13 @@ The handler is designed to be idempotent, meaning it can be safely called multip
 |----------|----------|
 | Actor has no wielding component | Returns success (no-op) |
 | Item not in wielded_item_ids | Returns success (no-op) |
+| wielded_item_ids is empty array | Returns success (no-op) |
+| wielded_item_ids is undefined | Returns success (no-op) |
 | Item is wielded | Performs full unwield, returns success |
 
 This allows rules to unconditionally call `UNWIELD_ITEM` without complex conditional logic.
 
-## Rule Changes
+## Rule Usage
 
 ### handle_drop_item.rule.json
 
@@ -138,41 +140,36 @@ Add `UNWIELD_ITEM` operation **before** `DROP_ITEM_AT_LOCATION`:
   "type": "UNWIELD_ITEM",
   "comment": "If item is wielded, unwield it first (idempotent)",
   "parameters": {
-    "actor_id": "{event.payload.actorId}",
-    "item_id": "{event.payload.targetId}"
+    "actorEntity": "{event.payload.actorId}",
+    "itemEntity": "{event.payload.targetId}"
   }
 }
 ```
 
 ### handle_unwield_item.rule.json
 
-Replace the 5 discrete operations (QUERY_COMPONENT for grabbing reqs, UNLOCK_GRABBING, MODIFY_ARRAY_FIELD, QUERY_COMPONENT for wielding, IF/REMOVE_COMPONENT) with a single operation:
+Uses `UNWIELD_ITEM` to encapsulate the unwielding logic:
 
 ```json
 {
   "type": "UNWIELD_ITEM",
   "comment": "Stop wielding the item, releasing appendages and cleaning up wielding state",
   "parameters": {
-    "actor_id": "{event.payload.actorId}",
-    "item_id": "{event.payload.targetId}"
+    "actorEntity": "{event.payload.actorId}",
+    "itemEntity": "{event.payload.targetId}"
   }
 }
 ```
-
-Keep: GET_NAME operations, SET_VARIABLE operations, REGENERATE_DESCRIPTION, and the logging macro.
 
 ## Dependencies
 
 ### Existing Utilities Used
 
 - `unlockAppendagesHoldingItem()` from `src/utils/grabbingUtils.js`
-- `deepClone()` from `src/utils/cloneUtils.js`
-- `safeDispatchError()` from `src/utils/safeDispatchErrorUtils.js`
 
 ### Components Accessed
 
 - `positioning:wielding` - Actor's wielding state
-- `anatomy:requires_grabbing` - Item's grabbing requirements (optional, defaults to 1)
 
 ## DI Registration
 
@@ -210,32 +207,6 @@ registry.register('UNWIELD_ITEM', bind(tokens.UnwieldItemHandler));
 'UNWIELD_ITEM',
 ```
 
-## Testing Requirements
-
-### Unit Tests
-
-**File**: `tests/unit/logic/operationHandlers/unwieldItemHandler.test.js`
-
-| Test Case | Description |
-|-----------|-------------|
-| Invalid actor_id | Returns validation error |
-| Invalid item_id | Returns validation error |
-| No wielding component | Returns success with wasWielding: false |
-| Item not in wielded_item_ids | Returns success with wasWielding: false |
-| Single wielded item | Removes component, unlocks appendages |
-| Multiple wielded items | Removes item from array, keeps component |
-| Two-handed weapon | Unlocks correct number of appendages |
-
-### Integration Tests
-
-**File**: `tests/integration/mods/items/unwieldItemOperation.test.js`
-
-| Test Case | Description |
-|-----------|-------------|
-| Full unwield flow | Verify complete rule execution |
-| Drop wielded item | Verify drop_item unwields first |
-| Drop non-wielded item | Verify normal drop behavior unchanged |
-
 ## Event Dispatched
 
 **Event Type**: `items:item_unwielded`
@@ -243,24 +214,23 @@ registry.register('UNWIELD_ITEM', bind(tokens.UnwieldItemHandler));
 **Payload**:
 ```javascript
 {
-  actorId: string,       // Entity ID of the actor
-  itemId: string,        // Entity ID of the unwielded item
+  actorEntity: string,       // Entity ID of the actor
+  itemEntity: string,        // Entity ID of the unwielded item
   remainingWieldedItems: string[]  // IDs of items still being wielded
 }
 ```
 
 ## Files Summary
 
-### Files to Create
+### Files Created
 
 | File | Purpose |
 |------|---------|
 | `data/schemas/operations/unwieldItem.schema.json` | Operation schema |
 | `src/logic/operationHandlers/unwieldItemHandler.js` | Handler implementation |
 | `tests/unit/logic/operationHandlers/unwieldItemHandler.test.js` | Unit tests |
-| `tests/integration/mods/items/unwieldItemOperation.test.js` | Integration tests |
 
-### Files to Modify
+### Files Modified
 
 | File | Change |
 |------|--------|
@@ -278,3 +248,25 @@ This operation can be reused for other actions that need to release wielded item
 - `give_item` - When giving a wielded item to another actor
 - `put_in_container` - When putting a wielded item in a container
 - Any future action that transfers a wielded item
+
+---
+
+## Outcome
+
+### Spec vs Implementation Differences
+
+| Spec Element | Actual Implementation |
+|--------------|----------------------|
+| Parameter names: `actor_id`, `item_id` | Uses `actorEntity`, `itemEntity` |
+| Event payload: `actorId`, `itemId` | Uses `actorEntity`, `itemEntity` |
+| Returns `{ success: true, wasWielding: boolean }` | Returns `{ success: true }` (no wasWielding field) |
+| Integration test file: `unwieldItemOperation.test.js` | Tests in existing `unwield_item_rule_execution.test.js` |
+
+### Implementation Status
+
+- ✅ Schema created and registered
+- ✅ Handler implemented with idempotent behavior
+- ✅ DI registration complete (token, factory, mapping, whitelist)
+- ✅ Unit tests passing (33 tests)
+- ✅ Integration tests passing (9 tests + 3 drop wielded item tests)
+- ✅ Rules updated to use new operation

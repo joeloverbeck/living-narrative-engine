@@ -2,15 +2,11 @@
 // --- FILE START ---
 
 import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
-import {
-  expectSystemErrorDispatch,
-  triggerTurnEndedAndFlush,
-} from '../../common/turns/turnManagerTestUtils.js';
+import { expectSystemErrorDispatch } from '../../common/turns/turnManagerTestUtils.js';
 // import removed constant; not needed
 import {
   TURN_ENDED_ID,
   TURN_PROCESSING_ENDED,
-  TURN_STARTED_ID,
 } from '../../../src/constants/eventIds.js';
 import { beforeEach, expect, jest, test } from '@jest/globals';
 import { createAiActor } from '../../common/turns/testActors.js';
@@ -190,6 +186,8 @@ describeTurnManagerSuite(
         testBed.mockNextActor(actor);
         const handler = testBed.setupHandlerForActor(actor);
         handler.startTurn.mockResolvedValue();
+        // Mock destroy to resolve immediately for the async handler flow
+        handler.destroy = jest.fn().mockResolvedValue();
 
         /** @type {(value: true) => void} */
         let resolveProcessing;
@@ -207,18 +205,25 @@ describeTurnManagerSuite(
         await testBed.turnManager.start();
         expect(handler.startTurn).toHaveBeenCalled();
 
+        // Trigger event - now #handleTurnEndedEvent is invoked immediately
+        // (Phase 10 fix: TurnEventSubscription no longer uses setTimeout deferral)
         testBed.mocks.dispatcher._triggerEvent(TURN_ENDED_ID, {
           entityId: actor.id,
           success: true,
         });
 
-        expect(sharedScheduler.setTimeout).toHaveBeenCalledTimes(1);
-        expect(sharedScheduler.pendingCount()).toBe(1);
+        // Phase 10 fix: TurnEventSubscription now calls callback immediately,
+        // so we don't expect setTimeout to be called for the subscription callback.
+        // The callback executes synchronously (as an untracked async IIFE).
 
-        sharedScheduler.runNext();
+        // Flush promise queue for the async handler to complete (including await destroy())
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
 
-        expect(sharedScheduler.setTimeout).toHaveBeenCalledTimes(1);
-        expect(sharedScheduler.pendingCount()).toBe(0);
+        // Handler should not yet have scheduled next turn - waiting for processing promise
+        // The only setTimeout should come from advanceTurn scheduling, not subscription
 
         if (!resolveProcessing) {
           throw new Error('resolveProcessing not initialized');
@@ -228,7 +233,9 @@ describeTurnManagerSuite(
         await Promise.resolve();
         await Promise.resolve();
 
-        expect(sharedScheduler.setTimeout).toHaveBeenCalledTimes(2);
+        // Now the setTimeout should be scheduled for advanceTurn
+        // (Phase 10: Only 1 setTimeout now, not 2, since TurnEventSubscription doesn't use it)
+        expect(sharedScheduler.setTimeout).toHaveBeenCalledTimes(1);
         expect(sharedScheduler.pendingCount()).toBe(1);
       }
     );

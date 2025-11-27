@@ -4,6 +4,9 @@ const path = require('path');
 const {
   registerLoaders,
 } = require('../../../src/dependencyInjection/registrations/loadersRegistrations.js');
+const {
+  registerInterpreters,
+} = require('../../../src/dependencyInjection/registrations/interpreterRegistrations.js');
 const { tokens } = require('../../../src/dependencyInjection/tokens.js');
 
 // Node-compatible fetch for local files
@@ -115,6 +118,8 @@ describe('Integration: ModsLoader can load the core mod (real files)', () => {
     // const nodeDataFetcher = new NodeDataFetcher();
     // container.register(tokens.IDataFetcher, nodeDataFetcher);
 
+    // Register interpreters first (provides OperationRegistry needed by RuleLoader)
+    registerInterpreters(container);
     await registerLoaders(container);
     const logger = container.resolve(tokens.ILogger);
     // Spy on logger.error for critical errors

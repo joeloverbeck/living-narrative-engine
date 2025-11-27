@@ -102,32 +102,35 @@ describe('swing_at_target outcome resolution rule', () => {
   });
 
   describe('Outcome Branch Validation', () => {
-    // Helper to find IF operations
-    const findIfOperation = (ops) => ops.find((op) => op.type === 'IF');
-    const findNestedIf = (ifOp, conditionValue) => {
-      if (!ifOp?.parameters?.else_actions) return null;
-      return ifOp.parameters.else_actions.find(
+    // Helper to find IF operation by outcome value (flat structure)
+    const findIfByOutcome = (ops, outcomeValue) =>
+      ops.find(
         (op) =>
           op.type === 'IF' &&
-          op.parameters.condition['==']?.[1] === conditionValue
+          op.parameters?.condition?.['==']?.[1] === outcomeValue
       );
-    };
 
-    it('should check for CRITICAL_SUCCESS first', () => {
-      const mainIf = findIfOperation(swingAtTargetRule.actions);
-      expect(mainIf).toBeDefined();
+    it('should have 4 independent IF operations for each outcome (flat structure)', () => {
+      const ifOps = swingAtTargetRule.actions.filter((op) => op.type === 'IF');
+      expect(ifOps.length).toBe(4);
 
-      const condition = mainIf.parameters.condition;
-      expect(condition['==']).toBeDefined();
-      expect(condition['=='][0]).toEqual({ var: 'context.attackResult.outcome' });
-      expect(condition['=='][1]).toBe('CRITICAL_SUCCESS');
+      // Verify each outcome has its own top-level IF
+      expect(findIfByOutcome(swingAtTargetRule.actions, 'CRITICAL_SUCCESS')).toBeDefined();
+      expect(findIfByOutcome(swingAtTargetRule.actions, 'SUCCESS')).toBeDefined();
+      expect(findIfByOutcome(swingAtTargetRule.actions, 'FUMBLE')).toBeDefined();
+      expect(findIfByOutcome(swingAtTargetRule.actions, 'FAILURE')).toBeDefined();
     });
 
     it('should handle CRITICAL_SUCCESS with devastating blow message', () => {
-      const mainIf = findIfOperation(swingAtTargetRule.actions);
-      const thenActions = mainIf.parameters.then_actions;
+      const criticalSuccessIf = findIfByOutcome(swingAtTargetRule.actions, 'CRITICAL_SUCCESS');
+      expect(criticalSuccessIf).toBeDefined();
 
-      // Find dispatch event
+      const condition = criticalSuccessIf.parameters.condition;
+      expect(condition['==']).toBeDefined();
+      expect(condition['=='][0]).toEqual({ var: 'context.attackResult.outcome' });
+      expect(condition['=='][1]).toBe('CRITICAL_SUCCESS');
+
+      const thenActions = criticalSuccessIf.parameters.then_actions;
       const dispatchEvent = thenActions.find(
         (op) => op.type === 'DISPATCH_PERCEPTIBLE_EVENT'
       );
@@ -147,15 +150,13 @@ describe('swing_at_target outcome resolution rule', () => {
 
       // Check for success macro
       const hasMacro = thenActions.some(
-        (op) => op.macro === 'core:logSuccessAndEndTurn'
+        (op) => op.macro === 'core:logSuccessOutcomeAndEndTurn'
       );
       expect(hasMacro).toBe(true);
     });
 
     it('should have SUCCESS branch with cutting flesh message', () => {
-      const mainIf = findIfOperation(swingAtTargetRule.actions);
-      const successIf = findNestedIf(mainIf, 'SUCCESS');
-
+      const successIf = findIfByOutcome(swingAtTargetRule.actions, 'SUCCESS');
       expect(successIf).toBeDefined();
 
       const thenActions = successIf.parameters.then_actions;
@@ -170,16 +171,13 @@ describe('swing_at_target outcome resolution rule', () => {
 
       // Check for success macro
       const hasMacro = thenActions.some(
-        (op) => op.macro === 'core:logSuccessAndEndTurn'
+        (op) => op.macro === 'core:logSuccessOutcomeAndEndTurn'
       );
       expect(hasMacro).toBe(true);
     });
 
     it('should have FUMBLE branch with loses grip message', () => {
-      const mainIf = findIfOperation(swingAtTargetRule.actions);
-      const successIf = findNestedIf(mainIf, 'SUCCESS');
-      const fumbleIf = findNestedIf(successIf, 'FUMBLE');
-
+      const fumbleIf = findIfByOutcome(swingAtTargetRule.actions, 'FUMBLE');
       expect(fumbleIf).toBeDefined();
 
       const thenActions = fumbleIf.parameters.then_actions;
@@ -192,21 +190,17 @@ describe('swing_at_target outcome resolution rule', () => {
 
       // Check for failure macro
       const hasMacro = thenActions.some(
-        (op) => op.macro === 'core:logFailureAndEndTurn'
+        (op) => op.macro === 'core:logFailureOutcomeAndEndTurn'
       );
       expect(hasMacro).toBe(true);
     });
 
-    it('should have FAILURE branch (else) with fails to connect message', () => {
-      const mainIf = findIfOperation(swingAtTargetRule.actions);
-      const successIf = findNestedIf(mainIf, 'SUCCESS');
-      const fumbleIf = findNestedIf(successIf, 'FUMBLE');
+    it('should have FAILURE branch with fails to connect message', () => {
+      const failureIf = findIfByOutcome(swingAtTargetRule.actions, 'FAILURE');
+      expect(failureIf).toBeDefined();
 
-      expect(fumbleIf).toBeDefined();
-      expect(fumbleIf.parameters.else_actions).toBeDefined();
-
-      const elseActions = fumbleIf.parameters.else_actions;
-      const dispatchEvent = elseActions.find(
+      const thenActions = failureIf.parameters.then_actions;
+      const dispatchEvent = thenActions.find(
         (op) => op.type === 'DISPATCH_PERCEPTIBLE_EVENT'
       );
 
@@ -216,8 +210,8 @@ describe('swing_at_target outcome resolution rule', () => {
       );
 
       // Check for failure macro
-      const hasMacro = elseActions.some(
-        (op) => op.macro === 'core:logFailureAndEndTurn'
+      const hasMacro = thenActions.some(
+        (op) => op.macro === 'core:logFailureOutcomeAndEndTurn'
       );
       expect(hasMacro).toBe(true);
     });
@@ -334,22 +328,22 @@ describe('swing_at_target outcome resolution rule', () => {
   });
 
   describe('Macro Usage Validation', () => {
-    it('should use logSuccessAndEndTurn macro for success outcomes', () => {
+    it('should use logSuccessOutcomeAndEndTurn macro for success outcomes', () => {
       const ruleString = JSON.stringify(swingAtTargetRule);
 
       // Count success macro occurrences (should be 2: CRITICAL_SUCCESS and SUCCESS)
       const successMacroMatches = ruleString.match(
-        /core:logSuccessAndEndTurn/g
+        /core:logSuccessOutcomeAndEndTurn/g
       );
       expect(successMacroMatches?.length).toBe(2);
     });
 
-    it('should use logFailureAndEndTurn macro for failure outcomes', () => {
+    it('should use logFailureOutcomeAndEndTurn macro for failure outcomes', () => {
       const ruleString = JSON.stringify(swingAtTargetRule);
 
       // Count failure macro occurrences (should be 2: FAILURE and FUMBLE)
       const failureMacroMatches = ruleString.match(
-        /core:logFailureAndEndTurn/g
+        /core:logFailureOutcomeAndEndTurn/g
       );
       expect(failureMacroMatches?.length).toBe(2);
     });

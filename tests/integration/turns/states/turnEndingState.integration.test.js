@@ -183,9 +183,9 @@ describe('TurnEndingState integration', () => {
     );
   });
 
-  test('enterState notifies turn end port, signals termination, and transitions to idle', async () => {
+  test('enterState signals termination and performs cleanup (notification moved to destroy)', async () => {
     const actor = { id: 'actor-1' };
-    const context = buildTurnContext({
+    buildTurnContext({
       handler,
       actor,
       logger,
@@ -194,32 +194,26 @@ describe('TurnEndingState integration', () => {
     const state = new TurnEndingState(handler, actor.id);
     handler._currentState = state;
 
-    const idleRequestSpy = jest.spyOn(
-      context,
-      'requestIdleStateTransition'
-    );
-    const handlerIdleSpy = jest.spyOn(handler, 'requestIdleStateTransition');
-
     await state.enterState(handler, new TurnIdleState(handler));
 
-    expect(handler.turnEndPort.notifications).toEqual([
-      { actorId: actor.id, success: true },
-    ]);
+    // Notification is now handled by BaseTurnHandler.destroy(), not enterState
+    expect(handler.turnEndPort.notifications).toHaveLength(0);
     expect(handler.normalTerminationSignals).toBe(1);
     expect(handler.resetReasons).toContain(
       `enterState-TurnEndingState-actor-${actor.id}`
     );
-    expect(idleRequestSpy).toHaveBeenCalledTimes(1);
-    expect(handlerIdleSpy).toHaveBeenCalledTimes(1);
-    expect(handler.getCurrentState()).toBeInstanceOf(TurnIdleState);
+    // TurnEndingState is now a terminal state - no idle transition requested
+    expect(logger.debug).toHaveBeenCalledWith(
+      `TurnEndingState: Completed cleanup, awaiting destruction (actor ${actor.id}).`
+    );
   });
 
-  test('enterState dispatches error when turn end port notification fails', async () => {
+  test('enterState performs cleanup regardless of turn error (notification in destroy)', async () => {
     const actor = { id: 'actor-2' };
     const failingPort = new ThrowingTurnEndPort('boom');
     handler.turnEndPort = failingPort;
 
-    const context = buildTurnContext({
+    buildTurnContext({
       handler,
       actor,
       logger,
@@ -231,23 +225,18 @@ describe('TurnEndingState integration', () => {
 
     await state.enterState(handler, new TurnIdleState(handler));
 
-    expect(dispatcher.events.some((event) =>
-      event.eventId === SYSTEM_ERROR_OCCURRED_ID &&
-      event.payload.message.startsWith(
-        'TurnEndingState: Failed notifying TurnEndPort'
-      )
-    )).toBe(true);
+    // Notification errors are now handled in BaseTurnHandler.destroy(), not enterState
+    // enterState just performs cleanup
     expect(handler.resetReasons).toContain(
       `enterState-TurnEndingState-actor-${actor.id}`
     );
     expect(handler.normalTerminationSignals).toBe(1);
-    expect(handler.getCurrentState()).toBeInstanceOf(TurnIdleState);
-    expect(
-      handler.turnEndPort instanceof ThrowingTurnEndPort
-    ).toBe(true);
+    expect(logger.debug).toHaveBeenCalledWith(
+      `TurnEndingState: Completed cleanup, awaiting destruction (actor ${actor.id}).`
+    );
   });
 
-  test('enterState logs warning when context is missing', async () => {
+  test('enterState performs cleanup when context is missing (no termination signal)', async () => {
     const actor = { id: 'actor-3' };
     handler._setCurrentActorInternal(actor);
     handler._setCurrentTurnContextInternal(null);
@@ -256,22 +245,20 @@ describe('TurnEndingState integration', () => {
 
     await state.enterState(handler, new TurnIdleState(handler));
 
-    expect(logger.warn).toHaveBeenCalledWith(
-      `TurnEndingState: TurnEndPort not notified for actor ${actor.id}. Reason: ITurnContext not available.`
-    );
-    expect(logger.debug).toHaveBeenCalledWith(
-      'TurnEndingState: No ITurnContext available – Idle transition skipped.'
-    );
+    // Without context, no termination signal but cleanup still happens
     expect(handler.normalTerminationSignals).toBe(0);
     expect(handler.resetReasons).toContain(
       `enterState-TurnEndingState-actor-${actor.id}`
     );
+    expect(logger.debug).toHaveBeenCalledWith(
+      `TurnEndingState: Completed cleanup, awaiting destruction (actor ${actor.id}).`
+    );
   });
 
-  test('enterState handles actor mismatch by skipping notifications', async () => {
+  test('enterState handles actor mismatch by skipping termination signal', async () => {
     const actor = { id: 'actor-4' };
     const mismatchActor = { id: 'other-actor' };
-    const context = buildTurnContext({
+    buildTurnContext({
       handler,
       actor: mismatchActor,
       logger,
@@ -280,21 +267,18 @@ describe('TurnEndingState integration', () => {
     const state = new TurnEndingState(handler, actor.id);
     handler._currentState = state;
 
-    const idleRequestSpy = jest.spyOn(
-      context,
-      'requestIdleStateTransition'
-    );
-
     await state.enterState(handler, new TurnIdleState(handler));
 
-    expect(handler.turnEndPort.notifications).toHaveLength(0);
+    // With actor mismatch, termination signal is skipped but cleanup happens
     expect(handler.normalTerminationSignals).toBe(0);
-    expect(idleRequestSpy).toHaveBeenCalledTimes(1);
-    expect(logger.warn).toHaveBeenCalledWith(
-      `TurnEndingState: TurnEndPort not notified for actor ${actor.id}. Reason: ITurnContext actor mismatch (context: ${mismatchActor.id}, target: ${actor.id}).`
+    expect(handler.resetReasons).toContain(
+      `enterState-TurnEndingState-actor-${actor.id}`
     );
     expect(logger.debug).toHaveBeenCalledWith(
       `TurnEndingState: Normal apparent termination not signaled. Context actor ('${mismatchActor.id}') vs target actor ('${actor.id}') mismatch or no context actor.`
+    );
+    expect(logger.debug).toHaveBeenCalledWith(
+      `TurnEndingState: Completed cleanup, awaiting destruction (actor ${actor.id}).`
     );
   });
 
@@ -311,38 +295,24 @@ describe('TurnEndingState integration', () => {
     );
   });
 
-  test('destroy attempts idle transition and dispatches error when it fails', async () => {
+  test('destroy logs debug message (terminal state - no transition attempted)', async () => {
     const actor = { id: 'actor-6' };
-    const context = buildTurnContext({
+    buildTurnContext({
       handler,
       actor,
       logger,
       dispatcher,
     });
-    context.requestIdleStateTransition = jest
-      .fn()
-      .mockRejectedValue(new Error('forced failure'));
-
-    handler._currentState = new NoopState(handler);
 
     const state = new TurnEndingState(handler, actor.id);
+    handler._currentState = state;
 
     await state.destroy(handler);
 
-    expect(logger.warn).toHaveBeenCalledWith(
-      `TurnEndingState: Handler destroyed while in TurnEndingState for actor ${actor.id}.`
+    // TurnEndingState is now a terminal state - destroy() just logs debug
+    // Notification and transition to Idle are handled by BaseTurnHandler.destroy()
+    expect(logger.debug).toHaveBeenCalledWith(
+      `TurnEndingState.destroy() called for actor ${actor.id}.`
     );
-    expect(handler.resetReasons).toContain(
-      `destroy-TurnEndingState-actor-${actor.id}`
-    );
-    expect(context.requestIdleStateTransition).toHaveBeenCalledTimes(1);
-    expect(
-      dispatcher.events.some((event) =>
-        event.eventId === SYSTEM_ERROR_OCCURRED_ID &&
-        event.payload.message.startsWith(
-          'TurnEndingState: Failed forced transition to TurnIdleState'
-        )
-      )
-    ).toBe(true);
   });
 });

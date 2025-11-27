@@ -566,13 +566,16 @@ class TurnManager extends ITurnManager {
    * Checks if it matches the current actor, **updates the round success flag**,
    * and advances the turn if appropriate.
    *
+   * Note: This method is async to properly await handler destruction before
+   * scheduling the next turn advance. This prevents race conditions where
+   * the handler's state machine is still running when destruction is called.
+   *
    * @param {{ type?: typeof TURN_ENDED_ID, payload: SystemEventPayloads[typeof TURN_ENDED_ID] }} event - The full event object or a simulated payload.
    * @param {{ scheduleAdvance?: boolean }} [options] - Behaviour overrides for post-processing.
    * @private
    */
-  #handleTurnEndedEvent(event, options = {}) {
+  async #handleTurnEndedEvent(event, options = {}) {
     const { scheduleAdvance = true } = options;
-    // This method itself is not async
     if (!this.#isRunning) {
       this.#logger.debug(
         `Received '${TURN_ENDED_ID}' but manager is stopped. Ignoring.`
@@ -741,6 +744,49 @@ class TurnManager extends ITurnManager {
       }, 0);
     };
 
+    this.#logger.debug(
+      `Turn for current actor ${endedActorId} confirmed ended (Internal Status from Event: Success=${successStatus === undefined ? 'N/A' : successStatus}). Proceeding with cleanup and turn advancement...`
+    );
+
+    // CRITICAL: Destroy handler BEFORE scheduling advanceTurn to prevent race condition
+    // where the handler's state machine is still running when destruction is called.
+    // The previous fire-and-forget pattern caused "Handler destroyed while in TurnEndingState" errors.
+    const handlerToDestroy = this.#currentHandler;
+
+    this.#currentActor = null;
+    this.#currentHandler = null;
+
+    if (handlerToDestroy) {
+      if (
+        typeof handlerToDestroy.signalNormalApparentTermination === 'function'
+      ) {
+        handlerToDestroy.signalNormalApparentTermination();
+      }
+      if (typeof handlerToDestroy.destroy === 'function') {
+        logStart(
+          this.#logger,
+          `Calling destroy() on handler (${handlerToDestroy.constructor?.name || 'Unknown'}) for completed turn ${endedActorId}`
+        );
+        // AWAIT destruction to ensure handler state machine completes before advancing
+        try {
+          await handlerToDestroy.destroy();
+        } catch (destroyError) {
+          logError(
+            this.#logger,
+            `Error destroying handler for ${endedActorId} after turn end`,
+            destroyError
+          );
+        }
+      }
+    }
+
+    // Reset recursion counters after turn completes to prevent false warnings
+    // across separate turns separated by time
+    if (this.#eventBus && typeof this.#eventBus.resetRecursionCounters === 'function') {
+      this.#eventBus.resetRecursionCounters();
+    }
+
+    // Now dispatch TURN_PROCESSING_ENDED and schedule advanceTurn AFTER handler destruction is complete
     processingDispatchPromise = processingDispatchPromise
       .then((dispatchResult) => {
         if (dispatchResult === false) {
@@ -767,43 +813,6 @@ class TurnManager extends ITurnManager {
       .then(() => {
         scheduleAdvanceTurn();
       });
-
-    this.#logger.debug(
-      `Turn for current actor ${endedActorId} confirmed ended (Internal Status from Event: Success=${successStatus === undefined ? 'N/A' : successStatus}). Advancing turn...`
-    );
-
-    const handlerToDestroy = this.#currentHandler;
-
-    this.#currentActor = null;
-    this.#currentHandler = null;
-
-    if (handlerToDestroy) {
-      if (
-        typeof handlerToDestroy.signalNormalApparentTermination === 'function'
-      ) {
-        handlerToDestroy.signalNormalApparentTermination();
-      }
-      if (typeof handlerToDestroy.destroy === 'function') {
-        logStart(
-          this.#logger,
-          `Calling destroy() on handler (${handlerToDestroy.constructor?.name || 'Unknown'}) for completed turn ${endedActorId}`
-        );
-        // destroy() can be async, handle its promise to catch errors
-        Promise.resolve(handlerToDestroy.destroy()).catch((destroyError) =>
-          logError(
-            this.#logger,
-            `Error destroying handler for ${endedActorId} after turn end`,
-            destroyError
-          )
-        );
-      }
-    }
-
-    // Reset recursion counters after turn completes to prevent false warnings
-    // across separate turns separated by time
-    if (this.#eventBus && typeof this.#eventBus.resetRecursionCounters === 'function') {
-      this.#eventBus.resetRecursionCounters();
-    }
   }
 
   /**

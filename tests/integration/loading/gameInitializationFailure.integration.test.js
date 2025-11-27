@@ -8,6 +8,7 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { registerInfrastructure } from '../../../src/dependencyInjection/registrations/infrastructureRegistrations.js';
+import { registerInterpreters } from '../../../src/dependencyInjection/registrations/interpreterRegistrations.js';
 
 describe('Game Initialization Failure - Integration', () => {
   let container;
@@ -29,6 +30,9 @@ describe('Game Initialization Failure - Integration', () => {
     
     // Register infrastructure which includes ISafeEventDispatcher needed by EntityDefinitionLoader
     registerInfrastructure(container);
+
+    // Register interpreters which includes OperationRegistry needed by RuleLoader
+    registerInterpreters(container);
   });
 
   afterEach(() => {

@@ -99,6 +99,12 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
     );
     // Register mock safe event dispatcher
     container.register(tokens.ISafeEventDispatcher, { dispatch: jest.fn() });
+    // Register mock OperationRegistry (required by RuleLoader via loadersRegistrations)
+    container.register(tokens.OperationRegistry, {
+      get: jest.fn().mockReturnValue(undefined),
+      has: jest.fn().mockReturnValue(false),
+      register: jest.fn(),
+    });
     registerLoaders(container);
     container.register(
       tokens.IDataFetcher,
@@ -361,6 +367,12 @@ describe('Integration: EntityInstance componentOverrides are respected during wo
     // Register mock safe event dispatcher
     localContainer.register(tokens.ISafeEventDispatcher, {
       dispatch: jest.fn(),
+    });
+    // Register mock OperationRegistry (required by RuleLoader via loadersRegistrations)
+    localContainer.register(tokens.OperationRegistry, {
+      get: jest.fn().mockReturnValue(undefined),
+      has: jest.fn().mockReturnValue(false),
+      register: jest.fn(),
     });
 
     registerLoaders(localContainer); // Registers ManifestPhase, ContentPhase, etc.

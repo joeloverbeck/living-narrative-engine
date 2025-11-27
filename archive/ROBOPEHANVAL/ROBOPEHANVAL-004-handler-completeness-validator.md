@@ -1,5 +1,7 @@
 # ROBOPEHANVAL-004: Create HandlerCompletenessValidator Service
 
+**Status: COMPLETED** ✅
+
 ## Summary
 
 Create a validation service that can check whether operations in a rule have registered handlers, and compare the `KNOWN_OPERATION_TYPES` whitelist against the registry.
@@ -25,7 +27,7 @@ This service provides the validation logic; integration into loaders/startup is 
 
 | File | Change |
 |------|--------|
-| `src/dependencyInjection/tokens/tokens-validation.js` (or appropriate token file) | Add DI token if using DI |
+| `src/dependencyInjection/tokens/tokens-core.js` | Add `HandlerCompletenessValidator` token |
 
 ## Out of Scope
 
@@ -83,9 +85,11 @@ export class HandlerCompletenessValidator {
 ### Key Implementation Notes
 
 1. **Rule Structure**: Rules have `actions` array containing operation objects with `type` property
-2. **Use `registry.hasHandler()`**: From ROBOPEHANVAL-002
-3. **Use `registry.getRegisteredTypes()`**: Already exists
-4. **Error Message Quality**: Include ALL missing handlers in error, not just first one
+2. **Macro References**: Operations can also be macro references `{ "macro": "namespace:id" }` - these should be **skipped** during validation (they expand to operations later)
+3. **Nested Operations**: `IF` operations have `then_actions` and `else_actions` arrays that must be recursively validated
+4. **Use `registry.hasHandler()`**: From ROBOPEHANVAL-002
+5. **Use `registry.getRegisteredTypes()`**: Already exists
+6. **Error Message Quality**: Include ALL missing handlers in error, not just first one
 
 ### Example Error Message
 
@@ -113,7 +117,8 @@ Consider whether to use DI for this service. If the project pattern is to inject
    - Error message includes each missing operation type
    - Handles rules with no actions array gracefully
    - Handles rules with empty actions array (passes validation)
-   - Handles nested/conditional operations if present in rule structure
+   - Handles nested operations in IF (then_actions/else_actions)
+   - Skips macro references (operations with `macro` property instead of `type`)
 
    **validateHandlerRegistryCompleteness tests:**
    - Returns `isComplete: true` when whitelist matches registry exactly
@@ -149,3 +154,44 @@ Consider whether to use DI for this service. If the project pattern is to inject
 
 - ROBOPEHANVAL-005 (Rule loader integration) uses `validateRuleHandlerCompleteness`
 - ROBOPEHANVAL-006 (Startup validation) uses `validateHandlerRegistryCompleteness`
+
+---
+
+## Outcome
+
+### What Was Actually Changed
+
+1. **Created `src/validation/handlerCompletenessValidator.js`** (~118 lines)
+   - `HandlerCompletenessValidator` class with two public methods
+   - `validateRuleHandlerCompleteness(rule, registry)` - throws `ConfigurationError` for missing handlers
+   - `validateHandlerRegistryCompleteness(knownTypes, registry)` - returns `ValidationReport` object
+   - Private `#collectMissingHandlers()` method for recursive nested operation traversal
+   - Handles macro references (skips them), nested IF operations, duplicate detection, sorted output
+
+2. **Created `tests/unit/validation/handlerCompletenessValidator.test.js`** (~300 lines)
+   - 25 comprehensive unit tests covering all acceptance criteria
+   - Tests for rule validation, registry completeness, edge cases, and constructor
+
+3. **Modified `src/dependencyInjection/tokens/tokens-core.js`**
+   - Added `HandlerCompletenessValidator: 'HandlerCompletenessValidator'` token
+
+### Ticket Corrections Made Before Implementation
+
+| Original Assumption | Correction |
+|---------------------|------------|
+| Token file: `tokens-validation.js` | Corrected to `tokens-core.js` (actual location) |
+| Rule structure: only `type` operations | Added documentation for macro references `{ "macro": "ns:id" }` |
+| Nested operations: vague mention | Explicit documentation of `then_actions`/`else_actions` handling |
+
+### Deviations from Original Plan
+
+- **Implementation is ~118 lines** vs estimated ~80 lines (due to comprehensive JSDoc and explicit recursive traversal)
+- **Tests are ~300 lines** vs estimated ~150 lines (added more edge cases for robustness)
+- **Logger not stored** - after review, the logger was only used for validation, not logging, so it's not stored as a private field (ESLint clean)
+
+### Test Results
+
+- All 25 new unit tests pass
+- All 782 validation suite tests pass
+- All 394 DI registration tests pass
+- ESLint passes with no errors

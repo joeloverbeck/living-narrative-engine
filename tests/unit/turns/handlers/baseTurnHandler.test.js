@@ -474,7 +474,7 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
       expect(localHandler._getInternalState()).toBeInstanceOf(TurnIdleState);
     });
 
-    test('AwaitingActorDecisionState.enterState handles strategy execution failure (BaseTurnHandler recovers)', async () => {
+    test('AwaitingActorDecisionState.enterState handles strategy execution failure (BaseTurnHandler transitions to TurnEndingState)', async () => {
       const strategyError = new Error('Strategy failed to decide');
       mockDefaultStrategyImplementation.decideAction.mockRejectedValue(
         strategyError
@@ -503,14 +503,13 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
           `MinimalTestHandler: State Transition: AwaitingActorDecisionState \u2192 TurnEndingState`
         )
       );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `MinimalTestHandler: State Transition: TurnEndingState \u2192 TurnIdleState`
-        )
-      );
+      // MODIFIED: TurnEndingState is now a terminal state. It no longer auto-transitions
+      // to TurnIdleState. The transition to TurnIdleState happens in destroy().
+      // Handler ends in TurnEndingState awaiting external destruction.
 
       expect(resetSpy).toHaveBeenCalled();
-      expect(handler._getInternalState()).toBeInstanceOf(TurnIdleState);
+      // Handler is now in TurnEndingState (terminal state)
+      expect(handler._getInternalState()).toBeInstanceOf(TurnEndingState);
     });
   });
 
@@ -564,7 +563,16 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
       handler._handleTurnEnd.mockClear();
       resetSpy.mockClear();
 
-      await handler.destroy();
+      // MODIFIED: With the new transition lock mechanism, destroy() waits for
+      // active state transitions to complete. We must resolve the enterState
+      // mock so the transition lock releases and destroy() can proceed.
+      const destroyPromise = handler.destroy();
+
+      // Resolve the enterState mock so the transition lock is released
+      if (enterStatePromiseResolveFn) enterStatePromiseResolveFn();
+
+      // Now destroy() can complete
+      await destroyPromise;
 
       expect(handler._isDestroyed).toBe(true);
       expect(stateDestroySpy).toHaveBeenCalledTimes(1);
@@ -578,7 +586,6 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
       expect(handler._getInternalState()).toBeInstanceOf(TurnIdleState);
       expect(mockLogger.error).not.toHaveBeenCalled();
 
-      if (enterStatePromiseResolveFn) enterStatePromiseResolveFn();
       try {
         await startTurnPromise;
       } catch (e) {

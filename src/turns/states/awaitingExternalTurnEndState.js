@@ -1,36 +1,38 @@
 // src/turns/states/awaitingExternalTurnEndState.js
-// ****** MODIFIED FILE ******
 /**
- * Waits for a `core:turn_ended` that some rule should emit after an
- * action attempt. If nothing arrives within TIMEOUT_MS we:
+ * @file Waits for a `core:turn_ended` that some rule should emit after an
+ * action attempt. Uses Promise.race with AbortController for deterministic
+ * "first wins" behavior between event reception and timeout.
+ *
+ * If nothing arrives within the configured timeout we:
  * 1. Fire `core:display_error` with details about the stalled action.
  * 2. End the turn with `success:false`, keeping the game loop alive.
  *
  * This guarantees the engine never hard-locks because of a missing rule.
+ * @see src/turns/utils/cancellablePrimitives.js - Cancellable timeout/event helpers
  */
 
 import { AbstractTurnState } from './abstractTurnState.js';
-import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 import TimeoutConfiguration from '../config/timeoutConfiguration.js';
 
 import { TURN_ENDED_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { createTimeoutError } from '../../utils/timeoutUtils.js';
 import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
+import {
+  createCancellableTimeout,
+  createEventPromise,
+  TIMEOUT_SENTINEL,
+} from '../utils/cancellablePrimitives.js';
 
 /** @typedef {import('../interfaces/ITurnStateHost.js').ITurnStateHost} BaseTurnHandler */
 
-// ─── Helpers ───────────────────────────────────────────────────────────────────
-// Timeout utilities moved to src/utils/timeoutUtils.js
-
 // ─── AwaitingExternalTurnEndState ──────────────────────────────────────────────
 export class AwaitingExternalTurnEndState extends AbstractTurnState {
-  #timeoutId = null;
-  #unsubscribeFn = undefined;
+  /** @type {AbortController|null} */
+  #abortController = null;
   #awaitingActionId = 'unknown-action';
   #configuredTimeout;
-  #setTimeoutFn = (...args) => setTimeout(...args);
-  #clearTimeoutFn = (...args) => clearTimeout(...args);
 
   /**
    * Creates an instance of AwaitingExternalTurnEndState.
@@ -39,18 +41,8 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
    * @param {object} [options] - Optional configuration overrides.
    * @param {number} [options.timeoutMs] - Timeout duration for waiting.
    * @param {import('../../interfaces/IEnvironmentProvider.js').IEnvironmentProvider} [options.environmentProvider] - Optional environment provider for DI.
-   * @param {Function} [options.setTimeoutFn] - Optional custom setTimeout.
-   * @param {Function} [options.clearTimeoutFn] - Optional custom clearTimeout.
    */
-  constructor(
-    handler,
-    {
-      timeoutMs,
-      environmentProvider,
-      setTimeoutFn = (...args) => setTimeout(...args),
-      clearTimeoutFn = (...args) => clearTimeout(...args),
-    } = {}
-  ) {
+  constructor(handler, { timeoutMs, environmentProvider } = {}) {
     super(handler);
 
     // Use TimeoutConfiguration for timeout resolution
@@ -60,71 +52,151 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
       logger: handler?.getLogger?.(),
     });
     this.#configuredTimeout = timeoutConfig.getTimeoutMs();
-
-    // Validate timer functions are callable
-    if (typeof setTimeoutFn !== 'function') {
-      throw new InvalidArgumentError(
-        `setTimeoutFn must be a function, got: ${typeof setTimeoutFn}`
-      );
-    }
-
-    if (typeof clearTimeoutFn !== 'function') {
-      throw new InvalidArgumentError(
-        `clearTimeoutFn must be a function, got: ${typeof clearTimeoutFn}`
-      );
-    }
-
-    this.#setTimeoutFn = setTimeoutFn;
-    this.#clearTimeoutFn = clearTimeoutFn;
   }
-
-  //─────────────────────────────────────────────────────────────────────────────
 
   //─────────────────────────────────────────────────────────────────────────────
   async enterState(handler, prev) {
     await super.enterState(handler, prev);
+
     const ctx = await this._ensureContext('enter-no-context');
     if (!ctx) return;
 
-    // remember actionId purely for clearer error text
+    const actorId = ctx.getActor().id;
+    const logger = getLogger(ctx, this._handler);
+
+    // Check for pre-captured event (handles race condition where event fired
+    // during action dispatch BEFORE this listener was set up)
+    const pendingEvent = ctx.consumePendingTurnEndEvent?.();
+
+    // Clean up the early listener that was set up in CommandProcessingWorkflow.
+    // Now that we're in AwaitingExternalTurnEndState, we have our own listener
+    // or we have a pending event to process. Either way, the early listener
+    // has served its purpose and must be unsubscribed.
+    const earlyUnsubscribe = ctx.consumeEarlyListenerUnsubscribe?.();
+    if (earlyUnsubscribe && typeof earlyUnsubscribe === 'function') {
+      try {
+        earlyUnsubscribe();
+        logger.debug(
+          `${this.getStateName()}: Unsubscribed early listener for ${actorId}`
+        );
+      } catch (unsubErr) {
+        logger.warn(
+          `${this.getStateName()}: Error unsubscribing early listener: ${unsubErr.message}`
+        );
+      }
+    }
+
+    if (pendingEvent) {
+      logger.debug(
+        `${this.getStateName()}: Found pre-captured turn_ended event for ${actorId}, handling immediately`
+      );
+      // Mark context as awaiting then immediately handle
+      ctx.setAwaitingExternalEvent(true, actorId);
+      await this.#handleTurnEndedEvent(ctx, pendingEvent);
+      this.#cleanup(ctx);
+      return;
+    }
+
+    // Create new abort controller for this state entry
+    this.#abortController = new AbortController();
+    const { signal } = this.#abortController;
+
+    // Remember actionId purely for clearer error text
     this.#awaitingActionId =
       ctx.getChosenActionId?.() ??
       ctx.getChosenAction?.()?.actionDefinitionId ??
       'unknown-action';
 
-    // --- REFACTORED: Use SafeEventDispatcher directly ---
-    // The context now provides the dispatcher directly, bypassing the problematic manager.
-    // The returned unsubscribe function is stored and used identically to before.
+    // Mark context as awaiting external event
+    ctx.setAwaitingExternalEvent(true, actorId);
+
     const dispatcher = getSafeEventDispatcher(ctx, this._handler);
-    this.#unsubscribeFn = dispatcher?.subscribe(TURN_ENDED_ID, (event) =>
-      this.handleTurnEndedEvent(handler, event)
+    if (!dispatcher) {
+      getLogger(ctx, this._handler).error(
+        `${this.getStateName()}: No dispatcher available, cannot await turn_ended event`
+      );
+      return;
+    }
+
+    // Create racing promises
+    const eventPromise = createEventPromise(
+      dispatcher,
+      TURN_ENDED_ID,
+      (event) => event.payload?.entityId === actorId,
+      signal
     );
 
-    // mark context
-    ctx.setAwaitingExternalEvent(true, ctx.getActor().id);
+    const timeoutPromise = createCancellableTimeout(
+      this.#configuredTimeout,
+      signal
+    );
 
-    // set guard-rail
-    this.#timeoutId = this.#setTimeoutFn(async () => {
-      await this.#onTimeout();
-    }, this.#configuredTimeout);
+    try {
+      // Race: first one to resolve wins, loser is aborted
+      const result = await Promise.race([eventPromise, timeoutPromise]);
+
+      if (result === TIMEOUT_SENTINEL) {
+        // Timeout won the race
+        await this.#handleTimeout(ctx);
+      } else {
+        // Event won the race
+        await this.#handleTurnEndedEvent(ctx, result);
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        // Re-throw non-abort errors
+        throw err;
+      }
+      // AbortError means state was exited/destroyed externally, ignore
+    } finally {
+      this.#cleanup(ctx);
+    }
   }
 
   //─────────────────────────────────────────────────────────────────────────────
-  async handleTurnEndedEvent(handler, event) {
-    const ctx = this._getTurnContext();
-    if (!ctx) return;
-
-    // --- FIX: Correctly access the event payload ---
-    // The listener receives the full event object: { type, payload }.
-    // The data we need is inside the 'payload' property.
+  /**
+   * Handles a turn_ended event that won the race.
+   *
+   * @param {object} ctx - Turn context
+   * @param {object} event - The turn_ended event
+   * @private
+   */
+  async #handleTurnEndedEvent(ctx, event) {
     const eventPayload = event.payload;
-
-    if (eventPayload.entityId !== ctx.getActor().id) return; // not for us
-
-    this.#clearGuards(ctx);
-
-    // The error, if any, is also on the event's payload property.
     await ctx.endTurn(eventPayload.error ?? null);
+  }
+
+  //─────────────────────────────────────────────────────────────────────────────
+  /**
+   * Handles a timeout that won the race.
+   *
+   * @param {object} ctx - Turn context
+   * @private
+   */
+  async #handleTimeout(ctx) {
+    const { message, error } = createTimeoutError(
+      ctx.getActor().id,
+      this.#awaitingActionId,
+      this.#configuredTimeout
+    );
+
+    // Dispatch error to UI/console
+    const dispatcher = getSafeEventDispatcher(ctx, this._handler);
+    if (dispatcher) {
+      safeDispatchError(
+        dispatcher,
+        message,
+        {
+          actionId: this.#awaitingActionId,
+          actorId: ctx.getActor().id,
+          code: error.code,
+        },
+        getLogger(ctx, this._handler)
+      );
+    }
+
+    // End the turn with the timeout error
+    await ctx.endTurn(error);
   }
 
   //─────────────────────────────────────────────────────────────────────────────
@@ -134,13 +206,13 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
 
   //─────────────────────────────────────────────────────────────────────────────
   async exitState(handler, next) {
-    this.#clearGuards(this._getTurnContext());
+    this.#cleanup(this._getTurnContext());
     this.#resetInternalState();
     await super.exitState(handler, next);
   }
 
   async destroy(handler) {
-    this.#clearGuards(this._getTurnContext());
+    this.#cleanup(this._getTurnContext());
     this.#resetInternalState();
     await super.destroy(handler);
   }
@@ -148,16 +220,21 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
   //─────────────────────────────────────────────────────────────────────────────
   // Private utilities
   //─────────────────────────────────────────────────────────────────────────────
-  #clearGuards(ctx) {
-    if (this.#timeoutId) {
-      this.#clearTimeoutFn(this.#timeoutId);
-      this.#timeoutId = null;
+  /**
+   * Aborts pending promises and clears the awaiting flag.
+   *
+   * @param {object|null} ctx - Turn context
+   * @private
+   */
+  #cleanup(ctx) {
+    // Abort any pending promises (timeout or event listener)
+    if (this.#abortController) {
+      this.#abortController.abort();
+      this.#abortController = null;
     }
-    if (this.#unsubscribeFn) {
-      this.#unsubscribeFn();
-      this.#unsubscribeFn = undefined;
-    }
-    if (ctx?.isAwaitingExternalEvent()) {
+
+    // Clear the awaiting flag on context
+    if (ctx?.isAwaitingExternalEvent?.()) {
       try {
         ctx.setAwaitingExternalEvent(false, ctx.getActor().id);
       } catch (err) {
@@ -176,8 +253,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
    * @returns {void}
    */
   #resetInternalState() {
-    this.#timeoutId = null;
-    this.#unsubscribeFn = undefined;
+    this.#abortController = null;
     this.#awaitingActionId = 'unknown-action';
   }
 
@@ -185,42 +261,12 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
    * Returns key internal values for unit tests.
    *
    * @public
-   * @returns {{timeoutId: any, unsubscribeFn: Function|undefined, awaitingActionId: string}}
+   * @returns {{abortController: AbortController|null, awaitingActionId: string}}
    */
   getInternalStateForTest() {
     return {
-      timeoutId: this.#timeoutId,
-      unsubscribeFn: this.#unsubscribeFn,
+      abortController: this.#abortController,
       awaitingActionId: this.#awaitingActionId,
     };
-  }
-
-  async #onTimeout() {
-    const ctx = this._getTurnContext();
-    if (!ctx || !ctx.isAwaitingExternalEvent()) return; // already handled
-
-    const { message, error } = createTimeoutError(
-      ctx.getActor().id,
-      this.#awaitingActionId,
-      this.#configuredTimeout
-    );
-
-    // 1) tell the UI / console
-    const dispatcher = getSafeEventDispatcher(ctx, this._handler);
-    if (dispatcher) {
-      safeDispatchError(
-        dispatcher,
-        message,
-        {
-          actionId: this.#awaitingActionId,
-          actorId: ctx.getActor().id,
-          code: error.code,
-        },
-        getLogger(ctx, this._handler)
-      );
-    }
-
-    // 2) close the turn
-    await ctx.endTurn(error);
   }
 }

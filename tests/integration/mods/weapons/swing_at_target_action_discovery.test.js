@@ -28,7 +28,7 @@ describe('swing_at_target action definition', () => {
     });
 
     it('should have template with chance placeholder', () => {
-      expect(actionJson.template).toBe('swing {weapon} at {target} ({chance}%)');
+      expect(actionJson.template).toBe('swing {weapon} at {target} ({chance}% chance)');
     });
 
     it('should include {chance} in template for probability display', () => {

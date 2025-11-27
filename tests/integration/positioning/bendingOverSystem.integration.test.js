@@ -19,6 +19,7 @@ import handleStraightenUpRule from '../../../data/mods/positioning/rules/straigh
 import eventIsBendOver from '../../../data/mods/positioning/conditions/event-is-action-bend-over.condition.json';
 import eventIsStraightenUp from '../../../data/mods/positioning/conditions/event-is-action-straighten-up.condition.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
+import logFailureMacro from '../../../data/mods/core/macros/logFailureAndEndTurn.macro.json';
 import bendOverAction from '../../../data/mods/positioning/actions/bend_over.action.json';
 import straightenUpAction from '../../../data/mods/positioning/actions/straighten_up.action.json';
 
@@ -147,6 +148,7 @@ describe('Bending Over System Integration', () => {
       },
       macros: {
         'core:logSuccessAndEndTurn': logSuccessMacro,
+        'core:logFailureAndEndTurn': logFailureMacro,
       },
     });
 

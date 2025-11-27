@@ -257,6 +257,9 @@ describe('Straddling Waist System - Performance Tests', () => {
             'positioning:event-is-action-straddle-waist-facing': straddleFacingCondition,
             'positioning:event-is-action-straddle-waist-facing-away': straddleFacingAwayCondition,
           },
+          macros: {
+            'core:logSuccessAndEndTurn': logSuccessMacro,
+          },
         });
 
         createLocation(freshEnv.entityManager, 'test:room', 'Bedroom');

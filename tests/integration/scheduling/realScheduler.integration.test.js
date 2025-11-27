@@ -40,7 +40,10 @@ describe('RealScheduler integration with real modules', () => {
     eventBus = new EventBus({ logger });
   });
 
-  it('schedules turn advancement callbacks asynchronously through TurnEventSubscription', async () => {
+  it('invokes turn advancement callbacks synchronously through TurnEventSubscription', async () => {
+    // Phase 10 fix: TurnEventSubscription now invokes callbacks synchronously
+    // (immediately) rather than deferring via setTimeout. This prevents race
+    // conditions where deferred callbacks could fire after state machine transitions.
     const subscription = new TurnEventSubscription(eventBus, logger, scheduler);
     const callOrder = [];
 
@@ -58,13 +61,16 @@ describe('RealScheduler integration with real modules', () => {
     });
     callOrder.push('after-dispatch');
 
-    expect(callOrder).toEqual(['before-dispatch', 'after-dispatch']);
+    // Handler is invoked synchronously during dispatch, so it appears
+    // between 'before-dispatch' and 'after-dispatch'
+    expect(callOrder).toEqual(['before-dispatch', 'handler', 'after-dispatch']);
 
     const event = await handlerPromise;
+    // After awaiting, the order should still be the same
     expect(callOrder).toEqual([
       'before-dispatch',
-      'after-dispatch',
       'handler',
+      'after-dispatch',
     ]);
     expect(event.type).toBe(TURN_ENDED_ID);
     expect(event.payload).toEqual({

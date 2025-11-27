@@ -1,0 +1,23 @@
+{
+  "$schema": "schema://living-narrative-engine/macro.schema.json",
+  "id": "core:logFailureOutcomeAndEndTurn",
+  "description": "Logs a failed action outcome and ends the turn with success=false. Use for FAILURE/FUMBLE outcomes.",
+  "actions": [
+    {
+      "type": "DISPATCH_EVENT",
+      "parameters": {
+        "eventType": "core:display_failed_action_result",
+        "payload": {
+          "message": "{context.logMessage}"
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": false
+      }
+    }
+  ]
+}

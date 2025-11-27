@@ -48,14 +48,15 @@
       "wielded_cutting_weapons.scope"
     ],
     "conditions": [
-      "event-is-action-wield-threateningly.condition.json",
-      "event-is-action-swing-at-target.condition.json"
+      "event-is-action-swing-at-target.condition.json",
+      "event-is-action-wield-threateningly.condition.json"
     ],
     "actions": [
-      "wield_threateningly.action.json",
-      "swing_at_target.action.json"
+      "swing_at_target.action.json",
+      "wield_threateningly.action.json"
     ],
     "rules": [
+      "handle_swing_at_target.rule.json",
       "handle_wield_threateningly.rule.json"
     ],
     "entities": {
