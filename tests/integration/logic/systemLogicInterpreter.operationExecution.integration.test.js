@@ -124,6 +124,9 @@ describe('SystemLogicInterpreter - Operation Execution Integration Test', () => 
     operationRegistry = new OperationRegistry({
       logger: mockLoggerForOperationInterpreter,
     });
+    // Register a mock LOG handler to satisfy fail-fast enforcement
+    operationRegistry.register('LOG', jest.fn().mockReturnValue(undefined));
+
     mockOperationInterpreterInstance = new OperationInterpreterStub({
       logger: mockLoggerForOperationInterpreter,
       operationRegistry: operationRegistry,

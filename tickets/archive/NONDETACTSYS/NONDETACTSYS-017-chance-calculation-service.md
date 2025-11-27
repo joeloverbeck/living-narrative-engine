@@ -21,7 +21,20 @@ Create the `ChanceCalculationService` that orchestrates all combat services for 
 | `src/combat/index.js` | Export ChanceCalculationService |
 | `src/dependencyInjection/tokens/tokens-core.js` | Add ChanceCalculationService token |
 | `src/dependencyInjection/registrations/combatRegistrations.js` | Register ChanceCalculationService |
-| `src/actions/pipeline/stages/ActionFormattingStage.js` | Use ChanceCalculationService (if not already) |
+| `src/actions/pipeline/stages/ActionFormattingStage.js` | Refactor: Replace inline `#calculateChance()` with ChanceCalculationService |
+| `src/logic/operationHandlers/resolveOutcomeHandler.js` | Refactor: Replace inline orchestration with ChanceCalculationService |
+| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Update ResolveOutcomeHandler DI to use ChanceCalculationService |
+| `tests/unit/actions/pipeline/stages/ActionFormattingStage.test.js` | Update mocks for new service dependency |
+| `tests/unit/logic/operationHandlers/resolveOutcomeHandler.test.js` | Update mocks for new service dependency |
+
+## Codebase Assessment (Updated)
+
+**Note**: Prior to this implementation, both consumers already had inline orchestration logic:
+
+- **ActionFormattingStage** (lines 316-351): Had `#calculateChance()` method calling `SkillResolverService` + `ProbabilityCalculatorService` directly
+- **ResolveOutcomeHandler** (lines 187-224): Orchestrated `SkillResolverService` + `ProbabilityCalculatorService` + `OutcomeDeterminerService` inline
+
+Neither used `ModifierCollectorService`. This ticket consolidates that logic into `ChanceCalculationService` and refactors both consumers to use the new unified API.
 
 ## Implementation Details
 

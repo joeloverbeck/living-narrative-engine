@@ -18,18 +18,21 @@ describe('ActionFormattingStage - Template Immutability', () => {
   let runMock;
   let coordinatorSpy;
 
-  const createDependencies = () => ({
+  const createDependencies = (chanceOverrides = {}) => ({
     commandFormatter: { name: 'formatter' },
     entityManager: { name: 'entities' },
     safeEventDispatcher: { dispatch: jest.fn() },
     getEntityDisplayNameFn: jest.fn(),
     errorContextBuilder: { buildErrorContext: jest.fn() },
     logger: { warn: jest.fn(), debug: jest.fn(), info: jest.fn(), error: jest.fn() },
-    skillResolverService: {
-      getSkillValue: jest.fn().mockReturnValue({ baseValue: 50 }),
-    },
-    probabilityCalculatorService: {
-      calculate: jest.fn().mockReturnValue({ finalChance: 75 }),
+    chanceCalculationService: {
+      calculateForDisplay: jest.fn().mockReturnValue({
+        chance: 75,
+        displayText: '75%',
+        breakdown: { formula: 'ratio', actorSkill: 50, targetSkill: 0 },
+      }),
+      resolveOutcome: jest.fn(),
+      ...chanceOverrides,
     },
   });
 
@@ -135,9 +138,13 @@ describe('ActionFormattingStage - Template Immutability', () => {
       };
 
       // First actor: high skill (75% chance)
-      const deps1 = createDependencies();
-      deps1.skillResolverService.getSkillValue.mockReturnValue({ baseValue: 80 });
-      deps1.probabilityCalculatorService.calculate.mockReturnValue({ finalChance: 75 });
+      const deps1 = createDependencies({
+        calculateForDisplay: jest.fn().mockReturnValue({
+          chance: 75,
+          displayText: '75%',
+          breakdown: { formula: 'ratio', actorSkill: 80, targetSkill: 40 },
+        }),
+      });
       const stage1 = new ActionFormattingStage(deps1);
 
       const actionWithTarget1 = {
@@ -152,9 +159,13 @@ describe('ActionFormattingStage - Template Immutability', () => {
       };
 
       // Second actor: low skill (25% chance)
-      const deps2 = createDependencies();
-      deps2.skillResolverService.getSkillValue.mockReturnValue({ baseValue: 20 });
-      deps2.probabilityCalculatorService.calculate.mockReturnValue({ finalChance: 25 });
+      const deps2 = createDependencies({
+        calculateForDisplay: jest.fn().mockReturnValue({
+          chance: 25,
+          displayText: '25%',
+          breakdown: { formula: 'ratio', actorSkill: 20, targetSkill: 40 },
+        }),
+      });
       const stage2 = new ActionFormattingStage(deps2);
 
       const actionWithTarget2 = {

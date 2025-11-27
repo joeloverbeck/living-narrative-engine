@@ -27,7 +27,7 @@ describe('Bug Fix: REGENERATE_DESCRIPTION Handler Not Found', () => {
     });
   });
 
-  it('should reproduce the original "HANDLER NOT FOUND" error when handler is not registered', async () => {
+  it('should throw MissingHandlerError when handler is not registered', () => {
     // Arrange - create the exact operation from handle_remove_clothing.rule.json
     const regenerateDescriptionOperation = {
       type: 'REGENERATE_DESCRIPTION',
@@ -52,12 +52,11 @@ describe('Bug Fix: REGENERATE_DESCRIPTION Handler Not Found', () => {
       },
     };
 
-    // Act - execute the operation without the handler registered
-    await interpreter.execute(regenerateDescriptionOperation, executionContext);
-
-    // Assert - should log the exact error from error_logs.txt (with logger prefix)
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      'OperationInterpreter: ---> HANDLER NOT FOUND for operation type: "REGENERATE_DESCRIPTION".'
+    // Act & Assert - should throw MissingHandlerError when handler is not registered
+    expect(() =>
+      interpreter.execute(regenerateDescriptionOperation, executionContext)
+    ).toThrow(
+      "Cannot execute operation 'REGENERATE_DESCRIPTION': handler not found"
     );
   });
 

@@ -282,6 +282,12 @@
           "subjectType": "plan"
         }
       ]
+    },
+    "skills:melee_skill": {
+        "value": 86
+    },
+    "skills:defense_skill": {
+        "value": 73
     }
   }
 }

@@ -21,6 +21,7 @@ import GetTimestampHandler from '../../../../src/logic/operationHandlers/getTime
 import EndTurnHandler from '../../../../src/logic/operationHandlers/endTurnHandler.js';
 import GetNameHandler from '../../../../src/logic/operationHandlers/getNameHandler.js';
 import IfCoLocatedHandler from '../../../../src/logic/operationHandlers/ifCoLocatedHandler.js';
+import SetVariableHandler from '../../../../src/logic/operationHandlers/setVariableHandler.js';
 import {
   FOLLOWING_COMPONENT_ID,
   LEADING_COMPONENT_ID,
@@ -96,6 +97,12 @@ function createHandlers(
         logger,
         safeEventDispatcher: safeEventDispatcher,
       }),
+    // Mock handler for REGENERATE_DESCRIPTION - satisfies fail-fast enforcement
+    REGENERATE_DESCRIPTION: {
+      execute: jest.fn().mockResolvedValue(undefined),
+    },
+    // Real handler for SET_VARIABLE - rule depends on variable values
+    SET_VARIABLE: new SetVariableHandler({ logger }),
   };
 }
 

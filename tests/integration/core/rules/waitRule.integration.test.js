@@ -9,6 +9,7 @@ import GetTimestampHandler from '../../../../src/logic/operationHandlers/getTime
 import DispatchEventHandler from '../../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import DispatchPerceptibleEventHandler from '../../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import EndTurnHandler from '../../../../src/logic/operationHandlers/endTurnHandler.js';
+import QueryComponentHandler from '../../../../src/logic/operationHandlers/queryComponentHandler.js';
 import { ATTEMPT_ACTION_ID } from '../../../../src/constants/eventIds.js';
 import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTestEnv.js';
 
@@ -26,6 +27,11 @@ function createHandlers(entityManager, eventBus, logger) {
   };
 
   return {
+    QUERY_COMPONENT: new QueryComponentHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
       dispatcher: eventBus,

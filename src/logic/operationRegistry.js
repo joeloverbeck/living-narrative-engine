@@ -103,6 +103,27 @@ class OperationRegistry extends BaseService {
   // ---------------------------------------------------------------------------
 
   /**
+   * Check if a handler exists for the given operation type.
+   * Unlike `getHandler()`, this does NOT log when a handler is missing.
+   *
+   * @param {string} operationType - The operation type to check.
+   * @returns {boolean} `true` if a handler is registered, `false` otherwise.
+   */
+  hasHandler(operationType) {
+    const trimmed = getNormalizedOperationType(
+      operationType,
+      this.#logger,
+      'OperationRegistry.hasHandler'
+    );
+    if (!trimmed) {
+      return false;
+    }
+    return this.#registry.has(trimmed);
+  }
+
+  // ---------------------------------------------------------------------------
+
+  /**
    * Get all registered operation types as a sorted array.
    *
    * @returns {string[]} Array of registered operation type identifiers, sorted

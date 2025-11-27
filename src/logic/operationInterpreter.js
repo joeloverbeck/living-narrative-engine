@@ -7,6 +7,7 @@ import { resolvePlaceholders } from '../utils/contextUtils.js';
 import { BaseService } from '../utils/serviceBase.js';
 import { getNormalizedOperationType } from '../utils/operationTypeUtils.js';
 import jsonLogic from 'json-logic-js';
+import { MissingHandlerError } from '../errors/missingHandlerError.js';
 
 /** @typedef {import('../../data/schemas/operation.schema.json').Operation} Operation */
 /** @typedef {import('./defs.js').ExecutionContext}                               ExecutionContext */
@@ -418,10 +419,7 @@ class OperationInterpreter extends BaseService {
     const handler = this.#registry.getHandler(opType);
 
     if (!handler) {
-      this.#logger.error(
-        `---> HANDLER NOT FOUND for operation type: "${opType}".`
-      );
-      return;
+      throw new MissingHandlerError(opType, null);
     }
 
     // -----------------------------------------------------------------------

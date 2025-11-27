@@ -200,6 +200,12 @@
             "minAge": 25,
             "maxAge": 27
         },
-        "music:is_musician": {}
+        "music:is_musician": {},
+        "skills:melee_skill": {
+            "value": 73
+        },
+        "skills:defense_skill": {
+            "value": 78
+        }
     }
 }

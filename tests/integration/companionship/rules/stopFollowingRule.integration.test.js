@@ -117,6 +117,10 @@ const createHandlers = (
       safeEventDispatcher: safeEventDispatcher,
       logger,
     }),
+    // Mock handler for REGENERATE_DESCRIPTION - satisfies fail-fast enforcement
+    REGENERATE_DESCRIPTION: {
+      execute: jest.fn().mockResolvedValue(undefined),
+    },
   };
 };
 

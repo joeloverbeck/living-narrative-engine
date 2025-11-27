@@ -379,8 +379,10 @@ export const coreTokens = freeze({
   // GOAP Numeric Constraint Evaluator (MODCOMPLASUP-001)
   INumericConstraintEvaluator: 'INumericConstraintEvaluator',
   // Combat Services (NONDETACTSYS)
-  SkillResolverService: 'SkillResolverService',
-  ProbabilityCalculatorService: 'ProbabilityCalculatorService',
+  ChanceCalculationService: 'ChanceCalculationService',
+  ModifierCollectorService: 'ModifierCollectorService',
   OutcomeDeterminerService: 'OutcomeDeterminerService',
+  ProbabilityCalculatorService: 'ProbabilityCalculatorService',
   ResolveOutcomeHandler: 'ResolveOutcomeHandler',
+  SkillResolverService: 'SkillResolverService',
 });

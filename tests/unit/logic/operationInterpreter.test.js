@@ -18,6 +18,7 @@ import OperationInterpreter, {
 } from '../../../src/logic/operationInterpreter.js';
 import * as contextUtils from '../../../src/utils/contextUtils.js';
 import { LOGGER_INFO_METHOD_ERROR } from '../../common/constants.js';
+import { MissingHandlerError } from '../../../src/errors/missingHandlerError.js';
 
 /**
  * -----------------------------------------------------------------------
@@ -221,14 +222,11 @@ describe('OperationInterpreter', () => {
   /* ────────────────────────────────────────────────────────────────────────
      Registry lookup & trimming
      ─────────────────────────────────────────────────────────────────────── */
-  test('execute should call registry.getHandler with trimmed operation type', () => {
+  test('execute should call registry.getHandler with trimmed operation type and throw MissingHandlerError', () => {
     mockRegistry.getHandler.mockReturnValue(undefined);
-    interpreter.execute(unknownOperation, mockExecutionContext);
+    expect(() => interpreter.execute(unknownOperation, mockExecutionContext)).toThrow(MissingHandlerError);
     expect(mockRegistry.getHandler).toHaveBeenCalledTimes(1);
     expect(mockRegistry.getHandler).toHaveBeenCalledWith('UNKNOWN_OP');
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      'OperationInterpreter: ---> HANDLER NOT FOUND for operation type: "UNKNOWN_OP".'
-    );
   });
 
   /* ────────────────────────────────────────────────────────────────────────
@@ -584,26 +582,61 @@ describe('OperationInterpreter', () => {
   });
 
   /* ────────────────────────────────────────────────────────────────────────
-     Unknown handler - Enhanced Error Messages
+     Unknown handler - Fail-Fast Behavior (MissingHandlerError)
      ─────────────────────────────────────────────────────────────────────── */
-  test('execute should log error when handler not found', () => {
+  test('execute should throw MissingHandlerError when handler not found', () => {
     mockRegistry.getHandler.mockReturnValue(undefined);
-    mockRegistry.getRegisteredTypes.mockReturnValue([
-      'ADD_COMPONENT',
-      'REMOVE_COMPONENT',
-    ]);
 
-    interpreter.execute(unknownOperation, mockExecutionContext);
-
+    expect(() => interpreter.execute(unknownOperation, mockExecutionContext)).toThrow(MissingHandlerError);
     expect(mockRegistry.getHandler).toHaveBeenCalledWith('UNKNOWN_OP');
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      'OperationInterpreter: ---> HANDLER NOT FOUND for operation type: "UNKNOWN_OP".'
-    );
   });
 
-  // Note: Enhanced error diagnostics tests removed because OperationInterpreter
-  // now logs errors instead of throwing OperationHandlerNotFoundError.
-  // The new behavior simply logs: "HANDLER NOT FOUND for operation type: X"
+  // Note: Fail-fast behavior implemented in ROBOPEHANVAL-003.
+  // MissingHandlerError is thrown instead of logging + silent return.
+
+  test('MissingHandlerError contains correct operation type', () => {
+    mockRegistry.getHandler.mockReturnValue(undefined);
+
+    let thrownError;
+    expect(() => {
+      try {
+        interpreter.execute(unknownOperation, mockExecutionContext);
+      } catch (err) {
+        thrownError = err;
+        throw err;
+      }
+    }).toThrow(MissingHandlerError);
+
+    expect(thrownError.operationType).toBe('UNKNOWN_OP');
+  });
+
+  test('MissingHandlerError has null ruleId (no context tracking in interpreter)', () => {
+    mockRegistry.getHandler.mockReturnValue(undefined);
+
+    let thrownError;
+    expect(() => {
+      try {
+        interpreter.execute(unknownOperation, mockExecutionContext);
+      } catch (err) {
+        thrownError = err;
+        throw err;
+      }
+    }).toThrow(MissingHandlerError);
+
+    expect(thrownError.ruleId).toBeNull();
+  });
+
+  test('MissingHandlerError propagates up the call stack (not swallowed)', () => {
+    mockRegistry.getHandler.mockReturnValue(undefined);
+
+    // Verify error propagates and isn't caught internally
+    expect(() => interpreter.execute(unknownOperation, mockExecutionContext)).toThrow(MissingHandlerError);
+
+    // Verify no logger.error was called (error is thrown, not logged)
+    expect(mockLogger.error).not.toHaveBeenCalledWith(
+      expect.stringContaining('HANDLER NOT FOUND')
+    );
+  });
 
   /* Invalid operation objects */
   test('execute should log error if operation object is invalid (null)', () => {
@@ -656,14 +689,11 @@ describe('OperationInterpreter', () => {
   /* ────────────────────────────────────────────────────────────────────────
      IF behaves like any other op (no special logic in interpreter)
      ─────────────────────────────────────────────────────────────────────── */
-  test('execute should treat IF like any other type (lookup in registry)', () => {
+  test('execute should treat IF like any other type (lookup in registry) and throw MissingHandlerError', () => {
     mockRegistry.getHandler.mockReturnValue(undefined);
 
-    interpreter.execute(ifOperation, mockExecutionContext);
+    expect(() => interpreter.execute(ifOperation, mockExecutionContext)).toThrow(MissingHandlerError);
     expect(mockRegistry.getHandler).toHaveBeenCalledWith('IF');
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      'OperationInterpreter: ---> HANDLER NOT FOUND for operation type: "IF".'
-    );
   });
 
   /* ────────────────────────────────────────────────────────────────────────

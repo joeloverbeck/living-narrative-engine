@@ -1,5 +1,7 @@
 # ROBOPEHANVAL-001: Create MissingHandlerError Class
 
+**Status**: ✅ COMPLETED
+
 ## Summary
 
 Create a dedicated error class for missing operation handler scenarios, following the project's established error class patterns.
@@ -56,7 +58,7 @@ export class MissingHandlerError extends BaseError {
   }
 
   getSeverity() {
-    return 'critical';
+    return 'error';
   }
 
   isRecoverable() {
@@ -67,11 +69,12 @@ export class MissingHandlerError extends BaseError {
 
 ### Pattern Reference
 
-Follow the pattern from `src/errors/configurationError.js`:
+Follow the pattern from `src/errors/unknownAstNodeError.js` (domain-specific runtime error):
 - Extend `BaseError`
-- Include `getSeverity()` returning 'critical'
+- Include `getSeverity()` returning `'error'` (not 'critical' - this is a runtime error, not a configuration error)
 - Include `isRecoverable()` returning `false`
 - Store relevant context as instance properties
+- Export as named export for consistency with index.js barrel pattern
 
 ## Acceptance Criteria
 
@@ -84,7 +87,7 @@ Follow the pattern from `src/errors/configurationError.js`:
    - Error message includes both operation type and rule ID when provided
    - `operationType` property is accessible
    - `ruleId` property is accessible (and null when not provided)
-   - `getSeverity()` returns 'critical'
+   - `getSeverity()` returns 'error'
    - `isRecoverable()` returns false
    - Error is instance of `BaseError`
    - Error is instance of `Error`
@@ -114,3 +117,45 @@ Follow the pattern from `src/errors/configurationError.js`:
 
 - ROBOPEHANVAL-003 (OperationInterpreter fail-fast) depends on this
 - ROBOPEHANVAL-004 (HandlerCompletenessValidator) depends on this
+
+---
+
+## Outcome
+
+### Changes Made vs Originally Planned
+
+**Originally planned:**
+- Create `MissingHandlerError` class with `getSeverity()` returning `'critical'`
+- Follow `ConfigurationError` pattern
+
+**Actually implemented:**
+- Created `MissingHandlerError` class with `getSeverity()` returning `'error'` (not 'critical')
+- Followed `UnknownAstNodeError` pattern instead (domain-specific runtime error vs configuration error)
+
+**Rationale for deviation:**
+- `'critical'` severity is appropriate for configuration errors that affect system startup
+- Missing handler is a runtime error when a rule references an unregistered operation - `'error'` severity is more appropriate
+- Aligns with other domain-specific runtime errors like `UnknownAstNodeError`
+
+### Files Created
+| File | Lines | Purpose |
+|------|-------|---------|
+| `src/errors/missingHandlerError.js` | 45 | Error class implementation |
+| `tests/unit/errors/missingHandlerError.test.js` | 161 | Comprehensive unit tests (20 test cases) |
+
+### Files Modified
+| File | Change |
+|------|--------|
+| `src/errors/index.js` | Added export for `MissingHandlerError` |
+
+### Test Results
+- All 20 new tests pass
+- All 412 existing error tests pass (23 test suites)
+- No regressions introduced
+
+### Acceptance Criteria Met
+- ✅ Error class follows project patterns (`UnknownAstNodeError`)
+- ✅ No circular dependencies
+- ✅ Error importable from `src/errors/index.js`
+- ✅ instanceof checks work correctly
+- ✅ All unit tests pass

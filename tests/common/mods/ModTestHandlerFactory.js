@@ -36,6 +36,8 @@ import UnlockMouthEngagementHandler from '../../../src/logic/operationHandlers/u
 import BreakClosenessWithTargetHandler from '../../../src/logic/operationHandlers/breakClosenessWithTargetHandler.js';
 import MergeClosenessCircleHandler from '../../../src/logic/operationHandlers/mergeClosenessCircleHandler.js';
 import EstablishLyingClosenessHandler from '../../../src/logic/operationHandlers/establishLyingClosenessHandler.js';
+import EstablishSittingClosenessHandler from '../../../src/logic/operationHandlers/establishSittingClosenessHandler.js';
+import RemoveLyingClosenessHandler from '../../../src/logic/operationHandlers/removeLyingClosenessHandler.js';
 import RegenerateDescriptionHandler from '../../../src/logic/operationHandlers/regenerateDescriptionHandler.js';
 import IfHandler from '../../../src/logic/operationHandlers/ifHandler.js';
 import ForEachHandler from '../../../src/logic/operationHandlers/forEachHandler.js';
@@ -163,6 +165,18 @@ export class ModTestHandlerFactory {
         jsonLogic: { evaluate: jest.fn((rule, data) => data) },
         logger,
       }),
+      // Mock handler for BURN_ENERGY - satisfies fail-fast enforcement
+      BURN_ENERGY: {
+        execute: jest.fn().mockResolvedValue(undefined),
+      },
+      // Mock handler for REGENERATE_DESCRIPTION - satisfies fail-fast enforcement
+      REGENERATE_DESCRIPTION: {
+        execute: jest.fn().mockResolvedValue(undefined),
+      },
+      // Mock handler for UNEQUIP_CLOTHING - satisfies fail-fast enforcement
+      UNEQUIP_CLOTHING: {
+        execute: jest.fn().mockResolvedValue(undefined),
+      },
     };
 
     // Add QUERY_LOOKUP handler if dataRegistry is provided
@@ -268,6 +282,10 @@ export class ModTestHandlerFactory {
         logger,
         safeEventDispatcher: safeDispatcher,
       }),
+      // Mock handler for REGENERATE_DESCRIPTION - satisfies fail-fast enforcement
+      REGENERATE_DESCRIPTION: {
+        execute: jest.fn().mockResolvedValue(undefined),
+      },
     };
   }
 
@@ -541,6 +559,14 @@ export class ModTestHandlerFactory {
         logger,
         safeEventDispatcher: safeDispatcher,
       }),
+      // Mock handler for LOCK_GRABBING - satisfies fail-fast enforcement
+      LOCK_GRABBING: {
+        execute: jest.fn().mockResolvedValue(undefined),
+      },
+      // Mock handler for UNLOCK_GRABBING - satisfies fail-fast enforcement
+      UNLOCK_GRABBING: {
+        execute: jest.fn().mockResolvedValue(undefined),
+      },
     };
   }
 
@@ -822,6 +848,18 @@ export class ModTestHandlerFactory {
         safeEventDispatcher: safeDispatcher,
         closenessCircleService,
       }),
+      ESTABLISH_SITTING_CLOSENESS: new EstablishSittingClosenessHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+        closenessCircleService,
+      }),
+      REMOVE_LYING_CLOSENESS: new RemoveLyingClosenessHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+        closenessCircleService,
+      }),
       LOCK_MOVEMENT: new LockMovementHandler({
         entityManager,
         logger,
@@ -864,6 +902,14 @@ export class ModTestHandlerFactory {
         logger,
         safeEventDispatcher: safeDispatcher,
       }),
+      // Mock handler for LOCK_GRABBING - satisfies fail-fast enforcement
+      LOCK_GRABBING: {
+        execute: jest.fn().mockResolvedValue(undefined),
+      },
+      // Mock handler for UNLOCK_GRABBING - satisfies fail-fast enforcement
+      UNLOCK_GRABBING: {
+        execute: jest.fn().mockResolvedValue(undefined),
+      },
     };
   }
 }

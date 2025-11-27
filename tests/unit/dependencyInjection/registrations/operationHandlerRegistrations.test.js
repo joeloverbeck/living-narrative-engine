@@ -225,9 +225,7 @@ beforeAll(async () => {
     EquipmentOrchestrator: EquipmentOrchestratorToken,
     BodyDescriptionComposer: BodyDescriptionComposerToken,
     ActionSequence: ActionSequenceToken,
-    SkillResolverService: SkillResolverServiceToken,
-    ProbabilityCalculatorService: ProbabilityCalculatorServiceToken,
-    OutcomeDeterminerService: OutcomeDeterminerServiceToken,
+    ChanceCalculationService: ChanceCalculationServiceToken,
   } = tokens;
 
   handlerExpectations = [
@@ -767,14 +765,9 @@ beforeAll(async () => {
       handlerName: 'ResolveOutcomeHandler',
       dependencies: [
         { property: 'logger', token: ILogger },
-        { property: 'skillResolverService', token: SkillResolverServiceToken },
         {
-          property: 'probabilityCalculatorService',
-          token: ProbabilityCalculatorServiceToken,
-        },
-        {
-          property: 'outcomeDeterminerService',
-          token: OutcomeDeterminerServiceToken,
+          property: 'chanceCalculationService',
+          token: ChanceCalculationServiceToken,
         },
       ],
     },
