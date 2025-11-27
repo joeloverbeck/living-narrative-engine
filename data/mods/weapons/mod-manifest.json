@@ -24,6 +24,14 @@
     {
       "id": "positioning",
       "version": "1.0.0"
+    },
+    {
+      "id": "skills",
+      "version": "1.0.0"
+    },
+    {
+      "id": "damage-types",
+      "version": "1.0.0"
     }
   ],
   "content": {
@@ -36,13 +44,16 @@
     ],
     "scopes": [
       "grabbable_weapons_in_inventory.scope",
-      "weapons_in_inventory.scope"
+      "weapons_in_inventory.scope",
+      "wielded_cutting_weapons.scope"
     ],
     "conditions": [
-      "event-is-action-wield-threateningly.condition.json"
+      "event-is-action-wield-threateningly.condition.json",
+      "event-is-action-swing-at-target.condition.json"
     ],
     "actions": [
-      "wield_threateningly.action.json"
+      "wield_threateningly.action.json",
+      "swing_at_target.action.json"
     ],
     "rules": [
       "handle_wield_threateningly.rule.json"

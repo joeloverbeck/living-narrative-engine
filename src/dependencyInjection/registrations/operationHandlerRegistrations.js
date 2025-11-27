@@ -79,6 +79,7 @@ import LockMouthEngagementHandler from '../../logic/operationHandlers/lockMouthE
 import UnlockGrabbingHandler from '../../logic/operationHandlers/unlockGrabbingHandler.js';
 import UnlockMovementHandler from '../../logic/operationHandlers/unlockMovementHandler.js';
 import UnlockMouthEngagementHandler from '../../logic/operationHandlers/unlockMouthEngagementHandler.js';
+import UnwieldItemHandler from '../../logic/operationHandlers/unwieldItemHandler.js';
 import RegenerateDescriptionHandler from '../../logic/operationHandlers/regenerateDescriptionHandler.js';
 import ResolveDirectionHandler from '../../logic/operationHandlers/resolveDirectionHandler.js';
 import AtomicModifyComponentHandler from '../../logic/operationHandlers/atomicModifyComponentHandler.js';
@@ -613,6 +614,16 @@ export function registerOperationHandlers(registrar) {
     [
       tokens.UnlockMouthEngagementHandler,
       UnlockMouthEngagementHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.UnwieldItemHandler,
+      UnwieldItemHandler,
       (c, Handler) =>
         new Handler({
           logger: c.resolve(tokens.ILogger),

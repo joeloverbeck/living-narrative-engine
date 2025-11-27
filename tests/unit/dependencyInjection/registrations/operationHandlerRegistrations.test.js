@@ -125,6 +125,7 @@ const handlerModuleDefinitions = [
     'UnlockMouthEngagementHandler',
     `${handlerBasePath}/unlockMouthEngagementHandler.js`,
   ],
+  ['UnwieldItemHandler', `${handlerBasePath}/unwieldItemHandler.js`],
   [
     'RegenerateDescriptionHandler',
     `${handlerBasePath}/regenerateDescriptionHandler.js`,
@@ -715,6 +716,15 @@ beforeAll(async () => {
     {
       token: tokens.UnlockMouthEngagementHandler,
       handlerName: 'UnlockMouthEngagementHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.UnwieldItemHandler,
+      handlerName: 'UnwieldItemHandler',
       dependencies: [
         { property: 'logger', token: ILogger },
         { property: 'entityManager', token: IEntityManager },

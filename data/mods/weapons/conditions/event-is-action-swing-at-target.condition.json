@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "weapons:event-is-action-swing-at-target",
+  "description": "Checks if the event is a swing_at_target action attempt",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "weapons:swing_at_target"
+    ]
+  }
+}
