@@ -115,7 +115,11 @@ export class GlobalMultiTargetStrategy {
       return;
     }
 
-    const { actionDef } = task;
+    const { actionDef: originalActionDef, formattedTemplate } = task;
+    // Use a shallow clone with the formattedTemplate if available to avoid mutating cached definitions
+    const actionDef = formattedTemplate
+      ? { ...originalActionDef, template: formattedTemplate }
+      : originalActionDef;
     const actionId = actionDef.id;
     const startTimestamp = Date.now();
 

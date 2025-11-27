@@ -271,13 +271,16 @@ export class ActionFormattingStage extends PipelineStage {
       const targetId = this.#extractTargetId(actionWithTarget, context);
 
       const chance = this.#calculateChance(actionDef, actor.id, targetId);
-      actionDef.template = actionDef.template.replace(
+      // Store formatted template on the transient actionWithTarget object
+      // instead of mutating the cached actionDef.template to prevent
+      // stale values across multiple action discovery passes
+      actionWithTarget.formattedTemplate = actionDef.template.replace(
         '{chance}',
         String(chance)
       );
 
       this.#logger.debug(
-        `ActionFormattingStage: Injected chance ${chance}% into template for action '${actionDef.id}'`
+        `ActionFormattingStage: Injected chance ${chance}% into formattedTemplate for action '${actionDef.id}'`
       );
     }
   }

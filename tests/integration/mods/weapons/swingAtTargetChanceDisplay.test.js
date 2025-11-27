@@ -139,9 +139,13 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       // Act
       await stage.executeInternal(context);
 
-      // Assert - Template should have been modified
-      expect(context.actionsWithTargets[0].actionDef.template).toBe(
+      // Assert - Formatted template should be set (original actionDef.template unchanged for cache safety)
+      expect(context.actionsWithTargets[0].formattedTemplate).toBe(
         'swing sword at {target} (67%)'
+      );
+      // Verify original template remains unchanged
+      expect(context.actionsWithTargets[0].actionDef.template).toBe(
+        'swing sword at {target} ({chance}%)'
       );
 
       // Verify services were called
@@ -212,8 +216,13 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
         bounds: undefined,
       });
 
-      expect(context.actionsWithTargets[0].actionDef.template).toBe(
+      // Formatted template should be set (original actionDef.template unchanged for cache safety)
+      expect(context.actionsWithTargets[0].formattedTemplate).toBe(
         'swing at {target} (67%)'
+      );
+      // Verify original template remains unchanged
+      expect(context.actionsWithTargets[0].actionDef.template).toBe(
+        'swing at {target} ({chance}%)'
       );
     });
   });
@@ -263,8 +272,13 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
         10
       );
 
-      expect(context.actionsWithTargets[0].actionDef.template).toBe(
+      // Formatted template should be set (original actionDef.template unchanged for cache safety)
+      expect(context.actionsWithTargets[0].formattedTemplate).toBe(
         'swing at {target} (50%)'
+      );
+      // Verify original template remains unchanged
+      expect(context.actionsWithTargets[0].actionDef.template).toBe(
+        'swing at {target} ({chance}%)'
       );
     });
   });
@@ -527,8 +541,13 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
         bounds: { min: 10, max: 90 },
       });
 
-      expect(context.actionsWithTargets[0].actionDef.template).toBe(
+      // Formatted template should be set (original actionDef.template unchanged for cache safety)
+      expect(context.actionsWithTargets[0].formattedTemplate).toBe(
         'swing at {target} (75%)'
+      );
+      // Verify original template remains unchanged
+      expect(context.actionsWithTargets[0].actionDef.template).toBe(
+        'swing at {target} ({chance}%)'
       );
     });
   });

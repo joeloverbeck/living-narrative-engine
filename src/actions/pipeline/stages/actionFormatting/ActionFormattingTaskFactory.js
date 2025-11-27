@@ -14,6 +14,7 @@
  * @property {boolean} isMultiTarget - Indicates if the task should be treated as multi-target aware
  * @property {object} formatterOptions - Shared formatter options prepared for the task
  * @property {{ source: 'per-action'|'batch'|'legacy', hasPerActionMetadata: boolean }} metadata - Diagnostic metadata
+ * @property {string|null} formattedTemplate - Pre-formatted template (e.g., with {chance} replaced), or null if using actionDef.template directly
  */
 
 /**
@@ -24,7 +25,8 @@
  *   targetContexts?: ActionTargetContext[],
  *   resolvedTargets?: object|null,
  *   targetDefinitions?: object|null,
- *   isMultiTarget?: boolean
+ *   isMultiTarget?: boolean,
+ *   formattedTemplate?: string|null
  * }} actionWithTargets - Raw action data including per-action metadata
  * @property {object} formatterOptions - Shared formatter configuration for command formatters
  * @property {object|null} [batchResolvedTargets] - Batch-level resolved targets fallback
@@ -49,6 +51,7 @@ export function createActionFormattingTask({
     resolvedTargets = null,
     targetDefinitions = null,
     isMultiTarget,
+    formattedTemplate = null,
   } = actionWithTargets;
 
   const hasPerActionMetadata = Boolean(
@@ -81,6 +84,7 @@ export function createActionFormattingTask({
     targetDefinitions: targetDefinitionsForTask,
     isMultiTarget: inferredIsMultiTarget,
     formatterOptions,
+    formattedTemplate,
     metadata: {
       source,
       hasPerActionMetadata,

@@ -306,7 +306,11 @@ export class ActionFormattingCoordinator {
    * @returns {Promise<void>} Resolves once formatting completes.
    */
   async #formatLegacyFallbackTask({ task, accumulator, createError, trace }) {
-    const { actionDef, targetContexts = [], actor } = task;
+    const { actionDef: originalActionDef, targetContexts = [], actor, formattedTemplate } = task;
+    // Use a shallow clone with the formattedTemplate if available to avoid mutating cached definitions
+    const actionDef = formattedTemplate
+      ? { ...originalActionDef, template: formattedTemplate }
+      : originalActionDef;
     const actionId = actionDef.id;
 
     const formatterOptions = {

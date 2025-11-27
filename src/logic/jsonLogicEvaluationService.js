@@ -124,6 +124,8 @@ class JsonLogicEvaluationService extends BaseService {
       'hasFreeGrabbingAppendages',
       'canActorGrabItem',
       'isItemBeingGrabbed',
+      // Skills/stats operators
+      'getSkillValue',
     ]);
 
     // --- ADDED: Register the 'not' operator alias upon instantiation ---
