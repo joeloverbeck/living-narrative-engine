@@ -109,7 +109,11 @@ export class PerActionMetadataStrategy {
       return;
     }
 
-    const { actionDef } = task;
+    const { actionDef: originalActionDef, formattedTemplate } = task;
+    // Use a shallow clone with the formattedTemplate if available to avoid mutating cached definitions
+    const actionDef = formattedTemplate
+      ? { ...originalActionDef, template: formattedTemplate }
+      : originalActionDef;
     const actionId = actionDef.id;
     const startTimestamp = Date.now();
 
@@ -169,7 +173,11 @@ export class PerActionMetadataStrategy {
     createError,
     trace,
   }) {
-    const { actionDef, actor, resolvedTargets, targetDefinitions } = task;
+    const { actionDef: originalActionDef, actor, resolvedTargets, targetDefinitions, formattedTemplate } = task;
+    // Use a shallow clone with the formattedTemplate if available to avoid mutating cached definitions
+    const actionDef = formattedTemplate
+      ? { ...originalActionDef, template: formattedTemplate }
+      : originalActionDef;
     const formatterOptions = this.#buildFormatterOptions(task);
 
     const hasMultiTargetFormatter =
@@ -443,7 +451,11 @@ export class PerActionMetadataStrategy {
     createError,
     trace,
   }) {
-    const { actionDef, actor, targetContexts } = task;
+    const { actionDef: originalActionDef, actor, targetContexts, formattedTemplate } = task;
+    // Use a shallow clone with the formattedTemplate if available to avoid mutating cached definitions
+    const actionDef = formattedTemplate
+      ? { ...originalActionDef, template: formattedTemplate }
+      : originalActionDef;
     const formatterOptions = this.#buildFormatterOptions(task);
 
     let successes = 0;

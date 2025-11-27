@@ -49,7 +49,7 @@ This epic implements a non-deterministic (chance-based) actions system for the L
 
 | Ticket | Description | Status |
 |--------|-------------|--------|
-| [NONDETACTSYS-012](./NONDETACTSYS-012-wielded-cutting-weapons-scope.md) | Create wielded_cutting_weapons scope | ⬜ |
+| [NONDETACTSYS-012](../archive/NONDETACTSYS/NONDETACTSYS-012-wielded-cutting-weapons-scope-COMPLETED.md) | Create wielded_cutting_weapons scope | ✅ |
 | [NONDETACTSYS-013](./NONDETACTSYS-013-swing-at-target-action.md) | Create swing_at_target action definition | ⬜ |
 | [NONDETACTSYS-014](./NONDETACTSYS-014-swing-at-target-rule.md) | Create swing_at_target rule with outcome handling | ⬜ |
 | [NONDETACTSYS-015](./NONDETACTSYS-015-weapon-entities-can-cut.md) | Add can_cut component to weapon entities | ⬜ |
