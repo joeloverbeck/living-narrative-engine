@@ -6,6 +6,7 @@ import {
   afterEach,
   expect,
 } from '@jest/globals';
+import { createMainBootstrapContainerMock } from '../../common/mockFactories/mainBootstrapContainer.js';
 
 const mockEnsure = jest.fn();
 const mockSetupDI = jest.fn();
@@ -125,7 +126,7 @@ describe('main.js fallback coverage', () => {
   });
 
   it('propagates explicit phase information when a later stage fails', async () => {
-    const logger = { debug: jest.fn(), error: jest.fn() };
+    const logger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn() };
     const engineInstance = {};
 
     global.fetch = jest.fn().mockResolvedValue({
@@ -134,7 +135,7 @@ describe('main.js fallback coverage', () => {
     });
 
     mockEnsure.mockResolvedValue({ success: true, payload: createUiElements() });
-    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockSetupDI.mockResolvedValue({ success: true, payload: createMainBootstrapContainerMock() });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
     mockInitEngine.mockResolvedValue({ success: true, payload: engineInstance });
@@ -170,11 +171,11 @@ describe('main.js fallback coverage', () => {
       statusText: 'Server Error',
     });
 
-    const logger = { debug: jest.fn(), error: jest.fn() };
+    const logger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn() };
     const engineInstance = {};
 
     mockEnsure.mockResolvedValue({ success: true, payload: createUiElements() });
-    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockSetupDI.mockResolvedValue({ success: true, payload: createMainBootstrapContainerMock() });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
     mockInitEngine.mockResolvedValue({ success: true, payload: engineInstance });

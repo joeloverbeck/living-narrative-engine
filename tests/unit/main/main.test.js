@@ -1,4 +1,5 @@
 import { jest, describe, it, afterEach, expect } from '@jest/globals';
+import { createMainBootstrapContainerMock } from '../../common/mockFactories/mainBootstrapContainer.js';
 
 const mockEnsure = jest.fn();
 const mockSetupDI = jest.fn();
@@ -56,10 +57,10 @@ describe('main.js bootstrap process', () => {
       titleElement: document.querySelector('h1'),
       document,
     };
-    const logger = { info: jest.fn(), error: jest.fn() };
+    const logger = { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() };
 
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockSetupDI.mockResolvedValue({ success: true, payload: createMainBootstrapContainerMock() });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
     mockInitEngine.mockResolvedValue({ success: true, payload: {} });
@@ -130,7 +131,7 @@ describe('main.js bootstrap process', () => {
       titleElement: null,
       document,
     };
-    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
+    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
 
     const aggError = new Error('Aux fail');
     aggError.phase = 'Auxiliary Services Initialization';
@@ -139,7 +140,7 @@ describe('main.js bootstrap process', () => {
     ];
 
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockSetupDI.mockResolvedValue({ success: true, payload: createMainBootstrapContainerMock() });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
     mockInitEngine.mockResolvedValue({ success: true, payload: {} });

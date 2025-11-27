@@ -6,6 +6,7 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
+import { createMainBootstrapContainerMock } from '../../common/mockFactories/mainBootstrapContainer.js';
 
 const mockEnsure = jest.fn();
 const mockSetupDI = jest.fn();
@@ -115,7 +116,7 @@ describe('main.js inline factory and fallback coverage', () => {
       document,
     };
 
-    const logger = { debug: jest.fn(), info: jest.fn(), error: jest.fn() };
+    const logger = { debug: jest.fn(), info: jest.fn(), error: jest.fn(), warn: jest.fn() };
 
     let createdEngine;
 
@@ -130,7 +131,9 @@ describe('main.js inline factory and fallback coverage', () => {
       expect(typeof options.createAppContainer).toBe('function');
       const container = options.createAppContainer();
       expect(container).toEqual({ marker: 'app-container' });
-      return { success: true, payload: container };
+      // Return a container with proper resolve method for handler completeness validation
+      const baseContainer = createMainBootstrapContainerMock();
+      return { success: true, payload: { ...container, resolve: baseContainer.resolve } };
     });
 
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });

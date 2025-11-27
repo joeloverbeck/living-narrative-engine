@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { createMainBootstrapContainerMock } from '../../common/mockFactories/mainBootstrapContainer.js';
 
 const mockStageImplementations = {
   ensureCriticalDOMElementsStage: jest.fn(),
@@ -183,7 +184,7 @@ describe('main.js bootstrap error fallbacks', () => {
 
     mockStageImplementations.setupDIContainerStage.mockResolvedValue({
       success: true,
-      payload: {},
+      payload: createMainBootstrapContainerMock(),
     });
 
     const stageError = new Error('Logger missing');
@@ -204,7 +205,7 @@ describe('main.js bootstrap error fallbacks', () => {
   });
 
   it('falls back to application logic phase when auxiliary services initialization fails', async () => {
-    const logger = { error: jest.fn(), debug: jest.fn() };
+    const logger = { error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
     const gameEngine = {};
 
     mockStageImplementations.ensureCriticalDOMElementsStage.mockResolvedValue({
@@ -214,7 +215,7 @@ describe('main.js bootstrap error fallbacks', () => {
 
     mockStageImplementations.setupDIContainerStage.mockResolvedValue({
       success: true,
-      payload: {},
+      payload: createMainBootstrapContainerMock(),
     });
 
     mockStageImplementations.resolveLoggerStage.mockResolvedValue({

@@ -6,6 +6,7 @@ import {
   afterEach,
   expect,
 } from '@jest/globals';
+import { createMainBootstrapContainerMock } from '../../common/mockFactories/mainBootstrapContainer.js';
 
 const mockEnsure = jest.fn();
 const mockSetupDI = jest.fn();
@@ -88,7 +89,7 @@ function primeSuccessfulStages(logger, gameEngine) {
     if (typeof createAppContainer === 'function') {
       createAppContainer();
     }
-    return { success: true, payload: {} };
+    return { success: true, payload: createMainBootstrapContainerMock() };
   });
   mockResolveLogger.mockResolvedValue({ success: true, payload: { logger } });
   mockInitGlobalConfig.mockResolvedValue({ success: true });
@@ -122,7 +123,7 @@ beforeEach(() => {
     <input id="speech-input" />
   `;
   delete global.fetch;
-  delete global.alert;
+  global.alert = jest.fn();
 });
 
 afterEach(() => {
@@ -131,7 +132,7 @@ afterEach(() => {
 
 describe('main.js additional coverage', () => {
   it('runs full bootstrap flow and honours manual start world overrides', async () => {
-    const logger = { debug: jest.fn(), error: jest.fn(), info: jest.fn() };
+    const logger = { debug: jest.fn(), error: jest.fn(), info: jest.fn(), warn: jest.fn() };
     const gameEngine = { showLoadGameUI: jest.fn() };
     primeSuccessfulStages(logger, gameEngine);
 
@@ -290,7 +291,7 @@ describe('main.js additional coverage', () => {
   });
 
   it('falls back to default start world when configuration fetch fails', async () => {
-    const logger = { debug: jest.fn(), error: jest.fn(), info: jest.fn() };
+    const logger = { debug: jest.fn(), error: jest.fn(), info: jest.fn(), warn: jest.fn() };
     const gameEngine = { showLoadGameUI: jest.fn() };
     primeSuccessfulStages(logger, gameEngine);
 
@@ -319,7 +320,7 @@ describe('main.js additional coverage', () => {
   });
 
   it('treats non-ok responses while loading start world as defaults', async () => {
-    const logger = { debug: jest.fn(), error: jest.fn(), info: jest.fn() };
+    const logger = { debug: jest.fn(), error: jest.fn(), info: jest.fn(), warn: jest.fn() };
     const gameEngine = { showLoadGameUI: jest.fn() };
     primeSuccessfulStages(logger, gameEngine);
 
@@ -352,7 +353,7 @@ describe('main.js additional coverage', () => {
   });
 
   it('reports startGame stage failures and exercises fatal helper functions', async () => {
-    const logger = { debug: jest.fn(), error: jest.fn(), info: jest.fn() };
+    const logger = { debug: jest.fn(), error: jest.fn(), info: jest.fn(), warn: jest.fn() };
     const gameEngine = { showLoadGameUI: jest.fn() };
     primeSuccessfulStages(logger, gameEngine);
 

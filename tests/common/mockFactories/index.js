@@ -40,3 +40,4 @@ export {
 
 export { MockContainer } from './container.js';
 export { createMockSpatialIndexManager } from './spatialIndexManager.js';
+export { createMainBootstrapContainerMock } from './mainBootstrapContainer.js';

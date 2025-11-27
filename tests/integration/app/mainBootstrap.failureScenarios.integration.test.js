@@ -119,16 +119,35 @@ const createUIElements = () => ({
 const configureSuccessfulStages = () => {
   const uiElements = createUIElements();
   const eventBus = { subscribe: jest.fn() }; // Mock EventBus for cache invalidation
+  // Mock handler validator and registry for startup completeness validation
+  const mockHandlerValidator = {
+    validateHandlerRegistryCompleteness: jest.fn().mockReturnValue({
+      isComplete: true,
+      missingHandlers: [],
+      orphanedHandlers: [],
+    }),
+  };
+  const mockOperationRegistry = {
+    getRegisteredTypes: jest.fn().mockReturnValue([]),
+  };
   const container = {
     resolve: jest.fn((token) => {
       // Return eventBus when IEventBus token is requested
       if (token === 'IEventBus' || token?.includes?.('EventBus')) {
         return eventBus;
       }
+      // Return handler validator for startup completeness validation
+      if (token === 'HandlerCompletenessValidator') {
+        return mockHandlerValidator;
+      }
+      // Return operation registry for startup completeness validation
+      if (token === 'OperationRegistry') {
+        return mockOperationRegistry;
+      }
       return undefined;
     }),
   };
-  const logger = { debug: jest.fn(), error: jest.fn() };
+  const logger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn() };
 
   mockStages.ensureCriticalDOMElementsStage.mockResolvedValue({
     success: true,

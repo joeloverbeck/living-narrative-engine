@@ -3,6 +3,7 @@
 import { configureContainer } from './dependencyInjection/containerConfig.js';
 import { tokens } from './dependencyInjection/tokens.js';
 import { displayFatalStartupError } from './utils/errorUtils.js';
+import { KNOWN_OPERATION_TYPES } from './utils/preValidationUtils.js';
 import { UIBootstrapper } from './bootstrapper/UIBootstrapper.js';
 import AppContainer from './dependencyInjection/appContainer.js';
 import GameEngine from './engine/gameEngine.js';
@@ -129,6 +130,42 @@ export async function bootstrapApp() {
     logger.debug(
       `main.js: ${currentPhaseForError} stage completed. Logger is now available.`
     );
+
+    // STAGE 3.25: Handler Completeness Validation (diagnostic only)
+    currentPhaseForError = 'Handler Completeness Validation';
+    try {
+      const validator = container.resolve(tokens.HandlerCompletenessValidator);
+      const registry = container.resolve(tokens.OperationRegistry);
+      const report = validator.validateHandlerRegistryCompleteness(
+        KNOWN_OPERATION_TYPES,
+        registry
+      );
+
+      if (!report.isComplete) {
+        if (report.missingHandlers.length > 0) {
+          logger.warn(
+            `Handler completeness check: ${report.missingHandlers.length} operation types have no handler registered`,
+            { missingHandlers: report.missingHandlers }
+          );
+        }
+        if (report.orphanedHandlers.length > 0) {
+          logger.warn(
+            `Handler completeness check: ${report.orphanedHandlers.length} handlers registered but not in KNOWN_OPERATION_TYPES`,
+            { orphanedHandlers: report.orphanedHandlers }
+          );
+        }
+      } else {
+        logger.debug(
+          'Handler completeness check passed: all operation types have registered handlers.'
+        );
+      }
+    } catch (validationError) {
+      // Validation is diagnostic only - never block startup
+      logger.warn(
+        'Handler completeness validation failed (non-blocking)',
+        validationError
+      );
+    }
 
     // STAGE 3.5: Initialize Global Configuration
     currentPhaseForError = 'Global Configuration Initialization';

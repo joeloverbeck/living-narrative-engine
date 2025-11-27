@@ -39,13 +39,18 @@ With ROBOPEHANVAL-003 in place (fail-fast on missing handlers), such tests will 
 
 ### Audit Current Methods
 
+**NOTE (Updated 2025-11-27)**: The original assumptions in this section were outdated:
+- `createHandlersWithPositioningSupport` does NOT exist - use `createHandlersWithPerceptionLogging` instead
+- `UNWIELD_ITEM` is already present in `createHandlersWithItemsSupport`
+- The factory has 10 methods, not 3 as implied
+
 Review each handler factory method and ensure it registers handlers for all operation types used by rules in that category:
 
 | Method | Expected Operations |
 |--------|-------------------|
-| `createHandlersWithItemsSupport` | DROP_ITEM_AT_LOCATION, PICK_UP_ITEM_FROM_LOCATION, TRANSFER_ITEM, OPEN_CONTAINER, TAKE_FROM_CONTAINER, PUT_IN_CONTAINER, **UNWIELD_ITEM**, etc. |
-| `createStandardHandlers` | ADD_COMPONENT, REMOVE_COMPONENT, SET_COMPONENT_VALUE, DISPATCH_EVENT, etc. |
-| `createHandlersWithPositioningSupport` | Positioning-related operations |
+| `createHandlersWithItemsSupport` | DROP_ITEM_AT_LOCATION, PICK_UP_ITEM_FROM_LOCATION, TRANSFER_ITEM, OPEN_CONTAINER, TAKE_FROM_CONTAINER, PUT_IN_CONTAINER, UNWIELD_ITEM (already present), etc. |
+| `createStandardHandlers` | QUERY_COMPONENT, QUERY_COMPONENTS, GET_NAME, GET_TIMESTAMP, DISPATCH_PERCEPTIBLE_EVENT, DISPATCH_EVENT, END_TURN, SET_VARIABLE, LOG_MESSAGE, FOR_EACH, IF |
+| `createHandlersWithPerceptionLogging` | Positioning, closeness, and component modification operations |
 
 ### Adding Missing Handlers
 
@@ -177,3 +182,58 @@ Mitigate by:
 This ticket may reveal that many handlers are missing from test infrastructure. If the scope becomes too large, consider:
 1. Splitting into multiple tickets by category (items, positioning, etc.)
 2. Prioritizing based on which tests are currently failing
+
+---
+
+## Outcome
+
+**Status**: COMPLETED
+
+**Date**: 2025-11-27
+
+### Assumption Corrections
+
+The original ticket assumptions were based on outdated information:
+
+| Original Assumption | Reality |
+|---------------------|---------|
+| `UNWIELD_ITEM` handler missing | Already present in `createHandlersWithItemsSupport` (line 557-561) |
+| `createHandlersWithPositioningSupport` exists | Does NOT exist; use `createHandlersWithPerceptionLogging` instead |
+| Only items handlers needed review | Factory already comprehensive; primary gap was lack of completeness tests |
+
+### Changes Made
+
+1. **Created `tests/unit/common/mods/ModTestHandlerFactory.completeness.test.js`** (16 tests):
+   - Tests that `createStandardHandlers` registers documented handlers
+   - Tests that `createHandlersWithItemsSupport` includes UNWIELD_ITEM and all item handlers
+   - Tests that `createHandlersWithPerceptionLogging` includes positioning and closeness handlers
+   - Tests that `createHandlersWithMouthEngagement` includes mouth engagement handlers
+   - Tests that `createMinimalHandlers` registers exactly 4 handlers
+   - Tests factory method consistency (all handlers have `execute` method)
+   - Tests category mapping for all 17+ documented categories
+   - Tests sex- prefixed category handling
+   - Tests unknown category fallback behavior
+
+2. **No changes to `tests/common/mods/ModTestHandlerFactory.js`** - factory was already complete
+
+### Test Results
+
+```
+ModTestHandlerFactory.completeness.test.js: 16 passed
+ModTestHandlerFactory.test.js: 43 passed
+Total: 59 tests, all passing
+```
+
+### Acceptance Criteria Verification
+
+- [x] Completeness tests created and passing
+- [x] Existing tests continue to pass (43/43)
+- [x] Tests verify UNWIELD_ITEM is registered (it was already present)
+- [x] Tests verify handler consistency across factory methods
+- [x] Tests verify category mappings work correctly
+
+### Key Learnings
+
+1. **Factory was already complete** - The UNWIELD_ITEM issue mentioned in the spec was already fixed
+2. **Gap was in test coverage, not handlers** - The primary deliverable was completeness tests to prevent future regressions
+3. **No production code changes needed** - Ticket scope correctly identified as test infrastructure only
