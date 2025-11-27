@@ -40,6 +40,7 @@ import RegenerateDescriptionHandler from '../../../src/logic/operationHandlers/r
 import IfHandler from '../../../src/logic/operationHandlers/ifHandler.js';
 import ForEachHandler from '../../../src/logic/operationHandlers/forEachHandler.js';
 import ConsumeItemHandler from '../../../src/logic/operationHandlers/consumeItemHandler.js';
+import UnwieldItemHandler from '../../../src/logic/operationHandlers/unwieldItemHandler.js';
 import * as closenessCircleService from '../../../src/logic/services/closenessCircleService.js';
 import { validateDependency } from '../../../src/utils/dependencyUtils.js';
 
@@ -531,6 +532,11 @@ export class ModTestHandlerFactory {
         safeEventDispatcher: safeDispatcher,
       }),
       MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      UNWIELD_ITEM: new UnwieldItemHandler({
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,

@@ -275,6 +275,47 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       expect(result.get('kissing')).toEqual(new Set(['kissing']));
     });
 
+    it('should correctly extract references from hyphenated mod IDs', async () => {
+      const testPath = '/test/mod/path';
+      const jsonContent = {
+        scope: 'sex-breastplay:actors_with_breasts',
+        scope2: 'hand-holding:close_actors',
+        scope3: 'sex-penile-oral:actors_nearby',
+        required_components: {
+          actor: ['sex-anal-penetration:penetrating'],
+        },
+      };
+
+      fs.readdir.mockResolvedValue([
+        { name: 'test.json', isFile: () => true, isDirectory: () => false },
+      ]);
+      fs.readFile.mockResolvedValue(JSON.stringify(jsonContent));
+
+      const result = await extractor.extractReferences(testPath);
+
+      // Should extract the full hyphenated mod ID, NOT split on hyphens
+      expect(result.has('sex-breastplay')).toBe(true);
+      expect(result.has('hand-holding')).toBe(true);
+      expect(result.has('sex-penile-oral')).toBe(true);
+      expect(result.has('sex-anal-penetration')).toBe(true);
+
+      // Should NOT incorrectly extract parts after hyphens as separate mods
+      expect(result.has('breastplay')).toBe(false);
+      expect(result.has('holding')).toBe(false);
+      expect(result.has('oral')).toBe(false);
+      expect(result.has('penetration')).toBe(false);
+
+      // Verify component IDs are correct
+      expect(result.get('sex-breastplay')).toEqual(
+        new Set(['actors_with_breasts'])
+      );
+      expect(result.get('hand-holding')).toEqual(new Set(['close_actors']));
+      expect(result.get('sex-penile-oral')).toEqual(new Set(['actors_nearby']));
+      expect(result.get('sex-anal-penetration')).toEqual(
+        new Set(['penetrating'])
+      );
+    });
+
     it('should handle edge cases in reference patterns', async () => {
       const testPath = '/test/mod/edgetest'; // Changed to avoid mod2 self-reference filtering
       const jsonContent = {

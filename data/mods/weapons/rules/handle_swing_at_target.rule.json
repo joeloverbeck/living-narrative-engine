@@ -1,0 +1,112 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_swing_at_target",
+  "event_type": "core:attempt_action",
+  "condition": { "condition_ref": "weapons:event-is-action-swing-at-target" },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "secondary", "result_variable": "targetName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "primary", "result_variable": "weaponName" }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "RESOLVE_OUTCOME",
+      "parameters": {
+        "actor_skill_component": "skills:melee_skill",
+        "target_skill_component": "skills:defense_skill",
+        "actor_skill_default": 10,
+        "target_skill_default": 0,
+        "formula": "ratio",
+        "result_variable": "attackResult"
+      }
+    },
+    {
+      "type": "IF",
+      "parameters": {
+        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "CRITICAL_SUCCESS"] },
+        "then_actions": [
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} lands a devastating blow with their {context.weaponName} on {context.targetName}!",
+              "perception_type": "action_target_general",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.secondaryId}"
+            }
+          },
+          { "macro": "core:logSuccessAndEndTurn" }
+        ],
+        "else_actions": [
+          {
+            "type": "IF",
+            "parameters": {
+              "condition": { "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"] },
+              "then_actions": [
+                {
+                  "type": "DISPATCH_PERCEPTIBLE_EVENT",
+                  "parameters": {
+                    "location_id": "{context.actorPosition.locationId}",
+                    "description_text": "{context.actorName} swings their {context.weaponName} at {context.targetName}, cutting their flesh.",
+                    "perception_type": "action_target_general",
+                    "actor_id": "{event.payload.actorId}",
+                    "target_id": "{event.payload.secondaryId}"
+                  }
+                },
+                { "macro": "core:logSuccessAndEndTurn" }
+              ],
+              "else_actions": [
+                {
+                  "type": "IF",
+                  "parameters": {
+                    "condition": { "==": [{ "var": "context.attackResult.outcome" }, "FUMBLE"] },
+                    "then_actions": [
+                      {
+                        "type": "DISPATCH_PERCEPTIBLE_EVENT",
+                        "parameters": {
+                          "location_id": "{context.actorPosition.locationId}",
+                          "description_text": "{context.actorName} swings wildly and loses grip on their {context.weaponName}!",
+                          "perception_type": "action_target_general",
+                          "actor_id": "{event.payload.actorId}"
+                        }
+                      },
+                      { "macro": "core:logFailureAndEndTurn" }
+                    ],
+                    "else_actions": [
+                      {
+                        "type": "DISPATCH_PERCEPTIBLE_EVENT",
+                        "parameters": {
+                          "location_id": "{context.actorPosition.locationId}",
+                          "description_text": "{context.actorName} swings their {context.weaponName} at {context.targetName}, but the swing fails to connect.",
+                          "perception_type": "action_target_general",
+                          "actor_id": "{event.payload.actorId}",
+                          "target_id": "{event.payload.secondaryId}"
+                        }
+                      },
+                      { "macro": "core:logFailureAndEndTurn" }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

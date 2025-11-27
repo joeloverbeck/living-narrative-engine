@@ -52,7 +52,7 @@ This epic implements a non-deterministic (chance-based) actions system for the L
 | [NONDETACTSYS-012](../archive/NONDETACTSYS/NONDETACTSYS-012-wielded-cutting-weapons-scope-COMPLETED.md) | Create wielded_cutting_weapons scope | ✅ |
 | [NONDETACTSYS-013](./NONDETACTSYS-013-swing-at-target-action.md) | Create swing_at_target action definition | ⬜ |
 | [NONDETACTSYS-014](./NONDETACTSYS-014-swing-at-target-rule.md) | Create swing_at_target rule with outcome handling | ⬜ |
-| [NONDETACTSYS-015](./NONDETACTSYS-015-weapon-entities-can-cut.md) | Add can_cut component to weapon entities | ⬜ |
+| [NONDETACTSYS-015](../archive/NONDETACTSYS/NONDETACTSYS-015-weapon-entities-can-cut-COMPLETED.md) | Add can_cut component to weapon entities | ✅ |
 
 ### Phase 5: Modifiers Enhancement
 
@@ -125,8 +125,6 @@ NONDETACTSYS-016 ────► NONDETACTSYS-017
 | `data/mods/skills/components/melee_skill.component.json` | 001 |
 | `data/mods/skills/components/defense_skill.component.json` | 001 |
 | `data/mods/skills/components/ranged_skill.component.json` | 001 |
-| `data/mods/skills/components/dodge_skill.component.json` | 001 |
-| `data/mods/skills/components/parry_skill.component.json` | 001 |
 | `data/mods/damage-types/mod-manifest.json` | 002 |
 | `data/mods/damage-types/components/can_cut.component.json` | 002 |
 | `src/combat/services/SkillResolverService.js` | 003 |

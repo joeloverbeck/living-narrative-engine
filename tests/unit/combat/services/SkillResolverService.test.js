@@ -4,6 +4,7 @@ import { InvalidArgumentError } from '../../../../src/errors/invalidArgumentErro
 
 /**
  * Creates minimal mocks for dependencies
+ *
  * @returns {object} Object containing mocked dependencies
  */
 function createMocks() {
@@ -366,23 +367,6 @@ describe('SkillResolverService', () => {
         expect(result).toEqual({ baseValue: 55, hasComponent: true });
       });
 
-      it('should work with dodge_skill component', () => {
-        mockEntityManager.hasComponent.mockReturnValue(true);
-        mockEntityManager.getComponentData.mockReturnValue({ value: 40 });
-
-        const result = service.getSkillValue('actor-123', 'skills:dodge_skill');
-
-        expect(result).toEqual({ baseValue: 40, hasComponent: true });
-      });
-
-      it('should work with parry_skill component', () => {
-        mockEntityManager.hasComponent.mockReturnValue(true);
-        mockEntityManager.getComponentData.mockReturnValue({ value: 35 });
-
-        const result = service.getSkillValue('actor-123', 'skills:parry_skill');
-
-        expect(result).toEqual({ baseValue: 35, hasComponent: true });
-      });
     });
 
     describe('edge cases', () => {

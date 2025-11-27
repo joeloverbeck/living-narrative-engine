@@ -7,6 +7,7 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import '../../../common/mods/domainMatchers.js';
 import dropItemRule from '../../../../data/mods/items/rules/handle_drop_item.rule.json' assert { type: 'json' };
 import eventIsActionDropItem from '../../../../data/mods/items/conditions/event-is-action-drop-item.condition.json' assert { type: 'json' };
@@ -234,6 +235,184 @@ describe('items:drop_item action integration', () => {
         scenario.actor.id
       );
       expect(actor).toHaveComponentData('items:inventory', { items: [] });
+    });
+  });
+
+  describe('Drop Item - Wielded Items', () => {
+    it('should unwield item before dropping when item is wielded', async () => {
+      const weapon = new ModEntityBuilder('test-sword')
+        .withName('Test Sword')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('weapons:weapon', {})
+        .build();
+
+      const room = new ModEntityBuilder('tavern')
+        .withName('Tavern')
+        .withComponent('core:location', {})
+        .build();
+
+      const actor = new ModEntityBuilder('test-actor')
+        .withName('Fighter')
+        .asActor()
+        .withComponent('core:position', { locationId: 'tavern' })
+        .withComponent('items:inventory', {
+          items: ['test-sword'],
+          capacity: { maxWeight: 50, maxItems: 10 },
+        })
+        .withComponent('positioning:wielding', {
+          wielded_item_ids: ['test-sword'],
+        })
+        .build();
+
+      testFixture.reset([actor, weapon, room]);
+
+      await testFixture.executeAction('test-actor', 'test-sword');
+
+      // Verify item was dropped (has position at location)
+      const item = testFixture.entityManager.getEntityInstance('test-sword');
+      expect(item).toHaveComponent('core:position');
+      expect(item).toHaveComponentData('core:position', { locationId: 'tavern' });
+
+      // Verify item was removed from inventory
+      const actorAfter =
+        testFixture.entityManager.getEntityInstance('test-actor');
+      expect(actorAfter).toHaveComponentData('items:inventory', { items: [] });
+
+      // Verify wielding component was removed (since it was the only wielded item)
+      const wieldingComponent = testFixture.entityManager.getComponentData(
+        'test-actor',
+        'positioning:wielding'
+      );
+      expect(wieldingComponent).toBeNull();
+
+      expect(testFixture.events).toDispatchEvent('core:turn_ended');
+    });
+
+    it('should handle dropping wielded item when actor has multiple wielded items', async () => {
+      const sword = new ModEntityBuilder('sword')
+        .withName('Sword')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('weapons:weapon', {})
+        .build();
+
+      const dagger = new ModEntityBuilder('dagger')
+        .withName('Dagger')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('weapons:weapon', {})
+        .build();
+
+      const room = new ModEntityBuilder('arena')
+        .withName('Arena')
+        .withComponent('core:location', {})
+        .build();
+
+      const actor = new ModEntityBuilder('dual-wielder')
+        .withName('Dual Wielder')
+        .asActor()
+        .withComponent('core:position', { locationId: 'arena' })
+        .withComponent('items:inventory', {
+          items: ['sword', 'dagger'],
+          capacity: { maxWeight: 50, maxItems: 10 },
+        })
+        .withComponent('positioning:wielding', {
+          wielded_item_ids: ['sword', 'dagger'],
+        })
+        .build();
+
+      testFixture.reset([actor, sword, dagger, room]);
+
+      // Drop only the sword
+      await testFixture.executeAction('dual-wielder', 'sword');
+
+      // Verify sword was dropped
+      const droppedSword = testFixture.entityManager.getEntityInstance('sword');
+      expect(droppedSword).toHaveComponent('core:position');
+      expect(droppedSword).toHaveComponentData('core:position', {
+        locationId: 'arena',
+      });
+
+      // Verify sword removed from inventory, but dagger remains
+      const actorAfter =
+        testFixture.entityManager.getEntityInstance('dual-wielder');
+      expect(actorAfter).toHaveComponentData('items:inventory', {
+        items: ['dagger'],
+      });
+
+      // Verify wielding component still exists with just the dagger
+      const wieldingComponent = testFixture.entityManager.getComponentData(
+        'dual-wielder',
+        'positioning:wielding'
+      );
+      expect(wieldingComponent).not.toBeNull();
+      expect(wieldingComponent.wielded_item_ids).toEqual(['dagger']);
+
+      expect(testFixture.events).toDispatchEvent('core:turn_ended');
+    });
+
+    it('should handle dropping non-wielded item when actor has wielded items (idempotent)', async () => {
+      const wielded = new ModEntityBuilder('wielded-sword')
+        .withName('Wielded Sword')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('weapons:weapon', {})
+        .build();
+
+      const notWielded = new ModEntityBuilder('potion')
+        .withName('Healing Potion')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .build();
+
+      const room = new ModEntityBuilder('camp')
+        .withName('Camp')
+        .withComponent('core:location', {})
+        .build();
+
+      const actor = new ModEntityBuilder('adventurer')
+        .withName('Adventurer')
+        .asActor()
+        .withComponent('core:position', { locationId: 'camp' })
+        .withComponent('items:inventory', {
+          items: ['wielded-sword', 'potion'],
+          capacity: { maxWeight: 50, maxItems: 10 },
+        })
+        .withComponent('positioning:wielding', {
+          wielded_item_ids: ['wielded-sword'],
+        })
+        .build();
+
+      testFixture.reset([actor, wielded, notWielded, room]);
+
+      // Drop the potion (not wielded)
+      await testFixture.executeAction('adventurer', 'potion');
+
+      // Verify potion was dropped
+      const droppedPotion =
+        testFixture.entityManager.getEntityInstance('potion');
+      expect(droppedPotion).toHaveComponent('core:position');
+      expect(droppedPotion).toHaveComponentData('core:position', {
+        locationId: 'camp',
+      });
+
+      // Verify potion removed from inventory, but sword remains
+      const actorAfter =
+        testFixture.entityManager.getEntityInstance('adventurer');
+      expect(actorAfter).toHaveComponentData('items:inventory', {
+        items: ['wielded-sword'],
+      });
+
+      // Verify wielding component still exists unchanged
+      const wieldingComponent = testFixture.entityManager.getComponentData(
+        'adventurer',
+        'positioning:wielding'
+      );
+      expect(wieldingComponent).not.toBeNull();
+      expect(wieldingComponent.wielded_item_ids).toEqual(['wielded-sword']);
+
+      expect(testFixture.events).toDispatchEvent('core:turn_ended');
     });
   });
 

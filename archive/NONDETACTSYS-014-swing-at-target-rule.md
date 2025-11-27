@@ -234,3 +234,56 @@ Required test cases:
 | `data/mods/positioning/rules/handle_turn_around.rule.json` | Simple rule pattern |
 | `data/core/macros/logSuccessAndEndTurn.macro.json` | Turn ending macro |
 | `tests/integration/mods/weapons/wieldWeaponRuleExecution.test.js` | Rule test pattern |
+
+---
+
+## Outcome
+
+**Status**: ✅ Completed
+
+**Implementation Date**: 2025-11-27
+
+### Deliverables Created
+
+| File | Purpose |
+|------|---------|
+| `data/mods/weapons/rules/handle_swing_at_target.rule.json` | Rule definition with outcome branching |
+| `tests/integration/mods/weapons/swingAtTargetOutcomeResolution.test.js` | Comprehensive integration tests (27 tests) |
+
+### Ticket Discrepancy Corrected
+
+The ticket specified `component_id` in the QUERY_COMPONENT operation but the actual schema uses `component_type`. The implementation uses the correct parameter name `component_type` as per the schema.
+
+### Test Results
+
+```
+Test Suites: 1 passed, 1 total
+Tests:       27 passed, 27 total
+```
+
+**Test Coverage**:
+- Rule structure validation (rule_id, event_type, condition reference)
+- Operations validation (GET_NAME, QUERY_COMPONENT, RESOLVE_OUTCOME, IF)
+- Outcome branch validation (CRITICAL_SUCCESS, SUCCESS, FUMBLE, FAILURE)
+- Action configuration validation (chanceBased settings)
+- Condition validation (action ID reference)
+- Schema compliance ($schema references)
+- Variable resolution consistency (result_variable definitions and context usage)
+- Macro usage validation (2 success macros, 2 failure macros)
+
+### Invariants Verified
+
+- [x] Rule JSON passes schema validation
+- [x] All referenced conditions exist (`weapons:event-is-action-swing-at-target`)
+- [x] All referenced macros exist (`core:logSuccessAndEndTurn`, `core:logFailureAndEndTurn`)
+- [x] RESOLVE_OUTCOME operation is valid with correct parameters
+- [x] IF conditions use correct JSON Logic syntax
+- [x] Variable references use correct paths (`context.*`, `event.payload.*`)
+- [x] No modifications to existing rules
+
+### Notes
+
+The integration tests focus on structural validation rather than full execution testing because:
+1. ModTestHandlerFactory doesn't yet support RESOLVE_OUTCOME handler injection
+2. Unit tests for ResolveOutcomeHandler and OutcomeDeterminerService (NONDETACTSYS-008) already cover execution logic
+3. Structural tests validate the rule's integration with the event system and schema compliance

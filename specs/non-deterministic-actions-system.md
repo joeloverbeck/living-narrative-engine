@@ -344,9 +344,7 @@ data/mods/skills/
 └── components/
     ├── melee_skill.component.json
     ├── ranged_skill.component.json
-    ├── defense_skill.component.json
-    ├── dodge_skill.component.json
-    └── parry_skill.component.json
+    └── defense_skill.component.json
 ```
 
 **mod-manifest.json:**
