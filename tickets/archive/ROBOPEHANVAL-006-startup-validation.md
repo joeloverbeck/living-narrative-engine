@@ -154,3 +154,59 @@ This allows disabling in tests or production if needed.
 ## Dependents
 
 - None - this is the final diagnostic layer
+
+---
+
+## Outcome
+
+**Status**: COMPLETED
+
+**Date**: 2025-11-27
+
+### Changes Made
+
+1. **`src/main.js`** (~20 lines added):
+   - Added import for `KNOWN_OPERATION_TYPES` from `./utils/preValidationUtils.js`
+   - Added STAGE 3.25: Handler Completeness Validation (diagnostic only) after logger resolution
+   - Validation runs in try-catch to never block startup
+   - Logs warnings for missing or orphaned handlers
+   - Logs debug message on success
+
+2. **`tests/integration/validation/startupHandlerValidation.integration.test.js`** (332 lines, 13 tests):
+   - Tests complete registry validation (reports isComplete=true)
+   - Tests with actual KNOWN_OPERATION_TYPES array
+   - Tests missing handler detection with sorted output
+   - Tests orphaned handler detection with sorted output
+   - Tests combined missing and orphaned scenarios
+   - Tests startup flow simulation with logging verification
+   - Tests error handling for broken registries
+   - Verifies validation never blocks startup
+
+3. **Test file fixes** (mock updates for new validation stage):
+   - `tests/integration/app/mainBootstrap.failureScenarios.integration.test.js`
+   - `tests/integration/runtime/mainBootstrapFlow.integration.test.js`
+   - `tests/integration/runtime/mainCoverageEnhancements.integration.test.js`
+
+### Acceptance Criteria Verification
+
+- [x] Validation runs after DI setup, after logger resolution (STAGE 3.25)
+- [x] Missing handlers logged as **warnings** (not errors)
+- [x] Orphaned handlers logged as **warnings** (not errors)
+- [x] Complete registry logs **debug** message
+- [x] Validation errors caught and logged, not thrown
+- [x] All integration tests pass (30 related tests)
+- [x] All ticket invariants maintained
+
+### Test Results
+
+```
+Test Suites: 4 passed, 4 total
+Tests:       30 passed, 30 total
+```
+
+### Key Implementation Decisions
+
+1. **Inline validation** rather than new bootstrap stage file - minimizes code changes
+2. **Try-catch wrapper** ensures validation failures never crash the app
+3. **Diagnostic-only logging** - warnings for issues, debug for success
+4. **No configuration flag** added (deferred as optional enhancement)

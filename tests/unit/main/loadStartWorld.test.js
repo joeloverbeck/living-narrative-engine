@@ -6,6 +6,7 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
+import { createMainBootstrapContainerMock } from '../../common/mockFactories/mainBootstrapContainer.js';
 
 const mockEnsure = jest.fn();
 const mockSetupDI = jest.fn();
@@ -47,8 +48,8 @@ jest.mock('../../../src/dependencyInjection/containerConfig.js', () => ({
  */
 function setupStageMocks(uiElements) {
   mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-  mockSetupDI.mockResolvedValue({ success: true, payload: {} });
-  const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
+  mockSetupDI.mockResolvedValue({ success: true, payload: createMainBootstrapContainerMock() });
+  const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
   mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
   mockInitGlobalConfig.mockResolvedValue({ success: true });
   mockInitEngine.mockResolvedValue({ success: true, payload: {} });
@@ -61,6 +62,7 @@ function setupStageMocks(uiElements) {
 
 beforeEach(() => {
   jest.useFakeTimers();
+  global.alert = jest.fn();
 });
 
 afterEach(() => {

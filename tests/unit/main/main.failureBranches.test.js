@@ -6,6 +6,7 @@ import {
   afterEach,
   expect,
 } from '@jest/globals';
+import { createMainBootstrapContainerMock } from '../../common/mockFactories/mainBootstrapContainer.js';
 
 const mockEnsure = jest.fn();
 const mockSetupDI = jest.fn();
@@ -74,10 +75,11 @@ describe('main.js failure branches', () => {
 
     // Create mock container with resolve method
     const mockEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+    const baseContainer = createMainBootstrapContainerMock();
     const mockContainer = {
       resolve: jest.fn((token) => {
         if (token === 'IEventBus') return mockEventBus;
-        return null;
+        return baseContainer.resolve(token);
       }),
     };
 
@@ -113,14 +115,15 @@ describe('main.js failure branches', () => {
       titleElement: null,
       document,
     };
-    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
+    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
 
     // Create mock container with resolve method
     const mockEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+    const baseContainer = createMainBootstrapContainerMock();
     const mockContainer = {
       resolve: jest.fn((token) => {
         if (token === 'IEventBus') return mockEventBus;
-        return null;
+        return baseContainer.resolve(token);
       }),
     };
 
@@ -157,14 +160,15 @@ describe('main.js failure branches', () => {
       titleElement: null,
       document,
     };
-    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
+    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
 
     // Create mock container with resolve method
     const mockEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+    const baseContainer = createMainBootstrapContainerMock();
     const mockContainer = {
       resolve: jest.fn((token) => {
         if (token === 'IEventBus') return mockEventBus;
-        return null;
+        return baseContainer.resolve(token);
       }),
     };
 
@@ -201,7 +205,7 @@ describe('main.js failure branches', () => {
       titleElement: null,
       document,
     };
-    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
+    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
 
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
@@ -210,10 +214,11 @@ describe('main.js failure branches', () => {
 
     // Create mock container with resolve method
     const mockEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+    const baseContainer = createMainBootstrapContainerMock();
     const mockContainer = {
       resolve: jest.fn((token) => {
         if (token === 'IEventBus') return mockEventBus;
-        return null;
+        return baseContainer.resolve(token);
       }),
     };
 
@@ -254,7 +259,7 @@ describe('main.js failure branches', () => {
       titleElement: null,
       document,
     };
-    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
+    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
 
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
@@ -263,10 +268,11 @@ describe('main.js failure branches', () => {
 
     // Create mock container with resolve method
     const mockEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+    const baseContainer = createMainBootstrapContainerMock();
     const mockContainer = {
       resolve: jest.fn((token) => {
         if (token === 'IEventBus') return mockEventBus;
-        return null;
+        return baseContainer.resolve(token);
       }),
     };
 

@@ -6,6 +6,7 @@ import {
   it,
   jest,
 } from '@jest/globals';
+import { createMainBootstrapContainerMock } from '../../common/mockFactories/mainBootstrapContainer.js';
 
 const mockStages = {
   ensure: jest.fn(),
@@ -107,6 +108,7 @@ describe('main.js high fidelity coverage', () => {
       debug: jest.fn(),
       error: jest.fn(),
       info: jest.fn(),
+      warn: jest.fn(),
     };
     gameEngine = { showLoadGameUI: jest.fn().mockResolvedValue(undefined) };
 
@@ -114,7 +116,7 @@ describe('main.js high fidelity coverage', () => {
       success: true,
       payload: defaultUiElements,
     });
-    mockStages.setupDI.mockResolvedValue({ success: true, payload: {} });
+    mockStages.setupDI.mockResolvedValue({ success: true, payload: createMainBootstrapContainerMock() });
     mockStages.resolveLogger.mockResolvedValue({
       success: true,
       payload: { logger },

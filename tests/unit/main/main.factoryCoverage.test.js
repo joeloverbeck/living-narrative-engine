@@ -6,6 +6,7 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
+import { createMainBootstrapContainerMock } from '../../common/mockFactories/mainBootstrapContainer.js';
 
 const bootstrapperInstances = [];
 const containerInstances = [];
@@ -134,7 +135,7 @@ describe('main.js factory-driven bootstrap coverage', () => {
   });
 
   it('executes stage-provided factories for UI, container, and engine setup', async () => {
-    const logger = { debug: jest.fn(), error: jest.fn() };
+    const logger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn() };
 
     global.fetch.mockResolvedValue({
       ok: true,
@@ -151,11 +152,12 @@ describe('main.js factory-driven bootstrap coverage', () => {
       expect(elements.outputDiv).toBe(document.getElementById('outputDiv'));
       const container = createAppContainer();
       expect(container.marker).toBe('app-container');
-      // Add resolve method to container
+      // Add resolve method to container with bootstrap-required mocks
       const mockEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+      const baseContainer = createMainBootstrapContainerMock();
       container.resolve = jest.fn((token) => {
         if (token === 'IEventBus') return mockEventBus;
-        return null;
+        return baseContainer.resolve(token);
       });
       return { success: true, payload: container };
     });
@@ -212,7 +214,7 @@ describe('main.js factory-driven bootstrap coverage', () => {
   });
 
   it('reports fatal startup errors with DOM helpers when startGame stage fails', async () => {
-    const logger = { debug: jest.fn(), error: jest.fn() };
+    const logger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn() };
     const startError = new Error('start stage failure');
 
     global.fetch.mockResolvedValue({
@@ -227,11 +229,12 @@ describe('main.js factory-driven bootstrap coverage', () => {
 
     mockSetupDI.mockImplementation(async (_elements, _configure, { createAppContainer }) => {
       const container = createAppContainer();
-      // Add resolve method to container
+      // Add resolve method to container with bootstrap-required mocks
       const mockEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+      const baseContainer = createMainBootstrapContainerMock();
       container.resolve = jest.fn((token) => {
         if (token === 'IEventBus') return mockEventBus;
-        return null;
+        return baseContainer.resolve(token);
       });
       return { success: true, payload: container };
     });

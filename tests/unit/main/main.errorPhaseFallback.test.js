@@ -1,4 +1,5 @@
 import { jest, describe, it, expect, afterEach } from '@jest/globals';
+import { createMainBootstrapContainerMock } from '../../common/mockFactories/mainBootstrapContainer.js';
 
 const mockEnsure = jest.fn();
 const mockSetupDI = jest.fn();
@@ -63,11 +64,11 @@ describe('main.js error phase fallbacks', () => {
 
   it('prefers runtime fallback when all bootstrap services resolved', async () => {
     const uiElements = createUiElements();
-    const logger = { info: jest.fn(), debug: jest.fn(), error: jest.fn() };
+    const logger = { info: jest.fn(), debug: jest.fn(), error: jest.fn(), warn: jest.fn() };
     let setPhaseForTest;
 
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockSetupDI.mockResolvedValue({ success: true, payload: createMainBootstrapContainerMock() });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
     mockInitEngine.mockResolvedValue({
@@ -107,7 +108,7 @@ describe('main.js error phase fallbacks', () => {
     let setPhaseForTest;
 
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockSetupDI.mockResolvedValue({ success: true, payload: createMainBootstrapContainerMock() });
     const stageError = new Error('logger failure');
     mockResolveCore.mockImplementation(async () => {
       stageError.phase = '';
@@ -201,13 +202,13 @@ describe('main.js error phase fallbacks', () => {
 
   it('evaluates load UI branch regardless of game engine implementation', async () => {
     const uiElements = createUiElements();
-    const logger = { info: jest.fn(), debug: jest.fn(), error: jest.fn() };
+    const logger = { info: jest.fn(), debug: jest.fn(), error: jest.fn(), warn: jest.fn() };
     const gameEngine = {
       showLoadGameUI: jest.fn(),
     };
 
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockSetupDI.mockResolvedValue({ success: true, payload: createMainBootstrapContainerMock() });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
     mockInitEngine.mockResolvedValue({ success: true, payload: gameEngine });

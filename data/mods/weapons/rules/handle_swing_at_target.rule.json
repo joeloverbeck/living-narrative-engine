@@ -122,6 +122,23 @@
         "condition": { "==": [{ "var": "context.attackResult.outcome" }, "FUMBLE"] },
         "then_actions": [
           {
+            "type": "UNWIELD_ITEM",
+            "comment": "Fumble: release grip on weapon (idempotent)",
+            "parameters": {
+              "actorEntity": "{event.payload.actorId}",
+              "itemEntity": "{event.payload.primaryId}"
+            }
+          },
+          {
+            "type": "DROP_ITEM_AT_LOCATION",
+            "comment": "Fumble: weapon falls to the ground",
+            "parameters": {
+              "actorEntity": "{event.payload.actorId}",
+              "itemEntity": "{event.payload.primaryId}",
+              "locationId": "{context.actorPosition.locationId}"
+            }
+          },
+          {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
