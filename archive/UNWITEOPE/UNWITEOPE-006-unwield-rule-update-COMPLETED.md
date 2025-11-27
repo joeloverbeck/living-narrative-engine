@@ -1,5 +1,7 @@
 # UNWITEOPE-006: Simplify handle_unwield_item.rule.json
 
+**Status: ✅ COMPLETED**
+
 ## Summary
 
 Replace the 5 discrete unwielding operations in `handle_unwield_item.rule.json` with a single `UNWIELD_ITEM` operation, significantly simplifying the rule while preserving all functionality.
@@ -122,11 +124,13 @@ Insert after `SET_VARIABLE` for targetId, before `REGENERATE_DESCRIPTION`:
   "type": "UNWIELD_ITEM",
   "comment": "Stop wielding the item, releasing appendages and cleaning up wielding state",
   "parameters": {
-    "actor_id": "{event.payload.actorId}",
-    "item_id": "{event.payload.targetId}"
+    "actorEntity": "{event.payload.actorId}",
+    "itemEntity": "{event.payload.targetId}"
   }
 }
 ```
+
+**Note**: Parameter names are `actorEntity` and `itemEntity` (matching the schema and handler), not `actor_id` and `item_id` as originally assumed.
 
 ### Complete New Rule
 
@@ -194,8 +198,8 @@ Insert after `SET_VARIABLE` for targetId, before `REGENERATE_DESCRIPTION`:
       "type": "UNWIELD_ITEM",
       "comment": "Stop wielding the item, releasing appendages and cleaning up wielding state",
       "parameters": {
-        "actor_id": "{event.payload.actorId}",
-        "item_id": "{event.payload.targetId}"
+        "actorEntity": "{event.payload.actorId}",
+        "itemEntity": "{event.payload.targetId}"
       }
     },
     {
@@ -281,3 +285,33 @@ npm run test:ci
 | Logic duplication | With drop_item | None |
 | Error points | 5 (for unwield logic) | 1 |
 | Maintainability | Complex conditional | Simple encapsulated |
+
+## Outcome
+
+### What Changed vs. Originally Planned
+
+**Planned Changes:**
+- Replace 5 discrete unwielding operations with single `UNWIELD_ITEM` operation
+
+**Actual Changes:**
+- ✅ Replaced 5 operations (QUERY_COMPONENT, UNLOCK_GRABBING, MODIFY_ARRAY_FIELD, QUERY_COMPONENT, IF/REMOVE_COMPONENT) with single `UNWIELD_ITEM` operation
+- ✅ Rule simplified from 14 operations to 10 operations
+
+**Discrepancies Corrected:**
+- **Parameter naming**: Ticket originally specified `actor_id` and `item_id`, but the actual schema uses `actorEntity` and `itemEntity`. Ticket updated to reflect correct parameter names matching the handler and schema.
+
+### Verification
+
+- `npm run validate` → ✅ PASSED (0 violations across 44 mods)
+- Unit tests → ✅ 31 tests passed (`unwieldItemHandler.test.js`)
+- Integration tests → ✅ 540 tests passed across 73 test suites (items mod)
+- Full test suite → ✅ 37,552 tests passed across 2,255 test suites
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `data/mods/items/rules/handle_unwield_item.rule.json` | Replaced 5 discrete unwielding operations with single `UNWIELD_ITEM` operation |
+
+### Completion Date
+2025-11-27

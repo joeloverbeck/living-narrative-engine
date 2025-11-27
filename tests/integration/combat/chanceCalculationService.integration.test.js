@@ -255,6 +255,9 @@ describe('ChanceCalculationService Integration', () => {
 
       it('should detect failure on high roll', () => {
         // Set up an actor with low skill for lower threshold
+        // Using linear formula: 50 + (skill - difficulty)
+        // With skill 20 and difficulty 50: 50 + (20 - 50) = 20% threshold
+        // Roll 80 > 20% → FAILURE
         entityManager = createMockEntityManager({
           'low-skill-actor': {
             'skills:melee_skill': { value: 20 },
@@ -289,8 +292,11 @@ describe('ChanceCalculationService Integration', () => {
 
         const result = service.resolveOutcome({
           actorId: 'low-skill-actor',
-          actionDef: createChanceBasedActionDef(),
-          forcedRoll: 80, // High roll above threshold
+          actionDef: createChanceBasedActionDef({
+            formula: 'linear',
+            fixedDifficulty: 50,
+          }),
+          forcedRoll: 80, // High roll above threshold (20%)
         });
 
         expect(result.outcome).toBe('FAILURE');
@@ -298,15 +304,21 @@ describe('ChanceCalculationService Integration', () => {
       });
 
       it('should detect fumble on very high roll', () => {
+        // Using linear formula: 50 + (skill - difficulty)
+        // With skill 60 and difficulty 50: 50 + (60 - 50) = 60% threshold
+        // Roll 95 > 60% → FAILURE
+        // Roll 95 >= criticalFailure (90) → FUMBLE
         const result = service.resolveOutcome({
           actorId: 'actor-123',
           actionDef: createChanceBasedActionDef({
+            formula: 'linear',
+            fixedDifficulty: 50,
             outcomes: {
               criticalSuccess: 5,
               criticalFailure: 90,
             },
           }),
-          forcedRoll: 95, // Very high roll
+          forcedRoll: 95, // Very high roll above threshold (60%) and >= criticalFailure (90)
         });
 
         expect(result.outcome).toBe('FUMBLE');

@@ -4,7 +4,9 @@
  */
 
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
-import ResolveOutcomeHandler from '../../../../src/logic/operationHandlers/resolveOutcomeHandler.js';
+import ResolveOutcomeHandler, {
+  ResolveOutcomeOperationError,
+} from '../../../../src/logic/operationHandlers/resolveOutcomeHandler.js';
 
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
 
@@ -148,98 +150,143 @@ describe('ResolveOutcomeHandler', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Parameter Validation Tests
+  // Parameter Validation Tests - Fail Fast Behavior
   // ---------------------------------------------------------------------------
 
-  describe('Parameter Validation', () => {
-    test('logs error and returns if actor_skill_component is missing', () => {
+  describe('Parameter Validation - Fail Fast', () => {
+    test('throws ResolveOutcomeOperationError when actor_skill_component is missing', () => {
       const ctx = buildExecutionContext(mockLogger);
       const params = { result_variable: 'outcome' };
 
-      handler.execute(params, ctx);
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'RESOLVE_OUTCOME: Missing or invalid "actor_skill_component" parameter. Must be a non-empty string.',
-        { params }
+      expect(() => handler.execute(params, ctx)).toThrow(
+        ResolveOutcomeOperationError
       );
-      expect(ctx.evaluationContext.context.outcome).toBeUndefined();
+      expect(() => handler.execute(params, ctx)).toThrow(
+        'Missing or invalid "actor_skill_component"'
+      );
     });
 
-    test('logs error and returns if actor_skill_component is not a string', () => {
+    test('throws ResolveOutcomeOperationError when actor_skill_component is not a string', () => {
       const ctx = buildExecutionContext(mockLogger);
       const params = { actor_skill_component: 123, result_variable: 'outcome' };
 
-      handler.execute(params, ctx);
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'RESOLVE_OUTCOME: Missing or invalid "actor_skill_component" parameter. Must be a non-empty string.',
-        { params }
+      expect(() => handler.execute(params, ctx)).toThrow(
+        ResolveOutcomeOperationError
+      );
+      expect(() => handler.execute(params, ctx)).toThrow(
+        'Missing or invalid "actor_skill_component"'
       );
     });
 
-    test('logs error and returns if result_variable is missing', () => {
+    test('throws ResolveOutcomeOperationError when result_variable is missing', () => {
       const ctx = buildExecutionContext(mockLogger);
       const params = { actor_skill_component: 'skills:melee' };
 
-      handler.execute(params, ctx);
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'RESOLVE_OUTCOME: Missing or invalid "result_variable" parameter. Must be a non-empty string.',
-        { params }
+      expect(() => handler.execute(params, ctx)).toThrow(
+        ResolveOutcomeOperationError
+      );
+      expect(() => handler.execute(params, ctx)).toThrow(
+        'Missing or invalid "result_variable"'
       );
     });
 
-    test('logs error and returns if result_variable is not a string', () => {
+    test('throws ResolveOutcomeOperationError when result_variable is not a string', () => {
       const ctx = buildExecutionContext(mockLogger);
-      const params = { actor_skill_component: 'skills:melee', result_variable: 42 };
+      const params = {
+        actor_skill_component: 'skills:melee',
+        result_variable: 42,
+      };
 
-      handler.execute(params, ctx);
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'RESOLVE_OUTCOME: Missing or invalid "result_variable" parameter. Must be a non-empty string.',
-        { params }
+      expect(() => handler.execute(params, ctx)).toThrow(
+        ResolveOutcomeOperationError
+      );
+      expect(() => handler.execute(params, ctx)).toThrow(
+        'Missing or invalid "result_variable"'
       );
     });
 
-    test('logs error and returns if params is null', () => {
+    test('throws ResolveOutcomeOperationError when params is null', () => {
       const ctx = buildExecutionContext(mockLogger);
 
-      handler.execute(null, ctx);
-
-      expect(mockLogger.error).toHaveBeenCalled();
+      expect(() => handler.execute(null, ctx)).toThrow(
+        ResolveOutcomeOperationError
+      );
     });
 
-    test('logs error and returns if params is undefined', () => {
+    test('throws ResolveOutcomeOperationError when params is undefined', () => {
       const ctx = buildExecutionContext(mockLogger);
 
-      handler.execute(undefined, ctx);
+      expect(() => handler.execute(undefined, ctx)).toThrow(
+        ResolveOutcomeOperationError
+      );
+    });
 
-      expect(mockLogger.error).toHaveBeenCalled();
+    test('includes diagnostic details for missing actor_skill_component', () => {
+      const ctx = buildExecutionContext(mockLogger);
+      const params = { result_variable: 'outcome' };
+
+      try {
+        handler.execute(params, ctx);
+        throw new Error('Expected ResolveOutcomeOperationError');
+      } catch (err) {
+        expect(err).toBeInstanceOf(ResolveOutcomeOperationError);
+        expect(err.details.receivedValue).toBeUndefined();
+        expect(err.details.receivedType).toBe('undefined');
+        expect(err.details.allParams).toEqual(params);
+      }
+    });
+
+    test('logs error before throwing', () => {
+      const ctx = buildExecutionContext(mockLogger);
+      const params = { result_variable: 'outcome' };
+
+      expect(() => handler.execute(params, ctx)).toThrow();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('actor_skill_component'),
+        expect.any(Object)
+      );
     });
   });
 
   // ---------------------------------------------------------------------------
-  // Event Payload Validation Tests
+  // Event Payload Validation Tests - Fail Fast Behavior
   // ---------------------------------------------------------------------------
 
-  describe('Event Payload Validation', () => {
-    test('logs error and returns if actorId is missing from event payload', () => {
+  describe('Event Payload Validation - Fail Fast', () => {
+    test('throws ResolveOutcomeOperationError when actorId is missing from event payload', () => {
       const ctx = buildExecutionContext(mockLogger, { actorId: undefined });
       const params = {
         actor_skill_component: 'skills:melee',
         result_variable: 'outcome',
       };
 
-      handler.execute(params, ctx);
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'RESOLVE_OUTCOME: Missing actorId in event payload.',
-        expect.any(Object)
+      expect(() => handler.execute(params, ctx)).toThrow(
+        ResolveOutcomeOperationError
       );
-      expect(ctx.evaluationContext.context.outcome).toBeUndefined();
+      expect(() => handler.execute(params, ctx)).toThrow('Missing actorId');
     });
 
-    test('logs error and returns if evaluationContext.context is missing', () => {
+    test('includes diagnostic details for missing actorId', () => {
+      const ctx = buildExecutionContext(mockLogger, { actorId: undefined });
+      const params = {
+        actor_skill_component: 'skills:melee',
+        result_variable: 'outcome',
+      };
+
+      try {
+        handler.execute(params, ctx);
+        throw new Error('Expected ResolveOutcomeOperationError');
+      } catch (err) {
+        expect(err).toBeInstanceOf(ResolveOutcomeOperationError);
+        expect(err.details.hasEvent).toBe(true);
+        expect(err.details.hasPayload).toBe(true);
+        expect(err.details.eventPayload).toBeDefined();
+        expect(err.details.hasExecutionContext).toBe(true);
+        expect(err.details.hasEvaluationContext).toBe(true);
+      }
+    });
+
+    test('throws ResolveOutcomeOperationError when evaluationContext.context is missing', () => {
       const ctx = {
         evaluationContext: {
           event: { payload: { actorId: 'actor-123' } },
@@ -252,10 +299,48 @@ describe('ResolveOutcomeHandler', () => {
         result_variable: 'outcome',
       };
 
-      handler.execute(params, ctx);
+      expect(() => handler.execute(params, ctx)).toThrow(
+        ResolveOutcomeOperationError
+      );
+      expect(() => handler.execute(params, ctx)).toThrow(
+        'Missing evaluationContext.context'
+      );
+    });
 
+    test('includes diagnostic details for missing context', () => {
+      const ctx = {
+        evaluationContext: {
+          event: { payload: { actorId: 'actor-123' } },
+        },
+        logger: mockLogger,
+      };
+      const params = {
+        actor_skill_component: 'skills:melee',
+        result_variable: 'outcome',
+      };
+
+      try {
+        handler.execute(params, ctx);
+        throw new Error('Expected ResolveOutcomeOperationError');
+      } catch (err) {
+        expect(err).toBeInstanceOf(ResolveOutcomeOperationError);
+        expect(err.details.hasExecutionContext).toBe(true);
+        expect(err.details.hasEvaluationContext).toBe(true);
+        expect(err.details.result_variable).toBe('outcome');
+      }
+    });
+
+    test('logs error before throwing for missing actorId', () => {
+      const ctx = buildExecutionContext(mockLogger, { actorId: undefined });
+      const params = {
+        actor_skill_component: 'skills:melee',
+        result_variable: 'outcome',
+      };
+
+      expect(() => handler.execute(params, ctx)).toThrow();
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'RESOLVE_OUTCOME: Missing evaluationContext.context for variable storage.'
+        expect.stringContaining('Missing actorId'),
+        expect.any(Object)
       );
     });
   });
@@ -612,6 +697,38 @@ describe('ResolveOutcomeHandler', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('outcome: SUCCESS')
       );
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // ResolveOutcomeOperationError Class Tests
+  // ---------------------------------------------------------------------------
+
+  describe('ResolveOutcomeOperationError class', () => {
+    test('has correct name property', () => {
+      const error = new ResolveOutcomeOperationError('test message');
+      expect(error.name).toBe('ResolveOutcomeOperationError');
+    });
+
+    test('stores details object', () => {
+      const details = { foo: 'bar', baz: 123 };
+      const error = new ResolveOutcomeOperationError('test message', details);
+      expect(error.details).toEqual(details);
+    });
+
+    test('defaults details to empty object', () => {
+      const error = new ResolveOutcomeOperationError('test message');
+      expect(error.details).toEqual({});
+    });
+
+    test('extends Error', () => {
+      const error = new ResolveOutcomeOperationError('test message');
+      expect(error).toBeInstanceOf(Error);
+    });
+
+    test('preserves message', () => {
+      const error = new ResolveOutcomeOperationError('custom error message');
+      expect(error.message).toBe('custom error message');
     });
   });
 });

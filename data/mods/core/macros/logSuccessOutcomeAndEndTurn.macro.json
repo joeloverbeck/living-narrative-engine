@@ -1,0 +1,34 @@
+{
+  "$schema": "schema://living-narrative-engine/macro.schema.json",
+  "id": "core:logSuccessOutcomeAndEndTurn",
+  "description": "Logs a successful action outcome and ends the turn with success=true. Use for SUCCESS/CRITICAL_SUCCESS outcomes.",
+  "actions": [
+    {
+      "type": "DISPATCH_EVENT",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": { "message": "{context.logMessage}" }
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "parameters": {
+        "eventType": "core:action_success",
+        "payload": {
+          "eventName": "core:action_success",
+          "actionId": "{event.payload.actionId}",
+          "actorId": "{event.payload.actorId}",
+          "targetId": "{event.payload.targetId}",
+          "success": true
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
+    }
+  ]
+}

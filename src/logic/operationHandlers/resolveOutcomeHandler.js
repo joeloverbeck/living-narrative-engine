@@ -48,6 +48,29 @@
  */
 
 // -----------------------------------------------------------------------------
+//  Error class
+// -----------------------------------------------------------------------------
+
+/**
+ * Error thrown when RESOLVE_OUTCOME operation fails due to invalid parameters.
+ * Includes diagnostic details to help identify the root cause.
+ *
+ * FAIL-FAST: This error is thrown immediately when validation fails,
+ * rather than silently returning and causing cryptic timeout errors.
+ */
+export class ResolveOutcomeOperationError extends Error {
+  /**
+   * @param {string} message - Error message
+   * @param {object} details - Diagnostic details about the failure
+   */
+  constructor(message, details = {}) {
+    super(message);
+    this.name = 'ResolveOutcomeOperationError';
+    this.details = details;
+  }
+}
+
+// -----------------------------------------------------------------------------
 //  Handler implementation
 // -----------------------------------------------------------------------------
 
@@ -55,6 +78,10 @@
  * @class ResolveOutcomeHandler
  * Implements the operation handler for the "RESOLVE_OUTCOME" operation type.
  * Delegates to ChanceCalculationService for outcome resolution in non-deterministic actions.
+ *
+ * FAIL-FAST: This handler throws ResolveOutcomeOperationError on invalid parameters
+ * rather than silently returning. This makes debugging outcome resolution failures
+ * immediately visible instead of causing cryptic timeout errors.
  */
 class ResolveOutcomeHandler {
   /** @type {object} */
@@ -118,21 +145,31 @@ class ResolveOutcomeHandler {
       result_variable,
     } = params || {};
 
-    // --- 1. Validate Required Parameters ---
+    // --- 1. Validate Required Parameters (FAIL-FAST) ---
     if (!actor_skill_component || typeof actor_skill_component !== 'string') {
-      this.#logger.error(
+      const error = new ResolveOutcomeOperationError(
         'RESOLVE_OUTCOME: Missing or invalid "actor_skill_component" parameter. Must be a non-empty string.',
-        { params }
+        {
+          receivedValue: actor_skill_component,
+          receivedType: typeof actor_skill_component,
+          allParams: params,
+        }
       );
-      return;
+      this.#logger.error(error.message, error.details);
+      throw error;
     }
 
     if (!result_variable || typeof result_variable !== 'string') {
-      this.#logger.error(
+      const error = new ResolveOutcomeOperationError(
         'RESOLVE_OUTCOME: Missing or invalid "result_variable" parameter. Must be a non-empty string.',
-        { params }
+        {
+          receivedValue: result_variable,
+          receivedType: typeof result_variable,
+          allParams: params,
+        }
       );
-      return;
+      this.#logger.error(error.message, error.details);
+      throw error;
     }
 
     // --- 2. Extract Actor/Target IDs from Event ---
@@ -141,10 +178,19 @@ class ResolveOutcomeHandler {
     const targetId = event?.payload?.secondaryId || event?.payload?.targetId;
 
     if (!actorId) {
-      this.#logger.error('RESOLVE_OUTCOME: Missing actorId in event payload.', {
-        eventPayload: event?.payload,
-      });
-      return;
+      const error = new ResolveOutcomeOperationError(
+        'RESOLVE_OUTCOME: Missing actorId in event payload. ' +
+          'This usually means the event was not properly constructed or placeholder resolution failed.',
+        {
+          eventPayload: event?.payload,
+          hasEvent: !!event,
+          hasPayload: !!event?.payload,
+          hasExecutionContext: !!executionContext,
+          hasEvaluationContext: !!executionContext?.evaluationContext,
+        }
+      );
+      this.#logger.error(error.message, error.details);
+      throw error;
     }
 
     // --- 3. Build Pseudo-ActionDef from Operation Parameters ---
@@ -190,12 +236,18 @@ class ResolveOutcomeHandler {
       modifiers: outcomeResult.modifiers,
     };
 
-    // --- 6. Store in Context Variable ---
+    // --- 6. Store in Context Variable (FAIL-FAST) ---
     if (!executionContext?.evaluationContext?.context) {
-      this.#logger.error(
-        'RESOLVE_OUTCOME: Missing evaluationContext.context for variable storage.'
+      const error = new ResolveOutcomeOperationError(
+        'RESOLVE_OUTCOME: Missing evaluationContext.context for variable storage.',
+        {
+          hasExecutionContext: !!executionContext,
+          hasEvaluationContext: !!executionContext?.evaluationContext,
+          result_variable,
+        }
       );
-      return;
+      this.#logger.error(error.message, error.details);
+      throw error;
     }
 
     executionContext.evaluationContext.context[result_variable] = result;

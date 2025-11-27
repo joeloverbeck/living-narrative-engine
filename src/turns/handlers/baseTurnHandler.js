@@ -31,6 +31,8 @@ export class BaseTurnHandler {
   _isDestroyed = false;
   _isDestroying = false;
   _currentActor = null;
+  /** @type {Promise<void>|null} Lock held during state transitions to prevent destroy() during transition */
+  _transitionLock = null;
 
   /**
    * @param {object} deps
@@ -241,62 +243,78 @@ export class BaseTurnHandler {
       `${this.constructor.name}: State Transition: ${prevStateName} → ${newState.getStateName()}`
     );
 
-    if (prevState) {
-      try {
-        await this.onExitState(prevState, newState);
-        await prevState.exitState(this, newState);
-      } catch (exitErr) {
-        logger.error(
-          `${this.constructor.name}: Error during ${prevStateName}.exitState or onExitState hook – ${exitErr.message}`,
-          exitErr
-        );
-      }
-    }
-
-    this._currentState = newState;
+    // Create transition lock to prevent destroy() from running mid-transition
+    let resolveLock;
+    this._transitionLock = new Promise((resolve) => {
+      resolveLock = resolve;
+    });
 
     try {
-      await this.onEnterState(newState, prevState);
-      await newState.enterState(this, prevState);
-    } catch (enterErr) {
-      logger.error(
-        `${this.constructor.name}: Error during ${newState.getStateName()}.enterState or onEnterState hook – ${enterErr.message}`,
-        enterErr
-      );
-      // MODIFIED: Use the new identity method for the recovery check.
-      const currentIsIdle =
-        typeof this._currentState.isIdle === 'function'
-          ? this._currentState.isIdle()
-          : false;
-      if (!currentIsIdle) {
-        logger.warn(
-          `${this.constructor.name}: Forcing transition to TurnIdleState due to error entering ${newState.getStateName()}.`
-        );
-        const actorIdForErr =
-          this._currentTurnContext?.getActor()?.id ??
-          this._currentActor?.id ??
-          'N/A';
-        this._resetTurnStateAndResources(
-          `error-entering-${newState.getStateName()}-for-${actorIdForErr}`
-        );
+      if (prevState) {
         try {
-          // Use the factory to recover.
-          await this._transitionToState(
-            this._turnStateFactory.createIdleState(this)
-          );
-        } catch (idleErr) {
+          await this.onExitState(prevState, newState);
+          await prevState.exitState(this, newState);
+        } catch (exitErr) {
           logger.error(
-            `${this.constructor.name}: CRITICAL - Failed to transition to TurnIdleState after error. Error: ${idleErr.message}`,
-            idleErr
+            `${this.constructor.name}: Error during ${prevStateName}.exitState or onExitState hook – ${exitErr.message}`,
+            exitErr
           );
-          // Forcibly set state as a last resort.
-          this._currentState = this._turnStateFactory.createIdleState(this);
         }
-      } else {
-        logger.error(
-          `${this.constructor.name}: CRITICAL - Failed to enter TurnIdleState even after an error.`
-        );
       }
+
+      this._currentState = newState;
+
+      try {
+        await this.onEnterState(newState, prevState);
+        await newState.enterState(this, prevState);
+      } catch (enterErr) {
+        logger.error(
+          `${this.constructor.name}: Error during ${newState.getStateName()}.enterState or onEnterState hook – ${enterErr.message}`,
+          enterErr
+        );
+        // MODIFIED: Use the new identity method for the recovery check.
+        const currentIsIdle =
+          typeof this._currentState.isIdle === 'function'
+            ? this._currentState.isIdle()
+            : false;
+        if (!currentIsIdle) {
+          logger.warn(
+            `${this.constructor.name}: Forcing transition to TurnIdleState due to error entering ${newState.getStateName()}.`
+          );
+          const actorIdForErr =
+            this._currentTurnContext?.getActor()?.id ??
+            this._currentActor?.id ??
+            'N/A';
+          this._resetTurnStateAndResources(
+            `error-entering-${newState.getStateName()}-for-${actorIdForErr}`
+          );
+          try {
+            // Release lock before recursive call to avoid deadlock
+            resolveLock();
+            this._transitionLock = null;
+            // Use the factory to recover.
+            await this._transitionToState(
+              this._turnStateFactory.createIdleState(this)
+            );
+            return; // Lock already released, skip finally
+          } catch (idleErr) {
+            logger.error(
+              `${this.constructor.name}: CRITICAL - Failed to transition to TurnIdleState after error. Error: ${idleErr.message}`,
+              idleErr
+            );
+            // Forcibly set state as a last resort.
+            this._currentState = this._turnStateFactory.createIdleState(this);
+          }
+        } else {
+          logger.error(
+            `${this.constructor.name}: CRITICAL - Failed to enter TurnIdleState even after an error.`
+          );
+        }
+      }
+    } finally {
+      // Release transition lock
+      resolveLock();
+      this._transitionLock = null;
     }
   }
 
@@ -516,6 +534,43 @@ export class BaseTurnHandler {
     if (this._isDestroyed) {
       logger.debug(`${name}.destroy() called but already destroyed.`);
       return;
+    }
+
+    // Wait for any active state transition to complete before destruction
+    // This prevents the race condition where destroy() runs mid-transition
+    if (this._transitionLock) {
+      logger.debug(`${name}.destroy: Waiting for active state transition to complete.`);
+      await this._transitionLock;
+    }
+
+    // Notify turn ended BEFORE destruction begins (handler still active)
+    // This moves the notification from TurnEndingState.enterState() to here,
+    // eliminating the race condition where notification triggers destruction mid-state-entry
+    if (
+      this._currentState &&
+      typeof this._currentState.isEnding === 'function' &&
+      this._currentState.isEnding() &&
+      this._currentTurnContext
+    ) {
+      try {
+        const actorId = this._currentActor?.id;
+        const turnEndPort = this._currentTurnContext.getTurnEndPort?.();
+        // Determine success based on whether there was a turn error
+        // TurnEndingState tracks this via #turnError field, but we can check
+        // if the state was entered due to an error by examining _lastTurnError
+        const success = !this._lastTurnError;
+        if (actorId && turnEndPort) {
+          logger.debug(
+            `${name}.destroy: Notifying turn end for actor ${actorId}, success=${success}`
+          );
+          await turnEndPort.notifyTurnEnded(actorId, success);
+        }
+      } catch (err) {
+        logger.warn(
+          `${name}.destroy: Error notifying turn end: ${err.message}`,
+          err
+        );
+      }
     }
 
     this._isDestroying = true;

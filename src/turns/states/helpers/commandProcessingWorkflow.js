@@ -19,7 +19,8 @@
 import { ServiceLookupError } from './getServiceFromContext.js';
 import { ProcessingExceptionHandler } from './processingExceptionHandler.js';
 import { finishProcessing } from './processingErrorUtils.js';
-import { getLogger } from './contextUtils.js';
+import { getLogger, getSafeEventDispatcher } from './contextUtils.js';
+import { TURN_ENDED_ID } from '../../../constants/eventIds.js';
 
 /**
  * @class CommandProcessingWorkflow
@@ -477,6 +478,38 @@ export class CommandProcessingWorkflow {
    */
   async processCommand(turnCtx, actor, turnAction) {
     const actorId = actor.id;
+    const logger = turnCtx.getLogger();
+
+    // Set up early listener for turn_ended event BEFORE dispatch.
+    // This captures events that fire during dispatchAction but before
+    // AwaitingExternalTurnEndState sets up its listener (race condition fix).
+    let earlyUnsubscribe = null;
+    let earlyEventCaptured = false;
+
+    const dispatcher = getSafeEventDispatcher(turnCtx, this._state?._handler);
+    if (dispatcher && typeof dispatcher.subscribe === 'function') {
+      earlyUnsubscribe = dispatcher.subscribe(TURN_ENDED_ID, (event) => {
+        // Only capture events for THIS actor
+        if (event.payload?.entityId === actorId && !earlyEventCaptured) {
+          earlyEventCaptured = true;
+          logger.debug(
+            `CommandProcessingWorkflow: Captured early turn_ended event for ${actorId} during dispatch`
+          );
+          // Store in context for AwaitingExternalTurnEndState to consume
+          if (typeof turnCtx.setPendingTurnEndEvent === 'function') {
+            turnCtx.setPendingTurnEndEvent(event);
+          }
+        }
+      });
+
+      // Store unsubscribe function on context for AwaitingExternalTurnEndState to call.
+      // We do NOT unsubscribe in finally block because queueMicrotask in EndTurnHandler
+      // defers the event dispatch until AFTER finally block runs. The listener must
+      // stay active until AwaitingExternalTurnEndState enters and handles cleanup.
+      if (typeof turnCtx.setEarlyListenerUnsubscribe === 'function') {
+        turnCtx.setEarlyListenerUnsubscribe(earlyUnsubscribe);
+      }
+    }
 
     try {
       const dispatchResult = await this._dispatchAction(
@@ -545,6 +578,13 @@ export class CommandProcessingWorkflow {
         actorIdForHandler
       );
     } finally {
+      // NOTE: We do NOT unsubscribe earlyUnsubscribe here!
+      // The queueMicrotask in EndTurnHandler defers event dispatch until AFTER
+      // this finally block completes. If we unsubscribe here, the early listener
+      // will be gone before the turn_ended event fires (race condition).
+      // Instead, the unsubscribe function is stored on turnCtx._earlyListenerUnsubscribe
+      // for AwaitingExternalTurnEndState to call when it enters.
+
       if (
         this._state.isProcessing &&
         this._state._handler.getCurrentState() === this._state

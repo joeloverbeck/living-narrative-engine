@@ -665,7 +665,10 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
           // Step 4: Execute workflow
           await handlers.GET_NAME.execute(['workflow-entity']);
           await handlers.LOG_MESSAGE.execute(['Performance test']);
-          await handlers.END_TURN.execute([]);
+          await handlers.END_TURN.execute({
+            entityId: 'workflow-entity',
+            success: true,
+          });
 
           // Step 5: Assert results
           const mockEvents = [

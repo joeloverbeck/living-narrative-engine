@@ -144,7 +144,8 @@ class ModifierCollectorService {
    */
   #calculateTotals(modifiers) {
     let totalFlat = 0;
-    let totalPercentage = 0;
+    // Start at 1 (identity for multiplication) - not 0 which would zero out the result
+    let totalPercentage = 1;
 
     for (const mod of modifiers) {
       if (mod.type === 'flat') {

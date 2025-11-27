@@ -1,6 +1,11 @@
 /**
  * @file Test suite for the AwaitingExternalTurnEndState class.
- * @see tests/turns/states/awaitingExternalTurnEndState.comprehensive.test.js
+ *
+ * This tests the Promise.race-based implementation that uses AbortController
+ * for deterministic "first wins" behavior between event reception and timeout.
+ *
+ * @see src/turns/states/awaitingExternalTurnEndState.js
+ * @see src/turns/utils/cancellablePrimitives.js
  */
 
 import {
@@ -13,7 +18,7 @@ import {
 } from '@jest/globals';
 import { expectNoDispatch } from '../../../common/engine/dispatchTestUtils.js';
 
-const TIMEOUT_MS = 100; // Increased from 10ms to allow more time for async operations
+const TIMEOUT_MS = 100;
 
 // --- Module Mocks ---
 
@@ -21,9 +26,7 @@ const TIMEOUT_MS = 100; // Increased from 10ms to allow more time for async oper
 // a new instance of it for error recovery. This lets us verify that behavior.
 jest.mock('../../../../src/turns/states/turnIdleState.js', () => ({
   TurnIdleState: jest.fn().mockImplementation((handler) => ({
-    // Provide a mock getStateName for logging purposes during transitions.
     getStateName: () => 'MockedTurnIdleState',
-    // Store the handler it was created with for verification.
     _handler: handler,
   })),
 }));
@@ -52,14 +55,35 @@ const makeMockLogger = () => ({
 });
 
 /**
- * Creates a mock SafeEventDispatcher.
+ * Creates a mock SafeEventDispatcher that captures subscribers and allows manual event dispatch.
  *
- * @returns {jest.Mocked<{subscribe: Function, dispatch: Function}>} Mock dispatcher
+ * @returns {object} Mock dispatcher with subscribe, dispatch, and test helpers
  */
-const makeMockSafeEventDispatcher = () => ({
-  subscribe: jest.fn(),
-  dispatch: jest.fn(),
-});
+const makeMockSafeEventDispatcher = () => {
+  const subscribers = new Map();
+
+  return {
+    subscribe: jest.fn((eventId, callback) => {
+      if (!subscribers.has(eventId)) {
+        subscribers.set(eventId, new Set());
+      }
+      subscribers.get(eventId).add(callback);
+      // Return unsubscribe function
+      return jest.fn(() => {
+        subscribers.get(eventId)?.delete(callback);
+      });
+    }),
+    dispatch: jest.fn(),
+    // Test helper to manually trigger events
+    _triggerEvent: (eventId, event) => {
+      const callbacks = subscribers.get(eventId);
+      if (callbacks) {
+        callbacks.forEach((cb) => cb(event));
+      }
+    },
+    _getSubscribers: () => subscribers,
+  };
+};
 
 /**
  * Creates a mock ITurnContext.
@@ -70,11 +94,9 @@ const makeMockSafeEventDispatcher = () => ({
 const makeMockTurnContext = (actorId = 'player1') => ({
   getActor: jest.fn().mockReturnValue({ id: actorId }),
   getLogger: jest.fn().mockReturnValue(makeMockLogger()),
-  getSafeEventDispatcher: jest
-    .fn()
-    .mockReturnValue(makeMockSafeEventDispatcher()),
+  getSafeEventDispatcher: jest.fn().mockReturnValue(makeMockSafeEventDispatcher()),
   setAwaitingExternalEvent: jest.fn(),
-  isAwaitingExternalEvent: jest.fn().mockReturnValue(true), // Default to true for an active state.
+  isAwaitingExternalEvent: jest.fn().mockReturnValue(true),
   endTurn: jest.fn(),
   getChosenActionId: jest.fn(),
   getChosenAction: jest.fn(),
@@ -96,6 +118,19 @@ const makeMockTurnHandler = () => ({
   requestIdleStateTransition: jest.fn().mockResolvedValue(undefined),
 });
 
+/**
+ * Helper to flush all pending promises and timers.
+ * Required because the Promise.race pattern interleaves microtasks with timers.
+ *
+ * @returns {Promise<void>}
+ */
+const flushPromisesAndTimers = async () => {
+  // Flush microtask queue multiple times to handle nested promises
+  await Promise.resolve();
+  await Promise.resolve();
+  await Promise.resolve();
+};
+
 // --- Test Suite ---
 
 describe('AwaitingExternalTurnEndState', () => {
@@ -105,54 +140,30 @@ describe('AwaitingExternalTurnEndState', () => {
   let mockEventDispatcher;
   let state;
 
-  // Store the unsubscribe function returned by dispatcher.subscribe.
-  let mockUnsubscribeFn;
-
-  // --- FIX: Add spies for global timer functions ---
-  let setTimeoutSpy;
-  let clearTimeoutSpy;
-
   beforeEach(() => {
-    // Use fake timers to control setTimeout/clearTimeout and advance time manually.
     jest.useFakeTimers();
-
-    // Spy on global timers before each test to allow for assertions.
-    setTimeoutSpy = jest.spyOn(global, 'setTimeout');
-    clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
 
     mockHandler = makeMockTurnHandler();
     mockTurnContext = makeMockTurnContext('player-1');
 
-    // --- FIX: Unify the logger instance ---
-    // This single logger will be used by both handler and context mocks.
     mockLogger = makeMockLogger();
     mockHandler.getLogger.mockReturnValue(mockLogger);
     mockTurnContext.getLogger.mockReturnValue(mockLogger);
 
-    mockEventDispatcher = mockTurnContext.getSafeEventDispatcher();
+    mockEventDispatcher = makeMockSafeEventDispatcher();
+    mockTurnContext.getSafeEventDispatcher.mockReturnValue(mockEventDispatcher);
 
-    // Link the handler and context.
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
-
-    // Setup the event dispatcher mock to capture the listener and return a mock unsubscribe function.
-    mockUnsubscribeFn = jest.fn();
-    mockEventDispatcher.subscribe.mockImplementation(() => mockUnsubscribeFn);
 
     state = new AwaitingExternalTurnEndState(mockHandler, {
       timeoutMs: TIMEOUT_MS,
-      setTimeoutFn: global.setTimeout,
-      clearTimeoutFn: global.clearTimeout,
     });
   });
 
   afterEach(() => {
     jest.clearAllMocks();
-    // Clear any pending timers to prevent test bleed.
     jest.clearAllTimers();
-
-    // --- FIX: Restore original timer functions ---
-    setTimeoutSpy.mockRestore();
-    clearTimeoutSpy.mockRestore();
+    jest.useRealTimers();
   });
 
   // --- Basic State Properties ---
@@ -165,7 +176,6 @@ describe('AwaitingExternalTurnEndState', () => {
     test('should log an error and transition to idle if no turn context is available', async () => {
       // Arrange
       mockHandler.getTurnContext.mockReturnValue(null);
-      // This uses the handler's logger, which we've mocked.
 
       // Act
       await state.enterState(mockHandler, null);
@@ -177,31 +187,42 @@ describe('AwaitingExternalTurnEndState', () => {
       expect(mockHandler.requestIdleStateTransition).toHaveBeenCalledTimes(1);
     });
 
-    test('should set up guards and subscribe to events on successful entry', async () => {
+    test('should set up subscription and mark context as awaiting on successful entry', async () => {
       // Arrange
       mockTurnContext.getActor.mockReturnValue({ id: 'actor-alpha' });
 
-      // Act
-      await state.enterState(mockHandler, null);
+      // Act - don't await because enterState now blocks until event/timeout
+      const enterPromise = state.enterState(mockHandler, null);
 
-      // Assert
-      // 1. Subscribes to the turn ended event.
+      // Allow microtasks to run - need to flush multiple times for nested promises
+      await flushPromisesAndTimers();
+
+      // Assert - check that setup happened
       expect(mockEventDispatcher.subscribe).toHaveBeenCalledWith(
         TURN_ENDED_ID,
         expect.any(Function)
       );
-
-      // 2. Marks the context as awaiting an event.
       expect(mockTurnContext.setAwaitingExternalEvent).toHaveBeenCalledWith(
         true,
         'actor-alpha'
       );
 
-      // 3. Sets a timeout with the provided value.
-      expect(setTimeoutSpy).toHaveBeenCalledTimes(1);
-      expect(setTimeoutSpy).toHaveBeenCalledWith(
-        expect.any(Function),
-        TIMEOUT_MS
+      // Cleanup - trigger timeout to complete the promise
+      jest.advanceTimersByTime(TIMEOUT_MS);
+      await flushPromisesAndTimers();
+      await enterPromise;
+    });
+
+    test('should log error if dispatcher is not available', async () => {
+      // Arrange
+      mockTurnContext.getSafeEventDispatcher.mockReturnValue(null);
+
+      // Act
+      await state.enterState(mockHandler, null);
+
+      // Assert
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('No dispatcher available')
       );
     });
 
@@ -229,14 +250,18 @@ describe('AwaitingExternalTurnEndState', () => {
         // Arrange
         setupFn();
 
-        // Act
-        await state.enterState(mockHandler, null);
-        // Manually trigger timeout to check the actionId in the generated error message.
-        jest.advanceTimersByTime(TIMEOUT_MS);
-        await Promise.resolve();
-        await Promise.resolve();
+        // Act - start enterState
+        const enterPromise = state.enterState(mockHandler, null);
 
-        // Assert
+        // Flush promises to allow state setup
+        await flushPromisesAndTimers();
+
+        // Trigger timeout to complete
+        jest.advanceTimersByTime(TIMEOUT_MS);
+        await flushPromisesAndTimers();
+        await enterPromise;
+
+        // Assert - check the actionId in the dispatched error
         expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
         const dispatchPayload = mockEventDispatcher.dispatch.mock.calls[0][1];
         expect(dispatchPayload.details.actionId).toBe(expectedActionId);
@@ -244,61 +269,36 @@ describe('AwaitingExternalTurnEndState', () => {
     );
   });
 
-  // --- handleTurnEndedEvent ---
-  describe('handleTurnEndedEvent', () => {
-    beforeEach(async () => {
-      // Enter the state to set everything up.
-      await state.enterState(mockHandler, null);
-    });
-
-    test('should do nothing if the context is lost', async () => {
-      // Arrange
-      mockHandler.getTurnContext.mockReturnValue(null);
-
-      // Act
-      await state.handleTurnEndedEvent(mockHandler, {
-        payload: { entityId: 'player-1' },
-      });
-
-      // Assert
-      expect(mockTurnContext.endTurn).not.toHaveBeenCalled();
-    });
-
-    test('should ignore events for other actors', async () => {
-      // Arrange
-      const eventForOtherActor = { payload: { entityId: 'not-our-actor' } };
-
-      // Act
-      await state.handleTurnEndedEvent(mockHandler, eventForOtherActor);
-
-      // Assert
-      expect(clearTimeoutSpy).not.toHaveBeenCalled();
-      expect(mockUnsubscribeFn).not.toHaveBeenCalled();
-      expect(mockTurnContext.endTurn).not.toHaveBeenCalled();
-    });
-
-    test('should end the turn with a null error when a valid success event is received', async () => {
+  // --- Event Wins Race ---
+  describe('Event Wins Race', () => {
+    test('should end the turn with null error when success event is received before timeout', async () => {
       // Arrange
       const successEvent = { payload: { entityId: 'player-1', success: true } };
 
-      // Act
-      await state.handleTurnEndedEvent(mockHandler, successEvent);
+      // Act - start enterState
+      const enterPromise = state.enterState(mockHandler, null);
+
+      // Wait for subscription to be set up
+      await flushPromisesAndTimers();
+
+      // Trigger the event (simulating rule dispatching turn_ended)
+      mockEventDispatcher._triggerEvent(TURN_ENDED_ID, successEvent);
+
+      // Wait for enterState to complete
+      await flushPromisesAndTimers();
+      await enterPromise;
 
       // Assert
-      // Guards should be cleared.
-      expect(clearTimeoutSpy).toHaveBeenCalledTimes(1);
-      expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1);
+      expect(mockTurnContext.endTurn).toHaveBeenCalledTimes(1);
+      expect(mockTurnContext.endTurn).toHaveBeenCalledWith(null);
+      // Should have cleaned up awaiting flag
       expect(mockTurnContext.setAwaitingExternalEvent).toHaveBeenCalledWith(
         false,
         'player-1'
       );
-
-      // Turn should end successfully (with a null error).
-      expect(mockTurnContext.endTurn).toHaveBeenCalledTimes(1);
-      expect(mockTurnContext.endTurn).toHaveBeenCalledWith(null);
     });
 
-    test('should end the turn with an error object when a valid failure event is received', async () => {
+    test('should end the turn with error when failure event is received before timeout', async () => {
       // Arrange
       const failureError = new Error('Action failed externally');
       const failureEvent = {
@@ -306,57 +306,59 @@ describe('AwaitingExternalTurnEndState', () => {
       };
 
       // Act
-      await state.handleTurnEndedEvent(mockHandler, failureEvent);
+      const enterPromise = state.enterState(mockHandler, null);
+      await flushPromisesAndTimers();
+
+      mockEventDispatcher._triggerEvent(TURN_ENDED_ID, failureEvent);
+      await flushPromisesAndTimers();
+      await enterPromise;
 
       // Assert
-      // Guards should be cleared.
-      expect(clearTimeoutSpy).toHaveBeenCalledTimes(1);
-      expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1);
-      expect(mockTurnContext.setAwaitingExternalEvent).toHaveBeenCalledWith(
-        false,
-        'player-1'
-      );
-
-      // Turn should end with the provided error.
       expect(mockTurnContext.endTurn).toHaveBeenCalledTimes(1);
       expect(mockTurnContext.endTurn).toHaveBeenCalledWith(failureError);
     });
+
+    test('should ignore events for other actors', async () => {
+      // Arrange
+      const eventForOtherActor = { payload: { entityId: 'not-our-actor' } };
+      const eventForUs = { payload: { entityId: 'player-1', success: true } };
+
+      // Act
+      const enterPromise = state.enterState(mockHandler, null);
+      await flushPromisesAndTimers();
+
+      // Send event for wrong actor (should be ignored)
+      mockEventDispatcher._triggerEvent(TURN_ENDED_ID, eventForOtherActor);
+
+      // Then send event for correct actor
+      mockEventDispatcher._triggerEvent(TURN_ENDED_ID, eventForUs);
+      await flushPromisesAndTimers();
+      await enterPromise;
+
+      // Assert - should only have called endTurn once (for our actor)
+      expect(mockTurnContext.endTurn).toHaveBeenCalledTimes(1);
+      expect(mockTurnContext.endTurn).toHaveBeenCalledWith(null);
+    });
   });
 
-  // --- Timeout Behavior ---
-  describe('Timeout Behavior', () => {
-    beforeEach(async () => {
-      // Enter the state to set up the timeout.
+  // --- Timeout Wins Race ---
+  describe('Timeout Wins Race', () => {
+    test('should dispatch error and end turn with timeout error when no event received', async () => {
+      // Arrange
       mockTurnContext.getChosenActionId.mockReturnValue('test-action');
-      await state.enterState(mockHandler, null);
-    });
-
-    test('should do nothing if timeout fires after state has been cleaned up', async () => {
-      // Arrange
-      // Simulate cleanup (e.g., a turn_ended event was received first).
-      mockTurnContext.isAwaitingExternalEvent.mockReturnValue(false);
 
       // Act
+      const enterPromise = state.enterState(mockHandler, null);
+
+      // Flush to allow state setup
+      await flushPromisesAndTimers();
+
+      // Advance time past timeout
       jest.advanceTimersByTime(TIMEOUT_MS);
-      await Promise.resolve();
-      await Promise.resolve();
+      await flushPromisesAndTimers();
+      await enterPromise;
 
-      // Assert
-      expectNoDispatch(mockEventDispatcher.dispatch);
-      expect(mockTurnContext.endTurn).not.toHaveBeenCalled();
-    });
-
-    test('should dispatch an error and end the turn when timeout fires', async () => {
-      // Arrange
-      expect(setTimeoutSpy).toHaveBeenCalledTimes(1);
-
-      // Act
-      jest.advanceTimersByTime(TIMEOUT_MS);
-      await Promise.resolve();
-      await Promise.resolve();
-
-      // Assert
-      // 1. A display error event is dispatched.
+      // Assert - error was dispatched
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
@@ -370,101 +372,150 @@ describe('AwaitingExternalTurnEndState', () => {
         }
       );
 
-      // 2. The turn is ended with a timeout error.
+      // Assert - turn was ended with error
       expect(mockTurnContext.endTurn).toHaveBeenCalledTimes(1);
       const endTurnError = mockTurnContext.endTurn.mock.calls[0][0];
       expect(endTurnError).toBeInstanceOf(Error);
       expect(endTurnError.code).toBe('TURN_END_TIMEOUT');
-      expect(endTurnError.message).toContain(
-        `timed out after ${TIMEOUT_MS} ms`
-      );
+      expect(endTurnError.message).toContain(`timed out after ${TIMEOUT_MS} ms`);
     });
 
-    // Note: Tests for error propagation have been removed due to Jest limitations
-    // with detecting unhandled promise rejections in async timeout callbacks.
-    // The implementation correctly allows errors from ctx.endTurn() to propagate
-    // as per the ticket requirement (removed try-catch block in #onTimeout).
+    test('should not dispatch error if event arrives just before timeout', async () => {
+      // Arrange
+      const successEvent = { payload: { entityId: 'player-1', success: true } };
+
+      // Act
+      const enterPromise = state.enterState(mockHandler, null);
+      await flushPromisesAndTimers();
+
+      // Advance time but not past timeout
+      jest.advanceTimersByTime(TIMEOUT_MS - 1);
+      await flushPromisesAndTimers();
+
+      // Event arrives just in time
+      mockEventDispatcher._triggerEvent(TURN_ENDED_ID, successEvent);
+      await flushPromisesAndTimers();
+      await enterPromise;
+
+      // Assert - no error dispatched
+      expectNoDispatch(mockEventDispatcher.dispatch);
+      expect(mockTurnContext.endTurn).toHaveBeenCalledWith(null);
+    });
   });
 
-  // --- Cleanup ---
+  // --- Cleanup on Exit/Destroy ---
   describe('Cleanup', () => {
-    beforeEach(async () => {
-      await state.enterState(mockHandler, null);
-    });
+    test('exitState should abort pending promises and clear awaiting flag', async () => {
+      // Arrange - start enterState but don't let it complete
+      const enterPromise = state.enterState(mockHandler, null);
+      await flushPromisesAndTimers();
 
-    test('should set up guards when entering the state', () => {
-      expect(setTimeoutSpy).toHaveBeenCalledTimes(1);
-      expect(mockEventDispatcher.subscribe).toHaveBeenCalledTimes(1);
-      expect(mockTurnContext.setAwaitingExternalEvent).toHaveBeenCalledWith(
-        true,
-        'player-1'
-      );
-    });
+      // Get internal state to verify abort controller was created
+      const internalState = state.getInternalStateForTest();
+      expect(internalState.abortController).not.toBeNull();
 
-    test('exitState should call #clearGuards', async () => {
-      // Act
+      // Act - exit the state before event/timeout
       await state.exitState(mockHandler, null);
 
+      // Flush any remaining microtasks
+      await flushPromisesAndTimers();
+
+      // The enterPromise will resolve (not reject) because AbortError is caught internally
+      await expect(enterPromise).resolves.toBeUndefined();
+
       // Assert
-      expect(clearTimeoutSpy).toHaveBeenCalledTimes(1);
-      expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1);
       expect(mockTurnContext.setAwaitingExternalEvent).toHaveBeenCalledWith(
         false,
         'player-1'
       );
+      expect(state.getInternalStateForTest().abortController).toBeNull();
     });
 
-    test('destroy should call #clearGuards', async () => {
+    test('destroy should abort pending promises and clear awaiting flag', async () => {
+      // Arrange
+      const enterPromise = state.enterState(mockHandler, null);
+      await flushPromisesAndTimers();
+
       // Act
       await state.destroy(mockHandler);
+      await flushPromisesAndTimers();
+      await expect(enterPromise).resolves.toBeUndefined();
 
       // Assert
-      expect(clearTimeoutSpy).toHaveBeenCalledTimes(1);
-      expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1);
       expect(mockTurnContext.setAwaitingExternalEvent).toHaveBeenCalledWith(
         false,
         'player-1'
       );
+      expect(state.getInternalStateForTest().abortController).toBeNull();
     });
 
-    test('#clearGuards should be idempotent', async () => {
-      // Act
-      await state.exitState(mockHandler, null); // First call to clearGuards.
+    test('cleanup should be idempotent', async () => {
+      // Arrange
+      const enterPromise = state.enterState(mockHandler, null);
+      await flushPromisesAndTimers();
 
-      // Assert first call worked as expected.
-      expect(clearTimeoutSpy).toHaveBeenCalledTimes(1);
-      expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1);
-      expect(mockTurnContext.setAwaitingExternalEvent).toHaveBeenCalledTimes(2); // true on enter, false on exit.
+      // Act - cleanup multiple times
+      await state.exitState(mockHandler, null);
+      await flushPromisesAndTimers();
+      await enterPromise;
 
-      // Act again (e.g., destroy is called after exit).
+      // After exitState, isAwaitingExternalEvent should have been set to false
+      // Simulate that by having the mock return false after cleanup
+      mockTurnContext.isAwaitingExternalEvent.mockReturnValue(false);
+
+      // Reset call count to verify subsequent calls don't increment
+      const callCount = mockTurnContext.setAwaitingExternalEvent.mock.calls.length;
+
       await state.destroy(mockHandler);
 
-      // Assert - counters should not increment further because guards are now null/undefined.
-      expect(clearTimeoutSpy).toHaveBeenCalledTimes(1);
-      expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1);
+      // Assert - no additional setAwaitingExternalEvent calls
+      // (because isAwaitingExternalEvent returns false after first cleanup)
+      expect(mockTurnContext.setAwaitingExternalEvent.mock.calls.length).toBe(
+        callCount
+      );
     });
   });
 
-  // --- Internal State Reset ---
-  describe('Internal State Reset', () => {
-    beforeEach(async () => {
-      await state.enterState(mockHandler, null);
+  // --- Internal State ---
+  describe('Internal State', () => {
+    test('getInternalStateForTest returns expected fields', () => {
+      const internalState = state.getInternalStateForTest();
+      expect(internalState).toHaveProperty('abortController');
+      expect(internalState).toHaveProperty('awaitingActionId');
     });
 
-    test('exitState resets internal fields', async () => {
+    test('internal state is reset after exit', async () => {
+      // Arrange
+      mockTurnContext.getChosenActionId.mockReturnValue('some-action');
+      const enterPromise = state.enterState(mockHandler, null);
+      await flushPromisesAndTimers();
+
+      // Act
       await state.exitState(mockHandler, null);
+      await flushPromisesAndTimers();
+      await enterPromise;
+
+      // Assert
       expect(state.getInternalStateForTest()).toEqual({
-        timeoutId: null,
-        unsubscribeFn: undefined,
+        abortController: null,
         awaitingActionId: 'unknown-action',
       });
     });
 
-    test('destroy resets internal fields', async () => {
+    test('internal state is reset after destroy', async () => {
+      // Arrange
+      mockTurnContext.getChosenActionId.mockReturnValue('some-action');
+      const enterPromise = state.enterState(mockHandler, null);
+      await flushPromisesAndTimers();
+
+      // Act
       await state.destroy(mockHandler);
+      await flushPromisesAndTimers();
+      await enterPromise;
+
+      // Assert
       expect(state.getInternalStateForTest()).toEqual({
-        timeoutId: null,
-        unsubscribeFn: undefined,
+        abortController: null,
         awaitingActionId: 'unknown-action',
       });
     });
@@ -474,15 +525,75 @@ describe('AwaitingExternalTurnEndState', () => {
   describe('Ignored Actions', () => {
     test('handleSubmittedCommand should be a no-op', async () => {
       // Act
-      // This method is intentionally empty, so we just call it.
       await state.handleSubmittedCommand();
 
       // Assert
-      // Check that no core logic was triggered.
       expect(mockTurnContext.endTurn).not.toHaveBeenCalled();
       expect(mockHandler._transitionToState).not.toHaveBeenCalled();
-      // The overridden method is empty, so it shouldn't call the superclass method which logs an error.
       expect(mockLogger.error).not.toHaveBeenCalled();
+    });
+  });
+
+  // --- Constructor Validation ---
+  describe('Constructor Validation', () => {
+    test('should throw InvalidArgumentError when timeoutMs is NaN', () => {
+      const { InvalidArgumentError } = require('../../../../src/errors/invalidArgumentError.js');
+      expect(() => {
+        new AwaitingExternalTurnEndState(mockHandler, {
+          timeoutMs: NaN,
+        });
+      }).toThrow(InvalidArgumentError);
+
+      expect(() => {
+        new AwaitingExternalTurnEndState(mockHandler, {
+          timeoutMs: NaN,
+        });
+      }).toThrow(/timeoutMs must be a positive finite number.*NaN/);
+    });
+
+    test('should throw InvalidArgumentError when timeoutMs is negative', () => {
+      const { InvalidArgumentError } = require('../../../../src/errors/invalidArgumentError.js');
+      expect(() => {
+        new AwaitingExternalTurnEndState(mockHandler, {
+          timeoutMs: -1000,
+        });
+      }).toThrow(InvalidArgumentError);
+
+      expect(() => {
+        new AwaitingExternalTurnEndState(mockHandler, {
+          timeoutMs: -1000,
+        });
+      }).toThrow(/timeoutMs must be a positive finite number.*-1000/);
+    });
+
+    test('should throw InvalidArgumentError when timeoutMs is Infinity', () => {
+      const { InvalidArgumentError } = require('../../../../src/errors/invalidArgumentError.js');
+      expect(() => {
+        new AwaitingExternalTurnEndState(mockHandler, {
+          timeoutMs: Infinity,
+        });
+      }).toThrow(InvalidArgumentError);
+
+      expect(() => {
+        new AwaitingExternalTurnEndState(mockHandler, {
+          timeoutMs: Infinity,
+        });
+      }).toThrow(/timeoutMs must be a positive finite number.*Infinity/);
+    });
+
+    test('should throw InvalidArgumentError when timeoutMs is zero', () => {
+      const { InvalidArgumentError } = require('../../../../src/errors/invalidArgumentError.js');
+      expect(() => {
+        new AwaitingExternalTurnEndState(mockHandler, {
+          timeoutMs: 0,
+        });
+      }).toThrow(InvalidArgumentError);
+
+      expect(() => {
+        new AwaitingExternalTurnEndState(mockHandler, {
+          timeoutMs: 0,
+        });
+      }).toThrow(/timeoutMs must be a positive finite number.*0/);
     });
   });
 });

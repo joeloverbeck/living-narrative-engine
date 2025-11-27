@@ -58,63 +58,11 @@
       }
     },
     {
-      "type": "QUERY_COMPONENT",
-      "comment": "Get target's grabbing requirements to know how many appendages to unlock",
+      "type": "UNWIELD_ITEM",
+      "comment": "Stop wielding the item, releasing appendages and cleaning up wielding state",
       "parameters": {
-        "entity_ref": "target",
-        "component_type": "anatomy:requires_grabbing",
-        "result_variable": "targetGrabbingReqs",
-        "missing_value": { "handsRequired": 1 }
-      }
-    },
-    {
-      "type": "UNLOCK_GRABBING",
-      "comment": "Release the appendages that were holding this item",
-      "parameters": {
-        "actor_id": "{event.payload.actorId}",
-        "count": "{context.targetGrabbingReqs.handsRequired}",
-        "item_id": "{event.payload.targetId}"
-      }
-    },
-    {
-      "type": "MODIFY_ARRAY_FIELD",
-      "comment": "Remove the item from wielded_item_ids array",
-      "parameters": {
-        "entity_ref": "actor",
-        "component_type": "positioning:wielding",
-        "field": "wielded_item_ids",
-        "mode": "remove_by_value",
-        "value": "{event.payload.targetId}"
-      }
-    },
-    {
-      "type": "QUERY_COMPONENT",
-      "comment": "Check if any items remain in wielding component",
-      "parameters": {
-        "entity_ref": "actor",
-        "component_type": "positioning:wielding",
-        "result_variable": "currentWielding"
-      }
-    },
-    {
-      "type": "IF",
-      "comment": "Remove wielding component if no items remain",
-      "parameters": {
-        "condition": {
-          "==": [
-            { "var": "context.currentWielding.wielded_item_ids.length" },
-            0
-          ]
-        },
-        "then_actions": [
-          {
-            "type": "REMOVE_COMPONENT",
-            "parameters": {
-              "entity_ref": "actor",
-              "component_type": "positioning:wielding"
-            }
-          }
-        ]
+        "actorEntity": "{event.payload.actorId}",
+        "itemEntity": "{event.payload.targetId}"
       }
     },
     {

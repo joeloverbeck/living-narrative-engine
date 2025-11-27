@@ -220,7 +220,10 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       );
 
       // Exercise actions typically end turn
-      await handlers.END_TURN.execute([]);
+      await handlers.END_TURN.execute({
+        entityId: 'exercise-actor',
+        success: true,
+      });
       assertionHelpers.assertActionSuccess({
         shouldEndTurn: true,
         shouldHavePerceptibleEvent: true,
@@ -403,7 +406,10 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       ]);
 
       // Intimacy actions typically end turn
-      await handlers.END_TURN.execute([]);
+      await handlers.END_TURN.execute({
+        entityId: 'romantic-actor',
+        success: true,
+      });
 
       assertionHelpers.assertActionSuccess({
         shouldEndTurn: true,
@@ -614,7 +620,10 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       });
 
       // Positioning actions typically end turn after position change
-      await handlers.END_TURN.execute([]);
+      await handlers.END_TURN.execute({
+        entityId: 'positionable-actor',
+        success: true,
+      });
 
       assertionHelpers.assertActionSuccess({
         shouldEndTurn: true,

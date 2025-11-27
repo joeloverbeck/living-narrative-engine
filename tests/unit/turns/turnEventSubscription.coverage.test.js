@@ -4,7 +4,9 @@ import { TURN_ENDED_ID } from '../../../src/constants/eventIds.js';
 import { createEventBus } from '../../common/mockFactories/index.js';
 
 /**
- * Builds a scheduler mock that immediately executes callbacks while tracking invocations.
+ * Builds a scheduler mock that tracks invocations.
+ * Note: Since Phase 10 fix, setTimeout is no longer called by TurnEventSubscription,
+ * but the scheduler is still required by the constructor contract for backward compatibility.
  *
  * @returns {{ setTimeout: jest.Mock, clearTimeout: jest.Mock }} Scheduler mock
  */
@@ -19,60 +21,15 @@ function createSchedulerMock() {
 }
 
 /**
- * Creates a scheduler mock that defers execution until manually triggered.
- *
- * @returns {{ setTimeout: jest.Mock, clearTimeout: jest.Mock }} Scheduler mock
- */
-function createDeferredSchedulerMock() {
-  let nextId = 1;
-  const pending = new Map();
-  return {
-    setTimeout: jest.fn((fn) => {
-      const id = nextId++;
-      pending.set(id, fn);
-      return id;
-    }),
-    clearTimeout: jest.fn((id) => {
-      pending.delete(id);
-    }),
-    /**
-     * Helper exposed for assertions in tests.
-     *
-     * @returns {number} Count of pending callbacks.
-     */
-    getPendingCount: () => pending.size,
-  };
-}
-
-/**
  * Creates a basic logger stub with a debuggable interface.
  *
- * @returns {{ debug: jest.Mock }}
+ * @returns {{ debug: jest.Mock, error: jest.Mock }}
  */
 function createLoggerMock() {
   return {
     debug: jest.fn(),
     error: jest.fn(),
   };
-}
-
-/**
- *
- */
-function createCapturingSchedulerMock() {
-  const scheduler = {
-    capturedError: undefined,
-    setTimeout: jest.fn((fn, delay) => {
-      try {
-        fn();
-      } catch (error) {
-        scheduler.capturedError = error;
-      }
-      return delay ?? 0;
-    }),
-    clearTimeout: jest.fn(),
-  };
-  return scheduler;
 }
 
 describe('TurnEventSubscription - coverage', () => {
@@ -117,7 +74,7 @@ describe('TurnEventSubscription - coverage', () => {
     });
   });
 
-  it('subscribes to turn end events and schedules callback execution', async () => {
+  it('subscribes to turn end events and invokes callback immediately', async () => {
     const bus = createEventBus();
     const logger = createLoggerMock();
     const scheduler = createSchedulerMock();
@@ -141,10 +98,8 @@ describe('TurnEventSubscription - coverage', () => {
     expect(logger.debug).toHaveBeenCalledWith(
       `TurnEventSubscription: received ${TURN_ENDED_ID} event`
     );
-    expect(scheduler.setTimeout).toHaveBeenCalledWith(
-      expect.any(Function),
-      0
-    );
+    // Phase 10 fix: callback is invoked immediately, not via setTimeout
+    // scheduler.setTimeout is no longer called
     expect(cb).toHaveBeenCalledWith({
       type: TURN_ENDED_ID,
       payload: { entityId: 'abc', success: true },
@@ -217,32 +172,37 @@ describe('TurnEventSubscription - coverage', () => {
     expect(logger.debug).not.toHaveBeenCalled();
   });
 
-  it('clears pending scheduled callbacks when unsubscribing before they execute', async () => {
+  // Phase 10 fix: This test was removed because callbacks are now invoked immediately
+  // (no setTimeout deferral) to fix the race condition with state machine transitions.
+  // The original test verified that pending timeouts are cleared on unsubscribe,
+  // but this is no longer applicable since callbacks execute synchronously.
+  it('invokes callback immediately without deferral (Phase 10 race condition fix)', async () => {
     const bus = createEventBus();
     const logger = createLoggerMock();
-    const scheduler = createDeferredSchedulerMock();
+    const scheduler = createSchedulerMock();
     const subscription = new TurnEventSubscription(bus, logger, scheduler);
     const cb = jest.fn();
 
     subscription.subscribe(cb);
+
+    // Before Phase 10, this would be deferred via setTimeout.
+    // Now it executes immediately when the event fires.
     await bus.dispatch(TURN_ENDED_ID, { reason: 'test' });
 
-    expect(cb).not.toHaveBeenCalled();
-    expect(scheduler.setTimeout).toHaveBeenCalledTimes(1);
-    const scheduledId = scheduler.setTimeout.mock.results[0].value;
-    expect(scheduler.getPendingCount()).toBe(1);
-
-    subscription.unsubscribe();
-
-    expect(scheduler.clearTimeout).toHaveBeenCalledWith(scheduledId);
-    expect(scheduler.getPendingCount()).toBe(0);
-    expect(cb).not.toHaveBeenCalled();
+    // Callback should have been invoked immediately, not deferred
+    expect(cb).toHaveBeenCalledTimes(1);
+    expect(cb).toHaveBeenCalledWith({
+      type: TURN_ENDED_ID,
+      payload: { reason: 'test' },
+    });
+    // setTimeout is no longer used for callback deferral
+    expect(scheduler.setTimeout).not.toHaveBeenCalled();
   });
 
-  it('logs and suppresses errors thrown by scheduled callbacks', async () => {
+  it('logs and suppresses errors thrown by callbacks', async () => {
     const bus = createEventBus();
     const logger = createLoggerMock();
-    const scheduler = createCapturingSchedulerMock();
+    const scheduler = createSchedulerMock(); // Use simple mock since setTimeout isn't called
     const subscription = new TurnEventSubscription(bus, logger, scheduler);
 
     const error = new Error('callback failed');
@@ -253,11 +213,13 @@ describe('TurnEventSubscription - coverage', () => {
     subscription.subscribe(failingCallback);
     await bus.dispatch(TURN_ENDED_ID, { reason: 'boom' });
 
+    // Allow the async invokeCallback to complete and catch the error
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
     expect(failingCallback).toHaveBeenCalledTimes(1);
     expect(logger.error).toHaveBeenCalledWith(
       `TurnEventSubscription: callback threw while handling ${TURN_ENDED_ID}.`,
       error
     );
-    expect(scheduler.capturedError).toBeUndefined();
   });
 });

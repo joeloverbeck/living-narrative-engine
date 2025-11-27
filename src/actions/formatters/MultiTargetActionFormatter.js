@@ -169,8 +169,37 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
     const formattedCommands = [];
 
     for (const combination of combinations) {
+      let template = actionDef.template || actionDef.name;
+
+      // Calculate chance per-combination for chance-based actions
+      // This ensures each target combination gets its own accurate percentage
+      if (
+        actionDef.chanceBased?.enabled &&
+        template.includes('{chance}') &&
+        _options?.chanceCalculationService &&
+        _options?.actorId
+      ) {
+        const targetRole =
+          actionDef.chanceBased.targetSkill?.targetRole ?? 'secondary';
+        const targetId = combination[targetRole]?.[0]?.id;
+
+        if (targetId) {
+          const displayResult =
+            _options.chanceCalculationService.calculateForDisplay({
+              actorId: _options.actorId,
+              targetId,
+              actionDef,
+            });
+          // Remove % since template already has it
+          template = template.replace(
+            '{chance}',
+            displayResult.displayText.replace('%', '')
+          );
+        }
+      }
+
       const result = this.#formatSingleMultiTarget(
-        actionDef.template || actionDef.name,
+        template,
         combination,
         targetDefinitions,
         _options

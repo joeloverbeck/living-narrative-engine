@@ -5,12 +5,15 @@
   "name": "Skills System",
   "description": "Character skills for non-deterministic action resolution",
   "dependencies": [
-    { "id": "core", "version": ">=1.0.0" }
+    {
+      "id": "core",
+      "version": ">=1.0.0"
+    }
   ],
   "content": {
     "components": [
-      "melee_skill.component.json",
       "defense_skill.component.json",
+      "melee_skill.component.json",
       "ranged_skill.component.json"
     ]
   }

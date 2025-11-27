@@ -2,6 +2,7 @@ import {
   expandMacros,
   findUnexpandedMacros,
   validateMacroExpansion,
+  MacroExpansionError,
 } from '../../../src/utils/macroUtils.js';
 import { freeze } from '../../../src/utils/cloneUtils.js';
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
@@ -14,7 +15,7 @@ describe('macroUtils', () => {
   let logger;
 
   beforeEach(() => {
-    logger = { warn: jest.fn() };
+    logger = { warn: jest.fn(), error: jest.fn() };
   });
 
   describe('expandMacros', () => {
@@ -133,15 +134,16 @@ describe('macroUtils', () => {
       });
     });
 
-    it('handles missing macro gracefully', () => {
+    it('throws MacroExpansionError when macro is not found', () => {
       const actions = [
         { macro: 'core:nonexistent' },
         { type: 'LOG', parameters: { msg: 'B' } },
       ];
-      const result = expandMacros(actions, createRegistry({}), logger);
-      expect(result).toEqual([{ type: 'LOG', parameters: { msg: 'B' } }]);
-      expect(logger.warn).toHaveBeenCalledWith(
-        "expandMacros: macro 'core:nonexistent' not found."
+      expect(() => expandMacros(actions, createRegistry({}), logger)).toThrow(
+        MacroExpansionError
+      );
+      expect(() => expandMacros(actions, createRegistry({}), logger)).toThrow(
+        "macro 'core:nonexistent' not found"
       );
     });
 
@@ -166,22 +168,47 @@ describe('macroUtils', () => {
       ]);
     });
 
-    it('handles macro with non-array actions', () => {
+    it('throws MacroExpansionError when macro has non-array actions', () => {
       const macros = {
         'core:invalid': { actions: 'not-an-array' },
       };
       const actions = [{ macro: 'core:invalid' }];
-      const result = expandMacros(actions, createRegistry(macros), logger);
-      expect(result).toEqual([]);
-      expect(logger.warn).toHaveBeenCalledWith(
-        "expandMacros: macro 'core:invalid' not found."
+      expect(() =>
+        expandMacros(actions, createRegistry(macros), logger)
+      ).toThrow(MacroExpansionError);
+      expect(() =>
+        expandMacros(actions, createRegistry(macros), logger)
+      ).toThrow("macro 'core:invalid' not found");
+    });
+
+    it('throws MacroExpansionError even without logger', () => {
+      const actions = [{ macro: 'core:nonexistent' }];
+      expect(() => expandMacros(actions, createRegistry({}))).toThrow(
+        MacroExpansionError
       );
     });
 
-    it('works without logger', () => {
-      const actions = [{ macro: 'core:nonexistent' }];
-      const result = expandMacros(actions, createRegistry({}));
-      expect(result).toEqual([]);
+    it('includes diagnostic details in MacroExpansionError', () => {
+      const actions = [{ macro: 'core:missingMacro' }];
+      let caughtError;
+      try {
+        expandMacros(actions, createRegistry({}), logger);
+      } catch (err) {
+        caughtError = err;
+      }
+      expect(caughtError).toBeInstanceOf(MacroExpansionError);
+      expect(caughtError.details.macroId).toBe('core:missingMacro');
+      expect(caughtError.details.macroFound).toBe(false);
+      expect(caughtError.details.macroHasActions).toBe(false);
+    });
+
+    it('logs error before throwing MacroExpansionError', () => {
+      const actions = [{ macro: 'missing:macro' }];
+      expect(() => expandMacros(actions, createRegistry({}), logger)).toThrow();
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining("macro 'missing:macro' not found"),
+        expect.any(Object)
+      );
     });
 
     it('expands macros in else_actions', () => {

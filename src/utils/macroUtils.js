@@ -1,7 +1,34 @@
 /**
  * @module macroUtils
  * @description Utility helpers for expanding macro references in rule actions.
+ *
+ * FAIL-FAST: This module throws MacroExpansionError when a macro is not found,
+ * rather than silently skipping. This makes debugging macro-related issues
+ * immediately visible instead of causing cryptic timeout errors.
  */
+
+// -----------------------------------------------------------------------------
+//  Error class
+// -----------------------------------------------------------------------------
+
+/**
+ * Error thrown when macro expansion fails due to a missing macro.
+ * Includes diagnostic details to help identify the root cause.
+ *
+ * FAIL-FAST: This error is thrown immediately when a macro is not found,
+ * rather than silently skipping the macro action.
+ */
+export class MacroExpansionError extends Error {
+  /**
+   * @param {string} message - Error message
+   * @param {object} details - Diagnostic details about the failure
+   */
+  constructor(message, details = {}) {
+    super(message);
+    this.name = 'MacroExpansionError';
+    this.details = details;
+  }
+}
 
 /**
  * Internal recursive helper used by {@link expandMacros} and
@@ -23,7 +50,18 @@ function _expandActions(actions, registry, logger) {
       if (macro && Array.isArray(macro.actions)) {
         result.push(..._expandActions(macro.actions, registry, logger));
       } else {
-        logger?.warn?.(`expandMacros: macro '${action.macro}' not found.`);
+        // FAIL-FAST: Throw error instead of silently skipping the macro
+        const error = new MacroExpansionError(
+          `Macro expansion failed: macro '${action.macro}' not found in registry. ` +
+            'This usually means the macro file does not exist or was not loaded.',
+          {
+            macroId: action.macro,
+            macroFound: !!macro,
+            macroHasActions: macro ? Array.isArray(macro.actions) : false,
+          }
+        );
+        logger?.error?.(error.message, error.details);
+        throw error;
       }
     } else if (action && action.parameters) {
       const newParams = { ...action.parameters };

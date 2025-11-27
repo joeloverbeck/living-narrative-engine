@@ -774,7 +774,7 @@ describeTurnManagerSuite(
         turnHandlerResolver.resolveHandler.mockResolvedValueOnce(handler);
 
         let systemErrorDispatchCount = 0;
-        const dispatchMock = jest.fn((eventId, payload) => {
+        const dispatchMock = jest.fn((eventId) => {
           if (eventId === TURN_PROCESSING_ENDED) {
             return Promise.reject(new Error('processing end failure'));
           }
@@ -816,7 +816,8 @@ describeTurnManagerSuite(
           entityId: actor.id,
           success: true,
         });
-        await drainTimersAndMicrotasks(6);
+        // Increased from 6 to 10 to accommodate async destroy() await in #handleTurnEndedEvent
+        await drainTimersAndMicrotasks(10);
 
         expect(logger.debug).toHaveBeenCalledWith(
           `Marking round as having had a successful turn (actor: ${actor.id}).`

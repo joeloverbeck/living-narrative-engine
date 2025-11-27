@@ -42,6 +42,7 @@ import DefaultPathResolver from '../../pathing/defaultPathResolver.js';
 import AjvSchemaValidator from '../../validation/ajvSchemaValidator.js';
 import ValidatorGenerator from '../../validation/validatorGenerator.js';
 import StringSimilarityCalculator from '../../validation/stringSimilarityCalculator.js';
+import HandlerCompletenessValidator from '../../validation/handlerCompletenessValidator.js';
 import InMemoryDataRegistry from '../../data/inMemoryDataRegistry.js';
 import WorkspaceDataFetcher from '../../data/workspaceDataFetcher.js';
 import TextDataFetcher from '../../data/textDataFetcher.js';
@@ -228,6 +229,13 @@ export async function registerLoaders(container) {
     })
   );
 
+  registrar.singletonFactory(
+    tokens.HandlerCompletenessValidator,
+    (c) => new HandlerCompletenessValidator({
+      logger: c.resolve(tokens.ILogger)
+    })
+  );
+
   // === Individual Content & Data Loaders (unchanged) ===
   const registerLoader = (token, LoaderClass) => {
     if (!token) {
@@ -255,7 +263,21 @@ export async function registerLoaders(container) {
     );
   };
 
-  registerLoader(tokens.RuleLoader, RuleLoader);
+  // RuleLoader needs custom registration to include handler validation dependencies
+  registrar.singletonFactory(
+    tokens.RuleLoader,
+    (c) =>
+      new RuleLoader(
+        c.resolve(tokens.IConfiguration),
+        c.resolve(tokens.IPathResolver),
+        c.resolve(tokens.IDataFetcher),
+        c.resolve(tokens.ISchemaValidator),
+        c.resolve(tokens.IDataRegistry),
+        c.resolve(tokens.ILogger),
+        c.resolve(tokens.HandlerCompletenessValidator),
+        c.resolve(tokens.OperationRegistry)
+      )
+  );
   registerLoader(tokens.ComponentLoader, ComponentLoader);
   registerLoader(tokens.ConditionLoader, ConditionLoader);
   registerLoader(tokens.ActionLoader, ActionLoader);

@@ -108,7 +108,7 @@
 
 /* Actor Name Label */
 .ticker-actor-name {
-  font-size: 0.875rem; /* Increased from 0.75rem (12px) to 0.875rem (14px) for better readability */
+  font-size: 0.65rem; /* Reduced from 0.875rem (14px) to 0.65rem (~10px) to show more characters */
   color: #ecf0f1;
   text-align: center;
   max-width: 80px;
@@ -177,7 +177,7 @@
   }
 
   .ticker-actor-name {
-    font-size: 0.65rem;
+    font-size: 0.55rem; /* Proportionally smaller for mobile */
     max-width: 60px;
   }
 }

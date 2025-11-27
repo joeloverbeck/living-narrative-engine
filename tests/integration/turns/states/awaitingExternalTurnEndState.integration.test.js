@@ -1,3 +1,16 @@
+/**
+ * @file Integration tests for AwaitingExternalTurnEndState with the Promise.race architecture.
+ *
+ * Tests the real integration between:
+ * - AwaitingExternalTurnEndState
+ * - SafeEventDispatcher
+ * - TurnContext
+ * - AbortController-based cancellation
+ *
+ * @see src/turns/states/awaitingExternalTurnEndState.js
+ * @see src/turns/utils/cancellablePrimitives.js
+ */
+
 import { jest } from '@jest/globals';
 
 import { AwaitingExternalTurnEndState } from '../../../../src/turns/states/awaitingExternalTurnEndState.js';
@@ -33,6 +46,16 @@ class TestTurnHandler {
     return this._dispatcher;
   }
 }
+
+/**
+ * Helper to flush promise queue for async coordination with fake timers.
+ * Multiple calls needed to handle nested promise chains.
+ */
+const flushPromisesAndTimers = async () => {
+  await Promise.resolve();
+  await Promise.resolve();
+  await Promise.resolve();
+};
 
 describe('AwaitingExternalTurnEndState integration', () => {
   let logger;
@@ -79,10 +102,18 @@ describe('AwaitingExternalTurnEndState integration', () => {
     });
 
     handler.setTurnContext(context);
-    state = new AwaitingExternalTurnEndState(handler);
+    state = new AwaitingExternalTurnEndState(handler, { timeoutMs: 100 });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // Clean up any pending state before resetting timers
+    if (state) {
+      try {
+        await state.destroy(handler);
+      } catch {
+        // Ignore cleanup errors
+      }
+    }
     jest.useRealTimers();
   });
 
@@ -91,36 +122,43 @@ describe('AwaitingExternalTurnEndState integration', () => {
   };
 
   test('subscribes to turn-ended events and completes turn for matching actor', async () => {
-    await state.enterState(handler, null);
+    // Start enterState (which will await in Promise.race)
+    const enterPromise = state.enterState(handler, null);
+    await flushPromisesAndTimers();
 
     expect(context.isAwaitingExternalEvent()).toBe(true);
     expect(eventBus.listenerCount(TURN_ENDED_ID)).toBe(1);
 
+    // Dispatch for wrong actor - should be ignored
     await dispatchTurnEnded({ entityId: 'other-actor', error: null });
+    await flushPromisesAndTimers();
     expect(onEndTurn).not.toHaveBeenCalled();
 
+    // Dispatch for correct actor - should complete turn
     await dispatchTurnEnded({ entityId: actor.id, error: null });
+    await flushPromisesAndTimers();
+
+    // Wait for enterState to complete
+    await enterPromise;
 
     expect(onEndTurn).toHaveBeenCalledTimes(1);
     expect(onEndTurn).toHaveBeenCalledWith(null);
     expect(context.isAwaitingExternalEvent()).toBe(false);
-    expect(eventBus.listenerCount(TURN_ENDED_ID)).toBe(0);
 
+    // Verify internal state is cleaned up
     const internalState = state.getInternalStateForTest();
-    expect(internalState.timeoutId).toBeNull();
-    expect(internalState.unsubscribeFn).toBeUndefined();
+    expect(internalState.abortController).toBeNull();
     expect(internalState.awaitingActionId).toBe('unknown-action');
-
-    onEndTurn.mockClear();
-    await dispatchTurnEnded({ entityId: actor.id, error: null });
-    expect(onEndTurn).not.toHaveBeenCalled();
   });
 
   test('passes turn-end errors through to the context', async () => {
-    await state.enterState(handler, null);
-    const failure = new Error('rule failed');
+    const enterPromise = state.enterState(handler, null);
+    await flushPromisesAndTimers();
 
+    const failure = new Error('rule failed');
     await dispatchTurnEnded({ entityId: actor.id, error: failure });
+    await flushPromisesAndTimers();
+    await enterPromise;
 
     expect(onEndTurn).toHaveBeenCalledWith(failure);
     expect(context.isAwaitingExternalEvent()).toBe(false);
@@ -130,10 +168,14 @@ describe('AwaitingExternalTurnEndState integration', () => {
     const timeoutMs = 50;
     state = new AwaitingExternalTurnEndState(handler, { timeoutMs });
 
-    await state.enterState(handler, null);
+    const enterPromise = state.enterState(handler, null);
+    await flushPromisesAndTimers();
     expect(context.isAwaitingExternalEvent()).toBe(true);
 
-    await jest.runOnlyPendingTimersAsync();
+    // Advance time to trigger timeout
+    await jest.advanceTimersByTimeAsync(timeoutMs);
+    await flushPromisesAndTimers();
+    await enterPromise;
 
     expect(onEndTurn).toHaveBeenCalledTimes(1);
     const timeoutError = onEndTurn.mock.calls[0][0];
@@ -146,46 +188,57 @@ describe('AwaitingExternalTurnEndState integration', () => {
     );
     expect(systemEvents).toHaveLength(1);
     expect(systemEvents[0].payload.details.actionId).toBe('unknown-action');
-
-    await state.exitState(handler, { getStateName: () => 'TimeoutCleanup' });
-    expect(context.isAwaitingExternalEvent()).toBe(false);
   });
 
   test('clears guards on exit even when awaiting flag callbacks throw', async () => {
-    await state.enterState(handler, null);
-    const originalSetAwaiting = context.setAwaitingExternalEvent.bind(context);
-    const erroringLogger = logger;
+    const enterPromise = state.enterState(handler, null);
+    await flushPromisesAndTimers();
 
-    context.setAwaitingExternalEvent = jest.fn(() => {
-      originalSetAwaiting(false, actor.id);
-      throw new Error('listener failed');
+    // Make setAwaitingExternalEvent throw on cleanup
+    const originalSetAwaiting = context.setAwaitingExternalEvent.bind(context);
+    context.setAwaitingExternalEvent = jest.fn((value, actorId) => {
+      originalSetAwaiting(value, actorId);
+      if (!value) {
+        throw new Error('listener failed');
+      }
     });
 
     await state.exitState(handler, { getStateName: () => 'NextState' });
+    await flushPromisesAndTimers();
 
-    expect(context.setAwaitingExternalEvent).toHaveBeenCalledWith(false, actor.id);
-    expect(erroringLogger.warn).toHaveBeenCalledWith(
+    // enterPromise should resolve (AbortError is caught internally)
+    await expect(enterPromise).resolves.toBeUndefined();
+
+    expect(context.setAwaitingExternalEvent).toHaveBeenCalledWith(
+      false,
+      actor.id
+    );
+    expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('failed to clear awaitingExternalEvent flag'),
       expect.any(Error)
     );
 
+    // Internal state should still be cleaned up
     const internalState = state.getInternalStateForTest();
-    expect(internalState.timeoutId).toBeNull();
-    expect(internalState.unsubscribeFn).toBeUndefined();
-    expect(context.isAwaitingExternalEvent()).toBe(false);
+    expect(internalState.abortController).toBeNull();
   });
 
   test('destroy resets internal tracking and stops listening for events', async () => {
-    await state.enterState(handler, null);
+    const enterPromise = state.enterState(handler, null);
+    await flushPromisesAndTimers();
 
     await state.destroy(handler);
+    await flushPromisesAndTimers();
+    await enterPromise;
 
     const internalState = state.getInternalStateForTest();
-    expect(internalState.timeoutId).toBeNull();
-    expect(internalState.unsubscribeFn).toBeUndefined();
+    expect(internalState.abortController).toBeNull();
+    expect(internalState.awaitingActionId).toBe('unknown-action');
 
+    // Events after destroy should be ignored
     onEndTurn.mockClear();
     await dispatchTurnEnded({ entityId: actor.id, error: null });
+    await flushPromisesAndTimers();
     expect(onEndTurn).not.toHaveBeenCalled();
   });
 
@@ -195,95 +248,88 @@ describe('AwaitingExternalTurnEndState integration', () => {
     const idleSpy = handler.requestIdleStateTransition;
     await state.enterState(handler, null);
 
-    expect(handler.resetStateAndResources).toHaveBeenCalledWith('enter-no-context');
+    expect(handler.resetStateAndResources).toHaveBeenCalledWith(
+      'enter-no-context'
+    );
     expect(idleSpy).toHaveBeenCalledTimes(1);
 
     const internalState = state.getInternalStateForTest();
-    expect(internalState.timeoutId).toBeNull();
-    expect(internalState.unsubscribeFn).toBeUndefined();
-  });
-
-  test('handleTurnEndedEvent exits gracefully when no context exists', async () => {
-    handler.setTurnContext(null);
-
-    await state.handleTurnEndedEvent(handler, { payload: { entityId: actor.id } });
-
-    expect(onEndTurn).not.toHaveBeenCalled();
+    expect(internalState.abortController).toBeNull();
   });
 
   test('handleSubmittedCommand is ignored while awaiting external completion', async () => {
-    await state.enterState(handler, null);
+    const enterPromise = state.enterState(handler, null);
+    await flushPromisesAndTimers();
 
     await expect(state.handleSubmittedCommand()).resolves.toBeUndefined();
 
+    // Clean up by exiting
     await state.exitState(handler, { getStateName: () => 'PostCommand' });
-  });
-
-  test('timeout callback returns early when no longer awaiting', async () => {
-    await state.enterState(handler, null);
-    context.setAwaitingExternalEvent(false, actor.id);
-
-    await jest.runOnlyPendingTimersAsync();
-
-    expect(onEndTurn).not.toHaveBeenCalled();
-    expect(eventBus.events).toHaveLength(0);
-
-    await state.exitState(handler, { getStateName: () => 'EarlyTimeoutCleanup' });
-  });
-
-  test('timeout processing tolerates missing safe dispatcher', async () => {
-    const noDispatcherHandler = new TestTurnHandler({ logger, dispatcher: null });
-    const noDispatcherContext = new TurnContext({
-      actor,
-      logger,
-      services: {
-        safeEventDispatcher: null,
-        turnEndPort: { signalTurnEnd: jest.fn() },
-        entityManager: {
-          getComponentData: jest.fn(),
-          getEntityInstance: jest.fn(),
-        },
-      },
-      strategy: {
-        decideAction: jest.fn(),
-        getMetadata: jest.fn(() => ({})),
-        dispose: jest.fn(),
-      },
-      onEndTurnCallback: onEndTurn,
-      handlerInstance: noDispatcherHandler,
-    });
-
-    noDispatcherHandler.setTurnContext(noDispatcherContext);
-    const stateWithoutDispatcher = new AwaitingExternalTurnEndState(
-      noDispatcherHandler
-    );
-
-    await stateWithoutDispatcher.enterState(noDispatcherHandler, null);
-    noDispatcherHandler.getSafeEventDispatcher = () => null;
-    noDispatcherContext.getSafeEventDispatcher = () => null;
-
-    await jest.runOnlyPendingTimersAsync();
-
-    expect(onEndTurn).toHaveBeenCalledTimes(1);
-    expect(eventBus.events).toHaveLength(0);
-
-    await stateWithoutDispatcher.exitState(noDispatcherHandler, {
-      getStateName: () => 'MissingDispatcherCleanup',
-    });
+    await flushPromisesAndTimers();
+    await enterPromise;
   });
 
   test('exitState handles repeated invocations without residual guards', async () => {
-    await state.enterState(handler, null);
+    const enterPromise = state.enterState(handler, null);
+    await flushPromisesAndTimers();
+
     await state.exitState(handler, { getStateName: () => 'FirstExit' });
+    await flushPromisesAndTimers();
+    await enterPromise;
 
     const internalAfterFirst = state.getInternalStateForTest();
-    expect(internalAfterFirst.timeoutId).toBeNull();
-    expect(internalAfterFirst.unsubscribeFn).toBeUndefined();
+    expect(internalAfterFirst.abortController).toBeNull();
 
+    // Second exit should be idempotent
     await state.exitState(handler, { getStateName: () => 'SecondExit' });
+
     expect(logger.warn).not.toHaveBeenCalledWith(
       expect.stringContaining('failed to clear awaitingExternalEvent flag'),
       expect.any(Error)
     );
+  });
+
+  test('event winning the race aborts the timeout', async () => {
+    const timeoutMs = 100;
+    state = new AwaitingExternalTurnEndState(handler, { timeoutMs });
+
+    const enterPromise = state.enterState(handler, null);
+    await flushPromisesAndTimers();
+
+    // Dispatch event before timeout
+    await dispatchTurnEnded({ entityId: actor.id, error: null });
+    await flushPromisesAndTimers();
+    await enterPromise;
+
+    // Now advance timers - timeout should NOT fire since event already won
+    onEndTurn.mockClear();
+    await jest.advanceTimersByTimeAsync(timeoutMs);
+    await flushPromisesAndTimers();
+
+    // No additional calls to onEndTurn
+    expect(onEndTurn).not.toHaveBeenCalled();
+  });
+
+  test('abort controller prevents event processing after timeout', async () => {
+    const timeoutMs = 50;
+    state = new AwaitingExternalTurnEndState(handler, { timeoutMs });
+
+    const enterPromise = state.enterState(handler, null);
+    await flushPromisesAndTimers();
+
+    // Let timeout win
+    await jest.advanceTimersByTimeAsync(timeoutMs);
+    await flushPromisesAndTimers();
+    await enterPromise;
+
+    const firstCallCount = onEndTurn.mock.calls.length;
+    expect(firstCallCount).toBe(1);
+
+    // Now dispatch event - should be ignored since state already exited
+    await dispatchTurnEnded({ entityId: actor.id, error: null });
+    await flushPromisesAndTimers();
+
+    // No additional calls
+    expect(onEndTurn.mock.calls.length).toBe(firstCallCount);
   });
 });

@@ -1,7 +1,14 @@
 // src/turns/states/turnEndingState.js
 // -----------------------------------------------------------------------------
-//  TurnEndingState – wraps-up a turn and returns the handler to Idle *only
-//  through ITurnContext* (never via handler._transitionToState).
+//  TurnEndingState – Terminal state that signals turn completion.
+//
+//  This is now a TERMINAL STATE - it does not dispatch events or request
+//  transitions. Instead, it performs cleanup and signals normal termination.
+//  BaseTurnHandler.destroy() handles the turn-ended notification and the
+//  transition back to Idle state.
+//
+//  This design eliminates the race condition where the notification triggered
+//  handler destruction mid-state-entry.
 // -----------------------------------------------------------------------------
 
 /**
@@ -11,8 +18,6 @@
  */
 
 import { AbstractTurnState } from './abstractTurnState.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
-import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { reportMissingActorId } from '../../utils/errorReportingUtils.js';
 import { UNKNOWN_ACTOR_ID } from '../../constants/unknownIds.js';
 import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
@@ -50,39 +55,14 @@ export class TurnEndingState extends AbstractTurnState {
     const ctx = this._getTurnContext();
     const logger = getLogger(ctx, handler);
     const sameActor = ctx?.getActor()?.id === this.#actorToEndId;
-    const success = this.#turnError === null;
 
     await super.enterState(handler, previousState);
 
-    /* 1️⃣  Notify TurnEndPort ------------------------------------------------ */
-    if (ctx && sameActor) {
-      try {
-        await ctx.getTurnEndPort().notifyTurnEnded(this.#actorToEndId, success);
-      } catch (err) {
-        const dispatcher = getSafeEventDispatcher(ctx, handler);
-        if (dispatcher) {
-          safeDispatchError(
-            dispatcher,
-            `TurnEndingState: Failed notifying TurnEndPort for actor ${this.#actorToEndId}: ${err.message}`,
-            {
-              actorId: this.#actorToEndId,
-              stack: err.stack,
-              error: err.message,
-            },
-            logger
-          );
-        }
-      }
-    } else {
-      const reason = !ctx
-        ? 'ITurnContext not available'
-        : `ITurnContext actor mismatch (context: ${ctx.getActor()?.id}, target: ${this.#actorToEndId})`;
-      logger.warn(
-        `TurnEndingState: TurnEndPort not notified for actor ${this.#actorToEndId}. Reason: ${reason}.`
-      );
-    }
+    // NOTE: notifyTurnEnded() has been moved to BaseTurnHandler.destroy()
+    // to eliminate the race condition where the notification triggers
+    // handler destruction while this enterState() is still executing.
 
-    /* 2️⃣  Normal-apparent-termination signal -------------------------------- */
+    /* 1️⃣  Normal-apparent-termination signal -------------------------------- */
     if (
       sameActor &&
       typeof handler.signalNormalApparentTermination === 'function'
@@ -94,22 +74,17 @@ export class TurnEndingState extends AbstractTurnState {
       );
     }
 
-    /* 3️⃣  Cleanup ----------------------------------------------------------- */
+    /* 2️⃣  Cleanup ----------------------------------------------------------- */
     handler.resetStateAndResources(
       `enterState-TurnEndingState-actor-${this.#actorToEndId}`
     );
 
-    /* 4️⃣  Transition back to Idle – strictly via ITurnContext -------------- */
-    if (ctx?.requestIdleStateTransition) {
-      await ctx.requestIdleStateTransition();
-    } else {
-      logger.debug(
-        'TurnEndingState: No ITurnContext available – Idle transition skipped.'
-      );
-    }
+    // NOTE: requestIdleStateTransition() has been removed.
+    // TurnEndingState is now a terminal state - the transition to Idle
+    // is handled by BaseTurnHandler.destroy() after this state completes.
 
     logger.debug(
-      `TurnEndingState: Completed. Handler now in Idle (actor ${this.#actorToEndId}).`
+      `TurnEndingState: Completed cleanup, awaiting destruction (actor ${this.#actorToEndId}).`
     );
   }
 
@@ -128,40 +103,12 @@ export class TurnEndingState extends AbstractTurnState {
   async destroy(handler) {
     const logger = getLogger(this._getTurnContext(), handler);
 
-    logger.warn(
-      `TurnEndingState: Handler destroyed while in TurnEndingState for actor ${this.#actorToEndId}.`
+    // NOTE: Being destroyed while in TurnEndingState is now the expected flow.
+    // TurnEndingState is a terminal state - BaseTurnHandler.destroy() handles
+    // the notification and transition to Idle.
+    logger.debug(
+      `TurnEndingState.destroy() called for actor ${this.#actorToEndId}.`
     );
-
-    // Capture context *before* we clear resources so we can still use it
-    const ctx = handler.getTurnContext?.();
-
-    handler.resetStateAndResources(
-      `destroy-TurnEndingState-actor-${this.#actorToEndId}`
-    );
-
-    if (
-      ctx?.requestIdleStateTransition &&
-      !handler.getCurrentState()?.isIdle?.() &&
-      handler.getCurrentState() !== this
-    ) {
-      try {
-        await ctx.requestIdleStateTransition();
-      } catch (err) {
-        const dispatcher = getSafeEventDispatcher(ctx, handler);
-        if (dispatcher) {
-          safeDispatchError(
-            dispatcher,
-            `TurnEndingState: Failed forced transition to TurnIdleState during destroy for actor ${this.#actorToEndId}: ${err.message}`,
-            {
-              actorId: this.#actorToEndId,
-              stack: err.stack,
-              error: err.message,
-            },
-            logger
-          );
-        }
-      }
-    }
 
     await super.destroy(handler);
   }

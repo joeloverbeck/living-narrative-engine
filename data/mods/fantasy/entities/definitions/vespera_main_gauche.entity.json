@@ -4,7 +4,7 @@
   "description": "Vespera Nightwhisper's needle-thin parrying dagger, designed for precision and concealment",
   "components": {
     "core:name": {
-      "text": "Vespera's main-gauche"
+      "text": "main-gauche"
     },
     "core:description": {
       "text": "A parrying dagger of deceptive simplicity and lethal purpose. The blade is needle-thin and honed to a vicious point, purpose-built for finding gaps in armor and exploiting soft spots rather than broad slashing. Easy to hide and draw without appearing threatening, this weapon embodies the principle that the most dangerous blade is the one your opponent doesn't see until it's too late. The craftsmanship speaks of precision over brutality—clean lines and perfect balance, fit for a composer of death rather than a butcher. In capable hands, this slender length of steel can deflect a broadsword or slip between ribs with equal efficiency."

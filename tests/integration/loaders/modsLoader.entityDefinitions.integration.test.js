@@ -86,6 +86,12 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
     );
     // Register mock safe event dispatcher
     container.register(tokens.ISafeEventDispatcher, { dispatch: jest.fn() });
+    // Register mock OperationRegistry (required by RuleLoader via loadersRegistrations)
+    container.register(tokens.OperationRegistry, {
+      get: jest.fn().mockReturnValue(undefined),
+      has: jest.fn().mockReturnValue(false),
+      register: jest.fn(),
+    });
     // Register all loaders and phases
     registerLoaders(container);
     // Register mock data fetcher AFTER loader registration to overwrite

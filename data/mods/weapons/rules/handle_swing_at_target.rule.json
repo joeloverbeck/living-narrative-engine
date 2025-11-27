@@ -36,7 +36,30 @@
       }
     },
     {
+      "type": "SET_VARIABLE",
+      "comment": "Set common variables needed by the end-turn macro",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.secondaryId}"
+      }
+    },
+    {
       "type": "IF",
+      "comment": "Handle CRITICAL_SUCCESS outcome - flat structure (1 of 4)",
       "parameters": {
         "condition": { "==": [{ "var": "context.attackResult.outcome" }, "CRITICAL_SUCCESS"] },
         "then_actions": [
@@ -50,60 +73,101 @@
               "target_id": "{event.payload.secondaryId}"
             }
           },
-          { "macro": "core:logSuccessAndEndTurn" }
-        ],
-        "else_actions": [
           {
-            "type": "IF",
+            "type": "SET_VARIABLE",
             "parameters": {
-              "condition": { "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"] },
-              "then_actions": [
-                {
-                  "type": "DISPATCH_PERCEPTIBLE_EVENT",
-                  "parameters": {
-                    "location_id": "{context.actorPosition.locationId}",
-                    "description_text": "{context.actorName} swings their {context.weaponName} at {context.targetName}, cutting their flesh.",
-                    "perception_type": "action_target_general",
-                    "actor_id": "{event.payload.actorId}",
-                    "target_id": "{event.payload.secondaryId}"
-                  }
-                },
-                { "macro": "core:logSuccessAndEndTurn" }
-              ],
-              "else_actions": [
-                {
-                  "type": "IF",
-                  "parameters": {
-                    "condition": { "==": [{ "var": "context.attackResult.outcome" }, "FUMBLE"] },
-                    "then_actions": [
-                      {
-                        "type": "DISPATCH_PERCEPTIBLE_EVENT",
-                        "parameters": {
-                          "location_id": "{context.actorPosition.locationId}",
-                          "description_text": "{context.actorName} swings wildly and loses grip on their {context.weaponName}!",
-                          "perception_type": "action_target_general",
-                          "actor_id": "{event.payload.actorId}"
-                        }
-                      },
-                      { "macro": "core:logFailureAndEndTurn" }
-                    ],
-                    "else_actions": [
-                      {
-                        "type": "DISPATCH_PERCEPTIBLE_EVENT",
-                        "parameters": {
-                          "location_id": "{context.actorPosition.locationId}",
-                          "description_text": "{context.actorName} swings their {context.weaponName} at {context.targetName}, but the swing fails to connect.",
-                          "perception_type": "action_target_general",
-                          "actor_id": "{event.payload.actorId}",
-                          "target_id": "{event.payload.secondaryId}"
-                        }
-                      },
-                      { "macro": "core:logFailureAndEndTurn" }
-                    ]
-                  }
-                }
-              ]
+              "variable_name": "logMessage",
+              "value": "{context.actorName} lands a devastating blow with their {context.weaponName} on {context.targetName}!"
             }
+          },
+          {
+            "macro": "core:logSuccessOutcomeAndEndTurn"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle SUCCESS outcome - flat structure (2 of 4)",
+      "parameters": {
+        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"] },
+        "then_actions": [
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} swings their {context.weaponName} at {context.targetName}, cutting their flesh.",
+              "perception_type": "action_target_general",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.secondaryId}"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} swings their {context.weaponName} at {context.targetName}, cutting their flesh."
+            }
+          },
+          {
+            "macro": "core:logSuccessOutcomeAndEndTurn"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FUMBLE outcome - flat structure (3 of 4)",
+      "parameters": {
+        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "FUMBLE"] },
+        "then_actions": [
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} swings wildly and loses grip on their {context.weaponName}!",
+              "perception_type": "action_target_general",
+              "actor_id": "{event.payload.actorId}"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} swings wildly and loses grip on their {context.weaponName}!"
+            }
+          },
+          {
+            "macro": "core:logFailureOutcomeAndEndTurn"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FAILURE outcome - flat structure (4 of 4)",
+      "parameters": {
+        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "FAILURE"] },
+        "then_actions": [
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} swings their {context.weaponName} at {context.targetName}, but the swing fails to connect.",
+              "perception_type": "action_target_general",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.secondaryId}"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} swings their {context.weaponName} at {context.targetName}, but the swing fails to connect."
+            }
+          },
+          {
+            "macro": "core:logFailureOutcomeAndEndTurn"
           }
         ]
       }

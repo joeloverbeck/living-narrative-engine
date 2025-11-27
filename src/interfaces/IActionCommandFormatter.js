@@ -26,6 +26,8 @@
  * @property {boolean} [debug] - Enable debug logging
  * @property {object} [logger] - Logger instance
  * @property {object} [safeEventDispatcher] - Event dispatcher
+ * @property {object} [chanceCalculationService] - Service for calculating action success chances (for chance-based actions)
+ * @property {string} [actorId] - Actor ID for chance calculations
  */
 
 /**

@@ -105,6 +105,7 @@ export const coreTokens = freeze({
   PersistenceCoordinator: 'PersistenceCoordinator',
   BodyBlueprintFactory: 'BodyBlueprintFactory',
   GraphIntegrityValidator: 'GraphIntegrityValidator',
+  HandlerCompletenessValidator: 'HandlerCompletenessValidator',
   BodyGraphService: 'BodyGraphService',
   AnatomyGenerationService: 'AnatomyGenerationService',
   AnatomyInitializationService: 'AnatomyInitializationService',

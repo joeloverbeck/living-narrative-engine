@@ -216,6 +216,11 @@ describe('registerLoaders full instantiation coverage', () => {
     container.register(tokens.ISafeEventDispatcher, () => ({ dispatch: jest.fn() }));
     container.register(tokens.IValidatedEventDispatcher, () => ({ dispatchValidated: jest.fn() }));
     container.register(tokens.IPathConfiguration, () => ({ promptBasePath: '/prompt' }));
+    // RuleLoader requires OperationRegistry (registered in interpreterRegistrations.js)
+    container.register(tokens.OperationRegistry, () => ({
+      getHandlerToken: jest.fn(),
+      register: jest.fn(),
+    }));
 
     await registerLoaders(container);
 

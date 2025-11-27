@@ -79,7 +79,7 @@ describe('RuleLoader additional coverage', () => {
     expect(result).toEqual({ qualifiedId: 'core:customRule', didOverride: false });
   });
 
-  it('warns when macro expansion validation reports incomplete expansion', async () => {
+  it('throws when macro expansion validation reports incomplete expansion', async () => {
     const expandedActions = [{ type: 'LOG', parameters: { message: 'hello' } }];
     jest
       .spyOn(macroUtils, 'expandMacros')
@@ -88,22 +88,20 @@ describe('RuleLoader additional coverage', () => {
       .spyOn(macroUtils, 'validateMacroExpansion')
       .mockReturnValue(false);
 
-    const storeSpy = jest
-      .spyOn(loader, '_storeItemInRegistry')
-      .mockReturnValue({ qualifiedId: 'core:test', didOverride: false });
-
     const data = {
       rule_id: 'test',
       actions: [{ macro: 'core:hello' }],
     };
 
-    await loader._processFetchedItem(
-      'core',
-      'macro.rule.json',
-      '/tmp/macro.rule.json',
-      data,
-      'rules'
-    );
+    await expect(
+      loader._processFetchedItem(
+        'core',
+        'macro.rule.json',
+        '/tmp/macro.rule.json',
+        data,
+        'rules'
+      )
+    ).rejects.toThrow('Failed to expand all macros in macro.rule.json');
 
     expect(macroUtils.expandMacros).toHaveBeenCalledWith(
       expect.any(Array),
@@ -114,16 +112,6 @@ describe('RuleLoader additional coverage', () => {
       expandedActions,
       deps.registry,
       deps.logger
-    );
-    expect(deps.logger.warn).toHaveBeenCalledWith(
-      "RuleLoader [core]: Some macros may not have been fully expanded in macro.rule.json."
-    );
-    expect(storeSpy).toHaveBeenCalledWith(
-      'rules',
-      'core',
-      'test',
-      expect.objectContaining({ actions: expandedActions }),
-      'macro.rule.json'
     );
   });
 

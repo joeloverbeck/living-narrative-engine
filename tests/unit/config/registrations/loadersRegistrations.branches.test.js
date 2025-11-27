@@ -34,11 +34,13 @@ describe('registerLoaders uncovered branches', () => {
       '../../../../src/dependencyInjection/tokens.js'
     ).tokens;
 
+    // Mock ComponentLoader token as undefined (uses registerLoader() which validates)
+    // Note: RuleLoader uses custom registration that doesn't go through registerLoader()
     jest.doMock('../../../../src/dependencyInjection/tokens.js', () => {
       const actual = jest.requireActual(
         '../../../../src/dependencyInjection/tokens.js'
       );
-      return { tokens: { ...actual.tokens, RuleLoader: undefined } };
+      return { tokens: { ...actual.tokens, ComponentLoader: undefined } };
     });
 
     jest.resetModules();

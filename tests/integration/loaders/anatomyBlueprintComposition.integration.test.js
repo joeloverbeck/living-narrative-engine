@@ -221,6 +221,12 @@ describe('Anatomy Blueprint Composition Integration', () => {
       createMockValidatedEventDispatcherForIntegration()
     );
     container.register(tokens.ISafeEventDispatcher, { dispatch: jest.fn() });
+    // Register mock OperationRegistry (required by RuleLoader via loadersRegistrations)
+    container.register(tokens.OperationRegistry, {
+      get: jest.fn().mockReturnValue(undefined),
+      has: jest.fn().mockReturnValue(false),
+      register: jest.fn(),
+    });
 
     // Register all loaders
     registerLoaders(container);

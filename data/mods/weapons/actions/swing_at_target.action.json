@@ -3,7 +3,7 @@
   "id": "weapons:swing_at_target",
   "name": "Swing at Target",
   "description": "Swing a cutting weapon at a target",
-  "template": "swing {weapon} at {target} ({chance}%)",
+  "template": "swing {weapon} at {target} ({chance}% chance)",
   "generateCombinations": true,
   "required_components": {
     "actor": ["positioning:wielding"],
@@ -32,7 +32,8 @@
     "targetSkill": {
       "component": "skills:defense_skill",
       "property": "value",
-      "default": 0
+      "default": 0,
+      "targetRole": "secondary"
     },
     "formula": "ratio",
     "bounds": {
