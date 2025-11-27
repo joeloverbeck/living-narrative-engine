@@ -239,6 +239,7 @@ export const coreTokens = freeze({
   UnequipClothingHandler: 'UnequipClothingHandler',
   UnlockGrabbingHandler: 'UnlockGrabbingHandler',
   UnlockMovementHandler: 'UnlockMovementHandler',
+  UnwieldItemHandler: 'UnwieldItemHandler',
   UnlockMouthEngagementHandler: 'UnlockMouthEngagementHandler',
   RegenerateDescriptionHandler: 'RegenerateDescriptionHandler',
   ResolveDirectionHandler: 'ResolveDirectionHandler',
