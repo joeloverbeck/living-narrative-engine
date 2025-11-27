@@ -175,6 +175,12 @@
     "core:apparent_age": {
       "minAge": 312,
       "maxAge": 312
+    },
+    "skills:melee_skill": {
+        "value": 35
+    },
+    "skills:defense_skill": {
+        "value": 45
     }
   }
 }

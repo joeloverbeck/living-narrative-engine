@@ -112,6 +112,12 @@
         "core:perception_log": {
             "maxEntries": 50,
             "logEntries": []
+        },
+        "skills:melee_skill": {
+            "value": 40
+        },
+        "skills:defense_skill": {
+            "value": 35
         }
     }
 }

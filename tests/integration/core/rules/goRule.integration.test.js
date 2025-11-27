@@ -107,6 +107,14 @@ describe('core_handle_go rule integration', () => {
         safeEventDispatcher: safeEventDispatcher,
         logger,
       }),
+      // Mock handler for IF - satisfies fail-fast enforcement
+      IF: {
+        execute: jest.fn().mockResolvedValue(undefined),
+      },
+      // Mock handler for BURN_ENERGY - satisfies fail-fast enforcement
+      BURN_ENERGY: {
+        execute: jest.fn().mockResolvedValue(undefined),
+      },
     };
   }
 

@@ -1,6 +1,8 @@
 /**
  * @file Integration tests for chance-based action display in ActionFormattingStage
  * Tests that {chance} placeholder is correctly replaced with calculated probability
+ *
+ * Updated to use ChanceCalculationService instead of individual skill/probability services.
  */
 
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
@@ -13,8 +15,7 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
   let mockSafeEventDispatcher;
   let mockGetEntityDisplayNameFn;
   let mockErrorContextBuilder;
-  let mockSkillResolverService;
-  let mockProbabilityCalculatorService;
+  let mockChanceCalculationService;
 
   beforeEach(() => {
     mockLogger = {
@@ -50,24 +51,17 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       }),
     };
 
-    mockSkillResolverService = {
-      getSkillValue: jest.fn().mockReturnValue({
-        baseValue: 50,
-        hasComponent: true,
-      }),
-    };
-
-    mockProbabilityCalculatorService = {
-      calculate: jest.fn().mockReturnValue({
-        baseChance: 67,
-        finalChance: 67,
+    mockChanceCalculationService = {
+      calculateForDisplay: jest.fn().mockReturnValue({
+        chance: 67,
+        displayText: '67%',
         breakdown: {
           formula: 'ratio',
-          rawCalculation: 67,
-          afterModifiers: 67,
-          bounds: { min: 5, max: 95 },
+          actorSkill: 50,
+          targetSkill: 25,
         },
       }),
+      resolveOutcome: jest.fn(),
     };
   });
 
@@ -76,7 +70,7 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
   });
 
   /**
-   * Creates a stage instance with optional combat services
+   * Creates a stage instance with optional chanceCalculationService
    */
   function createStage(options = {}) {
     return new ActionFormattingStage({
@@ -86,8 +80,7 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       getEntityDisplayNameFn: mockGetEntityDisplayNameFn,
       errorContextBuilder: mockErrorContextBuilder,
       logger: mockLogger,
-      skillResolverService: options.skillResolverService ?? null,
-      probabilityCalculatorService: options.probabilityCalculatorService ?? null,
+      chanceCalculationService: options.chanceCalculationService ?? null,
     });
   }
 
@@ -132,8 +125,7 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       const context = createContext(actionDef, targetContexts);
 
       const stage = createStage({
-        skillResolverService: mockSkillResolverService,
-        probabilityCalculatorService: mockProbabilityCalculatorService,
+        chanceCalculationService: mockChanceCalculationService,
       });
 
       // Act
@@ -148,28 +140,22 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
         'swing sword at {target} ({chance}%)'
       );
 
-      // Verify services were called
-      expect(mockSkillResolverService.getSkillValue).toHaveBeenCalledWith(
-        'actor-1',
-        'skills:melee_skill',
-        0
-      );
-      expect(mockProbabilityCalculatorService.calculate).toHaveBeenCalled();
+      // Verify service was called with correct parameters
+      expect(mockChanceCalculationService.calculateForDisplay).toHaveBeenCalledWith({
+        actorId: 'actor-1',
+        targetId: 'target-1',
+        actionDef,
+      });
     });
   });
 
   describe('Opposed skill check display', () => {
     it('should calculate correct chance for actor skill 50 vs target skill 25', async () => {
-      // Arrange - Setup specific skill values
-      mockSkillResolverService.getSkillValue
-        .mockReturnValueOnce({ baseValue: 50, hasComponent: true }) // actor
-        .mockReturnValueOnce({ baseValue: 25, hasComponent: true }); // target
-
-      // ratio formula: actor / (actor + target) * 100 = 50 / 75 * 100 = 66.67
-      mockProbabilityCalculatorService.calculate.mockReturnValue({
-        baseChance: 66.67,
-        finalChance: 67,
-        breakdown: { formula: 'ratio' },
+      // Arrange - Setup service to return expected values
+      mockChanceCalculationService.calculateForDisplay.mockReturnValue({
+        chance: 67,
+        displayText: '67%',
+        breakdown: { formula: 'ratio', actorSkill: 50, targetSkill: 25 },
       });
 
       const actionDef = {
@@ -187,33 +173,17 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       const context = createContext(actionDef, [{ entityId: 'target-1' }]);
 
       const stage = createStage({
-        skillResolverService: mockSkillResolverService,
-        probabilityCalculatorService: mockProbabilityCalculatorService,
+        chanceCalculationService: mockChanceCalculationService,
       });
 
       // Act
       await stage.executeInternal(context);
 
       // Assert
-      expect(mockSkillResolverService.getSkillValue).toHaveBeenNthCalledWith(
-        1,
-        'actor-1',
-        'skills:melee_skill',
-        0
-      );
-      expect(mockSkillResolverService.getSkillValue).toHaveBeenNthCalledWith(
-        2,
-        'target-1',
-        'skills:defense_skill',
-        0
-      );
-
-      expect(mockProbabilityCalculatorService.calculate).toHaveBeenCalledWith({
-        actorSkill: 50,
-        targetSkill: 25,
-        difficulty: 0,
-        formula: 'ratio',
-        bounds: undefined,
+      expect(mockChanceCalculationService.calculateForDisplay).toHaveBeenCalledWith({
+        actorId: 'actor-1',
+        targetId: 'target-1',
+        actionDef,
       });
 
       // Formatted template should be set (original actionDef.template unchanged for cache safety)
@@ -229,16 +199,11 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
 
   describe('Missing skill fallback', () => {
     it('should use default value when skill component is missing', async () => {
-      // Arrange - Actor has no skill component
-      mockSkillResolverService.getSkillValue.mockReturnValue({
-        baseValue: 10, // default value
-        hasComponent: false,
-      });
-
-      mockProbabilityCalculatorService.calculate.mockReturnValue({
-        baseChance: 50,
-        finalChance: 50,
-        breakdown: { formula: 'ratio' },
+      // Arrange - Service handles fallback internally
+      mockChanceCalculationService.calculateForDisplay.mockReturnValue({
+        chance: 50,
+        displayText: '50%',
+        breakdown: { formula: 'ratio', actorSkill: 10, targetSkill: 0 },
       });
 
       const actionDef = {
@@ -258,19 +223,14 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       const context = createContext(actionDef, [{ entityId: 'target-1' }]);
 
       const stage = createStage({
-        skillResolverService: mockSkillResolverService,
-        probabilityCalculatorService: mockProbabilityCalculatorService,
+        chanceCalculationService: mockChanceCalculationService,
       });
 
       // Act
       await stage.executeInternal(context);
 
-      // Assert - Should use default value 10
-      expect(mockSkillResolverService.getSkillValue).toHaveBeenCalledWith(
-        'actor-1',
-        'skills:melee_skill',
-        10
-      );
+      // Assert - Service was called
+      expect(mockChanceCalculationService.calculateForDisplay).toHaveBeenCalled();
 
       // Formatted template should be set (original actionDef.template unchanged for cache safety)
       expect(context.actionsWithTargets[0].formattedTemplate).toBe(
@@ -299,8 +259,7 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       const context = createContext(actionDef, [{ entityId: 'target-1' }]);
 
       const stage = createStage({
-        skillResolverService: mockSkillResolverService,
-        probabilityCalculatorService: mockProbabilityCalculatorService,
+        chanceCalculationService: mockChanceCalculationService,
       });
 
       // Act
@@ -311,8 +270,8 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
         'swing sword at {target}'
       );
 
-      // Services should NOT be called since no placeholder
-      expect(mockProbabilityCalculatorService.calculate).not.toHaveBeenCalled();
+      // Service should NOT be called since no placeholder
+      expect(mockChanceCalculationService.calculateForDisplay).not.toHaveBeenCalled();
     });
   });
 
@@ -328,8 +287,7 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       const context = createContext(actionDef, [{ entityId: 'target-1' }]);
 
       const stage = createStage({
-        skillResolverService: mockSkillResolverService,
-        probabilityCalculatorService: mockProbabilityCalculatorService,
+        chanceCalculationService: mockChanceCalculationService,
       });
 
       // Act
@@ -340,8 +298,7 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
         'walk to {target} ({chance}%)'
       );
 
-      expect(mockSkillResolverService.getSkillValue).not.toHaveBeenCalled();
-      expect(mockProbabilityCalculatorService.calculate).not.toHaveBeenCalled();
+      expect(mockChanceCalculationService.calculateForDisplay).not.toHaveBeenCalled();
     });
 
     it('should not modify template when chanceBased.enabled is false', async () => {
@@ -358,8 +315,7 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       const context = createContext(actionDef, [{ entityId: 'target-1' }]);
 
       const stage = createStage({
-        skillResolverService: mockSkillResolverService,
-        probabilityCalculatorService: mockProbabilityCalculatorService,
+        chanceCalculationService: mockChanceCalculationService,
       });
 
       // Act
@@ -370,12 +326,12 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
         'swing at {target} ({chance}%)'
       );
 
-      expect(mockSkillResolverService.getSkillValue).not.toHaveBeenCalled();
+      expect(mockChanceCalculationService.calculateForDisplay).not.toHaveBeenCalled();
     });
   });
 
   describe('Without combat services', () => {
-    it('should work normally without combat services (backward compatibility)', async () => {
+    it('should work normally without chanceCalculationService (backward compatibility)', async () => {
       // Arrange
       const actionDef = {
         id: 'weapons:swing_at_target',
@@ -388,13 +344,13 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
 
       const context = createContext(actionDef, [{ entityId: 'target-1' }]);
 
-      // Create stage WITHOUT combat services
+      // Create stage WITHOUT chanceCalculationService
       const stage = createStage();
 
       // Act
       await stage.executeInternal(context);
 
-      // Assert - Template unchanged because no services available
+      // Assert - Template unchanged because no service available
       expect(context.actionsWithTargets[0].actionDef.template).toBe(
         'swing at {target} ({chance}%)'
       );
@@ -404,8 +360,9 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
   describe('Target extraction', () => {
     it('should extract target from resolvedTargets when available', async () => {
       // Arrange
-      mockProbabilityCalculatorService.calculate.mockReturnValue({
-        finalChance: 60,
+      mockChanceCalculationService.calculateForDisplay.mockReturnValue({
+        chance: 60,
+        displayText: '60%',
         breakdown: { formula: 'ratio' },
       });
 
@@ -436,26 +393,25 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       };
 
       const stage = createStage({
-        skillResolverService: mockSkillResolverService,
-        probabilityCalculatorService: mockProbabilityCalculatorService,
+        chanceCalculationService: mockChanceCalculationService,
       });
 
       // Act
       await stage.executeInternal(context);
 
       // Assert - Should use resolvedTargets.primary, not targetContexts
-      expect(mockSkillResolverService.getSkillValue).toHaveBeenNthCalledWith(
-        2,
-        'resolved-target-1',
-        'skills:defense_skill',
-        0
-      );
+      expect(mockChanceCalculationService.calculateForDisplay).toHaveBeenCalledWith({
+        actorId: 'actor-1',
+        targetId: 'resolved-target-1',
+        actionDef,
+      });
     });
 
     it('should fall back to targetContexts when resolvedTargets is not available', async () => {
       // Arrange
-      mockProbabilityCalculatorService.calculate.mockReturnValue({
-        finalChance: 55,
+      mockChanceCalculationService.calculateForDisplay.mockReturnValue({
+        chance: 55,
+        displayText: '55%',
         breakdown: { formula: 'ratio' },
       });
 
@@ -484,28 +440,27 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       };
 
       const stage = createStage({
-        skillResolverService: mockSkillResolverService,
-        probabilityCalculatorService: mockProbabilityCalculatorService,
+        chanceCalculationService: mockChanceCalculationService,
       });
 
       // Act
       await stage.executeInternal(context);
 
       // Assert - Should use targetContexts fallback
-      expect(mockSkillResolverService.getSkillValue).toHaveBeenNthCalledWith(
-        2,
-        'fallback-target',
-        'skills:defense_skill',
-        0
-      );
+      expect(mockChanceCalculationService.calculateForDisplay).toHaveBeenCalledWith({
+        actorId: 'actor-1',
+        targetId: 'fallback-target',
+        actionDef,
+      });
     });
   });
 
   describe('Formula and bounds', () => {
-    it('should pass custom formula and bounds to probability calculator', async () => {
+    it('should pass actionDef with custom formula and bounds to service', async () => {
       // Arrange
-      mockProbabilityCalculatorService.calculate.mockReturnValue({
-        finalChance: 75,
+      mockChanceCalculationService.calculateForDisplay.mockReturnValue({
+        chance: 75,
+        displayText: '75%',
         breakdown: { formula: 'logistic' },
       });
 
@@ -525,20 +480,17 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       const context = createContext(actionDef, [{ entityId: 'target-1' }]);
 
       const stage = createStage({
-        skillResolverService: mockSkillResolverService,
-        probabilityCalculatorService: mockProbabilityCalculatorService,
+        chanceCalculationService: mockChanceCalculationService,
       });
 
       // Act
       await stage.executeInternal(context);
 
-      // Assert
-      expect(mockProbabilityCalculatorService.calculate).toHaveBeenCalledWith({
-        actorSkill: 50,
-        targetSkill: 0,
-        difficulty: 10,
-        formula: 'logistic',
-        bounds: { min: 10, max: 90 },
+      // Assert - Service receives actionDef which contains the formula and bounds
+      expect(mockChanceCalculationService.calculateForDisplay).toHaveBeenCalledWith({
+        actorId: 'actor-1',
+        targetId: 'target-1',
+        actionDef,
       });
 
       // Formatted template should be set (original actionDef.template unchanged for cache safety)
@@ -555,8 +507,9 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
   describe('Logging', () => {
     it('should log debug message when injecting chance', async () => {
       // Arrange
-      mockProbabilityCalculatorService.calculate.mockReturnValue({
-        finalChance: 67,
+      mockChanceCalculationService.calculateForDisplay.mockReturnValue({
+        chance: 67,
+        displayText: '67%',
         breakdown: { formula: 'ratio' },
       });
 
@@ -573,8 +526,7 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       const context = createContext(actionDef, [{ entityId: 'target-1' }]);
 
       const stage = createStage({
-        skillResolverService: mockSkillResolverService,
-        probabilityCalculatorService: mockProbabilityCalculatorService,
+        chanceCalculationService: mockChanceCalculationService,
       });
 
       // Act

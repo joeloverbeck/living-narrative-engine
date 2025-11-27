@@ -5,9 +5,11 @@
 
 import { tokens } from '../tokens.js';
 import { Registrar } from '../../utils/registrarHelpers.js';
-import SkillResolverService from '../../combat/services/SkillResolverService.js';
-import ProbabilityCalculatorService from '../../combat/services/ProbabilityCalculatorService.js';
+import ChanceCalculationService from '../../combat/services/ChanceCalculationService.js';
+import ModifierCollectorService from '../../combat/services/ModifierCollectorService.js';
 import OutcomeDeterminerService from '../../combat/services/OutcomeDeterminerService.js';
+import ProbabilityCalculatorService from '../../combat/services/ProbabilityCalculatorService.js';
+import SkillResolverService from '../../combat/services/SkillResolverService.js';
 
 /**
  * Register combat services with the DI container.
@@ -35,6 +37,25 @@ export function registerCombatServices(container) {
   // Register OutcomeDeterminerService
   registrar.singletonFactory(tokens.OutcomeDeterminerService, (c) =>
     new OutcomeDeterminerService({
+      logger: c.resolve(tokens.ILogger),
+    })
+  );
+
+  // Register ModifierCollectorService
+  registrar.singletonFactory(tokens.ModifierCollectorService, (c) =>
+    new ModifierCollectorService({
+      entityManager: c.resolve(tokens.IEntityManager),
+      logger: c.resolve(tokens.ILogger),
+    })
+  );
+
+  // Register ChanceCalculationService (orchestrator)
+  registrar.singletonFactory(tokens.ChanceCalculationService, (c) =>
+    new ChanceCalculationService({
+      skillResolverService: c.resolve(tokens.SkillResolverService),
+      modifierCollectorService: c.resolve(tokens.ModifierCollectorService),
+      probabilityCalculatorService: c.resolve(tokens.ProbabilityCalculatorService),
+      outcomeDeterminerService: c.resolve(tokens.OutcomeDeterminerService),
       logger: c.resolve(tokens.ILogger),
     })
   );

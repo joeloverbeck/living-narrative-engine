@@ -34,9 +34,9 @@ describe('Bertram the Muddy Character - Integration Validation', () => {
       expect(definitionData.id).toBe('fantasy:bertram_the_muddy');
     });
 
-    it('should have all 19 required components', () => {
+    it('should have all 21 required components', () => {
       const components = definitionData.components;
-      expect(Object.keys(components)).toHaveLength(19);
+      expect(Object.keys(components)).toHaveLength(21);
 
       // Identity components
       expect(components['core:name']).toBeDefined();
@@ -63,6 +63,10 @@ describe('Bertram the Muddy Character - Integration Validation', () => {
       expect(components['core:actor']).toBeDefined();
       expect(components['core:player_type']).toBeDefined();
       expect(components['core:perception_log']).toBeDefined();
+
+      // Skills components
+      expect(components['skills:melee_skill']).toBeDefined();
+      expect(components['skills:defense_skill']).toBeDefined();
     });
 
     it('should reference the correct recipe', () => {

@@ -37,3 +37,6 @@ export * from './modAccessError.js';
 
 // Action validation error classes
 export * from './actionIndexValidationError.js';
+
+// Operation handler error classes
+export * from './missingHandlerError.js';

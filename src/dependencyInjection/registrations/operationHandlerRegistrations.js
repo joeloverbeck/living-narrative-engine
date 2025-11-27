@@ -668,11 +668,7 @@ export function registerOperationHandlers(registrar) {
       (c, Handler) =>
         new Handler({
           logger: c.resolve(tokens.ILogger),
-          skillResolverService: c.resolve(tokens.SkillResolverService),
-          probabilityCalculatorService: c.resolve(
-            tokens.ProbabilityCalculatorService
-          ),
-          outcomeDeterminerService: c.resolve(tokens.OutcomeDeterminerService),
+          chanceCalculationService: c.resolve(tokens.ChanceCalculationService),
         }),
     ],
     [

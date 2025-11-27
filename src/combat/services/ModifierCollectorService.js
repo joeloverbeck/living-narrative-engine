@@ -1,33 +1,3 @@
-# NONDETACTSYS-016: Create ModifierCollectorService
-
-## Summary
-
-Create the `ModifierCollectorService` that collects and aggregates applicable modifiers from entity buffs, equipment, and environment. This service is used by the `ChanceCalculationService` to apply situational modifiers to probability calculations.
-
-**Note**: This is a Phase 5 enhancement ticket. The core system works without modifiers (Phase 1-4). This adds the infrastructure for future modifier-based gameplay.
-
-## Files to Create
-
-| File | Purpose |
-|------|---------|
-| `src/combat/services/ModifierCollectorService.js` | Service implementation |
-| `tests/unit/combat/services/modifierCollectorService.test.js` | Unit tests |
-
-## Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/combat/index.js` | Export ModifierCollectorService |
-| `src/dependencyInjection/tokens/tokens-core.js` | Add ModifierCollectorService token |
-| `src/dependencyInjection/registrations/combatRegistrations.js` | Register ModifierCollectorService |
-
-## Implementation Details
-
-### ModifierCollectorService.js
-
-```javascript
-// src/combat/services/ModifierCollectorService.js
-
 /**
  * @file Collects and aggregates modifiers for probability calculations
  * @description Gathers applicable modifiers from buffs, equipment, and environment
@@ -56,6 +26,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  */
 
 class ModifierCollectorService {
+  // eslint-disable-next-line no-unused-private-class-members -- Reserved for Phase 5+ modifier collection from buffs/equipment/environment
   #entityManager;
   #logger;
 
@@ -65,11 +36,17 @@ class ModifierCollectorService {
    * @param {ILogger} deps.logger
    */
   constructor({ entityManager, logger }) {
+    validateDependency(logger, 'ILogger', logger, {
+      requiredMethods: ['debug', 'warn', 'error', 'info'],
+    });
     validateDependency(entityManager, 'IEntityManager', logger, {
       requiredMethods: ['getComponentData', 'hasComponent'],
     });
+
     this.#entityManager = entityManager;
     this.#logger = logger;
+
+    this.#logger.debug('ModifierCollectorService: Initialized');
   }
 
   /**
@@ -81,7 +58,7 @@ class ModifierCollectorService {
    * @param {Object} [params.actionConfig] - Action's chanceBased configuration
    * @returns {ModifierCollection}
    */
-  collectModifiers({ actorId, targetId, locationId, actionConfig }) {
+  collectModifiers({ actorId, targetId, _locationId, actionConfig }) {
     this.#logger.debug(
       `ModifierCollectorService: Collecting modifiers for actor=${actorId}, target=${targetId}`
     );
@@ -124,8 +101,12 @@ class ModifierCollectorService {
   /**
    * Collects modifiers defined in action configuration
    * @private
+   * @param {string} _actorId - Actor entity ID (unused in Phase 5 stub)
+   * @param {string} [_targetId] - Target entity ID (unused in Phase 5 stub)
+   * @param {Object} _modifierConfigs - Modifier configurations (unused in Phase 5 stub)
+   * @returns {Modifier[]}
    */
-  #collectActionModifiers(actorId, targetId, modifierConfigs) {
+  #collectActionModifiers(_actorId, _targetId, _modifierConfigs) {
     // In Phase 5, this evaluates JSON Logic conditions on each modifier
     // For now, return empty array as conditions are not evaluated yet
     return [];
@@ -179,124 +160,3 @@ class ModifierCollectorService {
 }
 
 export default ModifierCollectorService;
-```
-
-### DI Token Addition
-
-```javascript
-// In tokens-core.js, add:
-ModifierCollectorService: 'ModifierCollectorService',
-```
-
-### Combat Registrations Update
-
-```javascript
-// In combatRegistrations.js, add:
-import ModifierCollectorService from '../../combat/services/ModifierCollectorService.js';
-
-// In registerCombatServices function, add:
-container.register(tokens.ModifierCollectorService, (c) => {
-  return new ModifierCollectorService({
-    entityManager: c.resolve(tokens.IEntityManager),
-    logger: c.resolve(tokens.ILogger),
-  });
-});
-```
-
-### index.js Export
-
-```javascript
-// In src/combat/index.js, add:
-export { default as ModifierCollectorService } from './services/ModifierCollectorService.js';
-```
-
-## Modifier Stacking Rules
-
-The service implements the following stacking rules from the spec:
-
-| Rule | Behavior |
-|------|----------|
-| Flat modifiers | Sum all applicable values |
-| Percentage modifiers | Add percentages together (applied after flat) |
-| Same stackId | Only highest absolute value modifier applies |
-
-## Out of Scope
-
-- **DO NOT** implement buff component collection (future enhancement)
-- **DO NOT** implement equipment modifier collection (future enhancement)
-- **DO NOT** implement environmental modifiers (future enhancement)
-- **DO NOT** implement JSON Logic condition evaluation (requires integration work)
-- **DO NOT** modify action definitions
-- **DO NOT** create integration tests (unit tests sufficient for Phase 5 stub)
-
-## Acceptance Criteria
-
-### Tests That Must Pass
-
-```bash
-# Unit tests for service
-npm run test:unit -- --testPathPattern="modifierCollectorService"
-
-# Type checking
-npm run typecheck
-
-# Lint
-npx eslint src/combat/services/ModifierCollectorService.js
-
-# Full test suite (no regressions)
-npm run test:ci
-```
-
-### Unit Test Requirements
-
-**Test File**: `tests/unit/combat/services/modifierCollectorService.test.js`
-
-Required test cases:
-
-1. **Empty modifiers**
-   - No modifiers configured
-   - Returns empty collection with zero totals
-
-2. **Flat modifier totals**
-   - Multiple flat modifiers
-   - Correctly sums values
-
-3. **Percentage modifier totals**
-   - Multiple percentage modifiers
-   - Correctly sums percentages
-
-4. **Stacking rules**
-   - Multiple modifiers with same stackId
-   - Only highest absolute value kept
-
-5. **Mixed modifier types**
-   - Both flat and percentage modifiers
-   - Correctly separates totals
-
-6. **Negative modifiers**
-   - Negative values for penalties
-   - Correctly handled in totals
-
-### Invariants That Must Remain True
-
-- [ ] Service has no side effects on entity state
-- [ ] Empty input returns valid ModifierCollection
-- [ ] Stacking rules follow spec (highest absolute value wins)
-- [ ] All dependencies properly validated
-- [ ] Logging includes useful debug information
-- [ ] No circular dependencies introduced
-
-## Dependencies
-
-- **Depends on**:
-  - NONDETACTSYS-008 (combatRegistrations.js exists)
-- **Blocked by**: NONDETACTSYS-008
-- **Blocks**: NONDETACTSYS-017 (ChanceCalculationService needs this)
-
-## Reference Files
-
-| File | Purpose |
-|------|---------|
-| `src/combat/services/SkillResolverService.js` | Service pattern reference |
-| `src/combat/services/ProbabilityCalculatorService.js` | Service pattern reference |
-| `tests/unit/combat/services/skillResolverService.test.js` | Test pattern reference |

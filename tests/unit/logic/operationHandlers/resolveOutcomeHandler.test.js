@@ -19,32 +19,22 @@ const createMockLogger = () => ({
   debug: jest.fn(),
 });
 
-const createMockSkillResolverService = (overrides = {}) => ({
-  getSkillValue: jest.fn().mockReturnValue({ baseValue: 50, hasComponent: true }),
-  ...overrides,
-});
-
-const createMockProbabilityCalculatorService = (overrides = {}) => ({
-  calculate: jest.fn().mockReturnValue({
-    baseChance: 50,
-    finalChance: 50,
-    breakdown: {
-      formula: 'ratio',
-      rawCalculation: 50,
-      afterModifiers: 50,
-      bounds: { min: 5, max: 95 },
-    },
-  }),
-  ...overrides,
-});
-
-const createMockOutcomeDeterminerService = (overrides = {}) => ({
-  determine: jest.fn().mockReturnValue({
+/**
+ * Creates a mock ChanceCalculationService.
+ *
+ * @param {object} [overrides] - Optional method overrides
+ * @returns {object} Mock service
+ */
+const createMockChanceCalculationService = (overrides = {}) => ({
+  resolveOutcome: jest.fn().mockReturnValue({
     outcome: 'SUCCESS',
     roll: 30,
+    threshold: 50,
     margin: -20,
     isCritical: false,
+    modifiers: [],
   }),
+  calculateForDisplay: jest.fn(),
   ...overrides,
 });
 
@@ -87,21 +77,15 @@ function buildExecutionContext(
 describe('ResolveOutcomeHandler', () => {
   let handler;
   let mockLogger;
-  let mockSkillResolver;
-  let mockProbabilityCalculator;
-  let mockOutcomeDeterminer;
+  let mockChanceCalculationService;
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockLogger = createMockLogger();
-    mockSkillResolver = createMockSkillResolverService();
-    mockProbabilityCalculator = createMockProbabilityCalculatorService();
-    mockOutcomeDeterminer = createMockOutcomeDeterminerService();
+    mockChanceCalculationService = createMockChanceCalculationService();
 
     handler = new ResolveOutcomeHandler({
-      skillResolverService: mockSkillResolver,
-      probabilityCalculatorService: mockProbabilityCalculator,
-      outcomeDeterminerService: mockOutcomeDeterminer,
+      chanceCalculationService: mockChanceCalculationService,
       logger: mockLogger,
     });
     mockLogger.debug.mockClear();
@@ -115,9 +99,7 @@ describe('ResolveOutcomeHandler', () => {
     test('initializes successfully with valid dependencies', () => {
       const freshLogger = createMockLogger();
       const freshHandler = new ResolveOutcomeHandler({
-        skillResolverService: mockSkillResolver,
-        probabilityCalculatorService: mockProbabilityCalculator,
-        outcomeDeterminerService: mockOutcomeDeterminer,
+        chanceCalculationService: mockChanceCalculationService,
         logger: freshLogger,
       });
       expect(freshHandler).toBeDefined();
@@ -130,9 +112,7 @@ describe('ResolveOutcomeHandler', () => {
       expect(
         () =>
           new ResolveOutcomeHandler({
-            skillResolverService: mockSkillResolver,
-            probabilityCalculatorService: mockProbabilityCalculator,
-            outcomeDeterminerService: mockOutcomeDeterminer,
+            chanceCalculationService: mockChanceCalculationService,
           })
       ).toThrow(/ILogger instance/);
     });
@@ -141,81 +121,29 @@ describe('ResolveOutcomeHandler', () => {
       expect(
         () =>
           new ResolveOutcomeHandler({
-            skillResolverService: mockSkillResolver,
-            probabilityCalculatorService: mockProbabilityCalculator,
-            outcomeDeterminerService: mockOutcomeDeterminer,
+            chanceCalculationService: mockChanceCalculationService,
             logger: { info: jest.fn() }, // Missing debug, warn, error
           })
       ).toThrow(/ILogger instance/);
     });
 
-    test('throws if skillResolverService is missing', () => {
+    test('throws if chanceCalculationService is missing', () => {
       expect(
         () =>
           new ResolveOutcomeHandler({
-            probabilityCalculatorService: mockProbabilityCalculator,
-            outcomeDeterminerService: mockOutcomeDeterminer,
             logger: mockLogger,
           })
-      ).toThrow(/skillResolverService/);
+      ).toThrow(/chanceCalculationService/);
     });
 
-    test('throws if skillResolverService lacks getSkillValue method', () => {
+    test('throws if chanceCalculationService lacks resolveOutcome method', () => {
       expect(
         () =>
           new ResolveOutcomeHandler({
-            skillResolverService: { otherMethod: jest.fn() },
-            probabilityCalculatorService: mockProbabilityCalculator,
-            outcomeDeterminerService: mockOutcomeDeterminer,
+            chanceCalculationService: { otherMethod: jest.fn() },
             logger: mockLogger,
           })
-      ).toThrow(/skillResolverService/);
-    });
-
-    test('throws if probabilityCalculatorService is missing', () => {
-      expect(
-        () =>
-          new ResolveOutcomeHandler({
-            skillResolverService: mockSkillResolver,
-            outcomeDeterminerService: mockOutcomeDeterminer,
-            logger: mockLogger,
-          })
-      ).toThrow(/probabilityCalculatorService/);
-    });
-
-    test('throws if probabilityCalculatorService lacks calculate method', () => {
-      expect(
-        () =>
-          new ResolveOutcomeHandler({
-            skillResolverService: mockSkillResolver,
-            probabilityCalculatorService: { otherMethod: jest.fn() },
-            outcomeDeterminerService: mockOutcomeDeterminer,
-            logger: mockLogger,
-          })
-      ).toThrow(/probabilityCalculatorService/);
-    });
-
-    test('throws if outcomeDeterminerService is missing', () => {
-      expect(
-        () =>
-          new ResolveOutcomeHandler({
-            skillResolverService: mockSkillResolver,
-            probabilityCalculatorService: mockProbabilityCalculator,
-            logger: mockLogger,
-          })
-      ).toThrow(/outcomeDeterminerService/);
-    });
-
-    test('throws if outcomeDeterminerService lacks determine method', () => {
-      expect(
-        () =>
-          new ResolveOutcomeHandler({
-            skillResolverService: mockSkillResolver,
-            probabilityCalculatorService: mockProbabilityCalculator,
-            outcomeDeterminerService: { otherMethod: jest.fn() },
-            logger: mockLogger,
-          })
-      ).toThrow(/outcomeDeterminerService/);
+      ).toThrow(/chanceCalculationService/);
     });
   });
 
@@ -333,28 +261,40 @@ describe('ResolveOutcomeHandler', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Happy Path Tests
+  // Happy Path Tests - Pseudo-ActionDef Construction
   // ---------------------------------------------------------------------------
 
-  describe('Happy Path - Opposed Skill Check', () => {
-    test('executes opposed skill check with both skills present', () => {
-      mockSkillResolver.getSkillValue
-        .mockReturnValueOnce({ baseValue: 60, hasComponent: true }) // Actor
-        .mockReturnValueOnce({ baseValue: 40, hasComponent: true }); // Target
+  describe('Happy Path - Pseudo-ActionDef Construction', () => {
+    test('constructs pseudo-actionDef for simple skill check', () => {
+      const ctx = buildExecutionContext(mockLogger);
+      const params = {
+        actor_skill_component: 'skills:melee',
+        result_variable: 'combat_result',
+      };
 
-      mockProbabilityCalculator.calculate.mockReturnValue({
-        baseChance: 60,
-        finalChance: 60,
-        breakdown: { formula: 'ratio', rawCalculation: 60, afterModifiers: 60, bounds: { min: 5, max: 95 } },
+      handler.execute(params, ctx);
+
+      expect(mockChanceCalculationService.resolveOutcome).toHaveBeenCalledWith({
+        actorId: 'actor-123',
+        targetId: 'target-456',
+        actionDef: {
+          id: 'RESOLVE_OUTCOME_OPERATION',
+          chanceBased: {
+            enabled: true,
+            contestType: 'simple',
+            actorSkill: {
+              component: 'skills:melee',
+              default: 0,
+            },
+            targetSkill: undefined,
+            formula: 'ratio',
+            fixedDifficulty: 0,
+          },
+        },
       });
+    });
 
-      mockOutcomeDeterminer.determine.mockReturnValue({
-        outcome: 'SUCCESS',
-        roll: 45,
-        margin: -15,
-        isCritical: false,
-      });
-
+    test('constructs pseudo-actionDef for opposed skill check', () => {
       const ctx = buildExecutionContext(mockLogger);
       const params = {
         actor_skill_component: 'skills:melee',
@@ -364,73 +304,48 @@ describe('ResolveOutcomeHandler', () => {
 
       handler.execute(params, ctx);
 
-      expect(mockSkillResolver.getSkillValue).toHaveBeenCalledTimes(2);
-      expect(mockSkillResolver.getSkillValue).toHaveBeenNthCalledWith(
-        1,
-        'actor-123',
-        'skills:melee',
-        0
-      );
-      expect(mockSkillResolver.getSkillValue).toHaveBeenNthCalledWith(
-        2,
-        'target-456',
-        'skills:defense',
-        0
-      );
-
-      expect(mockProbabilityCalculator.calculate).toHaveBeenCalledWith({
-        actorSkill: 60,
-        targetSkill: 40,
-        difficulty: 0,
-        formula: 'ratio',
-      });
-
-      expect(mockOutcomeDeterminer.determine).toHaveBeenCalledWith({
-        finalChance: 60,
-      });
-
-      expect(ctx.evaluationContext.context.combat_result).toEqual({
-        outcome: 'SUCCESS',
-        roll: 45,
-        threshold: 60,
-        margin: -15,
-        isCritical: false,
-        actorSkill: 60,
-        targetSkill: 40,
-        breakdown: expect.any(Object),
+      expect(mockChanceCalculationService.resolveOutcome).toHaveBeenCalledWith({
+        actorId: 'actor-123',
+        targetId: 'target-456',
+        actionDef: {
+          id: 'RESOLVE_OUTCOME_OPERATION',
+          chanceBased: {
+            enabled: true,
+            contestType: 'opposed',
+            actorSkill: {
+              component: 'skills:melee',
+              default: 0,
+            },
+            targetSkill: {
+              component: 'skills:defense',
+              default: 0,
+            },
+            formula: 'ratio',
+            fixedDifficulty: 0,
+          },
+        },
       });
     });
 
-    test('executes opposed skill check with missing target skill (uses default)', () => {
-      mockSkillResolver.getSkillValue
-        .mockReturnValueOnce({ baseValue: 50, hasComponent: true }) // Actor
-        .mockReturnValueOnce({ baseValue: 10, hasComponent: false }); // Target - uses default
-
+    test('passes custom default values to pseudo-actionDef', () => {
       const ctx = buildExecutionContext(mockLogger);
       const params = {
         actor_skill_component: 'skills:melee',
         target_skill_component: 'skills:defense',
+        actor_skill_default: 15,
         target_skill_default: 10,
         result_variable: 'outcome',
       };
 
       handler.execute(params, ctx);
 
-      expect(mockSkillResolver.getSkillValue).toHaveBeenNthCalledWith(
-        2,
-        'target-456',
-        'skills:defense',
-        10
-      );
-      expect(ctx.evaluationContext.context.outcome).toBeDefined();
+      const calledWith =
+        mockChanceCalculationService.resolveOutcome.mock.calls[0][0];
+      expect(calledWith.actionDef.chanceBased.actorSkill.default).toBe(15);
+      expect(calledWith.actionDef.chanceBased.targetSkill.default).toBe(10);
     });
 
-    test('executes fixed difficulty check (no target_skill_component)', () => {
-      mockSkillResolver.getSkillValue.mockReturnValue({
-        baseValue: 50,
-        hasComponent: true,
-      });
-
+    test('passes difficulty modifier to pseudo-actionDef', () => {
       const ctx = buildExecutionContext(mockLogger);
       const params = {
         actor_skill_component: 'skills:athletics',
@@ -440,23 +355,9 @@ describe('ResolveOutcomeHandler', () => {
 
       handler.execute(params, ctx);
 
-      // Should only call once (for actor)
-      expect(mockSkillResolver.getSkillValue).toHaveBeenCalledTimes(1);
-      expect(mockSkillResolver.getSkillValue).toHaveBeenCalledWith(
-        'actor-123',
-        'skills:athletics',
-        0
-      );
-
-      // Target skill should be 0
-      expect(mockProbabilityCalculator.calculate).toHaveBeenCalledWith({
-        actorSkill: 50,
-        targetSkill: 0,
-        difficulty: 25,
-        formula: 'ratio',
-      });
-
-      expect(ctx.evaluationContext.context.climb_result).toBeDefined();
+      const calledWith =
+        mockChanceCalculationService.resolveOutcome.mock.calls[0][0];
+      expect(calledWith.actionDef.chanceBased.fixedDifficulty).toBe(25);
     });
   });
 
@@ -466,7 +367,7 @@ describe('ResolveOutcomeHandler', () => {
 
   describe('Formula Types', () => {
     test.each(['ratio', 'logistic', 'linear'])(
-      'passes %s formula to probability calculator',
+      'passes %s formula to pseudo-actionDef',
       (formula) => {
         const ctx = buildExecutionContext(mockLogger);
         const params = {
@@ -477,9 +378,9 @@ describe('ResolveOutcomeHandler', () => {
 
         handler.execute(params, ctx);
 
-        expect(mockProbabilityCalculator.calculate).toHaveBeenCalledWith(
-          expect.objectContaining({ formula })
-        );
+        const calledWith =
+          mockChanceCalculationService.resolveOutcome.mock.calls[0][0];
+        expect(calledWith.actionDef.chanceBased.formula).toBe(formula);
       }
     );
 
@@ -492,9 +393,9 @@ describe('ResolveOutcomeHandler', () => {
 
       handler.execute(params, ctx);
 
-      expect(mockProbabilityCalculator.calculate).toHaveBeenCalledWith(
-        expect.objectContaining({ formula: 'ratio' })
-      );
+      const calledWith =
+        mockChanceCalculationService.resolveOutcome.mock.calls[0][0];
+      expect(calledWith.actionDef.chanceBased.formula).toBe('ratio');
     });
   });
 
@@ -503,28 +404,14 @@ describe('ResolveOutcomeHandler', () => {
   // ---------------------------------------------------------------------------
 
   describe('Result Object Structure', () => {
-    test('result contains all expected properties', () => {
-      mockSkillResolver.getSkillValue.mockReturnValue({
-        baseValue: 55,
-        hasComponent: true,
-      });
-
-      mockProbabilityCalculator.calculate.mockReturnValue({
-        baseChance: 55,
-        finalChance: 55,
-        breakdown: {
-          formula: 'ratio',
-          rawCalculation: 55,
-          afterModifiers: 55,
-          bounds: { min: 5, max: 95 },
-        },
-      });
-
-      mockOutcomeDeterminer.determine.mockReturnValue({
+    test('result contains all expected properties from service', () => {
+      mockChanceCalculationService.resolveOutcome.mockReturnValue({
         outcome: 'SUCCESS',
         roll: 42,
+        threshold: 55,
         margin: -13,
         isCritical: false,
+        modifiers: [{ type: 'environmental', value: 5 }],
       });
 
       const ctx = buildExecutionContext(mockLogger);
@@ -542,11 +429,13 @@ describe('ResolveOutcomeHandler', () => {
       expect(result).toHaveProperty('threshold', 55);
       expect(result).toHaveProperty('margin', -13);
       expect(result).toHaveProperty('isCritical', false);
-      expect(result).toHaveProperty('actorSkill', 55);
-      // targetSkill is 0 because no target_skill_component was provided
+      // actorSkill and targetSkill are set to 0 for backward compatibility
+      expect(result).toHaveProperty('actorSkill', 0);
       expect(result).toHaveProperty('targetSkill', 0);
+      // breakdown is empty object for backward compatibility
       expect(result).toHaveProperty('breakdown');
-      expect(result.breakdown).toHaveProperty('formula', 'ratio');
+      expect(result).toHaveProperty('modifiers');
+      expect(result.modifiers).toEqual([{ type: 'environmental', value: 5 }]);
     });
 
     test('result is stored in correct context variable', () => {
@@ -563,49 +452,21 @@ describe('ResolveOutcomeHandler', () => {
         'SUCCESS'
       );
     });
-
-    test('breakdown information is included from probability service', () => {
-      mockProbabilityCalculator.calculate.mockReturnValue({
-        baseChance: 75,
-        finalChance: 75,
-        breakdown: {
-          formula: 'logistic',
-          rawCalculation: 73.1,
-          afterModifiers: 75,
-          bounds: { min: 10, max: 90 },
-        },
-      });
-
-      const ctx = buildExecutionContext(mockLogger);
-      const params = {
-        actor_skill_component: 'skills:melee',
-        formula: 'logistic',
-        result_variable: 'outcome',
-      };
-
-      handler.execute(params, ctx);
-
-      const result = ctx.evaluationContext.context.outcome;
-      expect(result.breakdown).toEqual({
-        formula: 'logistic',
-        rawCalculation: 73.1,
-        afterModifiers: 75,
-        bounds: { min: 10, max: 90 },
-      });
-    });
   });
 
   // ---------------------------------------------------------------------------
   // Outcome Distribution Tests
   // ---------------------------------------------------------------------------
 
-  describe('Outcome Distribution (via mocked services)', () => {
+  describe('Outcome Distribution (via mocked service)', () => {
     test('SUCCESS outcome is returned correctly', () => {
-      mockOutcomeDeterminer.determine.mockReturnValue({
+      mockChanceCalculationService.resolveOutcome.mockReturnValue({
         outcome: 'SUCCESS',
         roll: 40,
+        threshold: 50,
         margin: -10,
         isCritical: false,
+        modifiers: [],
       });
 
       const ctx = buildExecutionContext(mockLogger);
@@ -619,11 +480,13 @@ describe('ResolveOutcomeHandler', () => {
     });
 
     test('FAILURE outcome is returned correctly', () => {
-      mockOutcomeDeterminer.determine.mockReturnValue({
+      mockChanceCalculationService.resolveOutcome.mockReturnValue({
         outcome: 'FAILURE',
         roll: 75,
+        threshold: 50,
         margin: 25,
         isCritical: false,
+        modifiers: [],
       });
 
       const ctx = buildExecutionContext(mockLogger);
@@ -637,11 +500,13 @@ describe('ResolveOutcomeHandler', () => {
     });
 
     test('CRITICAL_SUCCESS outcome is returned correctly', () => {
-      mockOutcomeDeterminer.determine.mockReturnValue({
+      mockChanceCalculationService.resolveOutcome.mockReturnValue({
         outcome: 'CRITICAL_SUCCESS',
         roll: 3,
+        threshold: 50,
         margin: -47,
         isCritical: true,
+        modifiers: [],
       });
 
       const ctx = buildExecutionContext(mockLogger);
@@ -655,11 +520,13 @@ describe('ResolveOutcomeHandler', () => {
     });
 
     test('FUMBLE outcome is returned correctly', () => {
-      mockOutcomeDeterminer.determine.mockReturnValue({
+      mockChanceCalculationService.resolveOutcome.mockReturnValue({
         outcome: 'FUMBLE',
         roll: 98,
+        threshold: 50,
         margin: 48,
         isCritical: true,
+        modifiers: [],
       });
 
       const ctx = buildExecutionContext(mockLogger);
@@ -692,60 +559,11 @@ describe('ResolveOutcomeHandler', () => {
 
       handler.execute(params, ctx);
 
-      expect(mockSkillResolver.getSkillValue).toHaveBeenNthCalledWith(
-        2,
-        'secondary-789',
-        'skills:defense',
-        0
+      expect(mockChanceCalculationService.resolveOutcome).toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetId: 'secondary-789',
+        })
       );
-    });
-
-    test('uses actor_skill_default when actor lacks component', () => {
-      mockSkillResolver.getSkillValue.mockReturnValue({
-        baseValue: 15,
-        hasComponent: false,
-      });
-
-      const ctx = buildExecutionContext(mockLogger);
-      const params = {
-        actor_skill_component: 'skills:melee',
-        actor_skill_default: 15,
-        result_variable: 'outcome',
-      };
-
-      handler.execute(params, ctx);
-
-      expect(mockSkillResolver.getSkillValue).toHaveBeenCalledWith(
-        'actor-123',
-        'skills:melee',
-        15
-      );
-    });
-
-    test('handles zero skill values correctly', () => {
-      mockSkillResolver.getSkillValue.mockReturnValue({
-        baseValue: 0,
-        hasComponent: true,
-      });
-
-      mockProbabilityCalculator.calculate.mockReturnValue({
-        baseChance: 50,
-        finalChance: 50,
-        breakdown: { formula: 'ratio', rawCalculation: 50, afterModifiers: 50, bounds: { min: 5, max: 95 } },
-      });
-
-      const ctx = buildExecutionContext(mockLogger);
-      const params = {
-        actor_skill_component: 'skills:melee',
-        result_variable: 'outcome',
-      };
-
-      handler.execute(params, ctx);
-
-      expect(mockProbabilityCalculator.calculate).toHaveBeenCalledWith(
-        expect.objectContaining({ actorSkill: 0 })
-      );
-      expect(ctx.evaluationContext.context.outcome).toBeDefined();
     });
 
     test('does not modify event payload', () => {
@@ -771,15 +589,13 @@ describe('ResolveOutcomeHandler', () => {
 
   describe('Logging', () => {
     test('logs debug message on successful execution', () => {
-      mockProbabilityCalculator.calculate.mockReturnValue({
-        finalChance: 65,
-        breakdown: {},
-      });
-      mockOutcomeDeterminer.determine.mockReturnValue({
+      mockChanceCalculationService.resolveOutcome.mockReturnValue({
         outcome: 'SUCCESS',
         roll: 50,
+        threshold: 65,
         margin: -15,
         isCritical: false,
+        modifiers: [],
       });
 
       const ctx = buildExecutionContext(mockLogger);

@@ -214,7 +214,7 @@ describe('Operation Registry Workflow E2E', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle missing operation handler gracefully', () => {
+    it('should throw MissingHandlerError for missing operation handler (fail-fast)', () => {
       // Arrange
       const unknownOperation = {
         type: 'NON_EXISTENT_OPERATION',
@@ -229,20 +229,11 @@ describe('Operation Registry Workflow E2E', () => {
         jsonLogic,
       };
 
-      // Spy on logger to verify error is logged
-      const errorSpy = jest.spyOn(logger, 'error');
-
-      // Act - Execute with missing handler
-      const result = operationInterpreter.execute(unknownOperation, context);
-
-      // Assert - Should return undefined and log error (graceful degradation)
-      expect(result).toBeUndefined();
-      expect(errorSpy).toHaveBeenCalledWith(
-        expect.stringMatching(/HANDLER NOT FOUND.*NON_EXISTENT_OPERATION/)
-      );
-
-      // Cleanup
-      errorSpy.mockRestore();
+      // Act & Assert - Should throw MissingHandlerError immediately (fail-fast behavior)
+      // The error is thrown synchronously during handler lookup, before any async operation
+      expect(() =>
+        operationInterpreter.execute(unknownOperation, context)
+      ).toThrow(/Cannot execute operation.*NON_EXISTENT_OPERATION.*handler not found/);
     });
 
     it('should handle handler execution errors gracefully', async () => {

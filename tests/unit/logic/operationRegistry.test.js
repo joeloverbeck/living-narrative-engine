@@ -116,6 +116,66 @@ describe('OperationRegistry', () => {
     });
   });
 
+  describe('hasHandler()', () => {
+    let registry;
+    beforeEach(() => {
+      registry = new OperationRegistry({ logger: mockLogger });
+      registry.register('TEST', dummyHandler);
+    });
+
+    test('returns true for registered operation type', () => {
+      expect(registry.hasHandler('TEST')).toBe(true);
+    });
+
+    test('returns false for unregistered operation type', () => {
+      expect(registry.hasHandler('MISSING')).toBe(false);
+    });
+
+    test('handles null input gracefully (returns false)', () => {
+      expect(registry.hasHandler(null)).toBe(false);
+    });
+
+    test('handles undefined input gracefully (returns false)', () => {
+      expect(registry.hasHandler(undefined)).toBe(false);
+    });
+
+    test('handles empty string input gracefully (returns false)', () => {
+      expect(registry.hasHandler('')).toBe(false);
+    });
+
+    test('handles whitespace-only input gracefully (returns false)', () => {
+      expect(registry.hasHandler('   ')).toBe(false);
+    });
+
+    test('uses normalized operation type (handles whitespace)', () => {
+      expect(registry.hasHandler('  TEST  ')).toBe(true);
+    });
+
+    test('does NOT log debug when handler is missing (unlike getHandler)', () => {
+      mockLogger.debug.mockClear();
+      registry.hasHandler('MISSING');
+      // hasHandler should NOT log anything for missing handlers
+      expect(mockLogger.debug).not.toHaveBeenCalledWith(
+        expect.stringContaining('No handler found')
+      );
+    });
+
+    test('is consistent with getHandler - true case', () => {
+      const hasIt = registry.hasHandler('TEST');
+      const handler = registry.getHandler('TEST');
+      expect(hasIt).toBe(true);
+      expect(handler).toBeDefined();
+      expect(handler).toBe(dummyHandler);
+    });
+
+    test('is consistent with getHandler - false case', () => {
+      const hasIt = registry.hasHandler('NONEXISTENT');
+      const handler = registry.getHandler('NONEXISTENT');
+      expect(hasIt).toBe(false);
+      expect(handler).toBeUndefined();
+    });
+  });
+
   describe('getRegisteredTypes()', () => {
     test('returns sorted list of registered operation types', () => {
       const registry = new OperationRegistry({ logger: mockLogger });

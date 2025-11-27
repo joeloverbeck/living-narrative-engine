@@ -21,8 +21,7 @@ import { ActionFormattingCoordinator } from './actionFormatting/ActionFormatting
 /** @typedef {import('../../errors/actionErrorContextBuilder.js').ActionErrorContextBuilder} ActionErrorContextBuilder */
 /** @typedef {import('../../../logging/consoleLogger.js').default} ILogger */
 /** @typedef {import('../../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-/** @typedef {import('../../../combat/services/SkillResolverService.js').default} SkillResolverService */
-/** @typedef {import('../../../combat/services/ProbabilityCalculatorService.js').default} ProbabilityCalculatorService */
+/** @typedef {import('../../../combat/services/ChanceCalculationService.js').default} ChanceCalculationService */
 
 /**
  * @class ActionFormattingStage
@@ -47,11 +46,8 @@ export class ActionFormattingStage extends PipelineStage {
 
   #decider;
 
-  /** @type {SkillResolverService|null} */
-  #skillResolverService;
-
-  /** @type {ProbabilityCalculatorService|null} */
-  #probabilityCalculatorService;
+  /** @type {ChanceCalculationService|null} */
+  #chanceCalculationService;
 
   /**
    * Creates an ActionFormattingStage instance
@@ -63,8 +59,7 @@ export class ActionFormattingStage extends PipelineStage {
    * @param {Function} deps.getEntityDisplayNameFn - Function to get entity display names
    * @param {ActionErrorContextBuilder} deps.errorContextBuilder - Builder for error contexts
    * @param {ILogger} deps.logger - Logger for diagnostic output
-   * @param {SkillResolverService} [deps.skillResolverService] - Service for resolving skill values (optional)
-   * @param {ProbabilityCalculatorService} [deps.probabilityCalculatorService] - Service for calculating probabilities (optional)
+   * @param {ChanceCalculationService} [deps.chanceCalculationService] - Service for chance calculations (optional)
    */
   constructor({
     commandFormatter,
@@ -73,8 +68,7 @@ export class ActionFormattingStage extends PipelineStage {
     getEntityDisplayNameFn,
     errorContextBuilder,
     logger,
-    skillResolverService,
-    probabilityCalculatorService,
+    chanceCalculationService,
   }) {
     super('ActionFormatting');
     /*
@@ -97,9 +91,8 @@ export class ActionFormattingStage extends PipelineStage {
     this.#errorContextBuilder = errorContextBuilder;
     this.#logger = logger;
 
-    // Optional combat services for chance-based actions
-    this.#skillResolverService = skillResolverService ?? null;
-    this.#probabilityCalculatorService = probabilityCalculatorService ?? null;
+    // Optional combat service for chance-based actions
+    this.#chanceCalculationService = chanceCalculationService ?? null;
 
     this.#targetNormalizationService = new TargetNormalizationService({
       logger: this.#logger,
@@ -173,7 +166,7 @@ export class ActionFormattingStage extends PipelineStage {
       : new NoopInstrumentation();
 
     // Inject chance percentages into templates for chance-based actions
-    if (this.#skillResolverService && this.#probabilityCalculatorService) {
+    if (this.#chanceCalculationService) {
       this.#injectChanceIntoTemplates(context);
     }
 
@@ -270,17 +263,23 @@ export class ActionFormattingStage extends PipelineStage {
       // Get target ID from resolvedTargets or targetContexts
       const targetId = this.#extractTargetId(actionWithTarget, context);
 
-      const chance = this.#calculateChance(actionDef, actor.id, targetId);
+      // Use ChanceCalculationService for probability calculation
+      const displayResult = this.#chanceCalculationService.calculateForDisplay({
+        actorId: actor.id,
+        targetId,
+        actionDef,
+      });
+
       // Store formatted template on the transient actionWithTarget object
       // instead of mutating the cached actionDef.template to prevent
       // stale values across multiple action discovery passes
       actionWithTarget.formattedTemplate = actionDef.template.replace(
         '{chance}',
-        String(chance)
+        displayResult.displayText.replace('%', '') // Remove % since template already has it
       );
 
       this.#logger.debug(
-        `ActionFormattingStage: Injected chance ${chance}% into formattedTemplate for action '${actionDef.id}'`
+        `ActionFormattingStage: Injected chance ${displayResult.chance}% into formattedTemplate for action '${actionDef.id}'`
       );
     }
   }
@@ -302,52 +301,6 @@ export class ActionFormattingStage extends PipelineStage {
     }
     // Fall back to targetContexts (legacy path)
     return actionWithTarget.targetContexts?.[0]?.entityId ?? null;
-  }
-
-  /**
-   * Calculates the success probability for a chance-based action.
-   *
-   * @param {object} actionDef - Action definition with chanceBased configuration
-   * @param {string} actorId - Actor entity ID
-   * @param {string|null} targetId - Target entity ID (for opposed checks)
-   * @returns {number} Calculated chance percentage (rounded)
-   * @private
-   */
-  #calculateChance(actionDef, actorId, targetId) {
-    const { chanceBased } = actionDef;
-
-    // Get actor skill
-    const actorResult = this.#skillResolverService.getSkillValue(
-      actorId,
-      chanceBased.actorSkill?.component,
-      chanceBased.actorSkill?.default ?? 0
-    );
-
-    // Get target skill (if opposed)
-    let targetSkillValue = 0;
-    if (
-      chanceBased.contestType === 'opposed' &&
-      chanceBased.targetSkill &&
-      targetId
-    ) {
-      const targetResult = this.#skillResolverService.getSkillValue(
-        targetId,
-        chanceBased.targetSkill.component,
-        chanceBased.targetSkill.default ?? 0
-      );
-      targetSkillValue = targetResult.baseValue;
-    }
-
-    // Calculate probability
-    const result = this.#probabilityCalculatorService.calculate({
-      actorSkill: actorResult.baseValue,
-      targetSkill: targetSkillValue,
-      difficulty: chanceBased.fixedDifficulty ?? 0,
-      formula: chanceBased.formula ?? 'ratio',
-      bounds: chanceBased.bounds,
-    });
-
-    return Math.round(result.finalChance);
   }
 }
 

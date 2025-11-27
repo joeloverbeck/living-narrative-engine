@@ -1,25 +1,20 @@
 /**
  * @file ResolveOutcomeHandler - Resolves non-deterministic action outcomes
  *
- * Executes the RESOLVE_OUTCOME operation during rule execution by orchestrating:
- * 1. SkillResolverService - Retrieves actor/target skill values from components
- * 2. ProbabilityCalculatorService - Calculates success probability
- * 3. OutcomeDeterminerService - Determines final outcome (SUCCESS, FAILURE, CRITICAL, FUMBLE)
+ * Executes the RESOLVE_OUTCOME operation during rule execution by delegating to
+ * ChanceCalculationService, which orchestrates the full calculation pipeline.
  *
  * Operation flow:
  * 1. Validate parameters (actor_skill_component, result_variable required)
  * 2. Extract actorId/targetId from event payload
- * 3. Resolve skill values for actor and target
- * 4. Calculate probability using specified formula
- * 5. Determine outcome (rolls d100 internally)
- * 6. Store result object in executionContext.evaluationContext.context[result_variable]
+ * 3. Build a pseudo-actionDef from operation parameters
+ * 4. Delegate to ChanceCalculationService.resolveOutcome()
+ * 5. Store result object in executionContext.evaluationContext.context[result_variable]
  *
  * Related files:
  * @see specs/non-deterministic-actions-system.md - System specification
  * @see data/schemas/operations/resolveOutcome.schema.json - Operation schema
- * @see src/combat/services/SkillResolverService.js - Skill resolution
- * @see src/combat/services/ProbabilityCalculatorService.js - Probability calculation
- * @see src/combat/services/OutcomeDeterminerService.js - Outcome determination
+ * @see src/combat/services/ChanceCalculationService.js - Orchestrates all combat services
  */
 
 // --- JSDoc Imports for Type Hinting ---
@@ -59,16 +54,11 @@
 /**
  * @class ResolveOutcomeHandler
  * Implements the operation handler for the "RESOLVE_OUTCOME" operation type.
- * Orchestrates skill resolution, probability calculation, and outcome determination
- * for non-deterministic actions in the game engine.
+ * Delegates to ChanceCalculationService for outcome resolution in non-deterministic actions.
  */
 class ResolveOutcomeHandler {
   /** @type {object} */
-  #skillResolverService;
-  /** @type {object} */
-  #probabilityCalculatorService;
-  /** @type {object} */
-  #outcomeDeterminerService;
+  #chanceCalculationService;
   /** @type {ILogger} */
   #logger;
 
@@ -76,18 +66,11 @@ class ResolveOutcomeHandler {
    * Creates an instance of ResolveOutcomeHandler.
    *
    * @param {object} dependencies - Dependencies object.
-   * @param {object} dependencies.skillResolverService - Service for resolving skill values from entity components.
-   * @param {object} dependencies.probabilityCalculatorService - Service for calculating success probability.
-   * @param {object} dependencies.outcomeDeterminerService - Service for determining final outcome.
+   * @param {object} dependencies.chanceCalculationService - Service for orchestrating chance calculations.
    * @param {ILogger} dependencies.logger - The logging service instance.
    * @throws {Error} If any dependency is missing or invalid.
    */
-  constructor({
-    skillResolverService,
-    probabilityCalculatorService,
-    outcomeDeterminerService,
-    logger,
-  }) {
+  constructor({ chanceCalculationService, logger }) {
     // Validate logger
     if (
       !logger ||
@@ -100,35 +83,17 @@ class ResolveOutcomeHandler {
       );
     }
 
-    // Validate services
+    // Validate service
     if (
-      !skillResolverService ||
-      typeof skillResolverService.getSkillValue !== 'function'
+      !chanceCalculationService ||
+      typeof chanceCalculationService.resolveOutcome !== 'function'
     ) {
       throw new Error(
-        'ResolveOutcomeHandler requires a valid skillResolverService with getSkillValue method.'
-      );
-    }
-    if (
-      !probabilityCalculatorService ||
-      typeof probabilityCalculatorService.calculate !== 'function'
-    ) {
-      throw new Error(
-        'ResolveOutcomeHandler requires a valid probabilityCalculatorService with calculate method.'
-      );
-    }
-    if (
-      !outcomeDeterminerService ||
-      typeof outcomeDeterminerService.determine !== 'function'
-    ) {
-      throw new Error(
-        'ResolveOutcomeHandler requires a valid outcomeDeterminerService with determine method.'
+        'ResolveOutcomeHandler requires a valid chanceCalculationService with resolveOutcome method.'
       );
     }
 
-    this.#skillResolverService = skillResolverService;
-    this.#probabilityCalculatorService = probabilityCalculatorService;
-    this.#outcomeDeterminerService = outcomeDeterminerService;
+    this.#chanceCalculationService = chanceCalculationService;
     this.#logger = logger;
 
     this.#logger.debug('ResolveOutcomeHandler initialized.');
@@ -176,54 +141,56 @@ class ResolveOutcomeHandler {
     const targetId = event?.payload?.secondaryId || event?.payload?.targetId;
 
     if (!actorId) {
-      this.#logger.error(
-        'RESOLVE_OUTCOME: Missing actorId in event payload.',
-        { eventPayload: event?.payload }
-      );
+      this.#logger.error('RESOLVE_OUTCOME: Missing actorId in event payload.', {
+        eventPayload: event?.payload,
+      });
       return;
     }
 
-    // --- 3. Resolve Skill Values ---
-    const actorSkill = this.#skillResolverService.getSkillValue(
-      actorId,
-      actor_skill_component,
-      actor_skill_default
-    );
-
-    const targetSkill = target_skill_component
-      ? this.#skillResolverService.getSkillValue(
-          targetId,
-          target_skill_component,
-          target_skill_default
-        )
-      : { baseValue: 0, hasComponent: false };
-
-    // --- 4. Calculate Probability ---
-    const probability = this.#probabilityCalculatorService.calculate({
-      actorSkill: actorSkill.baseValue,
-      targetSkill: targetSkill.baseValue,
-      difficulty: difficulty_modifier,
-      formula,
-    });
-
-    // --- 5. Determine Outcome ---
-    const outcome = this.#outcomeDeterminerService.determine({
-      finalChance: probability.finalChance,
-    });
-
-    // --- 6. Build Result Object ---
-    const result = {
-      outcome: outcome.outcome,
-      roll: outcome.roll,
-      threshold: probability.finalChance,
-      margin: outcome.margin,
-      isCritical: outcome.isCritical,
-      actorSkill: actorSkill.baseValue,
-      targetSkill: targetSkill.baseValue,
-      breakdown: probability.breakdown,
+    // --- 3. Build Pseudo-ActionDef from Operation Parameters ---
+    // ChanceCalculationService expects an actionDef with chanceBased configuration.
+    // We construct this from the operation parameters for compatibility.
+    const pseudoActionDef = {
+      id: 'RESOLVE_OUTCOME_OPERATION',
+      chanceBased: {
+        enabled: true,
+        contestType: target_skill_component ? 'opposed' : 'simple',
+        actorSkill: {
+          component: actor_skill_component,
+          default: actor_skill_default,
+        },
+        targetSkill: target_skill_component
+          ? {
+              component: target_skill_component,
+              default: target_skill_default,
+            }
+          : undefined,
+        formula,
+        fixedDifficulty: difficulty_modifier,
+      },
     };
 
-    // --- 7. Store in Context Variable ---
+    // --- 4. Delegate to ChanceCalculationService ---
+    const outcomeResult = this.#chanceCalculationService.resolveOutcome({
+      actorId,
+      targetId,
+      actionDef: pseudoActionDef,
+    });
+
+    // --- 5. Build Result Object (maintaining backward compatibility) ---
+    const result = {
+      outcome: outcomeResult.outcome,
+      roll: outcomeResult.roll,
+      threshold: outcomeResult.threshold,
+      margin: outcomeResult.margin,
+      isCritical: outcomeResult.isCritical,
+      actorSkill: 0, // Not directly available from service result
+      targetSkill: 0, // Not directly available from service result
+      breakdown: {}, // Breakdown is in the display result, not outcome result
+      modifiers: outcomeResult.modifiers,
+    };
+
+    // --- 6. Store in Context Variable ---
     if (!executionContext?.evaluationContext?.context) {
       this.#logger.error(
         'RESOLVE_OUTCOME: Missing evaluationContext.context for variable storage.'
