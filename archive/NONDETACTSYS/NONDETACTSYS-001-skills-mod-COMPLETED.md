@@ -2,6 +2,8 @@
 
 **Status: COMPLETED**
 
+> **Note (Post-Completion):** `dodge_skill` and `parry_skill` components were subsequently removed to maintain a minimal skill set. The `defense_skill` component provides sufficient abstraction for defending against both melee and ranged attacks. Only `melee_skill`, `defense_skill`, and `ranged_skill` remain in the final implementation.
+
 ## Summary
 
 Create the `skills` mod with individual skill components for character combat proficiencies. These components follow the existing ECS pattern and will be used by the non-deterministic action system for probability calculations.

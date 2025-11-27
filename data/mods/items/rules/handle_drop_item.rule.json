@@ -17,6 +17,14 @@
       }
     },
     {
+      "type": "UNWIELD_ITEM",
+      "comment": "If item is wielded, unwield it first (idempotent)",
+      "parameters": {
+        "actorEntity": "{event.payload.actorId}",
+        "itemEntity": "{event.payload.targetId}"
+      }
+    },
+    {
       "type": "DROP_ITEM_AT_LOCATION",
       "comment": "Remove from inventory and place at location",
       "parameters": {

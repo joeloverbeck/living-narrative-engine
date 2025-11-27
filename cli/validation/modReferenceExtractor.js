@@ -502,13 +502,13 @@ class ModReferenceExtractor {
     // Enhanced pattern matching for various mod reference formats
     const patterns = [
       // Standard modId:componentId pattern (including hyphens for compatibility)
-      /\b([a-zA-Z][a-zA-Z0-9_]*):([a-zA-Z][a-zA-Z0-9_-]*)\b/g,
+      /\b([a-zA-Z][a-zA-Z0-9_-]*):([a-zA-Z][a-zA-Z0-9_-]*)\b/g,
 
       // Scope DSL patterns in JSON strings (preview for MODDEPVAL-003)
-      /\b([a-zA-Z][a-zA-Z0-9_]*):([a-zA-Z][a-zA-Z0-9_-]*)\s*:=/g,
+      /\b([a-zA-Z][a-zA-Z0-9_-]*):([a-zA-Z][a-zA-Z0-9_-]*)\s*:=/g,
 
       // Component access patterns: modId:componentId.field
-      /\b([a-zA-Z][a-zA-Z0-9_]*):([a-zA-Z][a-zA-Z0-9_-]*)\.[a-zA-Z_][a-zA-Z0-9_]*\b/g,
+      /\b([a-zA-Z][a-zA-Z0-9_-]*):([a-zA-Z][a-zA-Z0-9_-]*)\.[a-zA-Z_][a-zA-Z0-9_]*\b/g,
     ];
 
     patterns.forEach((pattern) => {

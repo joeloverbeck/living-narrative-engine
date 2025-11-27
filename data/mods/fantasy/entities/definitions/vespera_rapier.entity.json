@@ -13,6 +13,7 @@
     "items:portable": {},
     "items:aimable": {},
     "weapons:weapon": {},
+    "damage-types:can_cut": {},
     "items:weight": {
       "weight": 1.2
     },

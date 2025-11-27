@@ -100,37 +100,9 @@ describe('AnatomyCacheManager - Scalability', () => {
     console.log(`Average per character: ${(duration / 10).toFixed(2)}ms`);
   }, 10000); // 10 second timeout
 
-  it('should maintain memory stability with 10+ characters', async () => {
-    // Arrange: 12 characters for stress test
-    const recipes = Array.from({ length: 12 }, (_, i) => 
-      ['anatomy:human_male', 'anatomy:human_female', 'anatomy:tortoise_person'][i % 3]
-    );
-
-    // Measure initial memory
-    const initialMemory = process.memoryUsage().heapUsed;
-
-    // Act: Generate all characters
-    await Promise.all(
-      recipes.map(recipeId => testBed.createCharacterFromRecipe(recipeId))
-    );
-
-    // Force garbage collection if available
-    if (global.gc) {
-      global.gc();
-    }
-
-    // Measure final memory
-    const finalMemory = process.memoryUsage().heapUsed;
-    const memoryIncrease = finalMemory - initialMemory;
-
-    // Assert: Memory increase is reasonable
-    const memoryIncreaseMB = memoryIncrease / 1024 / 1024;
-
-    // Expect <50MB increase for 12 characters (very generous threshold)
-    expect(memoryIncreaseMB).toBeLessThan(50);
-
-    console.log(`Memory increase: ${memoryIncreaseMB.toFixed(2)}MB for 12 characters`);
-  }, 15000); // 15 second timeout
+  // NOTE: Memory stability test has been moved to:
+  // tests/memory/anatomy/anatomyCacheManager.scalability.memory.test.js
+  // Run with: npm run test:memory -- --testPathPattern="anatomyCacheManager.scalability"
 
   it('should handle sequential batches of 5 concurrent characters', async () => {
     // Arrange: 3 batches of 5 characters
