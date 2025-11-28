@@ -6,6 +6,11 @@
     "anatomy:part": {
       "subType": "beak"
     },
+    "anatomy:part_health": {
+      "currentHealth": 35,
+      "maxHealth": 35,
+      "state": "healthy"
+    },
     "core:name": {
       "text": "beak"
     },

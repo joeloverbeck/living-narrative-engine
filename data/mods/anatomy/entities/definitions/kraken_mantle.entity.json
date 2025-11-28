@@ -6,6 +6,11 @@
     "anatomy:part": {
       "subType": "mantle"
     },
+    "anatomy:part_health": {
+      "currentHealth": 100,
+      "maxHealth": 100,
+      "state": "healthy"
+    },
     "anatomy:sockets": {
       "sockets": [
         {

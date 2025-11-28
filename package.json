@@ -126,7 +126,7 @@
     "build:validate": "node scripts/build.js --validate-only",
     "build:debug": "node scripts/build.js --verbose --no-parallel",
     "build:test": "node scripts/build.js --fast",
-    "prebuild": "npm run build:clean",
+    "prebuild": "npm run build:clean && npm run update-manifest",
     "cleanup:ports": "node scripts/cleanup-ports.js",
     "prestart:clean": "npm run cleanup:ports",
     "start": "npm run build && http-server dist -p 8080 -o --cors",

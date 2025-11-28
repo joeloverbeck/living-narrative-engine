@@ -22,6 +22,11 @@ describe('items:drop_item action integration', () => {
       dropItemRule,
       eventIsActionDropItem
     );
+    // The shared rule has a composite OR condition referencing both drop_item
+    // and drop_wielded_item conditions. Load the other condition for rule execution.
+    await testFixture.loadDependencyConditions([
+      'items:event-is-action-drop-wielded-item',
+    ]);
   });
 
   afterEach(() => {

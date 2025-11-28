@@ -6,6 +6,11 @@
     "anatomy:part": {
       "subType": "ink_reservoir"
     },
+    "anatomy:part_health": {
+      "currentHealth": 30,
+      "maxHealth": 30,
+      "state": "healthy"
+    },
     "core:name": {
       "text": "ink reservoir"
     },

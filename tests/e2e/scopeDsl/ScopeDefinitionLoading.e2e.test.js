@@ -181,8 +181,9 @@ describe('Scope Definition Loading E2E', () => {
     }
   }
 
-  beforeEach(async () => {
-    // Create real container and configure it
+  // ONE-TIME container setup (expensive - 700-900ms)
+  // Shared across all tests for performance
+  beforeAll(async () => {
     container = new AppContainer();
     await configureContainer(container, {
       outputDiv: document.createElement('div'),
@@ -196,6 +197,13 @@ describe('Scope Definition Loading E2E', () => {
     dataRegistry = container.resolve(tokens.IDataRegistry);
     logger = container.resolve(tokens.ILogger);
     schemaValidator = container.resolve(tokens.ISchemaValidator);
+  });
+
+  // PER-TEST setup (fast - ~50-100ms)
+  beforeEach(async () => {
+    // Clear shared registries to ensure test isolation
+    scopeRegistry.clear();
+    dataRegistry.clear();
 
     // Create temporary directory for test mods
     tempDir = await createTempModDirectory();

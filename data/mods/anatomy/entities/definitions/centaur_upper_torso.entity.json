@@ -6,6 +6,11 @@
     "anatomy:part": {
       "subType": "centaur_upper_torso"
     },
+    "anatomy:part_health": {
+      "currentHealth": 80,
+      "maxHealth": 80,
+      "state": "healthy"
+    },
     "anatomy:sockets": {
       "sockets": [
         {

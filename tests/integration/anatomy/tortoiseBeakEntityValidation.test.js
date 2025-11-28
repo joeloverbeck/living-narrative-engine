@@ -46,13 +46,14 @@ describe('Tortoise Beak Entity Validation', () => {
   });
 
   describe('Component structure', () => {
-    it('should have exactly 5 components', () => {
+    it('should have exactly 6 components', () => {
       const componentKeys = Object.keys(beakEntity.components);
-      expect(componentKeys.length).toBe(5);
+      expect(componentKeys.length).toBe(6);
     });
 
     it('should have all required components', () => {
       expect(beakEntity.components['anatomy:part']).toBeDefined();
+      expect(beakEntity.components['anatomy:part_health']).toBeDefined();
       expect(beakEntity.components['core:name']).toBeDefined();
       expect(beakEntity.components['descriptors:texture']).toBeDefined();
       expect(beakEntity.components['descriptors:color_extended']).toBeDefined();

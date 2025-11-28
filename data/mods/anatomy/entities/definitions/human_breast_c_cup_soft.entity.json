@@ -6,6 +6,11 @@
         "anatomy:part": {
             "subType": "breast"
         },
+        "anatomy:part_health": {
+            "currentHealth": 20,
+            "maxHealth": 20,
+            "state": "healthy"
+        },
         "descriptors:size_specific": {
             "size": "C-cup"
         },

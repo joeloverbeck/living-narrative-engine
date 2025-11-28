@@ -5,7 +5,7 @@
   "description": "Drop an item from your inventory at your current location",
   "targets": {
     "primary": {
-      "scope": "items:actor_inventory_items",
+      "scope": "items:non_wielded_inventory_items",
       "placeholder": "item",
       "description": "Item to drop"
     }
@@ -13,7 +13,14 @@
   "forbidden_components": {
     "actor": ["positioning:doing_complex_performance"]
   },
-  "prerequisites": [],
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
+      },
+      "failure_message": "You need a free hand to grab an item from your inventory."
+    }
+  ],
   "template": "drop {item}",
   "visual": {
     "backgroundColor": "#004d61",

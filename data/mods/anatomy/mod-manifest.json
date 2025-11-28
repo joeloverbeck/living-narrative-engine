@@ -19,6 +19,7 @@
       "can_grab.component.json",
       "joint.component.json",
       "part.component.json",
+      "part_health.component.json",
       "requires_grabbing.component.json",
       "sockets.component.json"
     ],
@@ -258,6 +259,7 @@
     "conditions": [
       "actor-has-free-grabbing-appendage.condition.json",
       "actor-has-two-free-grabbing-appendages.condition.json"
-    ]
+    ],
+    "lookups": []
   }
 }

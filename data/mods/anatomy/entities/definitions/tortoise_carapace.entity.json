@@ -6,6 +6,11 @@
     "anatomy:part": {
       "subType": "shell_carapace"
     },
+    "anatomy:part_health": {
+      "currentHealth": 100,
+      "maxHealth": 100,
+      "state": "healthy"
+    },
     "core:name": {
       "text": "carapace"
     },

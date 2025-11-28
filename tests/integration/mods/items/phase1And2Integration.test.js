@@ -32,6 +32,10 @@ describe('Items - Phase 1 and 2 Integration', () => {
       dropItemRule,
       eventIsActionDropItem
     );
+    // Load additional condition required by the rule's "or" block
+    await dropFixture.loadDependencyConditions([
+      'items:event-is-action-drop-wielded-item',
+    ]);
     pickupFixture = await ModTestFixture.forAction(
       'items',
       'items:pick_up_item',
@@ -64,7 +68,8 @@ describe('Items - Phase 1 and 2 Integration', () => {
         capacity: { maxWeight: 50, maxItems: 10 },
       })
       .build();
-    const actor2 = new ModEntityBuilder('test:actor2')
+    // Actor2 needs grabbing hands for dropping items
+    const actor2Builder = new ModEntityBuilder('test:actor2')
       .withName('Bob')
       .atLocation('saloon1')
       .asActor()
@@ -72,7 +77,9 @@ describe('Items - Phase 1 and 2 Integration', () => {
         items: [],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
-      .build();
+      .withGrabbingHands(2);
+    const actor2 = actor2Builder.build();
+    const actor2Hands = actor2Builder.getHandEntities();
     const item = new ModEntityBuilder('letter-1')
       .withName('Letter')
       .withComponent('items:item', {})
@@ -80,7 +87,7 @@ describe('Items - Phase 1 and 2 Integration', () => {
       .withComponent('items:weight', { weight: 0.05 })
       .build();
 
-    giveFixture.reset([room, actor1, actor2, item]);
+    giveFixture.reset([room, actor1, actor2, ...actor2Hands, item]);
 
     // Step 1: Give item from actor1 to actor2
     await giveFixture.executeAction('test:actor1', 'test:actor2', {
@@ -94,7 +101,11 @@ describe('Items - Phase 1 and 2 Integration', () => {
     let currentActor1 = giveFixture.entityManager.getEntityInstance('test:actor1');
     let currentActor2 = giveFixture.entityManager.getEntityInstance('test:actor2');
     let currentItem = giveFixture.entityManager.getEntityInstance('letter-1');
-    dropFixture.reset([room, currentActor1, currentActor2, currentItem]);
+    // Include hand entities for actor2's drop action prerequisite
+    const currentHands = actor2Hands.map((h) =>
+      giveFixture.entityManager.getEntityInstance(h.id)
+    );
+    dropFixture.reset([room, currentActor1, currentActor2, ...currentHands, currentItem]);
 
     await dropFixture.executeAction('test:actor2', 'letter-1');
 
@@ -121,7 +132,8 @@ describe('Items - Phase 1 and 2 Integration', () => {
   it('should handle complex multi-actor item exchanges', async () => {
     // Setup: Three actors and multiple items
     const room = new ModEntityBuilder('marketplace').asRoom('Marketplace').build();
-    const actor1 = new ModEntityBuilder('test:actor1')
+    // Actor1 needs grabbing hands for dropping items
+    const actor1Builder = new ModEntityBuilder('test:actor1')
       .withName('Alice')
       .atLocation('marketplace')
       .asActor()
@@ -129,7 +141,9 @@ describe('Items - Phase 1 and 2 Integration', () => {
         items: ['gold-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
-      .build();
+      .withGrabbingHands(2);
+    const actor1 = actor1Builder.build();
+    const actor1Hands = actor1Builder.getHandEntities();
     const actor2 = new ModEntityBuilder('test:actor2')
       .withName('Bob')
       .atLocation('marketplace')
@@ -161,7 +175,7 @@ describe('Items - Phase 1 and 2 Integration', () => {
       .withComponent('items:weight', { weight: 0.015 })
       .build();
 
-    dropFixture.reset([room, actor1, actor2, actor3, gold, silver]);
+    dropFixture.reset([room, actor1, ...actor1Hands, actor2, actor3, gold, silver]);
 
     // Step 1: Alice drops gold
     await dropFixture.executeAction('test:actor1', 'gold-1');
@@ -171,9 +185,13 @@ describe('Items - Phase 1 and 2 Integration', () => {
     let currentActor3 = dropFixture.entityManager.getEntityInstance('test:actor3');
     let currentGold = dropFixture.entityManager.getEntityInstance('gold-1');
     let currentSilver = dropFixture.entityManager.getEntityInstance('silver-1');
+    // Get current state of hand entities
+    const currentActor1Hands = actor1Hands.map((h) =>
+      dropFixture.entityManager.getEntityInstance(h.id)
+    );
 
     // Step 2: Bob gives silver to Charlie (switch to give fixture)
-    giveFixture.reset([room, currentActor1, currentActor2, currentActor3, currentGold, currentSilver]);
+    giveFixture.reset([room, currentActor1, ...currentActor1Hands, currentActor2, currentActor3, currentGold, currentSilver]);
 
     await giveFixture.executeAction('test:actor2', 'test:actor3', {
       additionalPayload: { secondaryId: 'silver-1' },
@@ -184,9 +202,13 @@ describe('Items - Phase 1 and 2 Integration', () => {
     currentActor3 = giveFixture.entityManager.getEntityInstance('test:actor3');
     currentGold = giveFixture.entityManager.getEntityInstance('gold-1');
     currentSilver = giveFixture.entityManager.getEntityInstance('silver-1');
+    // Get current state of hand entities
+    const handsAfterGive = actor1Hands.map((h) =>
+      giveFixture.entityManager.getEntityInstance(h.id)
+    );
 
     // Step 3: Charlie picks up gold from ground (switch to pickup fixture)
-    pickupFixture.reset([room, currentActor1, currentActor2, currentActor3, currentGold, currentSilver]);
+    pickupFixture.reset([room, currentActor1, ...handsAfterGive, currentActor2, currentActor3, currentGold, currentSilver]);
 
     await pickupFixture.executeAction('test:actor3', 'gold-1');
 

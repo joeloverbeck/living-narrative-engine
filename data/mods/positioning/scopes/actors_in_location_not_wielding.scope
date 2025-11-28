@@ -1,0 +1,10 @@
+positioning:actors_in_location_not_wielding := entities(core:position)[][
+  {
+    "and": [
+      { "condition_ref": "core:entity-at-location" },
+      { "condition_ref": "core:entity-is-not-current-actor" },
+      { "condition_ref": "core:entity-has-actor-component" },
+      { "condition_ref": "positioning:entity-is-not-wielding" }
+    ]
+  }
+]

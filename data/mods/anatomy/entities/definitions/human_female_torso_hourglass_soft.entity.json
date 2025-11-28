@@ -6,6 +6,11 @@
     "anatomy:part": {
       "subType": "torso"
     },
+    "anatomy:part_health": {
+      "currentHealth": 50,
+      "maxHealth": 50,
+      "state": "healthy"
+    },
     "anatomy:sockets": {
       "sockets": [
         {

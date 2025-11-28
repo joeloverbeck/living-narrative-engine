@@ -201,6 +201,7 @@ export const coreTokens = freeze({
   LockMovementHandler: 'LockMovementHandler',
   LockMouthEngagementHandler: 'LockMouthEngagementHandler',
   ModifyComponentHandler: 'ModifyComponentHandler',
+  ModifyPartHealthHandler: 'ModifyPartHealthHandler',
   AddComponentHandler: 'AddComponentHandler',
   RemoveComponentHandler: 'RemoveComponentHandler',
   QueryComponentHandler: 'QueryComponentHandler',

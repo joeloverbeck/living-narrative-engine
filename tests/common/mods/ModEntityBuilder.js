@@ -1854,7 +1854,8 @@ export class ModEntityScenarios {
    * @param {object} [options.item] - Item definition for the droppable entity
    * @param {Array<object>} [options.additionalInventoryItems] - Extra inventory items carried by the actor
    * @param {object} [options.capacity] - Inventory capacity overrides
-   * @returns {object} Scenario details including room, actor, drop item, and supplemental entities
+   * @param {number} [options.withGrabbingHands=2] - Number of grabbing hands for drop_item prerequisite
+   * @returns {object} Scenario details including room, actor, drop item, handEntities, and supplemental entities
    */
   static createDropItemScenario(options = {}) {
     const {
@@ -1867,6 +1868,7 @@ export class ModEntityScenarios {
       itemWeight = 1,
       additionalInventoryItems = [],
       capacity,
+      withGrabbingHands = 2,
     } = options;
 
     const room = this.createRoom(roomId, roomName);
@@ -1921,11 +1923,38 @@ export class ModEntityScenarios {
       actorCapacity
     );
 
-    const entities = [room, actorEntity, dropItemEntity, ...extraInventoryEntities];
+    // Add grabbing hands for drop_item prerequisite (anatomy:actor-has-free-grabbing-appendage)
+    let handEntities = [];
+    if (withGrabbingHands > 0) {
+      const bodyParts = {};
+      for (let i = 0; i < withGrabbingHands; i++) {
+        const handId = `${finalActorId}-hand-${i}`;
+        const handName = i === 0 ? 'rightHand' : i === 1 ? 'leftHand' : `hand${i}`;
+        bodyParts[handName] = handId;
+
+        handEntities.push({
+          id: handId,
+          components: {
+            'anatomy:can_grab': {
+              gripStrength: 1.0,
+              locked: false,
+              heldItemId: null,
+            },
+          },
+        });
+      }
+      // Add anatomy:body component to actor
+      actorEntity.components['anatomy:body'] = {
+        body: { parts: bodyParts },
+      };
+    }
+
+    const entities = [room, actorEntity, ...handEntities, dropItemEntity, ...extraInventoryEntities];
 
     return {
       room,
       actor: actorEntity,
+      handEntities,
       item: dropItemEntity,
       additionalInventoryItems: extraInventoryEntities,
       entities,

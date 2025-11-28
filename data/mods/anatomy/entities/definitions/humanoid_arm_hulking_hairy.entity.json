@@ -6,6 +6,11 @@
         "anatomy:part": {
             "subType": "arm"
         },
+        "anatomy:part_health": {
+            "currentHealth": 25,
+            "maxHealth": 25,
+            "state": "healthy"
+        },
         "anatomy:sockets": {
             "sockets": [
                 {

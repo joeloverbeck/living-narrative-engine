@@ -6,6 +6,11 @@
     "anatomy:part": {
       "subType": "asshole"
     },
+    "anatomy:part_health": {
+      "currentHealth": 10,
+      "maxHealth": 10,
+      "state": "healthy"
+    },
     "core:name": {
       "text": "asshole"
     }

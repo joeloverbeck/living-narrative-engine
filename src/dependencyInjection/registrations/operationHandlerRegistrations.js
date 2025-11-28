@@ -35,6 +35,7 @@ import DispatchThoughtHandler from '../../logic/operationHandlers/dispatchThough
 import DigestFoodHandler from '../../logic/operationHandlers/digestFoodHandler.js';
 import LogHandler from '../../logic/operationHandlers/logHandler.js';
 import ModifyComponentHandler from '../../logic/operationHandlers/modifyComponentHandler.js';
+import ModifyPartHealthHandler from '../../logic/operationHandlers/modifyPartHealthHandler.js';
 import AddComponentHandler from '../../logic/operationHandlers/addComponentHandler.js';
 
 import QueryComponentHandler from '../../logic/operationHandlers/queryComponentHandler.js';
@@ -180,6 +181,17 @@ export function registerOperationHandlers(registrar) {
           entityManager: c.resolve(tokens.IEntityManager),
           logger: c.resolve(tokens.ILogger),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.ModifyPartHealthHandler,
+      ModifyPartHealthHandler,
+      (c, Handler) =>
+        new Handler({
+          entityManager: c.resolve(tokens.IEntityManager),
+          logger: c.resolve(tokens.ILogger),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+          jsonLogicService: c.resolve(tokens.JsonLogicEvaluationService),
         }),
     ],
     [

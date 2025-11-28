@@ -11,6 +11,11 @@
     "anatomy:part": {
       "subType": "tentacle"
     },
+    "anatomy:part_health": {
+      "currentHealth": 25,
+      "maxHealth": 25,
+      "state": "healthy"
+    },
     "core:name": {
       "text": "tentacle"
     },

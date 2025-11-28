@@ -6,6 +6,11 @@
     "anatomy:part": {
       "subType": "centaur_head"
     },
+    "anatomy:part_health": {
+      "currentHealth": 40,
+      "maxHealth": 40,
+      "state": "healthy"
+    },
     "core:name": {
       "text": "head"
     },

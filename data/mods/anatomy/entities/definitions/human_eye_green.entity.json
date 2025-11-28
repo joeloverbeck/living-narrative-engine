@@ -6,6 +6,11 @@
     "anatomy:part": {
       "subType": "eye"
     },
+    "anatomy:part_health": {
+      "currentHealth": 10,
+      "maxHealth": 10,
+      "state": "healthy"
+    },
     "descriptors:color_basic": {
       "color": "green"
     },

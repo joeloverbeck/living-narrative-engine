@@ -40,6 +40,10 @@ describe('Inventory scenario helpers - integration', () => {
 
   it('executes drop_item using the drop scenario helper', async () => {
     const fixture = await createFixture('items:drop_item');
+    // Load additional condition required by the rule's "or" block
+    await fixture.loadDependencyConditions([
+      'items:event-is-action-drop-wielded-item',
+    ]);
     const scenario = fixture.createDropItemScenario({
       actor: { id: 'dropper' },
       item: { id: 'drop_target', weight: 0.2 },

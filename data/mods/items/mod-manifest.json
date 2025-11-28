@@ -45,6 +45,7 @@
       "drink_entirely.action.json",
       "drink_from.action.json",
       "drop_item.action.json",
+      "drop_wielded_item.action.json",
       "examine_item_in_location.action.json",
       "examine_owned_item.action.json",
       "give_item.action.json",
@@ -83,6 +84,7 @@
       "event-is-action-drink-entirely.condition.json",
       "event-is-action-drink-from.condition.json",
       "event-is-action-drop-item.condition.json",
+      "event-is-action-drop-wielded-item.condition.json",
       "event-is-action-examine-item-in-location.condition.json",
       "event-is-action-examine-owned-item.condition.json",
       "event-is-action-give-item.condition.json",
@@ -108,6 +110,7 @@
       "items_at_actor_location.scope",
       "items_at_location.scope",
       "non_portable_items_at_location.scope",
+      "non_wielded_inventory_items.scope",
       "open_containers_at_location.scope",
       "openable_containers_at_location.scope",
       "wielded_items.scope"

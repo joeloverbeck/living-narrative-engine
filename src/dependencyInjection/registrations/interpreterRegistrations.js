@@ -89,6 +89,10 @@ export function registerInterpreters(container) {
     registry.register('DIGEST_FOOD', bind(tokens.DigestFoodHandler));
     registry.register('LOG', bind(tokens.LogHandler));
     registry.register('MODIFY_COMPONENT', bind(tokens.ModifyComponentHandler));
+    registry.register(
+      'MODIFY_PART_HEALTH',
+      bind(tokens.ModifyPartHealthHandler)
+    );
     registry.register('ADD_COMPONENT', bind(tokens.AddComponentHandler));
     registry.register('REMOVE_COMPONENT', bind(tokens.RemoveComponentHandler));
     registry.register('QUERY_COMPONENT', bind(tokens.QueryComponentHandler));

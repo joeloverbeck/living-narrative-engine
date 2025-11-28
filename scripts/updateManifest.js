@@ -270,7 +270,8 @@ async function getAllModNames() {
     const modNames = [];
 
     for (const entry of entries) {
-      if (entry.isDirectory() && !IGNORE_DIRS.has(entry.name)) {
+      // Include both directories and symlinks to directories
+      if ((entry.isDirectory() || entry.isSymbolicLink()) && !IGNORE_DIRS.has(entry.name)) {
         // Check if the directory has a mod-manifest.json file
         const manifestPath = path.join(
           MODS_BASE_PATH,
@@ -969,8 +970,9 @@ async function updateAllManifests(options = {}) {
   };
   
   try {
+    // Include both directories and symlinks to directories
     const modDirectories = (await fs.readdir(modsPath, { withFileTypes: true }))
-      .filter(dirent => dirent.isDirectory())
+      .filter(dirent => dirent.isDirectory() || dirent.isSymbolicLink())
       .map(dirent => dirent.name);
     
     console.log(`📦 Found ${modDirectories.length} mods to process`);

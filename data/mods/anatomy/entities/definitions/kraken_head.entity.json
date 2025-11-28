@@ -6,6 +6,11 @@
     "anatomy:part": {
       "subType": "head"
     },
+    "anatomy:part_health": {
+      "currentHealth": 80,
+      "maxHealth": 80,
+      "state": "healthy"
+    },
     "core:name": {
       "text": "kraken head"
     },

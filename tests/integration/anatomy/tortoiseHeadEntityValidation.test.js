@@ -87,13 +87,14 @@ describe('Tortoise Head Entity Validation', () => {
   });
 
   describe('Component structure', () => {
-    it('should have exactly 6 components', () => {
+    it('should have exactly 7 components', () => {
       const componentKeys = Object.keys(headEntity.components);
-      expect(componentKeys.length).toBe(6);
+      expect(componentKeys.length).toBe(7);
     });
 
     it('should have all required components', () => {
       expect(headEntity.components['anatomy:part']).toBeDefined();
+      expect(headEntity.components['anatomy:part_health']).toBeDefined();
       expect(headEntity.components['anatomy:sockets']).toBeDefined();
       expect(headEntity.components['core:name']).toBeDefined();
       expect(headEntity.components['descriptors:texture']).toBeDefined();

@@ -6,6 +6,11 @@
     "anatomy:part": {
       "subType": "dragon_head"
     },
+    "anatomy:part_health": {
+      "currentHealth": 60,
+      "maxHealth": 60,
+      "state": "healthy"
+    },
     "core:name": {
       "text": "dragon head"
     },

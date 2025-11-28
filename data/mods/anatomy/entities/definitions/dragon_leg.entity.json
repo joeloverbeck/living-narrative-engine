@@ -6,6 +6,11 @@
     "anatomy:part": {
       "subType": "dragon_leg"
     },
+    "anatomy:part_health": {
+      "currentHealth": 50,
+      "maxHealth": 50,
+      "state": "healthy"
+    },
     "core:name": {
       "text": "dragon leg"
     },

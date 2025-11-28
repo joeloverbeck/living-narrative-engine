@@ -1,6 +1,6 @@
 # PERPARHEAANDNARTHR-001: Part Health Component Schema
 
-**Status:** Ready
+**Status:** Completed
 **Priority:** Critical (Phase 1)
 **Estimated Effort:** 0.5 days
 **Dependencies:** None
@@ -19,7 +19,7 @@ Create the `anatomy:part_health` component schema that tracks health status on b
 - `data/mods/anatomy/components/part_health.component.json`
 
 ### Modified Files
-- None
+- `tests/unit/schemas/core.allComponents.schema.test.js` (add test fixtures for part_health component)
 
 ---
 
@@ -31,7 +31,8 @@ Create the `anatomy:part_health` component schema that tracks health status on b
 - Any operation handler files
 - Any DI registration files
 - The mod manifest (covered in PERPARHEAANDNARTHR-011)
-- Any test files (unit tests for components are schema validation only)
+
+**NOTE:** Test fixtures in `tests/unit/schemas/core.allComponents.schema.test.js` must be added for the new component. This test auto-discovers components and requires valid/invalid payload fixtures.
 
 ---
 
@@ -162,3 +163,35 @@ npm run test:ci
 - Pattern to follow: `data/mods/metabolism/components/hunger_state.component.json`
 - Schema reference: `data/schemas/component.schema.json`
 - Existing anatomy components: `data/mods/anatomy/components/part.component.json`
+
+---
+
+## Outcome
+
+**Completion Date:** 2025-11-27
+
+### What Was Actually Changed
+
+1. **Created `data/mods/anatomy/components/part_health.component.json`**
+   - Implemented exactly as specified in the ticket
+   - Follows `metabolism:hunger_state.component.json` pattern
+   - Includes all required fields: `currentHealth`, `maxHealth`, `state`, `turnsInState`
+   - State enum: `healthy`, `bruised`, `wounded`, `badly_damaged`, `destroyed`
+
+2. **Modified `tests/unit/schemas/core.allComponents.schema.test.js`**
+   - Added valid payload fixture for `anatomy:part_health`
+   - Added invalid payload fixture for `anatomy:part_health`
+   - Required because the test auto-discovers components and validates payloads
+
+### Discrepancies From Original Plan
+
+- **Test file modification required**: The original ticket stated "DO NOT modify any test files" but the `core.allComponents.schema.test.js` auto-discovers new components and requires test fixtures. Ticket was updated to reflect this reality before implementation.
+
+### Verification Results
+
+- ✅ `npm run validate` passes
+- ✅ `npm run validate:strict` passes
+- ✅ JSON is valid (verified with `node -e`)
+- ✅ Unit tests pass (2250 test suites pass, pre-existing `main.test.js` isolation issue unrelated)
+- ✅ No changes to existing anatomy components
+- ✅ Component follows `hunger_state` pattern exactly

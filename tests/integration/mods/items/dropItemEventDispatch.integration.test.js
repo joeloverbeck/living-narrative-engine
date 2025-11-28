@@ -25,6 +25,10 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
       dropItemRule,
       eventIsActionDropItem
     );
+    // Load additional condition required by the rule's "or" block
+    await testFixture.loadDependencyConditions([
+      'items:event-is-action-drop-wielded-item',
+    ]);
   });
 
   afterEach(() => {
@@ -32,12 +36,12 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
   });
 
   it('should dispatch items:item_dropped event with correct payload structure', async () => {
-    // Arrange: Create scenario with actor holding an item
+    // Arrange: Create scenario with actor holding an item (with grabbing hands for prerequisite)
     const room = new ModEntityBuilder('test-room')
       .asRoom('Test Room')
       .build();
 
-    const actor = new ModEntityBuilder('test:actor1')
+    const actorBuilder = new ModEntityBuilder('test:actor1')
       .withName('TestActor')
       .atLocation('test-room')
       .asActor()
@@ -45,7 +49,9 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
         items: ['test-item'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
-      .build();
+      .withGrabbingHands(2);
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
 
     const item = new ModEntityBuilder('test-item')
       .withName('TestItem')
@@ -54,7 +60,7 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
       .withComponent('items:weight', { weight: 1.0 })
       .build();
 
-    testFixture.reset([room, actor, item]);
+    testFixture.reset([room, actor, ...handEntities, item]);
 
     // Act: Execute drop item action
     await testFixture.executeAction('test:actor1', 'test-item');
@@ -90,12 +96,12 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
   });
 
   it('should not trigger EventBus invalid event name error', async () => {
-    // Arrange
+    // Arrange (with grabbing hands for prerequisite)
     const room = new ModEntityBuilder('test-room')
       .asRoom('Test Room')
       .build();
 
-    const actor = new ModEntityBuilder('test:actor1')
+    const actorBuilder = new ModEntityBuilder('test:actor1')
       .withName('TestActor')
       .atLocation('test-room')
       .asActor()
@@ -103,7 +109,9 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
         items: ['test-item'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
-      .build();
+      .withGrabbingHands(2);
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
 
     const item = new ModEntityBuilder('test-item')
       .withName('TestItem')
@@ -112,7 +120,7 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
       .withComponent('items:weight', { weight: 1.0 })
       .build();
 
-    testFixture.reset([room, actor, item]);
+    testFixture.reset([room, actor, ...handEntities, item]);
 
     // Act
     await testFixture.executeAction('test:actor1', 'test-item');
@@ -128,12 +136,12 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
   });
 
   it('should successfully validate event payload against schema', async () => {
-    // Arrange
+    // Arrange (with grabbing hands for prerequisite)
     const room = new ModEntityBuilder('test-room')
       .asRoom('Test Room')
       .build();
 
-    const actor = new ModEntityBuilder('test:actor1')
+    const actorBuilder = new ModEntityBuilder('test:actor1')
       .withName('TestActor')
       .atLocation('test-room')
       .asActor()
@@ -141,7 +149,9 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
         items: ['test-item'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
-      .build();
+      .withGrabbingHands(2);
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
 
     const item = new ModEntityBuilder('test-item')
       .withName('TestItem')
@@ -150,7 +160,7 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
       .withComponent('items:weight', { weight: 1.0 })
       .build();
 
-    testFixture.reset([room, actor, item]);
+    testFixture.reset([room, actor, ...handEntities, item]);
 
     // Act
     await testFixture.executeAction('test:actor1', 'test-item');
