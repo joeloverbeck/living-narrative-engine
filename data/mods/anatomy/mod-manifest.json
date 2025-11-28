@@ -262,8 +262,6 @@
       "actor-has-free-grabbing-appendage.condition.json",
       "actor-has-two-free-grabbing-appendages.condition.json"
     ],
-    "lookups": [
-      "part_health_thresholds.json"
-    ]
+    "lookups": []
   }
 }

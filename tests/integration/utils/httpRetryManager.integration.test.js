@@ -133,7 +133,7 @@ describe('RetryManager HTTP integration behavior', () => {
     const resultPromise = manager.perform(attemptFn, async () => ({
       retry: false,
     }));
-    const rejectionExpectation = await expect(resultPromise).rejects.toThrow(
+    const rejectionExpectation = expect(resultPromise).rejects.toThrow(
       'Network request failed'
     );
 
