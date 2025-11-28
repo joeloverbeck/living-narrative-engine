@@ -6,6 +6,11 @@
     "anatomy:part": {
       "subType": "dragon_wing"
     },
+    "anatomy:part_health": {
+      "currentHealth": 45,
+      "maxHealth": 45,
+      "state": "healthy"
+    },
     "core:name": {
       "text": "dragon wing"
     },

@@ -21,6 +21,10 @@ describe('Drop Item - Event Dispatching', () => {
       dropItemRule,
       eventIsActionDropItem
     );
+    // Load additional condition required by the rule's "or" block
+    await testFixture.loadDependencyConditions([
+      'items:event-is-action-drop-wielded-item',
+    ]);
   });
 
   afterEach(() => {
@@ -29,12 +33,12 @@ describe('Drop Item - Event Dispatching', () => {
 
   describe('Event Name Validation', () => {
     it('should dispatch items:item_dropped event (not ITEM_DROPPED)', async () => {
-      // Arrange: Create test scenario with actor and item
+      // Arrange: Create test scenario with actor and item (with grabbing hands for prerequisite)
       const room = new ModEntityBuilder('test-room')
         .asRoom('Test Room')
         .build();
 
-      const actor = new ModEntityBuilder('test:actor1')
+      const actorBuilder = new ModEntityBuilder('test:actor1')
         .withName('Alice')
         .atLocation('test-room')
         .asActor()
@@ -42,7 +46,9 @@ describe('Drop Item - Event Dispatching', () => {
           items: ['test-item'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .build();
+        .withGrabbingHands(2);
+      const actor = actorBuilder.build();
+      const handEntities = actorBuilder.getHandEntities();
 
       const item = new ModEntityBuilder('test-item')
         .withName('Test Item')
@@ -51,7 +57,7 @@ describe('Drop Item - Event Dispatching', () => {
         .withComponent('items:weight', { weight: 0.5 })
         .build();
 
-      testFixture.reset([room, actor, item]);
+      testFixture.reset([room, actor, ...handEntities, item]);
 
       // Act: Execute drop action
       await testFixture.executeAction('test:actor1', 'test-item');
@@ -73,12 +79,12 @@ describe('Drop Item - Event Dispatching', () => {
     });
 
     it('should include correct payload structure in items:item_dropped event', async () => {
-      // Arrange
+      // Arrange (with grabbing hands for prerequisite)
       const room = new ModEntityBuilder('saloon')
         .asRoom('Saloon')
         .build();
 
-      const actor = new ModEntityBuilder('actor-bob')
+      const actorBuilder = new ModEntityBuilder('actor-bob')
         .withName('Bob')
         .atLocation('saloon')
         .asActor()
@@ -86,7 +92,9 @@ describe('Drop Item - Event Dispatching', () => {
           items: ['golden-watch'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .build();
+        .withGrabbingHands(2);
+      const actor = actorBuilder.build();
+      const handEntities = actorBuilder.getHandEntities();
 
       const item = new ModEntityBuilder('golden-watch')
         .withName('Golden Watch')
@@ -95,7 +103,7 @@ describe('Drop Item - Event Dispatching', () => {
         .withComponent('items:weight', { weight: 0.3 })
         .build();
 
-      testFixture.reset([room, actor, item]);
+      testFixture.reset([room, actor, ...handEntities, item]);
 
       // Act
       await testFixture.executeAction('actor-bob', 'golden-watch');
@@ -119,12 +127,12 @@ describe('Drop Item - Event Dispatching', () => {
     });
 
     it('should validate event payload against registered schema', async () => {
-      // Arrange
+      // Arrange (with grabbing hands for prerequisite)
       const room = new ModEntityBuilder('tavern')
         .asRoom('Tavern')
         .build();
 
-      const actor = new ModEntityBuilder('actor-charlie')
+      const actorBuilder = new ModEntityBuilder('actor-charlie')
         .withName('Charlie')
         .atLocation('tavern')
         .asActor()
@@ -132,7 +140,9 @@ describe('Drop Item - Event Dispatching', () => {
           items: ['letter'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .build();
+        .withGrabbingHands(2);
+      const actor = actorBuilder.build();
+      const handEntities = actorBuilder.getHandEntities();
 
       const item = new ModEntityBuilder('letter')
         .withName('Letter')
@@ -141,7 +151,7 @@ describe('Drop Item - Event Dispatching', () => {
         .withComponent('items:weight', { weight: 0.05 })
         .build();
 
-      testFixture.reset([room, actor, item]);
+      testFixture.reset([room, actor, ...handEntities, item]);
 
       // Act
       await testFixture.executeAction('actor-charlie', 'letter');
@@ -165,12 +175,12 @@ describe('Drop Item - Event Dispatching', () => {
 
   describe('Event Timing and Order', () => {
     it('should dispatch items:item_dropped before turn_ended', async () => {
-      // Arrange
+      // Arrange (with grabbing hands for prerequisite)
       const room = new ModEntityBuilder('kitchen')
         .asRoom('Kitchen')
         .build();
 
-      const actor = new ModEntityBuilder('actor-diana')
+      const actorBuilder = new ModEntityBuilder('actor-diana')
         .withName('Diana')
         .atLocation('kitchen')
         .asActor()
@@ -178,7 +188,9 @@ describe('Drop Item - Event Dispatching', () => {
           items: ['spoon'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .build();
+        .withGrabbingHands(2);
+      const actor = actorBuilder.build();
+      const handEntities = actorBuilder.getHandEntities();
 
       const item = new ModEntityBuilder('spoon')
         .withName('Spoon')
@@ -187,7 +199,7 @@ describe('Drop Item - Event Dispatching', () => {
         .withComponent('items:weight', { weight: 0.1 })
         .build();
 
-      testFixture.reset([room, actor, item]);
+      testFixture.reset([room, actor, ...handEntities, item]);
 
       // Act
       await testFixture.executeAction('actor-diana', 'spoon');

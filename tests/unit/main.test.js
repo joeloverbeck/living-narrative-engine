@@ -51,11 +51,16 @@ describe('main.js bootstrap orchestration', () => {
     fetchImpl,
     stageImplementations = {},
     tokens = {},
-    logger = { debug: jest.fn(), error: jest.fn() },
+    logger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn() },
     gameEngineInstance = { showLoadGameUI: jest.fn() },
   } = {}) {
     const essentialUI = createEssentialElements();
-    const containerInstance = { id: 'container' };
+    const containerInstance = {
+      id: 'container',
+      resolve: jest.fn().mockReturnValue({
+        validateHandlerRegistryCompleteness: jest.fn().mockReturnValue({ isComplete: true }),
+      }),
+    };
 
     const defaultStages = {
       ensureCriticalDOMElementsStage: jest.fn(async (_doc, options) => {

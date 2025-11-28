@@ -192,15 +192,18 @@ describe('Items System - Performance', () => {
         .build();
 
       // Worker with items in inventory (required for give_item action)
-      const actor = new ModEntityBuilder('worker')
+      // Must have grabbing hands to satisfy give_item prerequisite
+      const workerBuilder = new ModEntityBuilder('worker')
         .withName('Warehouse Worker')
         .atLocation('warehouse')
         .asActor()
+        .withGrabbingHands(2)
         .withComponent('items:inventory', {
           items: ['worker-item-1', 'worker-item-2'],
           capacity: { maxWeight: 200, maxItems: 50 },
-        })
-        .build();
+        });
+      const actor = workerBuilder.build();
+      const workerHands = workerBuilder.getHandEntities();
 
       // Recipient actor (required for give_item action - needs someone to give to)
       const recipient = new ModEntityBuilder('recipient')
@@ -228,7 +231,7 @@ describe('Items System - Performance', () => {
         .withComponent('items:weight', { weight: 1.0 })
         .build();
 
-      const entities = [location, actor, recipient, workerItem1, workerItem2];
+      const entities = [location, actor, recipient, workerItem1, workerItem2, ...workerHands];
 
       // Create 20 containers with 10 items each (environmental complexity)
       for (let i = 0; i < 20; i++) {

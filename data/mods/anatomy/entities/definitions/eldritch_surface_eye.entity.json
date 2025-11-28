@@ -6,6 +6,11 @@
     "anatomy:part": {
       "subType": "eldritch_surface_eye"
     },
+    "anatomy:part_health": {
+      "currentHealth": 8,
+      "maxHealth": 8,
+      "state": "healthy"
+    },
     "core:name": {
       "text": "surface eye"
     },

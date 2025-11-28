@@ -30,27 +30,41 @@ describe('items:drop_item action definition', () => {
     expect(dropItemAction.template).toBe('drop {item}');
   });
 
-  it('should use correct scope for primary targets (inventory items)', () => {
+  it('should use correct scope for primary targets (non-wielded inventory items)', () => {
     expect(dropItemAction.targets).toBeDefined();
     expect(dropItemAction.targets.primary).toBeDefined();
     expect(dropItemAction.targets.primary.scope).toBe(
-      'items:actor_inventory_items'
+      'items:non_wielded_inventory_items'
     );
     expect(dropItemAction.targets.primary.placeholder).toBe('item');
     expect(dropItemAction.targets.primary.description).toBe('Item to drop');
   });
 
-  it('should have empty prerequisites array', () => {
+  it('should require free grabbing appendage prerequisite', () => {
     expect(dropItemAction.prerequisites).toBeDefined();
     expect(Array.isArray(dropItemAction.prerequisites)).toBe(true);
-    expect(dropItemAction.prerequisites).toEqual([]);
+    expect(dropItemAction.prerequisites).toHaveLength(1);
+    expect(dropItemAction.prerequisites[0].logic.condition_ref).toBe(
+      'anatomy:actor-has-free-grabbing-appendage'
+    );
+    expect(dropItemAction.prerequisites[0].failure_message).toBe(
+      'You need a free hand to grab an item from your inventory.'
+    );
+  });
+
+  it('should forbid actor performing complex performance', () => {
+    expect(dropItemAction.forbidden_components).toBeDefined();
+    expect(dropItemAction.forbidden_components.actor).toContain(
+      'positioning:doing_complex_performance'
+    );
   });
 
   describe('Expected action discovery behavior (manual testing)', () => {
-    it('should appear when actor has portable items in inventory', () => {
+    it('should appear when actor has non-wielded portable items and free appendage', () => {
       // Manual test case:
-      // 1. Create actor with inventory containing portable items
-      // 2. Expected: drop_item action should be available for each portable item
+      // 1. Create actor with inventory containing portable items (not wielded)
+      // 2. Actor has free grabbing appendage
+      // 3. Expected: drop_item action should be available for each non-wielded portable item
       expect(true).toBe(true);
     });
 
@@ -61,10 +75,19 @@ describe('items:drop_item action definition', () => {
       expect(true).toBe(true);
     });
 
-    it('should NOT appear for non-portable items', () => {
+    it('should NOT appear for wielded items (use drop_wielded_item instead)', () => {
       // Manual test case:
-      // 1. Create actor with inventory containing non-portable items
-      // 2. Expected: drop_item action should NOT be available for those items
+      // 1. Create actor with wielded item in wielding.wielded_item_ids
+      // 2. Expected: drop_item action should NOT show that item
+      // 3. drop_wielded_item action SHOULD show that item
+      expect(true).toBe(true);
+    });
+
+    it('should NOT appear when actor has no free grabbing appendage', () => {
+      // Manual test case:
+      // 1. Create actor wielding two-handed weapon (no free appendages)
+      // 2. Actor has non-wielded items in inventory
+      // 3. Expected: drop_item action should NOT be available (prerequisite fails)
       expect(true).toBe(true);
     });
 

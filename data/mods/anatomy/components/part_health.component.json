@@ -1,0 +1,57 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "anatomy:part_health",
+  "description": "Tracks health status of a body part entity. Maps numeric health values to narrative state labels based on percentage thresholds.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "currentHealth": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Current health points of the body part. Must not exceed maxHealth."
+      },
+      "maxHealth": {
+        "type": "number",
+        "minimum": 1,
+        "description": "Maximum health capacity of the body part."
+      },
+      "state": {
+        "type": "string",
+        "enum": [
+          "healthy",
+          "bruised",
+          "wounded",
+          "badly_damaged",
+          "destroyed"
+        ],
+        "description": "Narrative health state based on percentage thresholds. healthy (76-100%), bruised (51-75%), wounded (26-50%), badly_damaged (1-25%), destroyed (0%)."
+      },
+      "turnsInState": {
+        "type": "integer",
+        "minimum": 0,
+        "default": 0,
+        "description": "Consecutive turns the part has been in the current state. Resets to 0 when state changes."
+      }
+    },
+    "required": [
+      "currentHealth",
+      "maxHealth",
+      "state"
+    ],
+    "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid health state: {{value}}. Valid states: healthy, bruised, wounded, badly_damaged, destroyed",
+      "missingRequired": "{PropertyLabel} is required",
+      "invalidType": "Invalid type for {propertyName}: expected {{expected}}, got {{actual}}",
+      "minimum": "{PropertyLabel} must be at least {{limit}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
+  }
+}

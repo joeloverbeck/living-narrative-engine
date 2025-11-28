@@ -6,6 +6,11 @@
     "anatomy:part": {
       "subType": "teeth"
     },
+    "anatomy:part_health": {
+      "currentHealth": 5,
+      "maxHealth": 5,
+      "state": "healthy"
+    },
     "core:name": {
       "text": "teeth"
     }

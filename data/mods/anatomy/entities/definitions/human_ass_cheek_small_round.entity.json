@@ -6,6 +6,11 @@
     "anatomy:part": {
       "subType": "ass_cheek"
     },
+    "anatomy:part_health": {
+      "currentHealth": 20,
+      "maxHealth": 20,
+      "state": "healthy"
+    },
     "descriptors:shape_general": {
       "shape": "round"
     },

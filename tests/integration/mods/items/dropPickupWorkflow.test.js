@@ -23,6 +23,10 @@ describe('Items - Drop and Pick Up Workflow', () => {
       dropItemRule,
       eventIsActionDropItem
     );
+    // Load additional condition required by the rule's "or" block
+    await dropFixture.loadDependencyConditions([
+      'items:event-is-action-drop-wielded-item',
+    ]);
     pickupFixture = await ModTestFixture.forAction(
       'items',
       'items:pick_up_item',
@@ -43,7 +47,7 @@ describe('Items - Drop and Pick Up Workflow', () => {
   it('should complete full drop and pickup cycle between actors', async () => {
     // Setup: Two actors in same location
     const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
-    const actor1 = new ModEntityBuilder('test:actor1')
+    const actor1Builder = new ModEntityBuilder('test:actor1')
       .withName('Alice')
       .atLocation('saloon1')
       .asActor()
@@ -51,8 +55,10 @@ describe('Items - Drop and Pick Up Workflow', () => {
         items: ['letter-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
-      .build();
-    const actor2 = new ModEntityBuilder('test:actor2')
+      .withGrabbingHands(2);
+    const actor1 = actor1Builder.build();
+    const actor1Hands = actor1Builder.getHandEntities();
+    const actor2Builder = new ModEntityBuilder('test:actor2')
       .withName('Bob')
       .atLocation('saloon1')
       .asActor()
@@ -60,7 +66,9 @@ describe('Items - Drop and Pick Up Workflow', () => {
         items: [],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
-      .build();
+      .withGrabbingHands(2);
+    const actor2 = actor2Builder.build();
+    const actor2Hands = actor2Builder.getHandEntities();
     const item = new ModEntityBuilder('letter-1')
       .withName('Letter')
       .withComponent('items:item', {})
@@ -68,7 +76,7 @@ describe('Items - Drop and Pick Up Workflow', () => {
       .withComponent('items:weight', { weight: 0.05 })
       .build();
 
-    dropFixture.reset([room, actor1, actor2, item]);
+    dropFixture.reset([room, actor1, ...actor1Hands, actor2, ...actor2Hands, item]);
 
     // Actor 1 drops item
     await dropFixture.executeAction('test:actor1', 'letter-1');
@@ -99,7 +107,7 @@ describe('Items - Drop and Pick Up Workflow', () => {
 
   it('should handle multiple items dropped at same location', async () => {
     const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
-    const actor = new ModEntityBuilder('test:actor1')
+    const actorBuilder = new ModEntityBuilder('test:actor1')
       .withName('Charlie')
       .atLocation('saloon1')
       .asActor()
@@ -107,7 +115,9 @@ describe('Items - Drop and Pick Up Workflow', () => {
         items: ['letter-1', 'gun-1', 'key-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
-      .build();
+      .withGrabbingHands(2);
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
     const letter = new ModEntityBuilder('letter-1')
       .withName('Letter')
       .withComponent('items:item', {})
@@ -127,7 +137,7 @@ describe('Items - Drop and Pick Up Workflow', () => {
       .withComponent('items:weight', { weight: 0.02 })
       .build();
 
-    dropFixture.reset([room, actor, letter, gun, key]);
+    dropFixture.reset([room, actor, ...handEntities, letter, gun, key]);
 
     // Drop first two items
     await dropFixture.executeAction('test:actor1', 'letter-1');
@@ -147,7 +157,7 @@ describe('Items - Drop and Pick Up Workflow', () => {
 
   it('should create perception events for both drop and pickup', async () => {
     const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
-    const actor = new ModEntityBuilder('test:actor1')
+    const actorBuilder = new ModEntityBuilder('test:actor1')
       .withName('Diana')
       .atLocation('saloon1')
       .asActor()
@@ -155,7 +165,9 @@ describe('Items - Drop and Pick Up Workflow', () => {
         items: ['letter-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
-      .build();
+      .withGrabbingHands(2);
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
     const item = new ModEntityBuilder('letter-1')
       .withName('Letter')
       .withComponent('items:item', {})
@@ -163,7 +175,7 @@ describe('Items - Drop and Pick Up Workflow', () => {
       .withComponent('items:weight', { weight: 0.05 })
       .build();
 
-    dropFixture.reset([room, actor, item]);
+    dropFixture.reset([room, actor, ...handEntities, item]);
 
     // Drop item
     await dropFixture.executeAction('test:actor1', 'letter-1');

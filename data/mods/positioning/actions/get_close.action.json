@@ -5,7 +5,7 @@
   "description": "Move closer to the target, entering their personal space.",
   "targets": {
     "primary": {
-      "scope": "core:actors_in_location",
+      "scope": "positioning:actors_in_location_not_wielding",
       "placeholder": "target",
       "description": "Actor to get close to"
     }

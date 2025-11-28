@@ -6,6 +6,11 @@
     "anatomy:part": {
       "subType": "tail"
     },
+    "anatomy:part_health": {
+      "currentHealth": 12,
+      "maxHealth": 12,
+      "state": "healthy"
+    },
     "core:name": {
       "text": "cat tail"
     },

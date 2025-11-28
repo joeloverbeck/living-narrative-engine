@@ -20,6 +20,10 @@ describe('Items - Drop Item Component Preservation', () => {
       dropItemRule,
       eventIsActionDropItem
     );
+    // Load additional condition required by the rule's "or" block
+    await testFixture.loadDependencyConditions([
+      'items:event-is-action-drop-wielded-item',
+    ]);
   });
 
   afterEach(() => {
@@ -29,9 +33,9 @@ describe('Items - Drop Item Component Preservation', () => {
   });
 
   it('should preserve items:item marker component when dropped', async () => {
-    // Setup: Actor with item in inventory
+    // Setup: Actor with item in inventory (with grabbing hands for prerequisite)
     const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
-    const actor = new ModEntityBuilder('test:actor1')
+    const actorBuilder = new ModEntityBuilder('test:actor1')
       .withName('Alice')
       .atLocation('saloon1')
       .asActor()
@@ -39,7 +43,9 @@ describe('Items - Drop Item Component Preservation', () => {
         items: ['letter-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
-      .build();
+      .withGrabbingHands(2);
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
     const item = new ModEntityBuilder('letter-1')
       .withName('Letter')
       .withComponent('items:item', {})
@@ -47,7 +53,7 @@ describe('Items - Drop Item Component Preservation', () => {
       .withComponent('items:weight', { weight: 0.05 })
       .build();
 
-    testFixture.reset([room, actor, item]);
+    testFixture.reset([room, actor, ...handEntities, item]);
 
     // Execute drop action
     await testFixture.executeAction('test:actor1', 'letter-1');
@@ -58,9 +64,9 @@ describe('Items - Drop Item Component Preservation', () => {
   });
 
   it('should preserve items:portable marker component when dropped', async () => {
-    // Setup: Actor with item in inventory
+    // Setup: Actor with item in inventory (with grabbing hands for prerequisite)
     const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
-    const actor = new ModEntityBuilder('test:actor1')
+    const actorBuilder = new ModEntityBuilder('test:actor1')
       .withName('Bob')
       .atLocation('saloon1')
       .asActor()
@@ -68,7 +74,9 @@ describe('Items - Drop Item Component Preservation', () => {
         items: ['gun-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
-      .build();
+      .withGrabbingHands(2);
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
     const item = new ModEntityBuilder('gun-1')
       .withName('Gun')
       .withComponent('items:item', {})
@@ -76,7 +84,7 @@ describe('Items - Drop Item Component Preservation', () => {
       .withComponent('items:weight', { weight: 1.2 })
       .build();
 
-    testFixture.reset([room, actor, item]);
+    testFixture.reset([room, actor, ...handEntities, item]);
 
     // Execute drop action
     await testFixture.executeAction('test:actor1', 'gun-1');
@@ -87,9 +95,9 @@ describe('Items - Drop Item Component Preservation', () => {
   });
 
   it('should preserve items:weight component when dropped', async () => {
-    // Setup: Actor with item in inventory
+    // Setup: Actor with item in inventory (with grabbing hands for prerequisite)
     const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
-    const actor = new ModEntityBuilder('test:actor1')
+    const actorBuilder = new ModEntityBuilder('test:actor1')
       .withName('Charlie')
       .atLocation('saloon1')
       .asActor()
@@ -97,7 +105,9 @@ describe('Items - Drop Item Component Preservation', () => {
         items: ['key-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
-      .build();
+      .withGrabbingHands(2);
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
     const item = new ModEntityBuilder('key-1')
       .withName('Key')
       .withComponent('items:item', {})
@@ -105,7 +115,7 @@ describe('Items - Drop Item Component Preservation', () => {
       .withComponent('items:weight', { weight: 0.02 })
       .build();
 
-    testFixture.reset([room, actor, item]);
+    testFixture.reset([room, actor, ...handEntities, item]);
 
     // Execute drop action
     await testFixture.executeAction('test:actor1', 'key-1');
@@ -117,9 +127,9 @@ describe('Items - Drop Item Component Preservation', () => {
   });
 
   it('should preserve all components when dropping item', async () => {
-    // Setup: Actor with item in inventory
+    // Setup: Actor with item in inventory (with grabbing hands for prerequisite)
     const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
-    const actor = new ModEntityBuilder('test:actor1')
+    const actorBuilder = new ModEntityBuilder('test:actor1')
       .withName('Diana')
       .atLocation('saloon1')
       .asActor()
@@ -127,7 +137,9 @@ describe('Items - Drop Item Component Preservation', () => {
         items: ['letter-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
-      .build();
+      .withGrabbingHands(2);
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
     const item = new ModEntityBuilder('letter-1')
       .withName('Letter')
       .withComponent('items:item', {})
@@ -135,7 +147,7 @@ describe('Items - Drop Item Component Preservation', () => {
       .withComponent('items:weight', { weight: 0.05 })
       .build();
 
-    testFixture.reset([room, actor, item]);
+    testFixture.reset([room, actor, ...handEntities, item]);
 
     // Execute drop action
     await testFixture.executeAction('test:actor1', 'letter-1');
@@ -160,9 +172,9 @@ describe('Items - Drop Item Component Preservation', () => {
   });
 
   it('should preserve components when dropping multiple items', async () => {
-    // Setup: Actor with multiple items in inventory
+    // Setup: Actor with multiple items in inventory (with grabbing hands for prerequisite)
     const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
-    const actor = new ModEntityBuilder('test:actor1')
+    const actorBuilder = new ModEntityBuilder('test:actor1')
       .withName('Eve')
       .atLocation('saloon1')
       .asActor()
@@ -170,7 +182,9 @@ describe('Items - Drop Item Component Preservation', () => {
         items: ['letter-1', 'gun-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
-      .build();
+      .withGrabbingHands(2);
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
     const letter = new ModEntityBuilder('letter-1')
       .withName('Letter')
       .withComponent('items:item', {})
@@ -184,7 +198,7 @@ describe('Items - Drop Item Component Preservation', () => {
       .withComponent('items:weight', { weight: 1.2 })
       .build();
 
-    testFixture.reset([room, actor, letter, gun]);
+    testFixture.reset([room, actor, ...handEntities, letter, gun]);
 
     // Drop both items
     await testFixture.executeAction('test:actor1', 'letter-1');

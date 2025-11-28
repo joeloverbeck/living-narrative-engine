@@ -11,6 +11,11 @@
     "anatomy:part": {
       "subType": "hand"
     },
+    "anatomy:part_health": {
+      "currentHealth": 15,
+      "maxHealth": 15,
+      "state": "healthy"
+    },
     "core:name": {
       "text": "hand"
     }

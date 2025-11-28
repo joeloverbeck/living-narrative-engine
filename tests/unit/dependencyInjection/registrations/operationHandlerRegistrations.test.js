@@ -25,6 +25,10 @@ const handlerModuleDefinitions = [
     'ModifyComponentHandler',
     `${handlerBasePath}/modifyComponentHandler.js`,
   ],
+  [
+    'ModifyPartHealthHandler',
+    `${handlerBasePath}/modifyPartHealthHandler.js`,
+  ],
   ['AddComponentHandler', `${handlerBasePath}/addComponentHandler.js`],
   ['RemoveComponentHandler', `${handlerBasePath}/removeComponentHandler.js`],
   ['QueryComponentHandler', `${handlerBasePath}/queryComponentHandler.js`],
@@ -295,6 +299,19 @@ beforeAll(async () => {
         { property: 'entityManager', token: IEntityManager },
         { property: 'logger', token: ILogger },
         { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.ModifyPartHealthHandler,
+      handlerName: 'ModifyPartHealthHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+        {
+          property: 'jsonLogicService',
+          token: JsonLogicEvaluationServiceToken,
+        },
       ],
     },
     {

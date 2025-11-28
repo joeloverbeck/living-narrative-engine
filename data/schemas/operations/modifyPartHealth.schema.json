@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/operations/modifyPartHealth.schema.json",
+  "title": "MODIFY_PART_HEALTH Operation",
+  "description": "Changes a body part's health value by a delta amount. Negative delta = damage, positive delta = healing. Automatically clamps to [0, maxHealth] bounds and dispatches health changed event.",
+  "allOf": [
+    { "$ref": "../base-operation.schema.json" },
+    {
+      "properties": {
+        "type": { "const": "MODIFY_PART_HEALTH" },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the MODIFY_PART_HEALTH operation.",
+      "properties": {
+        "part_entity_ref": {
+          "description": "Reference to the body part entity. Can be a direct entity ID string or a JSON Logic expression that resolves to an entity ID.",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "object" }
+          ]
+        },
+        "delta": {
+          "description": "Health change amount. Negative values deal damage, positive values heal. Can be a number or JSON Logic expression.",
+          "oneOf": [
+            { "type": "number" },
+            { "type": "object" }
+          ]
+        },
+        "clamp_to_bounds": {
+          "type": "boolean",
+          "default": true,
+          "description": "If true, clamps result to [0, maxHealth]. If false, allows overflow/underflow (not recommended)."
+        }
+      },
+      "required": ["part_entity_ref", "delta"],
+      "additionalProperties": false
+    }
+  }
+}

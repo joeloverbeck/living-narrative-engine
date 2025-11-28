@@ -26,6 +26,17 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
   let fixtures;
 
   beforeEach(async () => {
+    const dropFixture = await ModTestFixture.forAction(
+      'items',
+      'items:drop_item',
+      dropItemRule,
+      eventIsActionDropItem
+    );
+    // Load additional condition required by the rule's "or" block
+    await dropFixture.loadDependencyConditions([
+      'items:event-is-action-drop-wielded-item',
+    ]);
+
     fixtures = {
       give: await ModTestFixture.forAction(
         'items',
@@ -33,12 +44,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
         giveItemRule,
         eventIsActionGiveItem
       ),
-      drop: await ModTestFixture.forAction(
-        'items',
-        'items:drop_item',
-        dropItemRule,
-        eventIsActionDropItem
-      ),
+      drop: dropFixture,
       pickup: await ModTestFixture.forAction(
         'items',
         'items:pick_up_item',
@@ -78,7 +84,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
         .asRoom('Verification Room')
         .build();
 
-      const actor = new ModEntityBuilder('test-actor')
+      const actorBuilder = new ModEntityBuilder('test-actor')
         .withName('Test Actor')
         .atLocation('verification-room')
         .asActor()
@@ -86,7 +92,9 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
           items: ['owned-item'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .build();
+        .withGrabbingHands(2);
+      const actor = actorBuilder.build();
+      const handEntities = actorBuilder.getHandEntities();
 
       const ownedItem = new ModEntityBuilder('owned-item')
         .withName('Owned Item')
@@ -125,7 +133,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
         .build();
 
       // Test drop_item
-      fixtures.drop.reset([room, actor, ownedItem, locationItem, container, chestItem]);
+      fixtures.drop.reset([room, actor, ...handEntities, ownedItem, locationItem, container, chestItem]);
       await fixtures.drop.executeAction('test-actor', 'owned-item');
       expect(fixtures.drop.events.some((e) => e.eventType === 'items:item_dropped')).toBe(true);
 

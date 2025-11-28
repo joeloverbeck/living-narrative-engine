@@ -6,6 +6,11 @@
     "anatomy:part": {
       "subType": "eldritch_vestigial_arm"
     },
+    "anatomy:part_health": {
+      "currentHealth": 15,
+      "maxHealth": 15,
+      "state": "healthy"
+    },
     "anatomy:sockets": {
       "sockets": [
         {

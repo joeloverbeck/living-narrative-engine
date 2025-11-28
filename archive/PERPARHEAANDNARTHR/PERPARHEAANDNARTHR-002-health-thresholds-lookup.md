@@ -1,6 +1,6 @@
 # PERPARHEAANDNARTHR-002: Health Thresholds Lookup File
 
-**Status:** Ready
+**Status:** Completed
 **Priority:** Critical (Phase 1)
 **Estimated Effort:** 0.25 days
 **Dependencies:** None
@@ -10,6 +10,19 @@
 ## Objective
 
 Create the health thresholds lookup file that defines the mapping between health percentages and narrative state labels. This file serves as reference data for modders and future extensibility (per-part-type thresholds).
+
+---
+
+## Assumption Corrections
+
+**Original assumptions vs actual codebase:**
+
+1. ~~`minPercentage`/`maxPercentage`~~ → `min_percentage`/`max_percentage` (snake_case matches `hunger_thresholds.json` pattern)
+2. ~~`defaultThresholds`~~ → `thresholds` (matches `hunger_thresholds.json` pattern)
+3. **Confirmed**: `lookups` directory does not exist and must be created
+4. **Confirmed**: `part_health.component.json` already exists with correct states from ticket 001
+
+**Rationale**: Consistency with existing `hunger_thresholds.json` is more important than the original ticket spec. All handlers using threshold lookups will expect the same property names.
 
 ---
 
@@ -53,35 +66,35 @@ Create `data/mods/anatomy/lookups/part_health_thresholds.json`:
 ```json
 {
   "description": "Reference data for part health state thresholds. Actual logic in UPDATE_PART_HEALTH_STATE operation handler.",
-  "defaultThresholds": [
+  "thresholds": [
     {
       "state": "healthy",
-      "minPercentage": 76,
-      "maxPercentage": 100,
+      "min_percentage": 76,
+      "max_percentage": 100,
       "description": "Part is fully functional, no visible damage"
     },
     {
       "state": "bruised",
-      "minPercentage": 51,
-      "maxPercentage": 75,
+      "min_percentage": 51,
+      "max_percentage": 75,
       "description": "Minor damage, slight discoloration or tenderness"
     },
     {
       "state": "wounded",
-      "minPercentage": 26,
-      "maxPercentage": 50,
+      "min_percentage": 26,
+      "max_percentage": 50,
       "description": "Moderate damage, visible injury affecting function"
     },
     {
       "state": "badly_damaged",
-      "minPercentage": 1,
-      "maxPercentage": 25,
+      "min_percentage": 1,
+      "max_percentage": 25,
       "description": "Severe damage, significantly impaired function"
     },
     {
       "state": "destroyed",
-      "minPercentage": 0,
-      "maxPercentage": 0,
+      "min_percentage": 0,
+      "max_percentage": 0,
       "description": "Part is non-functional (narrative label only, no automatic effects)"
     }
   ],
@@ -90,7 +103,7 @@ Create `data/mods/anatomy/lookups/part_health_thresholds.json`:
       "_comment": "Future: Per-part-type thresholds (e.g., head might have different thresholds)",
       "_example": {
         "head": [
-          { "state": "healthy", "minPercentage": 81, "maxPercentage": 100 }
+          { "state": "healthy", "min_percentage": 81, "max_percentage": 100 }
         ]
       }
     },
@@ -98,7 +111,7 @@ Create `data/mods/anatomy/lookups/part_health_thresholds.json`:
       "_comment": "Future: Creature-specific thresholds (e.g., undead might not bruise)",
       "_example": {
         "undead": [
-          { "state": "healthy", "minPercentage": 51, "maxPercentage": 100 }
+          { "state": "healthy", "min_percentage": 51, "max_percentage": 100 }
         ]
       }
     }
@@ -108,10 +121,10 @@ Create `data/mods/anatomy/lookups/part_health_thresholds.json`:
 
 ### Design Rationale
 
-1. **Follows hunger_thresholds.json pattern**: Same structure with thresholds array
+1. **Follows hunger_thresholds.json pattern**: Same structure with `thresholds` array and `min_percentage`/`max_percentage` keys
 2. **Extension points documented**: Future iteration hooks are visible but unused
 3. **Description field**: Self-documenting for modders
-4. **Boundary semantics**: minPercentage/maxPercentage clearly define ranges
+4. **Boundary semantics**: min_percentage/max_percentage clearly define ranges
 5. **Destroyed at exactly 0**: Not a range, exactly zero health = destroyed
 
 ---
@@ -154,7 +167,7 @@ node -e "JSON.parse(require('fs').readFileSync('data/mods/anatomy/lookups/part_h
 # 3. Verify states cover full range
 node -e "
   const data = JSON.parse(require('fs').readFileSync('data/mods/anatomy/lookups/part_health_thresholds.json'));
-  const states = data.defaultThresholds.map(t => t.state);
+  const states = data.thresholds.map(t => t.state);
   const expected = ['healthy', 'bruised', 'wounded', 'badly_damaged', 'destroyed'];
   console.log('States present:', states);
   console.log('All states covered:', expected.every(s => states.includes(s)));
@@ -173,3 +186,36 @@ npm run test:ci
 
 - Pattern to follow: `data/mods/metabolism/lookups/hunger_thresholds.json`
 - Component states: `data/mods/anatomy/components/part_health.component.json` (from ticket 001)
+
+---
+
+## Outcome
+
+**Completed:** 2025-11-28
+
+### What Was Actually Changed
+
+1. **Created** `data/mods/anatomy/lookups/` directory
+2. **Created** `data/mods/anatomy/lookups/part_health_thresholds.json` with:
+   - 5 health state thresholds (healthy, bruised, wounded, badly_damaged, destroyed)
+   - Extension points for future per-part-type and creature-type overrides
+   - Description field for modder documentation
+
+### Deviation From Original Plan
+
+| Original Ticket Spec | Actual Implementation | Reason |
+|---------------------|----------------------|--------|
+| `minPercentage`/`maxPercentage` | `min_percentage`/`max_percentage` | Consistency with `hunger_thresholds.json` pattern |
+| `defaultThresholds` array | `thresholds` array | Consistency with `hunger_thresholds.json` pattern |
+
+### Verification Results
+
+- ✅ JSON validity: Passed
+- ✅ All 5 states covered: `healthy`, `bruised`, `wounded`, `badly_damaged`, `destroyed`
+- ✅ `npm run validate`: Passed (0 violations across 44 mods)
+- ✅ Unit tests: 37,542 passed (9 pre-existing failures in `main.test.js` unrelated to this change)
+- ✅ Integration tests: 14,140 passed
+
+### Tests Added
+
+None required for this ticket - the lookup file is reference data only. The handler that consumes this file (PERPARHEAANDNARTHR-007) will include appropriate tests when implemented.

@@ -27,6 +27,10 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       dropItemRule,
       eventIsActionDropItem
     );
+    // Load additional condition required by the rule's "or" block
+    await testFixture.loadDependencyConditions([
+      'items:event-is-action-drop-wielded-item',
+    ]);
     // Register inventory scopes needed for drop and pickup actions
     ScopeResolverHelpers.registerInventoryScopes(testFixture.testEnv);
     // Register pick_up_item action so it can be discovered after drop

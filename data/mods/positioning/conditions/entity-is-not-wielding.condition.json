@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "positioning:entity-is-not-wielding",
+  "description": "Checks that the entity is NOT currently wielding any items.",
+  "logic": {
+    "!": {
+      "var": "entity.components.positioning:wielding"
+    }
+  }
+}

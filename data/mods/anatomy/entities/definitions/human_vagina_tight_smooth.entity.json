@@ -6,6 +6,11 @@
     "anatomy:part": {
       "subType": "vagina"
     },
+    "anatomy:part_health": {
+      "currentHealth": 6,
+      "maxHealth": 6,
+      "state": "healthy"
+    },
     "descriptors:size_category": {
       "size": "small"
     },

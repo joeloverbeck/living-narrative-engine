@@ -1,10 +1,13 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_drop_item",
-  "comment": "Handles drop_item action with perception logging",
+  "comment": "Handles drop_item and drop_wielded_item actions with perception logging",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "items:event-is-action-drop-item"
+    "or": [
+      { "condition_ref": "items:event-is-action-drop-item" },
+      { "condition_ref": "items:event-is-action-drop-wielded-item" }
+    ]
   },
   "actions": [
     {

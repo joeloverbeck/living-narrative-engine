@@ -18,12 +18,12 @@ import eventIsActionDropItem from '../../../../data/mods/items/conditions/event-
 /**
  * Helper to create a basic drop scenario
  *
- * @returns {{room: object, actor: object, item: object}} Test entities
+ * @returns {{room: object, actor: object, item: object, handEntities: object[]}} Test entities
  */
 function createDropScenario() {
   const room = new ModEntityBuilder('location-1').asRoom('Test Room').build();
 
-  const actor = new ModEntityBuilder('actor-1')
+  const actorBuilder = new ModEntityBuilder('actor-1')
     .withName('TestActor')
     .atLocation('location-1')
     .asActor()
@@ -31,7 +31,9 @@ function createDropScenario() {
       items: ['item-1'],
       capacity: { maxWeight: 50, maxItems: 10 },
     })
-    .build();
+    .withGrabbingHands(2);
+  const actor = actorBuilder.build();
+  const handEntities = actorBuilder.getHandEntities();
 
   const item = new ModEntityBuilder('item-1')
     .withName('TestItem')
@@ -40,7 +42,7 @@ function createDropScenario() {
     .withComponent('items:weight', { weight: 0.5 })
     .build();
 
-  return { room, actor, item };
+  return { room, actor, item, handEntities };
 }
 
 describe('drop_item action handler instantiation and execution', () => {
@@ -55,6 +57,10 @@ describe('drop_item action handler instantiation and execution', () => {
       dropItemRule,
       eventIsActionDropItem
     );
+    // Load additional condition required by the rule's "or" block
+    await testFixture.loadDependencyConditions([
+      'items:event-is-action-drop-wielded-item',
+    ]);
   });
 
   afterEach(() => {
@@ -64,7 +70,7 @@ describe('drop_item action handler instantiation and execution', () => {
   describe('handler instantiation', () => {
     it('should successfully instantiate handler from DI container without errors', async () => {
       const scenario = createDropScenario();
-      testFixture.reset([scenario.room, scenario.actor, scenario.item]);
+      testFixture.reset([scenario.room, scenario.actor, ...scenario.handEntities, scenario.item]);
 
       // The act of executing the action triggers handler instantiation
       // If handler creation fails, this will throw an error
@@ -75,7 +81,7 @@ describe('drop_item action handler instantiation and execution', () => {
 
     it('should not throw validation errors about missing methods', async () => {
       const scenario = createDropScenario();
-      testFixture.reset([scenario.room, scenario.actor, scenario.item]);
+      testFixture.reset([scenario.room, scenario.actor, ...scenario.handEntities, scenario.item]);
 
       // Execute - should not throw any errors
       await expect(
@@ -90,7 +96,7 @@ describe('drop_item action handler instantiation and execution', () => {
   describe('successful execution', () => {
     it('should complete drop operation successfully', async () => {
       const scenario = createDropScenario();
-      testFixture.reset([scenario.room, scenario.actor, scenario.item]);
+      testFixture.reset([scenario.room, scenario.actor, ...scenario.handEntities, scenario.item]);
 
       const startTime = Date.now();
       await testFixture.executeAction('actor-1', 'item-1');
@@ -111,7 +117,7 @@ describe('drop_item action handler instantiation and execution', () => {
 
     it('should NOT dispatch system error events on successful execution', async () => {
       const scenario = createDropScenario();
-      testFixture.reset([scenario.room, scenario.actor, scenario.item]);
+      testFixture.reset([scenario.room, scenario.actor, ...scenario.handEntities, scenario.item]);
 
       await testFixture.executeAction('actor-1', 'item-1');
 
@@ -124,7 +130,7 @@ describe('drop_item action handler instantiation and execution', () => {
 
     it('should dispatch expected events in correct order', async () => {
       const scenario = createDropScenario();
-      testFixture.reset([scenario.room, scenario.actor, scenario.item]);
+      testFixture.reset([scenario.room, scenario.actor, ...scenario.handEntities, scenario.item]);
 
       await testFixture.executeAction('actor-1', 'item-1');
 
@@ -148,7 +154,7 @@ describe('drop_item action handler instantiation and execution', () => {
   describe('event payload schema compliance', () => {
     it('should dispatch events with schema-compliant payloads', async () => {
       const scenario = createDropScenario();
-      testFixture.reset([scenario.room, scenario.actor, scenario.item]);
+      testFixture.reset([scenario.room, scenario.actor, ...scenario.handEntities, scenario.item]);
 
       await testFixture.executeAction('actor-1', 'item-1');
 

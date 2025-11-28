@@ -26,6 +26,10 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
       dropItemRule,
       eventIsActionDropItem
     );
+    // Load additional condition required by the rule's "or" block
+    await testFixture.loadDependencyConditions([
+      'items:event-is-action-drop-wielded-item',
+    ]);
   });
 
   afterEach(() => {
@@ -89,12 +93,12 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
     });
 
     it('should successfully call batchAddComponentsOptimized without TypeError', async () => {
-      // Setup: Actor with item at location
+      // Setup: Actor with item at location (with grabbing hands for prerequisite)
       const room = new ModEntityBuilder('p_erotica:patient_room_instance')
         .asRoom('Patient Room')
         .build();
 
-      const actor = new ModEntityBuilder('p_erotica:jon_urena_daydream_instance')
+      const actorBuilder = new ModEntityBuilder('p_erotica:jon_urena_daydream_instance')
         .withName('Jon Ureña')
         .atLocation('p_erotica:patient_room_instance')
         .asActor()
@@ -102,7 +106,9 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
           items: ['p_erotica:yellowed_goodbye_letter_instance'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .build();
+        .withGrabbingHands(2);
+      const actor = actorBuilder.build();
+      const handEntities = actorBuilder.getHandEntities();
 
       const item = new ModEntityBuilder('p_erotica:yellowed_goodbye_letter_instance')
         .withName('yellowed goodbye letter')
@@ -111,7 +117,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
         .withComponent('items:weight', { weight: 0.05 })
         .build();
 
-      testFixture.reset([room, actor, item]);
+      testFixture.reset([room, actor, ...handEntities, item]);
 
       // Act: Drop item - this previously threw TypeError at line 130
       await expect(
@@ -141,12 +147,12 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
 
   describe('Issue 2: VED validation failed for perceptionType "item_dropped"', () => {
     it('should accept "item_dropped" as valid perceptionType', async () => {
-      // Setup: Same scenario as in logs
+      // Setup: Same scenario as in logs (with grabbing hands for prerequisite)
       const room = new ModEntityBuilder('p_erotica:patient_room_instance')
         .asRoom('Patient Room')
         .build();
 
-      const actor = new ModEntityBuilder('p_erotica:jon_urena_daydream_instance')
+      const actorBuilder = new ModEntityBuilder('p_erotica:jon_urena_daydream_instance')
         .withName('Jon Ureña')
         .atLocation('p_erotica:patient_room_instance')
         .asActor()
@@ -154,7 +160,9 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
           items: ['p_erotica:yellowed_goodbye_letter_instance'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .build();
+        .withGrabbingHands(2);
+      const actor = actorBuilder.build();
+      const handEntities = actorBuilder.getHandEntities();
 
       const item = new ModEntityBuilder('p_erotica:yellowed_goodbye_letter_instance')
         .withName('yellowed goodbye letter')
@@ -163,7 +171,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
         .withComponent('items:weight', { weight: 0.05 })
         .build();
 
-      testFixture.reset([room, actor, item]);
+      testFixture.reset([room, actor, ...handEntities, item]);
 
       // Act: Drop item - this previously failed validation at line 296
       await testFixture.executeAction(
@@ -190,9 +198,9 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
     });
 
     it('should not emit validation warnings for item_dropped perceptionType', async () => {
-      // Setup
+      // Setup (with grabbing hands for prerequisite)
       const room = new ModEntityBuilder('location-1').asRoom('Room').build();
-      const actor = new ModEntityBuilder('actor-1')
+      const actorBuilder = new ModEntityBuilder('actor-1')
         .withName('Actor')
         .atLocation('location-1')
         .asActor()
@@ -200,7 +208,9 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
           items: ['item-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .build();
+        .withGrabbingHands(2);
+      const actor = actorBuilder.build();
+      const handEntities = actorBuilder.getHandEntities();
       const item = new ModEntityBuilder('item-1')
         .withName('Item')
         .withComponent('items:item', {})
@@ -208,7 +218,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
         .withComponent('items:weight', { weight: 0.5 })
         .build();
 
-      testFixture.reset([room, actor, item]);
+      testFixture.reset([room, actor, ...handEntities, item]);
 
       // Act
       await testFixture.executeAction('actor-1', 'item-1');
@@ -234,11 +244,12 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
   describe('Full workflow verification', () => {
     it('should complete full drop item workflow without errors', async () => {
       // This test verifies the complete workflow from the logs works end-to-end
+      // (with grabbing hands for prerequisite)
       const room = new ModEntityBuilder('p_erotica:patient_room_instance')
         .asRoom('Patient Room')
         .build();
 
-      const actor = new ModEntityBuilder('p_erotica:jon_urena_daydream_instance')
+      const actorBuilder = new ModEntityBuilder('p_erotica:jon_urena_daydream_instance')
         .withName('Jon Ureña')
         .atLocation('p_erotica:patient_room_instance')
         .asActor()
@@ -246,7 +257,9 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
           items: ['p_erotica:yellowed_goodbye_letter_instance'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .build();
+        .withGrabbingHands(2);
+      const actor = actorBuilder.build();
+      const handEntities = actorBuilder.getHandEntities();
 
       const item = new ModEntityBuilder('p_erotica:yellowed_goodbye_letter_instance')
         .withName('yellowed goodbye letter')
@@ -255,7 +268,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
         .withComponent('items:weight', { weight: 0.05 })
         .build();
 
-      testFixture.reset([room, actor, item]);
+      testFixture.reset([room, actor, ...handEntities, item]);
 
       // Execute the complete workflow
       await testFixture.executeAction(

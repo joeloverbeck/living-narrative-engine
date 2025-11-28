@@ -6,6 +6,11 @@
     "anatomy:part": {
       "subType": "hair"
     },
+    "anatomy:part_health": {
+      "currentHealth": 3,
+      "maxHealth": 3,
+      "state": "healthy"
+    },
     "descriptors:color_basic": {
       "color": "red"
     },
