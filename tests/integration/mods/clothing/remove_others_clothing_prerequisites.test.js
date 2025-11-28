@@ -1,12 +1,10 @@
 /**
  * @jest-environment node
- *
  * @file Integration tests for remove_others_clothing action prerequisites
  * @description Tests that the action correctly requires two free grabbing appendages
  *
  * Tests the prerequisite `anatomy:actor-has-two-free-grabbing-appendages` which uses
  * the hasFreeGrabbingAppendages custom JSON Logic operator.
- *
  * @see data/mods/clothing/actions/remove_others_clothing.action.json
  * @see data/mods/anatomy/conditions/actor-has-two-free-grabbing-appendages.condition.json
  * @see tickets/GRAPREFORACT-001-clothing-mod-prerequisites.md

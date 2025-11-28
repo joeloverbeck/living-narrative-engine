@@ -1,6 +1,6 @@
 # OPEHANARCANA-004: PREPARE_ACTION_CONTEXT Unit Tests
 
-**Status:** Ready
+**Status:** Completed
 **Priority:** Critical (Phase 1)
 **Estimated Effort:** 0.5 days
 **Dependencies:** OPEHANARCANA-002 (handler implementation)
@@ -55,6 +55,7 @@ describe('PrepareActionContextHandler', () => {
 
   beforeEach(() => {
     mockEntityManager = {
+      getEntityInstance: jest.fn(), // Required for validation
       getEntityById: jest.fn(),
       getComponentData: jest.fn(),
     };
@@ -89,6 +90,81 @@ describe('PrepareActionContextHandler', () => {
     });
   });
 
+  describe('execute - validation and initialization', () => {
+    it('should log warning and return if event is missing', async () => {
+      const parameters = {};
+      const executionContext = {
+        evaluationContext: {
+          // event missing
+          context: {},
+        },
+      };
+
+      const result = await handler.execute(parameters, executionContext);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('No event payload found')
+      );
+      expect(result).toBe(executionContext);
+    });
+
+    it('should log warning and return if event payload is missing', async () => {
+      const parameters = {};
+      const executionContext = {
+        evaluationContext: {
+          event: {}, // payload missing
+          context: {},
+        },
+      };
+
+      const result = await handler.execute(parameters, executionContext);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('No event payload found')
+      );
+      expect(result).toBe(executionContext);
+    });
+
+    it('should initialize context if missing', async () => {
+      mockEntityManager.getComponentData.mockReturnValue({ name: 'Test' });
+
+      const parameters = {};
+      const executionContext = {
+        evaluationContext: {
+          event: {
+            payload: { actorId: 'a', targetId: 't' },
+          },
+          // context missing
+        },
+      };
+
+      const result = await handler.execute(parameters, executionContext);
+
+      expect(result.evaluationContext.context).toBeDefined();
+      expect(result.evaluationContext.context.actorName).toBe('Test');
+    });
+
+    it('should handle null parameters using defaults', async () => {
+      mockEntityManager.getComponentData.mockReturnValue({ name: 'Test' });
+
+      const executionContext = {
+        evaluationContext: {
+          event: {
+            payload: { actorId: 'a', targetId: 't' },
+          },
+          context: {},
+        },
+      };
+
+      // Pass null as parameters
+      const result = await handler.execute(null, executionContext);
+
+      expect(result.evaluationContext.context.perceptionType).toBe(
+        'action_target_general'
+      );
+    });
+  });
+
   describe('execute - happy path', () => {
     it('should set actorName from core:actor component', async () => {
       // Arrange
@@ -107,40 +183,49 @@ describe('PrepareActionContextHandler', () => {
         }
       );
 
-      const context = {
-        event: {
-          payload: {
-            actorId: 'actor-1',
-            targetId: 'target-1',
+      const parameters = {};
+      const executionContext = {
+        evaluationContext: {
+          event: {
+            payload: {
+              actorId: 'actor-1',
+              targetId: 'target-1',
+            },
           },
+          context: {},
         },
-        parameters: {},
       };
 
       // Act
-      const result = await handler.execute(context);
+      const result = await handler.execute(parameters, executionContext);
 
       // Assert
-      expect(result.actorName).toBe('Alice');
-      expect(result.targetName).toBe('Bob');
-      expect(result.locationId).toBe('location-1');
-      expect(result.targetId).toBe('target-1');
-      expect(result.perceptionType).toBe('action_target_general');
+      const context = result.evaluationContext.context;
+      expect(context.actorName).toBe('Alice');
+      expect(context.targetName).toBe('Bob');
+      expect(context.locationId).toBe('location-1');
+      expect(context.targetId).toBe('target-1');
+      expect(context.perceptionType).toBe('action_target_general');
     });
 
     it('should use custom perception_type when provided', async () => {
       mockEntityManager.getComponentData.mockReturnValue({ name: 'Test' });
 
-      const context = {
-        event: {
-          payload: { actorId: 'a', targetId: 't' },
+      const parameters = { perception_type: 'custom_type' };
+      const executionContext = {
+        evaluationContext: {
+          event: {
+            payload: { actorId: 'a', targetId: 't' },
+          },
+          context: {},
         },
-        parameters: { perception_type: 'custom_type' },
       };
 
-      const result = await handler.execute(context);
+      const result = await handler.execute(parameters, executionContext);
 
-      expect(result.perceptionType).toBe('custom_type');
+      expect(result.evaluationContext.context.perceptionType).toBe(
+        'custom_type'
+      );
     });
   });
 
@@ -156,47 +241,59 @@ describe('PrepareActionContextHandler', () => {
         }
       );
 
-      const context = {
-        event: {
-          payload: { actorId: 'item-1', targetId: 'item-2' },
+      const parameters = {};
+      const executionContext = {
+        evaluationContext: {
+          event: {
+            payload: { actorId: 'item-1', targetId: 'item-2' },
+          },
+          context: {},
         },
-        parameters: {},
       };
 
-      const result = await handler.execute(context);
+      const result = await handler.execute(parameters, executionContext);
 
-      expect(result.actorName).toBe('Sword');
-      expect(result.targetName).toBe('Sword');
+      const context = result.evaluationContext.context;
+      expect(context.actorName).toBe('Sword');
+      expect(context.targetName).toBe('Sword');
     });
 
     it('should fallback to entityId if no name components found', async () => {
       mockEntityManager.getComponentData.mockReturnValue(null);
 
-      const context = {
-        event: {
-          payload: { actorId: 'entity-123', targetId: 'entity-456' },
+      const parameters = {};
+      const executionContext = {
+        evaluationContext: {
+          event: {
+            payload: { actorId: 'entity-123', targetId: 'entity-456' },
+          },
+          context: {},
         },
-        parameters: {},
       };
 
-      const result = await handler.execute(context);
+      const result = await handler.execute(parameters, executionContext);
 
-      expect(result.actorName).toBe('entity-123');
-      expect(result.targetName).toBe('entity-456');
+      const context = result.evaluationContext.context;
+      expect(context.actorName).toBe('entity-123');
+      expect(context.targetName).toBe('entity-456');
     });
 
     it('should return "Unknown" for null entityId', async () => {
-      const context = {
-        event: {
-          payload: { actorId: null, targetId: null },
+      const parameters = {};
+      const executionContext = {
+        evaluationContext: {
+          event: {
+            payload: { actorId: null, targetId: null },
+          },
+          context: {},
         },
-        parameters: {},
       };
 
-      const result = await handler.execute(context);
+      const result = await handler.execute(parameters, executionContext);
 
-      expect(result.actorName).toBe('Unknown');
-      expect(result.targetName).toBe('Unknown');
+      const context = result.evaluationContext.context;
+      expect(context.actorName).toBe('Unknown');
+      expect(context.targetName).toBe('Unknown');
     });
   });
 
@@ -214,22 +311,27 @@ describe('PrepareActionContextHandler', () => {
         }
       );
 
-      const context = {
-        event: {
-          payload: {
-            actorId: 'actor-1',
-            targetId: 'target-1',
-            secondaryId: 'secondary-1',
+      const parameters = {
+        include_secondary: true,
+      };
+      const executionContext = {
+        evaluationContext: {
+          event: {
+            payload: {
+              actorId: 'actor-1',
+              targetId: 'target-1',
+              secondaryId: 'secondary-1',
+            },
           },
-        },
-        parameters: {
-          include_secondary: true,
+          context: {},
         },
       };
 
-      const result = await handler.execute(context);
+      const result = await handler.execute(parameters, executionContext);
 
-      expect(result.secondaryName).toBe('Name-secondary-1');
+      expect(result.evaluationContext.context.secondaryName).toBe(
+        'Name-secondary-1'
+      );
     });
 
     it('should use custom secondary_name_variable', async () => {
@@ -242,24 +344,28 @@ describe('PrepareActionContextHandler', () => {
         }
       );
 
-      const context = {
-        event: {
-          payload: {
-            actorId: 'a',
-            targetId: 't',
-            secondaryId: 's',
+      const parameters = {
+        include_secondary: true,
+        secondary_name_variable: 'weaponName',
+      };
+      const executionContext = {
+        evaluationContext: {
+          event: {
+            payload: {
+              actorId: 'a',
+              targetId: 't',
+              secondaryId: 's',
+            },
           },
-        },
-        parameters: {
-          include_secondary: true,
-          secondary_name_variable: 'weaponName',
+          context: {},
         },
       };
 
-      const result = await handler.execute(context);
+      const result = await handler.execute(parameters, executionContext);
 
-      expect(result.weaponName).toBe('Test');
-      expect(result.secondaryName).toBeUndefined();
+      const context = result.evaluationContext.context;
+      expect(context.weaponName).toBe('Test');
+      expect(context.secondaryName).toBeUndefined();
     });
 
     it('should not set secondary name when include_secondary is false', async () => {
@@ -272,22 +378,25 @@ describe('PrepareActionContextHandler', () => {
         }
       );
 
-      const context = {
-        event: {
-          payload: {
-            actorId: 'a',
-            targetId: 't',
-            secondaryId: 's',
+      const parameters = {
+        include_secondary: false,
+      };
+      const executionContext = {
+        evaluationContext: {
+          event: {
+            payload: {
+              actorId: 'a',
+              targetId: 't',
+              secondaryId: 's',
+            },
           },
-        },
-        parameters: {
-          include_secondary: false,
+          context: {},
         },
       };
 
-      const result = await handler.execute(context);
+      const result = await handler.execute(parameters, executionContext);
 
-      expect(result.secondaryName).toBeUndefined();
+      expect(result.evaluationContext.context.secondaryName).toBeUndefined();
     });
 
     it('should not set secondary name when secondaryId is missing', async () => {
@@ -300,22 +409,25 @@ describe('PrepareActionContextHandler', () => {
         }
       );
 
-      const context = {
-        event: {
-          payload: {
-            actorId: 'a',
-            targetId: 't',
-            // no secondaryId
+      const parameters = {
+        include_secondary: true,
+      };
+      const executionContext = {
+        evaluationContext: {
+          event: {
+            payload: {
+              actorId: 'a',
+              targetId: 't',
+              // no secondaryId
+            },
           },
-        },
-        parameters: {
-          include_secondary: true,
+          context: {},
         },
       };
 
-      const result = await handler.execute(context);
+      const result = await handler.execute(parameters, executionContext);
 
-      expect(result.secondaryName).toBeUndefined();
+      expect(result.evaluationContext.context.secondaryName).toBeUndefined();
     });
   });
 
@@ -329,16 +441,19 @@ describe('PrepareActionContextHandler', () => {
         }
       );
 
-      const context = {
-        event: {
-          payload: { actorId: 'a', targetId: 't' },
+      const parameters = {};
+      const executionContext = {
+        evaluationContext: {
+          event: {
+            payload: { actorId: 'a', targetId: 't' },
+          },
+          context: {},
         },
-        parameters: {},
       };
 
-      const result = await handler.execute(context);
+      const result = await handler.execute(parameters, executionContext);
 
-      expect(result.locationId).toBeNull();
+      expect(result.evaluationContext.context.locationId).toBeNull();
     });
 
     it('should handle position without locationId', async () => {
@@ -350,16 +465,19 @@ describe('PrepareActionContextHandler', () => {
         }
       );
 
-      const context = {
-        event: {
-          payload: { actorId: 'a', targetId: 't' },
+      const parameters = {};
+      const executionContext = {
+        evaluationContext: {
+          event: {
+            payload: { actorId: 'a', targetId: 't' },
+          },
+          context: {},
         },
-        parameters: {},
       };
 
-      const result = await handler.execute(context);
+      const result = await handler.execute(parameters, executionContext);
 
-      expect(result.locationId).toBeNull();
+      expect(result.evaluationContext.context.locationId).toBeNull();
     });
   });
 
@@ -367,14 +485,17 @@ describe('PrepareActionContextHandler', () => {
     it('should log debug message on successful execution', async () => {
       mockEntityManager.getComponentData.mockReturnValue({ name: 'Test' });
 
-      const context = {
-        event: {
-          payload: { actorId: 'a', targetId: 't' },
+      const parameters = {};
+      const executionContext = {
+        evaluationContext: {
+          event: {
+            payload: { actorId: 'a', targetId: 't' },
+          },
+          context: {},
         },
-        parameters: {},
       };
 
-      await handler.execute(context);
+      await handler.execute(parameters, executionContext);
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Prepared context'),
@@ -390,19 +511,24 @@ describe('PrepareActionContextHandler', () => {
     it('should preserve existing context properties', async () => {
       mockEntityManager.getComponentData.mockReturnValue({ name: 'Test' });
 
-      const context = {
-        event: {
-          payload: { actorId: 'a', targetId: 't' },
+      const parameters = {};
+      const executionContext = {
+        evaluationContext: {
+          event: {
+            payload: { actorId: 'a', targetId: 't' },
+          },
+          context: {
+            existingProperty: 'should-be-preserved',
+            anotherProperty: 42,
+          },
         },
-        parameters: {},
-        existingProperty: 'should-be-preserved',
-        anotherProperty: 42,
       };
 
-      const result = await handler.execute(context);
+      const result = await handler.execute(parameters, executionContext);
 
-      expect(result.existingProperty).toBe('should-be-preserved');
-      expect(result.anotherProperty).toBe(42);
+      const context = result.evaluationContext.context;
+      expect(context.existingProperty).toBe('should-be-preserved');
+      expect(context.anotherProperty).toBe(42);
     });
   });
 });
@@ -472,3 +598,9 @@ npx eslint tests/unit/logic/operationHandlers/prepareActionContextHandler.test.j
 - Test pattern: `tests/unit/logic/operationHandlers/getNameHandler.test.js`
 - Test pattern: `tests/unit/logic/operationHandlers/setVariableHandler.test.js`
 - Mock utilities: `tests/common/testBed.js`
+
+## Outcome
+- **Code Changes:** Created `tests/unit/logic/operationHandlers/prepareActionContextHandler.test.js`.
+- **Ticket Updates:** Updated ticket to match implementation signature and added error/edge case tests.
+- **Coverage:** Achieved 100% coverage for all metrics.
+- **Verification:** All tests pass, linting passes.

@@ -1,9 +1,7 @@
 /**
  * @jest-environment node
- *
  * @file Integration tests for drink_from action prerequisites
  * @description Tests that the action correctly requires one free grabbing appendage
- *
  * @see data/mods/items/actions/drink_from.action.json
  * @see data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json
  * @see tickets/GRAPREFORACT-008-items-mod-tests.md

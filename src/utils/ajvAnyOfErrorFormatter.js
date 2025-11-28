@@ -568,7 +568,7 @@ function formatOperationTypeSummary(groupedErrors, data, errors) {
  *
  * @param {import('ajv').ErrorObject[]} errors - AJV validation errors
  * @param {any} [data] - The data being validated (optional)
- * @param {Object} [context] - Optional context for enhanced error formatting
+ * @param {object} [context] - Optional context for enhanced error formatting
  * @param {string} [context.filePath] - Path to the file being validated
  * @param {string} [context.fileContent] - Content of the file being validated
  * @param {string} [context.ruleId] - Rule or action ID being validated
@@ -638,7 +638,7 @@ export function formatAjvErrorsEnhanced(errors, data, context = null) {
  *
  * @param {string} message - The formatted error message
  * @param {import('ajv').ErrorObject[]} errors - AJV validation errors (for extracting instancePath)
- * @param {Object|null} context - Optional context for enhanced formatting
+ * @param {object | null} context - Optional context for enhanced formatting
  * @returns {string} Error message, optionally wrapped with rich context
  */
 function wrapWithContext(message, errors, context) {

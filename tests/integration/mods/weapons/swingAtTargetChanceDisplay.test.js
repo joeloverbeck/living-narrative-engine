@@ -71,6 +71,8 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
 
   /**
    * Creates a stage instance with optional chanceCalculationService
+   *
+   * @param options
    */
   function createStage(options = {}) {
     return new ActionFormattingStage({
@@ -86,6 +88,9 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
 
   /**
    * Creates a basic context with an action
+   *
+   * @param actionDef
+   * @param targetContexts
    */
   function createContext(actionDef, targetContexts = []) {
     return {
@@ -838,6 +843,8 @@ describe('DIAGNOSTIC: generateCombinations with REAL ChanceCalculationService', 
 
   /**
    * Creates a mock entity manager with configurable skill components
+   *
+   * @param entitySkills
    */
   function createEntityManagerWithSkills(entitySkills) {
     return {

@@ -1,11 +1,9 @@
 /**
  * @jest-environment node
- *
  * @file Supplementary performance tests for numeric constraint planning
  * @description Tests missing coverage areas not covered by existing GOAP performance tests.
  * Focuses on: memory leak detection, statistical analysis (percentiles), health restoration,
  * batch testing of diverse goal types, and complex multi-constraint goals.
- *
  * @see tests/performance/goap/multiActionPlanning.performance.test.js - Existing hunger/gold tests
  * @see tests/performance/goap/heuristicCalculation.performance.test.js - Existing heuristic tests
  * @see tickets/MODCOMPLASUP-010-performance-benchmarking.md - Requirements
@@ -20,6 +18,7 @@ import { GOAP_EVENTS } from '../../../src/goap/events/goapEvents.js';
 
 /**
  * Helper to add flattened component aliases to an actor entity
+ *
  * @param {object} actor - Actor entity with components
  * @returns {object} Actor with flattened component aliases
  */
@@ -41,6 +40,7 @@ function addFlattenedAliases(actor) {
 
 /**
  * Builds dual-format state object for GOAP planning
+ *
  * @param {object} actor - Actor entity
  * @returns {object} State object with flat and nested component formats
  */
@@ -72,6 +72,7 @@ function buildDualFormatState(actor) {
 
 /**
  * Calculate percentile from array of values
+ *
  * @param {number[]} values - Array of numeric values
  * @param {number} percentile - Percentile to calculate (0-100)
  * @returns {number} Percentile value
@@ -84,6 +85,7 @@ function calculatePercentile(values, percentile) {
 
 /**
  * Calculate median from array of values
+ *
  * @param {number[]} values - Array of numeric values
  * @returns {number} Median value
  */
@@ -93,6 +95,7 @@ function calculateMedian(values) {
 
 /**
  * Calculate mean from array of values
+ *
  * @param {number[]} values - Array of numeric values
  * @returns {number} Mean value
  */

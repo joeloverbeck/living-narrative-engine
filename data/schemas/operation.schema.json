@@ -232,6 +232,9 @@
         },
         {
           "$ref": "./operations/validateContainerCapacity.schema.json"
+        },
+        {
+          "$ref": "./operations/prepareActionContext.schema.json"
         }
       ]
     }

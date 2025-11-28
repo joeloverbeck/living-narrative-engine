@@ -55,8 +55,8 @@ import ScopeEngine from '../../../src/scopeDsl/engine.js';
  * @param {object} [options.lookups] - Lookup definitions for QUERY_LOOKUP operations
  * @param {boolean} [options.debugPrerequisites] - Enable debug mode for enhanced prerequisite error messages
  * @param {boolean} [options.useAdapterEntityManager] - Use TestEntityManagerAdapter for production API compatibility
- * @param {import('ajv').default|null} [options.schemaValidator=null] - Optional AJV instance for rule validation (SCHVALTESINT-003)
- * @param {boolean} [options.validateOnSetup=true] - Validate rules on setup when schemaValidator is provided
+ * @param {import('ajv').default|null} [options.schemaValidator] - Optional AJV instance for rule validation (SCHVALTESINT-003)
+ * @param {boolean} [options.validateOnSetup] - Validate rules on setup when schemaValidator is provided
  * @returns {{
  *   eventBus: import('../../../src/events/eventBus.js').default,
  *   events: any[],
@@ -1132,7 +1132,7 @@ export function createBaseRuleEnvironment({
      * Validates a single rule against the rule schema.
      * Requires schemaValidator to be provided during environment creation.
      *
-     * @param {Object} ruleData - Rule to validate
+     * @param {object} ruleData - Rule to validate
      * @throws {Error} If validator not provided or validation fails
      */
     validateRule(ruleData) {
@@ -1161,6 +1161,7 @@ export function createBaseRuleEnvironment({
 
     /**
      * Checks if schema validation is available.
+     *
      * @returns {boolean} True if schemaValidator was provided
      */
     hasValidation() {

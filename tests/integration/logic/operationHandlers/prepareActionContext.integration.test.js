@@ -1,46 +1,3 @@
-# OPEHANARCANA-005: PREPARE_ACTION_CONTEXT Integration Tests
-
-**Status:** Ready
-**Priority:** Critical (Phase 1)
-**Estimated Effort:** 0.5 days
-**Dependencies:** OPEHANARCANA-003 (DI registration), OPEHANARCANA-004 (unit tests)
-
----
-
-## Objective
-
-Create integration tests that verify `PREPARE_ACTION_CONTEXT` works correctly:
-1. With the full DI container
-2. Within rule execution context
-3. Before the `core:logSuccessAndEndTurn` macro
-4. Produces identical behavior to the expanded pattern
-
----
-
-## Files to Touch
-
-### New Files
-- `tests/integration/logic/operationHandlers/prepareActionContext.integration.test.js`
-
----
-
-## Out of Scope
-
-**DO NOT modify:**
-- The handler implementation file
-- Any schema files
-- Any DI registration files
-- Any unit test files
-- Any rule files (migrations are separate tickets)
-- Any existing integration test files
-
----
-
-## Implementation Details
-
-### Test Scenarios
-
-```javascript
 /**
  * @file Integration tests for PREPARE_ACTION_CONTEXT operation
  */
@@ -59,8 +16,29 @@ describe('PREPARE_ACTION_CONTEXT Integration', () => {
 
   describe('context preparation', () => {
     it('should set all required context variables', async () => {
-      // Create test fixture with minimal setup
-      fixture = await ModTestFixture.forRule('core', 'core:test_prepare_context');
+      const dummyRule = {
+        rule_id: 'core:test_prepare_context',
+        event_type: 'core:test_event',
+        actions: [{ type: 'LOG', parameters: { message: 'test' } }],
+      };
+      const dummyCondition = {
+        id: 'core:event-is-action-test-prepare-context',
+        description: 'Test condition',
+        logic: {
+          if: [
+            { '==': [{ var: 'event.eventName' }, 'core:test_event'] },
+            true,
+            false,
+          ],
+        },
+      };
+
+      fixture = await ModTestFixture.forRule(
+        'core',
+        'core:test_prepare_context',
+        dummyRule,
+        dummyCondition
+      );
 
       // Create test entities
       const actor = fixture.createEntity({
@@ -82,8 +60,8 @@ describe('PREPARE_ACTION_CONTEXT Integration', () => {
       const context = await fixture.executeOperation('PREPARE_ACTION_CONTEXT', {
         event: {
           payload: {
-            actorId: actor.id,
-            targetId: target.id,
+            actorId: actor,
+            targetId: target,
           },
         },
         parameters: {},
@@ -93,14 +71,36 @@ describe('PREPARE_ACTION_CONTEXT Integration', () => {
       expect(context.actorName).toBe('Alice');
       expect(context.targetName).toBe('Bob');
       expect(context.locationId).toBe('test-location');
-      expect(context.targetId).toBe(target.id);
+      expect(context.targetId).toBe(target);
       expect(context.perceptionType).toBe('action_target_general');
     });
   });
 
   describe('equivalence to expanded pattern', () => {
     it('should produce same result as manual context setup', async () => {
-      fixture = await ModTestFixture.forRule('affection', 'affection:handle_brush_hand');
+      const dummyRule = {
+        rule_id: 'affection:handle_brush_hand',
+        event_type: 'affection:test_event',
+        actions: [{ type: 'LOG', parameters: { message: 'test' } }],
+      };
+      const dummyCondition = {
+        id: 'affection:event-is-action-brush-hand',
+        description: 'Test condition',
+        logic: {
+          if: [
+            { '==': [{ var: 'event.eventName' }, 'affection:test_event'] },
+            true,
+            false,
+          ],
+        },
+      };
+
+      fixture = await ModTestFixture.forRule(
+        'affection',
+        'affection:handle_brush_hand',
+        dummyRule,
+        dummyCondition
+      );
 
       // Create entities
       const actor = fixture.createEntity({
@@ -119,19 +119,22 @@ describe('PREPARE_ACTION_CONTEXT Integration', () => {
       });
 
       // Execute with PREPARE_ACTION_CONTEXT
-      const newContext = await fixture.executeOperation('PREPARE_ACTION_CONTEXT', {
-        event: {
-          payload: { actorId: actor.id, targetId: target.id },
-        },
-        parameters: {},
-      });
+      const newContext = await fixture.executeOperation(
+        'PREPARE_ACTION_CONTEXT',
+        {
+          event: {
+            payload: { actorId: actor, targetId: target },
+          },
+          parameters: {},
+        }
+      );
 
       // Execute manual pattern (simulating old approach)
       const manualContext = {};
       manualContext.actorName = 'Charlie'; // Would come from GET_NAME
-      manualContext.targetName = 'Dana';   // Would come from GET_NAME
+      manualContext.targetName = 'Dana'; // Would come from GET_NAME
       manualContext.locationId = 'room-1'; // Would come from QUERY_COMPONENT + SET_VARIABLE
-      manualContext.targetId = target.id;  // Would come from SET_VARIABLE
+      manualContext.targetId = target; // Would come from SET_VARIABLE
       manualContext.perceptionType = 'action_target_general'; // Would come from SET_VARIABLE
 
       // Verify equivalence
@@ -145,7 +148,29 @@ describe('PREPARE_ACTION_CONTEXT Integration', () => {
 
   describe('item name resolution', () => {
     it('should resolve item names for item entities', async () => {
-      fixture = await ModTestFixture.forRule('items', 'items:handle_give_item');
+      const dummyRule = {
+        rule_id: 'items:handle_give_item',
+        event_type: 'items:test_event',
+        actions: [{ type: 'LOG', parameters: { message: 'test' } }],
+      };
+      const dummyCondition = {
+        id: 'items:event-is-action-give-item',
+        description: 'Test condition',
+        logic: {
+          if: [
+            { '==': [{ var: 'event.eventName' }, 'items:test_event'] },
+            true,
+            false,
+          ],
+        },
+      };
+
+      fixture = await ModTestFixture.forRule(
+        'items',
+        'items:handle_give_item',
+        dummyRule,
+        dummyCondition
+      );
 
       // Create actor and item target
       const actor = fixture.createEntity({
@@ -165,7 +190,7 @@ describe('PREPARE_ACTION_CONTEXT Integration', () => {
 
       const context = await fixture.executeOperation('PREPARE_ACTION_CONTEXT', {
         event: {
-          payload: { actorId: actor.id, targetId: item.id },
+          payload: { actorId: actor, targetId: item },
         },
         parameters: {},
       });
@@ -177,7 +202,29 @@ describe('PREPARE_ACTION_CONTEXT Integration', () => {
 
   describe('secondary entity support', () => {
     it('should resolve secondary entity when include_secondary is true', async () => {
-      fixture = await ModTestFixture.forRule('items', 'items:handle_give_item');
+      const dummyRule = {
+        rule_id: 'items:handle_give_item',
+        event_type: 'items:test_event',
+        actions: [{ type: 'LOG', parameters: { message: 'test' } }],
+      };
+      const dummyCondition = {
+        id: 'items:event-is-action-give-item',
+        description: 'Test condition',
+        logic: {
+          if: [
+            { '==': [{ var: 'event.eventName' }, 'items:test_event'] },
+            true,
+            false,
+          ],
+        },
+      };
+
+      fixture = await ModTestFixture.forRule(
+        'items',
+        'items:handle_give_item',
+        dummyRule,
+        dummyCondition
+      );
 
       const actor = fixture.createEntity({
         id: 'giver',
@@ -204,9 +251,9 @@ describe('PREPARE_ACTION_CONTEXT Integration', () => {
       const context = await fixture.executeOperation('PREPARE_ACTION_CONTEXT', {
         event: {
           payload: {
-            actorId: actor.id,
-            targetId: target.id,
-            secondaryId: item.id,
+            actorId: actor,
+            targetId: target,
+            secondaryId: item,
           },
         },
         parameters: {
@@ -223,7 +270,29 @@ describe('PREPARE_ACTION_CONTEXT Integration', () => {
 
   describe('edge cases', () => {
     it('should handle missing position component gracefully', async () => {
-      fixture = await ModTestFixture.forRule('core', 'core:test_prepare_context');
+      const dummyRule = {
+        rule_id: 'core:test_prepare_context',
+        event_type: 'core:test_event',
+        actions: [{ type: 'LOG', parameters: { message: 'test' } }],
+      };
+      const dummyCondition = {
+        id: 'core:event-is-action-test-prepare-context',
+        description: 'Test condition',
+        logic: {
+          if: [
+            { '==': [{ var: 'event.eventName' }, 'core:test_event'] },
+            true,
+            false,
+          ],
+        },
+      };
+
+      fixture = await ModTestFixture.forRule(
+        'core',
+        'core:test_prepare_context',
+        dummyRule,
+        dummyCondition
+      );
 
       const actor = fixture.createEntity({
         id: 'actor-no-position',
@@ -242,7 +311,7 @@ describe('PREPARE_ACTION_CONTEXT Integration', () => {
 
       const context = await fixture.executeOperation('PREPARE_ACTION_CONTEXT', {
         event: {
-          payload: { actorId: actor.id, targetId: target.id },
+          payload: { actorId: actor, targetId: target },
         },
         parameters: {},
       });
@@ -252,7 +321,28 @@ describe('PREPARE_ACTION_CONTEXT Integration', () => {
     });
 
     it('should fallback to entity ID for unnamed entities', async () => {
-      fixture = await ModTestFixture.forRule('core', 'core:test_prepare_context');
+      const dummyRule = {
+        rule_id: 'core:test_prepare_context',
+        event_type: 'core:test_event',
+        actions: [{ type: 'LOG', parameters: { message: 'test' } }],
+      };
+      const dummyCondition = {
+        id: 'core:event-is-action-test-prepare-context',
+        description: 'Test condition',
+        logic: {
+          if: [
+            { '==': [{ var: 'event.eventName' }, 'core:test_event'] },
+            true,
+            false,
+          ],
+        },
+      };
+      fixture = await ModTestFixture.forRule(
+        'core',
+        'core:test_prepare_context',
+        dummyRule,
+        dummyCondition
+      );
 
       const actor = fixture.createEntity({
         id: 'unnamed-entity-123',
@@ -269,7 +359,7 @@ describe('PREPARE_ACTION_CONTEXT Integration', () => {
 
       const context = await fixture.executeOperation('PREPARE_ACTION_CONTEXT', {
         event: {
-          payload: { actorId: actor.id, targetId: target.id },
+          payload: { actorId: actor, targetId: target },
         },
         parameters: {},
       });
@@ -279,58 +369,3 @@ describe('PREPARE_ACTION_CONTEXT Integration', () => {
     });
   });
 });
-```
-
----
-
-## Acceptance Criteria
-
-### Tests That Must Pass
-
-1. **All integration tests pass:**
-   ```bash
-   npm run test:integration -- tests/integration/logic/operationHandlers/prepareActionContext.integration.test.js
-   ```
-
-2. **Full integration suite passes:**
-   ```bash
-   npm run test:integration
-   ```
-
-3. **Full CI passes:**
-   ```bash
-   npm run test:ci
-   ```
-
-### Invariants That Must Remain True
-
-1. No modifications to handler or DI files
-2. No modifications to existing integration tests
-3. Tests use project's standard ModTestFixture pattern
-4. All tests are isolated and clean up properly
-
----
-
-## Verification Steps
-
-```bash
-# 1. Run the specific integration test file
-npm run test:integration -- tests/integration/logic/operationHandlers/prepareActionContext.integration.test.js --verbose
-
-# 2. Verify no other integration tests are broken
-npm run test:integration
-
-# 3. Run full CI suite
-npm run test:ci
-
-# 4. Lint the test file
-npx eslint tests/integration/logic/operationHandlers/prepareActionContext.integration.test.js
-```
-
----
-
-## Reference Files
-
-- Test fixture: `tests/common/mods/ModTestFixture.js`
-- Integration pattern: `tests/integration/mods/affection/brush_hand_action.test.js`
-- Rule execution: `tests/integration/logic/ruleExecutionFlow.test.js`

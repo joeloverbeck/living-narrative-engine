@@ -10,10 +10,10 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 
 /**
- * @typedef {Object} DisplayResult
+ * @typedef {object} DisplayResult
  * @property {number} chance - Calculated probability (0-100)
  * @property {string} displayText - Formatted for template (e.g., "55%")
- * @property {Object} breakdown - Detailed calculation breakdown
+ * @property {object} breakdown - Detailed calculation breakdown
  * @property {number} breakdown.actorSkill - Actor's skill value used
  * @property {number} breakdown.targetSkill - Target's skill value used
  * @property {number} breakdown.baseChance - Base chance before modifiers
@@ -23,7 +23,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  */
 
 /**
- * @typedef {Object} OutcomeResult
+ * @typedef {object} OutcomeResult
  * @property {'CRITICAL_SUCCESS' | 'SUCCESS' | 'FAILURE' | 'FUMBLE'} outcome
  * @property {number} roll - The d100 roll
  * @property {number} threshold - Success threshold (finalChance)
@@ -41,7 +41,6 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  * // For action discovery UI
  * const result = service.calculateForDisplay({ actorId, targetId, actionDef });
  * // Returns { chance: 55, displayText: '55%', breakdown: {...} }
- *
  * @example
  * // For rule execution
  * const outcome = service.resolveOutcome({ actorId, targetId, actionDef });
@@ -55,11 +54,11 @@ class ChanceCalculationService {
   #logger;
 
   /**
-   * @param {Object} deps
-   * @param {Object} deps.skillResolverService - Service for resolving skill values
-   * @param {Object} deps.modifierCollectorService - Service for collecting modifiers
-   * @param {Object} deps.probabilityCalculatorService - Service for calculating probability
-   * @param {Object} deps.outcomeDeterminerService - Service for determining outcomes
+   * @param {object} deps
+   * @param {object} deps.skillResolverService - Service for resolving skill values
+   * @param {object} deps.modifierCollectorService - Service for collecting modifiers
+   * @param {object} deps.probabilityCalculatorService - Service for calculating probability
+   * @param {object} deps.outcomeDeterminerService - Service for determining outcomes
    * @param {ILogger} deps.logger
    */
   constructor({
@@ -112,10 +111,10 @@ class ChanceCalculationService {
   /**
    * Calculate chance for action discovery display
    *
-   * @param {Object} params
+   * @param {object} params
    * @param {string} params.actorId - Actor entity ID
    * @param {string} [params.targetId] - Target entity ID (for opposed checks)
-   * @param {Object} params.actionDef - Action definition with chanceBased config
+   * @param {object} params.actionDef - Action definition with chanceBased config
    * @returns {DisplayResult}
    */
   calculateForDisplay({ actorId, targetId, actionDef }) {
@@ -189,10 +188,10 @@ class ChanceCalculationService {
   /**
    * Resolve outcome for rule execution
    *
-   * @param {Object} params
+   * @param {object} params
    * @param {string} params.actorId - Actor entity ID
    * @param {string} [params.targetId] - Target entity ID (for opposed checks)
-   * @param {Object} params.actionDef - Action definition with chanceBased config
+   * @param {object} params.actionDef - Action definition with chanceBased config
    * @param {number} [params.forcedRoll] - For testing determinism (1-100)
    * @returns {OutcomeResult}
    */

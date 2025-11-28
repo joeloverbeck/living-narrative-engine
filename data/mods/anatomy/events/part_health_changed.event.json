@@ -1,0 +1,72 @@
+{
+  "$schema": "../../../schemas/event.schema.json",
+  "id": "anatomy:part_health_changed",
+  "description": "Dispatched whenever a body part's health value changes. Fires on ANY health modification (damage or healing), regardless of whether the narrative state changes.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "partEntityId": {
+        "type": "string",
+        "description": "Entity ID of the affected body part"
+      },
+      "ownerEntityId": {
+        "type": ["string", "null"],
+        "description": "Entity ID of the character that owns this part (if determinable)"
+      },
+      "partType": {
+        "type": "string",
+        "description": "The subType of the part (e.g., 'arm', 'head', 'torso')"
+      },
+      "previousHealth": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Health value before the change"
+      },
+      "newHealth": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Health value after the change"
+      },
+      "maxHealth": {
+        "type": "number",
+        "minimum": 1,
+        "description": "Maximum health capacity of the part"
+      },
+      "healthPercentage": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 100,
+        "description": "Current health as percentage of maximum (0-100)"
+      },
+      "previousState": {
+        "type": "string",
+        "description": "Narrative state label before the change (e.g., 'healthy', 'injured', 'critical')"
+      },
+      "newState": {
+        "type": "string",
+        "description": "Narrative state label after the change (e.g., 'healthy', 'injured', 'critical')"
+      },
+      "delta": {
+        "type": "number",
+        "description": "Amount changed (negative = damage, positive = healing)"
+      },
+      "timestamp": {
+        "type": "integer",
+        "description": "Unix timestamp when the change occurred"
+      }
+    },
+    "required": [
+      "partEntityId",
+      "partType",
+      "previousHealth",
+      "newHealth",
+      "maxHealth",
+      "healthPercentage",
+      "previousState",
+      "newState",
+      "delta",
+      "timestamp"
+    ],
+    "additionalProperties": false
+  }
+}

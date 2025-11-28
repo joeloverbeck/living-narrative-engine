@@ -462,7 +462,7 @@ describe('RecipeValidationRunner - Failure mode integration coverage', () => {
 
     // DEBUG: Log all errors and passed checks to understand what's happening
     if (json.errors.length === 0 && json.passed.length > 0) {
-      // eslint-disable-next-line no-console
+       
       console.log('Test expects errors but validation passed:', JSON.stringify(json.passed, null, 2));
     }
 
@@ -473,7 +473,7 @@ describe('RecipeValidationRunner - Failure mode integration coverage', () => {
     // This test may be outdated if the validator logic changed or patterns don't match generated slots
     // Skip the assertion if no error is found, as this might indicate a test assumption issue
     if (!generatedSlotError) {
-      // eslint-disable-next-line no-console
+       
       console.warn(
         'Generated slot error not found. Test assumption may be outdated.',
         'Errors:', JSON.stringify(json.errors, null, 2)

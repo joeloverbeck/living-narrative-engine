@@ -355,7 +355,7 @@ export class ModEntityBuilder {
    * This is useful for tests that require action prerequisites involving grabbing appendages,
    * such as pick_up_item (1 hand) or remove_clothing (2 hands).
    *
-   * @param {number} [numHands=2] - Number of hands to create (default 2)
+   * @param {number} [numHands] - Number of hands to create (default 2)
    * @returns {ModEntityBuilder} This builder for chaining
    * @example
    * const actorBuilder = new ModEntityBuilder('actor1')
@@ -1854,7 +1854,7 @@ export class ModEntityScenarios {
    * @param {object} [options.item] - Item definition for the droppable entity
    * @param {Array<object>} [options.additionalInventoryItems] - Extra inventory items carried by the actor
    * @param {object} [options.capacity] - Inventory capacity overrides
-   * @param {number} [options.withGrabbingHands=2] - Number of grabbing hands for drop_item prerequisite
+   * @param {number} [options.withGrabbingHands] - Number of grabbing hands for drop_item prerequisite
    * @returns {object} Scenario details including room, actor, drop item, handEntities, and supplemental entities
    */
   static createDropItemScenario(options = {}) {

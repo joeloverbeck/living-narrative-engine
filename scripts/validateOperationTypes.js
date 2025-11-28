@@ -101,6 +101,7 @@ if (errors.length > 0) {
 
 /**
  * Extract KNOWN_OPERATION_TYPES from preValidationUtils.js
+ *
  * @returns {string[]} Array of operation type strings
  */
 function extractWhitelistTypes() {
@@ -128,6 +129,7 @@ function extractWhitelistTypes() {
 
 /**
  * Extract registered operation types from interpreterRegistrations.js
+ *
  * @returns {string[]} Array of registered operation type strings (sorted)
  */
 function extractRegisteredTypes() {
@@ -164,6 +166,7 @@ function extractRegisteredTypes() {
 
 /**
  * Check for registered handlers missing from whitelist
+ *
  * @param {string[]} registered - Registered operation types
  * @param {string[]} whitelist - Whitelisted operation types
  * @returns {string[]} Types registered but not whitelisted
@@ -175,6 +178,7 @@ function checkMissingFromWhitelist(registered, whitelist) {
 
 /**
  * Check for whitelisted types without registered handlers
+ *
  * @param {string[]} whitelist - Whitelisted operation types
  * @param {string[]} registered - Registered operation types
  * @returns {string[]} Types whitelisted but not registered
@@ -186,6 +190,7 @@ function checkOrphanedInWhitelist(whitelist, registered) {
 
 /**
  * Check if whitelist is alphabetically sorted
+ *
  * @param {string[]} whitelist - Whitelisted operation types
  * @returns {null|{current: string[], expected: string[]}} Null if sorted, object with ordering info if not
  */

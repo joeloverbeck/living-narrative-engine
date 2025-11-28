@@ -228,6 +228,10 @@ export function registerInterpreters(container) {
       'PICK_UP_ITEM_FROM_LOCATION',
       bind(tokens.PickUpItemFromLocationHandler)
     );
+    registry.register(
+      'PREPARE_ACTION_CONTEXT',
+      bind(tokens.PrepareActionContextHandler)
+    );
     registry.register('OPEN_CONTAINER', bind(tokens.OpenContainerHandler));
     registry.register(
       'TAKE_FROM_CONTAINER',

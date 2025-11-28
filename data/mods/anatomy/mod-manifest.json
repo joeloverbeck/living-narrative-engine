@@ -246,6 +246,8 @@
       "interaction_panstart.event.json",
       "interaction_zoom.event.json",
       "limb_detached.event.json",
+      "part_health_changed.event.json",
+      "part_state_changed.event.json",
       "visualizer_state_changed.event.json"
     ],
     "structure-templates": [
@@ -260,6 +262,8 @@
       "actor-has-free-grabbing-appendage.condition.json",
       "actor-has-two-free-grabbing-appendages.condition.json"
     ],
-    "lookups": []
+    "lookups": [
+      "part_health_thresholds.json"
+    ]
   }
 }

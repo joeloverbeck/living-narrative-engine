@@ -2,7 +2,6 @@
  * @file Memory tests for anyOf validation
  * @description Tests memory stability of anyOf-based operation validation
  * to ensure no memory leaks during repeated validations.
- *
  * @see src/validation/ajvSchemaValidator.js
  * @see tests/performance/validation/anyOfPerformance.test.js
  */
@@ -12,6 +11,8 @@ import Ajv from 'ajv';
 
 /**
  * Creates a simplified operation schema for memory testing
+ *
+ * @param operationCount
  */
 function createSimplifiedOperationSchema(operationCount = 59) {
   const operations = [];

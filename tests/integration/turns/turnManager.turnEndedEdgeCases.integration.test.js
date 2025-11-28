@@ -90,6 +90,13 @@ class ImmediateScheduler {
   }
 }
 
+/**
+ *
+ * @param id
+ * @param root0
+ * @param root0.playerType
+ * @param root0.includeLegacy
+ */
 function createActor(id, { playerType = null, includeLegacy = true } = {}) {
   const components = { [ACTOR_COMPONENT_ID]: {} };
   if (playerType !== null) {
@@ -101,6 +108,15 @@ function createActor(id, { playerType = null, includeLegacy = true } = {}) {
   return { id, components };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.entities
+ * @param root0.dispatchOverrides
+ * @param root0.handlerFactory
+ * @param root0.scheduler
+ * @param root0.resolverOverrides
+ */
 function createEnvironment({
   entities,
   dispatchOverrides = new Map(),
@@ -141,6 +157,10 @@ function createEnvironment({
   };
 }
 
+/**
+ *
+ * @param manager
+ */
 async function startManager(manager) {
   await manager.start();
   await new Promise((resolve) => setImmediate(resolve));

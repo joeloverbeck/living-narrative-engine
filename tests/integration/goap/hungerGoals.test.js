@@ -85,6 +85,9 @@ describe('GOAP hunger goals integration', () => {
 
   /**
    * Helper: Create actor with metabolism components
+   *
+   * @param instanceId
+   * @param config
    */
   const createMetabolismActor = async (instanceId, config = {}) => {
     const {
@@ -126,6 +129,9 @@ describe('GOAP hunger goals integration', () => {
 
   /**
    * Evaluate goal condition with proper context
+   *
+   * @param logic
+   * @param actor
    */
   const evaluateGoalCondition = (logic, actor) => {
     // Build context that operators can resolve 'self' from

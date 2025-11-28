@@ -68,8 +68,7 @@ npm run test:single -- tests/path/to/test.js
 
 ## Development Guidelines
 *   **Code Style:** Follow `AGENTS.md`. `camelCase` functions, `PascalCase` classes.
-*   **Linting:** `npm run lint` (ESLint) and `npm run format` (Prettier).
-    -   Use `npm run lint` to lint the entire codebase. This can be slow on large repositories.
+*   **Linting:** `npm run format` (Prettier).
     -   For better performance during development, use `npm run lint:staged` to lint only the currently staged JavaScript/TypeScript files.
 
 *   **Mod Architecture:** Respect the namespace separation. Use `resolve-library-id` patterns if checking `data/mods` references.

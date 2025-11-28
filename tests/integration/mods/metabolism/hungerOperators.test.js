@@ -60,6 +60,9 @@ describe('metabolism hunger operators integration', () => {
 
   /**
    * Helper: Create actor with metabolism components
+   *
+   * @param instanceId
+   * @param config
    */
   const createMetabolismActor = async (instanceId, config = {}) => {
     const {
@@ -104,6 +107,9 @@ describe('metabolism hunger operators integration', () => {
 
   /**
    * Helper: Create food item with fuel_source component
+   *
+   * @param instanceId
+   * @param config
    */
   const createFoodItem = async (instanceId, config = {}) => {
     const {

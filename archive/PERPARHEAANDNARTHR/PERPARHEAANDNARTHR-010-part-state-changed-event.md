@@ -1,6 +1,6 @@
 # PERPARHEAANDNARTHR-010: Part State Changed Event Schema
 
-**Status:** Ready
+**Status:** Completed
 **Priority:** Critical (Phase 1)
 **Estimated Effort:** 0.25 days
 **Dependencies:** None
@@ -101,7 +101,7 @@ Create `data/mods/anatomy/events/part_state_changed.event.json`:
       "isDeterioration",
       "timestamp"
     ],
-    "additionalProperties": true
+    "additionalProperties": false
   }
 }
 ```
@@ -109,7 +109,7 @@ Create `data/mods/anatomy/events/part_state_changed.event.json`:
 ### Design Rationale
 
 1. **Follows limb_detached.event.json pattern**: Same structure with payloadSchema
-2. **additionalProperties: true**: Enables future extensibility
+2. **additionalProperties: false**: Matches existing anatomy event patterns for consistency
 3. **State enums validated**: Only valid states allowed
 4. **isDeterioration field**: Enables rules to easily distinguish damage from healing
 5. **turnsInPreviousState**: Useful for time-based narrative effects
@@ -176,3 +176,33 @@ npm run test:ci
 - Event schema: `data/schemas/event.schema.json`
 - Component states: `data/mods/anatomy/components/part_health.component.json` (from ticket 001)
 - Handler that dispatches this event: `src/logic/operationHandlers/updatePartHealthStateHandler.js` (from ticket 007)
+
+---
+
+## Outcome
+
+### What Changed vs. Originally Planned
+
+**Ticket Correction:**
+- Changed `additionalProperties: true` → `additionalProperties: false` to match existing anatomy event patterns (`limb_detached.event.json`, `part_health_changed.event.json`)
+
+**Implementation:**
+- Created `data/mods/anatomy/events/part_state_changed.event.json` as specified
+
+### Verification Results
+
+- ✅ JSON validity check passed
+- ✅ State enum verification passed (exact match)
+- ✅ `npm run validate` passed (0 violations across 44 mods)
+- ✅ `npm run test:unit` passed (37,640 tests, 2,253 test suites)
+- ✅ No existing files modified
+
+### Files Created
+
+| File | Description |
+|------|-------------|
+| `data/mods/anatomy/events/part_state_changed.event.json` | Event schema for health state threshold crossings |
+
+### Completion Date
+
+2025-11-28

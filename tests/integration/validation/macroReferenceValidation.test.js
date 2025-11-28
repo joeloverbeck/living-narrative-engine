@@ -6,7 +6,6 @@
  * massive error cascades when validating macro references. Previously, using oneOf
  * caused 322 errors for a single invalid macro reference. With anyOf, we expect
  * fewer than 10 errors for invalid cases and zero errors for valid cases.
- * 
  * @see specs/json-schema-validation-robustness.md (lines 790-860)
  */
 

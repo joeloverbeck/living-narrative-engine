@@ -28,6 +28,7 @@ const COVERAGE_FEATURES = {
  * @param {object} dependencies - Injected dependencies
  * @param {object} dependencies.entitiesGateway - Gateway for entity data access
  * @param {object} [dependencies.errorHandler] - Optional centralized error handler
+ * @param dependencies.coverageFeatures
  * @returns {object} NodeResolver with canResolve and resolve methods
  */
 export default function createSlotAccessResolver({
@@ -60,8 +61,8 @@ export default function createSlotAccessResolver({
   /**
    * Check if coverage resolution is enabled
    *
-  * @returns {boolean} True if coverage resolution is enabled
-  */
+   * @returns {boolean} True if coverage resolution is enabled
+   */
   function isCoverageResolutionEnabled() {
     return featureFlags.enableCoverageResolution;
   }

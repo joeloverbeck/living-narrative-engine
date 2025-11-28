@@ -1,12 +1,10 @@
 /**
  * @jest-environment node
- *
  * @file Integration tests for wield_threateningly action prerequisites
  * @description Tests that the action correctly requires a free grabbing appendage
  *
  * Tests the prerequisite `anatomy:actor-has-free-grabbing-appendage` which uses
  * the hasFreeGrabbingAppendages custom JSON Logic operator.
- *
  * @see data/mods/weapons/actions/wield_threateningly.action.json
  * @see data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json
  * @see tickets/APPGRAOCCSYS-010-wield-threateningly-prerequisites.md

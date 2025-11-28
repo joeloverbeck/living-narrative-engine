@@ -17,6 +17,7 @@ export default class TurnEventSubscription {
   /**
    * Scheduler retained for backward compatibility with constructor signature.
    * No longer used after Phase 10 fix removed setTimeout deferral.
+   *
    * @type {import('../scheduling').IScheduler}
    */
   // eslint-disable-next-line no-unused-private-class-members

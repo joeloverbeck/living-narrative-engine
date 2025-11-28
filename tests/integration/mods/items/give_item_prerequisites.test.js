@@ -1,12 +1,10 @@
 /**
  * @jest-environment node
- *
  * @file Integration tests for items:give_item action prerequisites
  * @description Tests that the action correctly requires one free grabbing appendage
  *
  * Tests the prerequisite `anatomy:actor-has-free-grabbing-appendage` which uses
  * the hasFreeGrabbingAppendages custom JSON Logic operator.
- *
  * @see data/mods/items/actions/give_item.action.json
  * @see data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json
  * @see tickets/GRAPREEXP-005-give-item-prerequisite.md

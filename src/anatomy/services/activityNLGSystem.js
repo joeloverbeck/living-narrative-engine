@@ -491,7 +491,7 @@ class ActivityNLGSystem {
    * @description Formats an array of items as a natural language list with conjunction.
    * Uses Oxford comma for lists of 3+ items (e.g., "a, b, and c").
    * @param {string[]} items - Array of items to format
-   * @param {string} [conjunction='and'] - Conjunction to use ('and', 'or')
+   * @param {string} [conjunction] - Conjunction to use ('and', 'or')
    * @returns {string} Formatted list, or empty string if items is empty/invalid
    * @example
    * #formatListWithConjunction(['sword'], 'and') // 'sword'

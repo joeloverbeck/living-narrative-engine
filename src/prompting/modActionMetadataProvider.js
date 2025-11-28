@@ -40,6 +40,7 @@ class ModActionMetadataProvider {
 
   /**
    * Retrieves action metadata for a specific mod.
+   *
    * @param {string} modId - The mod identifier (namespace)
    * @returns {ModActionMetadata|null} Metadata or null if mod not found
    */

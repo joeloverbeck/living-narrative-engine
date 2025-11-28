@@ -6,7 +6,6 @@
  * - SafeEventDispatcher
  * - TurnContext
  * - AbortController-based cancellation
- *
  * @see src/turns/states/awaitingExternalTurnEndState.js
  * @see src/turns/utils/cancellablePrimitives.js
  */

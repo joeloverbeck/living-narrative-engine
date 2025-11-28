@@ -90,6 +90,7 @@ import TransferItemHandler from '../../logic/operationHandlers/transferItemHandl
 import ValidateInventoryCapacityHandler from '../../logic/operationHandlers/validateInventoryCapacityHandler.js';
 import DropItemAtLocationHandler from '../../logic/operationHandlers/dropItemAtLocationHandler.js';
 import PickUpItemFromLocationHandler from '../../logic/operationHandlers/pickUpItemFromLocationHandler.js';
+import PrepareActionContextHandler from '../../logic/operationHandlers/prepareActionContextHandler.js';
 import OpenContainerHandler from '../../logic/operationHandlers/openContainerHandler.js';
 import TakeFromContainerHandler from '../../logic/operationHandlers/takeFromContainerHandler.js';
 import PutInContainerHandler from '../../logic/operationHandlers/putInContainerHandler.js';
@@ -741,6 +742,15 @@ export function registerOperationHandlers(registrar) {
           logger: c.resolve(tokens.ILogger),
           entityManager: c.resolve(tokens.IEntityManager),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.PrepareActionContextHandler,
+      PrepareActionContextHandler,
+      (c, Handler) =>
+        new Handler({
+          entityManager: c.resolve(tokens.IEntityManager),
+          logger: c.resolve(tokens.ILogger),
         }),
     ],
     [

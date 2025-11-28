@@ -1,12 +1,10 @@
 /**
  * @jest-environment node
- *
  * @file Integration tests for clutch_onto_upper_clothing action prerequisites
  * @description Tests that the action correctly requires one free grabbing appendage
  *
  * Tests the prerequisite `anatomy:actor-has-free-grabbing-appendage` which uses
  * the hasFreeGrabbingAppendages custom JSON Logic operator with parameter 1.
- *
  * @see data/mods/distress/actions/clutch_onto_upper_clothing.action.json
  * @see data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json
  * @see tickets/GRAPREFORACT-006-distress-mod-tests.md

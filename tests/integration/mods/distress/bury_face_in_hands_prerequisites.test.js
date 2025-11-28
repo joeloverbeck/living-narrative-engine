@@ -1,12 +1,10 @@
 /**
  * @jest-environment node
- *
  * @file Integration tests for bury_face_in_hands action prerequisites
  * @description Tests that the action correctly requires two free grabbing appendages
  *
  * Tests the prerequisite `anatomy:actor-has-two-free-grabbing-appendages` which uses
  * the hasFreeGrabbingAppendages custom JSON Logic operator with parameter 2.
- *
  * @see data/mods/distress/actions/bury_face_in_hands.action.json
  * @see data/mods/anatomy/conditions/actor-has-two-free-grabbing-appendages.condition.json
  * @see tickets/GRAPREFORACT-006-distress-mod-tests.md

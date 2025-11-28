@@ -4,13 +4,13 @@
  *
  * Provides utilities for creating cancellable timeouts and event-based promises
  * that integrate with AbortController for deterministic cleanup.
- *
  * @see src/turns/states/awaitingExternalTurnEndState.js - Primary consumer
  */
 
 /**
  * Sentinel value returned by createCancellableTimeout when the timeout elapses.
  * Use this to distinguish timeout resolution from event resolution in Promise.race.
+ *
  * @type {symbol}
  */
 export const TIMEOUT_SENTINEL = Symbol('TIMEOUT');
@@ -26,7 +26,6 @@ export const TIMEOUT_SENTINEL = Symbol('TIMEOUT');
  * @param {number} ms - Timeout duration in milliseconds
  * @param {AbortSignal} signal - Abort signal for cancellation
  * @returns {Promise<symbol>} Resolves to TIMEOUT_SENTINEL or rejects if aborted
- *
  * @example
  * const controller = new AbortController();
  * const timeoutPromise = createCancellableTimeout(5000, controller.signal);
@@ -69,7 +68,6 @@ export function createCancellableTimeout(ms, signal) {
  * @param {function(object): boolean} filter - Predicate to filter events (return true to resolve)
  * @param {AbortSignal} signal - Abort signal for cancellation
  * @returns {Promise<object>} Resolves with the matching event object
- *
  * @example
  * const controller = new AbortController();
  * const eventPromise = createEventPromise(

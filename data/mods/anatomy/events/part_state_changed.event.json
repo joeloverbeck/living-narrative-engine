@@ -1,0 +1,62 @@
+{
+  "$schema": "../../../schemas/event.schema.json",
+  "id": "anatomy:part_state_changed",
+  "description": "Dispatched only when a body part crosses a health state threshold boundary. Does NOT fire on every health change - only when the narrative state label actually changes (e.g., healthy -> bruised).",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "partEntityId": {
+        "type": "string",
+        "description": "Entity ID of the affected body part"
+      },
+      "ownerEntityId": {
+        "type": ["string", "null"],
+        "description": "Entity ID of the character that owns this part (if determinable)"
+      },
+      "partType": {
+        "type": "string",
+        "description": "The subType of the part (e.g., 'arm', 'head', 'torso')"
+      },
+      "previousState": {
+        "type": "string",
+        "enum": ["healthy", "bruised", "wounded", "badly_damaged", "destroyed"],
+        "description": "Narrative health state before the transition"
+      },
+      "newState": {
+        "type": "string",
+        "enum": ["healthy", "bruised", "wounded", "badly_damaged", "destroyed"],
+        "description": "Narrative health state after the transition"
+      },
+      "turnsInPreviousState": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Number of consecutive turns spent in the previous state before this transition"
+      },
+      "healthPercentage": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 100,
+        "description": "Current health as percentage of maximum (0-100)"
+      },
+      "isDeterioration": {
+        "type": "boolean",
+        "description": "True if transitioning to a worse state (damage), false if improving (healing)"
+      },
+      "timestamp": {
+        "type": "integer",
+        "description": "Unix timestamp or game turn when the transition occurred"
+      }
+    },
+    "required": [
+      "partEntityId",
+      "partType",
+      "previousState",
+      "newState",
+      "turnsInPreviousState",
+      "healthPercentage",
+      "isDeterioration",
+      "timestamp"
+    ],
+    "additionalProperties": false
+  }
+}

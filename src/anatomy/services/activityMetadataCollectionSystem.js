@@ -279,7 +279,7 @@ class ActivityMetadataCollectionSystem {
    * @param {string} componentId - Component ID containing metadata
    * @param {object} componentData - Full component data
    * @param {object} activityMetadata - Activity metadata from component
-   * @param {boolean} [activityMetadata.targetRoleIsArray=false] - Whether targetRole points to an array
+   * @param {boolean} [activityMetadata.targetRoleIsArray] - Whether targetRole points to an array
    * @returns {object|null} Activity object or null if invalid
    * @private
    */

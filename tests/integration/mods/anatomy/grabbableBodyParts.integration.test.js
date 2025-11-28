@@ -3,7 +3,6 @@
  *
  * Validates that body parts capable of grabbing/holding items have the
  * anatomy:can_grab component correctly configured.
- *
  * @see data/mods/anatomy/components/can_grab.component.json
  * @see tickets/APPGRAOCCSYS-007-can-grab-to-body-parts.md
  */
@@ -24,6 +23,7 @@ const ANATOMY_ENTITIES_PATH = path.resolve(
 
 /**
  * Load JSON entity file
+ *
  * @param {string} filename - Entity filename
  * @returns {object} Parsed entity data
  */

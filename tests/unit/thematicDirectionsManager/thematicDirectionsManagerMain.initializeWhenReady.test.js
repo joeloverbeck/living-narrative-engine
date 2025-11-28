@@ -42,6 +42,9 @@ jest.mock('../../../src/characterBuilder/CharacterBuilderBootstrap.js', () => ({
 
 const modulePath = '../../../src/thematicDirectionsManager/thematicDirectionsManagerMain.js';
 
+/**
+ *
+ */
 async function importModule() {
   jest.resetModules();
   return import(modulePath);

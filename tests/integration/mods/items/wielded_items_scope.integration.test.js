@@ -1,13 +1,11 @@
 /**
  * @jest-environment node
- *
  * @file Integration tests for items:wielded_items scope
  * @description Tests the scope that returns entity IDs of items currently being wielded
  *
  * The scope:
  * - Accesses actor's positioning:wielding component
  * - Returns wielded_item_ids array via [] iterator
- *
  * @see data/mods/items/scopes/wielded_items.scope
  * @see tickets/UNWITEACT-001-create-scope-file.md
  */

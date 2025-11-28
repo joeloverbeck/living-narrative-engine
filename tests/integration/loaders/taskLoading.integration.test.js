@@ -71,6 +71,11 @@ const DEFAULT_SCOPES = [
   'test:items',
 ];
 
+/**
+ *
+ * @param registry
+ * @param scopeId
+ */
 function seedScope(registry, scopeId) {
   registry.store('scopes', scopeId, {
     id: scopeId,
@@ -164,6 +169,10 @@ const mockTaskData = {
   },
 };
 
+/**
+ *
+ * @param tasks
+ */
 function buildMethodLookup(tasks) {
   const lookup = new Map();
   Object.values(tasks).forEach((task) => {
@@ -179,6 +188,10 @@ function buildMethodLookup(tasks) {
 
 const MOCK_METHOD_LOOKUP = buildMethodLookup(mockTaskData);
 
+/**
+ *
+ * @param path
+ */
 function deriveMethodMetadataFromPath(path) {
   const modMatch = path.match(/mods\/(.*?)\/refinement-methods\//);
   const modId = modMatch ? modMatch[1] : 'core';

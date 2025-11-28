@@ -3,7 +3,6 @@
  *
  * This tests the Promise.race-based implementation that uses AbortController
  * for deterministic "first wins" behavior between event reception and timeout.
- *
  * @see src/turns/states/awaitingExternalTurnEndState.js
  * @see src/turns/utils/cancellablePrimitives.js
  */
