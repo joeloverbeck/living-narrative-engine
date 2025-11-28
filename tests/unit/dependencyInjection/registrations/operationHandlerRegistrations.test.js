@@ -61,6 +61,10 @@ const handlerModuleDefinitions = [
   ['BurnEnergyHandler', `${handlerBasePath}/burnEnergyHandler.js`],
   ['UpdateHungerStateHandler', `${handlerBasePath}/updateHungerStateHandler.js`],
   [
+    'UpdatePartHealthStateHandler',
+    `${handlerBasePath}/updatePartHealthStateHandler.js`,
+  ],
+  [
     'AddPerceptionLogEntryHandler',
     `${handlerBasePath}/addPerceptionLogEntryHandler.js`,
   ],
@@ -477,6 +481,15 @@ beforeAll(async () => {
     {
       token: tokens.UpdateHungerStateHandler,
       handlerName: 'UpdateHungerStateHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.UpdatePartHealthStateHandler,
+      handlerName: 'UpdatePartHealthStateHandler',
       dependencies: [
         { property: 'logger', token: ILogger },
         { property: 'entityManager', token: IEntityManager },

@@ -342,6 +342,29 @@ export class ScopeTracingTestBed {
     return this.#scopeTracer.format({ performanceFocus: true });
   }
 
+  /**
+   * Resolve scope purely, without tracer injection.
+   * Used for performance baselines to measure tracer overhead.
+   * Handles custom scopes registered via ScopeResolverHelpers.
+   *
+   * @param {string} scopeName - Scope to resolve
+   * @param {object} actorEntity - Actor entity
+   * @returns {Set<string>} Resolved entity IDs
+   */
+  resolveSyncNoTracer(scopeName, actorEntity) {
+    const env = this.testEnv;
+    const originalTracer = env._scopeTracer;
+    
+    // Temporarily disable tracer to prevent injection in ScopeResolverHelpers
+    env._scopeTracer = null;
+
+    try {
+      return env.unifiedScopeResolver.resolveSync(scopeName, actorEntity);
+    } finally {
+      env._scopeTracer = originalTracer;
+    }
+  }
+
   // ============================================================================
   // Cleanup
   // ============================================================================

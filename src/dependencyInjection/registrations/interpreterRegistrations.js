@@ -132,6 +132,10 @@ export function registerInterpreters(container) {
       bind(tokens.UpdateHungerStateHandler)
     );
     registry.register(
+      'UPDATE_PART_HEALTH_STATE',
+      bind(tokens.UpdatePartHealthStateHandler)
+    );
+    registry.register(
       'ADD_PERCEPTION_LOG_ENTRY',
       bind(tokens.AddPerceptionLogEntryHandler)
     );

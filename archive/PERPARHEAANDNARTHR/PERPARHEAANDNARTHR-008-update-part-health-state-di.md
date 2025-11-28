@@ -1,6 +1,6 @@
 # PERPARHEAANDNARTHR-008: UPDATE_PART_HEALTH_STATE DI Registration
 
-**Status:** Ready
+**Status:** Completed
 **Priority:** Critical (Phase 3)
 **Estimated Effort:** 0.5 days
 **Dependencies:**
@@ -62,16 +62,19 @@ import UpdatePartHealthStateHandler from '../../logic/operationHandlers/updatePa
 
 **Add factory** to the `handlerFactories` array (maintain alphabetical order):
 ```javascript
-{
-  token: tokens.UpdatePartHealthStateHandler,
-  factory: (container) => new UpdatePartHealthStateHandler({
-    entityManager: container.resolve(tokens.IEntityManager),
-    eventDispatcher: container.resolve(tokens.ISafeEventDispatcher),
-    jsonLogicService: container.resolve(tokens.IJsonLogicEvaluationService),
-    logger: container.resolve(tokens.ILogger)
-  })
-},
+[
+  tokens.UpdatePartHealthStateHandler,
+  UpdatePartHealthStateHandler,
+  (c, Handler) =>
+    new Handler({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+    }),
+],
 ```
+
+**CORRECTION (2025-11-28)**: Original ticket incorrectly specified `eventDispatcher` and `jsonLogicService` dependencies. The actual handler constructor requires only `logger`, `entityManager`, and `safeEventDispatcher`. Verified against `updatePartHealthStateHandler.js:54`.
 
 ### 3. Operation Mapping
 
@@ -162,10 +165,40 @@ npx eslint src/dependencyInjection/tokens/tokens-core.js src/dependencyInjection
 
 Per CLAUDE.md "Adding New Operations" section:
 
-- [ ] Schema created (PERPARHEAANDNARTHR-006)
-- [ ] Schema $ref added to operation.schema.json (PERPARHEAANDNARTHR-006)
-- [ ] Handler implemented (PERPARHEAANDNARTHR-007)
-- [ ] Token defined in tokens-core.js (this ticket)
-- [ ] Factory registered in operationHandlerRegistrations.js (this ticket)
-- [ ] Operation mapped in interpreterRegistrations.js (this ticket)
-- [ ] **CRITICAL**: Added to KNOWN_OPERATION_TYPES in preValidationUtils.js (this ticket)
+- [x] Schema created (PERPARHEAANDNARTHR-006)
+- [x] Schema $ref added to operation.schema.json (PERPARHEAANDNARTHR-006)
+- [x] Handler implemented (PERPARHEAANDNARTHR-007)
+- [x] Token defined in tokens-core.js (this ticket)
+- [x] Factory registered in operationHandlerRegistrations.js (this ticket)
+- [x] Operation mapped in interpreterRegistrations.js (this ticket)
+- [x] **CRITICAL**: Added to KNOWN_OPERATION_TYPES in preValidationUtils.js (this ticket)
+
+---
+
+## Outcome
+
+**Completed:** 2025-11-28
+
+### Changes vs. Original Plan
+
+**Corrections Made to Ticket:**
+- The original ticket incorrectly specified handler dependencies as `entityManager`, `eventDispatcher`, `jsonLogicService`, and `logger`
+- Actual handler constructor (verified at `updatePartHealthStateHandler.js:54`) requires only: `logger`, `entityManager`, `safeEventDispatcher`
+- Ticket was corrected before implementation to reflect accurate dependencies
+
+**Files Modified (as planned):**
+1. `src/dependencyInjection/tokens/tokens-core.js` - Added `UpdatePartHealthStateHandler` token
+2. `src/dependencyInjection/registrations/operationHandlerRegistrations.js` - Added import and factory registration
+3. `src/dependencyInjection/registrations/interpreterRegistrations.js` - Added operation mapping
+4. `src/utils/preValidationUtils.js` - Added `'UPDATE_PART_HEALTH_STATE'` to KNOWN_OPERATION_TYPES
+
+**Verification Results:**
+- `npm run typecheck` - Passed (pre-existing errors in cli/ unrelated to changes)
+- `npm run validate` - Passed (0 violations, 44 mods validated)
+- Unit tests for preValidationUtils - 153 tests passed
+- Unit tests for updatePartHealthStateHandler - 34 tests passed
+- Lint on modified files - Passed (pre-existing warnings unrelated to changes)
+
+**No New Tests Required:**
+- Existing test coverage in `tests/unit/logic/operationHandlers/updatePartHealthStateHandler.test.js` (34 tests) already covers the handler
+- DI registration is validated implicitly through `npm run validate` and type checking
