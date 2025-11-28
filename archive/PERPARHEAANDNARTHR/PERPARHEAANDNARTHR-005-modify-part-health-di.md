@@ -1,6 +1,6 @@
 # PERPARHEAANDNARTHR-005: MODIFY_PART_HEALTH DI Registration
 
-**Status:** Ready
+**Status:** Completed
 **Priority:** Critical (Phase 2)
 **Estimated Effort:** 0.5 days
 **Dependencies:**
@@ -61,15 +61,17 @@ import ModifyPartHealthHandler from '../../logic/operationHandlers/modifyPartHea
 
 **Add factory** to the `handlerFactories` array (maintain alphabetical order):
 ```javascript
-{
-  token: tokens.ModifyPartHealthHandler,
-  factory: (container) => new ModifyPartHealthHandler({
-    entityManager: container.resolve(tokens.IEntityManager),
-    eventDispatcher: container.resolve(tokens.ISafeEventDispatcher),
-    jsonLogicService: container.resolve(tokens.IJsonLogicEvaluationService),
-    logger: container.resolve(tokens.ILogger)
-  })
-},
+[
+  tokens.ModifyPartHealthHandler,
+  ModifyPartHealthHandler,
+  (c, Handler) =>
+    new Handler({
+      entityManager: c.resolve(tokens.IEntityManager),
+      logger: c.resolve(tokens.ILogger),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      jsonLogicService: c.resolve(tokens.JsonLogicEvaluationService),
+    }),
+],
 ```
 
 ### 3. Operation Mapping
@@ -167,10 +169,64 @@ npx eslint src/dependencyInjection/tokens/tokens-core.js src/dependencyInjection
 
 Per CLAUDE.md "Adding New Operations" section:
 
-- [ ] Schema created (PERPARHEAANDNARTHR-003)
-- [ ] Schema $ref added to operation.schema.json (PERPARHEAANDNARTHR-003)
-- [ ] Handler implemented (PERPARHEAANDNARTHR-004)
-- [ ] Token defined in tokens-core.js (this ticket)
-- [ ] Factory registered in operationHandlerRegistrations.js (this ticket)
-- [ ] Operation mapped in interpreterRegistrations.js (this ticket)
-- [ ] **CRITICAL**: Added to KNOWN_OPERATION_TYPES in preValidationUtils.js (this ticket)
+- [x] Schema created (PERPARHEAANDNARTHR-003)
+- [x] Schema $ref added to operation.schema.json (PERPARHEAANDNARTHR-003)
+- [x] Handler implemented (PERPARHEAANDNARTHR-004)
+- [x] Token defined in tokens-core.js (this ticket)
+- [x] Factory registered in operationHandlerRegistrations.js (this ticket)
+- [x] Operation mapped in interpreterRegistrations.js (this ticket)
+- [x] **CRITICAL**: Added to KNOWN_OPERATION_TYPES in preValidationUtils.js (this ticket)
+
+---
+
+## Outcome
+
+**Completion Date:** 2025-11-28
+
+### What Was Changed vs Originally Planned
+
+The implementation was already complete when this ticket was reviewed. The actual implementation matched the planned changes with one minor correction:
+
+**Originally proposed in ticket:**
+```javascript
+{
+  token: tokens.ModifyPartHealthHandler,
+  factory: (container) => new ModifyPartHealthHandler({
+    entityManager: container.resolve(tokens.IEntityManager),
+    eventDispatcher: container.resolve(tokens.ISafeEventDispatcher),
+    jsonLogicService: container.resolve(tokens.IJsonLogicEvaluationService),
+    logger: container.resolve(tokens.ILogger)
+  })
+},
+```
+
+**Actual implementation:**
+```javascript
+[
+  tokens.ModifyPartHealthHandler,
+  ModifyPartHealthHandler,
+  (c, Handler) =>
+    new Handler({
+      entityManager: c.resolve(tokens.IEntityManager),
+      logger: c.resolve(tokens.ILogger),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      jsonLogicService: c.resolve(tokens.JsonLogicEvaluationService),
+    }),
+],
+```
+
+**Key differences:**
+1. Factory uses array pattern `[token, Handler, factoryFn]` matching project's current style
+2. Dependency name is `safeEventDispatcher` (not `eventDispatcher`) matching handler constructor
+3. Uses `tokens.JsonLogicEvaluationService` (not `tokens.IJsonLogicEvaluationService`) matching project's token naming
+
+### Verification Results
+
+All verifications passed:
+- ✅ Token defined at line 204 in `tokens-core.js`
+- ✅ Factory registered at line 187-195 in `operationHandlerRegistrations.js`
+- ✅ Operation mapped at line 93-95 in `interpreterRegistrations.js`
+- ✅ Added to `KNOWN_OPERATION_TYPES` at line 71 in `preValidationUtils.js`
+- ✅ DI tests pass (394 tests in 43 test suites)
+- ✅ Handler tests pass (45 tests)
+- ✅ Lint passes with no errors (only pre-existing warnings)
