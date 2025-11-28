@@ -654,7 +654,6 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
       const inputElement = this._getElement(inputId);
       if (inputElement) {
         this.eventRegistry.addEventListener(inputElement, 'input', () => {
-          this.#updateUserInputs();
           this.#validateUserInputs();
           this.#updateUIState();
           this.#updateUserInputSummary();
@@ -665,16 +664,6 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
         });
       }
     });
-  }
-
-  /**
-   * Update user inputs object from form fields
-   *
-   * @private
-   */
-  #updateUserInputs() {
-    // This method is called when input values change
-    // We don't need to store values since #getUserInputs() gets them directly from DOM
   }
 
   /**
