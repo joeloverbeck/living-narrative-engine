@@ -1,9 +1,35 @@
 # PERPARHEAANDNARTHR-006: UPDATE_PART_HEALTH_STATE Schema Definition
 
-**Status:** Ready
+**Status:** Completed
 **Priority:** Critical (Phase 1)
 **Estimated Effort:** 0.5 days
 **Dependencies:** None
+
+---
+
+## Outcome
+
+### What Changed vs Originally Planned
+
+**Originally Planned:**
+- Create schema with inline `parameters` definition
+- Add to operation.schema.json "in alphabetical order"
+- Touch 2 files total
+
+**Actually Implemented:**
+1. **Schema pattern corrected**: Used `$defs/Parameters` reference pattern (matching `updateHungerState.schema.json`) instead of inline parameters as originally specified
+2. **Insertion point corrected**: operation.schema.json is NOT alphabetically sorted - placed after `modifyPartHealth.schema.json` for functional grouping
+3. **Additional file discovered**: `staticConfiguration.js` also required update to register schema for loading
+
+**Files Changed:**
+- ✅ `data/schemas/operations/updatePartHealthState.schema.json` (created)
+- ✅ `data/schemas/operation.schema.json` (added $ref after modifyPartHealth)
+- ✅ `src/configuration/staticConfiguration.js` (added to OPERATION_SCHEMA_FILES)
+
+**Validation Results:**
+- ✅ `npm run validate` - PASSED
+- ✅ `npm run validate:strict` - PASSED
+- ⚠️ `npm run test:ci` - Expected errors for missing handler/DI (covered by tickets 007-008)
 
 ---
 
@@ -20,6 +46,7 @@ Create the JSON schema for the `UPDATE_PART_HEALTH_STATE` operation, which recal
 
 ### Modified Files
 - `data/schemas/operation.schema.json` (add `$ref` entry to `anyOf` array)
+- `src/configuration/staticConfiguration.js` (add schema to `OPERATION_SCHEMA_FILES` array)
 
 ---
 
@@ -42,6 +69,8 @@ Create the JSON schema for the `UPDATE_PART_HEALTH_STATE` operation, which recal
 
 Create `data/schemas/operations/updatePartHealthState.schema.json`:
 
+> **NOTE**: The schema follows the established pattern from `updateHungerState.schema.json` using `$defs/Parameters` reference rather than inline parameters.
+
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -53,36 +82,41 @@ Create `data/schemas/operations/updatePartHealthState.schema.json`:
     {
       "properties": {
         "type": { "const": "UPDATE_PART_HEALTH_STATE" },
-        "parameters": {
-          "type": "object",
-          "properties": {
-            "part_entity_ref": {
-              "description": "Reference to the body part entity. Can be a direct entity ID string or a JSON Logic expression that resolves to an entity ID.",
-              "oneOf": [
-                { "type": "string" },
-                { "type": "object" }
-              ]
-            }
-          },
-          "required": ["part_entity_ref"],
-          "additionalProperties": false
+        "parameters": { "$ref": "#/$defs/Parameters" }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the UPDATE_PART_HEALTH_STATE operation.",
+      "properties": {
+        "part_entity_ref": {
+          "description": "Reference to the body part entity. Can be a direct entity ID string or a JSON Logic expression that resolves to an entity ID.",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "object" }
+          ]
         }
       },
-      "required": ["type", "parameters"]
+      "required": ["part_entity_ref"],
+      "additionalProperties": false
     }
-  ]
+  }
 }
 ```
 
 ### operation.schema.json Update
 
-Add to the `anyOf` array in **alphabetical order**:
+Add to the `anyOf` array:
+
+> **NOTE**: The operation.schema.json is NOT alphabetically sorted - it's organized by functional grouping. Insert after `modifyPartHealth.schema.json` since they're in the same per-part health feature domain.
 
 ```json
 { "$ref": "./operations/updatePartHealthState.schema.json" }
 ```
 
-Insert after entries starting with "upd..." - should be near `updateHungerState.schema.json` if it exists.
+Insert after `modifyPartHealth.schema.json` (around line 150) to keep related operations grouped together.
 
 ### Design Rationale
 

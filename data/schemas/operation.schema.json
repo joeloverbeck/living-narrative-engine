@@ -150,6 +150,9 @@
           "$ref": "./operations/modifyPartHealth.schema.json"
         },
         {
+          "$ref": "./operations/updatePartHealthState.schema.json"
+        },
+        {
           "$ref": "./operations/autoMoveFollowers.schema.json"
         },
         {
