@@ -11,6 +11,7 @@ import { TURN_ENDED_ID } from '../../../../src/constants/eventIds.js';
 
 /**
  * Creates a minimal mock handler for state testing
+ *
  * @param {object} ctx - Turn context mock
  * @param {object} logger - Logger mock
  * @returns {object} Handler mock
@@ -24,6 +25,7 @@ function createMockHandler(ctx, logger) {
 
 /**
  * Creates a minimal mock context for state testing
+ *
  * @param {string} actorId - Actor ID
  * @param {object} eventBus - Event bus mock
  * @param {object} logger - Logger mock

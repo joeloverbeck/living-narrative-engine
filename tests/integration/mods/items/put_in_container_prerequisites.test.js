@@ -1,12 +1,10 @@
 /**
  * @jest-environment node
- *
  * @file Integration tests for items:put_in_container action prerequisites
  * @description Tests that the action correctly requires one free grabbing appendage
  *
  * Tests the prerequisite `anatomy:actor-has-free-grabbing-appendage` which uses
  * the hasFreeGrabbingAppendages custom JSON Logic operator.
- *
  * @see data/mods/items/actions/put_in_container.action.json
  * @see data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json
  * @see tickets/GRAPREEXP-004-put-in-container-prerequisite.md

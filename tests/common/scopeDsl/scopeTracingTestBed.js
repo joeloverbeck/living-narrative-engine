@@ -106,6 +106,7 @@ export class ScopeTracingTestBed {
 
   /**
    * Cached test environment instance.
+   *
    * @private
    */
   #cachedTestEnv = null;
@@ -164,6 +165,7 @@ export class ScopeTracingTestBed {
 
   /**
    * Internal storage for loaded conditions.
+   *
    * @private
    */
   _loadedConditions = new Map();

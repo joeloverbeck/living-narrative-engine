@@ -14,6 +14,8 @@ import '../../../common/mods/domainMatchers.js';
 
 /**
  * Registers components needed for wielding activity tests.
+ *
+ * @param testBed
  */
 function registerWieldingComponents(testBed) {
   // Register positioning:wielding component definition using loadComponents pattern
@@ -63,6 +65,12 @@ function registerWieldingComponents(testBed) {
 
 /**
  * Creates an actor entity for testing.
+ *
+ * @param testBed
+ * @param root0
+ * @param root0.id
+ * @param root0.name
+ * @param root0.gender
  */
 async function createActor(testBed, { id, name, gender = 'male' }) {
   const entity = await testBed.entityManager.createEntityInstance('core:actor', {
@@ -79,6 +87,11 @@ async function createActor(testBed, { id, name, gender = 'male' }) {
 
 /**
  * Creates a weapon entity for testing.
+ *
+ * @param testBed
+ * @param root0
+ * @param root0.id
+ * @param root0.name
  */
 async function createWeapon(testBed, { id, name }) {
   const entity = await testBed.entityManager.createEntityInstance('test:weapon', {
@@ -92,6 +105,11 @@ async function createWeapon(testBed, { id, name }) {
 
 /**
  * Adds wielding component with activity metadata to an entity.
+ *
+ * @param entityManager
+ * @param entityId
+ * @param weaponIds
+ * @param customMetadata
  */
 function addWieldingComponent(entityManager, entityId, weaponIds, customMetadata = {}) {
   const defaultMetadata = {

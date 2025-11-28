@@ -4,9 +4,9 @@
  *
  * @param {Function} fn - Function under test
  * @param {object} options
- * @param {number} [options.samples=5] - Number of timed samples to record
- * @param {number} [options.iterations=100] - Iterations per sample
- * @param {number} [options.warmupIterations=20] - Warmup iterations to smooth JIT effects
+ * @param {number} [options.samples] - Number of timed samples to record
+ * @param {number} [options.iterations] - Iterations per sample
+ * @param {number} [options.warmupIterations] - Warmup iterations to smooth JIT effects
  * @param {Function} [options.now] - Optional time source for deterministic testing
  * @returns {{
  *   samples: number[],

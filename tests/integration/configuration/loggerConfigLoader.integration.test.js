@@ -16,6 +16,11 @@ const baseUrl = 'http://logger-config.test';
 const nativeFetch = global.fetch;
 const jsonHeaders = { 'Content-Type': 'application/json' };
 
+/**
+ *
+ * @param payload
+ * @param init
+ */
 function jsonResponse(payload, init = {}) {
   const body =
     typeof payload === 'string' ? payload : JSON.stringify(payload ?? {});

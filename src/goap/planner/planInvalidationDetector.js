@@ -345,7 +345,7 @@ class PlanInvalidationDetector {
    * //   actor: 'entity-1',
    * //   state: { ... }
    * // }
-  */
+   */
   #buildEvaluationContext(state, actorId) {
     const context = {};
 

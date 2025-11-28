@@ -13,6 +13,11 @@ import {
   startFlakyTestServer,
 } from '../../../common/mockFactories/actionTracingExtended.js';
 
+/**
+ *
+ * @param server
+ * @param traces
+ */
 async function postTraces(server, traces) {
   const response = await fetch(`${server.url}/api/traces/write`, {
     method: 'POST',

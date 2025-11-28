@@ -9,7 +9,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
 /**
- * @typedef {Object} Modifier
+ * @typedef {object} Modifier
  * @property {string} id - Unique modifier identifier
  * @property {string} source - Where modifier comes from (buff, equipment, environment)
  * @property {number} value - Modifier value (positive or negative)
@@ -19,7 +19,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  */
 
 /**
- * @typedef {Object} ModifierCollection
+ * @typedef {object} ModifierCollection
  * @property {Modifier[]} modifiers - All collected modifiers
  * @property {number} totalFlat - Sum of flat modifiers
  * @property {number} totalPercentage - Total percentage modifier (multiplicative)
@@ -31,7 +31,7 @@ class ModifierCollectorService {
   #logger;
 
   /**
-   * @param {Object} deps
+   * @param {object} deps
    * @param {IEntityManager} deps.entityManager
    * @param {ILogger} deps.logger
    */
@@ -51,11 +51,13 @@ class ModifierCollectorService {
 
   /**
    * Collects all applicable modifiers for a chance calculation
-   * @param {Object} params
+   *
+   * @param {object} params
    * @param {string} params.actorId - Actor entity ID
    * @param {string} [params.targetId] - Target entity ID (for opposed checks)
    * @param {string} [params.locationId] - Location ID (for environmental modifiers)
-   * @param {Object} [params.actionConfig] - Action's chanceBased configuration
+   * @param params._locationId
+   * @param {object} [params.actionConfig] - Action's chanceBased configuration
    * @returns {ModifierCollection}
    */
   collectModifiers({ actorId, targetId, _locationId, actionConfig }) {
@@ -100,10 +102,11 @@ class ModifierCollectorService {
 
   /**
    * Collects modifiers defined in action configuration
+   *
    * @private
    * @param {string} _actorId - Actor entity ID (unused in Phase 5 stub)
    * @param {string} [_targetId] - Target entity ID (unused in Phase 5 stub)
-   * @param {Object} _modifierConfigs - Modifier configurations (unused in Phase 5 stub)
+   * @param {object} _modifierConfigs - Modifier configurations (unused in Phase 5 stub)
    * @returns {Modifier[]}
    */
   #collectActionModifiers(_actorId, _targetId, _modifierConfigs) {
@@ -114,6 +117,7 @@ class ModifierCollectorService {
 
   /**
    * Applies stacking rules - same stackId uses highest value only
+   *
    * @private
    * @param {Modifier[]} modifiers
    * @returns {Modifier[]}
@@ -138,6 +142,7 @@ class ModifierCollectorService {
 
   /**
    * Calculates total flat and percentage modifiers
+   *
    * @private
    * @param {Modifier[]} modifiers
    * @returns {{ totalFlat: number, totalPercentage: number }}

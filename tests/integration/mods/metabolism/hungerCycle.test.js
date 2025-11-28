@@ -22,6 +22,10 @@ import QueryComponentsHandler from '../../../../src/logic/operationHandlers/quer
 
 /**
  * Creates handlers needed for the metabolism turn processing rules.
+ *
+ * @param entityManager
+ * @param eventBus
+ * @param logger
  */
 function createHandlers(entityManager, eventBus, logger) {
   const safeEventDispatcher = {
@@ -59,6 +63,10 @@ describe('complete hunger cycle integration', () => {
 
   /**
    * Helper: Creates actor entity with metabolism components
+   *
+   * @param id
+   * @param name
+   * @param config
    */
   const createMetabolismActor = (id, name, config = {}) => {
     const {
@@ -106,6 +114,8 @@ describe('complete hunger cycle integration', () => {
 
   /**
    * Helper: Dispatch turn_started event for an entity
+   *
+   * @param entityId
    */
   const dispatchTurnStarted = async (entityId) => {
     await testEnv.eventBus.dispatch(TURN_STARTED_ID, {
@@ -118,6 +128,10 @@ describe('complete hunger cycle integration', () => {
 
   /**
    * Helper: Simulate eating food by adding to buffer storage
+   *
+   * @param entityId
+   * @param foodBulk
+   * @param energyContent
    */
   const simulateEating = (entityId, foodBulk, energyContent) => {
     const entity = testEnv.entityManager.getEntityInstance(entityId);

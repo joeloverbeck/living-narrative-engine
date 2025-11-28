@@ -39,6 +39,9 @@ describe('grabbingUtils', () => {
 
   /**
    * Helper to set up body component with parts
+   *
+   * @param entityId
+   * @param partsMap
    */
   function setupBodyWithParts(entityId, partsMap) {
     componentStore[`${entityId}:anatomy:body`] = {
@@ -51,6 +54,11 @@ describe('grabbingUtils', () => {
 
   /**
    * Helper to set up can_grab component for a part
+   *
+   * @param partId
+   * @param locked
+   * @param heldItemId
+   * @param gripStrength
    */
   function setupCanGrab(partId, locked, heldItemId = null, gripStrength = 1.0) {
     componentStore[`${partId}:anatomy:can_grab`] = {

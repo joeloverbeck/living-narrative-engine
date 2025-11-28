@@ -1,6 +1,6 @@
 # PERPARHEAANDNARTHR-009: Part Health Changed Event Schema
 
-**Status:** Ready
+**Status:** Completed
 **Priority:** Critical (Phase 1)
 **Estimated Effort:** 0.25 days
 **Dependencies:** None
@@ -81,13 +81,21 @@ Create `data/mods/anatomy/events/part_health_changed.event.json`:
         "maximum": 100,
         "description": "Current health as percentage of maximum (0-100)"
       },
+      "previousState": {
+        "type": "string",
+        "description": "Narrative state label before the change (e.g., 'healthy', 'injured', 'critical')"
+      },
+      "newState": {
+        "type": "string",
+        "description": "Narrative state label after the change (e.g., 'healthy', 'injured', 'critical')"
+      },
       "delta": {
         "type": "number",
         "description": "Amount changed (negative = damage, positive = healing)"
       },
       "timestamp": {
         "type": "integer",
-        "description": "Unix timestamp or game turn when the change occurred"
+        "description": "Unix timestamp when the change occurred"
       }
     },
     "required": [
@@ -97,10 +105,12 @@ Create `data/mods/anatomy/events/part_health_changed.event.json`:
       "newHealth",
       "maxHealth",
       "healthPercentage",
+      "previousState",
+      "newState",
       "delta",
       "timestamp"
     ],
-    "additionalProperties": true
+    "additionalProperties": false
   }
 }
 ```
@@ -108,11 +118,12 @@ Create `data/mods/anatomy/events/part_health_changed.event.json`:
 ### Design Rationale
 
 1. **Follows limb_detached.event.json pattern**: Same structure with payloadSchema
-2. **additionalProperties: true**: Enables future extensibility (damageType, source, etc.)
+2. **additionalProperties: false**: Matches existing anatomy event patterns for strict validation
 3. **ownerEntityId nullable**: May not always be determinable
 4. **ownerEntityId not required**: Graceful degradation if owner unknown
 5. **All numeric fields validated**: minimum/maximum where appropriate
-6. **Comprehensive payload**: All fields from spec REQ-5 included
+6. **Includes previousState/newState**: Matches what modifyPartHealthHandler.js actually dispatches (lines 328-340)
+7. **Comprehensive payload**: All 11 fields from handler dispatch included
 
 ---
 
@@ -137,7 +148,7 @@ Create `data/mods/anatomy/events/part_health_changed.event.json`:
 1. All existing anatomy events remain unchanged
 2. `npm run test:ci` passes (no regressions)
 3. Event ID matches exactly what handlers dispatch: `anatomy:part_health_changed`
-4. Required fields match spec REQ-5
+4. Schema includes all 11 fields dispatched by modifyPartHealthHandler.js (including previousState, newState)
 
 ---
 
@@ -168,3 +179,37 @@ npm run test:ci
 - Pattern to follow: `data/mods/anatomy/events/limb_detached.event.json`
 - Event schema: `data/schemas/event.schema.json`
 - Handler that dispatches this event: `src/logic/operationHandlers/modifyPartHealthHandler.js` (from ticket 004)
+
+---
+
+## Outcome
+
+**Completion Date:** 2025-11-28
+
+### What Changed vs Originally Planned
+
+| Aspect | Original Plan | Actual Implementation |
+|--------|---------------|----------------------|
+| Fields | 9 fields | 11 fields (added `previousState`, `newState`) |
+| additionalProperties | `true` | `false` (matches existing patterns) |
+| timestamp description | "Unix timestamp or game turn" | "Unix timestamp" (matches handler) |
+
+### Discrepancies Corrected
+
+1. **Missing fields**: Original ticket schema lacked `previousState` and `newState` fields that `modifyPartHealthHandler.js` (lines 328-340) actually dispatches
+2. **additionalProperties**: Changed from `true` to `false` to match existing anatomy event patterns (`limb_detached.event.json`)
+3. **Required fields**: Added `previousState` and `newState` to required array
+
+### Files Created
+- `data/mods/anatomy/events/part_health_changed.event.json`
+
+### Files Modified
+- This ticket (corrected schema before implementation)
+
+### Verification Results
+- ✅ JSON validity: Valid
+- ✅ Event ID format: `anatomy:part_health_changed`
+- ✅ `npm run validate`: Passed (0 violations across 44 mods)
+- ✅ Unit tests: 37,632 passed
+- ✅ Handler tests: 45 passed (`modifyPartHealthHandler.test.js`)
+- ⚠️ `npm run test:ci`: Pre-existing failure unrelated to this ticket (incomplete `PREPARE_ACTION_CONTEXT` operation from separate ticket)

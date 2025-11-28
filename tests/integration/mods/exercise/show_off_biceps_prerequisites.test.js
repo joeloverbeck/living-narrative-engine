@@ -1,6 +1,5 @@
 /**
  * @jest-environment node
- *
  * @file Integration tests for show_off_biceps action grabbing prerequisites
  * @description Tests that the action correctly requires two free grabbing appendages
  * in addition to its existing muscular/hulking arm requirement.
@@ -10,7 +9,6 @@
  *
  * Tests the prerequisite `anatomy:actor-has-two-free-grabbing-appendages` which uses
  * the hasFreeGrabbingAppendages custom JSON Logic operator.
- *
  * @see data/mods/exercise/actions/show_off_biceps.action.json
  * @see data/mods/anatomy/conditions/actor-has-two-free-grabbing-appendages.condition.json
  * @see tickets/GRAPREFORACT-003-exercise-mod-prerequisites.md

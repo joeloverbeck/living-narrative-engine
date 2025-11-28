@@ -312,7 +312,7 @@ export class ModTestFixture {
    * @param {object|null} [ruleFile] - The rule definition JSON (auto-loaded if null/undefined)
    * @param {object|null} [conditionFile] - The condition definition JSON (auto-loaded if null/undefined)
    * @param {object} [options] - Configuration options
-   * @param {boolean} [options.skipValidation=false] - Skip schema validation (for debugging)
+   * @param {boolean} [options.skipValidation] - Skip schema validation (for debugging)
    * @param {boolean} [options.autoRegisterScopes] - Auto-register dependency mod scopes
    * @param {string[]} [options.scopeCategories] - Which scope categories to register (positioning, inventory, items, anatomy)
    * @param {Array<string>} [options.supportingActions] - Additional action IDs whose rules
@@ -462,7 +462,7 @@ export class ModTestFixture {
    * @param {object|null} [ruleFile] - The rule definition JSON (auto-loaded if null/undefined)
    * @param {object|null} [conditionFile] - The condition definition JSON (auto-loaded if null/undefined)
    * @param {object} [options] - Additional configuration options
-   * @param {boolean} [options.skipValidation=false] - Skip schema validation (not recommended)
+   * @param {boolean} [options.skipValidation] - Skip schema validation (not recommended)
    * @returns {Promise<ModRuleTestFixture>} Configured test fixture for the rule
    * @throws {Error} If auto-loading fails when files are not provided
    * @throws {Error} If schema validation fails (unless skipValidation: true)
@@ -976,6 +976,44 @@ class BaseModTestFixture {
     this.testEnv = null;
     this.diagnostics = null; // Will be created on demand
     this.scopeTracer = new ScopeEvaluationTracer();
+  }
+
+  /**
+   * Executes an operation directly using the operation interpreter.
+   *
+   * @param {string} type - Operation type
+   * @param {object} context - Execution context (event, parameters, etc.)
+   * @returns {Promise<object>} Operation result (usually the modified context)
+   */
+  async executeOperation(type, context) {
+    if (!this.testEnv || !this.testEnv.operationInterpreter) {
+      throw new Error('ModTestFixture: Test environment not initialized');
+    }
+
+    const operation = {
+      type,
+      parameters: context.parameters || {},
+    };
+
+    const executionContext = {
+      evaluationContext: {
+        event: context.event || {},
+        context: {},
+      },
+      ...context,
+    };
+
+    // Ensure event payload exists
+    if (
+      executionContext.evaluationContext.event &&
+      !executionContext.evaluationContext.event.payload
+    ) {
+      executionContext.evaluationContext.event.payload = {};
+    }
+
+    await this.testEnv.operationInterpreter.execute(operation, executionContext);
+
+    return executionContext.evaluationContext.context;
   }
 
   /**

@@ -1,13 +1,11 @@
 /**
  * @jest-environment node
- *
  * @file Integration tests for weapons:grabbable_weapons_in_inventory scope
  * @description Tests the scope that filters weapons by hand availability and held status
  *
  * The scope uses:
  * - canActorGrabItem operator (from WEAHANREQFIL-001)
  * - isItemBeingGrabbed operator (from WEAHANREQFIL-002)
- *
  * @see data/mods/weapons/scopes/grabbable_weapons_in_inventory.scope
  * @see tickets/WEAHANREQFIL-004-create-scope-and-update-manifest.md
  */

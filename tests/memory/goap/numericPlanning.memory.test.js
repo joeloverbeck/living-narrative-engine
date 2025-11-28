@@ -2,7 +2,6 @@
  * @file Memory tests for numeric constraint planning
  * @description Tests memory leak detection and stability for GOAP planning.
  * Extracted from performance tests to use proper memory test infrastructure.
- *
  * @see tests/performance/goap/numericPlanning.performance.test.js - Performance-focused tests
  * @see tests/memory/goap/multiActionPlanning.memory.test.js - Related memory tests
  */
@@ -14,6 +13,7 @@ import { createTestTask } from '../../integration/goap/testFixtures/testTaskFact
 
 /**
  * Helper to add flattened component aliases to an actor entity
+ *
  * @param {object} actor - Actor entity with components
  * @returns {object} Actor with flattened component aliases
  */
@@ -35,6 +35,7 @@ function addFlattenedAliases(actor) {
 
 /**
  * Builds dual-format state object for GOAP planning
+ *
  * @param {object} actor - Actor entity
  * @returns {object} State object with flat and nested component formats
  */

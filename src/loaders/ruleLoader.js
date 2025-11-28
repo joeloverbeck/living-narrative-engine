@@ -44,8 +44,8 @@ class RuleLoader extends BaseManifestItemLoader {
    * @param {ISchemaValidator} validator - Schema validation service instance.
    * @param {IDataRegistry} registry - Data registry service instance.
    * @param {ILogger} logger - Logging service instance.
-   * @param {HandlerCompletenessValidator} [handlerValidator=null] - Optional handler validation service.
-   * @param {OperationRegistry} [operationRegistry=null] - Optional operation registry for handler lookup.
+   * @param {HandlerCompletenessValidator} [handlerValidator] - Optional handler validation service.
+   * @param {OperationRegistry} [operationRegistry] - Optional operation registry for handler lookup.
    */
   constructor(
     config,

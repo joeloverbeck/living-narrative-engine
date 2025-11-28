@@ -14,6 +14,8 @@ import { expandMacros } from '../../../src/utils/macroUtils.js';
 
 /**
  * Creates a simplified operation schema for performance testing
+ *
+ * @param operationCount
  */
 function createSimplifiedOperationSchema(operationCount = 59) {
   const operations = [];

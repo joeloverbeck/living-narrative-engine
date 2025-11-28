@@ -6,7 +6,6 @@
  * - Production vs development environment configurations
  * - Event arrival before timeout
  * - Resource cleanup at scale
- *
  * @see src/turns/states/awaitingExternalTurnEndState.js
  */
 

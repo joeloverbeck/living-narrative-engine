@@ -15,6 +15,10 @@ const fetchInterceptorState = {
   counter: 0,
 };
 
+/**
+ *
+ * @param input
+ */
 function extractRequestUrl(input) {
   if (typeof input === 'string') {
     return input;
@@ -35,6 +39,11 @@ function extractRequestUrl(input) {
   return null;
 }
 
+/**
+ *
+ * @param input
+ * @param init
+ */
 async function readRequestBody(input, init = {}) {
   if (typeof Request !== 'undefined' && input instanceof Request) {
     const clone = input.clone();
@@ -62,6 +71,10 @@ async function readRequestBody(input, init = {}) {
   return String(init.body);
 }
 
+/**
+ *
+ * @param rawHeaders
+ */
 function normalizeHeaders(rawHeaders = {}) {
   if (rawHeaders instanceof Headers) {
     const headersObj = {};
@@ -87,6 +100,11 @@ function normalizeHeaders(rawHeaders = {}) {
   return {};
 }
 
+/**
+ *
+ * @param payload
+ * @param status
+ */
 function createJsonResponse(payload, status = 200) {
   return new Response(JSON.stringify(payload), {
     status,
@@ -94,6 +112,9 @@ function createJsonResponse(payload, status = 200) {
   });
 }
 
+/**
+ *
+ */
 function ensureFetchInterceptor() {
   if (fetchInterceptorState.installed) {
     return;
@@ -117,6 +138,9 @@ function ensureFetchInterceptor() {
   fetchInterceptorState.installed = true;
 }
 
+/**
+ *
+ */
 function restoreFetchIfIdle() {
   if (
     fetchInterceptorState.servers.size === 0 &&
@@ -128,6 +152,10 @@ function restoreFetchIfIdle() {
   }
 }
 
+/**
+ *
+ * @param url
+ */
 function findServerForUrl(url) {
   if (!url) {
     return null;
@@ -140,6 +168,10 @@ function findServerForUrl(url) {
   return null;
 }
 
+/**
+ *
+ * @param handler
+ */
 function registerInMemoryServer(handler) {
   ensureFetchInterceptor();
   const id = ++fetchInterceptorState.counter;

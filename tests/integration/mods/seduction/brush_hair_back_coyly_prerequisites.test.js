@@ -1,10 +1,8 @@
 /**
  * @jest-environment node
- *
  * @file Integration tests for seduction:brush_hair_back_coyly action prerequisites
  * @description Tests that the action correctly requires one free grabbing appendage,
  *              hair, and other actors at location (multiple prerequisites)
- *
  * @see data/mods/seduction/actions/brush_hair_back_coyly.action.json
  * @see data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json
  * @see tickets/GRAPREEXP-003-brush-hair-prerequisite.md

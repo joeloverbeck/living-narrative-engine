@@ -77,7 +77,7 @@ class BlueprintSlotStrategy {
    *
    * @param {string} entityId - Entity to resolve for
    * @param {object} mapping - The clothing slot mapping
-   * @param {Map<string, string>} [slotEntityMappings=new Map()] - Optional slot-to-entity mappings for this character
+   * @param {Map<string, string>} [slotEntityMappings] - Optional slot-to-entity mappings for this character
    * @returns {Promise<ResolvedAttachmentPoint[]>} Resolved attachment points
    */
   async resolve(entityId, mapping, slotEntityMappings = new Map()) {

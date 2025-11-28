@@ -14,7 +14,7 @@ import { shouldAutoInitializeDom } from './utils/environmentUtils.js';
  *
  * @param {object} container - Dependency injection container
  */
-async function updateLLMDisplay(container) {
+export async function updateLLMDisplay(container) {
   const llmNameElement = document.getElementById('active-llm-name');
   if (!llmNameElement) return;
 
@@ -46,7 +46,7 @@ async function updateLLMDisplay(container) {
 /**
  * Initialize the Traits Rewriter application
  */
-async function initializeTraitsRewriter() {
+export async function initializeTraitsRewriter() {
   try {
     const bootstrap = new CharacterBuilderBootstrap();
 
@@ -76,11 +76,18 @@ async function initializeTraitsRewriter() {
   }
 }
 
-// Initialize when DOM is ready
-if (shouldAutoInitializeDom()) {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeTraitsRewriter);
-  } else {
-    initializeTraitsRewriter();
+/**
+ * Start the application if the environment allows it
+ */
+export function startApp() {
+  if (shouldAutoInitializeDom()) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeTraitsRewriter);
+    } else {
+      initializeTraitsRewriter();
+    }
   }
 }
+
+// Initialize when DOM is ready
+startApp();

@@ -48,6 +48,7 @@ const OPERATION_SCHEMA_FILES = [
   'modifyPartHealth.schema.json',
   'openContainer.schema.json',
   'pickUpItemFromLocation.schema.json',
+  'prepareActionContext.schema.json',
   'putInContainer.schema.json',
   'queryComponent.schema.json',
   'queryComponents.schema.json',

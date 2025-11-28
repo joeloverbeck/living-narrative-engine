@@ -11,6 +11,9 @@ const { validateDependency } = jest.requireMock(
   '../../../../src/utils/dependencyUtils.js'
 );
 
+/**
+ *
+ */
 function createDomElements() {
   const elements = {};
   const ids = [
@@ -61,6 +64,12 @@ function createDomElements() {
   return elements;
 }
 
+/**
+ *
+ * @param elements
+ * @param listeners
+ * @param subscriptions
+ */
 function createDependencies(elements, listeners, subscriptions) {
   const domElementManager = {
     configure: jest.fn(),
@@ -181,6 +190,9 @@ function createDependencies(elements, listeners, subscriptions) {
   return baseMocks;
 }
 
+/**
+ *
+ */
 function createGenerationResult() {
   return {
     characterName: 'Ada Lovelace',

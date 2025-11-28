@@ -4,7 +4,6 @@
  * Provides functions to count, lock, and unlock grabbing appendages
  * on entities that have anatomy:body components with parts containing
  * anatomy:can_grab components.
- *
  * @see data/mods/anatomy/components/can_grab.component.json
  * @see brainstorming/appendage-grabbing-occupation-system.md
  */
@@ -116,7 +115,7 @@ export function calculateFreeGripStrength(entityManager, entityId) {
  * @param {EntityManager} entityManager - Entity manager instance
  * @param {string} entityId - The entity ID whose appendages to lock
  * @param {number} count - Number of appendages to lock
- * @param {string|null} [itemId=null] - Optional item ID to associate with locked appendages
+ * @param {string|null} [itemId] - Optional item ID to associate with locked appendages
  * @returns {Promise<{ success: boolean, lockedParts: string[], error?: string }>}
  */
 export async function lockGrabbingAppendages(
@@ -172,7 +171,7 @@ export async function lockGrabbingAppendages(
  * @param {EntityManager} entityManager - Entity manager instance
  * @param {string} entityId - The entity ID whose appendages to unlock
  * @param {number} count - Number of appendages to unlock
- * @param {string|null} [itemId=null] - Optional: only unlock appendages holding this item
+ * @param {string|null} [itemId] - Optional: only unlock appendages holding this item
  * @returns {Promise<{ success: boolean, unlockedParts: string[], error?: string }>}
  */
 export async function unlockGrabbingAppendages(
@@ -284,7 +283,7 @@ export function getHeldItems(entityManager, entityId) {
  * @param {EntityManager} entityManager - Entity manager instance
  * @param {string} entityId - The entity ID to check
  * @param {number} requiredCount - Number of free appendages required
- * @param {number} [requiredGripStrength=0] - Optional minimum grip strength required
+ * @param {number} [requiredGripStrength] - Optional minimum grip strength required
  * @returns {boolean} True if requirements are met
  */
 export function hasEnoughFreeAppendages(

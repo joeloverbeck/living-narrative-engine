@@ -63,7 +63,6 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
  * - **Before**: ~1,085 lines with mixed concerns
  * - **After**: 556 lines focused on orchestration (~49% reduction)
  * - **Extracted**: 3 specialized services (~530 lines total)
- *
  * @example
  * // Stage is injected with all required services via DI
  * const stage = new MultiTargetResolutionStage({
@@ -82,7 +81,6 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
  * const result = await stage.execute(context);
  * // result.data.candidateActions - actions with resolvedTargets
  * // result.data.targetContexts - backward compatibility
- *
  * @see TargetResolutionTracingOrchestrator for tracing implementation
  * @see TargetResolutionResultBuilder for result assembly
  * @see TargetResolutionCoordinator for resolution coordination

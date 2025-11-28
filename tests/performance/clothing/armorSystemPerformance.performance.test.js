@@ -60,12 +60,12 @@ describe('Armor System Performance - ARMSYSANA-010', () => {
    * Helper to create equipment with specified layers
    *
    * @param {object} options - Layer inclusion options
-   * @param {boolean} [options.underwear=true] - Include underwear layer
-   * @param {boolean} [options.base=true] - Include base layer
-   * @param {boolean} [options.armor=false] - Include armor layer (5-layer system)
-   * @param {boolean} [options.outer=true] - Include outer layer
-   * @param {boolean} [options.accessories=true] - Include accessories
-   * @param {number} [options.slotCount=20] - Number of equipment slots
+   * @param {boolean} [options.underwear] - Include underwear layer
+   * @param {boolean} [options.base] - Include base layer
+   * @param {boolean} [options.armor] - Include armor layer (5-layer system)
+   * @param {boolean} [options.outer] - Include outer layer
+   * @param {boolean} [options.accessories] - Include accessories
+   * @param {number} [options.slotCount] - Number of equipment slots
    * @returns {object} Equipment structure
    */
   const createEquipment = ({

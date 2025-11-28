@@ -23,6 +23,10 @@ import QueryComponentsHandler from '../../../../src/logic/operationHandlers/quer
 
 /**
  * Creates handlers needed for the metabolism turn processing rules.
+ *
+ * @param entityManager
+ * @param eventBus
+ * @param logger
  */
 function createHandlers(entityManager, eventBus, logger) {
   const safeEventDispatcher = {
@@ -62,6 +66,10 @@ describe('metabolism turn processing performance', () => {
 
   /**
    * Helper: Creates actor entity with metabolism components
+   *
+   * @param id
+   * @param name
+   * @param config
    */
   const createMetabolismActor = (id, name, config = {}) => {
     const {
@@ -117,6 +125,8 @@ describe('metabolism turn processing performance', () => {
 
   /**
    * Helper: Dispatch turn_started event for an entity
+   *
+   * @param entityId
    */
   const dispatchTurnStarted = async (entityId) => {
     await testEnv.eventBus.dispatch(TURN_STARTED_ID, {

@@ -149,6 +149,10 @@ class TestHandler {
   }
 }
 
+/**
+ *
+ * @param commandProcessorImpl
+ */
 function buildTestSetup(commandProcessorImpl) {
   const logger = new TestLogger();
   const dispatcher = new TestSafeEventDispatcher();

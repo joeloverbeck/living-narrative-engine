@@ -1,8 +1,9 @@
 # PERPARHEAANDNARTHR-000: Per-Part Health and Narrative Thresholds - Overview
 
-**Status:** Active
+**Status:** Completed
 **Epic:** Per-Part Health System (Iteration 1)
 **Source Spec:** `specs/per-part-health-and-narrative-thresholds.md`
+**Completed:** 2025-11-28
 
 ---
 
@@ -12,9 +13,9 @@ Implement a foundational per-part health system that tracks health values on bod
 
 ---
 
-## Scope Boundaries
+## Final Outcome
 
-### In Scope (This Epic)
+All 12 tickets in this epic have been completed successfully. The per-part health system is now fully functional with:
 
 1. `anatomy:part_health` component for tracking health on body part entities
 2. Health threshold lookup file for modder-configurable state boundaries
@@ -23,7 +24,22 @@ Implement a foundational per-part health system that tracks health values on bod
 5. `anatomy:part_health_changed` event for any health modification
 6. `anatomy:part_state_changed` event for threshold crossings only
 7. Full DI registration and pre-validation whitelist updates
-8. Unit and integration tests
+8. Comprehensive unit and integration tests (32 integration tests, comprehensive unit tests)
+
+---
+
+## Scope Boundaries
+
+### In Scope (This Epic) - All Completed
+
+1. `anatomy:part_health` component for tracking health on body part entities ✅
+2. Health threshold lookup file for modder-configurable state boundaries ✅
+3. `MODIFY_PART_HEALTH` operation for changing health values ✅
+4. `UPDATE_PART_HEALTH_STATE` operation for recalculating narrative state ✅
+5. `anatomy:part_health_changed` event for any health modification ✅
+6. `anatomy:part_state_changed` event for threshold crossings only ✅
+7. Full DI registration and pre-validation whitelist updates ✅
+8. Unit and integration tests ✅
 
 ### Out of Scope (Future Iterations)
 
@@ -44,18 +60,18 @@ Implement a foundational per-part health system that tracks health values on bod
 
 | Ticket | Title | Dependencies | Status |
 |--------|-------|--------------|--------|
-| 001 | Part Health Component Schema | None | Completed |
-| 002 | Health Thresholds Lookup File | None | Completed |
-| 003 | MODIFY_PART_HEALTH Schema | None | Completed |
-| 004 | MODIFY_PART_HEALTH Handler | 001, 003 | Completed |
-| 005 | MODIFY_PART_HEALTH DI Registration | 003, 004 | Completed |
-| 006 | UPDATE_PART_HEALTH_STATE Schema | None | Completed |
-| 007 | UPDATE_PART_HEALTH_STATE Handler | 001, 002, 006 | Completed |
-| 008 | UPDATE_PART_HEALTH_STATE DI Registration | 006, 007 | Completed |
-| 009 | Part Health Changed Event | None | Ready |
-| 010 | Part State Changed Event | None | Ready |
-| 011 | Mod Manifest Update | 001, 002, 009, 010 | Ready |
-| 012 | Integration Tests | All others | Ready |
+| 001 | Part Health Component Schema | None | ✅ Completed |
+| 002 | Health Thresholds Lookup File | None | ✅ Completed |
+| 003 | MODIFY_PART_HEALTH Schema | None | ✅ Completed |
+| 004 | MODIFY_PART_HEALTH Handler | 001, 003 | ✅ Completed |
+| 005 | MODIFY_PART_HEALTH DI Registration | 003, 004 | ✅ Completed |
+| 006 | UPDATE_PART_HEALTH_STATE Schema | None | ✅ Completed |
+| 007 | UPDATE_PART_HEALTH_STATE Handler | 001, 002, 006 | ✅ Completed |
+| 008 | UPDATE_PART_HEALTH_STATE DI Registration | 006, 007 | ✅ Completed |
+| 009 | Part Health Changed Event | None | ✅ Completed |
+| 010 | Part State Changed Event | None | ✅ Completed |
+| 011 | Mod Manifest Update | 001, 002, 009, 010 | ✅ Completed |
+| 012 | Integration Tests | All others | ✅ Completed |
 
 ---
 
@@ -79,9 +95,9 @@ All ──────────────────→ [012] Integration 
 
 ---
 
-## Implementation Order (Recommended)
+## Implementation Order (Completed)
 
-**Phase 1: Data Definitions (can run in parallel)**
+**Phase 1: Data Definitions** ✅
 1. PERPARHEAANDNARTHR-001 (Component)
 2. PERPARHEAANDNARTHR-002 (Lookup)
 3. PERPARHEAANDNARTHR-003 (MODIFY schema)
@@ -89,30 +105,30 @@ All ──────────────────→ [012] Integration 
 5. PERPARHEAANDNARTHR-009 (Health Changed Event)
 6. PERPARHEAANDNARTHR-010 (State Changed Event)
 
-**Phase 2: MODIFY_PART_HEALTH Operation**
+**Phase 2: MODIFY_PART_HEALTH Operation** ✅
 7. PERPARHEAANDNARTHR-004 (Handler)
 8. PERPARHEAANDNARTHR-005 (DI Registration)
 
-**Phase 3: UPDATE_PART_HEALTH_STATE Operation**
+**Phase 3: UPDATE_PART_HEALTH_STATE Operation** ✅
 9. PERPARHEAANDNARTHR-007 (Handler)
 10. PERPARHEAANDNARTHR-008 (DI Registration)
 
-**Phase 4: Finalization**
+**Phase 4: Finalization** ✅
 11. PERPARHEAANDNARTHR-011 (Mod Manifest)
 12. PERPARHEAANDNARTHR-012 (Integration Tests)
 
 ---
 
-## Success Criteria
+## Success Criteria (All Met)
 
-1. Body part entities can have health tracked via `anatomy:part_health` component
-2. Health values can be modified via `MODIFY_PART_HEALTH` operation
-3. State labels update automatically based on health percentage
-4. `anatomy:part_health_changed` event fires on any health modification
-5. `anatomy:part_state_changed` event fires only on threshold crossings
-6. All operations follow established DI and registration patterns
-7. Unit and integration tests pass with 80%+ coverage
-8. No breaking changes to existing anatomy system
+1. ✅ Body part entities can have health tracked via `anatomy:part_health` component
+2. ✅ Health values can be modified via `MODIFY_PART_HEALTH` operation
+3. ✅ State labels update automatically based on health percentage
+4. ✅ `anatomy:part_health_changed` event fires on any health modification
+5. ✅ `anatomy:part_state_changed` event fires only on threshold crossings
+6. ✅ All operations follow established DI and registration patterns
+7. ✅ Unit and integration tests pass with 80%+ coverage
+8. ✅ No breaking changes to existing anatomy system
 
 ---
 

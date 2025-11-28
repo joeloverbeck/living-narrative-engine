@@ -19,6 +19,8 @@ describe('systemLogicTestEnv schema validation (SCHVALTESINT-003)', () => {
   /**
    * Helper to load required schemas for rule validation.
    * Must load schemas in dependency order and include common.schema.json.
+   *
+   * @param ajv
    */
   async function loadRequiredSchemas(ajv) {
     const schemasDir = resolve(process.cwd(), 'data/schemas');

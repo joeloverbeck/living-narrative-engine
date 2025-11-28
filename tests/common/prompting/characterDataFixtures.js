@@ -222,6 +222,7 @@ export const CHARACTER_FULL_TRAITS = {
 
 /**
  * Create a character data object with specified fields only
+ *
  * @param {Partial<typeof COMPLETE_CHARACTER_DATA>} overrides
  * @returns {object}
  */
@@ -234,6 +235,7 @@ export function createCharacterData(overrides = {}) {
 
 /**
  * Create goals array with specified count
+ *
  * @param {number} count
  * @returns {Array<{text: string, timestamp?: string}>}
  */
@@ -246,6 +248,7 @@ export function createGoals(count) {
 
 /**
  * Create notes array with specified count
+ *
  * @param {number} count
  * @returns {Array<{text: string, subject?: string, subjectType?: string}>}
  */
@@ -260,6 +263,7 @@ export function createNotes(count) {
 
 /**
  * Create short-term memory object with specified thought count
+ *
  * @param {number} count
  * @returns {{thoughts: Array<{text: string, timestamp?: string}>}}
  */

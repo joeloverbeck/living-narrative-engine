@@ -1,19 +1,19 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import { describe, it, beforeEach, afterEach, beforeAll, afterAll, expect, jest } from '@jest/globals';
 import path from 'path';
 import fs from 'fs/promises';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { LLMSelectionPersistence } from '../../../src/llms/services/llmSelectionPersistence.js';
+import { CharacterBuilderBootstrap } from '../../../src/characterBuilder/CharacterBuilderBootstrap.js';
 
 const MODULE_PATH = '../../../src/traits-rewriter-main.js';
 const DISPLAY_NAME = 'Claude Sonnet 4.5 (OpenRouter - Tool Calling)';
 const STORAGE_KEY = LLMSelectionPersistence.STORAGE_KEY;
 const ORIGINAL_READY_STATE_DESCRIPTOR = Object.getOwnPropertyDescriptor(document, 'readyState');
 
-jest.setTimeout(60000);
+// jest.setTimeout(60000); // Handled by config
 
 const flushMicrotasks = async (cycles = 5) => {
   for (let i = 0; i < cycles; i += 1) {
-     
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
 };
@@ -23,7 +23,6 @@ const waitForCondition = async (checkFn, {
   interval = 50,
 } = {}) => {
   const start = Date.now();
-   
   while (true) {
     const result = await checkFn();
     if (result) {
@@ -32,7 +31,6 @@ const waitForCondition = async (checkFn, {
     if (Date.now() - start > timeout) {
       throw new Error('Timed out waiting for condition to be met.');
     }
-     
     await new Promise((resolve) => setTimeout(resolve, interval));
   }
 };
@@ -173,9 +171,29 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
   let originalWindowFetch;
   let fetchMock;
   let bootstrapSpy;
+  
+  // Module exports
+  let initializeTraitsRewriter;
+  let startApp;
+
+  beforeAll(async () => {
+    // Disable auto-initialization before loading the module to prevent side effects
+    globalThis.__LNE_FORCE_AUTO_INIT__ = false;
+    
+    // Load the module once
+    const mod = await import(MODULE_PATH);
+    initializeTraitsRewriter = mod.initializeTraitsRewriter;
+    startApp = mod.startApp;
+  });
+
+  afterAll(() => {
+    // Restore default state
+    globalThis.__LNE_FORCE_AUTO_INIT__ = true;
+  });
 
   beforeEach(() => {
-    jest.resetModules();
+    // DO NOT reset modules here to avoid reloading everything
+    // jest.resetModules(); 
     jest.restoreAllMocks();
     localStorage.clear();
     setReadyState('complete');
@@ -210,11 +228,12 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
     }
     restoreReadyState();
     document.body.innerHTML = '';
-    jest.resetModules();
+    // jest.resetModules(); // Removed
+    globalThis.__LNE_FORCE_AUTO_INIT__ = false; // Reset for next test
   });
 
   it('bootstraps with real modules and updates the active LLM display', async () => {
-    await import(MODULE_PATH);
+    await initializeTraitsRewriter();
 
     const nameElement = document.getElementById('active-llm-name');
     const resolvedName = await waitForCondition(() => {
@@ -233,7 +252,12 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
   it('defers initialization until DOMContentLoaded when the document is loading', async () => {
     setReadyState('loading');
     renderTraitsRewriterDom();
-    await import(MODULE_PATH);
+    
+    // Enable auto-init for this test so startApp works
+    globalThis.__LNE_FORCE_AUTO_INIT__ = true;
+    
+    // Call startApp which should attach the listener
+    startApp();
 
     const nameElement = document.getElementById('active-llm-name');
     expect(nameElement?.textContent).toBe('Loading...');
@@ -250,9 +274,7 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
   });
 
   it('falls back to the default label when LLM initialization fails', async () => {
-    const { CharacterBuilderBootstrap } = await import(
-      '../../../src/characterBuilder/CharacterBuilderBootstrap.js'
-    );
+    // Spy on the prototype directly since we share the module instance
     const originalBootstrap = CharacterBuilderBootstrap.prototype.bootstrap;
     bootstrapSpy = jest
       .spyOn(CharacterBuilderBootstrap.prototype, 'bootstrap')
@@ -271,7 +293,7 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
         return result;
       });
 
-    await import(MODULE_PATH);
+    await initializeTraitsRewriter();
 
     const nameElement = document.getElementById('active-llm-name');
     const resolvedName = await waitForCondition(() => {
@@ -283,9 +305,6 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
   });
 
   it('reports unknown status when the LLM adapter cannot be resolved', async () => {
-    const { CharacterBuilderBootstrap } = await import(
-      '../../../src/characterBuilder/CharacterBuilderBootstrap.js'
-    );
     const originalBootstrap = CharacterBuilderBootstrap.prototype.bootstrap;
     bootstrapSpy = jest
       .spyOn(CharacterBuilderBootstrap.prototype, 'bootstrap')
@@ -301,7 +320,7 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
         return result;
       });
 
-    await import(MODULE_PATH);
+    await initializeTraitsRewriter();
 
     const nameElement = document.getElementById('active-llm-name');
     const resolvedName = await waitForCondition(() => {
@@ -319,16 +338,13 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
   });
 
   it('renders an inline error message when bootstrap throws', async () => {
-    const { CharacterBuilderBootstrap } = await import(
-      '../../../src/characterBuilder/CharacterBuilderBootstrap.js'
-    );
     bootstrapSpy = jest
       .spyOn(CharacterBuilderBootstrap.prototype, 'bootstrap')
       .mockImplementation(async () => {
         throw new Error('bootstrap failure');
       });
 
-    await import(MODULE_PATH);
+    await initializeTraitsRewriter();
     await flushMicrotasks(6);
 
     const container = document.getElementById('rewritten-traits-container');
@@ -338,7 +354,7 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
 
   it('skips LLM display updates gracefully when the indicator element is missing', async () => {
     renderTraitsRewriterDom({ includeLlmIndicator: false });
-    await import(MODULE_PATH);
+    await initializeTraitsRewriter();
 
     expect(document.getElementById('active-llm-name')).toBeNull();
 

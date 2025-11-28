@@ -42,6 +42,7 @@ import RegenerateDescriptionHandler from '../../../../src/logic/operationHandler
 import ForEachHandler from '../../../../src/logic/operationHandlers/forEachHandler.js';
 import IfHandler from '../../../../src/logic/operationHandlers/ifHandler.js';
 import ConsumeItemHandler from '../../../../src/logic/operationHandlers/consumeItemHandler.js';
+import PrepareActionContextHandler from '../../../../src/logic/operationHandlers/prepareActionContextHandler.js';
 import * as closenessCircleService from '../../../../src/logic/services/closenessCircleService.js';
 
 describe('ModTestHandlerFactory Migration Validation', () => {
@@ -134,6 +135,10 @@ describe('ModTestHandlerFactory Migration Validation', () => {
       }),
       SET_VARIABLE: new SetVariableHandler({ logger }),
       LOG_MESSAGE: new LogHandler({ logger }),
+      PREPARE_ACTION_CONTEXT: new PrepareActionContextHandler({
+        entityManager,
+        logger,
+      }),
       FOR_EACH: new ForEachHandler({
         operationInterpreter: () => ({ execute: jest.fn() }),
         jsonLogic: { evaluate: jest.fn((rule, data) => data) },

@@ -20,6 +20,7 @@ const GOAL_SCHEMA_ERROR_CODE = 'GOAL_SCHEMA_VALIDATION_FAILED';
 /**
  * Checks if permissive goal loader mode is enabled via environment variable.
  * Browser-safe: Returns false (default) when process.env is unavailable.
+ *
  * @returns {boolean} True if permissive mode is enabled, false otherwise
  */
 function isPermissiveGoalLoaderMode() {

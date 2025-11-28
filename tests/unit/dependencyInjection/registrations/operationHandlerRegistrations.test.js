@@ -164,6 +164,10 @@ const handlerModuleDefinitions = [
     'PickUpItemFromLocationHandler',
     `${handlerBasePath}/pickUpItemFromLocationHandler.js`,
   ],
+  [
+    'PrepareActionContextHandler',
+    `${handlerBasePath}/prepareActionContextHandler.js`,
+  ],
   ['OpenContainerHandler', `${handlerBasePath}/openContainerHandler.js`],
   ['TakeFromContainerHandler', `${handlerBasePath}/takeFromContainerHandler.js`],
   ['PutInContainerHandler', `${handlerBasePath}/putInContainerHandler.js`],
@@ -843,6 +847,14 @@ beforeAll(async () => {
         { property: 'logger', token: ILogger },
         { property: 'entityManager', token: IEntityManager },
         { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.PrepareActionContextHandler,
+      handlerName: 'PrepareActionContextHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
       ],
     },
     {
