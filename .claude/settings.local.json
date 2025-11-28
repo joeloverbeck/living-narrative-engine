@@ -615,7 +615,8 @@
       "Bash(tickets/audit-goal-references.txt)",
       "Bash(tickets/GOADISANA-003-audit-results.txt)",
       "Bash(tree:*)",
-      "mcp__morphllm-fast-apply__list_directory_with_sizes"
+      "mcp__morphllm-fast-apply__list_directory_with_sizes",
+      "Bash(git ls-tree:*)"
     ],
     "deny": [],
     "ask": []
