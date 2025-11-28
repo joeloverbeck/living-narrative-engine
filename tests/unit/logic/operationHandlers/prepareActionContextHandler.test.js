@@ -185,9 +185,72 @@ describe('PrepareActionContextHandler', () => {
   });
 
   describe('execute - name resolution fallbacks', () => {
-    it('should fallback to core:item if core:actor not found', async () => {
+    it('should resolve name from core:name component (primary source)', async () => {
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
+          if (componentType === 'core:name') {
+            return { text: `NameFrom-${entityId}` };
+          }
+          if (componentType === 'core:actor') {
+            // core:actor also has a name, but should be ignored in favor of core:name
+            return { name: 'ShouldNotBeUsed' };
+          }
+          if (componentType === 'core:position') {
+            return { locationId: 'loc-1' };
+          }
+          return null;
+        }
+      );
+
+      const parameters = {};
+      const executionContext = {
+        evaluationContext: {
+          event: {
+            payload: { actorId: 'actor-1', targetId: 'target-1' },
+          },
+          context: {},
+        },
+      };
+
+      const result = await handler.execute(parameters, executionContext);
+
+      const context = result.evaluationContext.context;
+      // Should use core:name.text, not core:actor.name
+      expect(context.actorName).toBe('NameFrom-actor-1');
+      expect(context.targetName).toBe('NameFrom-target-1');
+    });
+
+    it('should fallback to core:actor if core:name not found', async () => {
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'core:name') return null;
+          if (componentType === 'core:actor') return { name: `Actor-${entityId}` };
+          if (componentType === 'core:position') return { locationId: 'loc-1' };
+          return null;
+        }
+      );
+
+      const parameters = {};
+      const executionContext = {
+        evaluationContext: {
+          event: {
+            payload: { actorId: 'a1', targetId: 't1' },
+          },
+          context: {},
+        },
+      };
+
+      const result = await handler.execute(parameters, executionContext);
+
+      const context = result.evaluationContext.context;
+      expect(context.actorName).toBe('Actor-a1');
+      expect(context.targetName).toBe('Actor-t1');
+    });
+
+    it('should fallback to core:item if core:name and core:actor not found', async () => {
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'core:name') return null;
           if (componentType === 'core:actor') return null;
           if (componentType === 'core:item') return { name: 'Sword' };
           if (componentType === 'core:position')

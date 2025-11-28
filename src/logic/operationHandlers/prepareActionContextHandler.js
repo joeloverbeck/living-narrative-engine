@@ -119,7 +119,9 @@ class PrepareActionContextHandler extends BaseOperationHandler {
   }
 
   /**
-   * Resolves entity name using core:actor or core:item name component.
+   * Resolves entity name using core:name component (primary), then
+   * falls back to core:actor.name or core:item.name.
+   * Matches GetNameHandler behavior for consistency.
    *
    * @param {string} entityId - The ID of the entity to resolve.
    * @returns {string} Entity name or fallback.
@@ -127,7 +129,18 @@ class PrepareActionContextHandler extends BaseOperationHandler {
   #resolveEntityName(entityId) {
     if (!entityId) return 'Unknown';
 
-    // Try core:actor first
+    // Try core:name first (primary name component, used by GetNameHandler)
+    /** @type {{ text?: string } | undefined} */
+    // @ts-ignore
+    const nameComponent = this.#entityManager.getComponentData(
+      entityId,
+      'core:name'
+    );
+    if (nameComponent?.text) {
+      return nameComponent.text.trim();
+    }
+
+    // Try core:actor.name as fallback
     /** @type {{ name?: string } | undefined} */
     // @ts-ignore
     const actorComponent = this.#entityManager.getComponentData(
@@ -138,7 +151,7 @@ class PrepareActionContextHandler extends BaseOperationHandler {
       return actorComponent.name;
     }
 
-    // Try core:item
+    // Try core:item.name as fallback
     /** @type {{ name?: string } | undefined} */
     // @ts-ignore
     const itemComponent = this.#entityManager.getComponentData(

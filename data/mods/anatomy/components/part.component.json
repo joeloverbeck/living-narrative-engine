@@ -12,6 +12,24 @@
       "orientation": {
         "type": "string",
         "description": "The orientation of the body part inherited from parent socket (e.g., 'left', 'right', 'mid', or indexed like '1', '2')"
+      },
+      "hit_probability_weight": {
+        "type": "number",
+        "description": "Relative weight for being hit in a general attack (e.g., torso > finger)",
+        "minimum": 0,
+        "default": 1.0
+      },
+      "damage_propagation": {
+        "type": "object",
+        "description": "Rules for propagating damage to child parts",
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "probability": { "type": "number", "minimum": 0, "maximum": 1 },
+            "damage_fraction": { "type": "number", "minimum": 0, "default": 0.5 },
+            "damage_types": { "type": "array", "items": { "type": "string" } }
+          }
+        }
       }
     },
     "required": ["subType"],
