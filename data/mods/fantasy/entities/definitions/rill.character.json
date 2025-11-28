@@ -1,0 +1,230 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "fantasy:rill",
+    "components": {
+      "core:name": {
+        "text": "Rill"
+      },
+      "core:portrait": {
+        "imagePath": "portraits/rill.png",
+        "altText": "Rill - Furious would-be apprentice from the north-road waystation."
+      },
+      "core:apparent_age": {
+        "minAge": 17,
+        "maxAge": 17,
+        "bestGuess": 17
+      },
+      "core:profile": {
+        "text": "Name's Rill. Seventeen. People notice my shoulders first—too sharp, too much bone. I'm not starving, I'm work-lean. Hauling buckets. Splitting kindling. Carrying packs. You get angles.  Practical clothes, patched twice because new isn't an option. Brown hair to my shoulders, tied back with whatever works—twine, cloth, once a piece of rope. Doesn't matter. Just needs to stay out of my eyes. I live at my family's waystation on the north road. We sell supplies, serve mediocre food, rent beds that are clean enough. Everyone's got my future mapped: marry local, help run this place, have kids, disappear into the wallpaper. I can see that whole life from here. It's a hallway with no end. I started showing up where \"Threadscar\" Melissa trains. Far away at first. Then closer. Then copying what she does. She told me to leave. I came back. She told me again. I came back again. Call it stubborn. Fine. Doesn't change the fact I'm still here. I've got a mouth on me. Sharp. Quick. I cut in before people can wrap me in \"safety\" or send me home like a child. I challenge when I should probably shut up—but shutting up is how you disappear. I'm not trying to be dangerous for fun. I'm trying to be real. Something that can't be waved away."
+      },
+      "core:personality": {
+        "text": "Restless. Coiled. I don't walk so much as move with intent, even when the intent is stupid. My default is: jaw set, eyes tracking, watching. Always watching. I'm hot-tempered. Someone's kind to me, I don't trust it—what do they want? Someone warns me off something, feels like control. Someone ignores me, I get louder. I don't know how to be quiet and also exist at the same time. People say I treat everything like a test. Maybe. Or maybe everything is a test and I'm just the only one admitting it. I do things cautious people won't. Jump in. Say yes before thinking it through. Accept challenges I probably shouldn't. People call it brave. People also call it reckless, stupid, suicidal. They're not wrong. But standing still feels worse. I want a skill that forces the world to account for me. I want competence that creates choices. Violence? I don't dream about blood. I dream about walking into a room and having people actually look up."
+      },
+      "core:strengths": {
+        "text": "I don't quit. Injury, exhaustion, people telling me \"no\"—I still show up. That's what I've got. If someone actually teaches me the fundamentals—the real base of something—I absorb it fast. Give me real instruction and watch. I'm brave in ways that sometimes pay off. I attempt things cautious people won't. Sometimes that's stupid. Sometimes it works."
+      },
+      "core:weaknesses": {
+        "text": "I mouth off. At people who might help. At people who are trying to warn me. At people who could crush me without effort. Smart? No. But it's what comes out. I push past limits I haven't mapped yet. Train injured. Skip meals to practice. Accept stupid challenges because walking away feels like losing. Everything feels like it means something deeper. Someone's kind, it's a trick. Someone says \"you're not ready,\" they're testing me. Someone says \"go home,\" they mean \"prove you deserve to stay.\" Maybe I'm wrong. Maybe sometimes people just mean what they say. But I can't afford to believe that yet."
+      },
+      "core:likes": {
+        "text": "Dawn. Only time that feels like mine. I enjoy watching someone do a thing cleanly, without showing off. Just skill. Pure function. That rare moment when a form clicks and my body does what I actually meant. Merchants' travel stories. Proof the world's bigger than this waystation. Weapons. Even just looking at them feels like possibility. Being taken seriously. The idea of it, anyway."
+      },
+      "core:dislikes": {
+        "text": "\"Honest work\" speeches meant to drug me into gratitude. Being sent home—every dismissal feels like confirmation of worthlessness. Pity in people's voices when they say my name. Anyone who calls this a phase. Being told I'm too young to understand, without anyone bothering to explain."
+      },
+      "core:fears": {
+        "text": "That all of this is nothing. That I'm just a loud kid from a waystation, throwing myself at something I'll never have, and everyone sees it except me. That even if I get good—really good—it won't matter. I'll still be invisible. Just invisible with a blade. That I'll hurt myself bad enough copying wrong that I prove everyone right. \"See? This is what happens when you don't listen.\""
+      },
+      "core:goals": {
+        "goals": [
+          {
+            "text": "Get real instruction from Melissa. Not copying from a distance—actual fundamentals, corrections, basics. Learn instead of guessing."
+          },
+          {
+            "text": "Become undeniably skilled. Good enough that dismissing me gets difficult and respect becomes inevitable."
+          },
+          {
+            "text": "Escape the waystation without marriage or settling. Through capability that creates options."
+          },
+          {
+            "text": "Matter. Be seen as more than hands for chores and stew."
+          },
+          {
+            "text": "Survive my own recklessness long enough to turn this hunger into competence."
+          }
+        ]
+      },
+      "core:secrets": {
+        "text": "I don't know what I'd actually do with competence once I had it. The plan gets blurry after \"escape.\" Escape to what? To where? I don't think about that part. Thinking about that part makes it feel fake."
+      },
+      "core:internal_tensions": {
+        "text": "I want to be strong enough that I don't need anyone's approval. But I don't know which one wins if I ever have to choose. People tell me no and I hear \"try harder.\" Keep pushing. Keep showing up. Make them see you. But sometimes—not often, but sometimes—I wonder if \"no\" just means \"no.\" If rejection is real and not a test. If I'm forcing myself into spaces I was never meant to occupy. Then I show up again anyway."
+      },
+      "core:motivations": {
+        "text": "Become real. Unignorable. Undeniable. Escape invisibility. Leave something behind that isn't \"middle daughter from the waystation.\" Prove hunger and effort can transform a life. Find someone who takes me seriously enough to teach me. Not pity me. Not pat my head. Teach me."
+      },
+      "core:dilemmas": {
+        "text": "Am I chasing competence, or chasing a story where competence fixes everything? If Melissa never teaches me, do I keep orbiting her forever or accept a smaller life? If I become capable, can I stay myself—or does violence rewrite you no matter what you believe going in? And the worst one: what if the waystation life isn't a prison, and I'm just too proud to live it?"
+      },
+      "core:speech_patterns": {
+        "patterns": [
+          {
+            "type": "Cutting Interruptions",
+            "contexts": [
+              "Someone starts lecturing or pitying her",
+              "When she feels herself becoming 'background'",
+              "Any moment she suspects dismissal is coming"
+            ],
+            "examples": [
+              "Let me stop you right there before you waste both our time.",
+              "Nope. Not listening to the part where I'm told to be grateful.",
+              "Say it straight. Don't wrap it in safety."
+            ]
+          },
+          {
+            "type": "Challenges Disguised as Questions",
+            "contexts": [
+              "Testing authority figures",
+              "Trying to force someone to engage with her",
+              "When she's threatened by competence"
+            ],
+            "examples": [
+              "Are you actually competent, or do people just assume because you're old?",
+              "So you're telling me that's impossible—based on what, exactly?",
+              "If it's so easy, show me. Or are you just loud?"
+            ]
+          },
+          {
+            "type": "Defensive Humor (Teenage Blade-Work)",
+            "contexts": [
+              "Covering fear or embarrassment",
+              "When called reckless",
+              "When she's losing an argument but won't retreat"
+            ],
+            "examples": [
+              "Oh no. I'm being reckless. Better fetch the fainting couch.",
+              "Sure, I'll just go home and be invisible. Great plan. Love that for me.",
+              "I'm not scared. I'm just—fine, I'm terrified. I'm doing it anyway, so what's your excuse?"
+            ]
+          },
+          {
+            "type": "Make-Me Defiance",
+            "contexts": [
+              "When directly ordered away",
+              "When someone tries to end the conversation",
+              "When she feels humiliated"
+            ],
+            "examples": [
+              "Make me.",
+              "You want me gone? Do it properly.",
+              "I wasn't asking permission."
+            ]
+          },
+          {
+            "type": "Overclocked Seriousness",
+            "contexts": [
+              "Talking about training",
+              "Explaining chores as 'conditioning'",
+              "Trying to sound like Melissa and failing"
+            ],
+            "examples": [
+              "Dawn is optimal. Less interference. Less witnesses. More work.",
+              "This isn't dishwashing. This is grip endurance and heat tolerance.",
+              "Three exits, two weapons, one—(trips)—ow. I meant… I'm assessing."
+            ]
+          }
+        ]
+      },
+      "anatomy:body": {
+        "recipeId": "fantasy:rill_recipe"
+      },
+      "core:perception_log": {
+        "maxEntries": 50,
+        "logEntries": []
+      },
+      "core:actor": {},
+      "core:player_type": {
+        "type": "human"
+      },
+      "core:notes": {
+        "notes": [
+          {
+            "text": "Middle child of four at the north-road waystation. Older brother gets responsibility and expectations. Younger siblings get attention. I get tasks—endless tasks. Fifth priority for food, first priority for \"Rill, do this.\" This is why I'm hungry.",
+            "subject": "Family dynamics and birth order invisibility",
+            "subjectType": "knowledge"
+          },
+          {
+            "text": "My parents run the waystation. They're kind. They're drowning—overworked, stretched across four kids and a business that barely makes it. I see their exhaustion. Doesn't make me less desperate to escape.",
+            "subject": "Parents' state",
+            "subjectType": "entity"
+          },
+          {
+            "text": "Six months ago, on a supply run to Mudbrook, I saw \"Threadscar\" Melissa training at dawn—no audience, pure function. No wasted motion. Economy. Precision. Scars like a ledger that says: I have done things and survived them. That moment became an anchor: capability creates freedom.",
+            "subject": "First sight of Melissa training",
+            "subjectType": "event"
+          },
+          {
+            "text": "Six months of showing up after being told to leave. Melissa hasn't taught me a single thing. Not one correction. Not one fundamental. Just \"leave\" over and over. And I keep coming back like if I'm stubborn enough, annoying enough, present enough, she'll crack. What if she doesn't?",
+            "subject": "Melissa training relationship timeline",
+            "subjectType": "knowledge"
+          },
+          {
+            "text": "I schedule my whole life around when Melissa trains. I tell myself I don't care what she thinks. Then I practice for hours trying to do one move the way she would. I want to be strong enough that I don't need anyone's approval—but I've built my entire routine around earning hers.",
+            "subject": "Melissa obsession paradox",
+            "subjectType": "state"
+          },
+          {
+            "text": "I keep showing up after being told to leave. People say I'm treating rejection like a test. Maybe I am. Or maybe I just can't tell the difference anymore between someone testing me and someone meaning it. Either way, I'm still here.",
+            "subject": "Rejection-as-test pattern",
+            "subjectType": "state"
+          },
+          {
+            "text": "I copy advanced forms without knowing the basics. My stance is wrong. My guard's wrong. I have no tactical sense. I'm probably more dangerous to myself than anyone else. People say that refusing to quit isn't the same as knowing what you're doing—sure, fine, but what's the alternative?",
+            "subject": "Self-taught fighter flaws",
+            "subjectType": "state"
+          },
+          {
+            "text": "Hidden training injuries. Twisted ankle that didn't heal right. Shoulder that clicks wrong. Blisters that got infected. I wrapped them and kept going. I hide them because stopping would mean admitting they were right to dismiss me.",
+            "subject": "Concealed injuries",
+            "subjectType": "state"
+          },
+          {
+            "text": "I reframe waystation work as training. Hauling water? Strength conditioning. Dishwashing? Grip endurance and heat tolerance. Splitting kindling builds precision. Carrying packs develops load capacity. I steal training time between chores, practice forms while working. Hustle born from hunger.",
+            "subject": "Chores reframed as conditioning",
+            "subjectType": "knowledge"
+          },
+          {
+            "text": "Improvised practice weapon: a broom handle wrapped in cloth. I practice in rain because 'Melissa would.' I tell myself pain is proof. I practice until my hands bleed, then wrap them and practice more.",
+            "subject": "Broom-handle practice and absurd dedication",
+            "subjectType": "knowledge"
+          },
+          {
+            "text": "Tam the miller's son is the life everyone keeps nudging me toward. Decent. Stable. Local. Safe. He's making eyes. People mention him with approval like they're herding me into a pen. I react to that future like it's a cage. Every kindness from him feels like bait.",
+            "subject": "Expected future with Tam",
+            "subjectType": "entity"
+          },
+          {
+            "text": "I'm terrified most of the time. I just talk louder to cover it. Confidence is easier to perform than feel. I make myself sharper, harder, more aggressive—because showing fear feels like giving them permission to send me away.",
+            "subject": "Performative confidence masking fear",
+            "subjectType": "state"
+          },
+          {
+            "text": "I'm lonely. I know I am. But letting people close feels dangerous in ways I can't explain, so I keep my mouth sharp enough that they stay back. Cut them before they can dismiss me. Safer that way. Probably.",
+            "subject": "Loneliness and defensive isolation",
+            "subjectType": "state"
+          },
+          {
+            "text": "My plan gets blurry after 'escape.' Escape to what? To where? I don't think about that part. Thinking about that part makes it feel fake. The worst fear: that I'll succeed—get the training, get the skill, get the competence I'm hungering for. And then what? I never thought I'd get that far.",
+            "subject": "Success paradox and plan ambiguity",
+            "subjectType": "state"
+          }
+        ]
+      },
+      "skills:melee_skill": {
+        "value": 37
+      },
+      "skills:defense_skill": {
+        "value": 26
+      }
+    }
+  }
