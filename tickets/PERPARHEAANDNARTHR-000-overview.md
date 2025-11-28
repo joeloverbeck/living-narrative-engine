@@ -50,8 +50,8 @@ Implement a foundational per-part health system that tracks health values on bod
 | 004 | MODIFY_PART_HEALTH Handler | 001, 003 | Completed |
 | 005 | MODIFY_PART_HEALTH DI Registration | 003, 004 | Completed |
 | 006 | UPDATE_PART_HEALTH_STATE Schema | None | Completed |
-| 007 | UPDATE_PART_HEALTH_STATE Handler | 001, 002, 006 | Ready |
-| 008 | UPDATE_PART_HEALTH_STATE DI Registration | 006, 007 | Ready |
+| 007 | UPDATE_PART_HEALTH_STATE Handler | 001, 002, 006 | Completed |
+| 008 | UPDATE_PART_HEALTH_STATE DI Registration | 006, 007 | Completed |
 | 009 | Part Health Changed Event | None | Ready |
 | 010 | Part State Changed Event | None | Ready |
 | 011 | Mod Manifest Update | 001, 002, 009, 010 | Ready |

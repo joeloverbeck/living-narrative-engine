@@ -56,6 +56,7 @@ import EstablishFollowRelationHandler from '../../logic/operationHandlers/establ
 import BreakFollowRelationHandler from '../../logic/operationHandlers/breakFollowRelationHandler.js';
 import BurnEnergyHandler from '../../logic/operationHandlers/burnEnergyHandler.js';
 import UpdateHungerStateHandler from '../../logic/operationHandlers/updateHungerStateHandler.js';
+import UpdatePartHealthStateHandler from '../../logic/operationHandlers/updatePartHealthStateHandler.js';
 import AddPerceptionLogEntryHandler from '../../logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import QueryEntitiesHandler from '../../logic/operationHandlers/queryEntitiesHandler.js';
 import HasComponentHandler from '../../logic/operationHandlers/hasComponentHandler.js';
@@ -372,6 +373,16 @@ export function registerOperationHandlers(registrar) {
     [
       tokens.UpdateHungerStateHandler,
       UpdateHungerStateHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.UpdatePartHealthStateHandler,
+      UpdatePartHealthStateHandler,
       (c, Handler) =>
         new Handler({
           logger: c.resolve(tokens.ILogger),
