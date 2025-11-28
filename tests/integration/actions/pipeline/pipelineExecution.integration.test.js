@@ -262,4 +262,49 @@ describe('Pipeline integration', () => {
       'Pipeline requires at least one stage'
     );
   });
+
+  test('chains ActionResult helpers through multiple pipeline stages with mixed outcomes', async () => {
+    const logger = createLogger();
+    const trace = new TraceContext();
+
+    const fromActionResultStage = new RecordingStage('FromActionResult', () => {
+      const actionResult = ActionResult.success({ derived: ['candidate:1'] });
+      return PipelineResult.fromActionResult(actionResult, { origin: 'dsl' });
+    });
+
+    const chainSuccessStage = new RecordingStage('ChainSuccess', (context) => {
+      expect(context.origin).toBe('dsl');
+      const base = PipelineResult.success({ data: { chainBase: true } });
+      return base.chainActionResult(() =>
+        ActionResult.success({ chainExtra: context.origin })
+      );
+    });
+
+    const chainFailureStage = new RecordingStage('ChainFailure', () => {
+      const base = PipelineResult.success({ data: { shouldPersist: true } });
+      return base.chainActionResult(() =>
+        ActionResult.failure(new Error('chain explosion'))
+      );
+    });
+
+    const pipeline = new Pipeline(
+      [fromActionResultStage, chainSuccessStage, chainFailureStage],
+      logger
+    );
+
+    const result = await pipeline.execute({ ...baseContext, trace });
+
+    expect(result.success).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].message).toContain('chain explosion');
+
+    expect(result.data.origin).toBe('dsl');
+    expect(result.data.chainBase).toBe(true);
+    expect(result.data.chainExtra).toBe('dsl');
+    expect(result.data.shouldPersist).toBe(true);
+
+    expect(trace.logs.some((entry) =>
+      entry.type === 'info' && entry.message.includes('Pipeline execution completed')
+    )).toBe(true);
+  });
 });
