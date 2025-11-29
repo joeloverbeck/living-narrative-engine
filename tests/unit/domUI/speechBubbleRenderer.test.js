@@ -1046,6 +1046,7 @@ describe('SpeechBubbleRenderer', () => {
           {
             thoughts: 'Inner thoughts',
             notes: 'Private notes',
+            speakerName: 'Unknown Speaker',
           }
         );
 
@@ -1078,6 +1079,7 @@ describe('SpeechBubbleRenderer', () => {
           {
             thoughts: undefined,
             notes: undefined,
+            speakerName: 'Unknown Speaker',
           }
         );
 

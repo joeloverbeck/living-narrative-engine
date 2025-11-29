@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/operations/resolveHitLocation.schema.json",
+  "title": "RESOLVE_HIT_LOCATION Operation",
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "RESOLVE_HIT_LOCATION"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the RESOLVE_HIT_LOCATION operation.",
+      "properties": {
+        "entity_ref": {
+          "$ref": "../common.schema.json#/definitions/entityReference"
+        },
+        "result_variable": {
+          "type": "string",
+          "description": "Variable to store the resolved hit location (part entity ID) or null if none found.",
+          "minLength": 1
+        }
+      },
+      "required": ["entity_ref", "result_variable"],
+      "additionalProperties": false
+    }
+  }
+}

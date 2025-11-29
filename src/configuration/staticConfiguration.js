@@ -61,6 +61,7 @@ const OPERATION_SCHEMA_FILES = [
   'removeLyingCloseness.schema.json',
   'removeSittingCloseness.schema.json',
   'resolveDirection.schema.json',
+  'resolveHitLocation.schema.json',
   'resolveOutcome.schema.json',
   'setVariable.schema.json',
   'systemMoveEntity.schema.json',

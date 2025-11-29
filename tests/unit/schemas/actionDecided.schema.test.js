@@ -35,12 +35,12 @@ describe('Schema – core:action_decided payload', () => {
           {
             text: 'First observation',
             subject: 'player-1',
-            subjectType: 'character',
+            subjectType: 'entity',
           },
           {
             text: 'Second observation',
             subject: 'environment',
-            subjectType: 'location',
+            subjectType: 'entity',
           },
         ],
         speech: 'I will do it.',
@@ -94,7 +94,7 @@ describe('Schema – core:action_decided payload', () => {
           {
             text: 'Player seems nervous',
             subject: 'player-1',
-            subjectType: 'character',
+            subjectType: 'entity',
             context: 'dialogue interaction',
           },
         ],

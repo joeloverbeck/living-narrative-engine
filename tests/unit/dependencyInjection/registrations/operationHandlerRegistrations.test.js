@@ -143,6 +143,10 @@ const handlerModuleDefinitions = [
     `${handlerBasePath}/resolveDirectionHandler.js`,
   ],
   [
+    'ResolveHitLocationHandler',
+    `${handlerBasePath}/resolveHitLocationHandler.js`,
+  ],
+  [
     'AtomicModifyComponentHandler',
     `${handlerBasePath}/atomicModifyComponentHandler.js`,
   ],
@@ -783,6 +787,16 @@ beforeAll(async () => {
         { property: 'entityManager', token: IEntityManager },
         { property: 'logger', token: ILogger },
         { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.ResolveHitLocationHandler,
+      handlerName: 'ResolveHitLocationHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+        { property: 'bodyGraphService', token: BodyGraphServiceToken },
       ],
     },
     {

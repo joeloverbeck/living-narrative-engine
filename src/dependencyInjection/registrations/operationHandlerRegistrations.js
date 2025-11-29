@@ -84,6 +84,7 @@ import UnlockMouthEngagementHandler from '../../logic/operationHandlers/unlockMo
 import UnwieldItemHandler from '../../logic/operationHandlers/unwieldItemHandler.js';
 import RegenerateDescriptionHandler from '../../logic/operationHandlers/regenerateDescriptionHandler.js';
 import ResolveDirectionHandler from '../../logic/operationHandlers/resolveDirectionHandler.js';
+import ResolveHitLocationHandler from '../../logic/operationHandlers/resolveHitLocationHandler.js';
 import AtomicModifyComponentHandler from '../../logic/operationHandlers/atomicModifyComponentHandler.js';
 import SequenceHandler from '../../logic/operationHandlers/sequenceHandler.js';
 import TransferItemHandler from '../../logic/operationHandlers/transferItemHandler.js';
@@ -674,6 +675,17 @@ export function registerOperationHandlers(registrar) {
           entityManager: c.resolve(tokens.IEntityManager),
           logger: c.resolve(tokens.ILogger),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.ResolveHitLocationHandler,
+      ResolveHitLocationHandler,
+      (c, Handler) =>
+        new Handler({
+          entityManager: c.resolve(tokens.IEntityManager),
+          logger: c.resolve(tokens.ILogger),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+          bodyGraphService: c.resolve(tokens.BodyGraphService),
         }),
     ],
     [
