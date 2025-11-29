@@ -120,27 +120,15 @@
         "subjectType": {
           "type": "string",
           "enum": [
-            "character",
-            "location",
-            "item",
-            "creature",
+            "entity",
             "event",
-            "concept",
-            "relationship",
-            "organization",
-            "quest",
-            "skill",
-            "emotion",
             "plan",
-            "timeline",
-            "theory",
-            "observation",
-            "knowledge_state",
-            "psychological_state",
+            "knowledge",
+            "state",
             "other"
           ],
           "default": "other",
-          "description": "Explicit categorization of the note's subject type"
+          "description": "Explicit categorization of the note's subject type: entity (who/what/where), event (past occurrences), plan (future intentions), knowledge (information/theories), state (mental/emotional conditions), other"
         },
         "context": {
           "type": "string",

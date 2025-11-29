@@ -172,7 +172,7 @@
     },
     "core:actor": {},
     "core:player_type": {
-      "type": "human"
+      "type": "llm"
     },
     "core:notes": {
       "notes": [
@@ -277,17 +277,42 @@
           "subjectType": "knowledge"
         },
         {
-          "text": "Pulled a ridiculous notice off Copperplate's board. Five copper. Lunch. Fake-threaten some shopkeeper's stall, let him swing at air, fall down on cue, make him look brave. Theatre-combat. No stakes. Seasonal stupidity. I was about to track down which merchant wrote it—idiot didn't even sign his own contract—when Bertram the Muddy barrels up the street like he found a sale on entrails. Says a cat-folk bard, swords on her hips and confidence in her mouth, just took a job to kill \"possessed chickens\" out on the north road. Newcomer. No local sense. Bertram wants me as backup, calls it 'assistance,' means 'keep her alive if the birds bite back.' Fine. That's a better distraction than pretending to be a villain for pocket change. Plan: meet the bard, assess competence, set parameters, make sure nobody dies over poultry. If it stays absurd, good. If it turns real, I'm already paid in clarity.",
+          "text": "Pulled a ridiculous notice off Copperplate's board, a mere twenty minutes ago. Five copper. Lunch. Fake-threaten some shopkeeper's stall, let him swing at air, fall down on cue, make him look brave. Theatre-combat. No stakes. Seasonal stupidity. I was about to track down which merchant wrote it—idiot didn't even sign his own contract—when Bertram the Muddy barreled up the street like he found a sale on entrails. Said a cat-folk bard, swords on her hips and confidence in her mouth, just took a job to kill \"possessed chickens\" out on the north road. Newcomer. No local sense. Bertram wanted me as backup, called it 'assistance,' means 'keep her alive if the birds bite back.' Fine. That's a better distraction than pretending to be a villain for pocket change.",
           "subject": "Switching from staged shopkeeper threat to possessed-chickens job with the cat-folk bard",
+          "subjectType": "event"
+        },
+        {
+          "text": "Pastoral weird is usually outside my scope. I do bandits, caravans, sieges. Rural nonsense is what people laugh about over ale—until it stops being funny. I've cleared a few that started stupid and turned real. Farmer swore his plow was haunted. It was rust-sprites eating the iron fittings from the inside. Another time, a \"cursed grain silo\" was phase-moths breeding in stored wheat and sliding in and out of sight like it owned the place. Point is: if something's behaving wrong, there's a reason. Might be supernatural. Might be mundane wearing a mask. Treat it like a threat either way: verify, isolate, then solve the actual problem.",
+          "subject": "Pastoral weird contracts",
+          "subjectType": "knowledge"
+        },
+        {
+          "text": "Cat-folk bard, mid-twenties, heterochromatic eyes, dual weapons at hip, instrument case on back. Took the possessed-chicken contract. Sharp verbal style, confident body language, assessing me while I assess her. Gear suggests training or familiarity with violence. Unknown: actual combat experience, pain response, decision-making under pressure. Newcomer to Mudbrook region.",
+          "subject": "Vespera Nightwhisper",
+          "subjectType": "entity"
+        },
+        {
+          "text": "Aldous' \"possessed-chickens\" contract: Vespera took it. I'm accepted as backup. Terms as stated: seventeen birds, one allegedly \"possessed\" by a vengeful mother-in-law; one silver total pay, or else claim the chickens as compensation. Low pay suggests low stakes. That's often a lie. Aldous has been uneasy for weeks per Bertram. He used the word \"corrupted\" deliberately—not \"sick,\" not \"mad,\" not \"cursed.\" Flag that. Treat as threat until proven otherwise. Procedure on-site: verify behavior, isolate suspect bird(s), identify cause (supernatural vs mundane wearing a mask), then solve the actual problem. No theatrics. No romanticizing poultry violence.",
+          "subject": "Aldous' possessed-chickens contract (Accepted backup on Vespera's job)",
+          "subjectType": "plan"
+        },
+        {
+          "text": "Aldous: reported as an honest tradesman by Bertram. That matters. Honest people still misread fear, but they don't usually invent it for leverage. If he's been uneasy for weeks, something changed in his environment or his flock. Get specifics on timeline: when it started, what exactly he saw/heard, what he's already tried, and whether anyone else is feeding/handling the birds. Words matter. He chose \"corrupted.\" Ask what he means by it, without steering him.",
+          "subject": "Aldous (client reliability + language choice: \"corrupted\")",
+          "subjectType": "entity"
+        },
+        {
+          "text": "Bertram wants to witness the job. Civilian. Noncombatant. He's personally invested in Aldous and tends to insert himself when he thinks it helps. Parameters: he stays back, no interference, hands empty unless I say otherwise, leaves immediately if I tell him to. If this turns real, he becomes a liability fast. If he can't follow simple constraints, I send him home. Friendship doesn't outrank survival.",
+          "subject": "Bertram observing the chicken job (risk controls + permitted actions)",
           "subjectType": "plan"
         }
       ]
     },
     "skills:melee_skill": {
-        "value": 86
+      "value": 86
     },
     "skills:defense_skill": {
-        "value": 73
+      "value": 73
     }
   }
 }

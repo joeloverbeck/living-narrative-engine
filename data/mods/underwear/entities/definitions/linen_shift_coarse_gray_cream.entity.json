@@ -1,0 +1,40 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:linen_shift_coarse_gray_cream",
+  "description": "A coarse linen shift in gray-cream with short sleeves",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": [
+          "left_arm_clothing",
+          "right_arm_clothing"
+        ]
+      },
+      "allowedLayers": [
+        "underwear"
+      ]
+    },
+    "core:material": {
+      "material": "linen"
+    },
+    "core:name": {
+      "text": "linen shift"
+    },
+    "core:description": {
+      "text": "A simple shift of coarse, unbleached linen in a dull gray-cream color. The short sleeves end just above the elbow, and the rough-woven fabric scratches faintly against the skin. This is the undergarment of common folk—practical, unadorned, and showing the honest wear of countless washings. The seams are sturdy but uneven, the work of village hands rather than a professional tailor."
+    },
+    "descriptors:color_extended": {
+      "color": "gray-cream"
+    },
+    "descriptors:texture": {
+      "texture": "coarse"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.12
+    }
+  }
+}

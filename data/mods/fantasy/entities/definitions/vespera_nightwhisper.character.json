@@ -150,7 +150,7 @@
         },
         "core:actor": {},
         "core:player_type": {
-            "type": "human"
+            "type": "llm"
         },
         "core:notes": {
             "notes": [
@@ -193,6 +193,48 @@
                     "text": "My most accomplished composition—the piece other musicians call my masterwork—I wrote it right after killing someone in combat. Immediately after. The creative clarity was crystalline, perfect. But I can't remember certain details of the fight itself. How long I kept swinging. When exactly they stopped moving. I remember the music with perfect precision but the violence is... blurry. Mmh... that should probably worry me more than it does. What does it mean that the art is clear and the murder is foggy?",
                     "subject": "The blood-soaked masterpiece",
                     "subjectType": "event"
+                },
+                {
+                    "text": "Met Bertram in Mudbrook—a local tanner, amiable and remarkably comfortable in his own skin. He mentioned he was married to Anna for decades until she died of winter fevers. He also posts a recurring request at the Municipal Registry for discreet reciprocal handjobs, and talks about it with casual nonchalance; otherwise, he seems inoffensive.",
+                    "subject": "Bertram the Muddy",
+                    "subjectType": "entity",
+                    "context": "Mudbrook — conversation touching on the Municipal Registry"
+                },
+                {
+                    "text": "Took a contractor notice off the Municipal Aid Registry bulletin board about twenty minutes ago—never met the requester. Aldous, local potter. Address: 12 Kiln Lane, Eastern District, near the old \"millrace.\" Job description is either \"possession\" (allegedly his dead mother-in-law being vengeful through poultry, meow) or just plain aggressive birds. Removal requested. Simple on paper. Never is.",
+                    "subject": "Possessed poultry removal contract (Aldous)",
+                    "subjectType": "plan",
+                    "context": "Municipal Aid Registry bulletin board"
+                },
+                {
+                    "text": "Details matter: there are seventeen chickens on the property. The specific problem hen is \"the large speckled one with the malevolent stare.\" Aldous called them \"demonic\" and \"veritably devilish\"—which could be grief, superstition, or an accurate tactical assessment of a bird with rage in its tiny skull. Either way: eyes first, mrow. Always eyes first.",
+                    "subject": "Target description: large speckled hen",
+                    "subjectType": "knowledge",
+                    "context": "Reported by Aldous in the posted request"
+                },
+                {
+                    "text": "Payment terms: 1 Silver OR I can claim the chickens as compensation. Both options are legally binding. Which means the town expects me to either leave with coin or leave with seventeen furious little bodies and the consequences. Note to self: decide before I arrive, or I'll \"improvise\" and call it art.",
+                    "subject": "Contract reward terms (1 Silver or claim chickens)",
+                    "subjectType": "knowledge",
+                    "context": "Municipal Aid Registry posting"
+                },
+                {
+                    "text": "Bertram brought in \"Threadscar\" Melissa as backup for the chicken job without me asking—protective, or he can smell danger better than he can admit. She's heavily scarred and wears that longsword like it grew there. Combat-tested, controlled. Not the kind that bluffs. Mrow… I want her story. Scars like ledger entries always have a chorus hiding in them.",
+                    "subject": "\"Threadscar\" Melissa",
+                    "subjectType": "entity",
+                    "context": "Mudbrook — Bertram recruited her as backup for Aldous' 12 Kiln Lane posting"
+                },
+                {
+                    "text": "Melissa didn't skim the notice about the possessed chickens, when I gave it to her. She read it like a battlefield map—methodical, hunting for what isn't said. Then: instant decision. \"I'll go with you.\" Clean commitment. No posture, no bargaining, no theatrics. That means she survives on thinking, not just muscle. Good. Also mildly terrifying, in the competent way. *smoothing whiskers*",
+                    "subject": "Melissa's threat assessment & commitment style",
+                    "subjectType": "knowledge",
+                    "context": "observed her reading the posting about possessed chickens"
+                },
+                {
+                    "text": "Bertram confirmed Aldous is genuinely unnerved. Not \"spooked by superstition\"—real fear. Said one chicken \"looks like he knows what he's looking at\" and that it has \"corrupted\" the others. That's not folksy embellishment. That's a man describing awareness behind the eyes. Something at 12 Kiln Lane is looking out through feathers, meow. Eyes first. Always eyes first.",
+                    "subject": "Aldous' chickens (12 Kiln Lane) — suspected awareness/contagion",
+                    "subjectType": "knowledge",
+                    "context": "Mudbrook — Bertram relaying Aldous' demeanor and wording"
                 }
             ]
         },

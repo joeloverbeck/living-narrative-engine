@@ -22,6 +22,11 @@
                 "direction": "to the back of the tannery",
                 "target": "fantasy:back_of_tannery_instance",
                 "blocker": null
+            },
+            {
+                "direction": "to the surroundings of the old millrace",
+                "target": "fantasy:surroundings_of_old_millrace_instance",
+                "blocker": null
             }
         ]
     }

@@ -1,0 +1,44 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:narrow_trousers_wool_linen_charcoal_brown",
+  "description": "Worn narrow trousers of wool-linen blend in charcoal-brown",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_lower"
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "wool"
+    },
+    "core:name": {
+      "text": "narrow trousers"
+    },
+    "core:description": {
+      "text": "Narrow-cut trousers of a wool-linen weave in charcoal-brown, showing the wear of long use. The knees are faded and thin, the seat patched more than once with mismatched fabric. Despite their age, the trousers fit close to the leg and tuck well into boots. The waist has been taken in with rough stitching, suggesting the wearer has known leaner times. A working garment that has seen better days."
+    },
+    "descriptors:color_extended": {
+      "color": "charcoal-brown"
+    },
+    "descriptors:texture": {
+      "texture": "worn"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_lower"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.38
+    }
+  }
+}

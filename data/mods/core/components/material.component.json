@@ -43,7 +43,8 @@
           "synthetic",
           "velvet",
           "wood",
-          "wool"
+          "wool",
+          "twine"
         ]
       },
       "durability": {
@@ -78,6 +79,7 @@
             "breathable",
             "waterproof",
             "fireproof",
+            "flammable",
             "flexible",
             "rigid",
             "transparent",

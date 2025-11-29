@@ -60,7 +60,11 @@
           "varied-human-colors",
           "violet",
           "warm-brown",
-          "white"
+          "white",
+          "charcoal-brown",
+          "gray-cream",
+          "mud-brown",
+          "off-white"
         ],
         "default": "raven-black"
       }

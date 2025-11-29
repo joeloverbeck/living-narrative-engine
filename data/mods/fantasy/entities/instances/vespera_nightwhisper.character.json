@@ -4,10 +4,11 @@
     "definitionId": "fantasy:vespera_nightwhisper",
     "componentOverrides": {
         "core:position": {
-            "locationId": "fantasy:mudbrook_on_the_bend_instance"
+            "locationId": "fantasy:surroundings_of_old_millrace_instance"
         },
         "items:inventory": {
             "items": [
+                "fantasy:notice_possessed_chickens_instance",
                 "fantasy:vespera_hybrid_lute_viol_instance",
                 "fantasy:vespera_rapier_instance",
                 "fantasy:vespera_main_gauche_instance"
