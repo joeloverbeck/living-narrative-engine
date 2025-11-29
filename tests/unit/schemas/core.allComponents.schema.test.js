@@ -119,6 +119,7 @@ describe('JSON-Schema – core component data contracts', () => {
     'core:mouth_engagement': { locked: false },
     'core:gender': { value: 'male' },
     'core:participation': { participating: true },
+    'core:conspicuous': {},
   };
 
   /** @type {Record<string, unknown>} */
@@ -171,6 +172,7 @@ describe('JSON-Schema – core component data contracts', () => {
     'core:armed': { readyState: 'holstered' },
     'core:hungry': { severity: 200 },
     'core:participation': {}, // Missing required 'participating' field
+    'core:conspicuous': { extra: true },
   };
 
   Object.entries(validators).forEach(([id, validate]) => {

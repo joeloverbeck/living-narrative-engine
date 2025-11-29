@@ -134,7 +134,7 @@ describe('Entity Spoke Event - Schema Validation', () => {
           {
             text: 'Young man positioned strategically near café tables, observing bay with confident posture',
             subject: 'Iker Aguirre',
-            subjectType: 'character',
+            subjectType: 'entity',
             context: 'outside The Gilded Bean',
           },
         ],

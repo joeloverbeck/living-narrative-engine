@@ -102,6 +102,9 @@
           "$ref": "./operations/resolveDirection.schema.json"
         },
         {
+          "$ref": "./operations/resolveHitLocation.schema.json"
+        },
+        {
           "$ref": "./operations/resolveOutcome.schema.json"
         },
         {

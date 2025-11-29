@@ -14,23 +14,11 @@ import { v4 as uuid } from 'uuid';
  * @type {string[]}
  */
 const VALID_SUBJECT_TYPES = [
-  'character',
-  'location',
-  'item',
-  'creature',
+  'entity',
   'event',
-  'concept',
-  'relationship',
-  'organization',
-  'quest',
-  'skill',
-  'emotion',
   'plan',
-  'timeline',
-  'theory',
-  'observation',
-  'knowledge_state',
-  'psychological_state',
+  'knowledge',
+  'state',
   'other',
 ];
 
@@ -49,7 +37,7 @@ const VALID_SUBJECT_TYPES = [
  * const note = createValidNote(
  *   'Player is acting suspicious',
  *   'player-001',
- *   'character',
+ *   'entity',
  *   { context: 'dialogue' }
  * );
  */
@@ -133,7 +121,7 @@ export function createMinimalNote(text, subjectType = 'other', subject = null) {
  * @example
  * const notes = createNotesArray(3, {
  *   textPrefix: 'Observation',
- *   subjectType: 'character',
+ *   subjectType: 'entity',
  *   options: { context: 'test-scenario' }
  * });
  * // Returns array with 3 notes: "Observation 1", "Observation 2", "Observation 3"
@@ -179,7 +167,7 @@ export const NOTE_TEMPLATES = {
    * @returns {object} Structured note for character observation
    */
   characterObservation: (characterId, observation) =>
-    createValidNote(observation, characterId, 'character', {
+    createValidNote(observation, characterId, 'entity', {
       context: 'character observation',
     }),
 
@@ -191,7 +179,7 @@ export const NOTE_TEMPLATES = {
    * @returns {object} Structured note for location description
    */
   locationDescription: (locationId, description) =>
-    createValidNote(description, locationId, 'location', {
+    createValidNote(description, locationId, 'entity', {
       context: 'environmental description',
     }),
 
@@ -221,7 +209,7 @@ export const NOTE_TEMPLATES = {
    * @returns {object} Structured note for dialogue context
    */
   dialogueNote: (speakerId, dialogueContext) =>
-    createValidNote(dialogueContext, speakerId, 'character', {
+    createValidNote(dialogueContext, speakerId, 'entity', {
       context: 'dialogue interaction',
     }),
 };

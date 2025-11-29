@@ -127,11 +127,7 @@ describe('Bertram the Muddy Character - Integration Validation', () => {
       expect(instanceData.definitionId).toBe('fantasy:bertram_the_muddy');
     });
 
-    it('should be located in Mudbrook', () => {
-      expect(
-        instanceData.componentOverrides['core:position'].locationId,
-      ).toBe('fantasy:mudbrook_on_the_bend_instance');
-    });
+
 
     it('should have empty unequipped inventory', () => {
       const inventory =

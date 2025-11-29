@@ -37,3 +37,10 @@ Implement the `RESOLVE_HIT_LOCATION` operation. This operation is responsible fo
 ### Invariants
 - The operation must be deterministic if the random seed is controlled (if the engine supports seeded RNG, otherwise standard Math.random is acceptable for now).
 - Must not modify the entity state.
+
+## Outcome
+- Implemented `RESOLVE_HIT_LOCATION` operation handler and schema.
+- Added `ResolveHitLocationHandler` to `tokens-core.js` and registered it in `operationHandlerRegistrations.js` and `interpreterRegistrations.js`.
+- Added `RESOLVE_HIT_LOCATION` to `KNOWN_OPERATION_TYPES`.
+- Created unit tests in `tests/unit/logic/operationHandlers/resolveHitLocationHandler.test.js` verifying weighted distribution, error handling, and correct context variable writing.
+- Utilized `BodyGraphService` to retrieve all body parts, filtering by `anatomy:part` component presence and weight > 0.
