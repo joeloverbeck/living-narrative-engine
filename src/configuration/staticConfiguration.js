@@ -10,6 +10,7 @@
 const OPERATION_SCHEMA_FILES = [
   'addComponent.schema.json',
   'addPerceptionLogEntry.schema.json',
+  'applyDamage.schema.json',
   'atomicModifyComponent.schema.json',
   'autoMoveClosenessPartners.schema.json',
   'autoMoveFollowers.schema.json',

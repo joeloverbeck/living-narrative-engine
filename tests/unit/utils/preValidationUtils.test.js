@@ -917,6 +917,7 @@ describe('preValidationUtils', () => {
     it('should include all registered operation handlers', () => {
       // Arrange
       const whitelistedTypes = KNOWN_OPERATION_TYPES;
+      console.log('DEBUG: KNOWN_OPERATION_TYPES includes APPLY_DAMAGE:', whitelistedTypes.includes('APPLY_DAMAGE'));
 
       // Act & Assert - verify each registered handler is in the whitelist
       const missing = registeredHandlers.filter(

@@ -11,6 +11,7 @@ const handlerBasePath =
   '../../../../src/logic/operationHandlers';
 
 const handlerModuleDefinitions = [
+  ['ApplyDamageHandler', `${handlerBasePath}/applyDamageHandler.js`],
   ['ConsumeItemHandler', `${handlerBasePath}/consumeItemHandler.js`],
   ['DispatchEventHandler', `${handlerBasePath}/dispatchEventHandler.js`],
   [
@@ -189,7 +190,11 @@ const registerHandlerMock = (name, modulePath) => {
   jest.mock(modulePath, () => {
     class MockHandler {
       constructor(config) {
-        this.config = config;
+        // Mimic BaseOperationHandler's dependency resolution
+        this.resolvedDeps = {};
+        for (const [key, spec] of Object.entries(config || {})) {
+          this.resolvedDeps[key] = spec?.value ?? spec;
+        }
         MockHandler.instances.push(this);
       }
     }
@@ -245,6 +250,20 @@ beforeAll(async () => {
   } = tokens;
 
   handlerExpectations = [
+    {
+      token: tokens.ApplyDamageHandler,
+      handlerName: 'ApplyDamageHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+        {
+          property: 'jsonLogicService',
+          token: JsonLogicEvaluationServiceToken,
+        },
+        { property: 'bodyGraphService', token: BodyGraphServiceToken },
+      ],
+    },
     {
       token: tokens.ConsumeItemHandler,
       handlerName: 'ConsumeItemHandler',
@@ -994,20 +1013,20 @@ describe('registerOperationHandlers', () => {
         expect(handlerStats.instances).toHaveLength(1);
 
         const [handlerInstance] = handlerStats.instances;
-        const config = handlerInstance.config;
+        const resolvedDeps = handlerInstance.resolvedDeps;
         expectation.dependencies.forEach(({ property, token, isLazy }) => {
-          expect(config).toHaveProperty(property);
+          expect(resolvedDeps).toHaveProperty(property);
           if (token === JSON_LOGIC_SENTINEL) {
-            expect(config[property]).toBe(jsonLogic);
+            expect(resolvedDeps[property]).toBe(jsonLogic);
           } else if (isLazy) {
             // For lazy resolvers, verify it's a function
-            expect(typeof config[property]).toBe('function');
+            expect(typeof resolvedDeps[property]).toBe('function');
             // Verify it resolves correctly when called
-            const resolved = config[property]();
+            const resolved = resolvedDeps[property]();
             expect(resolved).toBe(getDependencyInstance(token));
           } else {
             const dependencyInstance = getDependencyInstance(token);
-            expect(config[property]).toBe(dependencyInstance);
+            expect(resolvedDeps[property]).toBe(dependencyInstance);
           }
         });
 
