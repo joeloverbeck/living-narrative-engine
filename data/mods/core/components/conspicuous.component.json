@@ -1,0 +1,10 @@
+{
+  "id": "core:conspicuous",
+  "name": "Conspicuous",
+  "description": "Marks an item as being large or obvious enough to be noticed in a character's inventory (e.g., hanging from a belt or strapping).",
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}
