@@ -4,12 +4,11 @@
     "definitionId": "fantasy:threadscar_melissa",
     "componentOverrides": {
         "core:position": {
-            "locationId": "fantasy:mudbrook_municipal_aid_registry_instance"
+            "locationId": "fantasy:surroundings_of_old_millrace_instance"
         },
         "items:inventory": {
             "items": [
-                "fantasy:threadscar_melissa_longsword_instance",
-                "fantasy:threadscar_ale_tankard_instance"
+                "fantasy:threadscar_melissa_longsword_instance"
             ],
             "capacity": {
                 "maxWeight": 50.0,

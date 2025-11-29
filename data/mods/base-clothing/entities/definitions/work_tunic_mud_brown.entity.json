@@ -1,0 +1,48 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:work_tunic_mud_brown",
+  "description": "A thick-woven linen work tunic in mud-brown, falling to thigh-length",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": [
+          "left_arm_clothing",
+          "right_arm_clothing"
+        ]
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "linen"
+    },
+    "core:name": {
+      "text": "work tunic"
+    },
+    "core:description": {
+      "text": "A sturdy work tunic of thick-woven linen, dyed the dull brown of dried mud. The heavy fabric falls to mid-thigh and has been built to withstand hard labor—reinforced at the shoulders and elbows where strain is greatest. Sweat stains have lightened the underarms, and the hem is frayed from catching on rough edges. This is the garment of a laborer, meant for toil rather than appearance."
+    },
+    "descriptors:color_extended": {
+      "color": "mud-brown"
+    },
+    "descriptors:texture": {
+      "texture": "coarse"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.35
+    }
+  }
+}

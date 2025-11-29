@@ -1,0 +1,41 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:old_ankle_boots_cracked_leather",
+  "description": "Old ankle boots of cracked dark brown leather",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": [
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "leather",
+      "durability": 35,
+      "careInstructions": [
+        "requires_oiling"
+      ]
+    },
+    "core:name": {
+      "text": "old ankle boots"
+    },
+    "core:description": {
+      "text": "A pair of old ankle boots in dark brown leather, the surface cracked and crazed from years of hard wear. The soles have been replaced at least once, crudely stitched with heavy thread. The leather has dried out and lost its suppleness, cracking at every flex of the foot. Water seeps through the worst of the cracks, and the laces are mismatched replacements. They still keep the worst of the mud out, barely."
+    },
+    "descriptors:color_basic": {
+      "color": "brown"
+    },
+    "descriptors:texture": {
+      "texture": "cracked"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.95
+    }
+  }
+}

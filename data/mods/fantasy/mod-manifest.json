@@ -67,6 +67,7 @@
     "rules": [],
     "entities": {
       "definitions": [
+        "12_kiln_lane.location.json",
         "ale_tankard.entity.json",
         "back_of_tannery.location.json",
         "bertram_the_muddy.character.json",
@@ -84,6 +85,9 @@
         "reading_spectacles.entity.json",
         "registrar_copperplate.character.json",
         "registry_ledger.entity.json",
+        "rill.character.json",
+        "rill_practice_stick.entity.json",
+        "surroundings_of_old_millrace.location.json",
         "threadscar_melissa.character.json",
         "threadscar_melissa_longsword.entity.json",
         "vespera_hybrid_lute_viol.entity.json",
@@ -92,6 +96,7 @@
         "vespera_rapier.entity.json"
       ],
       "instances": [
+        "12_kiln_lane.location.json",
         "ale_tankard.entity.json",
         "back_of_tannery.location.json",
         "bertram_the_muddy.character.json",
@@ -107,8 +112,11 @@
         "plain_wooden_stool.entity.json",
         "registrar_copperplate.character.json",
         "registry_ledger.entity.json",
+        "rill.character.json",
+        "rill_practice_stick.entity.json",
         "rough_wooden_bench.entity.json",
         "rustic_wooden_table.entity.json",
+        "surroundings_of_old_millrace.location.json",
         "threadscar_ale_tankard.entity.json",
         "threadscar_melissa.character.json",
         "threadscar_melissa_longsword.entity.json",
@@ -124,10 +132,12 @@
     "recipes": [
       "bertram_the_muddy.recipe.json",
       "registrar_copperplate.recipe.json",
+      "rill.recipe.json",
       "threadscar_melissa.recipe.json",
       "vespera_nightwhisper.recipe.json"
     ],
     "portraits": [
+      "12_kiln_lane.png",
       "back_of_tannery.png",
       "bertram.png",
       "bertram_old.png",
@@ -135,6 +145,8 @@
       "mudbrook_municipal_aid_registry.png",
       "registrar_copperplate.png",
       "registrar_copperplate_old.png",
+      "rill.png",
+      "surroundings_of_old_millrace.png",
       "threadscar_melissa.png",
       "threadscar_melissa_old.png",
       "vespera_nightwhisper.png",

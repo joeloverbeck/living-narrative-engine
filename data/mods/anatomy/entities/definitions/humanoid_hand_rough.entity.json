@@ -1,0 +1,27 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "anatomy:humanoid_hand_rough",
+    "description": "A rough humanoid hand",
+    "components": {
+      "anatomy:can_grab": {
+        "gripStrength": 1.0,
+        "heldItemId": null,
+        "locked": false
+      },
+      "anatomy:part": {
+        "subType": "hand"
+      },
+      "anatomy:part_health": {
+        "currentHealth": 15,
+        "maxHealth": 15,
+        "state": "healthy"
+      },
+      "core:name": {
+        "text": "hand"
+      },
+      "descriptors:texture": {
+        "texture": "rough"
+      }
+    }
+  }
+  

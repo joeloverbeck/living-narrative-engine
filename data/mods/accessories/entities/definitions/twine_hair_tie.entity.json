@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "accessories:twine_hair_tie",
+  "description": "A simple hair tie made of rough twine",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "head_gear"
+      },
+      "allowedLayers": [
+        "accessories"
+      ]
+    },
+    "core:material": {
+      "material": "twine"
+    },
+    "core:name": {
+      "text": "hair tie"
+    },
+    "core:description": {
+      "text": "A short length of rough twine, twisted and knotted into a simple hair tie. The fibers are coarse against the scalp, and the knot must be retied frequently as it works loose through the day. Despite its humble nature, it serves its purpose—keeping hair out of the eyes during work. A ribbon would be finer, but twine is what the poor have to hand."
+    },
+    "descriptors:color_extended": {
+      "color": "tan-brown"
+    },
+    "descriptors:texture": {
+      "texture": "rough"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.01
+    }
+  }
+}

@@ -14,37 +14,13 @@
             "instanceId": "fantasy:back_of_tannery_instance"
         },
         {
-            "instanceId": "fantasy:bulletin_board_instance"
+            "instanceId": "fantasy:surroundings_of_old_millrace_instance"
         },
         {
-            "instanceId": "fantasy:notice_alibi_wanted_instance"
-        },
-        {
-            "instanceId": "fantasy:notice_birthday_musician_instance"
-        },
-        {
-            "instanceId": "fantasy:notice_dignity_recovery_instance"
+            "instanceId": "fantasy:12_kiln_lane_instance"
         },
         {
             "instanceId": "fantasy:notice_possessed_chickens_instance"
-        },
-        {
-            "instanceId": "fantasy:notice_reciprocal_services_instance"
-        },
-        {
-            "instanceId": "fantasy:notice_staged_threat_instance"
-        },
-        {
-            "instanceId": "fantasy:registry_ledger_instance"
-        },
-        {
-            "instanceId": "fantasy:plain_wooden_stool_instance"
-        },
-        {
-            "instanceId": "fantasy:rough_wooden_bench_instance"
-        },
-        {
-            "instanceId": "fantasy:rustic_wooden_table_instance"
         },
         {
             "instanceId": "fantasy:vespera_hybrid_lute_viol_instance"
@@ -56,25 +32,22 @@
             "instanceId": "fantasy:vespera_main_gauche_instance"
         },
         {
-            "instanceId": "fantasy:registrar_copperplate_instance"
-        },
-        {
-            "instanceId": "fantasy:threadscar_melissa_instance"
-        },
-        {
-            "instanceId": "fantasy:threadscar_ale_tankard_instance"
-        },
-        {
-            "instanceId": "fantasy:ale_tankard_instance"
-        },
-        {
-            "instanceId": "fantasy:threadscar_melissa_longsword_instance"
+            "instanceId": "fantasy:rill_instance"
         },
         {
             "instanceId": "fantasy:bertram_the_muddy_instance"
         },
         {
+            "instanceId": "fantasy:threadscar_melissa_instance"
+        },       
+        {
+            "instanceId": "fantasy:threadscar_melissa_longsword_instance"
+        },        
+        {
             "instanceId": "fantasy:vespera_nightwhisper_instance"
+        },
+        {
+            "instanceId": "fantasy:rill_practice_stick_instance"
         }
     ]
 }

@@ -1,0 +1,36 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "fantasy:rill_practice_stick",
+    "description": "Rill's improvised practice weapon: a broom handle wrapped in rough cloth to simulate a sword",
+    "components": {
+        "core:name": {
+            "text": "cloth-wrapped broom handle"
+        },
+        "core:description": {
+            "text": "A length of sturdy hickory that was once a waystation broom before desperation claimed it. The bristles have been snapped off, leaving a rough, splintered tip. The 'hilt' is improvised from strips of coarse grey wool—likely remnants of a ruined tunic—wound tightly around the base and stiffened with dried sweat, dirt, and old blood from blistered palms. It is poorly balanced, too light to swing like real steel and without an edge to guide the wind, but the wood along the shaft is worn smooth from thousands of hours of obsessive, repetitive drills. It is a pitiful imitation of a weapon, treated with the deadly seriousness of a masterwork blade."
+        },
+        "items:item": {},
+        "items:portable": {},
+        "items:aimable": {},
+        "weapons:weapon": {},
+        "items:weight": {
+            "weight": 0.9
+        },
+        "descriptors:color_basic": {
+            "color": "brown"
+        },
+        "descriptors:texture": {
+            "texture": "rough"
+        },
+        "core:material": {
+            "material": "wood",
+            "properties": [
+                "rigid",
+                "flammable"
+            ]
+        },
+        "anatomy:requires_grabbing": {
+            "handsRequired": 2
+        }
+    }
+}

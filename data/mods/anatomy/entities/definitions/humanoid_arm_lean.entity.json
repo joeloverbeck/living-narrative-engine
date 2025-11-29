@@ -1,0 +1,31 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "anatomy:humanoid_arm_lean",
+    "description": "A lean humanoid arm",
+    "components": {
+      "anatomy:part": {
+        "subType": "arm"
+      },
+      "anatomy:part_health": {
+        "currentHealth": 25,
+        "maxHealth": 25,
+        "state": "healthy"
+      },
+      "anatomy:sockets": {
+        "sockets": [
+          {
+            "id": "wrist",
+            "allowedTypes": ["hand"],
+            "nameTpl": "{{effective_orientation}} {{type}}"
+          }
+        ]
+      },
+      "descriptors:body_composition": {
+        "composition": "lean"
+      },
+      "core:name": {
+        "text": "lean arm"
+      }
+    }
+  }
+  

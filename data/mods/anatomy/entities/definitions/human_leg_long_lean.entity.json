@@ -1,0 +1,38 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "anatomy:human_leg_long_lean",
+    "description": "A long, lean leg",
+    "components": {
+      "anatomy:part": {
+        "subType": "leg"
+      },
+      "anatomy:part_health": {
+        "currentHealth": 30,
+        "maxHealth": 30,
+        "state": "healthy"
+      },
+      "anatomy:sockets": {
+        "sockets": [
+          {
+            "id": "ankle",
+            "allowedTypes": ["foot"],
+            "nameTpl": "{{effective_orientation}} {{type}}"
+          }
+        ]
+      },
+      "descriptors:length_category": {
+        "length": "long"
+      },
+      "descriptors:body_composition": {
+        "composition": "lean"
+      },
+      "core:name": {
+        "text": "leg"
+      },
+      "core:movement": {
+        "locked": false,
+        "forcedOverride": false
+      }
+    }
+  }
+  

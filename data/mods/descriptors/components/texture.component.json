@@ -45,7 +45,9 @@
           "translucent-slick",
           "translucent-veined",
           "velvety",
-          "webbed-clawed"
+          "webbed-clawed",
+          "cracked",
+          "worn"
         ],
         "default": "smooth"
       }
