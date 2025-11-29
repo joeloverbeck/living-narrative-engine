@@ -51,6 +51,9 @@
           "$ref": "./operations/addComponent.schema.json"
         },
         {
+          "$ref": "./operations/applyDamage.schema.json"
+        },
+        {
           "$ref": "./operations/removeComponent.schema.json"
         },
         {

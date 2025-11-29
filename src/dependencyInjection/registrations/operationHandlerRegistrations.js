@@ -37,6 +37,8 @@ import LogHandler from '../../logic/operationHandlers/logHandler.js';
 import ModifyComponentHandler from '../../logic/operationHandlers/modifyComponentHandler.js';
 import ModifyPartHealthHandler from '../../logic/operationHandlers/modifyPartHealthHandler.js';
 import AddComponentHandler from '../../logic/operationHandlers/addComponentHandler.js';
+import ApplyDamageHandler from '../../logic/operationHandlers/applyDamageHandler.js';
+
 
 import QueryComponentHandler from '../../logic/operationHandlers/queryComponentHandler.js';
 import QueryComponentsHandler from '../../logic/operationHandlers/queryComponentsHandler.js';
@@ -85,7 +87,6 @@ import UnwieldItemHandler from '../../logic/operationHandlers/unwieldItemHandler
 import RegenerateDescriptionHandler from '../../logic/operationHandlers/regenerateDescriptionHandler.js';
 import ResolveDirectionHandler from '../../logic/operationHandlers/resolveDirectionHandler.js';
 import ResolveHitLocationHandler from '../../logic/operationHandlers/resolveHitLocationHandler.js';
-import ApplyDamageHandler from '../../logic/operationHandlers/applyDamageHandler.js';
 import AtomicModifyComponentHandler from '../../logic/operationHandlers/atomicModifyComponentHandler.js';
 import SequenceHandler from '../../logic/operationHandlers/sequenceHandler.js';
 import TransferItemHandler from '../../logic/operationHandlers/transferItemHandler.js';
@@ -207,6 +208,18 @@ export function registerOperationHandlers(registrar) {
           logger: c.resolve(tokens.ILogger),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
           gameDataRepository: c.resolve(tokens.IGameDataRepository),
+        }),
+    ],
+    [
+      tokens.ApplyDamageHandler,
+      ApplyDamageHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+          jsonLogicService: c.resolve(tokens.JsonLogicEvaluationService),
+          bodyGraphService: c.resolve(tokens.BodyGraphService),
         }),
     ],
     [
@@ -689,18 +702,7 @@ export function registerOperationHandlers(registrar) {
           bodyGraphService: c.resolve(tokens.BodyGraphService),
         }),
     ],
-    [
-      tokens.ApplyDamageHandler,
-      ApplyDamageHandler,
-      (c, Handler) =>
-        new Handler({
-          logger: c.resolve(tokens.ILogger),
-          entityManager: c.resolve(tokens.IEntityManager),
-          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-          jsonLogicService: c.resolve(tokens.JsonLogicEvaluationService),
-          bodyGraphService: c.resolve(tokens.BodyGraphService),
-        }),
-    ],
+
     [
       tokens.AtomicModifyComponentHandler,
       AtomicModifyComponentHandler,
