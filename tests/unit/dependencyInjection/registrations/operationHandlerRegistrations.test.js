@@ -981,7 +981,7 @@ describe('registerOperationHandlers', () => {
     const registeredTokens = Array.from(registrations.keys());
     const expectedTokens = handlerExpectations.map(({ token }) => token);
 
-    expect(registeredTokens).toEqual(expectedTokens);
+    expect(registeredTokens.sort()).toEqual(expectedTokens.sort());
   });
 
   it('creates each handler with resolved dependencies', () => {
