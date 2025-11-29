@@ -431,7 +431,6 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
     }
 
     const {
-      entityId,
       speechContent,
       allowHtml = false,
       thoughts,
@@ -457,6 +456,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       {
         thoughts,
         notes,
+        speakerName,
       }
     );
     if (speechMetaFragment) {

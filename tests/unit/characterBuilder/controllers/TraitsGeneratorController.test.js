@@ -3449,6 +3449,8 @@ describe('TraitsGeneratorController', () => {
 
     /**
      * Helper function that mirrors the production code logic
+     *
+     * @param traits
      */
     function getTraitsCount(traits) {
       if (!traits) return 0;

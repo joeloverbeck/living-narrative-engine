@@ -3,6 +3,7 @@
   "id": "fantasy:threadscar_melissa_longsword",
   "description": "Melissa's battle-scarred longsword, a veteran's weapon showing decades of use and meticulous maintenance",
   "components": {
+    "core:conspicuous": {},
     "core:name": {
       "text": "battle-scarred longsword"
     },

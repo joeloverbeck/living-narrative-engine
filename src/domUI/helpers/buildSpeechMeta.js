@@ -20,6 +20,7 @@ import {
  * @typedef {object} SpeechMetaInput
  * @property {string} [thoughts] - The inner thoughts of the character.
  * @property {*} [notes] - Structured notes data for rich HTML display.
+ * @property {string} [speakerName] - The name of the speaker (for clipboard formatting).
  */
 
 /**
@@ -30,7 +31,11 @@ import {
  * @param {SpeechMetaInput} meta - An object containing the speech metadata.
  * @returns {DocumentFragment|null} A document fragment with the speech-meta div, or null if no metadata is provided.
  */
-export function buildSpeechMeta(document, domFactory, { thoughts, notes }) {
+export function buildSpeechMeta(
+  document,
+  domFactory,
+  { thoughts, notes, speakerName }
+) {
   if (!thoughts && !notes) {
     return null;
   }
@@ -58,7 +63,7 @@ export function buildSpeechMeta(document, domFactory, { thoughts, notes }) {
       e.preventDefault();
       e.stopPropagation();
 
-      const formattedText = formatThoughtsForClipboard(thoughts);
+      const formattedText = formatThoughtsForClipboard(thoughts, speakerName);
       const success = await copyToClipboard(formattedText);
 
       if (success) {

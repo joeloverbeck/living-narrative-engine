@@ -3,6 +3,7 @@
   "id": "fantasy:vespera_rapier",
   "description": "Vespera Nightwhisper's elegant duelist's rapier with musical motifs and jingling silver charms",
   "components": {
+    "core:conspicuous": {},
     "core:name": {
       "text": "theatrical rapier"
     },
