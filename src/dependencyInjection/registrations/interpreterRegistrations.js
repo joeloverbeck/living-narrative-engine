@@ -204,6 +204,7 @@ export function registerInterpreters(container) {
     );
     registry.register('UNLOCK_MOVEMENT', bind(tokens.UnlockMovementHandler));
     registry.register('UNWIELD_ITEM', bind(tokens.UnwieldItemHandler));
+    registry.register('APPLY_DAMAGE', bind(tokens.ApplyDamageHandler));
     registry.register(
       'ATOMIC_MODIFY_COMPONENT',
       bind(tokens.AtomicModifyComponentHandler)

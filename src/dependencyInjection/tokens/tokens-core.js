@@ -223,6 +223,8 @@ export const coreTokens = freeze({
   UpdateHungerStateHandler: 'UpdateHungerStateHandler',
   UpdatePartHealthStateHandler: 'UpdatePartHealthStateHandler',
   AddPerceptionLogEntryHandler: 'AddPerceptionLogEntryHandler',
+  ApplyDamageHandler: 'ApplyDamageHandler',
+  AtomicModifyComponentHandler: 'AtomicModifyComponentHandler',
   QueryEntitiesHandler: 'QueryEntitiesHandler',
   HasComponentHandler: 'HasComponentHandler',
   ModifyArrayFieldHandler: 'ModifyArrayFieldHandler',
