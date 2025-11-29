@@ -172,7 +172,7 @@
     },
     "core:actor": {},
     "core:player_type": {
-      "type": "llm"
+      "type": "human"
     },
     "core:notes": {
       "notes": [
@@ -309,7 +309,7 @@
       ]
     },
     "skills:melee_skill": {
-      "value": 86
+      "value": 88
     },
     "skills:defense_skill": {
       "value": 73

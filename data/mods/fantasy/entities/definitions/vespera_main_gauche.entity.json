@@ -3,6 +3,7 @@
   "id": "fantasy:vespera_main_gauche",
   "description": "Vespera Nightwhisper's needle-thin parrying dagger, designed for precision and concealment",
   "components": {
+    "core:conspicuous": {},
     "core:name": {
       "text": "main-gauche"
     },

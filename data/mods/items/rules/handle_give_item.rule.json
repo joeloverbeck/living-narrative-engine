@@ -177,6 +177,20 @@
             }
           },
           {
+            "type": "REGENERATE_DESCRIPTION",
+            "comment": "Regenerate actor description to reflect inventory changes",
+            "parameters": {
+              "entity_ref": "{event.payload.actorId}"
+            }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "comment": "Regenerate target description to reflect inventory changes",
+            "parameters": {
+              "entity_ref": "{event.payload.targetId}"
+            }
+          },
+          {
             "comment": "Display success message and end turn",
             "macro": "core:logSuccessAndEndTurn"
           }

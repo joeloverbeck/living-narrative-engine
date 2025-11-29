@@ -151,14 +151,20 @@ export function formatNotesForClipboard(notesData) {
  * Formats thoughts text for clipboard copying.
  *
  * @param {string} thoughts - The thoughts text
+ * @param {string} [characterName] - The name of the character thinking (optional)
  * @returns {string} Formatted thoughts for clipboard
  */
-export function formatThoughtsForClipboard(thoughts) {
+export function formatThoughtsForClipboard(thoughts, characterName) {
   if (!isNonBlankString(thoughts)) {
     return '';
   }
 
-  return `Thoughts:\n${thoughts.trim()}`;
+  const header =
+    characterName && isNonBlankString(characterName)
+      ? `${characterName}'s thoughts:`
+      : 'Thoughts:';
+
+  return `${header}\n${thoughts.trim()}`;
 }
 
 /**

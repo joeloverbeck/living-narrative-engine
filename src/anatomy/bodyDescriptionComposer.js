@@ -203,6 +203,18 @@ export class BodyDescriptionComposer {
         continue;
       }
 
+      // Handle inventory descriptions
+      if (partType === 'inventory') {
+        const inventoryDescription = await this.#generateInventoryDescription(
+          bodyEntity
+        );
+        if (inventoryDescription) {
+          lines.push(inventoryDescription);
+        }
+        processedTypes.add(partType);
+        continue;
+      }
+
       // Process body parts
       if (partsByType.has(partType)) {
         const parts = partsByType.get(partType);
@@ -547,5 +559,62 @@ export class BodyDescriptionComposer {
     }
 
     return value || '';
+  }
+
+  /**
+   * Generate description for conspicuous items in inventory
+   *
+   * @param {object} bodyEntity - The entity
+   * @returns {Promise<string>} Formatted inventory description
+   * @private
+   */
+  async #generateInventoryDescription(bodyEntity) {
+    if (
+      !bodyEntity ||
+      typeof bodyEntity.getComponentData !== 'function' ||
+      !bodyEntity.hasComponent('items:inventory')
+    ) {
+      return '';
+    }
+
+    try {
+      const inventoryData = bodyEntity.getComponentData('items:inventory');
+      if (
+        !inventoryData ||
+        !inventoryData.items ||
+        !Array.isArray(inventoryData.items) ||
+        inventoryData.items.length === 0
+      ) {
+        return '';
+      }
+
+      const conspicuousItemNames = [];
+
+      for (const itemId of inventoryData.items) {
+        const itemEntity = this.entityFinder.getEntityInstance(itemId);
+        if (!itemEntity) {
+          continue;
+        }
+
+        if (itemEntity.hasComponent('core:conspicuous')) {
+          const nameData = itemEntity.getComponentData('core:name');
+          if (nameData && nameData.text) {
+            conspicuousItemNames.push(nameData.text);
+          }
+        }
+      }
+
+      if (conspicuousItemNames.length === 0) {
+        return '';
+      }
+
+      return `Inventory: ${conspicuousItemNames.join(', ')}.`;
+    } catch (error) {
+      this.#logger.error(
+        `Failed to generate inventory description for entity ${bodyEntity.id}`,
+        error
+      );
+      return '';
+    }
   }
 }

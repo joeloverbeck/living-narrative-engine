@@ -39,9 +39,10 @@ describe('Speech Bubble Copy Integration', () => {
   });
 
   describe('Thoughts copying', () => {
-    it('should copy thoughts when clicking the thoughts button', async () => {
+    it('should copy thoughts with character name when clicking the thoughts button', async () => {
       const thoughts = 'I wonder what will happen next...';
-      const fragment = buildSpeechMeta(document, domFactory, { thoughts });
+      const speakerName = 'Test Character';
+      const fragment = buildSpeechMeta(document, domFactory, { thoughts, speakerName });
 
       document.body.appendChild(fragment);
 
@@ -52,6 +53,23 @@ describe('Speech Bubble Copy Integration', () => {
       thoughtsBtn.click();
 
       // Wait for async operation
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+        "Test Character's thoughts:\nI wonder what will happen next..."
+      );
+    });
+
+    it('should fall back to generic header if no speaker name provided', async () => {
+      const thoughts = 'I wonder what will happen next...';
+      // No speakerName provided
+      const fragment = buildSpeechMeta(document, domFactory, { thoughts });
+
+      document.body.appendChild(fragment);
+
+      const thoughtsBtn = document.querySelector('.meta-btn.thoughts');
+      thoughtsBtn.click();
+
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(

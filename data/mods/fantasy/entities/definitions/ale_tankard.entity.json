@@ -2,6 +2,7 @@
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
   "id": "fantasy:ale_tankard",
   "components": {
+    "core:conspicuous": {},
     "core:name": {
       "text": "tankard of ale"
     },

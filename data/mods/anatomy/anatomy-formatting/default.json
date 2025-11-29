@@ -70,6 +70,7 @@
     "tortoise_tail",
     "equipment_mount",
     "equipment",
+    "inventory",
     "activity"
   ],
   "pairedParts": [

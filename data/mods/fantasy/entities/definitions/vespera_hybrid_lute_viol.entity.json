@@ -3,6 +3,7 @@
   "id": "fantasy:vespera_hybrid_lute_viol",
   "description": "A custom-crafted hybrid instrument combining the elegant body of a lute with the rich, resonant characteristics of a viol. This unique instrument bears the marks of countless performances and careful maintenance.",
   "components": {
+    "core:conspicuous": {},
     "core:name": {
       "text": "hybrid lute-viol"
     },
