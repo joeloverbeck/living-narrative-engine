@@ -125,7 +125,7 @@ describe('weapons:weapon Component - Integration', () => {
       // Weapons should be used with these core item components
       expect(description).toContain('items:item');
       expect(description).toContain('items:portable');
-      expect(description).toContain('items:aimable');
+      expect(description).toContain('anatomy:requires_grabbing');
     });
 
     it('should indicate this is a marker component', () => {

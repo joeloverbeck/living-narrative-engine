@@ -1,0 +1,15 @@
+locks:keys_for_blocker := actor.components.items:inventory.items[{"==": [
+  {"or": [
+    {"var": "entity.id"},
+    {"var": "entity"},
+    {"var": "itemId"}
+  ]},
+  {"or": [
+    {"var": "target.components.locks:openable.requiredKeyId"},
+    {"get_component_value": [
+      {"var": "target"},
+      "locks:openable",
+      "requiredKeyId"
+    ]}
+  ]}
+]}]

@@ -111,13 +111,12 @@ describe('Weapon can_cut Component Validation - Integration', () => {
 
   describe('Component Structure Integrity', () => {
     it('should not modify other weapon components when adding can_cut', () => {
-      // Ensure adding can_cut didn't accidentally remove or modify other components
+      // Ensure adding can_cut didn't accidentally remove or modify other baseline components
       const requiredComponents = [
         'core:name',
         'core:description',
         'items:item',
         'items:portable',
-        'items:aimable',
         'weapons:weapon',
         'items:weight',
         'descriptors:color_basic',

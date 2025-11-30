@@ -22,6 +22,7 @@ import { CanActorGrabItemOperator } from './operators/canActorGrabItemOperator.j
 import { IsItemBeingGrabbedOperator } from './operators/isItemBeingGrabbedOperator.js';
 import { GetSkillValueOperator } from './operators/getSkillValueOperator.js';
 import { validateOperatorWhitelist } from './operatorRegistrationValidator.js';
+import { hasValidEntityId } from './utils/entityPathResolver.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
@@ -171,6 +172,43 @@ export class JsonLogicCustomOperators extends BaseService {
       entityManager: this.#entityManager,
       logger: this.#logger,
     });
+
+    const getComponentValueOp = (entityRef, componentId, propertyPath = null) => {
+      let entityId = null;
+
+      if (hasValidEntityId(entityRef)) {
+        entityId = entityRef.id;
+      } else if (typeof entityRef === 'string' || typeof entityRef === 'number') {
+        entityId = entityRef;
+      }
+
+      if (entityId === null || entityId === undefined) {
+        return null;
+      }
+
+      const componentData = this.#entityManager.getComponentData(
+        entityId,
+        componentId
+      );
+
+      if (!componentData || typeof componentData !== 'object') {
+        return null;
+      }
+
+      if (!propertyPath || typeof propertyPath !== 'string') {
+        return componentData;
+      }
+
+      return propertyPath
+        .split('.')
+        .reduce(
+          (value, key) =>
+            value && Object.prototype.hasOwnProperty.call(value, key)
+              ? value[key]
+              : null,
+          componentData
+        );
+    };
 
     const isHungryOp = new IsHungryOperator({
       entityManager: this.#entityManager,
@@ -357,6 +395,15 @@ export class JsonLogicCustomOperators extends BaseService {
       function (entityPath, componentId) {
         // 'this' is the evaluation context
         return hasComponentOp.evaluate([entityPath, componentId], this);
+      },
+      jsonLogicEvaluationService
+    );
+
+    // Register get_component_value operator
+    this.#registerOperator(
+      'get_component_value',
+      function (entityPath, componentId, propertyPath = null) {
+        return getComponentValueOp(entityPath, componentId, propertyPath);
       },
       jsonLogicEvaluationService
     );

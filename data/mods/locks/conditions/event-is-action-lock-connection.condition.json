@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "locks:event-is-action-lock-connection",
+  "description": "Checks if the triggering event is for the locks:lock_connection action",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "locks:lock_connection"
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "fantasy:aldous_instance",
+    "definitionId": "fantasy:aldous",
+    "componentOverrides": {
+        "core:position": {
+            "locationId": "fantasy:12_kiln_lane_instance"
+        },
+        "items:inventory": {
+            "items": [
+            ],
+            "capacity": {
+                "maxWeight": 50.0,
+                "maxItems": 20
+            }
+        }
+    }
+}
