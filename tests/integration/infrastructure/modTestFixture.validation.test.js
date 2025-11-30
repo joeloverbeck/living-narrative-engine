@@ -19,12 +19,18 @@ import {
 import { promises as fs } from 'fs';
 
 // Mock file system for auto-loading tests
-jest.mock('fs', () => ({
-  promises: {
-    readFile: jest.fn(),
-    readdir: jest.fn(),
-  },
-}));
+jest.mock('fs', () => {
+  const actualFs = jest.requireActual('fs');
+
+  return {
+    ...actualFs,
+    promises: {
+      ...actualFs.promises,
+      readFile: jest.fn(),
+      readdir: jest.fn(),
+    },
+  };
+});
 
 describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
   let mockRuleFile;

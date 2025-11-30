@@ -39,14 +39,14 @@
 }
 
 .character-portrait {
-  width: clamp(72px, 13vw, 144px);
-  height: clamp(72px, 13vw, 144px);
-  object-fit: contain;
+  width: clamp(7em, 13vw, 7em);
+  object-fit: cover;
+  object-position: center;
   border-radius: var(--border-radius-sm);
   margin-right: var(--spacing-sm);
   flex-shrink: 0;
   border: 1px solid var(--border-color-subtle);
-  background: var(--secondary-bg-color);
+  background: var(--panel-bg-color);
 }
 
 .character-tooltip {

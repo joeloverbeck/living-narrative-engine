@@ -43,6 +43,17 @@ import ForEachHandler from '../../../../src/logic/operationHandlers/forEachHandl
 import IfHandler from '../../../../src/logic/operationHandlers/ifHandler.js';
 import ConsumeItemHandler from '../../../../src/logic/operationHandlers/consumeItemHandler.js';
 import PrepareActionContextHandler from '../../../../src/logic/operationHandlers/prepareActionContextHandler.js';
+import TransferItemHandler from '../../../../src/logic/operationHandlers/transferItemHandler.js';
+import ValidateInventoryCapacityHandler from '../../../../src/logic/operationHandlers/validateInventoryCapacityHandler.js';
+import DropItemAtLocationHandler from '../../../../src/logic/operationHandlers/dropItemAtLocationHandler.js';
+import PickUpItemFromLocationHandler from '../../../../src/logic/operationHandlers/pickUpItemFromLocationHandler.js';
+import OpenContainerHandler from '../../../../src/logic/operationHandlers/openContainerHandler.js';
+import TakeFromContainerHandler from '../../../../src/logic/operationHandlers/takeFromContainerHandler.js';
+import PutInContainerHandler from '../../../../src/logic/operationHandlers/putInContainerHandler.js';
+import ValidateContainerCapacityHandler from '../../../../src/logic/operationHandlers/validateContainerCapacityHandler.js';
+import DrinkFromHandler from '../../../../src/logic/operationHandlers/drinkFromHandler.js';
+import DrinkEntirelyHandler from '../../../../src/logic/operationHandlers/drinkEntirelyHandler.js';
+import UnwieldItemHandler from '../../../../src/logic/operationHandlers/unwieldItemHandler.js';
 import * as closenessCircleService from '../../../../src/logic/services/closenessCircleService.js';
 
 describe('ModTestHandlerFactory Migration Validation', () => {
@@ -257,7 +268,7 @@ describe('ModTestHandlerFactory Migration Validation', () => {
       }),
     };
 
-    return {
+    const handlers = {
       ...baseHandlers,
       ADD_COMPONENT: new AddComponentHandler({
         entityManager,
@@ -349,6 +360,65 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         },
       }),
       CONSUME_ITEM: new ConsumeItemHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+    };
+
+    return {
+      ...handlers,
+      TRANSFER_ITEM: new TransferItemHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      VALIDATE_INVENTORY_CAPACITY: new ValidateInventoryCapacityHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      VALIDATE_CONTAINER_CAPACITY: new ValidateContainerCapacityHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      DROP_ITEM_AT_LOCATION: new DropItemAtLocationHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      PICK_UP_ITEM_FROM_LOCATION: new PickUpItemFromLocationHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      OPEN_CONTAINER: new OpenContainerHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      TAKE_FROM_CONTAINER: new TakeFromContainerHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      PUT_IN_CONTAINER: new PutInContainerHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      DRINK_FROM: new DrinkFromHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      DRINK_ENTIRELY: new DrinkEntirelyHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      UNWIELD_ITEM: new UnwieldItemHandler({
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,

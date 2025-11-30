@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "fantasy:containment_vessel",
+  "description": "A specially constructed vessel designed to safely contain volatile entities.",
+  "components": {
+    "core:name": {
+      "text": "containment vessel"
+    },
+    "core:description": {
+      "text": "A purpose-built ceramic vessel: squat and heavy for its size, with walls thick enough to feel like masonry. The body is fired hard and dense—stoneware or porcelain by the sound of it—then sealed in a smooth, smoke-dark glaze that reads almost metallic at a glance, but shows tiny pooled ripples where it set in the kiln. It does have an opening, but it's been engineered to stop the eye from trusting it: a low, flush lid that seats into a recessed collar so tight the join vanishes under a thin band of vitrified sealant. Around that collar, the maker has cut and re-filled a single binding mark—one deep, deliberate sigil incised through the glaze and into the fired body, then inlaid with a cold blue compound that never quite looks like paint. In dim light it doesn't glow so much as it holds the light, making the air around it feel slightly wrong. Inside, the surface is not the same glaze as the outside. The interior has a darker, sound-deadening finish—matte, mineral, oxide-rich—like it's meant to deny grip to anything that wants to adhere. When you bring it close, the vessel seems to swallow small noises (cloth rustle, breath), and the ceramic stays unnervingly cool, as if it's constantly pulling warmth and pressure inward instead of radiating them out. This isn't decorative pottery. It's a fired procedure: clay, heat, chemistry, and geometry arranged to make a boundary that doesn't negotiate."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:conspicuous": {},
+    "items:weight": {
+      "weight": 0.8
+    }
+  }
+}

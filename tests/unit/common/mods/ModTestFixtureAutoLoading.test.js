@@ -18,12 +18,16 @@ import {
   ModRuleTestFixture,
 } from '../../../common/mods/ModTestFixture.js';
 
-// Mock fs module
+// Mock fs module (both async and sync APIs used by fixtures)
 jest.mock('fs', () => ({
   promises: {
     readFile: jest.fn(),
     readdir: jest.fn().mockResolvedValue([]),
   },
+  // Sync APIs are used by ModTestHandlerFactory during environment setup
+  existsSync: jest.fn().mockReturnValue(false),
+  readdirSync: jest.fn().mockReturnValue([]),
+  readFileSync: jest.fn().mockReturnValue('{}'),
 }));
 
 describe('ModTestFixture - Auto-Loading Functionality', () => {

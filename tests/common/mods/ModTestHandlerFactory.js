@@ -3,6 +3,9 @@
  * @description Centralizes handler creation to eliminate duplication across mod test files
  */
 
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { resolve as resolvePath } from 'node:path';
+
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import QueryComponentsHandler from '../../../src/logic/operationHandlers/queryComponentsHandler.js';
 import QueryLookupHandler from '../../../src/logic/operationHandlers/queryLookupHandler.js';
@@ -47,6 +50,46 @@ import PrepareActionContextHandler from '../../../src/logic/operationHandlers/pr
 import * as closenessCircleService from '../../../src/logic/services/closenessCircleService.js';
 import { validateDependency } from '../../../src/utils/dependencyUtils.js';
 
+const ITEM_OPERATION_TYPES = new Set([
+  'TRANSFER_ITEM',
+  'VALIDATE_INVENTORY_CAPACITY',
+  'VALIDATE_CONTAINER_CAPACITY',
+  'DROP_ITEM_AT_LOCATION',
+  'PICK_UP_ITEM_FROM_LOCATION',
+  'OPEN_CONTAINER',
+  'TAKE_FROM_CONTAINER',
+  'PUT_IN_CONTAINER',
+  'DRINK_FROM',
+  'DRINK_ENTIRELY',
+  'MODIFY_ARRAY_FIELD',
+  'UNWIELD_ITEM',
+  'LOCK_GRABBING',
+  'UNLOCK_GRABBING',
+]);
+
+const MOUTH_OPERATION_TYPES = new Set([
+  'LOCK_MOUTH_ENGAGEMENT',
+  'UNLOCK_MOUTH_ENGAGEMENT',
+]);
+
+const MUTATION_OR_PERCEPTION_TYPES = new Set([
+  'ADD_COMPONENT',
+  'MODIFY_COMPONENT',
+  'REMOVE_COMPONENT',
+  'ATOMIC_MODIFY_COMPONENT',
+  'ADD_PERCEPTION_LOG_ENTRY',
+  'MERGE_CLOSENESS_CIRCLE',
+  'ESTABLISH_LYING_CLOSENESS',
+  'ESTABLISH_SITTING_CLOSENESS',
+  'REMOVE_LYING_CLOSENESS',
+  'LOCK_MOVEMENT',
+  'UNLOCK_MOVEMENT',
+  'BREAK_CLOSENESS_WITH_TARGET',
+  'REGENERATE_DESCRIPTION',
+  'CONSUME_ITEM',
+  'MODIFY_ARRAY_FIELD',
+]);
+
 /* global jest */
 
 /**
@@ -56,6 +99,192 @@ import { validateDependency } from '../../../src/utils/dependencyUtils.js';
  * providing consistent handler creation across all mod integration tests.
  */
 export class ModTestHandlerFactory {
+  static #operationProfileCache = new Map();
+
+  static #collectOperationsFromNode(candidate, operations, macroRefs) {
+    if (!candidate) {
+      return;
+    }
+
+    if (Array.isArray(candidate)) {
+      for (const entry of candidate) {
+        this.#collectOperationsFromNode(entry, operations, macroRefs);
+      }
+      return;
+    }
+
+    if (typeof candidate !== 'object') {
+      return;
+    }
+
+    if (typeof candidate.type === 'string') {
+      operations.add(candidate.type);
+    }
+
+    if (typeof candidate.macro === 'string' && macroRefs) {
+      macroRefs.add(candidate.macro);
+    }
+
+    for (const value of Object.values(candidate)) {
+      this.#collectOperationsFromNode(value, operations, macroRefs);
+    }
+  }
+
+  static #readJsonFileSafe(filePath) {
+    try {
+      return JSON.parse(readFileSync(filePath, 'utf8'));
+    } catch {
+      return null;
+    }
+  }
+
+  static #resolveMacroPath(macroId, modCategory) {
+    if (!macroId) {
+      return null;
+    }
+
+    const macroName = macroId.includes(':')
+      ? macroId.split(':')[1]
+      : macroId;
+
+    const candidates = [
+      resolvePath(
+        process.cwd(),
+        'data',
+        'mods',
+        modCategory || '',
+        'macros',
+        `${macroName}.macro.json`
+      ),
+      resolvePath(
+        process.cwd(),
+        'data',
+        'mods',
+        'core',
+        'macros',
+        `${macroName}.macro.json`
+      ),
+    ];
+
+    return candidates.find((candidate) => existsSync(candidate)) || null;
+  }
+
+  static #expandMacroOperations(modCategory, macroRefs, operations) {
+    if (!macroRefs || macroRefs.size === 0) {
+      return;
+    }
+
+    const visited = new Set();
+    const queue = [...macroRefs];
+
+    while (queue.length > 0) {
+      const macroId = queue.pop();
+      if (visited.has(macroId)) {
+        continue;
+      }
+
+      visited.add(macroId);
+      const macroPath = this.#resolveMacroPath(macroId, modCategory);
+      if (!macroPath) {
+        continue;
+      }
+
+      const macroDefinition = this.#readJsonFileSafe(macroPath);
+      if (!macroDefinition) {
+        continue;
+      }
+
+      const nestedMacroRefs = new Set();
+      this.#collectOperationsFromNode(
+        macroDefinition.actions || macroDefinition.operations || macroDefinition,
+        operations,
+        nestedMacroRefs
+      );
+
+      for (const nested of nestedMacroRefs) {
+        if (!visited.has(nested)) {
+          queue.push(nested);
+        }
+      }
+    }
+  }
+
+  static #scanOperationsForMod(modCategory) {
+    if (this.#operationProfileCache.has(modCategory)) {
+      return this.#operationProfileCache.get(modCategory);
+    }
+
+    const operations = new Set();
+    const macroRefs = new Set();
+
+    const rulesDir = resolvePath(
+      process.cwd(),
+      'data',
+      'mods',
+      modCategory || '',
+      'rules'
+    );
+
+    if (modCategory && existsSync(rulesDir)) {
+      const ruleFiles = readdirSync(rulesDir).filter((file) =>
+        file.endsWith('.json')
+      );
+
+      for (const file of ruleFiles) {
+        const filePath = resolvePath(rulesDir, file);
+        const ruleDefinition = this.#readJsonFileSafe(filePath);
+        if (!ruleDefinition) {
+          continue;
+        }
+
+        this.#collectOperationsFromNode(
+          ruleDefinition.actions,
+          operations,
+          macroRefs
+        );
+      }
+    }
+
+    this.#expandMacroOperations(modCategory, macroRefs, operations);
+
+    const profile = { operations };
+    this.#operationProfileCache.set(modCategory, profile);
+    return profile;
+  }
+
+  static #buildProfileHint(modCategory) {
+    const { operations } = this.#scanOperationsForMod(modCategory);
+    const operationsArray = Array.from(operations);
+    const needsItems = operationsArray.some((op) =>
+      ITEM_OPERATION_TYPES.has(op)
+    );
+    const needsMouthEngagement = operationsArray.some((op) =>
+      MOUTH_OPERATION_TYPES.has(op)
+    );
+    const needsSuperset =
+      operationsArray.length === 0
+        ? false
+        : needsItems ||
+          needsMouthEngagement ||
+          operationsArray.some((op) => MUTATION_OR_PERCEPTION_TYPES.has(op));
+
+    return {
+      hasDiscoveredOperations: operationsArray.length > 0,
+      needsItems,
+      needsMouthEngagement,
+      needsSuperset: needsSuperset || operationsArray.length > 0,
+    };
+  }
+
+  static #pickHandlers(sourceHandlers, keys) {
+    return keys.reduce((acc, key) => {
+      if (sourceHandlers[key]) {
+        acc[key] = sourceHandlers[key];
+      }
+      return acc;
+    }, {});
+  }
+
   /**
    * Validates required dependencies for handler creation.
    *
@@ -642,6 +871,63 @@ export class ModTestHandlerFactory {
    * @returns {Function} The appropriate factory method for the category
    */
   static getHandlerFactoryForCategory(modCategory) {
+    const profileHint = this.#buildProfileHint(modCategory);
+
+    const buildAutoDetectedFactory = (hint) =>
+      (entityManager, eventBus, logger, dataRegistry) => {
+        const shouldUseSupersetBase =
+          hint.needsSuperset ||
+          hint.needsItems ||
+          hint.needsMouthEngagement ||
+          !hint.hasDiscoveredOperations;
+
+        const handlers = shouldUseSupersetBase
+          ? this.createHandlersWithPerceptionLogging(
+              entityManager,
+              eventBus,
+              logger,
+              dataRegistry
+            )
+          : this.createStandardHandlers(
+              entityManager,
+              eventBus,
+              logger,
+              dataRegistry
+            );
+
+        if (hint.needsItems) {
+          Object.assign(
+            handlers,
+            this.#pickHandlers(
+              this.createHandlersWithItemsSupport(
+                entityManager,
+                eventBus,
+                logger,
+                dataRegistry
+              ),
+              Array.from(ITEM_OPERATION_TYPES)
+            )
+          );
+        }
+
+        if (hint.needsMouthEngagement) {
+          Object.assign(
+            handlers,
+            this.#pickHandlers(
+              this.createHandlersWithMouthEngagement(
+                entityManager,
+                eventBus,
+                logger,
+                dataRegistry
+              ),
+              Array.from(MOUTH_OPERATION_TYPES)
+            )
+          );
+        }
+
+        return handlers;
+      };
+
     const categoryMappings = {
       positioning: this.createHandlersWithPerceptionLogging.bind(this),
       items: this.createHandlersWithItemsSupport.bind(this),
@@ -661,15 +947,22 @@ export class ModTestHandlerFactory {
       metabolism: this.createHandlersWithPerceptionLogging.bind(this),
       locks: this.createHandlersWithComponentMutations.bind(this),
       weapons: this.createHandlersWithPerceptionLogging.bind(this),
+      distress: this.createHandlersWithPerceptionLogging.bind(this),
     };
+
+    if (profileHint.hasDiscoveredOperations) {
+      return buildAutoDetectedFactory(profileHint);
+    }
 
     if (typeof modCategory === 'string' && modCategory.startsWith('sex-')) {
       return this.createHandlersWithComponentMutations.bind(this);
     }
 
-    return (
-      categoryMappings[modCategory] || this.createStandardHandlers.bind(this)
-    );
+    if (!categoryMappings[modCategory]) {
+      return buildAutoDetectedFactory(profileHint);
+    }
+
+    return categoryMappings[modCategory];
   }
 
   /**

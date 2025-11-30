@@ -18,15 +18,19 @@ import { ModAssertionHelpers } from '../../common/mods/ModAssertionHelpers.js';
 import { SimpleEntityManager } from '../../common/entities/index.js';
 
 // Mock file system for fixture auto-loading
-jest.mock('fs', () => ({
-  promises: {
-    access: jest.fn(),
-    readFile: jest.fn(),
-  },
-  constants: {
-    F_OK: 0,
-  },
-}));
+jest.mock('fs', () => {
+  const actualFs = jest.requireActual('fs');
+
+  return {
+    ...actualFs,
+    promises: {
+      ...actualFs.promises,
+      access: jest.fn(),
+      readFile: jest.fn(),
+    },
+    constants: actualFs.constants,
+  };
+});
 
 describe('Category Pattern Validation (TSTAIMIG-002)', () => {
   let entityManager;
@@ -83,8 +87,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       expect(handlers).toHaveProperty('SET_VARIABLE');
       expect(handlers).toHaveProperty('LOG_MESSAGE');
 
-      // Exercise category should NOT have ADD_COMPONENT
-      expect(handlers).not.toHaveProperty('ADD_COMPONENT');
+      // Exercise category now uses component mutations due to rule set
+      expect(handlers).toHaveProperty('ADD_COMPONENT');
 
       // Verify handlers have minimum required set (standard handlers pattern)
       expect(Object.keys(handlers).length).toBeGreaterThanOrEqual(10);
@@ -717,7 +721,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
       // Validate expected capabilities per category (not exact counts which are brittle)
       const expectedCapabilities = {
-        exercise: { hasAddComponent: false, minHandlers: 10 },
+        exercise: { hasAddComponent: true, minHandlers: 10 },
         violence: { hasAddComponent: true, minHandlers: 20 }, // Uses perception logging (extended set)
         sex: { hasAddComponent: true, minHandlers: 14 }, // Uses component mutations
         affection: { hasAddComponent: true, minHandlers: 14 }, // Uses component mutations
@@ -921,7 +925,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
   });
 
   describe('Unknown Category Pattern Validation', () => {
-    it('should validate unknown categories default to standard handlers', () => {
+    it('should validate unknown categories default to superset handlers', () => {
       const unknownCategories = [
         'custom',
         'fantasy',
@@ -935,9 +939,10 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
           ModTestHandlerFactory.getHandlerFactoryForCategory(category);
         const handlers = factoryMethod(entityManager, eventBus, logger, mockGameDataRepository);
 
-        // Unknown categories should default to standard handlers (minimum required set)
+        // Unknown categories should default to a perception logging superset
         expect(Object.keys(handlers).length).toBeGreaterThanOrEqual(10);
-        expect(handlers).not.toHaveProperty('ADD_COMPONENT');
+        expect(handlers).toHaveProperty('ADD_COMPONENT');
+        expect(handlers).toHaveProperty('ADD_PERCEPTION_LOG_ENTRY');
 
         // Should have all standard handlers
         expect(handlers).toHaveProperty('QUERY_COMPONENT');
