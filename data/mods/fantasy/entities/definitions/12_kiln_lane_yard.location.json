@@ -1,0 +1,23 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "fantasy:12_kiln_lane_yard",
+    "components": {
+        "core:name": {
+            "text": "yard of Aldous' home"
+        },
+        "core:description": {
+            "text": "A dirt yard stretches out beside a wooden chicken coop, its surface marked with crisp white lines laid in a square grid. The coop sits on a low stone base and is built from dark, weathered boards under a shingled roof. Pale, carved sigils repeat on the posts and corners, standing out against the wood. A wire-mesh separates the yard from the darkness inside the coop. A faint burnt-clay smell wafts from the gloom inside. Outside, more chickens wander freely across the yard, scattered between a salt-line in geometric pattern, mostly intact. A shallow metal water dish rests on the ground near the coop wall, ringed by a faint dusting of white. In the background, a fence line and tall posts run across the field, with trees and soft haze beyond."
+        },
+        "core:portrait": {
+            "imagePath": "portraits/yard_and_coop.png",
+            "altText": "Yard of 12 Kiln Lane"
+        },
+        "movement:exits": [
+            {
+                "direction": "to the front of Aldous' home",
+                "target": "fantasy:12_kiln_lane_instance",
+                "blocker": null
+            }
+        ]
+    }
+}

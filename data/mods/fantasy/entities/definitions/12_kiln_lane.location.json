@@ -6,7 +6,7 @@
             "text": "12 Kiln Lane"
         },
         "core:description": {
-            "text": "A small timber-framed cottage sits snug against a cobbled lane, its steep red-tiled roof glowing warm under a bright, hazy sky. Dark beams crisscross pale plaster walls, and a squat stone chimney rises from the ridge like a blunt thumbprint of industry. The building is modest in footprint but loudly purposeful: clay jugs and stout earthenware pots line the sill, the lintel, and a rough shelf beneath the upper window, staged like proof of skill rather than decoration. A hanging sign creaks from an iron bracket by the door—painted with a simple pot emblem and the blunt word POTTERY—marking the place as a working shop, not just a home. More finished vessels cluster at the threshold and along the front wall, their rounded bellies catching soft light, their warm terracotta color echoing the roof tiles above. The doorway itself is shadowed, a dark mouth that suggests cool interior air and the faint promise of kiln heat deeper within. To the right, a low wooden fence hems in a patch of grass where several chickens wander and peck, scattered casually across the yard like restless punctuation. Green shrubs press close to the house, and tall trees blur into a leafy backdrop, giving the whole scene a tucked-away feeling."
+            "text": "An old, low house sits alone at the edge of a dirt path, its thick thatched roof drooping slightly with age. A stone foundation lifts the walls just enough to show how long the building has been standing, while the pale plaster above it is worn and uneven, patched and cracked in hairline runs that catch the light. The front is plain and practical: a heavy wooden door set deep in its frame, flanked by small, square windows with dark panes. Nothing is ornamental, but everything looks kept—maintained in the way a working home is maintained, by habit and necessity rather than pride. Near the door, a small stone platform holds a cluster of terracotta jars, their rounded shoulders and rough surfaces echoing the earth tones of the house itself. Around it, grass and trees press in close, softening the hard lines of stone and timber. The whole place feels quietly sealed off—simple, sturdy, and watchful."
         },
         "core:portrait": {
             "imagePath": "portraits/12_kiln_lane.png",
@@ -16,6 +16,11 @@
             {
                 "direction": "to the surroundings of the old millrace",
                 "target": "fantasy:surroundings_of_old_millrace_instance",
+                "blocker": null
+            },
+            {
+                "direction": "to the yard of Aldous' home",
+                "target": "fantasy:12_kiln_lane_yard_instance",
                 "blocker": null
             }
         ]

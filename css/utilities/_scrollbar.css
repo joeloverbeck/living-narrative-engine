@@ -11,7 +11,7 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--accent-color-secondary);
+  background: var(--panel-border-color);
   border-radius: var(--border-radius-sm);
   border: 2px solid var(--secondary-bg-color);
 }
@@ -22,5 +22,5 @@
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--accent-color-secondary) var(--secondary-bg-color);
+  scrollbar-color: var(--panel-border-color) var(--secondary-bg-color);
 }

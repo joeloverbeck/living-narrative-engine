@@ -20,6 +20,9 @@
             "instanceId": "fantasy:12_kiln_lane_instance"
         },
         {
+            "instanceId": "fantasy:12_kiln_lane_yard_instance"
+        },
+        {
             "instanceId": "fantasy:notice_possessed_chickens_instance"
         },
         {
@@ -39,10 +42,10 @@
         },
         {
             "instanceId": "fantasy:threadscar_melissa_instance"
-        },       
+        },
         {
             "instanceId": "fantasy:threadscar_melissa_longsword_instance"
-        },        
+        },
         {
             "instanceId": "fantasy:vespera_nightwhisper_instance"
         },

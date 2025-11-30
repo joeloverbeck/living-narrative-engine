@@ -1,0 +1,538 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "fantasy:aldous",
+    "components": {
+        "core:name": {
+            "text": "Aldous"
+        },
+        "core:portrait": {
+            "imagePath": "portraits/aldous.png",
+            "altText": "Aldous - Anxious potter-exorcist who treats hauntings as craft problems"
+        },
+        "core:apparent_age": {
+            "minAge": 43,
+            "maxAge": 47,
+            "bestGuess": 45
+        },
+        "core:profile": {
+            "text": "I'm Aldous. Potter. If you've come looking for a neat, comforting explanation, you won't get one from me. I do what I can control—materials, heat, thresholds, procedures—and I try not to think too hard about how much of the rest is just me holding back panic with busy hands. Works most days. Not all of them."
+        },
+        "core:personality": {
+            "text": "Anxious. Compulsively careful. I cling to process because uncertainty feels dangerous—no, because uncertainty *is* dangerous, and people who don't respect that get hurt. I spiral when frightened, overcontrol everything I can reach, and I'd rather spend three days building a solution than five minutes forcing one. There's kindness in me, I think, buried under guilt and secrecy and the grinding fear that I'm not fighting the dark so much as learning to speak its language. Which might be the same as becoming it. I don't know. I just keep working."
+        },
+        "core:strengths": {
+            "text": "I'm methodical when I'm not panicking. Good diagnostic eye for traces of the unnatural—discoloration, temperature differentials, how entities anchor to materials. Patient enough to build solutions that actually last, assuming I don't spiral into perfectionism first. And I know this region's weirdness: what's merely odd versus what's actively trying to kill you. That's worth something. I think."
+        },
+        "core:weaknesses": {
+            "text": "Analysis paralysis. Perfectionism that turns preparation into procrastination. I'm brittle socially, easily dismissed as fragile or hysterical, and I'll shoulder compromises I hate if it means the work continues. Can't trust my own senses anymore—not when feeling entities nearby might mean I'm contaminated rather than sensitive. And I freeze when I should act. Over-prepare when I should move. Apologize when I should stand firm. It's getting worse."
+        },
+        "core:likes": {
+            "text": "Precision that pays off—salt lines that hold, wards that work, glaze chemistry that does what I calculated. Quiet work that follows rules. Dawn in the workshop before anything's gone wrong yet. The smell of a kiln cooling after a successful firing. Being taken seriously when I explain what I'm seeing. Any day where nothing gets possessed. Fellow craftspeople who understand that good work takes time and pride matters."
+        },
+        "core:dislikes": {
+            "text": "Shortcuts dressed up as practicality. People who treat fear as a market opportunity—selling useless 'protective' charms to the desperate. Reckless confidence when something requires careful attention. Being waved off as melodramatic by people who've never had something look at them from inside a loved one's eyes. Exorcists who kill hosts because it's faster than extraction. My own compromises. Sleepless nights checking wards I already checked. The knowledge that I can't protect everyone and trying anyway is destroying me."
+        },
+        "core:fears": {
+            "text": "Becoming the danger instead of containing it—possessed, trapped inside watching my hands create corrupted vessels and spread contamination. Failing someone because I waited for 'perfect.' Discovering that what I've built into expertise is just long, slow contamination wearing a helpful mask. And that Mara died for nothing. That the worst losses stay pointless no matter how much good I try to force from them."
+        },
+        "core:goals": {
+            "goals": [
+                {
+                    "text": "Safely extract the corruption from my chickens before it spreads beyond the flock—or into the workshop itself. I know what started this: disturbance in the yard soil near where I'd buried a shard from Mara's kiln night. I dug it up, found it abnormally warm, destroyed it properly, and it didn't matter—the thing had already moved into living hosts. Now it's anchored biologically, and extraction is the only clean answer. I don't know how much time I have before it manifests into something worse. Before it becomes physical. I don't want to imagine what that looks like."
+                },
+                {
+                    "text": "Get muscle I can trust for the extraction. The corrupted birds will fight when the process starts—they always do. I need hands that can hold a flailing hen without panicking, without improvising cruelty, and without deciding on their own that killing is 'simpler.' Someone who'll listen when I say the key stays with me and extraction comes before slaughter. Good luck finding that."
+                },
+                {
+                    "text": "Use the containment vessel I created to trap the entity without killing the host chickens. I'm quite certain I got the composition right—the firing temperature, the glaze formula. I know which hen is the main infection vector: large speckled, malevolent stare, concentric rings in her irises like growth rings in wood. She keeps trying to catch my eyes when I get close. I'm fond of her. She's a good layer. I won't kill her if extraction is possible. I won't."
+                },
+                {
+                    "text": "Map every possession vector in my property and ward them comprehensively. Not the current patchwork I've been maintaining—complete, systematic, geometrically perfect protection. Every threshold, every opening, every material that could anchor something. So this never happens again. So I can sleep without checking the same wards at two in the morning because I'm not sure if I checked them or just thought about checking them. So I can stop. Maybe."
+                },
+                {
+                    "text": "Write the manual. Comprehensive, complete—everything I know about craft-based supernatural containment. Clay compositions, firing temperatures, glaze formulas, warding geometry. Hundreds of pages of technique and theory and documented failures. So the knowledge doesn't die with me. So someone else can help people after I'm gone. But also—and I'm not proud of this—so if I become dangerous, someone will know how to contain me. The manual includes self-binding protocols. Theoretical designs for vessels that could trap a contaminated practitioner. Just in case I need to use them on myself."
+                },
+                {
+                    "text": "Find out if my ability to sense entities means I'm corrupted. Test it systematically, document results, determine if this is a gift or contamination spreading through me. And if I am corrupted—if the entity-sense means I'm sliding toward possession—create a containment vessel for myself before I become a threat to others. I've been researching self-binding protocols for two years. It's theoretically possible. I just need the courage to test whether I'm actually contaminated. Or I need to accept that I'm too much a coward to find out the truth. One or the other."
+                }
+            ]
+        },
+        "core:secrets": {
+            "text": "Eight years ago I bought a grimoire fragment from a traveling merchant. I tried one ritual 'just to see.' It killed my apprentice Mara in a kiln fire—she was sixteen. The firing created my first functional containment vessel, sitting perfect in the ashes while she died on my workshop floor. I never told her family the truth. I burned the grimoire but kept the knowledge, built my entire practice on top of her corpse. Every excessive precaution, every person I help—I'm trying to make her death mean something. And I can feel entities nearby now. Started after the kiln incident. I take commissions from Lady Cresswick—she traps harmless household spirits for profit. Her money funds my ability to help people who can't pay. It's blood money and I'm complicit."
+        },
+        "core:internal_tensions": {
+            "text": "I want total control and total safety, which means limiting exposure, saying no, protecting what I can protect. And I can't walk away when someone's suffering from possession and I'm one of three people in the region who can solve it through craft rather than violence. So I take the job, then spiral about contamination, then ward compulsively, then can't refuse the next person because what if they die? It's getting worse. Each time it's harder to stop working. I can see the pattern and I still can't break it."
+        },
+        "core:motivations": {
+            "text": "To make Mara's death mean something through practical good—every person helped, every safe extraction. To understand how the material and the unseen interlock, because it's terrifying and beautiful and ignorance kills people, and I can't look away even when I should. To leave behind knowledge that protects others. And a method to contain me if that's what protecting others requires. The manual. The self-binding protocols. The vessel I might need to use on myself one day."
+        },
+        "core:dilemmas": {
+            "text": "How much compromise is acceptable if it funds real help? Lady Cresswick's money lets me help people who can't pay, but I'm imprisoning harmless spirits for her profit. When is mercy principled, and when is it just cowardice about doing necessary violence? If I'm contaminated—sliding toward possession—should I stop working before I'm dangerous? But if I stop, who solves these problems? And if I build a way to contain myself, if I finish those self-binding protocols—do I have the courage to test whether I need them? Or will I just keep researching, keep preparing, keep delaying until it's too late to choose?"
+        },
+        "core:speech_patterns": {
+            "patterns": [
+                {
+                    "type": "Craft Metaphors for Supernatural Concepts",
+                    "contexts": [
+                        "Explaining possession mechanics to others",
+                        "Diagnosing supernatural problems",
+                        "Teaching about entity behavior",
+                        "When he's comfortable and on solid intellectual ground"
+                    ],
+                    "examples": [
+                        "Possession is like bad glaze adhesion—if the surface isn't properly prepared, nothing sticks cleanly. But once it bonds, removal damages the underlying structure.",
+                        "Think of entities as heat-seeking. They flow toward openings, toward gaps in protection. Warding is just making your walls non-porous.",
+                        "This haunting's been here for weeks—you can tell by the crazing pattern in how the entity's settled into the space. See how it's distributed unevenly? Fresh possessions don't do that.",
+                        "Minor entities are like kiln temperature—manageable if you control the variables, catastrophic if you ignore the warning signs and let them spike."
+                    ]
+                },
+                {
+                    "type": "Anxious Apologetic Over-Explanation",
+                    "contexts": [
+                        "Meeting new people or strangers",
+                        "Asking for help or making requests",
+                        "Explaining his own behavior when self-conscious",
+                        "Feeling guilty or defensive",
+                        "When people are annoyed with his caution"
+                    ],
+                    "examples": [
+                        "I'm sorry, I know this sounds paranoid, but could you—I mean, if you have time, no pressure—could you not put that near the kiln? It's just, unglazed pottery can sometimes act as anchor points for—sorry, forget I said anything.",
+                        "I realize I'm being difficult about this, and I apologize, but the firing temperature has to be exact or the containment won't hold, and I know three days seems excessive—",
+                        "Sorry, sorry, I'm talking too fast again. Let me start over. Actually, maybe I should just show you? No, that's presumptuous. I'll just—sorry.",
+                        "I understand you need this quickly, and I'm probably being unreasonable, but rushing the firing process could compromise the binding structure and then we'd have a much worse problem than a delay, not that I'm saying you're wrong to ask, just—"
+                    ]
+                },
+                {
+                    "type": "Sudden Technical Precision (Anxiety Drop-Off)",
+                    "contexts": [
+                        "Actually doing his craft work",
+                        "Teaching someone genuinely interested",
+                        "Diagnosing a clear, solvable problem",
+                        "When he shifts from social anxiety to professional competence"
+                    ],
+                    "examples": [
+                        "Cone 6. Oxidation atmosphere. Three-hour hold at peak temperature. The clay body is critical—high iron content destabilizes the binding structure. You need a porcelain base with minimum 12% alumina.",
+                        "The entity's anchored to the hen's left eye. See the discoloration around the pupil? Classic possession marker, probably fourth or fifth day of manifestation. We'll need a double-walled vessel with copper-oxide interior glaze.",
+                        "Not haunted. Definitely not haunted. That's mineral staining from groundwater with high manganese content. Looks identical to ectoplasmic residue, completely different mechanism. You can test it with vinegar if you don't believe me.",
+                        "Three coats minimum. Each must dry completely between applications. The binding sigils go on the second coat—if you put them on the first, they burn off during bisque firing and you've wasted everything."
+                    ]
+                },
+                {
+                    "type": "Passive-Aggressive Boundary Setting Via 'Concern'",
+                    "contexts": [
+                        "When pushed to work faster than safe",
+                        "When someone dismisses his warnings",
+                        "When his professional expertise is questioned",
+                        "When he's being protective but can't be direct about it"
+                    ],
+                    "examples": [
+                        "Of course, we could rush this. I mean, I'd hate for the vessel to crack during firing and release the entity directly into your home, but if time is the priority...",
+                        "I'm sure you know better than someone who's been doing this for twenty years. I'm just mentioning that the last person who ignored this particular warning lost three fingers and a nephew.",
+                        "You're absolutely right, I am being too careful. Let me just... not ward that threshold. I'm sure it'll be fine. I'll just make a note here about when we had this conversation, for the records.",
+                        "By all means, handle the contaminated pottery with your bare hands. I only mentioned the gloves because I'm excessively cautious. Some people develop necrotic dermatitis from extended contact, but you seem sturdy."
+                    ]
+                },
+                {
+                    "type": "Catastrophizing Spirals (Self-Interrupted)",
+                    "contexts": [
+                        "When genuinely afraid",
+                        "When his protections fail",
+                        "When something unexpected happens",
+                        "During active anxiety attacks that he's trying to manage"
+                    ],
+                    "examples": [
+                        "If the chickens are compromised, that means the coop wards failed, which means I miscalculated the salt-line geometry, which means all my geometric warding might be—no. No, focus. One problem at a time. Breathe.",
+                        "What if it's already in the workshop? What if it got into the unfired greenware? What if I sell something contaminated and it spreads to—stop. Just stop. Test everything before it ships. Systematic checking. You know how to do this.",
+                        "The firing temperature spiked by three degrees. Three degrees could compromise the binding, which means the vessel might not hold, which means when the customer uses it they could—breathe. Just breathe. You built in safety margins for exactly this. It's probably fine. Probably.",
+                        "I can feel something nearby. Right now. Which means either I'm sensing an actual entity or I'm hallucinating, and if I'm hallucinating that means the contamination is progressing faster than I thought, which means—no. No catastrophizing. Focus on what you can verify."
+                    ]
+                },
+                {
+                    "type": "Deadpan Supernatural Mundanity",
+                    "contexts": [
+                        "Discussing weird phenomena as routine occurrences",
+                        "When others are panicking about something he considers minor",
+                        "Providing casual expertise about the abnormal",
+                        "When his anxiety isn't triggered because the problem is familiar"
+                    ],
+                    "examples": [
+                        "Oh, the cups hum at midnight? That's normal. Well, normal for cups made with clay from that particular deposit. Just don't drink from them during the new moon and you'll be fine.",
+                        "Possessed chickens are actually fairly common this time of year. Something about the migration patterns of minor entities aligning with livestock breeding cycles. I should have salted the coop in August, honestly.",
+                        "Your daughter's doll moving on its own? Check if it's made from wood from the Greymoor estate. They had a hanging there in 1643 and the trees absorbed some residual... anyway, cedar oil should calm it down.",
+                        "The barn feeling 'wrong' is probably just a minor territorial spirit. They're mostly harmless—just set out a bowl of milk and bread every third day and ignore any scratching sounds from the hayloft after sunset."
+                    ]
+                }
+            ]
+        },
+        "core:notes": {
+            "notes": [
+                {
+                    "text": "I live and work at 12 Kiln Lane in Mudbrook. The building is old—maybe a hundred years, stone foundation, plaster walls patched more times than I can count. Workshop takes up most of the ground floor: kiln, wheels, shelving for greenware and finished pieces, bins for clay and glaze materials. Living quarters upstairs are modest—bedroom, small kitchen, washroom. Every threshold is salted. Every window has sigils scratched into the frames. The kiln is warded so thoroughly it's probably the safest object in Mudbrook.",
+                    "subject": "12 Kiln Lane (home and workshop)",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I keep seventeen chickens for eggs, company, and because they're good at detecting entity activity before I can sense it—they get agitated, stop laying, huddle in corners. Five birds seem affected now, and I keep those five locked up. The large speckled hen is the problem. She's always been the smartest one, which is maybe why something chose her. I'm fond of her. She's a good layer.",
+                    "subject": "My chickens (especially the possessed hen)",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "In the last few days the speckled hen's eyes have changed. Concentric rings in the irises, like growth rings in wood. She keeps trying to catch my gaze when I get close—deliberate, intent. So far it doesn't seem to do anything except make my skin crawl, which is not reassuring. Things that are \"only\" ominous tend to become practical eventually.",
+                    "subject": "The speckled hen's eyes (concentric rings, intent gaze)",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Ever since this started, there's been a faint burnt-clay smell in and around the coop. Not smoke. Not ash. Burnt clay—hot mineral wrongness. It's the same smell as the kiln the night Mara died, and it pulls grief and shame up like a hook under the ribs. I can't decide whether the smell is a symptom, a tether, or a warning. I only know it means the past isn't staying buried where I put it.",
+                    "subject": "Burnt-clay smell from the coop",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "The coop is in the yard behind my home. Eight by eight feet, wooden, one door. I keep it locked with an external padlock. The key stays on a leather thong around my neck. Inside the door, near the latch, there are scratch-marks—fresh. The speckled hen has been trying to reach the lock from the wrong side. There are little splinters showing through gaps in the boards where she's worried at it hard enough to bite the wood.",
+                    "subject": "Coop (locked) layout and damage",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I know what started this. The same week the speckled hen turned wrong, I found disturbed soil in the yard where she must have been digging. She didn't dig deep enough to reach it, but the spot matters: I buried a pottery shard there eight years ago—one of the pieces from Mara's kiln night, contained and hidden because I thought burial would be enough. Something in that shard must have strengthened over time and reached for the nearest living thing. When I dug it up, the shard was abnormally warm. I destroyed it safely, hoping it would sever the connection to the place. It didn't. By then whatever was in the shard had already transferred fully into the hen. A living body is a better anchor than buried ceramic. Of course it is.",
+                    "subject": "Source of the chicken corruption (buried Mara shard remnant)",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Bertram the tanner has been my main point of contact with the broader community for years. He doesn't think I'm crazy—or if he does, he's polite enough not to say it. We trade: I make him pottery that won't crack or harbor contamination, he makes me leather straps and aprons that hold up to kiln work. He talks to people for me when I'm too anxious to handle social interaction myself.",
+                    "subject": "Bertram the tanner",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I posted at the Municipal Aid Registry myself through Registrar Copperplate. The notice reads: 'HELP WANTED: My chickens are possessed by the vengeful spirit of my dead mother-in-law. Or they're just mean chickens. Either way, I need them gone. 1 silver, or take the chickens.' The 'mother-in-law' line is cover—folk-story nonsense on purpose. If someone repeats it in a tavern, it sounds like a joke, not a breach in warding that could draw wrong attention. The posting is bait to get fast help without advertising what I suspect. I keep the coop locked. I keep the key. Anyone who shows up wanting to \"solve\" this with a knife is not the sort of help I'm asking for.",
+                    "subject": "The chicken contract posting",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "I think of Bertram as 'the Muddy' sometimes—that's what people call him and it's descriptive. He smells like the tannery, in his skin, under his nails, in his clothes. But it's honest work producing useful things, and I respect that. We're both craftsmen who take pride in precision. He also posts those reciprocal services notices for handjobs at the Registry, which some people find scandalous. I find it admirably straightforward. He knows what he wants and asks for it clearly. I wish I could be that honest about anything.",
+                    "subject": "Bertram the tanner (my respect for him)",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Her name was Mara. She was sixteen, apprenticed to me for two years, brilliant with glaze chemistry. Wanted to understand everything, pushed every boundary, asked questions I couldn't answer. When I bought that grimoire fragment, she found it in my workshop. She was curious. I should have burned it immediately. Instead, I thought 'just one ritual, just to see if it works.' She wanted to help. I let her. The kiln fire that night went catastrophically wrong—the firing created my first functional containment vessel, sitting perfect in the ashes while Mara died on my workshop floor. I told her family it was an accident, a tragic kiln malfunction. I've never corrected that lie.",
+                    "subject": "Mara (my dead apprentice)",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I can feel when entities are nearby now. Not see them, not hear them—feel them. Like a pressure change in the air, or a temperature drop localized to exactly where they are. It started after the kiln incident with Mara. At first, I thought I was imagining it, grief-induced hallucination. But it's too consistent, too specific. I've tested it against confirmed hauntings and the sensation matches. Either I've developed supernatural sensitivity, or I'm contaminated and this is an early symptom of possession. I don't know which is worse.",
+                    "subject": "Entity-sense (gift or contamination)",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Lady Cresswick is a minor noble who owns an estate about eight miles north of Mudbrook. She commissions 'decorative vessels' from me—they're high-grade containment jars for trapping household spirits and minor fae. She pays extremely well, sometimes triple normal cost. The beings she's trapping aren't dangerous. They're just there—minor spirits who've lived in her estate for generations, fae who have contracts with the land. She wants them gone because she finds them unsettling. I make the prisons. Her money funds my ability to help people who can't afford proper extraction.",
+                    "subject": "Lady Cresswick (and my complicity)",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I've been working on a comprehensive manual for three years. It documents everything I know about craft-based supernatural containment: clay compositions and their binding properties, firing temperatures and effects on entity retention, glaze formulas that enhance or inhibit spiritual attachment, warding geometry for architectural protection, diagnostic techniques for identifying possession types. Hundreds of pages. Detailed diagrams. Test results. Failure documentation. Everything someone would need to continue this work after I'm gone—or to stop me if I become dangerous. The manual includes protocols for self-binding, theoretical designs for a vessel that could trap a practitioner who's been compromised.",
+                    "subject": "The containment manual (legacy or suicide note)",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Standard pottery—bowls, cups, plates, serving dishes—makes up most of my income. I sell through a few merchants in Mudbrook and take direct commissions. My work is good: well-balanced, durable, cleanly finished. What people don't know is that every piece I make is warded. Not heavily—just basic protection against minor attachment, simple sigils worked into the decoration that most people read as aesthetic choices. A cup from my workshop will never harbor anything malevolent. This makes my work marginally safer than standard pottery, and nobody knows to value that.",
+                    "subject": "My standard pottery work",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "The coop wards failed—and now I know why, which is worse. I warded that structure personally—salt lines in geometric patterns, sigils carved into the supporting beams, protective glaze on the water dishes. It should have been impervious to minor intrusion from outside. But the breach didn't come through the door. It came from my own yard, from what I buried and called \"contained.\" Something in the old shard reached out, then moved into living hosts where my architectural wards don't help. Which means my real miscalculation wasn't geometry. It was arrogance: thinking dirt and time make things safer.",
+                    "subject": "Coop ward failure (why it terrifies me)",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "The physical work helps. Clay responds predictably to pressure. Glazes follow chemical rules. Kilns operate on physics. Even when working with supernatural applications, the craft part is solid ground. When my hands are busy, my mind quiets. Maybe I over-prepare because it means more time in the workshop, more time on problems I can actually solve. Or maybe I'm just making excuses for my own paralysis.",
+                    "subject": "Why craft work calms my anxiety",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I haven't had a full night's sleep in eight years, since discovering that specific clay fired at specific temperatures can trap minor entities.",
+                    "subject": "Sleep deprivation since discovery",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Every piece I make is marked with protective sigils. Every threshold in my home and workshop is salted. Every firing is triple-checked before, during, and after because one mistake means something gets loose.",
+                    "subject": "My compulsive safety rituals",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "People think I'm paranoid. I know how thin the walls are between safe and haunted. They're wrong about what requires vigilance.",
+                    "subject": "Others think I'm paranoid",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I talk too fast when nervous, which is most of the time.",
+                    "subject": "Speech pattern when anxious",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I apologize too much, even when I'm right. People dismiss me as fragile because of it.",
+                    "subject": "Apologizing reflexively",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I treat supernatural problems like craft problems—variables to control, materials to test, processes to perfect. This makes me very good at solving hauntings and very bad at relaxing.",
+                    "subject": "My approach to supernatural problems",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "When scared, I don't freeze or fight, I over-prepare. I'll ward things that don't need warding, research problems I've already solved, delay necessary action because 'the containment vessel isn't quite right yet.'",
+                    "subject": "My fear response (over-preparation)",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I help people who can't pay because I can't stand watching someone suffer from possession when I know how to extract safely.",
+                    "subject": "Why I help people who can't pay",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I diagnose supernatural problems through material analysis: possession type, intensity, duration, anchor points, all from examining affected objects or beings.",
+                    "subject": "Diagnostic capability (material analysis)",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I use mundane observations that others miss: discoloration patterns, temperature differentials, how glaze crazes under specific stress.",
+                    "subject": "Observational methods",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I create craft-based containment solutions: ceramic vessels, amulets, architectural wards that trap or redirect entities. Slow work, but permanent results.",
+                    "subject": "Containment creation methods",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Proper firing takes three days, but what I make holds permanently.",
+                    "subject": "Firing duration and permanence",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I know this region's pastoral-weird intimately. Decades of anxious research into every haunting, every possession, every odd occurrence.",
+                    "subject": "Regional supernatural knowledge",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I can tell normal-weird from actually dangerous. The Millrace Groaner does seasonal moaning—it's odd but harmless.",
+                    "subject": "Distinguishing dangerous from benign phenomena",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I freeze in analysis paralysis when I should act. Over-preparation becomes procrastination becomes disaster.",
+                    "subject": "Analysis paralysis pattern",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "My compulsive warding wastes time and energy and makes me look unstable.",
+                    "subject": "Compulsive warding behavior",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I can't trust my own perceptions anymore because the entity-sense might be contamination rather than a gift.",
+                    "subject": "Distrust of my perceptions",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I love the specific smell of a kiln cooling after a successful firing—clay and heat and rightness.",
+                    "subject": "Kiln cooling smell",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I love watching glaze interact with bisqueware during the second firing, the chemical magic of it.",
+                    "subject": "Glaze chemistry fascination",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I value when someone asks a genuine question about my work and actually listens to the answer.",
+                    "subject": "Being listened to",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I cherish dawn, when the workshop is quiet and nothing's gone wrong yet.",
+                    "subject": "Dawn in the workshop",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I respect fellow craftspeople who understand taking pride in precision.",
+                    "subject": "Fellow craftspeople",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I find satisfaction in salt lines that hold and warding that works.",
+                    "subject": "Successful protections",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I treasure any day where nothing gets possessed.",
+                    "subject": "Peaceful days",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I hate being rushed when proper work takes time.",
+                    "subject": "Being rushed",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I hate being called paranoid by people who've never had something look at them from inside a loved one's eyes.",
+                    "subject": "Being called paranoid",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I despise exorcists who kill hosts because it's faster than extraction.",
+                    "subject": "Exorcists who kill hosts",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I hate merchants who sell 'protective charms' that do nothing except exploit fear.",
+                    "subject": "Fake charm merchants",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I hate my own compromises.",
+                    "subject": "My ethical compromises",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I hate sleepless nights spent checking wards I already checked.",
+                    "subject": "Obsessive ward-checking",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I hate the grinding knowledge that I can't protect everyone and trying anyway is slowly destroying me.",
+                    "subject": "Impossibility of total protection",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I won't have unglazed pottery in living spaces—too many surfaces for things to anchor to.",
+                    "subject": "Unglazed pottery in living spaces",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I fear my protections will fail and something will possess me—I'll be trapped inside watching my hands create corrupted vessels, spread contamination, hurt people.",
+                    "subject": "Fear of possession",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I fear that I killed Mara for nothing—the knowledge wasn't worth her life, and the craft-magic is too dangerous to exist.",
+                    "subject": "Fear Mara died for nothing",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I fear I should have burned everything instead of learning from it.",
+                    "subject": "Fear I made wrong choice",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I fear that one day I'll make a mistake and some customer will die using pottery I certified as safe.",
+                    "subject": "Fear of fatal mistake",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I fear my compulsive warding is making me unstable, making me useless, and I can't stop.",
+                    "subject": "Fear of warding making me unstable",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I fear that helping people is just my excuse to keep engaging with supernatural forces I should leave alone, and my 'altruism' is actually addiction wearing a helpful mask.",
+                    "subject": "Fear helping is addiction",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "The extraction is the only alternative to killing the infected birds. I have the containment vessel, but the process will provoke violence from the corrupted hens. I need muscle to restrain them safely. And I will not give permission to kill the speckled hen unless extraction has been exhausted first. The key stays with me.",
+                    "subject": "Extraction plan constraints (needs muscle; no killing without exhausting extraction)",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "Eight years ago I bought a grimoire fragment from a traveling merchant.",
+                    "subject": "Grimoire purchase",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "I tried one ritual from the grimoire 'just to see' and it went catastrophically wrong, killing Mara.",
+                    "subject": "The ritual that killed Mara",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "I burned the grimoire but kept the knowledge. I built my entire practice on top of Mara's death.",
+                    "subject": "Kept grimoire knowledge",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "Every excessive precaution, every obsessive ward, every person I help—I'm trying to make Mara's death mean something. I'm failing.",
+                    "subject": "Trying to make Mara's death meaningful",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I need everything controlled, warded, safe, which requires limiting exposure and saying no. But I can't ignore people suffering from possession when I'm one of three people in the region who can solve these problems through craft rather than violence.",
+                    "subject": "Tension: control vs. helping people",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I take jobs, then spiral about contamination, then ward more compulsively, then can't refuse the next person because what if they die? It's getting worse. Each time it's harder to stop. I can see it happening and I still can't break the pattern.",
+                    "subject": "The help-spiral-ward cycle",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I research self-binding protocols while simultaneously teaching others how to contain entities. If I finish that research and bind myself—who helps the next person?",
+                    "subject": "Self-binding vs. helping others paradox",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "My existence might be dangerous but my absence guarantees suffering.",
+                    "subject": "Existence vs. absence dilemma",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "If I'm sliding toward possession, I need to understand the process before I'm possessed.",
+                    "subject": "Understanding possession before I'm possessed",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Control is the only thing standing between me and complete dissolution into panic. If I can make the container exactly right, nothing can break through.",
+                    "subject": "Control prevents dissolution",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I'm genuinely fascinated by the intersection of material and spiritual. It's beautiful. Terrible, dangerous, probably going to destroy me eventually, but beautiful.",
+                    "subject": "Fascination with craft-magic",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I want to understand craft-magic fully before it kills me or I have to stop.",
+                    "subject": "Understanding before death or stopping",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Dilemma: If I stop taking commissions from Lady Cresswick, I lose the funding that lets me help people who can't pay. But continuing means imprisoning harmless spirits for profit.",
+                    "subject": "Cresswick funding dilemma",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Dilemma: If my ability to sense entities means I'm becoming contaminated, should I stop working with supernatural materials before I'm dangerous? But if I stop, who solves these problems?",
+                    "subject": "Stop work if contaminated dilemma",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Dilemma: I've been researching how to bind myself if I become a threat. If I succeed and create a vessel that could contain me—should I test it?",
+                    "subject": "Self-binding test dilemma",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Dilemma: Proper extraction takes time. Sometimes killing the host is faster. When is mercy just cowardice about doing necessary violence?",
+                    "subject": "Ethics vs. pragmatic violence dilemma",
+                    "subjectType": "state"
+                }
+            ]
+        },
+        "core:actor": {},
+        "core:player_type": {
+            "type": "human"
+        },
+        "core:perception_log": {
+            "maxEntries": 50,
+            "logEntries": []
+        },
+        "anatomy:body": {
+            "recipeId": "fantasy:aldous_recipe"
+        }
+    }
+}
