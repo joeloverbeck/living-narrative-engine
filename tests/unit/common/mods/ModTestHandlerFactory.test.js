@@ -656,26 +656,29 @@ describe('ModTestHandlerFactory', () => {
       expect(Object.keys(handlers).length).toBeGreaterThanOrEqual(14);
     });
 
-    it('should return createStandardHandlers for other categories', () => {
+    it('should return safe handlers for other categories', () => {
       const categories = ['exercise', 'intimacy'];
 
       categories.forEach((category) => {
         const factory =
           ModTestHandlerFactory.getHandlerFactoryForCategory(category);
-        const handlers = factory(mockEntityManager, mockEventBus, mockLogger, mockGameDataRepository);
+        const handlers = factory(
+          mockEntityManager,
+          mockEventBus,
+          mockLogger,
+          mockGameDataRepository
+        );
 
-        // Standard handlers don't have positioning-specific handlers
-        expect(handlers.ADD_COMPONENT).toBeUndefined();
-        expect(handlers.ADD_PERCEPTION_LOG_ENTRY).toBeUndefined();
-        expect(handlers.REMOVE_COMPONENT).toBeUndefined();
-        expect(handlers.LOCK_MOVEMENT).toBeUndefined();
-        expect(handlers.UNLOCK_MOVEMENT).toBeUndefined();
-        expect(handlers.MODIFY_ARRAY_FIELD).toBeUndefined();
-        expect(handlers.MODIFY_COMPONENT).toBeUndefined();
-        expect(handlers.ATOMIC_MODIFY_COMPONENT).toBeUndefined();
+        expect(handlers.GET_NAME).toBeDefined();
+        expect(handlers.DISPATCH_PERCEPTIBLE_EVENT).toBeDefined();
+        expect(handlers.END_TURN).toBeDefined();
+
+        if (handlers.ADD_COMPONENT) {
+          expect(typeof handlers.ADD_COMPONENT.execute).toBe('function');
+        }
 
         // Verify minimum expected handlers are present (additional mock handlers may be added for fail-fast enforcement)
-        expect(Object.keys(handlers).length).toBeGreaterThanOrEqual(12);
+        expect(Object.keys(handlers).length).toBeGreaterThanOrEqual(10);
       });
     });
 
@@ -690,19 +693,23 @@ describe('ModTestHandlerFactory', () => {
       expect(Object.keys(handlers).length).toBeGreaterThanOrEqual(14);
     });
 
-    it('should return createStandardHandlers for unknown categories', () => {
+    it('should return a superset handler profile for unknown categories', () => {
       const unknownCategories = ['unknown', 'test', ''];
 
       unknownCategories.forEach((category) => {
         const factory =
           ModTestHandlerFactory.getHandlerFactoryForCategory(category);
-        const handlers = factory(mockEntityManager, mockEventBus, mockLogger, mockGameDataRepository);
+        const handlers = factory(
+          mockEntityManager,
+          mockEventBus,
+          mockLogger,
+          mockGameDataRepository
+        );
 
-        // Unknown categories get standard handlers without positioning-specific ones
-        expect(handlers.ADD_COMPONENT).toBeUndefined();
-        expect(handlers.ADD_PERCEPTION_LOG_ENTRY).toBeUndefined();
-        // Verify minimum expected handlers are present (additional mock handlers may be added for fail-fast enforcement)
-        expect(Object.keys(handlers).length).toBeGreaterThanOrEqual(12);
+        // Unknown categories default to perception-logging superset
+        expect(handlers.ADD_COMPONENT).toBeDefined();
+        expect(handlers.ADD_PERCEPTION_LOG_ENTRY).toBeDefined();
+        expect(handlers.MODIFY_COMPONENT).toBeDefined();
       });
     });
 

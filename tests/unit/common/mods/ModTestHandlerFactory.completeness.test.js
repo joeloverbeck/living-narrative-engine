@@ -458,9 +458,9 @@ describe('ModTestHandlerFactory - Completeness', () => {
         expect(handlers).toHaveProperty('ADD_COMPONENT');
         expect(handlers).toHaveProperty('REMOVE_COMPONENT');
       });
-    });
+      });
 
-    it('should return standard handlers for unknown categories', () => {
+    it('should return superset handlers for unknown categories', () => {
       const factory =
         ModTestHandlerFactory.getHandlerFactoryForCategory('unknown-category');
       expect(typeof factory).toBe('function');
@@ -472,9 +472,40 @@ describe('ModTestHandlerFactory - Completeness', () => {
         mockGameDataRepository
       );
 
-      // Should be standard handlers
+      // Unknown categories should fall back to the superset profile
       expect(handlers).toHaveProperty('GET_NAME');
       expect(handlers).toHaveProperty('LOG_MESSAGE');
+      expect(handlers).toHaveProperty('ADD_COMPONENT');
+      expect(handlers).toHaveProperty('ADD_PERCEPTION_LOG_ENTRY');
+    });
+
+    it('should autodetect component mutation needs for distress mod data', () => {
+      const factory =
+        ModTestHandlerFactory.getHandlerFactoryForCategory('distress');
+      const handlers = factory(
+        mockEntityManager,
+        mockEventBus,
+        mockLogger,
+        mockGameDataRepository
+      );
+
+      expect(handlers).toHaveProperty('ADD_COMPONENT');
+      expect(handlers).toHaveProperty('ADD_PERCEPTION_LOG_ENTRY');
+      expect(handlers).toHaveProperty('REGENERATE_DESCRIPTION');
+    });
+
+    it('should pull item handlers when item operations are present', () => {
+      const factory = ModTestHandlerFactory.getHandlerFactoryForCategory('items');
+      const handlers = factory(
+        mockEntityManager,
+        mockEventBus,
+        mockLogger,
+        mockGameDataRepository
+      );
+
+      expect(handlers).toHaveProperty('TRANSFER_ITEM');
+      expect(handlers).toHaveProperty('VALIDATE_INVENTORY_CAPACITY');
+      expect(handlers).toHaveProperty('UNWIELD_ITEM');
     });
   });
 });

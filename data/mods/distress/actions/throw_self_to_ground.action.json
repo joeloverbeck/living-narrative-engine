@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "distress:throw_self_to_ground",
+  "name": "Throw self to ground",
+  "description": "Throw yourself to the ground in grief.",
+  "targets": "none",
+  "required_components": {},
+  "forbidden_components": {
+    "actor": [
+      "positioning:fallen",
+      "positioning:lying_down"
+    ]
+  },
+  "template": "throw yourself to the ground in grief",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#0b132b",
+    "textColor": "#f2f4f8",
+    "hoverBackgroundColor": "#1c2541",
+    "hoverTextColor": "#e0e7ff"
+  }
+}

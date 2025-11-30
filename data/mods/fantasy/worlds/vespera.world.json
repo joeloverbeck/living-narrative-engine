@@ -41,6 +41,9 @@
             "instanceId": "fantasy:coop_key_instance"
         },
         {
+            "instanceId": "fantasy:containment_vessel_instance"
+        },
+        {
             "instanceId": "fantasy:chicken_coop_door_instance"
         },
         {

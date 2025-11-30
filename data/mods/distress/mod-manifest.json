@@ -29,15 +29,18 @@
   "content": {
     "actions": [
       "bury_face_in_hands.action.json",
-      "clutch_onto_upper_clothing.action.json"
+      "clutch_onto_upper_clothing.action.json",
+      "throw_self_to_ground.action.json"
     ],
     "conditions": [
       "event-is-action-bury-face-in-hands.condition.json",
-      "event-is-action-clutch-onto-upper-clothing.condition.json"
+      "event-is-action-clutch-onto-upper-clothing.condition.json",
+      "event-is-action-throw-self-to-ground.condition.json"
     ],
     "rules": [
       "bury_face_in_hands.rule.json",
-      "clutch_onto_upper_clothing.rule.json"
+      "clutch_onto_upper_clothing.rule.json",
+      "throw_self_to_ground.rule.json"
     ],
     "scopes": [
       "close_actors_facing_each_other_with_torso_clothing.scope"

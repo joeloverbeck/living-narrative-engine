@@ -22,11 +22,15 @@ import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
 import { ModAssertionHelpers } from '../../../common/mods/ModAssertionHelpers.js';
 import { createTestBed } from '../../../common/testBed.js';
 
-// Mock the file loading
+// Mock the file loading (both async and sync APIs used in fixtures)
 jest.mock('fs', () => ({
   promises: {
     readFile: jest.fn(),
+    readdir: jest.fn().mockResolvedValue([]),
   },
+  existsSync: jest.fn().mockReturnValue(false),
+  readdirSync: jest.fn().mockReturnValue([]),
+  readFileSync: jest.fn().mockReturnValue('{}'),
 }));
 
 describe('ModTestFixture - Comprehensive Unit Tests', () => {

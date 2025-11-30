@@ -257,11 +257,12 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
         mockGameDataRepository
       );
 
-      // Should behave like createStandardHandlers
+      // Unknown categories should fall back to a superset with mutation support
       expect(handlers).toHaveProperty('QUERY_COMPONENT');
       expect(handlers).toHaveProperty('GET_NAME');
       expect(handlers).toHaveProperty('SET_VARIABLE');
-      expect(handlers).not.toHaveProperty('ADD_COMPONENT');
+      expect(handlers).toHaveProperty('ADD_COMPONENT');
+      expect(handlers).toHaveProperty('ADD_PERCEPTION_LOG_ENTRY');
     });
   });
 
