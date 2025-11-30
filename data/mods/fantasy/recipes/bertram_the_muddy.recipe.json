@@ -88,6 +88,14 @@
           "color": "green"
         }
       }
+    },
+    {
+      "matches": [
+        "left_testicle",
+        "right_testicle"
+      ],
+      "partType": "testicle",
+      "preferId": "anatomy:human_testicle"
     }
   ],
   "clothingEntities": [

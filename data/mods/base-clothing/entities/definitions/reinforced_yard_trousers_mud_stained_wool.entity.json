@@ -1,0 +1,44 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:reinforced_yard_trousers_mud_stained_wool",
+  "description": "Mud-stained wool yard trousers with reinforced knees and seat",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_lower"
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "wool"
+    },
+    "core:name": {
+      "text": "reinforced yard trousers"
+    },
+    "core:description": {
+      "text": "High-waisted yard trousers cut from sturdy wool and lined in linen for comfort. The knees and seat carry extra panels for crawling along kiln beds, with clay and mud staining baked into the lower hems. Seams are bar-tacked at stress points so they hold up under tool belts and jerkin lacing."
+    },
+    "descriptors:color_extended": {
+      "color": "mud-brown"
+    },
+    "descriptors:texture": {
+      "texture": "worn"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_lower"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.5
+    }
+  }
+}

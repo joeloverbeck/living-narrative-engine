@@ -1,0 +1,123 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "fantasy:aldous_recipe",
+  "blueprintId": "anatomy:human_male",
+  "bodyDescriptors": {
+    "height": "average",
+    "composition": "lean",
+    "build": "slim",
+    "hairDensity": "moderate",
+    "skinColor": "pale with clay staining",
+    "smell": "kiln smoke, wet clay, and ash"
+  },
+  "slots": {
+    "torso": {
+      "partType": "torso",
+      "preferId": "anatomy:human_male_torso"
+    },
+    "head": {
+      "partType": "head",
+      "preferId": "anatomy:humanoid_head_plain_weary"
+    },
+    "hair": {
+      "partType": "hair",
+      "preferId": "anatomy:human_hair_short_dirty_blonde_wavy"
+    },
+    "penis": {
+      "partType": "penis",
+      "preferId": "anatomy:human_penis"
+    },
+    "left_ass": {
+      "partType": "ass_cheek",
+      "preferId": "anatomy:human_ass_cheek_firm"
+    },
+    "right_ass": {
+      "partType": "ass_cheek",
+      "preferId": "anatomy:human_ass_cheek_firm"
+    }
+  },
+  "patterns": [
+    {
+      "matches": [
+        "left_arm",
+        "right_arm"
+      ],
+      "partType": "arm",
+      "preferId": "anatomy:humanoid_arm_lean"
+    },
+    {
+      "matches": [
+        "left_hand",
+        "right_hand"
+      ],
+      "partType": "hand",
+      "preferId": "anatomy:humanoid_hand_craftsman_scarred"
+    },
+    {
+      "matches": [
+        "left_leg",
+        "right_leg"
+      ],
+      "partType": "leg",
+      "preferId": "anatomy:human_leg_long_lean"
+    },
+    {
+      "matches": [
+        "left_foot",
+        "right_foot"
+      ],
+      "partType": "foot",
+      "preferId": "anatomy:human_foot"
+    },
+    {
+      "matches": [
+        "left_ear",
+        "right_ear"
+      ],
+      "partType": "ear",
+      "preferId": "anatomy:humanoid_ear"
+    },
+    {
+      "matches": [
+        "left_eye",
+        "right_eye"
+      ],
+      "partType": "eye",
+      "preferId": "anatomy:human_eye_hazel_hooded"
+    }
+  ],
+  "clothingEntities": [
+    {
+      "entityId": "underwear:linen_drawers",
+      "equip": true
+    },
+    {
+      "entityId": "underwear:linen_footwraps",
+      "equip": true
+    },
+    {
+      "entityId": "base-clothing:linen_close_cuff_work_shirt_ochre_brown",
+      "equip": true
+    },
+    {
+      "entityId": "base-clothing:reinforced_yard_trousers_mud_stained_wool",
+      "equip": true
+    },
+    {
+      "entityId": "base-clothing:waxed_leather_work_boots_dark_brown",
+      "equip": true
+    },
+    {
+      "entityId": "outer-clothing:quilted_smoke_gray_jerkin_linen_wool",
+      "equip": true
+    },
+    {
+      "entityId": "accessories:smoked_glass_eye_shields_green_tint_chipped",
+      "equip": true
+    },
+    {
+      "entityId": "accessories:goatskin_grip_gloves",
+      "equip": true
+    }
+  ]
+}

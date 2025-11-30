@@ -1,0 +1,44 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "outer-clothing:quilted_smoke_gray_jerkin_linen_wool",
+  "description": "Smoke-gray quilted jerkin with wool batting and vented sides",
+  "components": {
+    "clothing:wearable": {
+      "layer": "outer",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "linen"
+    },
+    "core:name": {
+      "text": "quilted jerkin"
+    },
+    "core:description": {
+      "text": "A smoke-gray jerkin quilted with wool batting, the channels lightly padded to blunt stray shards without smothering the wearer. The sides lace open to vent kiln heat, and the shoulders are bound with linen tape to keep their shape. Smoke scent clings to the fabric, hinting at time spent near kilns."
+    },
+    "descriptors:color_extended": {
+      "color": "smoke-gray"
+    },
+    "descriptors:texture": {
+      "texture": "quilted"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper"
+      ],
+      "coveragePriority": "outer"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.75
+    }
+  }
+}

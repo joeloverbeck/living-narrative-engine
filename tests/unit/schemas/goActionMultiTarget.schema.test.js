@@ -50,7 +50,7 @@ describe('Go Action Multi-Target Schema Validation', () => {
     expect(goActionMigrated.id).toBe('movement:go');
     expect(goActionMigrated.name).toBe('Go');
     expect(goActionMigrated.description).toBe(
-      'Moves your character to the specified location, if the way is clear.'
+      'Moves your character to the specified location.'
     );
     expect(goActionMigrated.prerequisites).toBeDefined();
     expect(goActionMigrated.prerequisites).toHaveLength(1);
