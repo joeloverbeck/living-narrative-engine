@@ -35,19 +35,22 @@
             "instanceId": "fantasy:vespera_main_gauche_instance"
         },
         {
-            "instanceId": "fantasy:rill_instance"
+            "instanceId": "fantasy:bertram_the_muddy_instance"
         },
         {
-            "instanceId": "fantasy:bertram_the_muddy_instance"
+            "instanceId": "fantasy:aldous_instance"
         },
         {
             "instanceId": "fantasy:threadscar_melissa_instance"
         },
         {
-            "instanceId": "fantasy:threadscar_melissa_longsword_instance"
+            "instanceId": "fantasy:vespera_nightwhisper_instance"
         },
         {
-            "instanceId": "fantasy:vespera_nightwhisper_instance"
+            "instanceId": "fantasy:rill_instance"
+        },
+        {
+            "instanceId": "fantasy:threadscar_melissa_longsword_instance"
         },
         {
             "instanceId": "fantasy:rill_practice_stick_instance"

@@ -1,0 +1,48 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "locks",
+  "version": "1.0.0",
+  "name": "Locks",
+  "description": "Keyed connection locks and shared lock state for blockers.",
+  "author": "Living Narrative Engine",
+  "gameVersion": "0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "movement",
+      "version": "1.0.0"
+    },
+    {
+      "id": "items",
+      "version": "1.0.0"
+    }
+  ],
+  "content": {
+    "components": [
+      "openable.component.json"
+    ],
+    "actions": [],
+    "rules": [],
+    "conditions": [
+      "blocker-has-openable.condition.json",
+      "blocker-is-locked.condition.json",
+      "blocker-is-unlocked.condition.json",
+      "actor-has-key-for-blocker.condition.json",
+      "event-is-action-lock-connection.condition.json",
+      "event-is-action-unlock-connection.condition.json"
+    ],
+    "scopes": [
+      "blockers_actor_can_unlock.scope",
+      "blockers_actor_can_lock.scope",
+      "keys_for_blocker.scope"
+    ],
+    "events": [],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    }
+  }
+}

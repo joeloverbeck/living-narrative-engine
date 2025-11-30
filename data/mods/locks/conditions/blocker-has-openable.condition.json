@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "locks:blocker-has-openable",
+  "description": "Checks if the exit blocker carries the locks:openable component",
+  "logic": {
+    "has_component": [
+      {
+        "var": "entity.blocker"
+      },
+      "locks:openable"
+    ]
+  }
+}

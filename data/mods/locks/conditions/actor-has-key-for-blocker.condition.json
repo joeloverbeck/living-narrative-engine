@@ -1,0 +1,40 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "locks:actor-has-key-for-blocker",
+  "description": "True when the actor holds the key required by the blocker",
+  "logic": {
+    "and": [
+      {
+        "condition_ref": "locks:blocker-has-openable"
+      },
+      {
+        "!!": {
+          "var": "actor.components.items:inventory.items"
+        }
+      },
+      {
+        "in": [
+          {
+            "or": [
+              {
+                "var": "entity.blocker.components.locks:openable.requiredKeyId"
+              },
+              {
+                "get_component_value": [
+                  {
+                    "var": "entity.blocker"
+                  },
+                  "locks:openable",
+                  "requiredKeyId"
+                ]
+              }
+            ]
+          },
+          {
+            "var": "actor.components.items:inventory.items"
+          }
+        ]
+      }
+    ]
+  }
+}

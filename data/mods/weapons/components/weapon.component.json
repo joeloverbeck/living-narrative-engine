@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "weapons:weapon",
-  "description": "Marker component identifying an item as a weapon. All weapons must have this component along with items:item, items:portable, and items:aimable.",
+  "description": "Marker component identifying an item as a weapon. Typically paired with items:item, items:portable, and anatomy:requires_grabbing so weapons can be carried and wielded.",
   "dataSchema": {
     "type": "object",
     "properties": {},

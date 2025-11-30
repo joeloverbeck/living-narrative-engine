@@ -1,0 +1,39 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "locks:openable",
+  "description": "Tracks lock state for exit blockers and the key needed to change it.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "isLocked": {
+        "type": "boolean",
+        "default": true,
+        "description": "True when the blocker should hide connected exits."
+      },
+      "isOpen": {
+        "type": "boolean",
+        "default": false,
+        "description": "Whether the blocker is open independently of its locked state."
+      },
+      "requiredKeyId": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$",
+        "description": "Namespaced entity ID of the key that operates this lock."
+      },
+      "lockLabel": {
+        "type": "string",
+        "description": "Optional description for UI/perception lines."
+      },
+      "lastChangedBy": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$",
+        "description": "Entity ID of the last actor to toggle the lock."
+      }
+    },
+    "required": [
+      "isLocked",
+      "requiredKeyId"
+    ],
+    "additionalProperties": false
+  }
+}

@@ -106,7 +106,7 @@ describe('weapons:weapon Component Definition', () => {
       const description = weaponComponent.description;
       expect(description).toContain('items:item');
       expect(description).toContain('items:portable');
-      expect(description).toContain('items:aimable');
+      expect(description).toContain('anatomy:requires_grabbing');
     });
   });
 
