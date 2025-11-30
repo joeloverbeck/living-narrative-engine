@@ -9,7 +9,7 @@
   border: var(--border-width) solid var(--border-color-subtle);
   border-radius: var(--border-radius-md);
   margin-bottom: var(--spacing-md);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 @media (max-width: 768px) {
@@ -76,20 +76,22 @@
   padding-top: var(--spacing-sm);
   padding-bottom: var(--spacing-sm);
   padding-right: var(--spacing-md);
-  padding-left: calc(
-    var(--spacing-md) - 3px
-  ); /* Accommodates the border-left */
+  padding-left: calc(var(--spacing-md) - 3px);
+  /* Accommodates the border-left */
   border-left: 3px solid var(--speech-border-color);
 
   /* Speech Bubble Enhancements */
-  border-radius: var(
-    --border-radius-lg,
-    12px
-  ); /* More rounded corners, fallback to 12px */
-  margin-top: var(--spacing-sm); /* Increased top margin */
-  margin-bottom: var(--spacing-sm); /* Increased bottom margin */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-  position: relative; /* Good for potential future pseudo-elements like tails */
+  border-radius: var(--border-radius-lg,
+      12px);
+  /* More rounded corners, fallback to 12px */
+  margin-top: var(--spacing-sm);
+  /* Increased top margin */
+  margin-bottom: var(--spacing-sm);
+  /* Increased bottom margin */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* Subtle shadow for depth */
+  position: relative;
+  /* Good for potential future pseudo-elements like tails */
 }
 
 /* --- Responsive Adjustments for Message List (Moved from style.css) --- */
@@ -105,7 +107,8 @@
     padding-top: var(--spacing-xs);
     padding-bottom: var(--spacing-xs);
     padding-right: var(--spacing-sm);
-    padding-left: calc(var(--spacing-sm) - 3px); /* Keep border accommodation */
+    padding-left: calc(var(--spacing-sm) - 3px);
+    /* Keep border accommodation */
     /* Margins for speech can also be adjusted if needed */
     margin-top: var(--spacing-xs);
     margin-bottom: var(--spacing-xs);
@@ -134,7 +137,8 @@
   border-radius: var(--border-radius-sm);
   text-align: center;
   margin: var(--spacing-md) auto;
-  display: none; /* Initially hidden */
+  display: none;
+  /* Initially hidden */
   max-width: 800px;
 }
 
@@ -158,7 +162,8 @@
   font-size: var(--font-size-large);
   margin-right: var(--spacing-md);
   flex-shrink: 0;
-  line-height: 1.2; /* Adjust vertical alignment */
+  line-height: 1.2;
+  /* Adjust vertical alignment */
 }
 
 .chat-alert-content {
@@ -168,7 +173,8 @@
 .chat-alert-title {
   font-weight: 700;
   margin: 0 0 var(--spacing-xs) 0;
-  display: block; /* Ensures it's on its own line */
+  display: block;
+  /* Ensures it's on its own line */
 }
 
 .chat-alert-message {
@@ -215,22 +221,30 @@
 
 /* Warning Bubble Theme */
 .chat-warning-bubble {
-  background-color: #fffbeb; /* Light yellow */
-  border-color: #f59e0b; /* Amber */
-  color: #92400e; /* Dark yellow/brown for text */
+  background-color: #fffbeb;
+  /* Light yellow */
+  border-color: #f59e0b;
+  /* Amber */
+  color: #92400e;
+  /* Dark yellow/brown for text */
 }
 
 .chat-warning-bubble .chat-alert-title {
-  color: #b45309; /* Slightly darker amber */
+  color: #b45309;
+  /* Slightly darker amber */
 }
 
 /* Error Bubble Theme */
 .chat-error-bubble {
-  background-color: var(--error-bg-color, #fee2e2); /* Light red */
-  border-color: var(--error-text-color, #ef4444); /* Red */
-  color: #991b1b; /* Dark red for text */
+  background-color: var(--error-bg-color, #fee2e2);
+  /* Light red */
+  border-color: var(--error-text-color, #ef4444);
+  /* Red */
+  color: #991b1b;
+  /* Dark red for text */
 }
 
 .chat-error-bubble .chat-alert-title {
-  color: var(--error-text-color, #b91c1c); /* Darker red */
+  color: var(--error-text-color, #b91c1c);
+  /* Darker red */
 }

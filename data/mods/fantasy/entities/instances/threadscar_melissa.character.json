@@ -4,7 +4,7 @@
     "definitionId": "fantasy:threadscar_melissa",
     "componentOverrides": {
         "core:position": {
-            "locationId": "fantasy:surroundings_of_old_millrace_instance"
+            "locationId": "fantasy:12_kiln_lane_instance"
         },
         "items:inventory": {
             "items": [

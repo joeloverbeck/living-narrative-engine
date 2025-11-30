@@ -32,6 +32,8 @@
   /* Take up remaining space in the actions widget */
   min-height: 0;
   /* Allow the container to shrink properly for scrolling */
+  padding-left: 0.8em;
+  padding-bottom: 0.8em;
 }
 
 /* Context-specific button sizing/margin within the actions widget */

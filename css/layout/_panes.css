@@ -6,7 +6,10 @@
   overflow-y: auto;
   border-top: var(--border-width) solid var(--panel-border-color);
   border-bottom: var(--border-width) solid var(--panel-border-color);
-  background-color: var(--panel-bg-color);
+}
+
+#app-layout-container {
+  background-color: transparent;
 }
 
 /* Consistent Paragraph Spacing within Panels */
@@ -37,9 +40,12 @@
 
 /* Right Pane Styling */
 #right-pane {
-  flex: 0 0 30%; /* MODIFIED: was 25% */
-  max-width: 450px; /* MODIFIED: was 300px */
-  min-width: 320px; /* MODIFIED: was 260px */
+  flex: 0 0 30%;
+  /* MODIFIED: was 25% */
+  max-width: 450px;
+  /* MODIFIED: was 300px */
+  min-width: 320px;
+  /* MODIFIED: was 260px */
 }
 
 /* --- Responsive Adjustments for Panes --- */
@@ -66,7 +72,8 @@
     flex: 1 1 100%;
     order: 3;
     max-width: 100%;
-    min-width: initial; /* This remains appropriate as it stacks */
+    min-width: initial;
+    /* This remains appropriate as it stacks */
     margin-top: var(--spacing-lg);
   }
 }
@@ -80,12 +87,14 @@
     flex: 1 0 auto;
     width: 100%;
     max-width: 100%;
-    min-width: 100% !important; /* Note the !important */
+    min-width: 100% !important;
+    /* Note the !important */
     margin-left: 0;
     margin-right: 0;
     margin-top: 0;
     box-shadow: none;
-    border-top-width: 0; /* First panel has no top border */
+    border-top-width: 0;
+    /* First panel has no top border */
     order: 1;
   }
 
@@ -98,7 +107,8 @@
     margin-right: 0;
     margin-top: 0;
     box-shadow: none;
-    border-top-width: 0; /* Middle panel has no top border */
+    border-top-width: 0;
+    /* Middle panel has no top border */
     order: 2;
   }
 
@@ -109,18 +119,20 @@
     min-width: 100% !important;
     margin-left: 0;
     margin-right: 0;
-    margin-top: 0; /* Overrides 1024px margin-top */
+    margin-top: 0;
+    /* Overrides 1024px margin-top */
     box-shadow: none;
-    border-top-width: 0; /* Last panel has no top border */
+    border-top-width: 0;
+    /* Last panel has no top border */
     order: 3;
   }
 
   /* General panel border adjustments for this breakpoint */
-  #app-layout-container > .panel:first-child {
+  #app-layout-container>.panel:first-child {
     border-top-width: var(--border-width);
   }
 
-  #app-layout-container > .panel:last-child {
+  #app-layout-container>.panel:last-child {
     border-bottom-width: var(--border-width);
     /* This was already specified for individual panes if they are the last child.
                                                                 If all panes are stacked and full width, this applies to the last one. */
@@ -129,9 +141,8 @@
 
 @media (max-width: 480px) {
   .panel {
-    padding: var(
-      --spacing-sm
-    ); /* Note: same as 768px in original, verify if intended */
+    padding: var(--spacing-sm);
+    /* Note: same as 768px in original, verify if intended */
   }
 
   /* Specific pane adjustments for 480px if needed, inherited from 768px otherwise */

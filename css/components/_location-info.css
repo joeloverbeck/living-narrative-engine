@@ -171,9 +171,9 @@
   gap: var(--spacing-sm);
   margin: -var(--spacing-md);
   padding: var(--spacing-md);
-  background: var(--secondary-bg-color);
-  border-bottom: 1px solid var(--border-color-subtle);
   user-select: none;
+  background: transparent;
+  border-bottom: 1px solid #E6DED3;
 }
 
 #location-info-container details.location-card > summary::before {

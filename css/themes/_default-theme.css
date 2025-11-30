@@ -4,7 +4,7 @@
   /* Colors */
   --primary-text-color: #2c3e50; /* Dark Slate Blue - good contrast */
   --secondary-text-color: #576574; /* Cool Grey - softer than before */
-  --primary-bg-color: #fdfdfd; /* Almost White - clean page background */
+  --primary-bg-color: #F5F1E8; /* Warm Neutral - for page background, contrasts with white panels */
   --secondary-bg-color: #f1f2f6; /* Light Cool Grey - for UI chrome */
 
   --accent-color-primary: #1abc9c; /* Rich Teal/Cyan - main accent */
@@ -16,8 +16,8 @@
   ); /* For focus box-shadow */
   --accent-color-secondary: #e67e22; /* Warm Orange - secondary accent for calls to action or highlights */
 
-  --panel-bg-color: #ffffff; /* White (For content panels) */
-  --panel-border-color: #dfe4ea; /* Softer panel borders */
+  --panel-bg-color: #FFFEFB; /* Not-Quite White (For content panels) */
+  --panel-border-color: #DDD3C7;
 
   --input-bg-color: #ffffff;
   --input-text-color: var(--primary-text-color);

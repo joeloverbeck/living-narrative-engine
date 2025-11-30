@@ -68,6 +68,8 @@
     "entities": {
       "definitions": [
         "12_kiln_lane.location.json",
+        "12_kiln_lane_yard.location.json",
+        "aldous.character.json",
         "ale_tankard.entity.json",
         "back_of_tannery.location.json",
         "bertram_the_muddy.character.json",
@@ -97,6 +99,7 @@
       ],
       "instances": [
         "12_kiln_lane.location.json",
+        "12_kiln_lane_yard.location.json",
         "ale_tankard.entity.json",
         "back_of_tannery.location.json",
         "bertram_the_muddy.character.json",
@@ -138,6 +141,7 @@
     ],
     "portraits": [
       "12_kiln_lane.png",
+      "12_kiln_lane_old.png",
       "back_of_tannery.png",
       "bertram.png",
       "bertram_old.png",
@@ -149,8 +153,10 @@
       "surroundings_of_old_millrace.png",
       "threadscar_melissa.png",
       "threadscar_melissa_old.png",
+      "threadscar_melissa_old_2.png",
       "vespera_nightwhisper.png",
-      "vespera_nightwhisper_old.png"
+      "vespera_nightwhisper_old.png",
+      "yard_and_coop.png"
     ],
     "worlds": [
       "vespera.world.json"
