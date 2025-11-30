@@ -28,7 +28,10 @@
       "lock_connection.action.json",
       "unlock_connection.action.json"
     ],
-    "rules": [],
+    "rules": [
+      "handle_lock_connection.rule.json",
+      "handle_unlock_connection.rule.json"
+    ],
     "conditions": [
       "actor-has-key-for-blocker.condition.json",
       "blocker-has-openable.condition.json",

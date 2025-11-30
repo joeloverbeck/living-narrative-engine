@@ -525,7 +525,7 @@
         },
         "core:actor": {},
         "core:player_type": {
-            "type": "llm"
+            "type": "human"
         },
         "core:perception_log": {
             "maxEntries": 50,

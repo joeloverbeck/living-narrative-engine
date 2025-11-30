@@ -17,6 +17,11 @@
                 "direction": "to the front of Aldous' home",
                 "target": "fantasy:12_kiln_lane_instance",
                 "blocker": null
+            },
+            {
+                "direction": "to the chicken coop's interior",
+                "target": "fantasy:interior_of_chicken_coop_instance",
+                "blocker": null
             }
         ]
     }
