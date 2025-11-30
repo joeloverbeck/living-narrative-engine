@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "locks:blocker-is-locked",
-  "description": "True when the blocker is locked and has the locks:openable component",
+  "description": "True when the blocker is locked and has the mechanisms:openable component",
   "logic": {
     "and": [
       {
@@ -12,14 +12,14 @@
           {
             "or": [
               {
-                "var": "entity.blocker.components.locks:openable.isLocked"
+                "var": "entity.blocker.components.mechanisms:openable.isLocked"
               },
               {
                 "get_component_value": [
                   {
                     "var": "entity.blocker"
                   },
-                  "locks:openable",
+                  "mechanisms:openable",
                   "isLocked"
                 ]
               }

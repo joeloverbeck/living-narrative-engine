@@ -99,7 +99,7 @@ describe('Locks conditions', () => {
     const blocker = {
       id: 'locks:test_blocker',
       components: {
-        'locks:openable': {
+        'mechanisms:openable': {
           isLocked,
           requiredKeyId: 'items:test_key',
         },
@@ -125,7 +125,7 @@ describe('Locks conditions', () => {
     return actor;
   }
 
-  it('detects blockers with the locks:openable component', () => {
+  it('detects blockers with the mechanisms:openable component', () => {
     const blocker = addBlocker({ isLocked: true });
     const hasOpenable = evaluateCondition('locks:blocker-has-openable', {
       entity: { blocker: services.entityManager.getEntityInstance(blocker.id) },

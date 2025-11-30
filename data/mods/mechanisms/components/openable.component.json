@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "locks:openable",
+  "id": "mechanisms:openable",
   "description": "Tracks lock state for exit blockers and the key needed to change it.",
   "dataSchema": {
     "type": "object",

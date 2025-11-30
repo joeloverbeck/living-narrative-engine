@@ -1,0 +1,74 @@
+
+> living-narrative-engine@0.0.1 test:single
+> jest --env=jsdom --silent=false --runInBand tests/unit/mods/movement/conditions/exit-is-unblocked.test.js
+
+  console.warn
+    Memory tests: GC not exposed. Run Node.js with --expose-gc for more reliable memory testing.
+
+      17 |     console.warn(
+      18 |       'Memory tests: GC not exposed. Run Node.js with --expose-gc for more reliable memory testing.'
+    > 19 |     );
+         |       ^
+      20 |   }
+      21 | }
+      22 |
+
+      at Object.<anonymous> (tests/setup/memorySetup.js:19:13)
+
+  console.log
+    Memory test setup - Initial heap usage: 52.87MB
+
+      at Object.<anonymous> (tests/setup/memorySetup.js:25:9)
+
+  console.log
+    jest.setup.js: fake-indexeddb polyfill loaded for jsdom
+
+      at Object.log (jest.setup.js:38:11)
+
+  console.log
+    jest.setup.js: window.fetch is now available.
+
+      at Object.log (jest.setup.js:65:13)
+
+  console.log
+    jest.setup.js: DOM API mocks initialized
+
+      at Object.log (jest.setup.js:277:9)
+
+  console.log
+    jest.setup.js: Domain matchers registered successfully
+
+      at log (jest.setup.js:287:13)
+
+FAIL tests/unit/mods/movement/conditions/exit-is-unblocked.test.js
+  ● Test suite failed to run
+
+    Configuration error:
+
+    Could not locate module ../../../../src/logic/jsonLogicEvaluationService.js mapped as:
+    $1.js.
+
+    Please check your configuration for these entries:
+    {
+      "moduleNameMapper": {
+        "/^(\.{1,2}\/.*)\.js$/": "$1.js"
+      },
+      "resolver": undefined
+    }
+
+      3 | import fs from 'fs';
+      4 | import { createMinimalTestContainer } from '../../../../common/scopeDsl/minimalTestContainer.js';
+    > 5 | import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
+        | ^
+      6 | import { ComponentOperator } from '../../../../src/logic/operators/componentOperator.js';
+      7 |
+      8 | const MOVEMENT_CONDITIONS_DIR = path.resolve(
+
+      at createNoMappedModuleFoundError (node_modules/jest-resolve/build/index.js:1117:17)
+      at Object.require (tests/unit/mods/movement/conditions/exit-is-unblocked.test.js:5:1)
+
+Test Suites: 1 failed, 1 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        0.553 s
+Ran all test suites matching tests/unit/mods/movement/conditions/exit-is-unblocked.test.js.

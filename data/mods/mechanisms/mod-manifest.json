@@ -1,0 +1,29 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "mechanisms",
+  "version": "1.0.0",
+  "name": "Mechanisms",
+  "description": "Core mechanisms like openable/lockable states shared by other mods.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "1.0.0"
+    }
+  ],
+  "content": {
+    "components": [
+      "openable.component.json"
+    ],
+    "actions": [],
+    "rules": [],
+    "conditions": [],
+    "scopes": [],
+    "events": [],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    }
+  }
+}

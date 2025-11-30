@@ -58,7 +58,7 @@ function buildEntityManager({ isLocked, actorHasKey }) {
   const blocker = {
     id: 'locks:test_blocker',
     components: {
-      'locks:openable': {
+      'mechanisms:openable': {
         isLocked,
         requiredKeyId: 'items:test_key',
       },

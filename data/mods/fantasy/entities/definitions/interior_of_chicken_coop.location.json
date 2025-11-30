@@ -16,7 +16,7 @@
             {
                 "direction": "to the yard of Aldous' home",
                 "target": "fantasy:12_kiln_lane_yard_instance",
-                "blocker": null
+                "blocker": "fantasy:chicken_coop_door_instance"
             }
         ]
     }
