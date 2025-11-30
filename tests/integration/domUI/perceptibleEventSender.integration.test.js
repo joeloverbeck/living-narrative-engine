@@ -178,7 +178,7 @@ describe('PerceptibleEventSender Integration Tests', () => {
       expect(operation.parameters.perception_type).toBe('state_change_observable');
       expect(operation.parameters.actor_id).toBe('system');
       expect(operation.parameters.log_entry).toBe(true);
-      expect(operation.parameters.contextualData).toEqual({});
+      expect(operation.parameters.contextual_data).toEqual({});
     });
   });
 
@@ -214,8 +214,8 @@ describe('PerceptibleEventSender Integration Tests', () => {
       // Assert: Verify recipientIds included in operation
       expect(executedOperations.length).toBe(1);
       const { operation } = executedOperations[0];
-      expect(operation.parameters.contextualData.recipientIds).toContain('actor:frodo');
-      expect(operation.parameters.contextualData.excludedActorIds).toBeUndefined();
+      expect(operation.parameters.contextual_data.recipientIds).toContain('actor:frodo');
+      expect(operation.parameters.contextual_data.excludedActorIds).toBeUndefined();
     });
   });
 
@@ -251,8 +251,8 @@ describe('PerceptibleEventSender Integration Tests', () => {
       // Assert: Verify excludedActorIds included in operation
       expect(executedOperations.length).toBe(1);
       const { operation } = executedOperations[0];
-      expect(operation.parameters.contextualData.excludedActorIds).toContain('actor:sam');
-      expect(operation.parameters.contextualData.recipientIds).toBeUndefined();
+      expect(operation.parameters.contextual_data.excludedActorIds).toContain('actor:sam');
+      expect(operation.parameters.contextual_data.recipientIds).toBeUndefined();
     });
   });
 
