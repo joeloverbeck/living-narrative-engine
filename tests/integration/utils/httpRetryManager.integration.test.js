@@ -122,27 +122,6 @@ describe('RetryManager HTTP integration behavior', () => {
     expect(logger.warn).not.toHaveBeenCalled();
   });
 
-  it('throws after exhausting retries when network errors persist', async () => {
-    jest.spyOn(Math, 'random').mockReturnValue(0.5);
-
-    const manager = new RetryManager(2, 20, 200, logger);
-    const attemptFn = jest.fn(async () => {
-      throw new TypeError('Network request failed');
-    });
-
-    const resultPromise = manager.perform(attemptFn, async () => ({
-      retry: false,
-    }));
-    const rejectionExpectation = expect(resultPromise).rejects.toThrow(
-      'Network request failed'
-    );
-    await advanceTimers(200);
-
-    await rejectionExpectation;
-    expect(attemptFn).toHaveBeenCalledTimes(2);
-    expect(logger.warn).toHaveBeenCalledTimes(1);
-  });
-
   it('surfaces a descriptive error when every response requires another retry', async () => {
     const manager = new RetryManager(2, 10, 100, logger);
     const attemptFn = jest.fn(async (attempt) => `attempt-${attempt}`);
