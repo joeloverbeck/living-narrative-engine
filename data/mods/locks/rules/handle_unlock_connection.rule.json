@@ -12,7 +12,7 @@
       "comment": "Load lock state for the target blocker.",
       "parameters": {
         "entity_ref": "target",
-        "component_type": "locks:openable",
+        "component_type": "mechanisms:openable",
         "result_variable": "openable",
         "missing_value": null
       }
@@ -66,7 +66,7 @@
           {
             "type": "SET_VARIABLE",
             "parameters": {
-              "variable_name": "keyId",
+              "variable_name": "key",
               "value": "{event.payload.secondaryId}"
             }
           },
@@ -76,17 +76,17 @@
             "parameters": {
               "condition": {
                 "or": [
-                  { "!": { "var": "context.keyId" } },
+                  { "!": { "var": "context.key" } },
                   {
                     "!=": [
-                      { "var": "context.keyId" },
+                      { "var": "context.key" },
                       { "var": "context.openable.requiredKeyId" }
                     ]
                   },
                   {
                     "!": {
                       "in": [
-                        { "var": "context.keyId" },
+                        { "var": "context.key" },
                         { "var": "context.actorInventory.items" }
                       ]
                     }
@@ -98,7 +98,7 @@
                   "type": "SET_VARIABLE",
                   "parameters": {
                     "variable_name": "logMessage",
-                    "value": "{event.payload.actorId} tries to unlock {event.payload.targetId}, but needs the matching key."
+                    "value": "{actor} tries to unlock {target}, but needs the matching key."
                   }
                 },
                 {
@@ -155,7 +155,7 @@
                         "type": "SET_VARIABLE",
                         "parameters": {
                           "variable_name": "logMessage",
-                          "value": "{event.payload.targetId} is already unlocked."
+                          "value": "{target} is already unlocked."
                         }
                       },
                       {
@@ -201,7 +201,7 @@
                         "comment": "Flip lock state to unlocked.",
                         "parameters": {
                           "entity_ref": "target",
-                          "component_type": "locks:openable",
+                          "component_type": "mechanisms:openable",
                           "field": "isLocked",
                           "mode": "set",
                           "value": false
@@ -212,10 +212,34 @@
                         "comment": "Record last actor to change the lock.",
                         "parameters": {
                           "entity_ref": "target",
-                          "component_type": "locks:openable",
+                          "component_type": "mechanisms:openable",
                           "field": "lastChangedBy",
                           "mode": "set",
                           "value": "{event.payload.actorId}"
+                        }
+                      },
+                      {
+                        "type": "GET_NAME",
+                        "comment": "Get actor name for log.",
+                        "parameters": {
+                          "entity_ref": "actor",
+                          "result_variable": "actorName"
+                        }
+                      },
+                      {
+                        "type": "GET_NAME",
+                        "comment": "Get target name for log.",
+                        "parameters": {
+                          "entity_ref": "target",
+                          "result_variable": "targetName"
+                        }
+                      },
+                      {
+                        "type": "GET_NAME",
+                        "comment": "Get key name for log.",
+                        "parameters": {
+                          "entity_ref": "{event.payload.secondaryId}",
+                          "result_variable": "keyName"
                         }
                       },
                       {
@@ -223,7 +247,7 @@
                         "comment": "Prepare log message for macro.",
                         "parameters": {
                           "variable_name": "logMessage",
-                          "value": "{event.payload.actorId} unlocks {event.payload.targetId}."
+                          "value": "{context.actorName} unlocks {context.targetName} with {context.keyName}."
                         }
                       },
                       {

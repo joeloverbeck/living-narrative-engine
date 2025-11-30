@@ -18,12 +18,14 @@
     {
       "id": "items",
       "version": "1.0.0"
+    },
+    {
+      "id": "mechanisms",
+      "version": "1.0.0"
     }
   ],
   "content": {
-    "components": [
-      "openable.component.json"
-    ],
+    "components": [],
     "actions": [
       "lock_connection.action.json",
       "unlock_connection.action.json"

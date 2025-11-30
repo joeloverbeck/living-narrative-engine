@@ -28,7 +28,7 @@ function buildScenario({
 
   const blocker = new ModEntityBuilder(blockerId)
     .withName('Sealed Door')
-    .withComponent('locks:openable', {
+    .withComponent('mechanisms:openable', {
       isLocked,
       requiredKeyId,
     })
@@ -107,7 +107,7 @@ describe('locks:lock_connection rule (integration)', () => {
 
     const blocker = env.entityManager.getComponentData(
       scenario.blockerId,
-      'locks:openable'
+      'mechanisms:openable'
     );
     expect(blocker.isLocked).toBe(true);
     expect(blocker.lastChangedBy).toBe(scenario.actorId);
@@ -118,6 +118,9 @@ describe('locks:lock_connection rule (integration)', () => {
         e.payload.perceptionType === 'connection_locked'
     );
     expect(perception).toBeDefined();
+    expect(perception.payload.descriptionText).toBe(
+      'Riley locks Sealed Door with Rusty Key.'
+    );
   });
 
   it('fails when the blocker is already locked', async () => {
@@ -137,7 +140,7 @@ describe('locks:lock_connection rule (integration)', () => {
 
     const blocker = env.entityManager.getComponentData(
       scenario.blockerId,
-      'locks:openable'
+      'mechanisms:openable'
     );
     expect(blocker.isLocked).toBe(true);
 
@@ -174,7 +177,7 @@ describe('locks:lock_connection rule (integration)', () => {
 
     const blocker = env.entityManager.getComponentData(
       scenario.blockerId,
-      'locks:openable'
+      'mechanisms:openable'
     );
     expect(blocker.isLocked).toBe(false);
 

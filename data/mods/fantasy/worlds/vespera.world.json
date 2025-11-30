@@ -38,6 +38,12 @@
             "instanceId": "fantasy:vespera_main_gauche_instance"
         },
         {
+            "instanceId": "fantasy:coop_key_instance"
+        },
+        {
+            "instanceId": "fantasy:chicken_coop_door_instance"
+        },
+        {
             "instanceId": "fantasy:bertram_the_muddy_instance"
         },
         {

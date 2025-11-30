@@ -1,8 +1,39 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "movement:exit-is-unblocked",
-  "description": "Checks if an exit object has the 'block' property nullified.",
+  "description": "Checks if an exit is unblocked (no blocker, or blocker is unlocked/unlockable).",
   "logic": {
-    "!": { "var": "entity.blocker" }
+    "or": [
+      { "!": { "var": "entity.blocker" } },
+      {
+        "and": [
+          { "var": "entity.blocker" },
+          {
+            "or": [
+              {
+                "!": {
+                  "get_component_value": [
+                    { "var": "entity.blocker" },
+                    "mechanisms:openable"
+                  ]
+                }
+              },
+              {
+                "==": [
+                  {
+                    "get_component_value": [
+                      { "var": "entity.blocker" },
+                      "mechanisms:openable",
+                      "isLocked"
+                    ]
+                  },
+                  false
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 }

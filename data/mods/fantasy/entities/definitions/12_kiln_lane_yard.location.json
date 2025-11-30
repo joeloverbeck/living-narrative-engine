@@ -21,7 +21,7 @@
             {
                 "direction": "to the chicken coop's interior",
                 "target": "fantasy:interior_of_chicken_coop_instance",
-                "blocker": null
+                "blocker": "fantasy:chicken_coop_door_instance"
             }
         ]
     }

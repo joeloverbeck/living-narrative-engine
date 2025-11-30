@@ -156,7 +156,7 @@ describe('Locks scopes', () => {
     const lockedBlocker = {
       id: 'locks:blocker_locked',
       components: {
-        'locks:openable': {
+        'mechanisms:openable': {
           isLocked: true,
           requiredKeyId: 'items:keycard_alpha',
         },
@@ -166,7 +166,7 @@ describe('Locks scopes', () => {
     const unlockedBlocker = {
       id: 'locks:blocker_unlocked',
       components: {
-        'locks:openable': {
+        'mechanisms:openable': {
           isLocked: false,
           requiredKeyId: 'items:keycard_alpha',
         },

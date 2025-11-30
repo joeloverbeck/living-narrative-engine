@@ -1,0 +1,18 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "fantasy:chicken_coop_door",
+    "components": {
+        "core:name": {
+            "text": "chicken coop door"
+        },
+        "core:description": {
+            "text": "A heavy plank door with diagonal cross-bracing. A dark metal latch and lock fixture secure it."
+        },
+        "mechanisms:openable": {
+            "isLocked": true,
+            "isOpen": false,
+            "requiredKeyId": "fantasy:coop_key_instance",
+            "lockLabel": "simple iron lock"
+        }
+    }
+}

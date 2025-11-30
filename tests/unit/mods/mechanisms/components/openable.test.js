@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { TestBedClass } from '../../../../common/entities/testBed.js';
 
-describe('locks:openable Component', () => {
+describe('mechanisms:openable Component', () => {
   let testBed;
 
   beforeEach(() => {
@@ -18,7 +18,7 @@ describe('locks:openable Component', () => {
       requiredKeyId: 'items:brass_key',
     };
 
-    const result = testBed.validateAgainstSchema(data, 'locks:openable');
+    const result = testBed.validateAgainstSchema(data, 'mechanisms:openable');
     expect(result.isValid).toBe(true);
   });
 
@@ -31,7 +31,7 @@ describe('locks:openable Component', () => {
       lastChangedBy: 'core:actor_123',
     };
 
-    const result = testBed.validateAgainstSchema(data, 'locks:openable');
+    const result = testBed.validateAgainstSchema(data, 'mechanisms:openable');
     expect(result.isValid).toBe(true);
   });
 
@@ -40,7 +40,7 @@ describe('locks:openable Component', () => {
       isLocked: true,
     };
 
-    const result = testBed.validateAgainstSchema(data, 'locks:openable');
+    const result = testBed.validateAgainstSchema(data, 'mechanisms:openable');
     expect(result.isValid).toBe(false);
   });
 
@@ -50,7 +50,7 @@ describe('locks:openable Component', () => {
       requiredKeyId: 'brass_key',
     };
 
-    const result = testBed.validateAgainstSchema(data, 'locks:openable');
+    const result = testBed.validateAgainstSchema(data, 'mechanisms:openable');
     expect(result.isValid).toBe(false);
   });
 
@@ -61,7 +61,7 @@ describe('locks:openable Component', () => {
       unexpected: 'extra',
     };
 
-    const result = testBed.validateAgainstSchema(data, 'locks:openable');
+    const result = testBed.validateAgainstSchema(data, 'mechanisms:openable');
     expect(result.isValid).toBe(false);
   });
 });
