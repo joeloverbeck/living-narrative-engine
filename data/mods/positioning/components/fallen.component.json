@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "positioning:fallen",
+  "name": "Fallen",
+  "description": "The actor has fallen to the ground in a messy or uncontrolled way (e.g., accident, violence).",
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

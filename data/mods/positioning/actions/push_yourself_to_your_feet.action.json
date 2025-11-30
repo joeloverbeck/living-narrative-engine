@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "positioning:push_yourself_to_your_feet",
+  "name": "Push Yourself To Your Feet",
+  "description": "Push yourself back to your feet after having fallen.",
+  "targets": "none",
+  "required_components": {
+    "actor": ["positioning:fallen"]
+  },
+  "forbidden_components": {
+    "actor": []
+  },
+  "template": "push yourself to your feet",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#bf360c",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#8d2c08",
+    "hoverTextColor": "#ffffff"
+  }
+}

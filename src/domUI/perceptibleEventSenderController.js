@@ -393,7 +393,7 @@ class PerceptibleEventSenderController {
         description_text: message,
         perception_type: 'state_change_observable',
         actor_id: 'system', // System token (no entity)
-        contextualData,
+        contextual_data: contextualData,
         log_entry: true, // Always log for perception tracking
       },
     };
@@ -418,7 +418,7 @@ class PerceptibleEventSenderController {
           actor_id: payload.parameters.actor_id,
           target_id: null,
           involved_entities: [],
-          contextualData: payload.parameters.contextualData,
+          contextual_data: payload.parameters.contextual_data,
           log_entry: true, // Critical: ensures perception logs are updated
         },
       };

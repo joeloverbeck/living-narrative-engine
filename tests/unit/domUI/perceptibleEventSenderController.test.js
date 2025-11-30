@@ -625,7 +625,7 @@ describe('PerceptibleEventSenderController', () => {
             actor_id: 'system',
             target_id: null,
             involved_entities: [],
-            contextualData: {},
+            contextual_data: {},
             log_entry: true,
           }),
         }),
@@ -702,7 +702,7 @@ describe('PerceptibleEventSenderController', () => {
       expect(mockOperationInterpreter.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           parameters: expect.objectContaining({
-            contextualData: {
+            contextual_data: {
               recipientIds: ['actor:frodo'],
             },
           }),
@@ -757,7 +757,7 @@ describe('PerceptibleEventSenderController', () => {
       expect(mockOperationInterpreter.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           parameters: expect.objectContaining({
-            contextualData: {
+            contextual_data: {
               excludedActorIds: ['actor:gandalf'],
             },
           }),
