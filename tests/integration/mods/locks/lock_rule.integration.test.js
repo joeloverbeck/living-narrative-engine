@@ -6,6 +6,16 @@ import lockRule from '../../../../data/mods/locks/rules/handle_lock_connection.r
 import eventIsActionLock from '../../../../data/mods/locks/conditions/event-is-action-lock-connection.condition.json' assert { type: 'json' };
 import logSuccessAndEndTurn from '../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json' assert { type: 'json' };
 
+/**
+ *
+ * @param root0
+ * @param root0.isLocked
+ * @param root0.actorInventory
+ * @param root0.requiredKeyId
+ * @param root0.blockerId
+ * @param root0.actorId
+ * @param root0.roomId
+ */
 function buildScenario({
   isLocked = false,
   actorInventory = ['items:test_key'],
@@ -77,9 +87,9 @@ describe('locks:lock_connection rule (integration)', () => {
       },
     });
     env.validateAction = () => true;
-    // eslint-disable-next-line no-console
+     
     console.log('lock rule count', env.dataRegistry.getAllSystemRules().length);
-    // eslint-disable-next-line no-console
+     
     console.log('listeners', env.eventBus.listenerCount('*'));
   });
 
@@ -102,7 +112,7 @@ describe('locks:lock_connection rule (integration)', () => {
     });
     await new Promise((resolve) => setTimeout(resolve, 20));
 
-    // eslint-disable-next-line no-console
+     
     console.log('lock events', env.events);
 
     const blocker = env.entityManager.getComponentData(

@@ -17,17 +17,26 @@ import { ModEntityBuilder } from '../../common/mods/ModEntityBuilder.js';
 import { ModAssertionHelpers } from '../../common/mods/ModAssertionHelpers.js';
 import { SimpleEntityManager } from '../../common/entities/index.js';
 
-// Mock file system for consistent performance testing
-jest.mock('fs', () => ({
-  promises: {
-    access: jest.fn(),
-    readFile: jest.fn(),
-    readdir: jest.fn(),
-  },
-  constants: {
-    F_OK: 0,
-  },
-}));
+// Mock file system for consistent performance testing.
+// Both async (promises) and sync APIs are exercised by ModTestFixture/ModTestHandlerFactory,
+// so we stub the minimal surface needed to keep the perf tests deterministic.
+jest.mock('fs', () => {
+  const createFn = (returnValue) => jest.fn().mockReturnValue(returnValue);
+
+  return {
+    promises: {
+      access: jest.fn(),
+      readFile: jest.fn(),
+      readdir: jest.fn(),
+    },
+    constants: {
+      F_OK: 0,
+    },
+    existsSync: createFn(false),
+    readdirSync: createFn([]),
+    readFileSync: createFn('{}'),
+  };
+});
 
 describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
   let entityManager;

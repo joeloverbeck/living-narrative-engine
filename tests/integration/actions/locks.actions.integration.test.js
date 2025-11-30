@@ -15,6 +15,9 @@ const CONDITIONS_DIR = path.resolve(
 const SCOPES_DIR = path.resolve(process.cwd(), 'data/mods/locks/scopes');
 const ACTIONS_DIR = path.resolve(process.cwd(), 'data/mods/locks/actions');
 
+/**
+ *
+ */
 function loadConditions() {
   const entries = fs
     .readdirSync(CONDITIONS_DIR)
@@ -29,6 +32,9 @@ function loadConditions() {
   return Object.fromEntries(entries);
 }
 
+/**
+ *
+ */
 function loadScopes() {
   const scopeDefs = {};
   const files = fs
@@ -50,10 +56,20 @@ function loadScopes() {
   return scopeDefs;
 }
 
+/**
+ *
+ * @param actionFile
+ */
 function loadAction(actionFile) {
   return JSON.parse(fs.readFileSync(path.join(ACTIONS_DIR, actionFile), 'utf8'));
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.isLocked
+ * @param root0.actorHasKey
+ */
 function buildEntityManager({ isLocked, actorHasKey }) {
   const blocker = {
     id: 'locks:test_blocker',
@@ -95,6 +111,11 @@ function buildEntityManager({ isLocked, actorHasKey }) {
   return new SimpleEntityManager([actor, blocker, location]);
 }
 
+/**
+ *
+ * @param jsonLogicEval
+ * @param entityManager
+ */
 function addJsonLogicOperations(jsonLogicEval, entityManager) {
   jsonLogicEval.addOperation('has_component', (entityRef, componentId) => {
     const entityId = typeof entityRef === 'string' ? entityRef : entityRef?.id;
@@ -126,6 +147,10 @@ function addJsonLogicOperations(jsonLogicEval, entityManager) {
   );
 }
 
+/**
+ *
+ * @param result
+ */
 function toArray(result) {
   if (!result) return [];
   const raw = result instanceof Set ? Array.from(result) : Array.isArray(result) ? result : [result];
@@ -175,6 +200,12 @@ describe('locks connection actions', () => {
   });
 
   describe('scope-driven availability', () => {
+    /**
+     *
+     * @param root0
+     * @param root0.isLocked
+     * @param root0.actorHasKey
+     */
     function createScopeHarness({ isLocked, actorHasKey }) {
       const entityManager = buildEntityManager({ isLocked, actorHasKey });
       const jsonLogicEval = new JsonLogicEvaluationService({
@@ -199,6 +230,11 @@ describe('locks connection actions', () => {
         location: entityManager.getEntityInstance('locks:test_room'),
       };
 
+      /**
+       *
+       * @param scopeName
+       * @param extraCtx
+       */
       function resolveScope(scopeName, extraCtx = {}) {
         const scope = scopeRegistry.getScope(scopeName);
         return scopeEngine.resolve(scope.ast, actor, { ...runtimeCtx, ...extraCtx });

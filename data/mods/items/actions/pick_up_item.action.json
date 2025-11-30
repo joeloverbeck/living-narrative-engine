@@ -11,10 +11,16 @@
     }
   },
   "required_components": {
-    "actor": ["items:inventory"]
+    "actor": [
+      "items:inventory"
+    ]
   },
   "forbidden_components": {
-    "actor": ["positioning:bending_over", "positioning:being_fucked_vaginally"]
+    "actor": [
+      "positioning:bending_over",
+      "positioning:being_fucked_vaginally",
+      "positioning:fallen"
+    ]
   },
   "prerequisites": [
     {

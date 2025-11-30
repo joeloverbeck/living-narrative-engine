@@ -41,7 +41,7 @@ describe('Exercise Mod: Show Off Biceps Action', () => {
     it('should have no component requirements or restrictions', () => {
       validateComponentRequirements(showOffBicepsAction, {
         required: {},
-        forbidden: { actor: ['positioning:hugging'] },
+        forbidden: { actor: ['positioning:hugging', 'positioning:fallen'] },
       });
     });
 

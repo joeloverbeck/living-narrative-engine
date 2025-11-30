@@ -11,10 +11,16 @@
     }
   },
   "required_components": {
-    "primary": ["items:item", "core:description"]
+    "primary": [
+      "items:item",
+      "core:description"
+    ]
   },
   "forbidden_components": {
-    "actor": ["positioning:doing_complex_performance"]
+    "actor": [
+      "positioning:doing_complex_performance",
+      "positioning:fallen"
+    ]
   },
   "prerequisites": [],
   "template": "examine {target} in location",

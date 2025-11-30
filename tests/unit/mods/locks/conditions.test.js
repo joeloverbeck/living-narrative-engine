@@ -10,6 +10,10 @@ const CONDITIONS_DIR = path.resolve(
   'data/mods/locks/conditions',
 );
 
+/**
+ *
+ * @param dataRegistry
+ */
 function loadConditions(dataRegistry) {
   const files = fs
     .readdirSync(CONDITIONS_DIR)
@@ -23,6 +27,9 @@ function loadConditions(dataRegistry) {
   });
 }
 
+/**
+ *
+ */
 async function createConditionEnv() {
   const { services, cleanup } = await createMinimalTestContainer();
   const jsonLogicEval = new JsonLogicEvaluationService({
@@ -90,11 +97,21 @@ describe('Locks conditions', () => {
     }
   });
 
+  /**
+   *
+   * @param id
+   * @param context
+   */
   function evaluateCondition(id, context) {
     const condition = services.dataRegistry.getConditionDefinition(id);
     return jsonLogicEval.evaluate(condition.logic, context);
   }
 
+  /**
+   *
+   * @param root0
+   * @param root0.isLocked
+   */
   function addBlocker({ isLocked }) {
     const blocker = {
       id: 'locks:test_blocker',
@@ -109,6 +126,11 @@ describe('Locks conditions', () => {
     return blocker;
   }
 
+  /**
+   *
+   * @param inventoryItems
+   * @param id
+   */
   function addActor(inventoryItems, id = 'actor:locks_condition_tester') {
     const actor = {
       id,
