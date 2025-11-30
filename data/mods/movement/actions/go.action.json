@@ -2,7 +2,7 @@
   "$schema": "schema://living-narrative-engine/action.schema.json",
   "id": "movement:go",
   "name": "Go",
-  "description": "Moves your character to the specified location, if the way is clear.",
+  "description": "Moves your character to the specified location.",
   "targets": {
     "primary": {
       "scope": "movement:clear_directions",

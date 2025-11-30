@@ -1,0 +1,47 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:waxed_leather_work_boots_dark_brown",
+  "description": "Dark-brown waxed leather work boots built for muddy yards",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": [
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "leather",
+      "properties": [
+        "waterproof"
+      ],
+      "durability": 70
+    },
+    "core:name": {
+      "text": "waxed work boots"
+    },
+    "core:description": {
+      "text": "Heavy-duty work boots in dark-brown waxed leather with sealed stitching and a thick lug sole for yard traction. The waxed finish sheds slurry and rain, while reinforced eyelets and a stitched rand keep the upper tight to the midsole. Built to take kiln-side abuse without soaking through."
+    },
+    "descriptors:color_basic": {
+      "color": "brown"
+    },
+    "descriptors:texture": {
+      "texture": "glossy"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "feet"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 1.05
+    }
+  }
+}

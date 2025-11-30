@@ -1,0 +1,41 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:humanoid_hand_craftsman_scarred",
+  "description": "Craftsman hands marked by staining, scars, and work-worn skin",
+  "components": {
+    "anatomy:can_grab": {
+      "gripStrength": 1.0,
+      "heldItemId": null,
+      "locked": false
+    },
+    "anatomy:part": {
+      "subType": "hand"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 15,
+      "maxHealth": 15,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "hand"
+    },
+    "descriptors:color_extended": {
+      "color": "tan-brown"
+    },
+    "descriptors:nail_condition": {
+      "cleanliness": "stained",
+      "condition": "chipped",
+      "length": "short"
+    },
+    "descriptors:professional_markers": {
+      "markers": ["tool-calluses", "chemical-staining"],
+      "profession": "potter"
+    },
+    "descriptors:skin_condition": {
+      "conditions": ["scarred", "work-worn"]
+    },
+    "descriptors:texture": {
+      "texture": "rough"
+    }
+  }
+}

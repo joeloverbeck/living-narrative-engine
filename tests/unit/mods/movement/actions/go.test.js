@@ -21,7 +21,7 @@ describe('Movement Go Action', () => {
   it('should have the correct name and description', () => {
     expect(action.name).toBe('Go');
     expect(action.description).toBe(
-      'Moves your character to the specified location, if the way is clear.',
+      'Moves your character to the specified location.',
     );
   });
 

@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_hair_short_dirty_blonde_wavy",
+  "description": "Short, wavy human hair with a dirty-blonde hue",
+  "components": {
+    "anatomy:part": {
+      "subType": "hair"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 3,
+      "maxHealth": 3,
+      "state": "healthy"
+    },
+    "descriptors:color_extended": {
+      "color": "dirty-blonde"
+    },
+    "descriptors:length_hair": {
+      "length": "short"
+    },
+    "descriptors:hair_style": {
+      "style": "wavy"
+    },
+    "core:name": {
+      "text": "hair"
+    }
+  }
+}

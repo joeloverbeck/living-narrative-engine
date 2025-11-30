@@ -1,0 +1,48 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:linen_close_cuff_work_shirt_ochre_brown",
+  "description": "Ochre-brown close-cuff linen work shirt with reinforced wear points",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": [
+          "left_arm_clothing",
+          "right_arm_clothing"
+        ]
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "linen"
+    },
+    "core:name": {
+      "text": "close-cuff work shirt"
+    },
+    "core:description": {
+      "text": "A close-cuffed linen work shirt dyed a sun-faded ochre brown. The sleeves cinch tight at the wrists to stay clear of clay slip, with reinforced elbow and shoulder panels to survive hauling kiln shelves. Faint salt lines and sun-bleaching mark the seams, and the collar sits low for ventilation while keeping grit out."
+    },
+    "descriptors:color_extended": {
+      "color": "ochre-brown"
+    },
+    "descriptors:texture": {
+      "texture": "coarse"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.32
+    }
+  }
+}

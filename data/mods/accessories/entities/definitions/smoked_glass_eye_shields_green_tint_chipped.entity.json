@@ -1,0 +1,42 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "accessories:smoked_glass_eye_shields_green_tint_chipped",
+  "description": "Smoked-glass eye shields with a greenish tint and chipped edges",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "head_gear"
+      },
+      "allowedLayers": [
+        "accessories"
+      ]
+    },
+    "core:material": {
+      "material": "glass"
+    },
+    "core:name": {
+      "text": "smoked-glass eye shields"
+    },
+    "core:description": {
+      "text": "A pair of smoked-glass shields darkened against kiln flare, the lenses carrying a faint green cast. Chips along the edges testify to stray grit, while a leather-and-rope strap cinches them tight over brow and nose. They leave narrow slots for airflow so they do not fog during long firing shifts."
+    },
+    "descriptors:color_extended": {
+      "color": "murky-green"
+    },
+    "descriptors:texture": {
+      "texture": "chipped"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "head_gear"
+      ],
+      "coveragePriority": "accessories"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.18
+    }
+  }
+}

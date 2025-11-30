@@ -24,19 +24,22 @@
     "components": [
       "openable.component.json"
     ],
-    "actions": [],
+    "actions": [
+      "lock_connection.action.json",
+      "unlock_connection.action.json"
+    ],
     "rules": [],
     "conditions": [
+      "actor-has-key-for-blocker.condition.json",
       "blocker-has-openable.condition.json",
       "blocker-is-locked.condition.json",
       "blocker-is-unlocked.condition.json",
-      "actor-has-key-for-blocker.condition.json",
       "event-is-action-lock-connection.condition.json",
       "event-is-action-unlock-connection.condition.json"
     ],
     "scopes": [
-      "blockers_actor_can_unlock.scope",
       "blockers_actor_can_lock.scope",
+      "blockers_actor_can_unlock.scope",
       "keys_for_blocker.scope"
     ],
     "events": [],

@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "locks:unlock_connection",
+  "name": "Unlock Connection",
+  "description": "Unlock a connection blocker using the matching key.",
+  "generateCombinations": true,
+  "required_components": {
+    "actor": ["items:inventory", "core:position"]
+  },
+  "targets": {
+    "primary": {
+      "scope": "locks:blockers_actor_can_unlock",
+      "placeholder": "blocker",
+      "description": "Connection blocker to unlock"
+    },
+    "secondary": {
+      "scope": "locks:keys_for_blocker",
+      "placeholder": "key",
+      "description": "Key that matches the blocker",
+      "contextFrom": "primary"
+    }
+  },
+  "prerequisites": [],
+  "template": "unlock {blocker} with {key}"
+}

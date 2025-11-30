@@ -1,0 +1,42 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "accessories:goatskin_grip_gloves",
+  "description": "Full-finger goatskin grip gloves for handling hot clay tools",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "hands"
+      },
+      "allowedLayers": [
+        "accessories"
+      ]
+    },
+    "core:material": {
+      "material": "goatskin"
+    },
+    "core:name": {
+      "text": "grip gloves"
+    },
+    "core:description": {
+      "text": "Supple full-finger gloves cut from goatskin, lined lightly for comfort and backed with rough-out palms for grip. Resin stippling across the fingers keeps tools steady even when coated in slip, and the cuffs taper to stay out of the way of spinning clay."
+    },
+    "descriptors:color_extended": {
+      "color": "warm-brown"
+    },
+    "descriptors:texture": {
+      "texture": "soft"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "hands"
+      ],
+      "coveragePriority": "accessories"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.16
+    }
+  }
+}

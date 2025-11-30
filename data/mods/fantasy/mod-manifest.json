@@ -100,6 +100,7 @@
       "instances": [
         "12_kiln_lane.location.json",
         "12_kiln_lane_yard.location.json",
+        "aldous.character.json",
         "ale_tankard.entity.json",
         "back_of_tannery.location.json",
         "bertram_the_muddy.character.json",
@@ -133,6 +134,7 @@
     "macros": [],
     "scopes": [],
     "recipes": [
+      "aldous.recipe.json",
       "bertram_the_muddy.recipe.json",
       "registrar_copperplate.recipe.json",
       "rill.recipe.json",
@@ -142,6 +144,7 @@
     "portraits": [
       "12_kiln_lane.png",
       "12_kiln_lane_old.png",
+      "aldous.png",
       "back_of_tannery.png",
       "bertram.png",
       "bertram_old.png",

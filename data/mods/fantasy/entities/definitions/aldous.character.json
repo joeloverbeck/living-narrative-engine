@@ -197,6 +197,11 @@
                     "subjectType": "knowledge"
                 },
                 {
+                    "text": "\"Threadscar\" Melissa is in Mudbrook often enough to be part of the town's weather: you notice her without trying. Mercenary—everyone knows that much, even the people who pretend not to. Scarred arms and the kind of stillness that says she's already counted exits, hands, knives, and lies before you finish a greeting. I've only exchanged the bare minimum with her in passing (a nod, a \"morning\" that didn't turn into conversation). She doesn't gossip. She doesn't posture. She reads spaces like I read glaze surfaces: for flaws, stress points, failure modes.\n\nIf I ever need \"muscle\" I can trust to hold a flailing animal without panicking, she's the obvious name—because she's competent and competence is rarer than kindness. But competence cuts both ways. Her kind of work teaches people that ending a problem is the same as solving it. If I ever involve her in an extraction, the terms have to be stated like kiln temperatures: explicit, non-negotiable, written if possible. No improvising cruelty. No \"simpler\" knife solutions. The key stays with me. I don't think she's malicious. I think she's efficient. And efficiency, pointed the wrong way, ruins things permanently.",
+                    "subject": "\"Threadscar\" Melissa (mercenary in Mudbrook)",
+                    "subjectType": "entity"
+                },
+                {
                     "text": "Bertram the tanner has been my main point of contact with the broader community for years. He doesn't think I'm crazy—or if he does, he's polite enough not to say it. We trade: I make him pottery that won't crack or harbor contamination, he makes me leather straps and aprons that hold up to kiln work. He talks to people for me when I'm too anxious to handle social interaction myself.",
                     "subject": "Bertram the tanner",
                     "subjectType": "entity"
@@ -260,11 +265,6 @@
                     "text": "People think I'm paranoid. I know how thin the walls are between safe and haunted. They're wrong about what requires vigilance.",
                     "subject": "Others think I'm paranoid",
                     "subjectType": "knowledge"
-                },
-                {
-                    "text": "I talk too fast when nervous, which is most of the time.",
-                    "subject": "Speech pattern when anxious",
-                    "subjectType": "state"
                 },
                 {
                     "text": "I apologize too much, even when I'm right. People dismiss me as fragile because of it.",
@@ -525,7 +525,7 @@
         },
         "core:actor": {},
         "core:player_type": {
-            "type": "human"
+            "type": "llm"
         },
         "core:perception_log": {
             "maxEntries": 50,
