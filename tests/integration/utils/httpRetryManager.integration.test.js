@@ -136,7 +136,6 @@ describe('RetryManager HTTP integration behavior', () => {
     const rejectionExpectation = expect(resultPromise).rejects.toThrow(
       'Network request failed'
     );
-
     await advanceTimers(200);
 
     await rejectionExpectation;

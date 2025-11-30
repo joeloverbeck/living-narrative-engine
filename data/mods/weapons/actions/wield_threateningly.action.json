@@ -10,7 +10,10 @@
     ]
   },
   "forbidden_components": {
-    "actor": ["positioning:closeness"]
+    "actor": [
+      "positioning:closeness",
+      "positioning:fallen"
+    ]
   },
   "prerequisites": [
     {

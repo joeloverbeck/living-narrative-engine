@@ -12,6 +12,9 @@ const MOVEMENT_CONDITIONS_DIR = path.resolve(process.cwd(), 'data/mods/movement/
 const MOVEMENT_SCOPES_DIR = path.resolve(process.cwd(), 'data/mods/movement/scopes');
 
 // Helper to load conditions/scopes
+/**
+ *
+ */
 function loadConditions() {
   const entries = fs.readdirSync(MOVEMENT_CONDITIONS_DIR)
     .filter(f => f.endsWith('.condition.json'))
@@ -22,6 +25,9 @@ function loadConditions() {
   return Object.fromEntries(entries);
 }
 
+/**
+ *
+ */
 function loadScopes() {
   const scopeDefs = {};
   const files = fs.readdirSync(MOVEMENT_SCOPES_DIR).filter(f => f.endsWith('.scope'));
@@ -35,6 +41,12 @@ function loadScopes() {
   return scopeDefs;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.isLocked
+ * @param root0.hasOpenable
+ */
 function buildEntityManager({ isLocked, hasOpenable }) {
   const blocker = {
     id: 'blocker1',
@@ -83,6 +95,12 @@ describe('Movement visibility integration', () => {
   const conditions = loadConditions();
   const scopes = loadScopes();
 
+  /**
+   *
+   * @param root0
+   * @param root0.isLocked
+   * @param root0.hasOpenable
+   */
   function createHarness({ isLocked, hasOpenable }) {
     const entityManager = buildEntityManager({ isLocked, hasOpenable });
     const jsonLogicEval = new JsonLogicEvaluationService({
@@ -119,6 +137,10 @@ describe('Movement visibility integration', () => {
       location: entityManager.getEntityInstance('room1')
     };
 
+    /**
+     *
+     * @param scopeName
+     */
     function resolve(scopeName) {
       return scopeEngine.resolve(scopeRegistry.getScope(scopeName).ast, actor, runtimeCtx);
     }

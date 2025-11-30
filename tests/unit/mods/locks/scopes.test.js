@@ -16,6 +16,10 @@ const CONDITIONS_DIR = path.resolve(
   'data/mods/locks/conditions',
 );
 
+/**
+ *
+ * @param scopeName
+ */
 function loadScopeDefinition(scopeName) {
   const filename = scopeName.replace('locks:', '') + '.scope';
   const scopePath = path.join(SCOPES_DIR, filename);
@@ -26,6 +30,10 @@ function loadScopeDefinition(scopeName) {
   return parsed.get(scopeName);
 }
 
+/**
+ *
+ * @param dataRegistry
+ */
 function loadConditionDefinitions(dataRegistry) {
   const conditionFiles = [
     'blocker-has-openable.condition.json',
@@ -42,6 +50,9 @@ function loadConditionDefinitions(dataRegistry) {
   });
 }
 
+/**
+ *
+ */
 async function createResolver() {
   const { services, cleanup } = await createMinimalTestContainer();
   const jsonLogicEval = new JsonLogicEvaluationService({
@@ -134,6 +145,9 @@ describe('Locks scopes', () => {
     }
   });
 
+  /**
+   *
+   */
   function addCommonEntities() {
     const location = {
       id: 'room1',
@@ -188,6 +202,10 @@ describe('Locks scopes', () => {
     services.entityManager.addEntity(keyItem);
   }
 
+  /**
+   *
+   * @param withKey
+   */
   function createActor(withKey = true) {
     const inventoryItems = withKey ? ['items:keycard_alpha'] : [];
     const actor = {

@@ -80,7 +80,13 @@ describe('distress:throw_self_to_ground', () => {
       // Verify component added
       const actorInstance = testFixture.entityManager.getEntityInstance(scenario.actor.id);
       expect(actorInstance.components['positioning:fallen']).toBeDefined();
-      expect(actorInstance.components['positioning:fallen']).toEqual({});
+      expect(actorInstance.components['positioning:fallen']).toEqual({
+        activityMetadata: {
+          shouldDescribeInActivity: true,
+          template: '{actor} has fallen to the ground',
+          priority: 78,
+        },
+      });
     });
   });
 });

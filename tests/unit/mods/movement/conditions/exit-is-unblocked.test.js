@@ -53,6 +53,10 @@ describe('movement:exit-is-unblocked', () => {
      ids.forEach(id => services.entityManager.deleteEntity(id));
   });
 
+  /**
+   *
+   * @param context
+   */
   function evaluate(context) {
     const condition = services.dataRegistry.getConditionDefinition('movement:exit-is-unblocked');
     return jsonLogicEval.evaluate(condition.logic, context);

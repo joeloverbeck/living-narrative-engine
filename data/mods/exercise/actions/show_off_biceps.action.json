@@ -6,7 +6,10 @@
   "targets": "none",
   "required_components": {},
   "forbidden_components": {
-    "actor": ["positioning:hugging"]
+    "actor": [
+      "positioning:hugging",
+      "positioning:fallen"
+    ]
   },
   "template": "show off your muscular arms",
   "prerequisites": [

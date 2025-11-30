@@ -132,12 +132,11 @@ describe('parallelUtils.withTimeout', () => {
     jest.useFakeTimers();
 
     const slowPromise = new Promise((resolve) => setTimeout(() => resolve('late'), 200));
-
     const resultPromise = withTimeout(slowPromise, 100, 'Too slow');
-    const rejectionPromise = expect(resultPromise).rejects.toThrow('Too slow');
+    const rejection = expect(resultPromise).rejects.toThrow('Too slow');
 
     await jest.advanceTimersByTimeAsync(100);
-    await rejectionPromise;
+    await rejection;
   });
 });
 
@@ -197,8 +196,7 @@ describe('parallelUtils.retryWithBackoff', () => {
       maxDelay: 100,
       factor: 2,
     });
-
-    const rejectionPromise = expect(promise).rejects.toBe(terminalError);
+    const expectation = expect(promise).rejects.toBe(terminalError);
 
     await Promise.resolve();
     expect(operation).toHaveBeenCalledTimes(1);
@@ -211,7 +209,7 @@ describe('parallelUtils.retryWithBackoff', () => {
     await Promise.resolve();
     expect(operation).toHaveBeenCalledTimes(3);
 
-    await rejectionPromise;
+    await expectation;
   });
 });
 

@@ -6,6 +6,16 @@ import unlockRule from '../../../../data/mods/locks/rules/handle_unlock_connecti
 import eventIsActionUnlock from '../../../../data/mods/locks/conditions/event-is-action-unlock-connection.condition.json' assert { type: 'json' };
 import logSuccessAndEndTurn from '../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json' assert { type: 'json' };
 
+/**
+ *
+ * @param root0
+ * @param root0.isLocked
+ * @param root0.actorInventory
+ * @param root0.requiredKeyId
+ * @param root0.blockerId
+ * @param root0.actorId
+ * @param root0.roomId
+ */
 function buildScenario({
   isLocked = true,
   actorInventory = ['items:test_key'],
