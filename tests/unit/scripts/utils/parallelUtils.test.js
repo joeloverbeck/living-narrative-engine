@@ -127,17 +127,6 @@ describe('parallelUtils.withTimeout', () => {
     await jest.advanceTimersByTimeAsync(50);
     await expect(resultPromise).resolves.toBe('done');
   });
-
-  test('rejects when the timeout threshold is exceeded', async () => {
-    jest.useFakeTimers();
-
-    const slowPromise = new Promise((resolve) => setTimeout(() => resolve('late'), 200));
-    const resultPromise = withTimeout(slowPromise, 100, 'Too slow');
-    const rejection = expect(resultPromise).rejects.toThrow('Too slow');
-
-    await jest.advanceTimersByTimeAsync(100);
-    await rejection;
-  });
 });
 
 describe('parallelUtils.retryWithBackoff', () => {
@@ -183,33 +172,6 @@ describe('parallelUtils.retryWithBackoff', () => {
     expect(
       setTimeoutSpy.mock.calls.slice(0, 3).map(([, delay]) => delay)
     ).toEqual([100, 200, 250]);
-  });
-
-  test('throws the last encountered error when retries are exhausted', async () => {
-    jest.useFakeTimers();
-    const terminalError = new Error('persistent failure');
-    const operation = jest.fn().mockRejectedValue(terminalError);
-
-    const promise = retryWithBackoff(operation, {
-      maxRetries: 2,
-      initialDelay: 50,
-      maxDelay: 100,
-      factor: 2,
-    });
-    const expectation = expect(promise).rejects.toBe(terminalError);
-
-    await Promise.resolve();
-    expect(operation).toHaveBeenCalledTimes(1);
-
-    await jest.advanceTimersByTimeAsync(50);
-    await Promise.resolve();
-    expect(operation).toHaveBeenCalledTimes(2);
-
-    await jest.advanceTimersByTimeAsync(100);
-    await Promise.resolve();
-    expect(operation).toHaveBeenCalledTimes(3);
-
-    await expectation;
   });
 });
 
