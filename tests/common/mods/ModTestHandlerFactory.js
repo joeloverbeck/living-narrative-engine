@@ -282,6 +282,11 @@ export class ModTestHandlerFactory {
         safeEventDispatcher: safeDispatcher,
         gameDataRepository,
       }),
+      MODIFY_COMPONENT: new ModifyComponentHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
       REMOVE_COMPONENT: new RemoveComponentHandler({
         entityManager,
         logger,
@@ -654,6 +659,7 @@ export class ModTestHandlerFactory {
       patrol: this.createHandlersWithPerceptionLogging.bind(this),
       movement: this.createHandlersWithPerceptionLogging.bind(this),
       metabolism: this.createHandlersWithPerceptionLogging.bind(this),
+      locks: this.createHandlersWithComponentMutations.bind(this),
       weapons: this.createHandlersWithPerceptionLogging.bind(this),
     };
 

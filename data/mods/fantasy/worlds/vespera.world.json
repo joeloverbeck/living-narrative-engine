@@ -23,6 +23,9 @@
             "instanceId": "fantasy:12_kiln_lane_yard_instance"
         },
         {
+            "instanceId": "fantasy:interior_of_chicken_coop_instance"
+        },
+        {
             "instanceId": "fantasy:notice_possessed_chickens_instance"
         },
         {

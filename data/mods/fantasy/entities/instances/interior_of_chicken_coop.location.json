@@ -1,0 +1,5 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "fantasy:interior_of_chicken_coop_instance",
+    "definitionId": "fantasy:interior_of_chicken_coop"
+}
