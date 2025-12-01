@@ -1,5 +1,7 @@
 # Human-in-the-Loop Gating for LLM Actions
 
+**Status:** Archived after HUMINTHELOOLLM-005 completion.
+
 ## Document Information
 
 **Version:** 0.1.0
@@ -108,4 +110,3 @@
 - Ship behind config flag defaulting to **enabled** for LLM actors; expose toggle for autoplay/debug runs.
 - Add high-verbosity logging in first release; trim after validation.
 - Document how to bypass gating for automated test environments if needed (env var or setting).
-

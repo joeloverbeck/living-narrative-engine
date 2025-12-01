@@ -166,6 +166,82 @@ describe('ActionDecisionWorkflow.run', () => {
       'cmd2',
       finalAction
     );
+    const pendingTraces = logger.debug.mock.calls.filter(([msg]) =>
+      msg.includes('Pending approval')
+    );
+    expect(pendingTraces).toHaveLength(2);
+  });
+
+  test('logs telemetry once with invalid suggestion correction and override', async () => {
+    const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(undefined) };
+    const llmProvider = new LLMDecisionProvider({
+      llmChooser: { choose: jest.fn() },
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    });
+
+    const availableActions = [
+      {
+        index: 1,
+        actionId: 'act1',
+        description: 'One',
+        commandString: 'cmd1',
+      },
+      {
+        index: 2,
+        actionId: 'act2',
+        description: 'Two',
+        commandString: 'cmd2',
+      },
+    ];
+
+    const prompt = {
+      prompt: jest.fn().mockResolvedValue({ chosenIndex: 1 }),
+    };
+
+    ctx.getPlayerPromptService = () => prompt;
+    ctx.getPromptSignal = jest.fn(() => new AbortController().signal);
+    ctx.setAwaitingExternalEvent = jest.fn();
+    ctx.getSafeEventDispatcher = () => safeDispatcher;
+
+    strategy = {
+      decisionProvider: llmProvider,
+      turnActionFactory: {
+        create: jest.fn().mockImplementation((composite) => ({
+          actionDefinitionId: composite.actionId,
+          commandString: composite.commandString,
+        })),
+      },
+    };
+
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act2', commandString: 'cmd2' },
+      extractedData: { speech: 'hi' },
+      availableActions,
+      suggestedIndex: 5,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    const telemetryCalls = logger.debug.mock.calls.filter(([msg]) =>
+      msg.includes('LLM suggestion telemetry')
+    );
+    expect(telemetryCalls).toHaveLength(1);
+    expect(telemetryCalls[0][1]).toEqual(
+      expect.objectContaining({
+        actorId: 'a1',
+        suggestedIndex: 2,
+        finalIndex: 1,
+        override: true,
+        resolvedByTimeout: false,
+        correctedSuggestedIndex: 5,
+        correctedSubmittedIndex: null,
+      })
+    );
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('LLM suggested index 5 was out of range')
+    );
   });
 
   test('autoAccept timeout resolves with suggested index', async () => {
@@ -240,6 +316,16 @@ describe('ActionDecisionWorkflow.run', () => {
       expect.objectContaining({
         suggestedIndex: 1,
         submittedIndex: 1,
+        resolvedByTimeout: true,
+        timeoutPolicy: 'autoAccept',
+      })
+    );
+    const telemetryCalls = logger.debug.mock.calls.filter(([msg]) =>
+      msg.includes('LLM suggestion telemetry')
+    );
+    expect(telemetryCalls[0][1]).toEqual(
+      expect.objectContaining({
+        finalIndex: 1,
         resolvedByTimeout: true,
         timeoutPolicy: 'autoAccept',
       })

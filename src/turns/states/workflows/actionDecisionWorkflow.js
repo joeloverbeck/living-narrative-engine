@@ -122,14 +122,21 @@ export class ActionDecisionWorkflow {
       return;
     }
 
+    const logger = this._turnContext.getLogger();
+
     try {
       this._turnContext.setAwaitingExternalEvent(isPending, this._actor.id);
-    } catch (err) {
-      this._turnContext
-        .getLogger()
-        .warn(
-          `${this._state.getStateName()}: Failed to set pending flag – ${err.message}`
+      if (logger?.debug) {
+        logger.debug(
+          `${this._state.getStateName()}: Pending approval ${
+            isPending ? 'set' : 'cleared'
+          } for actor ${this._actor.id}.`
         );
+      }
+    } catch (err) {
+      logger?.warn?.(
+        `${this._state.getStateName()}: Failed to set pending flag – ${err.message}`
+      );
     }
   }
 
@@ -218,6 +225,51 @@ export class ActionDecisionWorkflow {
     return (
       actions.find((candidate) => candidate?.index === index) || actions[index - 1] || null
     );
+  }
+
+  _logLLMSuggestionTelemetry({
+    rawSuggestedIndex,
+    clampedSuggestedIndex,
+    rawSubmittedIndex,
+    clampedSubmittedIndex,
+    resolvedByTimeout,
+    timeoutPolicy,
+  }) {
+    const logger = this._turnContext.getLogger();
+    if (!logger?.debug) return;
+
+    const finalIndex =
+      Number.isInteger(clampedSubmittedIndex) && clampedSubmittedIndex > 0
+        ? clampedSubmittedIndex
+        : clampedSuggestedIndex;
+
+    const override =
+      Number.isInteger(clampedSuggestedIndex) &&
+      Number.isInteger(clampedSubmittedIndex) &&
+      clampedSuggestedIndex !== clampedSubmittedIndex;
+
+    const correctedSuggestedIndex =
+      Number.isInteger(rawSuggestedIndex) &&
+      rawSuggestedIndex !== clampedSuggestedIndex
+        ? rawSuggestedIndex
+        : null;
+
+    const correctedSubmittedIndex =
+      Number.isInteger(rawSubmittedIndex) &&
+      rawSubmittedIndex !== clampedSubmittedIndex
+        ? rawSubmittedIndex
+        : null;
+
+    logger.debug(`${this._state.getStateName()}: LLM suggestion telemetry`, {
+      actorId: this._actor.id,
+      suggestedIndex: clampedSuggestedIndex,
+      finalIndex,
+      override,
+      resolvedByTimeout: resolvedByTimeout === true,
+      timeoutPolicy: resolvedByTimeout ? timeoutPolicy ?? null : null,
+      correctedSuggestedIndex,
+      correctedSubmittedIndex,
+    });
   }
 
   _buildActionForIndex(index, actions, speech, fallbackAction) {
@@ -367,10 +419,17 @@ export class ActionDecisionWorkflow {
     const actions = Array.isArray(availableActions) ? availableActions : [];
     const baseMeta = extractedData || {};
     const timeoutSettings = this._getTimeoutSettings();
-    const { value: clampedIndex } = this._clampIndex(
-      suggestedIndex ?? baseMeta.chosenIndex ?? null,
+    const rawSuggestedIndex = suggestedIndex ?? baseMeta.chosenIndex ?? null;
+    const { value: clampedIndex, adjusted: suggestedAdjusted } = this._clampIndex(
+      rawSuggestedIndex,
       actions.length
     );
+
+    if (suggestedAdjusted) {
+      logger.warn(
+        `${this._state.getStateName()}: LLM suggested index ${rawSuggestedIndex} was out of range for ${actions.length} actions; clamped to ${clampedIndex}.`
+      );
+    }
 
     if (!actions.length) {
       logger.warn(
@@ -390,12 +449,19 @@ export class ActionDecisionWorkflow {
         descriptor,
         timeoutSettings
       );
-      const { value: submittedIndex } = this._clampIndex(
-        submission?.chosenIndex,
+      const rawSubmittedIndex = submission?.chosenIndex ?? null;
+      const { value: submittedIndex, adjusted: submissionAdjusted } = this._clampIndex(
+        rawSubmittedIndex,
         actions.length
       );
 
       const finalIndex = submittedIndex ?? clampedIndex;
+
+      if (submissionAdjusted) {
+        logger.warn(
+          `${this._state.getStateName()}: Submitted index ${rawSubmittedIndex} was out of range for ${actions.length} actions; clamped to ${submittedIndex}.`
+        );
+      }
 
       const mergedMeta = {
         speech: submission?.speech ?? baseMeta.speech ?? null,
@@ -413,6 +479,15 @@ export class ActionDecisionWorkflow {
         mergedMeta.speech,
         action
       );
+
+      this._logLLMSuggestionTelemetry({
+        rawSuggestedIndex,
+        clampedSuggestedIndex: clampedIndex,
+        rawSubmittedIndex,
+        clampedSubmittedIndex: submittedIndex,
+        resolvedByTimeout: submission?.timeout,
+        timeoutPolicy: submission?.timeoutPolicy,
+      });
 
       return { action: finalAction, extractedData: mergedMeta };
     } finally {
