@@ -1,0 +1,10 @@
+// Scope for corrupted actors in the current location
+// Used by warding actions that target corrupted entities
+warding:corrupted_actors := entities(core:position)[][{
+  "and": [
+    { "condition_ref": "core:entity-at-location" },
+    { "condition_ref": "core:entity-is-not-current-actor" },
+    { "condition_ref": "core:entity-has-actor-component" },
+    { "condition_ref": "warding:entity-has-corrupted-component" }
+  ]
+}]

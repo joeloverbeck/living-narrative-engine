@@ -547,6 +547,9 @@
         },
         "skills:grappling_skill": {
             "value": 54
+        },
+        "skills:warding_skill": {
+            "value": 85
         }
     }
 }

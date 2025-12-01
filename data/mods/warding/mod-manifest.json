@@ -17,6 +17,15 @@
   "content": {
     "components": [
       "corrupted.component.json"
+    ],
+    "conditions": [
+      "entity-has-corrupted-component.condition.json"
+    ],
+    "scopes": [
+      "corrupted_actors.scope"
+    ],
+    "actions": [
+      "draw_salt_boundary.action.json"
     ]
   }
 }

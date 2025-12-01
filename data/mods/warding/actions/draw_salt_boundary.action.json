@@ -1,0 +1,45 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "warding:draw_salt_boundary",
+  "name": "Draw Salt Boundary",
+  "description": "Attempt to create a protective salt boundary around a corrupted target.",
+  "template": "draw salt boundary around {target} ({chance}% chance)",
+  "generateCombinations": true,
+  "required_components": {
+    "actor": [
+      "skills:warding_skill"
+    ]
+  },
+  "targets": {
+    "primary": {
+      "scope": "warding:corrupted_actors",
+      "placeholder": "target",
+      "description": "Corrupted actor to ward"
+    }
+  },
+  "chanceBased": {
+    "enabled": true,
+    "contestType": "fixed_difficulty",
+    "fixedDifficulty": 50,
+    "formula": "linear",
+    "actorSkill": {
+      "component": "skills:warding_skill",
+      "property": "value",
+      "default": 10
+    },
+    "bounds": {
+      "min": 5,
+      "max": 95
+    },
+    "outcomes": {
+      "criticalSuccessThreshold": 5,
+      "criticalFailureThreshold": 95
+    }
+  },
+  "visual": {
+    "backgroundColor": "#424242",
+    "textColor": "#fafafa",
+    "hoverBackgroundColor": "#616161",
+    "hoverTextColor": "#ffffff"
+  }
+}
