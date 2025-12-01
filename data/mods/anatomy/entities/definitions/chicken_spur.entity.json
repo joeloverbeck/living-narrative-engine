@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:chicken_spur",
+  "description": "Sharp keratinous spur on a chicken's leg, primarily found on roosters",
+  "components": {
+    "anatomy:part": {
+      "subType": "chicken_spur"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 4,
+      "maxHealth": 4,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "chicken spur"
+    },
+    "descriptors:size_category": {
+      "size": "small"
+    },
+    "descriptors:shape_general": {
+      "shape": "conical"
+    }
+  }
+}

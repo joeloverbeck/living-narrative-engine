@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:chicken_head",
+  "description": "Small feathered head of a chicken",
+  "components": {
+    "anatomy:part": {
+      "subType": "chicken_head"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 8,
+      "maxHealth": 8,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "chicken head"
+    },
+    "descriptors:size_category": {
+      "size": "small"
+    },
+    "descriptors:texture": {
+      "texture": "feathered"
+    }
+  }
+}

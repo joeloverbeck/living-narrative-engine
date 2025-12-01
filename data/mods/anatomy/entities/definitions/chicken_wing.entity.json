@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:chicken_wing",
+  "description": "Feathered wing of a chicken",
+  "components": {
+    "anatomy:part": {
+      "subType": "chicken_wing"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 8,
+      "maxHealth": 8,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "chicken wing"
+    },
+    "descriptors:texture": {
+      "texture": "feathered"
+    }
+  }
+}

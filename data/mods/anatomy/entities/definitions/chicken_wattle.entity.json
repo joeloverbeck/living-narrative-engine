@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:chicken_wattle",
+  "description": "Fleshy red wattle hanging below a chicken's beak",
+  "components": {
+    "anatomy:part": {
+      "subType": "chicken_wattle"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 3,
+      "maxHealth": 3,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "chicken wattle"
+    },
+    "descriptors:texture": {
+      "texture": "fleshy"
+    },
+    "descriptors:color_basic": {
+      "color": "red"
+    }
+  }
+}

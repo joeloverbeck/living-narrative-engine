@@ -14,8 +14,8 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 ## Current Status
 
 **Total Schemes**: 42 defined color combinations
-**In Use**: 26 schemes actively implemented across mods
-**Available**: 16 schemes ready for future mods
+**In Use**: 27 schemes actively implemented across mods
+**Available**: 15 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
 
@@ -48,6 +48,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 | Sex-Vaginal-Penetration  | Crimson Embrace    | 12.5    | `#6c0f36`        | Active   |
 | Vampirism                | Crimson Embrace    | 12.5    | `#6c0f36`        | Active   |
 | Violence                 | Dark Crimson       | 2.2     | `#8b0000`        | Active   |
+| Warding                  | Cool Grey Modern   | 10.3    | `#424242`        | Active   |
 | Weapons                  | Arctic Steel       | 11.8    | `#112a46`        | Active   |
 
 ## Available Color Schemes by Category
@@ -80,7 +81,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 - **Pathfinder Slate** (9.2) - Navigation, wayfinding
 
 ### Professional/Modern
-- **Cool Grey Modern** (10.3) - Modern UI, neutral actions
+(No available schemes - all in use)
 
 ### Expansion Set
 - **Evergreen Shadow** (11.5) - Stealth exploration, healing rituals
@@ -557,7 +558,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 - **Use Cases**: Energy actions, positioning, movement
 - **Theme**: Dynamic, energetic, active
 
-#### 10.3 Cool Grey Modern 🟢 AVAILABLE
+#### 10.3 Cool Grey Modern ✅ IN USE: Warding
 
 ```json
 {
@@ -570,8 +571,8 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 - **Normal Contrast**: 11.58:1 🌟 AAA
 - **Hover Contrast**: 7.04:1 🌟 AAA
-- **Use Cases**: Modern UI, neutral actions
-- **Theme**: Contemporary, balanced, versatile
+- **Use Cases**: Warding actions, protective magic, salt boundaries
+- **Theme**: Neutral salt aesthetic, contemporary, balanced
 
 ### 11. Expansion Set – High Contrast Additions
 

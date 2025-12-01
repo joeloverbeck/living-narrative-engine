@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "warding",
+  "version": "1.0.0",
+  "name": "Warding System",
+  "description": "Protective magic mechanics including salt boundaries against corrupted entities",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": ">=1.0.0"
+    },
+    {
+      "id": "skills",
+      "version": ">=1.0.0"
+    }
+  ],
+  "content": {
+    "components": [
+      "corrupted.component.json"
+    ]
+  }
+}

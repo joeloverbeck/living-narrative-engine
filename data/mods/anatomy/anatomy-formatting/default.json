@@ -68,6 +68,16 @@
     "tortoise_leg",
     "tortoise_foot",
     "tortoise_tail",
+    "chicken_torso",
+    "chicken_head",
+    "chicken_beak",
+    "chicken_comb",
+    "chicken_wattle",
+    "chicken_wing",
+    "chicken_leg",
+    "chicken_foot",
+    "chicken_tail",
+    "chicken_spur",
     "equipment_mount",
     "equipment",
     "inventory",
@@ -101,7 +111,10 @@
     "tortoise_arm",
     "tortoise_hand",
     "tortoise_leg",
-    "tortoise_foot"
+    "tortoise_foot",
+    "chicken_wing",
+    "chicken_leg",
+    "chicken_foot"
   ],
   "irregularPlurals": {
     "foot": "feet",

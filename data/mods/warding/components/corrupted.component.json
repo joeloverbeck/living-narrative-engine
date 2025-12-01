@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "warding:corrupted",
+  "description": "Marker component identifying an entity as corrupted. Entities with this component are susceptible to warding actions such as salt boundary creation.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}
