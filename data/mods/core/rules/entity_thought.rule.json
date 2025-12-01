@@ -59,12 +59,23 @@
             }
           },
           {
-            "type": "DISPATCH_THOUGHT",
-            "comment": "Dispatch core:display_thought event for UI rendering.",
+            "type": "IF",
+            "comment": "Skip UI bubble when suppressDisplay is true (e.g., preview already shown).",
             "parameters": {
-              "entity_id": "{event.payload.entityId}",
-              "thoughts": "{event.payload.thoughts}",
-              "notes": "{event.payload.notes?}"
+              "condition": {
+                "not": { "var": "event.payload.suppressDisplay" }
+              },
+              "then_actions": [
+                {
+                  "type": "DISPATCH_THOUGHT",
+                  "comment": "Dispatch core:display_thought event for UI rendering.",
+                  "parameters": {
+                    "entity_id": "{event.payload.entityId}",
+                    "thoughts": "{event.payload.thoughts}",
+                    "notes": "{event.payload.notes?}"
+                  }
+                }
+              ]
             }
           }
         ]

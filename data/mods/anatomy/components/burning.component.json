@@ -1,0 +1,26 @@
+{
+  "id": "anatomy:burning",
+  "description": "Indicates the part is burning, causing damage over time.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "remainingTurns": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Number of turns remaining until the fire goes out."
+      },
+      "tickDamage": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Damage applied per turn."
+      },
+      "stackedCount": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "Number of times the burn effect has been stacked."
+      }
+    },
+    "required": ["remainingTurns", "tickDamage", "stackedCount"],
+    "additionalProperties": false
+  }
+}

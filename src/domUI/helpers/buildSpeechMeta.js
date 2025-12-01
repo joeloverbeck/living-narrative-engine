@@ -39,8 +39,8 @@ function buildCopyAllLabel({
   hasNotes,
 }) {
   const parts = [];
-  if (hasSpeech) parts.push('speech');
   if (hasThoughts) parts.push('thoughts');
+  if (hasSpeech) parts.push('speech');
   if (hasNotes) parts.push('notes');
 
   const joinParts = () => {
@@ -75,6 +75,7 @@ export function buildSpeechMeta(
   { thoughts, notes, speakerName, copyAll }
 ) {
   const hasCopyAll = Boolean(copyAll);
+  const isThoughtBubble = copyAll?.bubbleType === 'thought';
 
   if (!thoughts && !notes && !hasCopyAll) {
     return null;
@@ -86,7 +87,7 @@ export function buildSpeechMeta(
       : domFactory?.create?.('div');
   const metaContainer = domFactory.create('div', { cls: 'speech-meta' });
 
-  if (thoughts) {
+  if (thoughts && !isThoughtBubble) {
     const btn = domFactory.create('button', {
       cls: 'meta-btn thoughts',
       attrs: {

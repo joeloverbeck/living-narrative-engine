@@ -226,18 +226,14 @@ describe('SpeechBubbleRenderer integration coverage', () => {
       'notes',
       'copy-all',
     ]);
-    expect(listButtonTypes(thoughtMeta)).toEqual([
-      'thoughts',
-      'notes',
-      'copy-all',
-    ]);
+    expect(listButtonTypes(thoughtMeta)).toEqual(['notes', 'copy-all']);
 
     copyToClipboard.mockClear();
     speechMeta
       .querySelector('.meta-btn.copy-all')
       ?.dispatchEvent(new Event('click', { bubbles: true }));
     expect(copyToClipboard).toHaveBeenCalledWith(
-      `Archivist says: "Observe the relic"\n\nArchivist's thoughts:\nNeed to log this\n\nArchivist Log: Recovered fragment catalogued.\n  (Context: Restricted Archives)`
+      `Archivist's thoughts:\nNeed to log this\n\nArchivist says: "Observe the relic"\n\nArchivist Log: Recovered fragment catalogued.\n  (Context: Restricted Archives)`
     );
 
     copyToClipboard.mockClear();

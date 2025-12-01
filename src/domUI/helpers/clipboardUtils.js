@@ -108,7 +108,7 @@ export function assembleCopyAllPayload({
   );
   const formattedNotes = formatNotesForClipboard(notes);
 
-  const segments = [speechSegment, formattedThoughts, formattedNotes].filter(
+  const segments = [formattedThoughts, speechSegment, formattedNotes].filter(
     (segment) => isNonBlankString(segment)
   );
 

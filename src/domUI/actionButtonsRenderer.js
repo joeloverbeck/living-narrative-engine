@@ -1301,6 +1301,7 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
     }
 
     this.#suggestionCalloutElement = null;
+    this._setSpeechInputEnabled(true);
   }
 
   #handleSuggestedAction(eventObject) {
@@ -1334,6 +1335,7 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
 
     this.#applySuggestionToCurrentActions();
     this.#renderSuggestionCallout();
+    this._setSpeechInputEnabled(false);
   }
 
   /**
@@ -1700,5 +1702,10 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
 
     this.logger.debug(`${this._logPrefix} ActionButtonsRenderer disposed.`);
     this.#isDisposed = true;
+  }
+
+  _setSpeechInputEnabled(enabled) {
+    if (!this.elements?.speechInputElement) return;
+    this.elements.speechInputElement.disabled = !enabled;
   }
 }

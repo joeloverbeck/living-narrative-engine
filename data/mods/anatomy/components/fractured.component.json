@@ -1,0 +1,19 @@
+{
+  "id": "anatomy:fractured",
+  "description": "Indicates the part has suffered a bone fracture.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "sourceDamageType": {
+        "type": "string",
+        "description": "The ID of the damage type that caused the fracture."
+      },
+      "appliedAtHealth": {
+        "type": "number",
+        "description": "The health value of the part when the fracture occurred."
+      }
+    },
+    "required": ["sourceDamageType", "appliedAtHealth"],
+    "additionalProperties": false
+  }
+}

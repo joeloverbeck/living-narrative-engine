@@ -157,4 +157,17 @@ describe('buildThoughtPayload', () => {
       notes: [],
     });
   });
+
+  it('should mark suppressDisplay when previewDisplayed is true', () => {
+    const result = buildThoughtPayload(
+      { thoughts: 'Maybe wait', previewDisplayed: true },
+      mockEntityId
+    );
+
+    expect(result).toEqual({
+      entityId: mockEntityId,
+      thoughts: 'Maybe wait',
+      suppressDisplay: true,
+    });
+  });
 });

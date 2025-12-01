@@ -26,6 +26,11 @@
         "items": {
           "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/structuredNote"
         }
+      },
+      "suppressDisplay": {
+        "type": "boolean",
+        "description": "If true, skip UI display bubbles while still logging perceptible events.",
+        "default": false
       }
     },
     "required": ["entityId", "speechContent"],

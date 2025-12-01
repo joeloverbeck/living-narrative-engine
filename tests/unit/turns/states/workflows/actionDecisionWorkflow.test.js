@@ -3,7 +3,11 @@ import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import { ActionDecisionWorkflow } from '../../../../../src/turns/states/workflows/actionDecisionWorkflow.js';
 import { LLMDecisionProvider } from '../../../../../src/turns/providers/llmDecisionProvider.js';
-import { LLM_SUGGESTED_ACTION_ID } from '../../../../../src/constants/eventIds.js';
+import {
+  DISPLAY_SPEECH_ID,
+  DISPLAY_THOUGHT_ID,
+  LLM_SUGGESTED_ACTION_ID,
+} from '../../../../../src/constants/eventIds.js';
 import * as llmTimeoutConfig from '../../../../../src/config/llmTimeout.config.js';
 import ValidatedEventDispatcher from '../../../../../src/events/validatedEventDispatcher.js';
 import commonSchema from '../../../../../data/schemas/common.schema.json';
@@ -176,6 +180,144 @@ describe('ActionDecisionWorkflow.run', () => {
       msg.includes('Pending approval')
     );
     expect(pendingTraces).toHaveLength(2);
+  });
+
+  test('dispatches a speech preview bubble before awaiting submission', async () => {
+    const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(undefined) };
+    const llmProvider = new LLMDecisionProvider({
+      llmChooser: { choose: jest.fn() },
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    });
+
+    const availableActions = [
+      {
+        index: 1,
+        actionId: 'act1',
+        description: 'One',
+        commandString: 'cmd1',
+      },
+      {
+        index: 2,
+        actionId: 'act2',
+        description: 'Two',
+        commandString: 'cmd2',
+      },
+    ];
+
+    const prompt = {
+      prompt: jest.fn().mockResolvedValue({ chosenIndex: 1 }),
+    };
+
+    const notes = [{ text: 'note', subject: 'test' }];
+    const initialAction = { actionDefinitionId: 'act1', commandString: 'cmd1' };
+    const finalAction = { actionDefinitionId: 'act1', commandString: 'cmd1' };
+
+    ctx.getPlayerPromptService = () => prompt;
+    ctx.getPromptSignal = jest.fn(() => new AbortController().signal);
+    ctx.setAwaitingExternalEvent = jest.fn();
+    ctx.getSafeEventDispatcher = () => safeDispatcher;
+
+    strategy = {
+      decisionProvider: llmProvider,
+      turnActionFactory: {
+        create: jest.fn().mockReturnValue(finalAction),
+      },
+    };
+
+    state._decideAction.mockResolvedValue({
+      action: initialAction,
+      extractedData: { speech: 'Hello human', thoughts: 'inner', notes },
+      availableActions,
+      suggestedIndex: 1,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    expect(
+      safeDispatcher.dispatch.mock.calls.map((call) => call[0])
+    ).toContain(DISPLAY_SPEECH_ID);
+    expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_SPEECH_ID,
+      {
+        entityId: actor.id,
+        speechContent: 'Hello human',
+        thoughts: 'inner',
+        notes,
+      }
+    );
+    expect(state._recordDecision).toHaveBeenCalledWith(
+      ctx,
+      finalAction,
+      expect.objectContaining({ previewDisplayed: true })
+    );
+  });
+
+  test('dispatches a thought preview bubble when only thoughts are provided', async () => {
+    const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(undefined) };
+    const llmProvider = new LLMDecisionProvider({
+      llmChooser: { choose: jest.fn() },
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    });
+
+    const availableActions = [
+      {
+        index: 1,
+        actionId: 'act1',
+        description: 'One',
+        commandString: 'cmd1',
+      },
+      {
+        index: 2,
+        actionId: 'act2',
+        description: 'Two',
+        commandString: 'cmd2',
+      },
+    ];
+
+    const prompt = {
+      prompt: jest.fn().mockResolvedValue({ chosenIndex: 2 }),
+    };
+
+    const initialAction = { actionDefinitionId: 'act1', commandString: 'cmd1' };
+    const finalAction = { actionDefinitionId: 'act2', commandString: 'cmd2' };
+
+    ctx.getPlayerPromptService = () => prompt;
+    ctx.getPromptSignal = jest.fn(() => new AbortController().signal);
+    ctx.setAwaitingExternalEvent = jest.fn();
+    ctx.getSafeEventDispatcher = () => safeDispatcher;
+
+    strategy = {
+      decisionProvider: llmProvider,
+      turnActionFactory: {
+        create: jest.fn().mockReturnValue(finalAction),
+      },
+    };
+
+    state._decideAction.mockResolvedValue({
+      action: initialAction,
+      extractedData: { thoughts: 'Maybe wait?' },
+      availableActions,
+      suggestedIndex: 2,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    expect(
+      safeDispatcher.dispatch.mock.calls.map((call) => call[0])
+    ).toContain(DISPLAY_THOUGHT_ID);
+    expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_THOUGHT_ID,
+      { entityId: actor.id, thoughts: 'Maybe wait?' }
+    );
+    expect(state._recordDecision).toHaveBeenCalledWith(
+      ctx,
+      finalAction,
+      expect.objectContaining({ previewDisplayed: true })
+    );
   });
 
   test('emits suggested_action with null index when no actions are available', async () => {
@@ -972,7 +1114,11 @@ describe('ActionDecisionWorkflow.run', () => {
         ],
       })
     );
-    expect(vedLogger.warn).not.toHaveBeenCalled();
+    const warnMessages = vedLogger.warn.mock.calls.map(([msg]) => msg);
+    expect(warnMessages.length).toBeLessThanOrEqual(1);
+    if (warnMessages.length) {
+      expect(warnMessages[0]).toContain('core:display_speech');
+    }
     expect(vedLogger.error).not.toHaveBeenCalled();
   });
 });

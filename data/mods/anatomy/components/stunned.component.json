@@ -1,0 +1,20 @@
+{
+  "id": "anatomy:stunned",
+  "description": "Indicates the entity is stunned and cannot act.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "remainingTurns": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Number of turns the entity remains stunned."
+      },
+      "sourcePartId": {
+        "type": "string",
+        "description": "Optional ID of the body part whose injury caused the stun."
+      }
+    },
+    "required": ["remainingTurns"],
+    "additionalProperties": false
+  }
+}

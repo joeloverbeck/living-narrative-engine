@@ -14,15 +14,25 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "components": [
+      "bleeding.component.json",
       "blueprintSlot.component.json",
       "body.component.json",
+      "burning.component.json",
       "can_grab.component.json",
+      "fractured.component.json",
       "joint.component.json",
       "part.component.json",
       "part_health.component.json",
+      "poisoned.component.json",
       "requires_grabbing.component.json",
       "sockets.component.json",
+      "stunned.component.json",
       "visibility_rules.component.json"
+    ],
+    "damageTypes": [
+      "blunt.json",
+      "slashing.json",
+      "piercing.json"
     ],
     "entities": {
       "definitions": [

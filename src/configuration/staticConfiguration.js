@@ -141,6 +141,7 @@ class StaticConfiguration {
       'action-result.schema.json',
       'component.schema.json',
       'condition.schema.json',
+      'damage-type.schema.json',
       'entity-definition.schema.json', // CORRECTED
       'entity-instance.schema.json', // CORRECTED
       'event.schema.json',
@@ -185,6 +186,7 @@ class StaticConfiguration {
       actions: 'schema://living-narrative-engine/action.schema.json',
       events: 'schema://living-narrative-engine/event.schema.json',
       conditions: 'schema://living-narrative-engine/condition.schema.json',
+      damageTypes: 'schema://living-narrative-engine/damage-type.schema.json',
       macros: 'schema://living-narrative-engine/macro.schema.json',
       rules: 'schema://living-narrative-engine/rule.schema.json',
       goals: 'schema://living-narrative-engine/goal.schema.json',

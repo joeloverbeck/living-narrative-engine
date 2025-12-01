@@ -1,0 +1,12 @@
+{
+  "$schema": "schema://living-narrative-engine/damage-type.schema.json",
+  "id": "piercing",
+  "name": "Piercing",
+  "description": "Damage caused by a sharp point penetrating the target. High penetration.",
+  "penetration": 0.8,
+  "bleed": {
+    "enabled": true,
+    "severity": "minor",
+    "baseDurationTurns": 2
+  }
+}

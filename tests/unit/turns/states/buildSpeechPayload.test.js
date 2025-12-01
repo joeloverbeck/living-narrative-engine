@@ -52,4 +52,15 @@ describe('buildSpeechPayload', () => {
       notes: notes,
     });
   });
+
+  it('marks suppressDisplay when previewDisplayed is true', () => {
+    const payload = buildSpeechPayload({
+      speech: 'Preview line',
+      previewDisplayed: true,
+    });
+    expect(payload).toEqual({
+      speechContent: 'Preview line',
+      suppressDisplay: true,
+    });
+  });
 });

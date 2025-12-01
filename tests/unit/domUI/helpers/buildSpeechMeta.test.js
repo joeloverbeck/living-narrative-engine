@@ -134,6 +134,28 @@ describe('buildSpeechMeta', () => {
     expect(formatNotesAsRichHtml).toHaveBeenCalledWith(notes);
   });
 
+  it('suppresses thoughts button for thought bubbles but keeps copy-all', () => {
+    const fragment = buildSpeechMeta(doc, domFactory, {
+      thoughts: 'Inner monologue',
+      notes: { text: 'context', subject: 's' },
+      copyAll: { bubbleType: 'thought', speechContent: null },
+    });
+
+    doc.body.appendChild(fragment);
+    const container = doc.body.querySelector('.speech-meta');
+    const buttons = Array.from(container.querySelectorAll('.meta-btn')).map((btn) =>
+      btn.classList.contains('notes')
+        ? 'notes'
+        : btn.classList.contains('copy-all')
+          ? 'copy-all'
+          : btn.classList.contains('thoughts')
+            ? 'thoughts'
+            : 'other'
+    );
+
+    expect(buttons).toEqual(['notes', 'copy-all']);
+  });
+
   it('creates copy-all button when only copyAll data is provided', () => {
     const fragment = buildSpeechMeta(doc, domFactory, {
       speakerName: 'Ava',
