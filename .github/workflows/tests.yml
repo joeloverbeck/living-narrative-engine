@@ -16,7 +16,7 @@ jobs:
     steps:
       # Step 1: Check out your repository's code so the job can access it
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Step 2: Set up the correct version of Node.js
       - name: Setup Node.js
@@ -39,7 +39,7 @@ jobs:
     steps:
       # Step 1: Check out your repository's code so the job can access it
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Step 2: Set up the correct version of Node.js
       - name: Setup Node.js
@@ -62,7 +62,7 @@ jobs:
     steps:
       # Step 1: Check out your repository's code so the job can access it
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Step 2: Set up the correct version of Node.js
       - name: Setup Node.js
@@ -85,7 +85,7 @@ jobs:
     steps:
       # Step 1: Check out your repository's code so the job can access it
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Step 2: Set up the correct version of Node.js
       - name: Setup Node.js
@@ -112,7 +112,7 @@ jobs:
     steps:
       # Step 1: Check out the code
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Step 2: Set up Node.js
       - name: Setup Node.js
