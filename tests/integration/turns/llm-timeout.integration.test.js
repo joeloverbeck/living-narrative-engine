@@ -106,7 +106,8 @@ describe('LLM timeout policies integration', () => {
     expect(ctx.setAwaitingExternalEvent).toHaveBeenLastCalledWith(false, 'actor-1');
     expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
       LLM_SUGGESTED_ACTION_ID,
-      expect.objectContaining({ actorId: 'actor-1', suggestedIndex: 1 })
+      expect.objectContaining({ actorId: 'actor-1', suggestedIndex: 1 }),
+      expect.objectContaining({ allowSchemaNotFound: true })
     );
     expect(ctx.requestProcessingCommandStateTransition).toHaveBeenCalledTimes(1);
     expect(state._recordDecision).toHaveBeenCalledWith(
@@ -264,7 +265,8 @@ describe('LLM timeout policies integration', () => {
     expect(ctx.setAwaitingExternalEvent).toHaveBeenLastCalledWith(false, 'actor-1');
     expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
       LLM_SUGGESTED_ACTION_ID,
-      expect.objectContaining({ actorId: 'actor-1' })
+      expect.objectContaining({ actorId: 'actor-1' }),
+      expect.objectContaining({ allowSchemaNotFound: true })
     );
   });
 });

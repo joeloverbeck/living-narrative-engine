@@ -206,7 +206,9 @@ export class ActionDecisionWorkflow {
     };
 
     try {
-      await dispatcher.dispatch(LLM_SUGGESTED_ACTION_ID, payload);
+      await dispatcher.dispatch(LLM_SUGGESTED_ACTION_ID, payload, {
+        allowSchemaNotFound: true,
+      });
     } catch (err) {
       this._turnContext
         .getLogger()

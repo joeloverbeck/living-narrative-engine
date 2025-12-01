@@ -153,7 +153,8 @@ describe('Integration – Human and AI turn parity', () => {
         actorId: aiActor.id,
         suggestedActionDescriptor: 'Wait',
         suggestedIndex: 1,
-      })
+      }),
+      expect.objectContaining({ allowSchemaNotFound: true })
     );
     expect(eventDispatcher.dispatch).toHaveBeenNthCalledWith(
       3,

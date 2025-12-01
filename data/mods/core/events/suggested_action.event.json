@@ -31,15 +31,7 @@
         "type": ["array", "null"],
         "description": "Optional structured notes captured with the suggestion.",
         "items": {
-          "type": "object",
-          "properties": {
-            "text": { "type": "string" },
-            "subject": { "type": "string" },
-            "context": { "type": ["string", "null"] },
-            "timestamp": { "type": ["string", "null"] }
-          },
-          "required": ["text", "subject"],
-          "additionalProperties": false
+          "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/structuredNote"
         }
       }
     },

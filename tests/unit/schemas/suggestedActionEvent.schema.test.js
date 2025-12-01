@@ -16,7 +16,7 @@ describe('core:suggested_action event schema', () => {
   beforeAll(() => {
     ajv = new Ajv({ strict: false });
     addFormats(ajv);
-    ajv.addSchema(commonSchema, 'common.schema.json');
+    ajv.addSchema(commonSchema);
     validateDef = ajv.compile(eventDefSchema);
   });
 
@@ -44,8 +44,13 @@ describe('core:suggested_action event schema', () => {
       speech: 'We should head north.',
       thoughts: 'This seems safest.',
       notes: [
-        { text: 'Prefers safety', subject: 'motivation' },
-        { text: 'Check surroundings', subject: 'tactics', context: 'cautious' },
+        { text: 'Prefers safety', subject: 'motivation', subjectType: 'state' },
+        {
+          text: 'Check surroundings',
+          subject: 'tactics',
+          subjectType: 'plan',
+          context: 'cautious',
+        },
       ],
     };
 
@@ -75,6 +80,55 @@ describe('core:suggested_action event schema', () => {
         notes: null,
       };
       expect(validatePayload(payload)).toBe(true);
+    });
+
+    test('allows structured notes with subjectType', () => {
+      const payload = {
+        actorId: 'core:actor_1',
+        suggestedIndex: 1,
+        suggestedActionDescriptor: 'Act',
+        speech: null,
+        thoughts: null,
+        notes: [
+          {
+            text: 'Track the catfolk mercenary',
+            subject: 'Vespera Nightwhisper',
+            subjectType: 'entity',
+            context: 'Arrived with Bertram',
+          },
+        ],
+      };
+      expect(validatePayload(payload)).toBe(true);
+    });
+
+    test('supports notes that omit subjectType for backward compatibility', () => {
+      const payload = {
+        actorId: 'core:actor_1',
+        suggestedIndex: 1,
+        suggestedActionDescriptor: 'Act',
+        speech: null,
+        thoughts: null,
+        notes: [{ text: 'Legacy note', subject: 'topic' }],
+      };
+      expect(validatePayload(payload)).toBe(true);
+    });
+
+    test('rejects notes with unexpected fields even in legacy form', () => {
+      const payload = {
+        actorId: 'core:actor_1',
+        suggestedIndex: 1,
+        suggestedActionDescriptor: 'Act',
+        speech: null,
+        thoughts: null,
+        notes: [
+          {
+            text: 'Legacy note',
+            subject: 'topic',
+            extra: 'nope',
+          },
+        ],
+      };
+      expect(validatePayload(payload)).toBe(false);
     });
 
     test('rejects payload without actorId', () => {
