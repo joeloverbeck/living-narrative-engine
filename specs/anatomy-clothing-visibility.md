@@ -16,7 +16,7 @@
   - `clothingSlotId` (string): clothing slot to inspect (e.g., `torso_lower`).
   - `nonBlockingLayers` (string[]): clothing layers that still allow description (e.g., `['underwear', 'accessories']`).
   - Optional `notes`/`reason` (string) for authoring clarity.
-- Annotate genital-facing parts (`human_penis*.entity.json`, `human_penis_thick_*`, `human_penis_small`, `human_testicle*`, `human_vagina*`, `pubic_hair` variants, futa torsos if needed) with this component pointing to `torso_lower` and `nonBlockingLayers: ['underwear', 'accessories']`.
+- Annotate genital-facing parts (`human_penis*.entity.json`, `human_penis_thick_*`, `human_penis_small`, `human_testicle*`, `human_vagina*`, `pubic_hair` variants) with this component pointing to `torso_lower` and `nonBlockingLayers: ['underwear', 'accessories']`. Also do something similar for torsos (not breasts) with the `torso_upper` clothing slot, with `['underwear', 'accessories']` as exceptions (the reason being that other actors should know in descriptive detail how hairy or muscular a torso is unless the actor is in underwear).
 - Ensure schemas/validators accept the new component and `validate:ecosystem` still passes.
 
 ## Behavior Requirements

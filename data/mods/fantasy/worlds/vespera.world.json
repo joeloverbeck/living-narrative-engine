@@ -44,6 +44,9 @@
             "instanceId": "fantasy:containment_vessel_instance"
         },
         {
+            "instanceId": "fantasy:smoking_pipe_instance"
+        },
+        {
             "instanceId": "fantasy:chicken_coop_door_instance"
         },
         {

@@ -6,8 +6,22 @@
   "template": "swing {weapon} at {target} ({chance}% chance)",
   "generateCombinations": true,
   "required_components": {
-    "actor": ["positioning:wielding"],
-    "primary": ["weapons:weapon", "damage-types:can_cut"]
+    "actor": [
+      "positioning:wielding"
+    ],
+    "primary": [
+      "weapons:weapon",
+      "damage-types:can_cut"
+    ]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:hugging",
+      "positioning:giving_blowjob",
+      "positioning:doing_complex_performance",
+      "positioning:bending_over",
+      "positioning:being_restrained"
+    ]
   },
   "targets": {
     "primary": {

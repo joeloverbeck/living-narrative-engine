@@ -12,7 +12,12 @@
   },
   "required_components": {},
   "forbidden_components": {
-    "actor": ["positioning:closeness", "positioning:doing_complex_performance", "positioning:wielding"]
+    "actor": [
+      "positioning:closeness",
+      "positioning:doing_complex_performance",
+      "positioning:wielding",
+      "positioning:being_restrained"
+    ]
   },
   "template": "get close to {target}",
   "prerequisites": [

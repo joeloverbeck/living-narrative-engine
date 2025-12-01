@@ -24,7 +24,10 @@ const TARGET_ID = 'gymnast_observer';
 const ACTOR_NAME = 'Simone';
 const TARGET_NAME = 'Jordan';
 const REQUIRED_COMPONENT = 'gymnastics:is_gymnast';
-const FORBIDDEN_COMPONENT = 'positioning:hugging';
+const FORBIDDEN_COMPONENTS = [
+  'positioning:hugging',
+  'positioning:being_restrained',
+];
 const ACTION_SCHEMA = 'schema://living-narrative-engine/action.schema.json';
 const RULE_SCHEMA = 'schema://living-narrative-engine/rule.schema.json';
 const CONDITION_SCHEMA =
@@ -75,7 +78,7 @@ export function runGymnasticsActionIntegrationTests(config) {
       it('specifies required and forbidden components', () => {
         validateComponentRequirements(actionFile, {
           required: { actor: [REQUIRED_COMPONENT] },
-          forbidden: { actor: [FORBIDDEN_COMPONENT] },
+          forbidden: { actor: FORBIDDEN_COMPONENTS },
         });
       });
 

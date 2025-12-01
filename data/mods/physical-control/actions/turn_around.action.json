@@ -11,10 +11,16 @@
     }
   },
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": [
+      "positioning:closeness"
+    ]
   },
   "forbidden_components": {
-    "actor": ["positioning:biting_neck", "positioning:lying_down"]
+    "actor": [
+      "positioning:biting_neck",
+      "positioning:lying_down",
+      "positioning:being_restrained"
+    ]
   },
   "template": "turn {target} around",
   "prerequisites": [

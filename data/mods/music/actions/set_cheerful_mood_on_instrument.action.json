@@ -15,7 +15,10 @@
     "primary": ["items:item", "music:is_instrument"]
   },
   "forbidden_components": {
-    "actor": ["positioning:closeness"]
+    "actor": [
+      "positioning:closeness",
+      "positioning:being_restrained"
+    ]
   },
   "prerequisites": [],
   "template": "set cheerful mood on {instrument}",

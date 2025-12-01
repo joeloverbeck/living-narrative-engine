@@ -22,7 +22,10 @@
     ]
   },
   "forbidden_components": {
-    "actor": ["positioning:closeness"]
+    "actor": [
+      "positioning:closeness",
+      "positioning:being_restrained"
+    ]
   },
   "prerequisites": [
     {
@@ -31,7 +34,14 @@
           {
             "var": "actor.components.music:performance_mood.mood"
           },
-          ["tense", "cheerful", "aggressive", "playful", "meditative", "solemn"]
+          [
+            "tense",
+            "cheerful",
+            "aggressive",
+            "playful",
+            "meditative",
+            "solemn"
+          ]
         ]
       },
       "failure_message": "Ostinato patterns don't work well with your current performance mood. Try a mood that's more driving, insistent, or rhythmic."

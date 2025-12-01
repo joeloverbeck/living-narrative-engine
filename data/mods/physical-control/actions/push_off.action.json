@@ -13,7 +13,8 @@
       "positioning:straddling_waist",
       "positioning:hugging",
       "positioning:being_hugged",
-      "positioning:lying_down"
+      "positioning:lying_down",
+      "positioning:being_restrained"
     ],
     "primary": ["positioning:sitting_on"]
   },

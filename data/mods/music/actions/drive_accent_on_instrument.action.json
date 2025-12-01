@@ -22,7 +22,10 @@
     ]
   },
   "forbidden_components": {
-    "actor": ["positioning:closeness"]
+    "actor": [
+      "positioning:closeness",
+      "positioning:being_restrained"
+    ]
   },
   "prerequisites": [
     {
@@ -31,7 +34,12 @@
           {
             "var": "actor.components.music:performance_mood.mood"
           },
-          ["aggressive", "triumphant", "tense", "solemn"]
+          [
+            "aggressive",
+            "triumphant",
+            "tense",
+            "solemn"
+          ]
         ]
       },
       "failure_message": "Driving accents requires forceful moods. Try aggressive, triumphant, tense, or solemn performance styles."

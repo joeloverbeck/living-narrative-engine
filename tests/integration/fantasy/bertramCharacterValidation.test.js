@@ -128,10 +128,10 @@ describe('Bertram the Muddy Character - Integration Validation', () => {
 
 
 
-    it('should have empty unequipped inventory', () => {
+    it('should start with only his smoking pipe in unequipped inventory', () => {
       const inventory =
         instanceData.componentOverrides['items:inventory'].items;
-      expect(inventory).toEqual([]);
+      expect(inventory).toEqual(['fantasy:smoking_pipe_instance']);
     });
 
     it('should have reasonable inventory capacity', () => {

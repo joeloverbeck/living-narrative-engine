@@ -139,6 +139,7 @@ describe('physical-control:push_onto_lying_furniture action discovery', () => {
         'positioning:lying_down',
         'positioning:hugging',
         'positioning:being_hugged',
+        'positioning:being_restrained',
       ]);
       expect(pushOntoFurnitureAction.forbidden_components.primary).toEqual([
         'positioning:lying_down',

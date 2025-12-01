@@ -12,7 +12,11 @@
   },
   "template": "go to {destination}",
   "forbidden_components": {
-    "actor": ["positioning:bending_over", "positioning:doing_complex_performance"]
+    "actor": [
+      "positioning:bending_over",
+      "positioning:doing_complex_performance",
+      "positioning:being_restrained"
+    ]
   },
   "prerequisites": [
     {

@@ -14,8 +14,23 @@
     "actor": []
   },
   "forbidden_components": {
-    "actor": ["positioning:biting_neck", "positioning:kneeling_before", "positioning:sitting_on", "positioning:bending_over", "positioning:lying_down", "positioning:straddling_waist", "positioning:being_hugged", "positioning:hugging", "positioning:doing_complex_performance"],
-    "primary": ["positioning:kneeling_before", "positioning:lying_down", "positioning:bending_over"]
+    "actor": [
+      "positioning:biting_neck",
+      "positioning:kneeling_before",
+      "positioning:sitting_on",
+      "positioning:bending_over",
+      "positioning:lying_down",
+      "positioning:straddling_waist",
+      "positioning:being_hugged",
+      "positioning:hugging",
+      "positioning:doing_complex_performance",
+      "positioning:being_restrained"
+    ],
+    "primary": [
+      "positioning:kneeling_before",
+      "positioning:lying_down",
+      "positioning:bending_over"
+    ]
   },
   "template": "kneel before {actor}",
   "prerequisites": [

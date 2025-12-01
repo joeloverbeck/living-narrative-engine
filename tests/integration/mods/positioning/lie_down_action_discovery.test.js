@@ -44,6 +44,7 @@ describe('positioning:lie_down action discovery', () => {
         'positioning:kneeling_before',
         'positioning:lying_down',
         'positioning:fucking_anally',
+        'positioning:being_restrained',
       ]);
     });
 

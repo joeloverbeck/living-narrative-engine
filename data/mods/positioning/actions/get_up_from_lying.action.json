@@ -5,10 +5,15 @@
   "description": "Get up from the furniture you're lying on",
   "targets": "positioning:furniture_im_lying_on",
   "required_components": {
-    "actor": ["positioning:lying_down"]
+    "actor": [
+      "positioning:lying_down"
+    ]
   },
   "forbidden_components": {
-    "actor": ["positioning:being_fucked_vaginally"]
+    "actor": [
+      "positioning:being_fucked_vaginally",
+      "positioning:being_restrained"
+    ]
   },
   "template": "get up from {target}",
   "prerequisites": [],

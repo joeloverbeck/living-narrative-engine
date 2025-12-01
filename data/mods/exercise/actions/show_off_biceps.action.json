@@ -8,7 +8,8 @@
   "forbidden_components": {
     "actor": [
       "positioning:hugging",
-      "positioning:fallen"
+      "positioning:fallen",
+      "positioning:being_restrained"
     ]
   },
   "template": "show off your muscular arms",

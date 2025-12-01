@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "items:smoking_pipe",
+  "description": "A simple, well-used smoking pipe suitable for tobacco or dried herbs.",
+  "components": {
+    "core:name": {
+      "text": "carved smoking pipe"
+    },
+    "core:description": {
+      "text": "A straight-stemmed wooden pipe with a shallow bowl that shows the dark sheen of long use. The rim is neatly charred, the stem burnished smooth where fingers rest, and the whole piece smells faintly of sweet leaf smoke and beeswax polish."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.2
+    },
+    "core:material": {
+      "material": "wood",
+      "properties": [
+        "rigid"
+      ]
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    }
+  }
+}
