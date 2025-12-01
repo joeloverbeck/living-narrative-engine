@@ -1,0 +1,105 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.blueprint.schema.json",
+  "id": "anatomy:hen",
+  "root": "anatomy:chicken_torso",
+  "slots": {
+    "head": {
+      "socket": "neck",
+      "requirements": {
+        "partType": "chicken_head",
+        "components": ["anatomy:part"]
+      }
+    },
+    "left_wing": {
+      "socket": "left_wing_root",
+      "requirements": {
+        "partType": "chicken_wing",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_wing": {
+      "socket": "right_wing_root",
+      "requirements": {
+        "partType": "chicken_wing",
+        "components": ["anatomy:part"]
+      }
+    },
+    "left_leg": {
+      "socket": "left_hip",
+      "requirements": {
+        "partType": "chicken_leg",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_leg": {
+      "socket": "right_hip",
+      "requirements": {
+        "partType": "chicken_leg",
+        "components": ["anatomy:part"]
+      }
+    },
+    "tail": {
+      "socket": "tail_root",
+      "requirements": {
+        "partType": "chicken_tail",
+        "components": ["anatomy:part"]
+      }
+    },
+    "beak": {
+      "parent": "head",
+      "socket": "beak_mount",
+      "requirements": {
+        "partType": "chicken_beak",
+        "components": ["anatomy:part"]
+      }
+    },
+    "left_eye": {
+      "parent": "head",
+      "socket": "left_eye",
+      "requirements": {
+        "partType": "eye",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_eye": {
+      "parent": "head",
+      "socket": "right_eye",
+      "requirements": {
+        "partType": "eye",
+        "components": ["anatomy:part"]
+      }
+    },
+    "comb": {
+      "parent": "head",
+      "socket": "comb_mount",
+      "requirements": {
+        "partType": "chicken_comb",
+        "components": ["anatomy:part"]
+      }
+    },
+    "wattle": {
+      "parent": "head",
+      "socket": "wattle_mount",
+      "requirements": {
+        "partType": "chicken_wattle",
+        "components": ["anatomy:part"]
+      }
+    },
+    "left_foot": {
+      "parent": "left_leg",
+      "socket": "foot",
+      "requirements": {
+        "partType": "chicken_foot",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_foot": {
+      "parent": "right_leg",
+      "socket": "foot",
+      "requirements": {
+        "partType": "chicken_foot",
+        "components": ["anatomy:part"]
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "warding:entity-has-corrupted-component",
+  "description": "Checks that the entity has the 'warding:corrupted' component.",
+  "logic": {
+    "!!": {
+      "var": "entity.components.warding:corrupted"
+    }
+  }
+}
