@@ -108,6 +108,7 @@ export class BodyDescriptionComposer {
       allParts && allParts.length > 0
         ? this.groupPartsByType(allParts)
         : new Map();
+    const visiblePartsByType = this.#filterVisibleParts(partsByType, bodyEntity);
 
     // Build structured description following configured order
     const lines = [];
@@ -216,8 +217,8 @@ export class BodyDescriptionComposer {
       }
 
       // Process body parts
-      if (partsByType.has(partType)) {
-        const parts = partsByType.get(partType);
+      if (visiblePartsByType.has(partType)) {
+        const parts = visiblePartsByType.get(partType);
         const structuredLine = this.descriptionTemplate.createStructuredLine(
           partType,
           parts
@@ -231,6 +232,283 @@ export class BodyDescriptionComposer {
 
     // Join all lines with newlines
     return lines.join('\n');
+  }
+
+  /**
+   * Filter out parts hidden by clothing visibility rules
+   *
+   * @param {Map<string, Array<object>>} partsByType
+   * @param {object} bodyEntity
+   * @returns {Map<string, Array<object>>}
+   */
+  #filterVisibleParts(partsByType, bodyEntity) {
+    if (!partsByType || !(partsByType instanceof Map)) {
+      return new Map();
+    }
+
+    const filtered = new Map();
+
+    for (const [partType, parts] of partsByType.entries()) {
+      const visibleParts = (parts || []).filter((part) =>
+        this.#isPartVisible(part, bodyEntity)
+      );
+
+      if (visibleParts.length > 0) {
+        filtered.set(partType, visibleParts);
+      }
+    }
+
+    return filtered;
+  }
+
+  /**
+   * Determine whether a part should be described based on clothing coverage
+   *
+   * @param {object} partEntity
+   * @param {object} bodyEntity
+   * @returns {boolean}
+   */
+  #isPartVisible(partEntity, bodyEntity) {
+    if (!partEntity || typeof partEntity.getComponentData !== 'function') {
+      return true;
+    }
+
+    const visibilityRules = this.#getComponentSafe(
+      partEntity,
+      'anatomy:visibility_rules'
+    );
+
+    if (!visibilityRules || !visibilityRules.nonBlockingLayers) {
+      return true;
+    }
+
+    const joint = this.#getComponentSafe(partEntity, 'anatomy:joint');
+    if (!joint || !joint.socketId) {
+      return true;
+    }
+
+    const slotMetadata = this.#getComponentSafe(
+      bodyEntity,
+      'clothing:slot_metadata'
+    );
+    const coveringSlots = this.#getCoveringSlotsForSocket(
+      slotMetadata,
+      joint.socketId
+    );
+
+    if (!coveringSlots || coveringSlots.length === 0) {
+      return true;
+    }
+
+    let targetSlots = coveringSlots;
+    if (visibilityRules.clothingSlotId) {
+      const narrowed = coveringSlots.filter(
+        (slotId) => slotId === visibilityRules.clothingSlotId
+      );
+      if (narrowed.length > 0) {
+        targetSlots = narrowed;
+      }
+    }
+
+    const nonBlockingLayers = new Set(visibilityRules.nonBlockingLayers || []);
+    const equipmentData = this.#getComponentSafe(
+      bodyEntity,
+      'clothing:equipment'
+    );
+
+    const hasDirectBlock = targetSlots.some((slotId) =>
+      this.#slotHasBlockingLayer(equipmentData, slotId, nonBlockingLayers)
+    );
+    if (hasDirectBlock) {
+      return false;
+    }
+
+    if (
+      this.#isBlockedByCoverageMapping(
+        equipmentData,
+        targetSlots,
+        nonBlockingLayers
+      )
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Get clothing slots that cover a given socket from slot metadata
+   *
+   * @param {object|null} slotMetadata
+   * @param {string} socketId
+   * @returns {Array<string>}
+   */
+  #getCoveringSlotsForSocket(slotMetadata, socketId) {
+    if (
+      !slotMetadata ||
+      !slotMetadata.slotMappings ||
+      typeof slotMetadata.slotMappings !== 'object'
+    ) {
+      return [];
+    }
+
+    const coveringSlots = [];
+
+    for (const [slotId, mapping] of Object.entries(slotMetadata.slotMappings)) {
+      if (
+        mapping &&
+        Array.isArray(mapping.coveredSockets) &&
+        mapping.coveredSockets.includes(socketId)
+      ) {
+        coveringSlots.push(slotId);
+      }
+    }
+
+    return coveringSlots;
+  }
+
+  /**
+   * Check if a clothing slot has blocking items equipped
+   *
+   * @param {object|null} equipmentData
+   * @param {string} slotId
+   * @param {Set<string>} nonBlockingLayers
+   * @returns {boolean}
+   */
+  #slotHasBlockingLayer(equipmentData, slotId, nonBlockingLayers) {
+    if (!equipmentData || !equipmentData.equipped) {
+      return false;
+    }
+
+    const slot = equipmentData.equipped[slotId];
+
+    if (!slot || typeof slot !== 'object') {
+      return false;
+    }
+
+    return Object.entries(slot).some(([layer, items]) => {
+      if (nonBlockingLayers.has(layer)) {
+        return false;
+      }
+
+      return this.#normalizeItems(items).length > 0;
+    });
+  }
+
+  /**
+   * Normalize equipped item values to a string array
+   *
+   * @param {string|Array|string[]|object|null|undefined} items
+   * @returns {Array<string>}
+   */
+  #normalizeItems(items) {
+    if (Array.isArray(items)) {
+      return items.filter(
+        (item) => typeof item === 'string' && item.trim() !== ''
+      );
+    }
+
+    if (typeof items === 'string') {
+      return items.trim() !== '' ? [items] : [];
+    }
+
+    if (items && typeof items === 'object') {
+      return Object.values(items).filter(
+        (item) => typeof item === 'string' && item.trim() !== ''
+      );
+    }
+
+    return [];
+  }
+
+  /**
+   * Determine if coverage mapping from other slots blocks the target slots
+   *
+   * @param {object|null} equipmentData
+   * @param {Array<string>} targetSlots
+   * @param {Set<string>} nonBlockingLayers
+   * @returns {boolean}
+   */
+  #isBlockedByCoverageMapping(equipmentData, targetSlots, nonBlockingLayers) {
+    if (
+      !equipmentData ||
+      !equipmentData.equipped ||
+      typeof this.entityFinder?.getEntityInstance !== 'function'
+    ) {
+      return false;
+    }
+
+    for (const slotLayers of Object.values(equipmentData.equipped)) {
+      if (!slotLayers || typeof slotLayers !== 'object') {
+        continue;
+      }
+
+      for (const [layer, items] of Object.entries(slotLayers)) {
+        const itemIds = this.#normalizeItems(items);
+        if (itemIds.length === 0) {
+          continue;
+        }
+
+        for (const itemId of itemIds) {
+          const itemEntity = this.entityFinder.getEntityInstance(itemId);
+          if (!itemEntity) {
+            continue;
+          }
+
+          const coverageMapping = this.#getComponentSafe(
+            itemEntity,
+            'clothing:coverage_mapping'
+          );
+
+          if (
+            !coverageMapping ||
+            !Array.isArray(coverageMapping.covers) ||
+            coverageMapping.covers.length === 0
+          ) {
+            continue;
+          }
+
+          const coverageLayer = coverageMapping.coveragePriority || layer;
+
+          if (nonBlockingLayers.has(coverageLayer)) {
+            continue;
+          }
+
+          if (
+            coverageMapping.covers.some((coveredSlot) =>
+              targetSlots.includes(coveredSlot)
+            )
+          ) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Safely fetch a component from an entity without throwing
+   *
+   * @param {object|null} entity
+   * @param {string} componentId
+   * @returns {object|null}
+   */
+  #getComponentSafe(entity, componentId) {
+    if (!entity || typeof entity.getComponentData !== 'function') {
+      return null;
+    }
+
+    try {
+      return entity.getComponentData(componentId);
+    } catch (error) {
+      this.#logger?.debug?.(
+        `BodyDescriptionComposer: failed to read component '${componentId}'`,
+        { error }
+      );
+      return null;
+    }
   }
 
   /**

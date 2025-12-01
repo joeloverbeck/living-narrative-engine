@@ -125,6 +125,9 @@ function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
       logger,
       safeEventDispatcher: safeDispatcher,
     }),
+    REGENERATE_DESCRIPTION: {
+      execute: jest.fn(), // Mocked to satisfy preflight handler validation
+    },
   };
 }
 

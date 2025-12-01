@@ -8,6 +8,8 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { readdirSync, statSync } from 'node:fs';
+import { resolve as resolvePath } from 'node:path';
 import { ModTestHandlerFactory } from '../../../common/mods/ModTestHandlerFactory.js';
 
 describe('ModTestHandlerFactory - Completeness', () => {
@@ -391,6 +393,35 @@ describe('ModTestHandlerFactory - Completeness', () => {
       commonKeys.forEach((key) => {
         expect(typeof standardHandlers[key].execute).toBe('function');
         expect(typeof itemHandlers[key].execute).toBe('function');
+      });
+    });
+  });
+
+  describe('Property coverage against mod data', () => {
+    const modsRoot = resolvePath(process.cwd(), 'data', 'mods');
+    const modCategories = readdirSync(modsRoot).filter((entry) =>
+      statSync(resolvePath(modsRoot, entry)).isDirectory()
+    );
+
+    modCategories.forEach((modCategory) => {
+      it(`should cover referenced operations for ${modCategory}`, () => {
+        const { operations } =
+          ModTestHandlerFactory.getOperationProfileForCategory(modCategory);
+        const factory =
+          ModTestHandlerFactory.getHandlerFactoryForCategory(modCategory);
+
+        const handlers = factory(
+          mockEntityManager,
+          mockEventBus,
+          mockLogger,
+          mockGameDataRepository
+        );
+
+        const missingOperations = Array.from(operations).filter(
+          (op) => !Object.prototype.hasOwnProperty.call(handlers, op)
+        );
+
+        expect(missingOperations).toEqual([]);
       });
     });
   });

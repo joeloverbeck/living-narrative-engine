@@ -202,6 +202,70 @@ export function createBaseRuleEnvironment({
     gameDataRepository: testDataRegistry,
   });
 
+  function collectOperationTypes(candidate, accumulator) {
+    if (!candidate) {
+      return;
+    }
+
+    if (Array.isArray(candidate)) {
+      candidate.forEach((item) => collectOperationTypes(item, accumulator));
+      return;
+    }
+
+    if (typeof candidate !== 'object') {
+      return;
+    }
+
+    if (typeof candidate.type === 'string') {
+      accumulator.add(candidate.type);
+    }
+
+    for (const value of Object.values(candidate)) {
+      collectOperationTypes(value, accumulator);
+    }
+  }
+
+  function validateOperationCoverage(operationRegistry, ruleset) {
+    if (!ruleset || ruleset.length === 0) {
+      return;
+    }
+
+    const missingByRule = [];
+
+    for (const rule of ruleset) {
+      const operations = new Set();
+      collectOperationTypes(rule.actions || rule, operations);
+      const missing = Array.from(operations).filter(
+        (opType) => opType && !operationRegistry.hasHandler(opType)
+      );
+
+      if (missing.length > 0) {
+        missingByRule.push({
+          id: rule.rule_id || rule.id || 'unknown-rule',
+          missing,
+        });
+      }
+    }
+
+    if (missingByRule.length > 0) {
+      const missingOps = Array.from(
+        new Set(missingByRule.flatMap((entry) => entry.missing))
+      ).join(', ');
+      const ruleDetails = missingByRule
+        .map((entry) => `  - ${entry.id}: ${entry.missing.join(', ')}`)
+        .join('\n');
+
+      throw new Error(
+        [
+          'Preflight operation handler validation failed.',
+          `Missing handlers: ${missingOps}.`,
+          'Rules:',
+          ruleDetails,
+        ].join('\n')
+      );
+    }
+  }
+
   /**
    * Initializes core engine components for the rule environment.
    *
@@ -255,6 +319,8 @@ export function createBaseRuleEnvironment({
     // Store these handlers in the handlers object for consistency
     handlers.IF = ifHandler;
     handlers.FOR_EACH = forEachHandler;
+
+    validateOperationCoverage(operationRegistry, expandedRules);
 
     // Create the bodyGraphService mock that actually checks entity components
     const getDescendantPartIds = (rootId) => {

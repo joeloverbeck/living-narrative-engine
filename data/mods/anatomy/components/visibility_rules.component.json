@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "anatomy:visibility_rules",
+  "description": "Defines clothing slot-based visibility gating for anatomy parts",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "clothingSlotId": {
+        "type": "string",
+        "description": "Clothing slot that controls visibility (e.g., 'torso_lower')",
+        "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+        "minLength": 1
+      },
+      "nonBlockingLayers": {
+        "type": "array",
+        "description": "Clothing layers that do not block descriptions when occupied",
+        "items": {
+          "type": "string",
+          "enum": ["underwear", "base", "outer", "accessories", "armor"]
+        },
+        "uniqueItems": true,
+        "default": []
+      },
+      "notes": {
+        "type": "string",
+        "description": "Optional notes for authors"
+      },
+      "reason": {
+        "type": "string",
+        "description": "Rationale for this visibility rule"
+      }
+    },
+    "required": ["clothingSlotId", "nonBlockingLayers"],
+    "additionalProperties": false
+  }
+}

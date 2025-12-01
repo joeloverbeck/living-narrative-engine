@@ -21,7 +21,8 @@
       "part.component.json",
       "part_health.component.json",
       "requires_grabbing.component.json",
-      "sockets.component.json"
+      "sockets.component.json",
+      "visibility_rules.component.json"
     ],
     "entities": {
       "definitions": [

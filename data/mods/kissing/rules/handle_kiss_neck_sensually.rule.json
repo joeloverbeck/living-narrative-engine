@@ -8,47 +8,14 @@
   },
   "actions": [
     {
-      "type": "GET_NAME",
-      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
-    },
-    {
-      "type": "GET_NAME",
-      "parameters": { "entity_ref": "target", "result_variable": "targetName" }
-    },
-    {
-      "type": "QUERY_COMPONENT",
-      "parameters": {
-        "entity_ref": "actor",
-        "component_type": "core:position",
-        "result_variable": "actorPosition"
-      }
+      "type": "PREPARE_ACTION_CONTEXT",
+      "parameters": {}
     },
     {
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
         "value": "{context.actorName} kisses {context.targetName}'s neck sensually."
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "perceptionType",
-        "value": "action_target_general"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "locationId",
-        "value": "{context.actorPosition.locationId}"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "targetId",
-        "value": "{event.payload.targetId}"
       }
     },
     { "macro": "core:logSuccessAndEndTurn" }
