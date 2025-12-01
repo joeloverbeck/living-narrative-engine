@@ -125,6 +125,11 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
     'core:gender': { value: 'male' },
     'core:participation': { participating: true },
     'core:conspicuous': {},
+    'anatomy:bleeding': { severity: 'minor', remainingTurns: 3, tickDamage: 5 },
+    'anatomy:burning': { remainingTurns: 3, tickDamage: 5, stackedCount: 1 },
+    'anatomy:fractured': { sourceDamageType: 'blunt', appliedAtHealth: 50 },
+    'anatomy:poisoned': { remainingTurns: 3, tickDamage: 5 },
+    'anatomy:stunned': { remainingTurns: 2 },
   };
 
   /** @type {Record<string, unknown>} */
@@ -182,6 +187,11 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
     'core:hungry': { severity: 200 },
     'core:participation': {}, // Missing required 'participating' field
     'core:conspicuous': { extra: true },
+    'anatomy:bleeding': { severity: 'invalid' },
+    'anatomy:burning': { remainingTurns: -1 },
+    'anatomy:fractured': {},
+    'anatomy:poisoned': { tickDamage: 'high' },
+    'anatomy:stunned': {},
   };
 
   Object.entries(validators).forEach(([id, validate]) => {

@@ -68,6 +68,9 @@
         "conditions": {
           "$ref": "#/definitions/contentFileList"
         },
+        "damageTypes": {
+          "$ref": "#/definitions/contentFileList"
+        },
         "entities": {
           "description": "Mapping of entity content types to lists of JSON files.",
           "type": "object",

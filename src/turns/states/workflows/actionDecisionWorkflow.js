@@ -5,8 +5,14 @@
 
 import { LLMDecisionProvider } from '../../providers/llmDecisionProvider.js';
 import { getSafeEventDispatcher } from '../helpers/contextUtils.js';
-import { LLM_SUGGESTED_ACTION_ID } from '../../../constants/eventIds.js';
+import {
+  DISPLAY_SPEECH_ID,
+  DISPLAY_THOUGHT_ID,
+  LLM_SUGGESTED_ACTION_ID,
+} from '../../../constants/eventIds.js';
 import { getLLMTimeoutConfig } from '../../../config/llmTimeout.config.js';
+import { buildSpeechPayload } from '../helpers/buildSpeechPayload.js';
+import { buildThoughtPayload } from '../helpers/buildThoughtPayload.js';
 
 /**
  * @class ActionDecisionWorkflow
@@ -217,6 +223,44 @@ export class ActionDecisionWorkflow {
           err
         );
     }
+  }
+
+  async _dispatchLLMDialogPreview(decisionMeta) {
+    const dispatcher = getSafeEventDispatcher(this._turnContext, this._state._handler);
+    const logger = this._turnContext.getLogger();
+    if (!dispatcher) {
+      return { speech: false, thought: false };
+    }
+
+    const speechPayload = buildSpeechPayload(decisionMeta);
+    if (speechPayload) {
+      try {
+        await dispatcher.dispatch(DISPLAY_SPEECH_ID, {
+          entityId: this._actor.id,
+          ...speechPayload,
+        });
+        return { speech: true, thought: Boolean(speechPayload.thoughts) };
+      } catch (err) {
+        logger?.warn?.(
+          `${this._state.getStateName()}: Failed to dispatch LLM preview speech bubble – ${err.message}`
+        );
+      }
+      return { speech: false, thought: false };
+    }
+
+    const thoughtPayload = buildThoughtPayload(decisionMeta, this._actor.id);
+    if (thoughtPayload) {
+      try {
+        await dispatcher.dispatch(DISPLAY_THOUGHT_ID, thoughtPayload);
+        return { speech: false, thought: true };
+      } catch (err) {
+        logger?.warn?.(
+          `${this._state.getStateName()}: Failed to dispatch LLM preview thought bubble – ${err.message}`
+        );
+      }
+    }
+
+    return { speech: false, thought: false };
   }
 
   _describeActionDescriptor(descriptor) {
@@ -483,6 +527,8 @@ export class ActionDecisionWorkflow {
       const descriptor = this._findCompositeForIndex(clampedIndex, actions) || action;
       await this._emitSuggestedActionEvent(clampedIndex, descriptor, baseMeta);
 
+      const previewResult = await this._dispatchLLMDialogPreview(baseMeta);
+
       const submission = await this._awaitHumanSubmission(
         actions,
         clampedIndex,
@@ -511,6 +557,8 @@ export class ActionDecisionWorkflow {
         submittedIndex: finalIndex,
         resolvedByTimeout: submission?.timeout === true,
         timeoutPolicy: submission?.timeoutPolicy ?? null,
+        previewDisplayed:
+          previewResult?.speech === true || previewResult?.thought === true,
       };
 
       const finalAction = this._buildActionForIndex(

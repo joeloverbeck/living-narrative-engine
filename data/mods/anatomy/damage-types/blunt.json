@@ -1,0 +1,12 @@
+{
+  "$schema": "schema://living-narrative-engine/damage-type.schema.json",
+  "id": "blunt",
+  "name": "Blunt Force",
+  "description": "Damage caused by impact with a dull object or surface. Causes bruising and fractures.",
+  "penetration": 0.1,
+  "fracture": {
+    "enabled": true,
+    "thresholdFraction": 0.5,
+    "stunChance": 0.2
+  }
+}

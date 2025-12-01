@@ -64,6 +64,7 @@ describe('ActionButtonsRenderer LLM suggestions', () => {
     document.body.innerHTML = `
       <div id="action-buttons"></div>
       <button id="player-confirm-turn-button"></button>
+      <input id="speech-input" />
     `;
 
     container = document.querySelector('#action-buttons');
@@ -103,6 +104,7 @@ describe('ActionButtonsRenderer LLM suggestions', () => {
       domElementFactory,
       actionButtonsContainerSelector: '#action-buttons',
       sendButtonSelector: '#player-confirm-turn-button',
+      speechInputSelector: '#speech-input',
       actionCategorizationService: createActionCategorizationService(),
     });
   });
@@ -149,5 +151,25 @@ describe('ActionButtonsRenderer LLM suggestions', () => {
     const callout = container.querySelector('.llm-suggestion-callout');
     expect(callout).not.toBeNull();
     expect(callout.textContent).toContain('move north');
+  });
+
+  it('disables speech input during LLM suggestion and re-enables when cleared', async () => {
+    const speechInput = document.querySelector('#speech-input');
+    expect(speechInput.disabled).toBe(false);
+
+    await validatedEventDispatcher.dispatch(LLM_SUGGESTED_ACTION_ID, {
+      actorId: 'actor-llm',
+      suggestedIndex: 1,
+    });
+
+    expect(speechInput.disabled).toBe(true);
+
+    // Clear suggestion by updating actions for a different actor
+    await validatedEventDispatcher.dispatch(UPDATE_ACTIONS_EVENT, {
+      actorId: 'actor-human',
+      actions: baseActions,
+    });
+
+    expect(speechInput.disabled).toBe(false);
   });
 });

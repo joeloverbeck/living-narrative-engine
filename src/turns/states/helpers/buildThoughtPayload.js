@@ -20,7 +20,7 @@ import { isNonBlankString } from '../../../utils/textUtils.js';
  * @returns {{entityId: string, thoughts: string, notes?: *}|null} The sanitized payload, or null if thoughts are absent/invalid.
  */
 export function buildThoughtPayload(decisionMeta, entityId) {
-  const { thoughts: thoughtsRaw, notes } = decisionMeta || {};
+  const { thoughts: thoughtsRaw, notes, previewDisplayed } = decisionMeta || {};
 
   const thoughts = isNonBlankString(thoughtsRaw) ? thoughtsRaw.trim() : null;
 
@@ -32,6 +32,7 @@ export function buildThoughtPayload(decisionMeta, entityId) {
     entityId,
     thoughts,
     ...(notes ? { notes } : {}),
+    ...(previewDisplayed ? { suppressDisplay: true } : {}),
   };
 
   return payload;

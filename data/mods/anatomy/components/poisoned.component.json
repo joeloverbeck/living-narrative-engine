@@ -1,0 +1,21 @@
+{
+  "id": "anatomy:poisoned",
+  "description": "Indicates the entity or part is poisoned, causing damage over time.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "remainingTurns": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Number of turns remaining until the poison wears off."
+      },
+      "tickDamage": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Damage applied per turn."
+      }
+    },
+    "required": ["remainingTurns", "tickDamage"],
+    "additionalProperties": false
+  }
+}

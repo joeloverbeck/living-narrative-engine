@@ -327,7 +327,7 @@ describe('clipboardUtils', () => {
         thoughts: 'Inner',
       });
 
-      expect(text).toBe('Unknown says: "Hi there"\n\nUnknown\'s thoughts:\nInner');
+      expect(text).toBe('Unknown\'s thoughts:\nInner\n\nUnknown says: "Hi there"');
       expect(hasSpeech).toBe(true);
     });
 
@@ -340,7 +340,7 @@ describe('clipboardUtils', () => {
       });
 
       expect(text).toBe(
-        'Iris says: "Hello"\n\nIris\'s thoughts:\nThinking...\n\nNote here'
+        'Iris\'s thoughts:\nThinking...\n\nIris says: "Hello"\n\nNote here'
       );
       expect(hasSpeech).toBe(true);
       expect(hasThoughts).toBe(true);

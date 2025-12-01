@@ -21,6 +21,7 @@ export function buildSpeechPayload(decisionMeta) {
     speech: speechRaw,
     thoughts: thoughtsRaw,
     notes,
+    previewDisplayed,
   } = decisionMeta || {};
 
   const speech = isNonBlankString(speechRaw) ? speechRaw.trim() : null;
@@ -36,6 +37,7 @@ export function buildSpeechPayload(decisionMeta) {
     speechContent: speech,
     ...(thoughts ? { thoughts } : {}),
     ...(notes ? { notes } : {}),
+    ...(previewDisplayed ? { suppressDisplay: true } : {}),
   };
 
   return payload;

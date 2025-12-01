@@ -1,6 +1,6 @@
 # DAMTYPANDSPEEFF-001: Define Damage Type schema and canonical content layout
 
-**Status**: Ready
+**Status**: Completed
 **Priority**: High
 **Estimated Effort**: 1.5 days
 **Dependencies**: None
@@ -46,3 +46,14 @@ Create the data model surface for damage types and status components so mods and
 - Existing mod validation not related to damage types continues to pass without schema changes.
 - Damage type parsing defaults missing optional sections to safe no-op values (penetration defaults to 0.0; effect blocks default to disabled).
 - No hardcoded references to specific mod ids; respect `mod-architecture/no-hardcoded-mod-references` lint rule.
+
+## Outcome
+
+- Created `data/schemas/damage-type.schema.json` defining the structure for damage types.
+- Updated `data/schemas/mod-manifest.schema.json` to support `damageTypes` content type.
+- Registered the new schema in `src/configuration/staticConfiguration.js`.
+- Created `data/mods/anatomy/damage-types/` with `blunt.json`, `slashing.json`, and `piercing.json`.
+- Created component definitions for `bleeding`, `burning`, `poisoned`, `fractured`, and `stunned` in `data/mods/anatomy/components/`.
+- Updated `data/mods/anatomy/mod-manifest.json` to include the new content.
+- Added `tests/unit/anatomy/damage-types.schema.test.js` to validate the schema and defaults.
+- Verified that `npm run validate:quick` passes with the new content.

@@ -1,0 +1,26 @@
+{
+  "id": "anatomy:bleeding",
+  "description": "Indicates the part is bleeding, causing damage over time.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "severity": {
+        "type": "string",
+        "enum": ["minor", "moderate", "severe"],
+        "description": "The severity of the bleeding."
+      },
+      "remainingTurns": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Number of turns remaining until the bleeding stops naturally."
+      },
+      "tickDamage": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Damage applied per turn."
+      }
+    },
+    "required": ["severity", "remainingTurns", "tickDamage"],
+    "additionalProperties": false
+  }
+}

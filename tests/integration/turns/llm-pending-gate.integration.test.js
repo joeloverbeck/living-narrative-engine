@@ -1,7 +1,10 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import { ActionDecisionWorkflow } from '../../../src/turns/states/workflows/actionDecisionWorkflow.js';
 import { LLMDecisionProvider } from '../../../src/turns/providers/llmDecisionProvider.js';
-import { LLM_SUGGESTED_ACTION_ID } from '../../../src/constants/eventIds.js';
+import {
+  DISPLAY_SPEECH_ID,
+  LLM_SUGGESTED_ACTION_ID,
+} from '../../../src/constants/eventIds.js';
 
 describe('LLM pending gate integration', () => {
   it('defers processing until submission resolves', async () => {
@@ -87,6 +90,16 @@ describe('LLM pending gate integration', () => {
       LLM_SUGGESTED_ACTION_ID,
       expect.objectContaining({ actorId: 'actor-1', suggestedIndex: 1 }),
       expect.objectContaining({ allowSchemaNotFound: true })
+    );
+    expect(
+      safeDispatcher.dispatch.mock.calls.map((call) => call[0])
+    ).toContain(DISPLAY_SPEECH_ID);
+    expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_SPEECH_ID,
+      expect.objectContaining({
+        entityId: actor.id,
+        speechContent: 'hello',
+      })
     );
     expect(promptService.prompt).toHaveBeenCalledWith(actor, {
       indexedComposites: availableActions,

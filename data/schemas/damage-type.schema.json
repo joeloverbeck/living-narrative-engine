@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/damage-type.schema.json",
+  "title": "Damage Type Definition",
+  "description": "Defines a damage type and its associated special effects (bleeding, fracture, burn, etc.).",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_:-]+$",
+      "description": "Unique identifier for the damage type."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable name for the damage type."
+    },
+    "description": {
+      "type": "string",
+      "description": "Narrative description of the damage type."
+    },
+    "penetration": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0.0,
+      "description": "Used by propagation logic to weight internal hit chances."
+    },
+    "bleed": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "severity": { "type": "string", "enum": ["minor", "moderate", "severe"] },
+        "baseDurationTurns": { "type": "integer", "minimum": 1 }
+      },
+      "required": ["enabled"],
+      "default": { "enabled": false }
+    },
+    "fracture": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "thresholdFraction": { "type": "number", "minimum": 0, "maximum": 1 },
+        "stunChance": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "required": ["enabled"],
+      "default": { "enabled": false }
+    },
+    "burn": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "dps": { "type": "number", "minimum": 0 },
+        "durationTurns": { "type": "integer", "minimum": 1 },
+        "canStack": { "type": "boolean" }
+      },
+      "required": ["enabled"],
+      "default": { "enabled": false }
+    },
+    "poison": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "tick": { "type": "number", "minimum": 0 },
+        "durationTurns": { "type": "integer", "minimum": 1 },
+        "scope": { "type": "string", "enum": ["part", "entity"] }
+      },
+      "required": ["enabled"],
+      "default": { "enabled": false }
+    },
+    "dismember": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "thresholdFraction": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "required": ["enabled"],
+      "default": { "enabled": false }
+    },
+    "flags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Custom flags for mod extensibility (e.g., 'magical', 'holy')."
+    }
+  },
+  "required": ["id", "name", "description"],
+  "additionalProperties": false
+}
