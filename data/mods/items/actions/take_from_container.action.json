@@ -12,7 +12,8 @@
   "forbidden_components": {
     "actor": [
       "positioning:sitting_on",
-      "positioning:fallen"
+      "positioning:fallen",
+      "positioning:restraining"
     ]
   },
   "targets": {

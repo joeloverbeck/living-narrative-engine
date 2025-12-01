@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "physical-control:let_go_of_restrained_target",
+  "name": "Let Go of Restrained Target",
+  "description": "Release control over the actor you are restraining, freeing them from your hold.",
+  "template": "let go of {target}",
+  "generateCombinations": false,
+  "required_components": {
+    "actor": ["positioning:restraining"]
+  },
+  "targets": {
+    "primary": {
+      "scope": "physical-control:restrained_entity_i_am_holding",
+      "placeholder": "target",
+      "description": "The actor you are currently restraining"
+    }
+  },
+  "visual": {
+    "backgroundColor": "#2f2f2f",
+    "textColor": "#f8f9fa",
+    "hoverBackgroundColor": "#3f3d56",
+    "hoverTextColor": "#f8f9ff"
+  }
+}

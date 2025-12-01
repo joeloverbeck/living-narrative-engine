@@ -37,6 +37,7 @@ import RemoveComponentHandler from '../../../src/logic/operationHandlers/removeC
 import LockMovementHandler from '../../../src/logic/operationHandlers/lockMovementHandler.js';
 import UnlockMovementHandler from '../../../src/logic/operationHandlers/unlockMovementHandler.js';
 import ModifyComponentHandler from '../../../src/logic/operationHandlers/modifyComponentHandler.js';
+import RegenerateDescriptionHandler from '../../../src/logic/operationHandlers/regenerateDescriptionHandler.js';
 
 import {
   NAME_COMPONENT_ID,
@@ -121,6 +122,14 @@ function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
       entityManager,
       logger,
       safeEventDispatcher: safeDispatcher,
+    }),
+    REGENERATE_DESCRIPTION: new RegenerateDescriptionHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: safeDispatcher,
+      bodyDescriptionComposer: {
+        composeDescription: jest.fn().mockResolvedValue(undefined),
+      },
     }),
   };
 }

@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "physical-control:event-is-action-let-go-of-restrained-target",
+  "description": "True when the event is an attempt to execute the let_go_of_restrained_target action",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "physical-control:let_go_of_restrained_target"
+    ]
+  }
+}

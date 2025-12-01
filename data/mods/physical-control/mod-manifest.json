@@ -34,24 +34,30 @@
   ],
   "content": {
     "actions": [
+      "break_free_from_restraint.action.json",
       "force_bend_over.action.json",
       "force_to_knees.action.json",
+      "let_go_of_restrained_target.action.json",
       "push_off.action.json",
       "push_onto_lying_furniture.action.json",
       "restrain_target.action.json",
       "turn_around.action.json"
     ],
     "rules": [
+      "handle_break_free_from_restraint.rule.json",
       "handle_force_bend_over.rule.json",
       "handle_force_to_knees.rule.json",
+      "handle_let_go_of_restrained_target.rule.json",
       "handle_push_off.rule.json",
       "handle_push_onto_lying_furniture.rule.json",
       "handle_restrain_target.rule.json",
       "handle_turn_around.rule.json"
     ],
     "conditions": [
+      "event-is-action-break-free-from-restraint.condition.json",
       "event-is-action-force-bend-over.condition.json",
       "event-is-action-force-to-knees.condition.json",
+      "event-is-action-let-go-of-restrained-target.condition.json",
       "event-is-action-push-off.condition.json",
       "event-is-action-push-onto-lying-furniture.condition.json",
       "event-is-action-restrain-target.condition.json",
@@ -59,6 +65,10 @@
     ],
     "events": [
       "actor_turned_around.event.json"
+    ],
+    "scopes": [
+      "restrained_entity_i_am_holding.scope",
+      "restraining_entity_from_being_restrained.scope"
     ]
   }
 }

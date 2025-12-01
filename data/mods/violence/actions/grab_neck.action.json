@@ -12,7 +12,8 @@
   "forbidden_components": {
     "actor": [
       "positioning:hugging",
-      "positioning:being_restrained"
+      "positioning:being_restrained",
+      "positioning:restraining"
     ]
   },
   "template": "grab {target}'s neck",

@@ -38,7 +38,7 @@ describe('Exercise Mod: Show Off Biceps Action', () => {
       });
     });
 
-    it('should have no component requirements or restrictions', () => {
+    it('should have no required components and the expected forbidden positioning states', () => {
       validateComponentRequirements(showOffBicepsAction, {
         required: {},
         forbidden: {
@@ -46,6 +46,7 @@ describe('Exercise Mod: Show Off Biceps Action', () => {
             'positioning:hugging',
             'positioning:fallen',
             'positioning:being_restrained',
+            'positioning:restraining',
           ],
         },
       });
@@ -157,6 +158,32 @@ describe('Exercise Mod: Show Off Biceps action availability restrictions', () =>
     );
     expect(actorInstance.components['positioning:hugging']).toEqual({
       embraced_entity_id: scenario.target.id,
+      initiated: true,
+    });
+  });
+
+  it('blocks execution when the actor is restraining another entity', async () => {
+    const scenario = testFixture.createStandardActorTarget(['Vera', 'Wyatt'], {
+      includeRoom: false,
+    });
+
+    scenario.actor.components['positioning:restraining'] = {
+      restrained_entity_id: scenario.target.id,
+      initiated: true,
+    };
+
+    const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+    testFixture.reset([room, scenario.actor, scenario.target]);
+
+    await expect(
+      testFixture.executeAction(scenario.actor.id, null)
+    ).rejects.toThrow('forbidden component');
+
+    const actorInstance = testFixture.entityManager.getEntityInstance(
+      scenario.actor.id
+    );
+    expect(actorInstance.components['positioning:restraining']).toEqual({
+      restrained_entity_id: scenario.target.id,
       initiated: true,
     });
   });

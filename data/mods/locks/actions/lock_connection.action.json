@@ -14,7 +14,8 @@
     "actor": [
       "positioning:fallen",
       "positioning:lying_down",
-      "positioning:being_restrained"
+      "positioning:being_restrained",
+      "positioning:restraining"
     ]
   },
   "targets": {

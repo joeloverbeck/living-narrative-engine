@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "physical-control:event-is-action-break-free-from-restraint",
+  "description": "True when the event is an attempt to execute the break_free_from_restraint action",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "physical-control:break_free_from_restraint"
+    ]
+  }
+}

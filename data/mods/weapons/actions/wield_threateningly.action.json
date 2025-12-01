@@ -13,7 +13,8 @@
     "actor": [
       "positioning:closeness",
       "positioning:fallen",
-      "positioning:being_restrained"
+      "positioning:being_restrained",
+      "positioning:restraining"
     ]
   },
   "prerequisites": [

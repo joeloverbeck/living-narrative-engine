@@ -11,10 +11,16 @@
     }
   },
   "required_components": {
-    "primary": ["items:item", "items:readable"]
+    "primary": [
+      "items:item",
+      "items:readable"
+    ]
   },
   "forbidden_components": {
-    "actor": ["positioning:doing_complex_performance"]
+    "actor": [
+      "positioning:doing_complex_performance",
+      "positioning:restraining"
+    ]
   },
   "prerequisites": [],
   "template": "jot down notes on {notebook}",

@@ -32,6 +32,8 @@ import UnlockMovementHandler from '../../../src/logic/operationHandlers/unlockMo
 import ModifyComponentHandler from '../../../src/logic/operationHandlers/modifyComponentHandler.js';
 import AtomicModifyComponentHandler from '../../../src/logic/operationHandlers/atomicModifyComponentHandler.js';
 import RemoveSittingClosenessHandler from '../../../src/logic/operationHandlers/removeSittingClosenessHandler.js';
+import EstablishSittingClosenessHandler from '../../../src/logic/operationHandlers/establishSittingClosenessHandler.js';
+import RegenerateDescriptionHandler from '../../../src/logic/operationHandlers/regenerateDescriptionHandler.js';
 import * as closenessCircleService from '../../../src/logic/services/closenessCircleService.js';
 import {
   NAME_COMPONENT_ID,
@@ -149,11 +151,25 @@ function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
       logger,
       safeEventDispatcher: safeDispatcher,
     }),
+    ESTABLISH_SITTING_CLOSENESS: new EstablishSittingClosenessHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: safeDispatcher,
+      closenessCircleService,
+    }),
     REMOVE_SITTING_CLOSENESS: new RemoveSittingClosenessHandler({
       entityManager,
       logger,
       safeEventDispatcher: safeDispatcher,
       closenessCircleService,
+    }),
+    REGENERATE_DESCRIPTION: new RegenerateDescriptionHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: safeDispatcher,
+      bodyDescriptionComposer: {
+        composeDescription: jest.fn().mockResolvedValue(undefined),
+      },
     }),
   };
 }

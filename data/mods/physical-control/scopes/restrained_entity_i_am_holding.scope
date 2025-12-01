@@ -1,0 +1,17 @@
+// Scope resolving the actor's currently restrained entity via component linkage
+physical-control:restrained_entity_i_am_holding := entities(core:actor)[][{
+  "and": [
+    {
+      "==": [
+        { "var": "entity.id" },
+        { "var": "actor.components.positioning:restraining.restrained_entity_id" }
+      ]
+    },
+    {
+      "==": [
+        { "var": "entity.components.positioning:being_restrained.restraining_entity_id" },
+        { "var": "actor.id" }
+      ]
+    }
+  ]
+}]

@@ -1,0 +1,242 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_break_free_from_restraint",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "physical-control:event-is-action-break-free-from-restraint"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "target", "result_variable": "targetName" }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "RESOLVE_OUTCOME",
+      "parameters": {
+        "actor_skill_component": "skills:grappling_skill",
+        "target_skill_component": "skills:grappling_skill",
+        "actor_skill_default": 10,
+        "target_skill_default": 10,
+        "formula": "ratio",
+        "result_variable": "breakFreeResult"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Common variables for macros and dispatches",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": { "variable_name": "perceptionType", "value": "action_target_general" }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.targetId}"
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle CRITICAL_SUCCESS outcome",
+      "parameters": {
+        "condition": {
+          "==": [
+            { "var": "context.breakFreeResult.outcome" },
+            "CRITICAL_SUCCESS"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "REMOVE_COMPONENT",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "positioning:being_restrained"
+            }
+          },
+          {
+            "type": "REMOVE_COMPONENT",
+            "parameters": {
+              "entity_ref": "target",
+              "component_type": "positioning:restraining"
+            }
+          },
+          {
+            "type": "UNLOCK_GRABBING",
+            "comment": "Release the restrainer's grabbing appendages occupied by the actor",
+            "parameters": {
+              "actor_id": "{event.payload.targetId}",
+              "count": 2,
+              "item_id": "{event.payload.actorId}"
+            }
+          },
+          {
+            "type": "ADD_COMPONENT",
+            "parameters": {
+              "entity_ref": "target",
+              "component_type": "positioning:fallen",
+              "value": {}
+            }
+          },
+          { "type": "REGENERATE_DESCRIPTION", "parameters": { "entity_ref": "actor" } },
+          { "type": "REGENERATE_DESCRIPTION", "parameters": { "entity_ref": "target" } },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} breaks free from {context.targetName}'s grip, and during the struggle, {context.targetName} falls to the ground.",
+              "perception_type": "action_target_general",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.targetId}"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} breaks free from {context.targetName}'s grip, and during the struggle, {context.targetName} falls to the ground."
+            }
+          },
+          { "macro": "core:logSuccessOutcomeAndEndTurn" }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle SUCCESS outcome",
+      "parameters": {
+        "condition": {
+          "==": [
+            { "var": "context.breakFreeResult.outcome" },
+            "SUCCESS"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "REMOVE_COMPONENT",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "positioning:being_restrained"
+            }
+          },
+          {
+            "type": "REMOVE_COMPONENT",
+            "parameters": {
+              "entity_ref": "target",
+              "component_type": "positioning:restraining"
+            }
+          },
+          {
+            "type": "UNLOCK_GRABBING",
+            "comment": "Release the restrainer's grabbing appendages occupied by the actor",
+            "parameters": {
+              "actor_id": "{event.payload.targetId}",
+              "count": 2,
+              "item_id": "{event.payload.actorId}"
+            }
+          },
+          { "type": "REGENERATE_DESCRIPTION", "parameters": { "entity_ref": "actor" } },
+          { "type": "REGENERATE_DESCRIPTION", "parameters": { "entity_ref": "target" } },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} breaks free from {context.targetName}'s grip.",
+              "perception_type": "action_target_general",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.targetId}"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} breaks free from {context.targetName}'s grip."
+            }
+          },
+          { "macro": "core:logSuccessOutcomeAndEndTurn" }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FAILURE outcome",
+      "parameters": {
+        "condition": {
+          "==": [
+            { "var": "context.breakFreeResult.outcome" },
+            "FAILURE"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} tries to break free from {context.targetName}'s grip, but fails to release themselves.",
+              "perception_type": "action_target_general",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.targetId}"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} tries to break free from {context.targetName}'s grip, but fails to release themselves."
+            }
+          },
+          { "macro": "core:logFailureOutcomeAndEndTurn" }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FUMBLE outcome",
+      "parameters": {
+        "condition": {
+          "==": [
+            { "var": "context.breakFreeResult.outcome" },
+            "FUMBLE"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} tries to break free from {context.targetName}'s grip, but fails to release themselves.",
+              "perception_type": "action_target_general",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.targetId}"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} tries to break free from {context.targetName}'s grip, but fails to release themselves."
+            }
+          },
+          { "macro": "core:logFailureOutcomeAndEndTurn" }
+        ]
+      }
+    }
+  ]
+}

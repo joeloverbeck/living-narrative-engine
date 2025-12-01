@@ -14,7 +14,8 @@
   "forbidden_components": {
     "actor": [
       "positioning:bending_over",
-      "positioning:fallen"
+      "positioning:fallen",
+      "positioning:restraining"
     ]
   },
   "template": "open {container}",
