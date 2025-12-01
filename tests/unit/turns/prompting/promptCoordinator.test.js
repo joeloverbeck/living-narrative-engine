@@ -114,6 +114,29 @@ describe('PromptCoordinator.prompt', () => {
     expect(promptSessionInstance.cancel).not.toHaveBeenCalled();
   });
 
+  it('passes suggestedAction through to the prompt output port when provided', async () => {
+    const suggestion = { index: 2, descriptor: 'LLM suggests: wait' };
+
+    await coordinator.prompt(actor, {
+      indexedComposites: [composite],
+      suggestedAction: suggestion,
+    });
+
+    expect(promptOutputPort.prompt).toHaveBeenCalledWith(actor.id, [
+      {
+        index: composite.index,
+        actionId: composite.actionId,
+        commandString: composite.commandString,
+        params: composite.params,
+        description: composite.description,
+        visual: composite.visual,
+      },
+    ],
+    {
+      suggestedAction: suggestion,
+    });
+  });
+
   it('cancelCurrentPrompt invokes session.cancel when active', async () => {
     const p = coordinator.prompt(actor, { indexedComposites: [composite] });
     await Promise.resolve();

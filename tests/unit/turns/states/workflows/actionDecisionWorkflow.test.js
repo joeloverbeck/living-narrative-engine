@@ -137,6 +137,10 @@ describe('ActionDecisionWorkflow.run', () => {
     expect(prompt.prompt).toHaveBeenCalledWith(actor, {
       indexedComposites: availableActions,
       cancellationSignal: expect.any(AbortSignal),
+      suggestedAction: {
+        index: 1,
+        descriptor: 'One',
+      },
     });
     expect(state._recordDecision).toHaveBeenCalledWith(
       ctx,

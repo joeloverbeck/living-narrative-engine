@@ -114,7 +114,7 @@ describe('EventBusPromptAdapter', () => {
     ];
     const errorMsg = 'Invalid command.';
 
-    await adapter.prompt(entityId, actions, errorMsg);
+    await adapter.prompt(entityId, actions, { error: errorMsg });
 
     expect(mockSafeDispatcher.dispatch).toHaveBeenCalledTimes(1);
     expect(mockSafeDispatcher.dispatch).toHaveBeenCalledWith(
@@ -178,7 +178,7 @@ describe('EventBusPromptAdapter', () => {
     const actions = [];
     const errorMsg = 'Another error.';
 
-    await adapter.prompt(entityId, actions, errorMsg);
+    await adapter.prompt(entityId, actions, { error: errorMsg });
 
     expect(mockVed.dispatch).toHaveBeenCalledTimes(1);
     expect(mockVed.dispatch).toHaveBeenCalledWith(PLAYER_TURN_PROMPT_ID, {
@@ -187,6 +187,46 @@ describe('EventBusPromptAdapter', () => {
       error: errorMsg,
     });
     expectNoDispatch(mockSafeDispatcher.dispatch); // Ensure safe wasn't called
+  });
+
+  it('clamps and forwards suggestedAction metadata', async () => {
+    const adapter = new EventBusPromptAdapter({
+      safeEventDispatcher: mockSafeDispatcher,
+    });
+    const entityId = 'player-suggest';
+    const actions = [
+      { id: 'act1', command: 'do act1' },
+      { id: 'act2', command: 'do act2' },
+    ];
+
+    await adapter.prompt(entityId, actions, {
+      suggestedAction: { index: 5, descriptor: 'Second action' },
+    });
+
+    expect(mockSafeDispatcher.dispatch).toHaveBeenCalledWith(
+      PLAYER_TURN_PROMPT_ID,
+      {
+        entityId,
+        availableActions: actions,
+        suggestedAction: { index: 2, descriptor: 'Second action' },
+      }
+    );
+  });
+
+  it('omits suggestedAction when it contains no usable data', async () => {
+    const adapter = new EventBusPromptAdapter({
+      safeEventDispatcher: mockSafeDispatcher,
+    });
+
+    await adapter.prompt('player-empty', [], { suggestedAction: { index: 'x' } });
+
+    expect(mockSafeDispatcher.dispatch).toHaveBeenCalledWith(
+      PLAYER_TURN_PROMPT_ID,
+      {
+        entityId: 'player-empty',
+        availableActions: [],
+      }
+    );
   });
 
   it('should resolve void even if dispatch returns false', async () => {

@@ -45,6 +45,10 @@ describe('Schema – PLAYER_TURN_PROMPT_ID payload', () => {
           description: 'Move to another location.',
         },
       ],
+      suggestedAction: {
+        index: 2,
+        descriptor: 'LLM suggested: Move to another location.',
+      },
     };
 
     const ok = validate(payload);
@@ -88,5 +92,27 @@ describe('Schema – PLAYER_TURN_PROMPT_ID payload', () => {
       availableActions: [actionPatch],
     };
     expect(validate(payload)).toBe(false);
+  });
+
+  test('accepts suggestedAction with null descriptor/index', () => {
+    const payload = {
+      entityId: 'core:player_123',
+      availableActions: [
+        {
+          index: 1,
+          actionId: 'core:wait',
+          commandString: 'wait',
+          description: '…',
+        },
+      ],
+      suggestedAction: {
+        index: null,
+        descriptor: null,
+      },
+    };
+
+    const ok = validate(payload);
+    if (!ok) console.error(validate.errors);
+    expect(ok).toBe(true);
   });
 });

@@ -24,13 +24,12 @@ export class IPromptOutputPort {
    * @param {string} entityId - The unique ID of the player entity being prompted.
    * @param {DiscoveredActionInfo[]} availableActions - An array of objects describing the actions
    * the player can currently take.
-   * @param {string} [error] - An optional error message to include in the prompt, usually
-   * indicating why the player is being re-prompted (e.g., invalid previous command).
+   * @param {{ error?: string, suggestedAction?: { index?: number|null, descriptor?: string|null }}|string} [options] - Optional metadata to include in the prompt payload (errors or preselection hints).
    * @returns {Promise<void>} A promise that resolves when the prompt has been successfully sent
    * (or queued for sending) by the adapter. It might reject if sending fails critically.
    * @throws {Error} Implementations might throw if required parameters are invalid or sending fails critically.
    */
-  async prompt(entityId, availableActions, error) {
+  async prompt(entityId, availableActions, options) {
     throw new Error('IPromptOutputPort.prompt method not implemented.');
   }
 }

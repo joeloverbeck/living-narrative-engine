@@ -590,15 +590,26 @@ class ModValidationOrchestrator {
    */
   async #validateModDependencies(modId, manifest, manifestsMap) {
     try {
-      // Create single-mod context for dependency validation
+      // Build the full dependency closure (mod + all transitive dependencies)
       const singleModMap = new Map([[modId, manifest]]);
+      const toVisit = [modId];
+      const visited = new Set([modId]);
 
-      // Add declared dependencies to context
-      if (manifest.dependencies) {
-        manifest.dependencies.forEach((dep) => {
-          const depId = typeof dep === 'string' ? dep : dep.id;
+      while (toVisit.length > 0) {
+        const currentId = toVisit.pop();
+        const currentManifest = manifestsMap.get(currentId);
+        if (!currentManifest?.dependencies) continue;
+
+        currentManifest.dependencies.forEach((dep) => {
+          const depId = (typeof dep === 'string' ? dep : dep.id)?.trim();
+          if (!depId || visited.has(depId)) {
+            return;
+          }
+
+          visited.add(depId);
           if (manifestsMap.has(depId)) {
             singleModMap.set(depId, manifestsMap.get(depId));
+            toVisit.push(depId);
           }
         });
       }
