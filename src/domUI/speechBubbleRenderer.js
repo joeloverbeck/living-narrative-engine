@@ -457,6 +457,14 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
         thoughts,
         notes,
         speakerName,
+        copyAll: {
+          speechContent,
+          allowHtml,
+          bubbleType: 'speech',
+          isPlayer,
+          thoughts,
+          notes,
+        },
       }
     );
     if (speechMetaFragment) {
@@ -562,7 +570,15 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       this.documentContext.document,
       this.domElementFactory,
       {
+        thoughts,
         notes,
+        speakerName,
+        copyAll: {
+          bubbleType: 'thought',
+          isPlayer,
+          thoughts,
+          notes,
+        },
       }
     );
     if (thoughtMetaFragment) {

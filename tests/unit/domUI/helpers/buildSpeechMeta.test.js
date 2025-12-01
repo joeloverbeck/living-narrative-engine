@@ -133,4 +133,54 @@ describe('buildSpeechMeta', () => {
     expect(getIcon).toHaveBeenCalledWith('notes');
     expect(formatNotesAsRichHtml).toHaveBeenCalledWith(notes);
   });
+
+  it('creates copy-all button when only copyAll data is provided', () => {
+    const fragment = buildSpeechMeta(doc, domFactory, {
+      speakerName: 'Ava',
+      copyAll: {
+        speechContent: 'Hello world',
+        bubbleType: 'speech',
+        isPlayer: true,
+      },
+    });
+
+    expect(fragment).not.toBeNull();
+    doc.body.appendChild(fragment);
+
+    const container = doc.body.querySelector('.speech-meta');
+    expect(container).not.toBeNull();
+
+    const copyAllButton = container.querySelector('.meta-btn.copy-all');
+    expect(copyAllButton).not.toBeNull();
+    expect(copyAllButton.getAttribute('aria-label')).toBe(
+      'Copy speech from the player speech bubble to clipboard'
+    );
+    expect(copyAllButton.getAttribute('title')).toBe(
+      'Copy speech from the player speech bubble to clipboard'
+    );
+    expect(getIcon).toHaveBeenCalledWith('copy-all');
+
+    expect(container.querySelector('.meta-btn.thoughts')).toBeNull();
+    expect(container.querySelector('.meta-btn.notes')).toBeNull();
+  });
+
+  it('positions copy-all button last after existing meta buttons', () => {
+    const notes = { text: 'Strategy', subject: 'Team', subjectType: 'goal' };
+    const fragment = buildSpeechMeta(doc, domFactory, {
+      thoughts: 'Plan ahead',
+      notes,
+      copyAll: {
+        speechContent: 'Quoted reply',
+        bubbleType: 'speech',
+      },
+    });
+
+    doc.body.appendChild(fragment);
+
+    const buttons = Array.from(doc.body.querySelectorAll('.speech-meta .meta-btn'));
+    expect(buttons).toHaveLength(3);
+    expect(buttons[0].classList.contains('thoughts')).toBe(true);
+    expect(buttons[1].classList.contains('notes')).toBe(true);
+    expect(buttons[2].classList.contains('copy-all')).toBe(true);
+  });
 });

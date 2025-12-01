@@ -14,6 +14,7 @@ jest.mock('../../../../src/domUI/helpers/noteTooltipFormatter.js', () => ({
 }));
 
 jest.mock('../../../../src/domUI/helpers/clipboardUtils.js', () => ({
+  assembleCopyAllPayload: jest.fn(),
   copyToClipboard: jest.fn(),
   formatNotesForClipboard: jest.fn(),
   formatThoughtsForClipboard: jest.fn(),
@@ -24,6 +25,7 @@ const { formatNotesAsRichHtml } = jest.requireMock(
   '../../../../src/domUI/helpers/noteTooltipFormatter.js'
 );
 const {
+  assembleCopyAllPayload,
   copyToClipboard,
   formatNotesForClipboard,
   formatThoughtsForClipboard,
@@ -69,6 +71,7 @@ describe('buildSpeechMeta clipboard interactions', () => {
     domFactory = createDomFactory(doc);
 
     formatNotesAsRichHtml.mockReturnValue('<div class="rich">note</div>');
+    assembleCopyAllPayload.mockReset();
     copyToClipboard.mockReset();
     formatNotesForClipboard.mockReset();
     formatThoughtsForClipboard.mockReset();
@@ -172,6 +175,77 @@ describe('buildSpeechMeta clipboard interactions', () => {
 
     expect(formatNotesForClipboard).toHaveBeenCalledWith(notes);
     expect(copyToClipboard).toHaveBeenCalledWith('formatted alert');
+    expect(showCopyFeedback).toHaveBeenCalledWith(button, 'Copy failed', 1500);
+  });
+
+  it('copies assembled payload for copy-all and shows success feedback', async () => {
+    assembleCopyAllPayload.mockReturnValue({
+      text: '"Hello"\n\nThoughts:\nDeep',
+      hasSpeech: true,
+      hasThoughts: true,
+      hasNotes: false,
+    });
+    copyToClipboard.mockResolvedValueOnce(true);
+
+    const fragment = buildSpeechMeta(doc, domFactory, {
+      thoughts: 'Deep',
+      speakerName: 'Echo',
+      copyAll: {
+        speechContent: 'Hello',
+        bubbleType: 'speech',
+      },
+    });
+
+    doc.body.appendChild(fragment);
+    const button = doc.body.querySelector('.meta-btn.copy-all');
+    const [handler] = button.__clickHandlers;
+
+    const event = {
+      preventDefault: jest.fn(),
+      stopPropagation: jest.fn(),
+    };
+
+    await handler.call(button, event);
+
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(event.stopPropagation).toHaveBeenCalled();
+    expect(assembleCopyAllPayload).toHaveBeenCalledWith({
+      allowSpeechHtml: undefined,
+      notes: undefined,
+      speakerName: 'Echo',
+      speechContent: 'Hello',
+      thoughts: 'Deep',
+    });
+    expect(copyToClipboard).toHaveBeenCalledWith('"Hello"\n\nThoughts:\nDeep');
+    expect(showCopyFeedback).toHaveBeenCalledWith(button, 'Copied!');
+  });
+
+  it('shows failure feedback and skips copy when assembled payload is empty', async () => {
+    assembleCopyAllPayload.mockReturnValue({
+      text: '',
+      hasSpeech: false,
+      hasThoughts: false,
+      hasNotes: false,
+    });
+
+    const fragment = buildSpeechMeta(doc, domFactory, {
+      copyAll: {
+        bubbleType: 'speech',
+      },
+    });
+
+    doc.body.appendChild(fragment);
+    const button = doc.body.querySelector('.meta-btn.copy-all');
+    const [handler] = button.__clickHandlers;
+
+    const event = {
+      preventDefault: jest.fn(),
+      stopPropagation: jest.fn(),
+    };
+
+    await handler.call(button, event);
+
+    expect(copyToClipboard).not.toHaveBeenCalled();
     expect(showCopyFeedback).toHaveBeenCalledWith(button, 'Copy failed', 1500);
   });
 });

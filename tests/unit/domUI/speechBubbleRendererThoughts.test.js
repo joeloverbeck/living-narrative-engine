@@ -324,7 +324,17 @@ describe('SpeechBubbleRenderer - Thought Functionality', () => {
       expect(buildSpeechMeta).toHaveBeenCalledWith(
         mockDocumentContext.document,
         mockDomElementFactory,
-        { notes: payload.notes }
+        expect.objectContaining({
+          notes: payload.notes,
+          thoughts: payload.thoughts,
+          speakerName: 'Test Character',
+          copyAll: expect.objectContaining({
+            bubbleType: 'thought',
+            isPlayer: false,
+            notes: payload.notes,
+            thoughts: payload.thoughts,
+          }),
+        })
       );
     });
 

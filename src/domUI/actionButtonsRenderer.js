@@ -5,7 +5,10 @@
  */
 
 import { SelectableListDisplayComponent } from './selectableListDisplayComponent.js';
-import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
+import {
+  LLM_SUGGESTED_ACTION_ID,
+  PLAYER_TURN_SUBMITTED_ID,
+} from '../constants/eventIds.js';
 import { DATASET_ACTION_INDEX } from '../constants/datasetKeys.js';
 import { validateDependency } from '../utils/dependencyUtils.js';
 
@@ -83,6 +86,8 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
   #currentActorId = null;
   #isDisposed = false;
   #actionCategorizationService = null;
+  #pendingSuggestion = null;
+  #suggestionCalloutElement = null;
 
   /** @type {Map<string, ActionComposite[]>} Grouped actions by namespace */
   #groupedActions = new Map();
@@ -229,6 +234,14 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
     this._subscribe('THEME_CHANGED', this.#handleThemeChange.bind(this));
     this.logger.debug(
       `${this._logPrefix} Subscribed to VED event 'THEME_CHANGED' via _subscribe.`
+    );
+
+    this._subscribe(
+      LLM_SUGGESTED_ACTION_ID,
+      this.#handleSuggestedAction.bind(this)
+    );
+    this.logger.debug(
+      `${this._logPrefix} Subscribed to VED event '${LLM_SUGGESTED_ACTION_ID}' for suggestion callouts.`
     );
   }
 
@@ -1098,6 +1111,231 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
     }
   }
 
+  #findActionByIndex(index, actions = this.availableActions) {
+    if (!Number.isInteger(index) || !Array.isArray(actions)) return null;
+    return (
+      actions.find((candidate) => candidate?.index === index) || null
+    );
+  }
+
+  #findWaitLikeAction(actions = this.availableActions) {
+    if (!Array.isArray(actions)) return null;
+    const matcher = (value) =>
+      typeof value === 'string' &&
+      (value.toLowerCase().includes('wait') ||
+        value.toLowerCase().includes('idle'));
+
+    return (
+      actions.find(
+        (action) =>
+          matcher(action?.actionId) || matcher(action?.commandString)
+      ) || null
+    );
+  }
+
+  #resolveSuggestedIndex(rawIndex, actions) {
+    if (!Array.isArray(actions) || actions.length === 0) return null;
+
+    const waitAction = this.#findWaitLikeAction(actions);
+    const isInvalid =
+      !Number.isInteger(rawIndex) || rawIndex < 1 || rawIndex > actions.length;
+
+    if (isInvalid) {
+      if (waitAction) {
+        return waitAction.index;
+      }
+
+      if (!Number.isInteger(rawIndex)) {
+        return 1;
+      }
+
+      return Math.min(Math.max(rawIndex, 1), actions.length);
+    }
+
+    return rawIndex;
+  }
+
+  #applySuggestionToCurrentActions({ beforeRender = false } = {}) {
+    if (
+      !this.#pendingSuggestion ||
+      !this.#currentActorId ||
+      this.#pendingSuggestion.actorId !== this.#currentActorId ||
+      !Array.isArray(this.availableActions) ||
+      this.availableActions.length === 0
+    ) {
+      return;
+    }
+
+    const resolvedIndex = this.#resolveSuggestedIndex(
+      this.#pendingSuggestion.index,
+      this.availableActions
+    );
+
+    if (resolvedIndex === null) return;
+
+    this.#pendingSuggestion = {
+      ...this.#pendingSuggestion,
+      resolvedIndex,
+    };
+
+    const action =
+      this.#findActionByIndex(resolvedIndex, this.availableActions) ||
+      this.#findWaitLikeAction(this.availableActions) ||
+      this.availableActions[0] ||
+      null;
+
+    if (!action) return;
+
+    this.selectedAction = action;
+
+    if (!beforeRender && this.elements.listContainerElement) {
+      const attrName = DATASET_ACTION_INDEX.replace(/([A-Z])/g, '-$1').toLowerCase();
+      const selectedButton = this.elements.listContainerElement.querySelector(
+        `button.action-button[data-${attrName}='${action.index}']`
+      );
+      this._selectItem(selectedButton, this.selectedAction);
+
+      if (this.elements.sendButtonElement) {
+        this.elements.sendButtonElement.disabled = !this.selectedAction;
+      }
+    }
+  }
+
+  #renderSuggestionCallout() {
+    if (!this.elements.listContainerElement) {
+      return;
+    }
+
+    if (!this.#pendingSuggestion) {
+      this.#clearSuggestionState();
+      return;
+    }
+
+    if (
+      !this.#currentActorId ||
+      this.#pendingSuggestion.actorId !== this.#currentActorId
+    ) {
+      if (
+        this.#suggestionCalloutElement &&
+        this.#suggestionCalloutElement.parentElement
+      ) {
+        this.#suggestionCalloutElement.parentElement.removeChild(
+          this.#suggestionCalloutElement
+        );
+      }
+      this.#suggestionCalloutElement = null;
+      return;
+    }
+
+    const suggestedText = (() => {
+      if (
+        this.#pendingSuggestion.descriptor &&
+        typeof this.#pendingSuggestion.descriptor === 'string'
+      ) {
+        return this.#pendingSuggestion.descriptor;
+      }
+
+      const hintedAction = this.#findActionByIndex(
+        this.#pendingSuggestion.resolvedIndex,
+        this.availableActions
+      );
+
+      if (!hintedAction) return null;
+
+      return (
+        hintedAction.commandString ||
+        hintedAction.description ||
+        hintedAction.actionId ||
+        null
+      );
+    })();
+
+    if (!this.#suggestionCalloutElement) {
+      const wrapper = this.documentContext.create('div');
+      const label = this.documentContext.create('div');
+      const body = this.documentContext.create('div');
+
+      if (!wrapper || !label || !body) {
+        this.logger.warn(
+          `${this._logPrefix} Unable to render suggestion callout because required elements could not be created.`
+        );
+        return;
+      }
+
+      wrapper.classList.add('llm-suggestion-callout');
+      wrapper.setAttribute('role', 'status');
+
+      label.classList.add('llm-suggestion-label');
+      label.textContent = 'LLM suggestion';
+
+      body.classList.add('llm-suggestion-body');
+      wrapper.append(label, body);
+      this.#suggestionCalloutElement = wrapper;
+    }
+
+    const bodyNode = this.#suggestionCalloutElement.querySelector(
+      '.llm-suggestion-body'
+    );
+    if (bodyNode) {
+      bodyNode.textContent = suggestedText || 'Awaiting suggestion details...';
+    }
+
+    if (
+      this.#suggestionCalloutElement.parentElement !==
+      this.elements.listContainerElement
+    ) {
+      this.elements.listContainerElement.prepend(this.#suggestionCalloutElement);
+    }
+  }
+
+  #clearSuggestionState() {
+    this.#pendingSuggestion = null;
+
+    if (
+      this.#suggestionCalloutElement &&
+      this.#suggestionCalloutElement.parentElement
+    ) {
+      this.#suggestionCalloutElement.parentElement.removeChild(
+        this.#suggestionCalloutElement
+      );
+    }
+
+    this.#suggestionCalloutElement = null;
+  }
+
+  #handleSuggestedAction(eventObject) {
+    if (this.#isDisposed) return;
+
+    const payload = eventObject?.payload;
+    const actorId = payload?.actorId;
+
+    if (!actorId || typeof actorId !== 'string' || actorId.trim().length === 0) {
+      this.logger.warn(
+        `${this._logPrefix} Received '${LLM_SUGGESTED_ACTION_ID}' with an invalid actorId.`,
+        { eventObject }
+      );
+      return;
+    }
+
+    const descriptor =
+      typeof payload?.suggestedActionDescriptor === 'string' &&
+      payload.suggestedActionDescriptor.trim().length > 0
+        ? payload.suggestedActionDescriptor.trim()
+        : null;
+
+    this.#pendingSuggestion = {
+      actorId,
+      index: Number.isInteger(payload?.suggestedIndex)
+        ? payload.suggestedIndex
+        : null,
+      descriptor,
+      resolvedIndex: null,
+    };
+
+    this.#applySuggestionToCurrentActions();
+    this.#renderSuggestionCallout();
+  }
+
   /**
    * Processes the 'core:update_available_actions' event with `ActionComposite[]`.
    *
@@ -1193,8 +1431,16 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
         );
       }
 
+      if (
+        this.#pendingSuggestion &&
+        this.#pendingSuggestion.actorId !== this.#currentActorId
+      ) {
+        this.#clearSuggestionState();
+      }
+
       this.selectedAction = null;
       this.availableActions = validActions;
+      this.#applySuggestionToCurrentActions({ beforeRender: true });
     } else {
       this.logger.warn(
         `${this._logPrefix} Received invalid or incomplete event for '${eventTypeForLog}'. Clearing actions.`,
@@ -1203,10 +1449,12 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
       this.#currentActorId = null;
       this.selectedAction = null;
       this.availableActions = [];
+      this.#clearSuggestionState();
     }
 
     try {
       await this.refreshList();
+      this.#renderSuggestionCallout();
     } catch (error) {
       this.logger.error(
         `${this._logPrefix} Error refreshing list in #handleUpdateActions:`,
@@ -1366,6 +1614,7 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
         }
 
         this.availableActions = [];
+        this.#clearSuggestionState();
 
         // 3. Clear internal state
         this._onItemSelected(null, null);
@@ -1440,6 +1689,8 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
     if (this.colorParseCache) {
       this.colorParseCache.clear();
     }
+
+    this.#clearSuggestionState();
 
     super.dispose();
 

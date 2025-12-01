@@ -332,10 +332,10 @@ describe('ActionButtonsRenderer', () => {
 
       rendererForDispose.dispose();
 
-      expect(mockUnsubscribeFunction).toHaveBeenCalledTimes(2);
+      expect(mockUnsubscribeFunction).toHaveBeenCalledTimes(3);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          `${CLASS_PREFIX} Unsubscribing 2 VED event subscriptions.`
+          `${CLASS_PREFIX} Unsubscribing 3 VED event subscriptions.`
         )
       );
 
@@ -347,7 +347,7 @@ describe('ActionButtonsRenderer', () => {
       );
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringMatching(/Removing 6 DOM event listeners./) // ActionButtonsRenderer registers 6: click (send button) + keydown (container) + 4 hover delegation listeners (mouseenter, mouseleave, focusin, focusout)
+        expect.stringMatching(/Removing 6 DOM event listeners./)
       );
     });
 
@@ -390,7 +390,7 @@ describe('ActionButtonsRenderer', () => {
       rendererForDispose.dispose();
       rendererForDispose.dispose();
 
-      expect(mockUnsubscribeFunction).toHaveBeenCalledTimes(2);
+      expect(mockUnsubscribeFunction).toHaveBeenCalledTimes(3);
       if (boundSendButton && boundSendButton.removeEventListener) {
         // Ensure it exists and has the method
         expect(boundSendButton.removeEventListener).toHaveBeenCalledTimes(1);
