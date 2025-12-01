@@ -5,10 +5,16 @@
   "description": "Stand up from a kneeling position.",
   "targets": "none",
   "required_components": {
-    "actor": ["positioning:kneeling_before"]
+    "actor": [
+      "positioning:kneeling_before"
+    ]
   },
   "forbidden_components": {
-    "actor": ["positioning:biting_neck", "positioning:giving_blowjob"]
+    "actor": [
+      "positioning:biting_neck",
+      "positioning:giving_blowjob",
+      "positioning:being_restrained"
+    ]
   },
   "template": "stand up",
   "prerequisites": [],

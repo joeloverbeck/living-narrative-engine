@@ -8,7 +8,8 @@
   "forbidden_components": {
     "actor": [
       "positioning:fallen",
-      "positioning:lying_down"
+      "positioning:lying_down",
+      "positioning:being_restrained"
     ]
   },
   "template": "throw yourself to the ground in grief",

@@ -5,11 +5,20 @@
   "description": "Carefully sink your fangs into the target's neck to feed",
   "targets": "positioning:close_actors_facing_each_other_or_behind_target",
   "required_components": {
-    "actor": ["positioning:closeness", "vampirism:is_vampire"]
+    "actor": [
+      "positioning:closeness",
+      "vampirism:is_vampire"
+    ]
   },
   "forbidden_components": {
-    "actor": ["positioning:biting_neck", "positioning:giving_blowjob"],
-    "primary": ["positioning:being_bitten_in_neck"]
+    "actor": [
+      "positioning:biting_neck",
+      "positioning:giving_blowjob",
+      "positioning:being_restrained"
+    ],
+    "primary": [
+      "positioning:being_bitten_in_neck"
+    ]
   },
   "template": "bite {target}'s neck carefully",
   "visual": {

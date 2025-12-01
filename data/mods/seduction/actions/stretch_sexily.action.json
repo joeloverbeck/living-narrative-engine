@@ -6,13 +6,19 @@
   "targets": "none",
   "required_components": {},
   "forbidden_components": {
-    "actor": ["positioning:hugging", "positioning:doing_complex_performance"]
+    "actor": [
+      "positioning:hugging",
+      "positioning:doing_complex_performance",
+      "positioning:being_restrained"
+    ]
   },
   "template": "stretch sexily",
   "prerequisites": [
     {
       "logic": {
-        "hasOtherActorsAtLocation": ["actor"]
+        "hasOtherActorsAtLocation": [
+          "actor"
+        ]
       },
       "failure_message": "There is nobody here to draw attention from."
     }

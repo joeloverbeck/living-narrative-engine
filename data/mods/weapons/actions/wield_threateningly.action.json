@@ -12,7 +12,8 @@
   "forbidden_components": {
     "actor": [
       "positioning:closeness",
-      "positioning:fallen"
+      "positioning:fallen",
+      "positioning:being_restrained"
     ]
   },
   "prerequisites": [

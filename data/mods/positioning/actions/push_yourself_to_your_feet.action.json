@@ -5,10 +5,14 @@
   "description": "Push yourself back to your feet after having fallen.",
   "targets": "none",
   "required_components": {
-    "actor": ["positioning:fallen"]
+    "actor": [
+      "positioning:fallen"
+    ]
   },
   "forbidden_components": {
-    "actor": []
+    "actor": [
+      "positioning:being_restrained"
+    ]
   },
   "template": "push yourself to your feet",
   "prerequisites": [],

@@ -14,7 +14,19 @@
     "actor": []
   },
   "forbidden_components": {
-    "actor": ["positioning:biting_neck", "positioning:facing_away", "positioning:sitting_on", "positioning:straddling_waist", "positioning:hugging", "positioning:giving_blowjob", "positioning:receiving_blowjob", "positioning:doing_complex_performance", "positioning:fucking_anally", "positioning:lying_down"]
+    "actor": [
+      "positioning:biting_neck",
+      "positioning:facing_away",
+      "positioning:sitting_on",
+      "positioning:straddling_waist",
+      "positioning:hugging",
+      "positioning:giving_blowjob",
+      "positioning:receiving_blowjob",
+      "positioning:doing_complex_performance",
+      "positioning:fucking_anally",
+      "positioning:lying_down",
+      "positioning:being_restrained"
+    ]
   },
   "template": "turn your back to {target}",
   "prerequisites": [

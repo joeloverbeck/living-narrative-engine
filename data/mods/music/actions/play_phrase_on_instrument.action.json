@@ -22,7 +22,10 @@
     ]
   },
   "forbidden_components": {
-    "actor": ["positioning:closeness"]
+    "actor": [
+      "positioning:closeness",
+      "positioning:being_restrained"
+    ]
   },
   "prerequisites": [],
   "template": "play phrase on {instrument}",

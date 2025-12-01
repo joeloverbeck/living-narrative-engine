@@ -21,7 +21,10 @@
     ]
   },
   "forbidden_components": {
-    "actor": ["positioning:closeness"]
+    "actor": [
+      "positioning:closeness",
+      "positioning:being_restrained"
+    ]
   },
   "prerequisites": [],
   "template": "stop playing {instrument}",
