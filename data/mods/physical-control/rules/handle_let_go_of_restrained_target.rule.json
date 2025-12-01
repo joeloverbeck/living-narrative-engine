@@ -39,6 +39,14 @@
       "parameters": { "variable_name": "targetId", "value": "{event.payload.targetId}" }
     },
     {
+      "type": "BREAK_CLOSENESS_WITH_TARGET",
+      "comment": "Release any closeness formed by the physical restraint",
+      "parameters": {
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.targetId}"
+      }
+    },
+    {
       "type": "REMOVE_COMPONENT",
       "parameters": {
         "entity_ref": "actor",

@@ -11,6 +11,9 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { readdirSync, statSync } from 'node:fs';
 import { resolve as resolvePath } from 'node:path';
 import { ModTestHandlerFactory } from '../../../common/mods/ModTestHandlerFactory.js';
+import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTestEnv.js';
+import IfHandler from '../../../../src/logic/operationHandlers/ifHandler.js';
+import ForEachHandler from '../../../../src/logic/operationHandlers/forEachHandler.js';
 
 describe('ModTestHandlerFactory - Completeness', () => {
   let mockEntityManager;
@@ -537,6 +540,48 @@ describe('ModTestHandlerFactory - Completeness', () => {
       expect(handlers).toHaveProperty('TRANSFER_ITEM');
       expect(handlers).toHaveProperty('VALIDATE_INVENTORY_CAPACITY');
       expect(handlers).toHaveProperty('UNWIELD_ITEM');
+    });
+  });
+
+  describe('Handler registration deduplication', () => {
+    it('emits a single consolidated warning when flow handlers replace factory stubs', () => {
+      const warn = jest.fn();
+      const logger = {
+        info: jest.fn(),
+        warn,
+        error: jest.fn(),
+        debug: jest.fn(),
+      };
+
+      const env = createRuleTestEnvironment({
+        createHandlers: (entityManager, eventBus, capturedLogger, dataRegistry) =>
+          ModTestHandlerFactory.createStandardHandlers(
+            entityManager,
+            eventBus,
+            capturedLogger,
+            dataRegistry
+          ),
+        entities: [],
+        rules: [],
+        actions: [],
+        logger,
+      });
+
+      const warningMessages = warn.mock.calls.map((call) => call[0]);
+      const duplicateWarnings = warningMessages.filter((message) =>
+        typeof message === 'string' && message.includes('duplicate registrations')
+      );
+
+      expect(duplicateWarnings).toHaveLength(1);
+      const [message] = duplicateWarnings;
+      expect(message).toContain('IF');
+      expect(message).toContain('FOR_EACH');
+      expect(message).toContain('last declaration');
+
+      expect(env.handlers.IF).toBeInstanceOf(IfHandler);
+      expect(env.handlers.FOR_EACH).toBeInstanceOf(ForEachHandler);
+
+      env.cleanup();
     });
   });
 });

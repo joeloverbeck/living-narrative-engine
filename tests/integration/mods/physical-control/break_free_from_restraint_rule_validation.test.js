@@ -165,6 +165,16 @@ describe('handle_break_free_from_restraint rule', () => {
           op.type === 'SET_VARIABLE' &&
           op.parameters.variable_name === 'logMessage'
       );
+      const breakCloseness = actions.find(
+        (op) => op.type === 'BREAK_CLOSENESS_WITH_TARGET'
+      );
+
+      expect(breakCloseness?.parameters.actor_id).toBe(
+        '{event.payload.actorId}'
+      );
+      expect(breakCloseness?.parameters.target_id).toBe(
+        '{event.payload.targetId}'
+      );
 
       expect(removeBeingRestrained?.parameters.entity_ref).toBe('actor');
       expect(removeRestraining?.parameters.entity_ref).toBe('target');

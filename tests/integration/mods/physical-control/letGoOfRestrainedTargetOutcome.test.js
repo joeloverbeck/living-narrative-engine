@@ -63,6 +63,11 @@ describe('handle_let_go_of_restrained_target outcome behavior', () => {
       };
     }
 
+    if (options.includeCloseness) {
+      actor.components['positioning:closeness'] = { partners: [target.id] };
+      target.components['positioning:closeness'] = { partners: [actor.id] };
+    }
+
     testFixture.reset([room, actor, target]);
     return { room, actor, target };
   };
@@ -178,5 +183,20 @@ describe('handle_let_go_of_restrained_target outcome behavior', () => {
       actorId: actor.id,
       targetId: target.id,
     });
+  });
+
+  it('breaks any closeness circle between actor and target', async () => {
+    const { actor, target } = primeRestraint({ includeCloseness: true });
+    configureScopeResolution();
+
+    await testFixture.executeAction(actor.id, target.id, {
+      skipValidation: true,
+    });
+
+    const actorAfter = testFixture.entityManager.getEntityInstance(actor.id);
+    const targetAfter = testFixture.entityManager.getEntityInstance(target.id);
+
+    expect(actorAfter.components['positioning:closeness']).toBeUndefined();
+    expect(targetAfter.components['positioning:closeness']).toBeUndefined();
   });
 });

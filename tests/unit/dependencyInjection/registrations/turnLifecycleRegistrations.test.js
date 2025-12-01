@@ -235,6 +235,7 @@ describe('registerTurnLifecycle - Unit Tests', () => {
       expect(resolveCalls).toContain(tokens.ITurnEndPort);
       expect(resolveCalls).toContain(tokens.ISafeEventDispatcher);
       expect(resolveCalls).toContain(tokens.IEntityManager);
+      expect(resolveCalls).toContain(tokens.IPromptCoordinator);
     });
   });
 

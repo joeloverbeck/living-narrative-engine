@@ -16,7 +16,7 @@ const EXPECTED_EVENT_IDS = Object.freeze({
   PLAYER_TURN_SUBMITTED_ID: 'core:player_turn_submitted',
   DISPLAY_ERROR_ID: 'core:display_error',
   DISPLAY_WARNING_ID: 'core:display_warning',
-  LLM_SUGGESTED_ACTION_ID: 'llm:suggested_action',
+  LLM_SUGGESTED_ACTION_ID: 'core:suggested_action',
   ACTION_DECIDED_ID: 'core:action_decided',
   ATTEMPT_ACTION_ID: 'core:attempt_action',
   ENTITY_SPOKE_ID: 'core:entity_spoke',

@@ -98,6 +98,10 @@ const handlerModuleDefinitions = [
     `${handlerBasePath}/removeFromClosenessCircleHandler.js`,
   ],
   [
+    'EstablishBidirectionalClosenessHandler',
+    `${handlerBasePath}/establishBidirectionalClosenessHandler.js`,
+  ],
+  [
     'EstablishSittingClosenessHandler',
     `${handlerBasePath}/establishSittingClosenessHandler.js`,
   ],
@@ -247,6 +251,7 @@ beforeAll(async () => {
     BodyDescriptionComposer: BodyDescriptionComposerToken,
     ActionSequence: ActionSequenceToken,
     ChanceCalculationService: ChanceCalculationServiceToken,
+    RegenerateDescriptionHandler: RegenerateDescriptionHandlerToken,
   } = tokens;
 
   handlerExpectations = [
@@ -633,6 +638,19 @@ beforeAll(async () => {
           property: 'closenessCircleService',
           token: ClosenessCircleServiceToken,
         },
+      ],
+    },
+    {
+      token: tokens.EstablishBidirectionalClosenessHandler,
+      handlerName: 'EstablishBidirectionalClosenessHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+        {
+          property: 'regenerateDescriptionHandler',
+          token: RegenerateDescriptionHandlerToken,
+        },
+        { property: 'logger', token: ILogger },
       ],
     },
     {

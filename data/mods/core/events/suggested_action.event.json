@@ -1,0 +1,49 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:suggested_action",
+  "description": "Emitted when an LLM suggests an action for human approval, carrying the clamped index and optional narration metadata.",
+  "payloadSchema": {
+    "title": "Core: Suggested Action Payload",
+    "type": "object",
+    "properties": {
+      "actorId": {
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
+        "description": "ID of the actor whose suggested action is pending approval."
+      },
+      "suggestedIndex": {
+        "type": ["integer", "null"],
+        "minimum": 1,
+        "description": "1-based index of the suggested action after clamping to available actions, or null when no indexed actions exist."
+      },
+      "suggestedActionDescriptor": {
+        "type": ["string", "null"],
+        "description": "Human-readable description of the suggested action (description, actionId, or commandString)."
+      },
+      "speech": {
+        "type": ["string", "null"],
+        "description": "Optional speech text proposed alongside the action."
+      },
+      "thoughts": {
+        "type": ["string", "null"],
+        "description": "Optional internal monologue proposed alongside the action."
+      },
+      "notes": {
+        "type": ["array", "null"],
+        "description": "Optional structured notes captured with the suggestion.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "text": { "type": "string" },
+            "subject": { "type": "string" },
+            "context": { "type": ["string", "null"] },
+            "timestamp": { "type": ["string", "null"] }
+          },
+          "required": ["text", "subject"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["actorId", "suggestedIndex"],
+    "additionalProperties": false
+  }
+}

@@ -284,19 +284,32 @@ export function createBaseRuleEnvironment({
       ? createEntityManagerAdapter({ logger: testLogger, initialEntities: entityList })
       : new SimpleEntityManager(entityList); // Legacy fallback - takes array of entities
     operationRegistry = new OperationRegistry({ logger: testLogger });
-    const handlers = createHandlers(entityManager, bus, testLogger, testDataRegistry);
-    for (const [type, handler] of Object.entries(handlers)) {
+    operationInterpreter = new OperationInterpreter({
+      logger: testLogger,
+      operationRegistry,
+    });
+
+    let handlers = createHandlers(
+      entityManager,
+      bus,
+      testLogger,
+      testDataRegistry
+    );
+
+    const registrationPlan = [];
+    const pushHandlerToPlan = (type, handler, source) => {
       if (!handler || typeof handler.execute !== 'function') {
         throw new Error(
           `Handler for ${type} must be an object with an execute() method`
         );
       }
-      operationRegistry.register(type, handler.execute.bind(handler));
+
+      registrationPlan.push({ type, handler, source });
+    };
+
+    for (const [type, handler] of Object.entries(handlers)) {
+      pushHandlerToPlan(type, handler, 'factory');
     }
-    operationInterpreter = new OperationInterpreter({
-      logger: testLogger,
-      operationRegistry,
-    });
 
     // Register IF and FOR_EACH handlers after operationInterpreter is created
     // These handlers need operationInterpreter and jsonLogic, which creates a circular dependency
@@ -313,12 +326,53 @@ export function createBaseRuleEnvironment({
       logger: testLogger,
     });
 
-    operationRegistry.register('IF', ifHandler.execute.bind(ifHandler));
-    operationRegistry.register('FOR_EACH', forEachHandler.execute.bind(forEachHandler));
+    pushHandlerToPlan('IF', ifHandler, 'flow-handler');
+    pushHandlerToPlan('FOR_EACH', forEachHandler, 'flow-handler');
 
-    // Store these handlers in the handlers object for consistency
-    handlers.IF = ifHandler;
-    handlers.FOR_EACH = forEachHandler;
+    const dedupedEntries = [];
+    const duplicates = [];
+
+    for (const entry of registrationPlan) {
+      const existingIndex = dedupedEntries.findIndex(
+        (candidate) => candidate.type === entry.type
+      );
+
+      if (existingIndex !== -1) {
+        const previous = dedupedEntries[existingIndex];
+        duplicates.push({
+          type: entry.type,
+          previousSource: previous.source,
+          winnerSource: entry.source,
+        });
+        dedupedEntries[existingIndex] = entry;
+      } else {
+        dedupedEntries.push(entry);
+      }
+    }
+
+    if (duplicates.length > 0) {
+      const duplicateSummary = duplicates
+        .map(
+          ({ type, previousSource, winnerSource }) =>
+            `${type} (${winnerSource} over ${previousSource})`
+        )
+        .join(', ');
+      testLogger.warn(
+        `Mod test handler registry: consolidated duplicate registrations: ${duplicateSummary}. Using the last declaration for each operation.`
+      );
+    }
+
+    const resolvedHandlers = {};
+
+    for (const entry of dedupedEntries) {
+      operationRegistry.register(
+        entry.type,
+        entry.handler.execute.bind(entry.handler)
+      );
+      resolvedHandlers[entry.type] = entry.handler;
+    }
+
+    handlers = resolvedHandlers;
 
     validateOperationCoverage(operationRegistry, expandedRules);
 

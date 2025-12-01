@@ -205,7 +205,16 @@ export class ActionDecisionWorkflow {
       notes: extractedData?.notes ?? null,
     };
 
-    await dispatcher.dispatch(LLM_SUGGESTED_ACTION_ID, payload);
+    try {
+      await dispatcher.dispatch(LLM_SUGGESTED_ACTION_ID, payload);
+    } catch (err) {
+      this._turnContext
+        .getLogger()
+        ?.error?.(
+          `${this._state.getStateName()}: Failed to dispatch suggested action event – ${err.message}`,
+          err
+        );
+    }
   }
 
   _describeActionDescriptor(descriptor) {
@@ -344,7 +353,36 @@ export class ActionDecisionWorkflow {
     suggestedDescriptor,
     timeoutSettings
   ) {
-    const promptService = this._turnContext.getPlayerPromptService?.();
+    const logger = this._turnContext.getLogger();
+    const fallbackSubmission = (error) => {
+      if (error) {
+        logger?.error?.(
+          `${this._state.getStateName()}: Prompt submission failed – ${error.message}`,
+          error
+        );
+      }
+      return {
+        chosenIndex: fallbackIndex,
+        speech: null,
+        thoughts: null,
+        notes: null,
+        timeout: false,
+        timeoutPolicy: null,
+      };
+    };
+    let promptService = null;
+
+    if (typeof this._turnContext.getPlayerPromptService === 'function') {
+      try {
+        promptService = this._turnContext.getPlayerPromptService();
+      } catch (err) {
+        logger?.error?.(
+          `${this._state.getStateName()}: PlayerPromptService unavailable – ${err.message}`,
+          err
+        );
+      }
+    }
+
     const promptPromise =
       promptService && Array.isArray(actions) && actions.length > 0
         ? promptService.prompt(this._actor, {
@@ -375,7 +413,7 @@ export class ActionDecisionWorkflow {
     if (!timeoutSettings?.enabled) {
       const outcome = await safePromptPromise;
       if (outcome.kind === 'error') {
-        throw outcome.error;
+        return fallbackSubmission(outcome.error);
       }
       return outcome.result;
     }
@@ -403,7 +441,7 @@ export class ActionDecisionWorkflow {
     }
 
     if (outcome.kind === 'error') {
-      throw outcome.error;
+      return fallbackSubmission(outcome.error);
     }
 
     return outcome.result;

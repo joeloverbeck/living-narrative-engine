@@ -260,7 +260,7 @@ describe('ActionButtonsRenderer', () => {
         expect.any(Function)
       );
       expect(mockVed.subscribe).toHaveBeenCalledWith(
-        'llm:suggested_action',
+        'core:suggested_action',
         expect.any(Function)
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(

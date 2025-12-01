@@ -35,12 +35,14 @@ export class ConcreteTurnContextFactory extends ITurnContextFactory {
   #logger;
   /** @type {IWorldContext} */
   #gameWorldAccess;
-  /** @type {ITurnEndPort} */
+ /** @type {ITurnEndPort} */
   #turnEndPort;
   /** @type {ISafeEventDispatcher} */
   #safeEventDispatcher;
   /** @type {IEntityManager} */
   #entityManager;
+  /** @type {import('../../interfaces/IPromptCoordinator').IPromptCoordinator} */
+  #promptCoordinator;
 
   /**
    * Constructs the factory and caches all necessary dependencies.
@@ -51,6 +53,7 @@ export class ConcreteTurnContextFactory extends ITurnContextFactory {
    * @param {ITurnEndPort} dependencies.turnEndPort
    * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher
    * @param {IEntityManager} dependencies.entityManager
+   * @param {import('../../interfaces/IPromptCoordinator').IPromptCoordinator} dependencies.promptCoordinator
    */
   constructor({
     logger,
@@ -58,6 +61,7 @@ export class ConcreteTurnContextFactory extends ITurnContextFactory {
     turnEndPort,
     safeEventDispatcher,
     entityManager,
+    promptCoordinator,
   }) {
     super();
     if (!logger)
@@ -74,12 +78,17 @@ export class ConcreteTurnContextFactory extends ITurnContextFactory {
       );
     if (!entityManager)
       throw new Error('ConcreteTurnContextFactory: entityManager is required.');
+    if (!promptCoordinator)
+      throw new Error(
+        'ConcreteTurnContextFactory: promptCoordinator is required.'
+      );
 
     this.#logger = logger;
     this.#gameWorldAccess = gameWorldAccess;
     this.#turnEndPort = turnEndPort;
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#entityManager = entityManager;
+    this.#promptCoordinator = promptCoordinator;
   }
 
   /**
@@ -109,6 +118,7 @@ export class ConcreteTurnContextFactory extends ITurnContextFactory {
       turnEndPort: this.#turnEndPort,
       safeEventDispatcher: this.#safeEventDispatcher,
       entityManager: this.#entityManager,
+      promptCoordinator: this.#promptCoordinator,
     };
 
     return new TurnContext({
