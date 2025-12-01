@@ -139,18 +139,25 @@ export class ActionDecisionWorkflow {
     const payload = {
       actorId: this._actor.id,
       suggestedIndex: clampedIndex,
-      suggestedActionDescriptor:
-        descriptor?.description ??
-        descriptor?.actionId ??
-        descriptor?.commandString ??
-        descriptor?.actionDefinitionId ??
-        null,
+      suggestedActionDescriptor: this._describeActionDescriptor(descriptor),
       speech: extractedData?.speech ?? null,
       thoughts: extractedData?.thoughts ?? null,
       notes: extractedData?.notes ?? null,
     };
 
     await dispatcher.dispatch(LLM_SUGGESTED_ACTION_ID, payload);
+  }
+
+  _describeActionDescriptor(descriptor) {
+    if (!descriptor) return null;
+
+    return (
+      descriptor.description ??
+      descriptor.actionId ??
+      descriptor.commandString ??
+      descriptor.actionDefinitionId ??
+      null
+    );
   }
 
   _findCompositeForIndex(index, actions) {
@@ -168,12 +175,21 @@ export class ActionDecisionWorkflow {
     return fallbackAction;
   }
 
-  async _awaitHumanSubmission(actions, fallbackIndex) {
+  async _awaitHumanSubmission(actions, fallbackIndex, suggestedDescriptor) {
     const promptService = this._turnContext.getPlayerPromptService?.();
     if (promptService && Array.isArray(actions) && actions.length > 0) {
+      const suggestedAction =
+        Number.isInteger(fallbackIndex) && fallbackIndex > 0
+          ? {
+              index: fallbackIndex,
+              descriptor: this._describeActionDescriptor(suggestedDescriptor),
+            }
+          : null;
+
       return promptService.prompt(this._actor, {
         indexedComposites: actions,
         cancellationSignal: this._turnContext.getPromptSignal(),
+        ...(suggestedAction ? { suggestedAction } : {}),
       });
     }
 
@@ -211,7 +227,11 @@ export class ActionDecisionWorkflow {
       const descriptor = this._findCompositeForIndex(clampedIndex, actions) || action;
       await this._emitSuggestedActionEvent(clampedIndex, descriptor, baseMeta);
 
-      const submission = await this._awaitHumanSubmission(actions, clampedIndex);
+      const submission = await this._awaitHumanSubmission(
+        actions,
+        clampedIndex,
+        descriptor
+      );
       const { value: submittedIndex } = this._clampIndex(
         submission?.chosenIndex,
         actions.length

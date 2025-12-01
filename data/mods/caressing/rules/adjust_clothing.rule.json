@@ -8,34 +8,10 @@
   },
   "actions": [
     {
-      "type": "GET_NAME",
-      "comment": "Get names for the messages.",
+      "type": "PREPARE_ACTION_CONTEXT",
       "parameters": {
-        "entity_ref": "actor",
-        "result_variable": "actorName"
-      }
-    },
-    {
-      "type": "GET_NAME",
-      "parameters": {
-        "entity_ref": "primary",
-        "result_variable": "primaryName"
-      }
-    },
-    {
-      "type": "GET_NAME",
-      "parameters": {
-        "entity_ref": "secondary",
-        "result_variable": "garmentName"
-      }
-    },
-    {
-      "type": "QUERY_COMPONENT",
-      "comment": "Get location for the perceptible event.",
-      "parameters": {
-        "entity_ref": "actor",
-        "component_type": "core:position",
-        "result_variable": "actorPosition"
+        "include_secondary": true,
+        "secondary_name_variable": "garmentName"
       }
     },
     {
@@ -43,7 +19,7 @@
       "comment": "Construct the perceptible log message for observers.",
       "parameters": {
         "variable_name": "perceptibleLogMessage",
-        "value": "{context.actorName} has smoothed {context.primaryName}'s {context.garmentName} with possessive care."
+        "value": "{context.actorName} has smoothed {context.targetName}'s {context.garmentName} with possessive care."
       }
     },
     {
@@ -51,18 +27,18 @@
       "comment": "Construct the success message for the actor's UI.",
       "parameters": {
         "variable_name": "successMessage",
-        "value": "{context.actorName} smooths {context.primaryName}'s {context.garmentName} with possessive care."
+        "value": "{context.actorName} smooths {context.targetName}'s {context.garmentName} with possessive care."
       }
     },
     {
       "type": "DISPATCH_PERCEPTIBLE_EVENT",
       "comment": "Dispatch the event for observers.",
       "parameters": {
-        "location_id": "{context.actorPosition.locationId}",
+        "location_id": "{context.locationId}",
         "description_text": "{context.perceptibleLogMessage}",
         "perception_type": "action_target_general",
         "actor_id": "{event.payload.actorId}",
-        "target_id": "{event.payload.primaryId}"
+        "target_id": "{context.targetId}"
       }
     },
     { "macro": "core:displaySuccessAndEndTurn" }

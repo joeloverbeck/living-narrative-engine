@@ -68,6 +68,22 @@
           "additionalProperties": false
         },
         "uniqueItems": true
+      },
+      "suggestedAction": {
+        "type": "object",
+        "description": "Optional preselection metadata for UI, typically from an LLM suggestion.",
+        "properties": {
+          "index": {
+            "type": ["integer", "null"],
+            "minimum": 1,
+            "description": "Suggested choice index (clamped to available actions)."
+          },
+          "descriptor": {
+            "type": ["string", "null"],
+            "description": "Human-readable description of the suggested action."
+          }
+        },
+        "additionalProperties": false
       }
     },
     "required": ["entityId", "availableActions"],

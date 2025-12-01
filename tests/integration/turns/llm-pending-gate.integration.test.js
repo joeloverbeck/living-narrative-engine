@@ -87,6 +87,14 @@ describe('LLM pending gate integration', () => {
       LLM_SUGGESTED_ACTION_ID,
       expect.objectContaining({ actorId: 'actor-1', suggestedIndex: 1 })
     );
+    expect(promptService.prompt).toHaveBeenCalledWith(actor, {
+      indexedComposites: availableActions,
+      cancellationSignal: expect.any(AbortSignal),
+      suggestedAction: {
+        index: 1,
+        descriptor: 'One',
+      },
+    });
     expect(ctx.requestProcessingCommandStateTransition).toHaveBeenCalledWith(
       'cmd2',
       finalAction
@@ -98,4 +106,3 @@ describe('LLM pending gate integration', () => {
     );
   });
 });
-

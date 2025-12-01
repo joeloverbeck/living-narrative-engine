@@ -82,9 +82,10 @@ class PromptCoordinator extends IPromptCoordinator {
    * @param {object}  options
    * @param {ActionComposite[]} options.indexedComposites   // <-- REQUIRED now
    * @param {AbortSignal}       [options.cancellationSignal]
+   * @param {{ index: number, descriptor?: string|null }} [options.suggestedAction]
    * @returns {Promise<PlayerPromptResolution>}
    */
-  async prompt(actor, { indexedComposites, cancellationSignal } = {}) {
+  async prompt(actor, { indexedComposites, cancellationSignal, suggestedAction } = {}) {
     if (!Array.isArray(indexedComposites) || indexedComposites.length === 0) {
       throw new Error(
         'PromptCoordinator.prompt: indexedComposites array is required and cannot be empty.'
@@ -103,7 +104,12 @@ class PromptCoordinator extends IPromptCoordinator {
       description: c.description,
       visual: c.visual,
     }));
-    await this.#promptOutputPort.prompt(actor.id, actionsForPrompt);
+    const promptArgs = [actor.id, actionsForPrompt];
+    if (suggestedAction) {
+      promptArgs.push({ suggestedAction });
+    }
+
+    await this.#promptOutputPort.prompt(...promptArgs);
 
     // ─── Spawn the session ───
     const session = new PromptSession({

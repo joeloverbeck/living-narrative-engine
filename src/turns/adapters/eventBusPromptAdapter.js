@@ -70,11 +70,11 @@ export class EventBusPromptAdapter extends IPromptOutputPort {
    * @async
    * @param {string} entityId - The unique ID of the player entity being prompted.
    * @param {DiscoveredActionInfo[]} availableActions - An array of objects describing the actions.
-   * @param {string} [error] - An optional error message.
+   * @param {{ error?: string, suggestedAction?: { index?: number|null, descriptor?: string|null }}|string} [options] - Optional prompt metadata.
    * @returns {Promise<void>} Resolves after the dispatch attempt. Does not typically propagate dispatch success/failure unless VED throws uncaught.
    * @throws {Error} Only if using VED directly and `dispatch` throws an unhandled error.
    */
-  async prompt(entityId, availableActions, error) {
+  async prompt(entityId, availableActions, options) {
     // Basic validation
     if (typeof entityId !== 'string' || !entityId) {
       console.error('EventBusPromptAdapter.prompt: Invalid entityId provided.');
@@ -93,15 +93,26 @@ export class EventBusPromptAdapter extends IPromptOutputPort {
       );
     }
 
-    /** @type {{entityId: string, availableActions: any[], error?: string}} */
+    const normalizedOptions =
+      typeof options === 'string' ? { error: options } : options || {};
+
+    /** @type {{entityId: string, availableActions: any[], error?: string, suggestedAction?: { index?: number|null, descriptor?: string|null }}} */
     const payload = {
       entityId,
       availableActions,
       // Only include error property if it's a non-empty string
-      ...(error &&
-        typeof error === 'string' &&
-        error.trim() !== '' && { error }),
+      ...(normalizedOptions.error &&
+        typeof normalizedOptions.error === 'string' &&
+        normalizedOptions.error.trim() !== '' && { error: normalizedOptions.error }),
     };
+
+    const suggestedAction = this.#normalizeSuggestedAction(
+      normalizedOptions.suggestedAction,
+      availableActions
+    );
+    if (suggestedAction) {
+      payload.suggestedAction = suggestedAction;
+    }
 
     if (this.#isSafeDispatcher) {
       // Using ISafeEventDispatcher - it handles logging errors internally
@@ -131,6 +142,39 @@ export class EventBusPromptAdapter extends IPromptOutputPort {
         throw dispatchError; // Propagate critical VED errors
       }
     }
+  }
+
+  #normalizeSuggestedAction(suggestedAction, availableActions) {
+    if (!suggestedAction || typeof suggestedAction !== 'object') return null;
+
+    const actionsLength = Array.isArray(availableActions)
+      ? availableActions.length
+      : 0;
+
+    const descriptor =
+      typeof suggestedAction.descriptor === 'string' &&
+      suggestedAction.descriptor.trim().length > 0
+        ? suggestedAction.descriptor
+        : null;
+
+    const indexValue = Number.isInteger(suggestedAction.index)
+      ? suggestedAction.index
+      : null;
+
+    if (actionsLength < 1) {
+      return descriptor === null && indexValue === null
+        ? null
+        : { index: indexValue, descriptor };
+    }
+
+    const clampedIndex =
+      indexValue === null
+        ? null
+        : Math.min(Math.max(indexValue, 1), actionsLength);
+
+    if (clampedIndex === null && descriptor === null) return null;
+
+    return { index: clampedIndex, descriptor };
   }
 }
 
