@@ -1,0 +1,59 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "physical-control:restrain_target",
+  "name": "Restrain Target",
+  "description": "Attempt to physically restrain a target, preventing free movement.",
+  "template": "restrain {target} ({chance}% chance)",
+  "generateCombinations": true,
+  "required_components": {
+    "actor": ["skills:grappling_skill"]
+  },
+  "forbidden_components": {
+    "primary": ["positioning:being_restrained"]
+  },
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-two-free-grabbing-appendages"
+      },
+      "failure_message": "You need two free grabbing appendages to restrain someone."
+    }
+  ],
+  "targets": {
+    "primary": {
+      "scope": "core:actors_in_location",
+      "placeholder": "target",
+      "description": "Actor to restrain"
+    }
+  },
+  "chanceBased": {
+    "enabled": true,
+    "contestType": "opposed",
+    "actorSkill": {
+      "component": "skills:grappling_skill",
+      "property": "value",
+      "default": 10
+    },
+    "targetSkill": {
+      "component": "skills:defense_skill",
+      "property": "value",
+      "default": 0,
+      "targetRole": "primary"
+    },
+    "formula": "ratio",
+    "bounds": {
+      "min": 5,
+      "max": 95
+    },
+    "outcomes": {
+      "criticalSuccessThreshold": 5,
+      "criticalFailureThreshold": 95
+    }
+  },
+  "visual": {
+    "backgroundColor": "#2f2f2f",
+    "textColor": "#f8f9fa",
+    "hoverBackgroundColor": "#3f3d56",
+    "hoverTextColor": "#f8f9ff"
+  }
+}

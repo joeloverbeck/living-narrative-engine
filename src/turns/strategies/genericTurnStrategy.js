@@ -63,7 +63,10 @@ export class GenericTurnStrategy {
         meta.speech ?? null
       );
 
-      const result = buildDecisionResult(turnAction, meta);
+      const result = buildDecisionResult(turnAction, meta, {
+        availableActions: actions,
+        suggestedIndex: meta.chosenIndex ?? null,
+      });
       this.logger.debug(
         `[GenericStrategy] ${actor.id} chose ${turnAction.actionDefinitionId}`
       );

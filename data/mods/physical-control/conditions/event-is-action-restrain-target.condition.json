@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "physical-control:event-is-action-restrain-target",
+  "description": "True when the event is an attempt to execute the restrain_target action",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "physical-control:restrain_target"
+    ]
+  }
+}

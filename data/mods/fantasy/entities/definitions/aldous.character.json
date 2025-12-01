@@ -172,7 +172,7 @@
                     "subjectType": "entity"
                 },
                 {
-                    "text": "I keep seventeen chickens for eggs, company, and because they're good at detecting entity activity before I can sense it—they get agitated, stop laying, huddle in corners. Five birds seem affected now, and I keep those five locked up. The large speckled hen is the problem. She's always been the smartest one, which is maybe why something chose her. I'm fond of her. She's a good layer.",
+                    "text": "I keep seventeen chickens for eggs, company, and because they're good at detecting entity activity before I can sense it—they get agitated, stop laying, huddle in corners. Five birds seem affected now, and I keep those five locked up. And I mean locked up—not \"shut in there until someone arrives\" locked, but quarantine. The coop is the containment boundary I still trust. Until I'm ready to extract into the vessel with proper hands on hand, the door stays closed. If someone can't understand that these birds are vectors and not a punchline, they don't go near the latch.",
                     "subject": "My chickens (especially the possessed hen)",
                     "subjectType": "entity"
                 },
@@ -187,7 +187,7 @@
                     "subjectType": "state"
                 },
                 {
-                    "text": "The coop is in the yard behind my home. Eight by eight feet, wooden, one door. I keep it locked with an external padlock. The key stays on a leather thong around my neck. Inside the door, near the latch, there are scratch-marks—fresh. The speckled hen has been trying to reach the lock from the wrong side. There are little splinters showing through gaps in the boards where she's worried at it hard enough to bite the wood.",
+                    "text": "The coop is in the yard behind my home. Eight by eight feet, wooden, one door. I keep it locked with an external padlock. The key stays on a leather thong around my neck. Inside the door, near the latch, there are scratch-marks—fresh. The speckled hen has been trying to reach the lock from the wrong side. There are little splinters showing through gaps in the boards where she's worried at it hard enough to bite the wood. Even if someone takes my request for help, I won't open the coop's door just because they arrived. I can bring people to the yard, show them the setup, explain the rules. But the coop stays shut until I am standing there with the vessel, the lines properly drawn, the restraint plan agreed to, and everyone understands that containment is a procedure, not a vibe. Opening early is how you turn a problem into a spreading mechanism.",
                     "subject": "Coop (locked) layout and damage",
                     "subjectType": "entity"
                 },
@@ -520,6 +520,11 @@
                     "text": "Dilemma: Proper extraction takes time. Sometimes killing the host is faster. When is mercy just cowardice about doing necessary violence?",
                     "subject": "Ethics vs. pragmatic violence dilemma",
                     "subjectType": "state"
+                },
+                {
+                    "text": "The coop is quarantine. It is not a barn you \"pop into\" to have a look. It is a closed vessel with lungs inside it. Until I'm ready to perform extraction—meaning the containment vessel is present, the ward geometry is proven to be stable, and I have agreed-upon restraint from someone who can hold a flailing bird without turning it into an execution—the door stays locked. No \"just a quick peek.\" No \"let me grab one.\" No one touches the latch without my say. If anyone takes my request at the Municipal Aid Registry and comes to help, my first job isn't ushering them in. It's getting them to understand that this is an infection problem wearing feathers: vectors, transfer, anchor points, escalation. If they laugh, if they make folk jokes, if they talk about knives like they're doing me a favor, then they can stand in my yard and enjoy the weather. The threat remains contained until the people are contained too—contained in the rules.",
+                    "subject": "Coop access protocol (quarantine and extraction discipline)",
+                    "subjectType": "plan"
                 }
             ]
         },
@@ -533,6 +538,15 @@
         },
         "anatomy:body": {
             "recipeId": "fantasy:aldous_recipe"
+        },
+        "skills:melee_skill": {
+            "value": 52
+        },
+        "skills:defense_skill": {
+            "value": 56
+        },
+        "skills:grappling_skill": {
+            "value": 54
         }
     }
 }

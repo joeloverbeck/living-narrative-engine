@@ -7,6 +7,36 @@
  * @description Jest configuration for the root project.
  * @type {import('@jest/types').Config.InitialOptions}
  */
+
+// Maintain full-file coverage accounting on suite-wide runs, but avoid pulling
+// every source file into coverage when invoking Jest with explicit test paths
+// (common for single-file debugging). On targeted runs, we let Jest default to
+// instrumenting only the files that are actually imported by those tests.
+const baseCollectCoverageFrom = [
+  'src/**/*.js', // Only collect coverage from source files
+  '!**/node_modules/**',
+  '!**/vendor/**',
+  '!<rootDir>/llm-proxy-server/**',
+  '!**/dist/**',
+  '!**/coverage/**',
+  '!src/interfaces/**',
+  '!src/entities/interfaces/**',
+  '!src/commands/interfaces/**',
+  '!src/turns/interfaces/**',
+  '!src/prompting/interfaces/**',
+  '!src/llms/interfaces/**',
+  '!src/actions/pipeline/services/interfaces/**',
+  '!src/actions/actionTypes.js',
+  '!src/actions/resolutionResult.js',
+  '!src/index.js',
+  '!index.js',
+];
+
+const isTargetedRun = process.argv.some(
+  (arg) =>
+    arg.includes('tests/') || arg.endsWith('.test.js') || arg.endsWith('.spec.js')
+);
+
 module.exports = {
   testEnvironment: 'jsdom',
   setupFiles: [
@@ -46,25 +76,7 @@ module.exports = {
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected.
   // IMPORTANT: Adjust these patterns to match your project's source file locations.
-  collectCoverageFrom: [
-    'src/**/*.js', // Only collect coverage from source files
-    '!**/node_modules/**',
-    '!**/vendor/**',
-    '!<rootDir>/llm-proxy-server/**',
-    '!**/dist/**',
-    '!**/coverage/**',
-    '!src/interfaces/**',
-    '!src/entities/interfaces/**',
-    '!src/commands/interfaces/**',
-    '!src/turns/interfaces/**',
-    '!src/prompting/interfaces/**',
-    '!src/llms/interfaces/**',
-    '!src/actions/pipeline/services/interfaces/**',
-    '!src/actions/actionTypes.js',
-    '!src/actions/resolutionResult.js',
-    '!src/index.js',
-    '!index.js',
-  ],
+  collectCoverageFrom: isTargetedRun ? undefined : baseCollectCoverageFrom,
 
   // --- END COVERAGE CONFIGURATION ---
 };

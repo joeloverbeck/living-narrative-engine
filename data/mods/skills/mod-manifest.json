@@ -13,9 +13,9 @@
   "content": {
     "components": [
       "defense_skill.component.json",
+      "grappling_skill.component.json",
       "melee_skill.component.json",
-      "ranged_skill.component.json",
-      "grappling_skill.component.json"
+      "ranged_skill.component.json"
     ]
   }
 }

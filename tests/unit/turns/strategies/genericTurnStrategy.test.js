@@ -13,6 +13,7 @@ describe('GenericTurnStrategy', () => {
     const fakeComposite = {
       actionDefinitionId: 'testAction',
       resolvedParameters: {},
+      index: 1,
     };
     const fakeTurnAction = {
       actionDefinitionId: 'testAction',
@@ -65,7 +66,10 @@ describe('GenericTurnStrategy', () => {
           speech: null,
           thoughts: null,
           notes: null,
+          chosenIndex: 1,
         }),
+        availableActions: [fakeComposite],
+        suggestedIndex: 1,
       })
     );
 

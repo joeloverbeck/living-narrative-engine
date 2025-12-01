@@ -11,6 +11,7 @@ describe('buildDecisionResult utility', () => {
         speech: null,
         thoughts: null,
         notes: null,
+        chosenIndex: null,
       },
     });
   });
@@ -20,5 +21,17 @@ describe('buildDecisionResult utility', () => {
     expect(() => {
       result.kind = 'fail';
     }).toThrow(TypeError);
+  });
+
+  test('preserves additional fields and chosenIndex metadata when provided', () => {
+    const actions = [{ index: 1 }];
+    const result = buildDecisionResult(
+      { foo: 'bar' },
+      { speech: 'hi', chosenIndex: 2 },
+      { availableActions: actions }
+    );
+
+    expect(result.extractedData.chosenIndex).toBe(2);
+    expect(result.availableActions).toBe(actions);
   });
 });

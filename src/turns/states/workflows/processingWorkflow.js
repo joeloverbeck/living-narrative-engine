@@ -76,6 +76,17 @@ export class ProcessingWorkflow {
     const turnCtx = await this._acquireContext(handler, previousState);
     if (!turnCtx) return;
 
+    if (turnCtx?.isAwaitingExternalEvent?.()) {
+      const logger = getLogger(turnCtx, this._state._handler);
+      logger.debug(
+        `${this._state.getStateName()}: Processing halted because turn is awaiting an external event.`
+      );
+      if (typeof this._state.finishProcessing === 'function') {
+        this._state.finishProcessing();
+      }
+      return;
+    }
+
     const actor = await this._validateActor(turnCtx);
     if (!actor) return;
 

@@ -11,6 +11,7 @@ export const PLAYER_TURN_PROMPT_ID = 'core:player_turn_prompt';
 export const PLAYER_TURN_SUBMITTED_ID = 'core:player_turn_submitted';
 export const DISPLAY_ERROR_ID = 'core:display_error';
 export const DISPLAY_WARNING_ID = 'core:display_warning';
+export const LLM_SUGGESTED_ACTION_ID = 'llm:suggested_action';
 
 // **New, canonical event** fired for both AI and human turns:
 export const ACTION_DECIDED_ID = 'core:action_decided';

@@ -99,7 +99,23 @@ describe('Integration – Human decision flow', () => {
         commandString: 'Wait',
         speech: 'Wait',
       },
-      extractedData: { speech: 'Wait', thoughts: null, notes: null },
+      extractedData: {
+        speech: 'Wait',
+        thoughts: null,
+        notes: null,
+        chosenIndex: 1,
+      },
+      availableActions: [
+        {
+          actionId: 'core:wait',
+          commandString: 'Wait',
+          description: 'Wait',
+          id: 'core:wait',
+          index: 1,
+          params: {},
+        },
+      ],
+      suggestedIndex: 1,
     });
   });
 });

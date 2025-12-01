@@ -20,13 +20,15 @@ import { freeze } from './cloneUtils.js';
  * @param {string} [meta.speech]   - Speech text, if any.
  * @param {string} [meta.thoughts] - Thoughts text, if any.
  * @param {string} [meta.notes]    - Notes text, if any.
- * @returns {Readonly<DecisionResult>} A frozen decision result envelope.
+ * @param {object} [extras] - Optional additional fields to include on the result.
+ * @returns {Readonly<DecisionResult & object>} A frozen decision result envelope.
  */
-export function buildDecisionResult(action, meta = {}) {
+export function buildDecisionResult(action, meta = {}, extras = {}) {
   const extractedData = {
     speech: meta.speech ?? null,
     thoughts: meta.thoughts ?? null,
     notes: meta.notes ?? null,
+    chosenIndex: meta.chosenIndex ?? meta.suggestedIndex ?? null,
   };
 
   // Freeze nested data first
@@ -36,6 +38,7 @@ export function buildDecisionResult(action, meta = {}) {
     kind: 'success',
     action,
     extractedData,
+    ...(extras && typeof extras === 'object' ? extras : {}),
   };
 
   // Then freeze the entire envelope

@@ -83,7 +83,22 @@ describe('Integration – AI decision flow', () => {
         resolvedParameters: {},
         commandString: 'Wait',
       },
-      extractedData: { speech: null, thoughts: null, notes: null },
+      extractedData: {
+        speech: null,
+        thoughts: null,
+        notes: null,
+        chosenIndex: 1,
+      },
+      availableActions: [
+        {
+          actionId: 'core:wait',
+          commandString: 'Wait',
+          description: 'Wait',
+          index: 1,
+          params: {},
+        },
+      ],
+      suggestedIndex: 1,
     });
   });
 });
