@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:chicken_leg",
+  "description": "Scaly leg of a chicken",
+  "components": {
+    "anatomy:part": {
+      "subType": "chicken_leg"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 8,
+      "maxHealth": 8,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "chicken leg"
+    },
+    "descriptors:texture": {
+      "texture": "scaled"
+    },
+    "descriptors:color_basic": {
+      "color": "yellow"
+    }
+  }
+}

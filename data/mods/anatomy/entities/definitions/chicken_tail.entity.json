@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:chicken_tail",
+  "description": "Feathered tail of a chicken",
+  "components": {
+    "anatomy:part": {
+      "subType": "chicken_tail"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 5,
+      "maxHealth": 5,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "chicken tail"
+    },
+    "descriptors:texture": {
+      "texture": "feathered"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:chicken_beak",
+  "description": "Small conical beak of a chicken, used for pecking",
+  "components": {
+    "anatomy:part": {
+      "subType": "chicken_beak"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 5,
+      "maxHealth": 5,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "chicken beak"
+    },
+    "descriptors:size_category": {
+      "size": "small"
+    },
+    "descriptors:shape_general": {
+      "shape": "conical"
+    },
+    "descriptors:color_basic": {
+      "color": "yellow"
+    }
+  }
+}
