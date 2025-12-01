@@ -107,4 +107,16 @@ describe('handle_restrain_target outcome resolution', () => {
     );
     expect(fumbleDispatch?.parameters.description_text).toBe(fumbleMessage);
   });
+
+  it('establishes closeness with the target on successful restraints', () => {
+    ['SUCCESS', 'CRITICAL_SUCCESS'].forEach((outcome) => {
+      const branch = findIfByOutcome(handleRestrainTargetRule.actions, outcome);
+      const mergeOp = branch?.parameters.then_actions?.find(
+        (op) => op.type === 'MERGE_CLOSENESS_CIRCLE'
+      );
+
+      expect(mergeOp?.parameters.actor_id).toBe('{event.payload.actorId}');
+      expect(mergeOp?.parameters.target_id).toBe('{event.payload.targetId}');
+    });
+  });
 });

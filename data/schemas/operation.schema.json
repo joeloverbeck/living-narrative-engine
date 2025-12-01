@@ -195,6 +195,9 @@
           "$ref": "./operations/atomicModifyComponent.schema.json"
         },
         {
+          "$ref": "./operations/establishBidirectionalCloseness.schema.json"
+        },
+        {
           "$ref": "./operations/establishSittingCloseness.schema.json"
         },
         {

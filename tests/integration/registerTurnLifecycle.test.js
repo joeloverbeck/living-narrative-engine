@@ -75,4 +75,20 @@ describe('registerTurnLifecycle', () => {
     const provider2 = container.resolve(tokens.IHumanDecisionProvider);
     expect(provider1).not.toBe(provider2); // transient
   });
+
+  it('injects IPromptCoordinator into TurnContext via the factory', () => {
+    registerTurnLifecycle(container);
+
+    const turnContextFactory = container.resolve(tokens.ITurnContextFactory);
+    const promptCoordinator = container.resolve(tokens.IPromptCoordinator);
+
+    const context = turnContextFactory.create({
+      actor: { id: 'actor-1' },
+      strategy: { decideAction: jest.fn() },
+      onEndTurnCallback: jest.fn(),
+      handlerInstance: {},
+    });
+
+    expect(context.getPlayerPromptService()).toBe(promptCoordinator);
+  });
 });

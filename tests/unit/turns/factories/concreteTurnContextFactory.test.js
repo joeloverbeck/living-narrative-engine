@@ -17,6 +17,7 @@ const mockGameWorldAccess = {};
 const mockTurnEndPort = {};
 const mockSafeEventDispatcher = {};
 const mockEntityManager = {};
+const mockPromptCoordinator = {};
 
 // --- Mock Arguments for the create() method ---
 const mockActor = { id: 'test-actor' };
@@ -39,6 +40,7 @@ describe('ConcreteTurnContextFactory', () => {
       turnEndPort: mockTurnEndPort,
       safeEventDispatcher: mockSafeEventDispatcher,
       entityManager: mockEntityManager,
+      promptCoordinator: mockPromptCoordinator,
     };
   });
 
@@ -78,6 +80,13 @@ describe('ConcreteTurnContextFactory', () => {
       );
     });
 
+    it('should throw an error if promptCoordinator is not provided', () => {
+      delete factoryDependencies.promptCoordinator;
+      expect(() => new ConcreteTurnContextFactory(factoryDependencies)).toThrow(
+        'ConcreteTurnContextFactory: promptCoordinator is required.'
+      );
+    });
+
     it('should construct successfully when all dependencies are provided', () => {
       expect(
         () => new ConcreteTurnContextFactory(factoryDependencies)
@@ -114,6 +123,7 @@ describe('ConcreteTurnContextFactory', () => {
         turnEndPort: mockTurnEndPort,
         safeEventDispatcher: mockSafeEventDispatcher,
         entityManager: mockEntityManager,
+        promptCoordinator: mockPromptCoordinator,
       };
 
       expect(TurnContext).toHaveBeenCalledWith({

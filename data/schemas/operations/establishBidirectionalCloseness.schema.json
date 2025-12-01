@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/operations/establishBidirectionalCloseness.schema.json",
+  "title": "ESTABLISH_BIDIRECTIONAL_CLOSENESS Operation",
+  "description": "Establishes mutual relationship components on both actor and target, with optional cleanup of existing third-party relationships",
+  "allOf": [
+    { "$ref": "../base-operation.schema.json" },
+    {
+      "properties": {
+        "type": { "const": "ESTABLISH_BIDIRECTIONAL_CLOSENESS" },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "actor_component_type": {
+              "type": "string",
+              "description": "Component type to add to actor, e.g., 'hugging:hugging'",
+              "pattern": "^[a-z_]+:[a-z_]+$"
+            },
+            "target_component_type": {
+              "type": "string",
+              "description": "Component type to add to target, e.g., 'hugging:being_hugged'",
+              "pattern": "^[a-z_]+:[a-z_]+$"
+            },
+            "actor_data": {
+              "type": "object",
+              "description": "Component data for actor (supports template variables like {event.payload.targetId})"
+            },
+            "target_data": {
+              "type": "object",
+              "description": "Component data for target (supports template variables like {event.payload.actorId})"
+            },
+            "clean_existing": {
+              "type": "boolean",
+              "default": true,
+              "description": "Whether to clean up existing relationships with third parties before establishing new ones"
+            },
+            "existing_component_types_to_clean": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "List of component types to remove from both entities before establishing new relationship. If not provided, defaults to removing actor_component_type and target_component_type."
+            },
+            "regenerate_descriptions": {
+              "type": "boolean",
+              "default": true,
+              "description": "Whether to regenerate entity descriptions after relationship change"
+            }
+          },
+          "required": ["actor_component_type", "target_component_type", "actor_data", "target_data"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["type", "parameters"]
+    }
+  ]
+}

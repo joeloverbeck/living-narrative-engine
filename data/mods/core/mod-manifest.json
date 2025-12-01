@@ -136,6 +136,7 @@
       "orphans_cleaned.event.json",
       "perceptible_event.event.json",
       "player_turn_prompt.event.json",
+      "suggested_action.event.json",
       "player_turn_submitted.event.json",
       "portrait_modal_closed.event.json",
       "portrait_modal_opened.event.json",

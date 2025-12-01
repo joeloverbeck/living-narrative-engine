@@ -64,6 +64,14 @@
         },
         "then_actions": [
           {
+            "type": "BREAK_CLOSENESS_WITH_TARGET",
+            "comment": "Breaking free should also break the close proximity to the restrainer",
+            "parameters": {
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.targetId}"
+            }
+          },
+          {
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "actor",
@@ -128,6 +136,14 @@
           ]
         },
         "then_actions": [
+          {
+            "type": "BREAK_CLOSENESS_WITH_TARGET",
+            "comment": "Breaking free should also break the close proximity to the restrainer",
+            "parameters": {
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.targetId}"
+            }
+          },
           {
             "type": "REMOVE_COMPONENT",
             "parameters": {

@@ -64,6 +64,7 @@ export function registerTurnLifecycle(container) {
         turnEndPort: c.resolve(tokens.ITurnEndPort),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         entityManager: c.resolve(tokens.IEntityManager),
+        promptCoordinator: c.resolve(tokens.IPromptCoordinator),
       })
   );
 

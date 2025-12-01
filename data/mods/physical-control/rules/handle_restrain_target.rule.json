@@ -64,6 +64,14 @@
         },
         "then_actions": [
           {
+            "type": "MERGE_CLOSENESS_CIRCLE",
+            "comment": "Being close enough to restrain should join the actor and target into a closeness circle",
+            "parameters": {
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.targetId}"
+            }
+          },
+          {
             "type": "ADD_COMPONENT",
             "parameters": {
               "entity_ref": "target",
@@ -127,6 +135,14 @@
           ]
         },
         "then_actions": [
+          {
+            "type": "MERGE_CLOSENESS_CIRCLE",
+            "comment": "Being close enough to restrain should join the actor and target into a closeness circle",
+            "parameters": {
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.targetId}"
+            }
+          },
           {
             "type": "ADD_COMPONENT",
             "parameters": {

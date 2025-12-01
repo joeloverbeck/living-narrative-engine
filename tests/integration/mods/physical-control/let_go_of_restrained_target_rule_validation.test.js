@@ -88,6 +88,12 @@ describe('handle_let_go_of_restrained_target rule', () => {
   });
 
   it('removes restraint components, unlocks grabbing, regenerates descriptions, and logs success', () => {
+    const breakCloseness = findAction('BREAK_CLOSENESS_WITH_TARGET');
+    expect(breakCloseness?.parameters.actor_id).toBe('{event.payload.actorId}');
+    expect(breakCloseness?.parameters.target_id).toBe(
+      '{event.payload.targetId}'
+    );
+
     const removeRestraining = handleLetGoRule.actions.find(
       (op) =>
         op.type === 'REMOVE_COMPONENT' &&

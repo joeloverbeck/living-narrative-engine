@@ -70,6 +70,7 @@ import AutoMoveFollowersHandler from '../../logic/operationHandlers/autoMoveFoll
 import AutoMoveClosenessPartnersHandler from '../../logic/operationHandlers/autoMoveClosenessPartnersHandler.js';
 import MergeClosenessCircleHandler from '../../logic/operationHandlers/mergeClosenessCircleHandler.js';
 import RemoveFromClosenessCircleHandler from '../../logic/operationHandlers/removeFromClosenessCircleHandler.js';
+import EstablishBidirectionalClosenessHandler from '../../logic/operationHandlers/establishBidirectionalClosenessHandler.js';
 import EstablishSittingClosenessHandler from '../../logic/operationHandlers/establishSittingClosenessHandler.js';
 import EstablishLyingClosenessHandler from '../../logic/operationHandlers/establishLyingClosenessHandler.js';
 import RemoveSittingClosenessHandler from '../../logic/operationHandlers/removeSittingClosenessHandler.js';
@@ -521,6 +522,19 @@ export function registerOperationHandlers(registrar) {
           entityManager: c.resolve(tokens.IEntityManager),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
           closenessCircleService: c.resolve(tokens.ClosenessCircleService),
+        }),
+    ],
+    [
+      tokens.EstablishBidirectionalClosenessHandler,
+      EstablishBidirectionalClosenessHandler,
+      (c, Handler) =>
+        new Handler({
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+          regenerateDescriptionHandler: c.resolve(
+            tokens.RegenerateDescriptionHandler
+          ),
+          logger: c.resolve(tokens.ILogger),
         }),
     ],
     [
