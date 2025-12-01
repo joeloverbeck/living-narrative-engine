@@ -2,6 +2,7 @@ import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { ActionDecisionWorkflow } from '../../../../../src/turns/states/workflows/actionDecisionWorkflow.js';
 import { LLMDecisionProvider } from '../../../../../src/turns/providers/llmDecisionProvider.js';
 import { LLM_SUGGESTED_ACTION_ID } from '../../../../../src/constants/eventIds.js';
+import * as llmTimeoutConfig from '../../../../../src/config/llmTimeout.config.js';
 
 describe('ActionDecisionWorkflow.run', () => {
   let logger;
@@ -9,9 +10,11 @@ describe('ActionDecisionWorkflow.run', () => {
   let state;
   let actor;
   let strategy;
+  let timeoutConfigSpy;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useRealTimers();
     logger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
     actor = { id: 'a1' };
     ctx = {
@@ -29,6 +32,18 @@ describe('ActionDecisionWorkflow.run', () => {
       _emitActionDecided: jest.fn().mockResolvedValue(undefined),
       _handler: {},
     };
+    timeoutConfigSpy = jest
+      .spyOn(llmTimeoutConfig, 'getLLMTimeoutConfig')
+      .mockReturnValue({
+        enabled: false,
+        timeoutMs: 0,
+        policy: 'autoAccept',
+        waitActionHints: [],
+      });
+  });
+
+  afterEach(() => {
+    timeoutConfigSpy?.mockRestore();
   });
 
   test('handles valid action decision', async () => {
@@ -150,6 +165,243 @@ describe('ActionDecisionWorkflow.run', () => {
     expect(ctx.requestProcessingCommandStateTransition).toHaveBeenCalledWith(
       'cmd2',
       finalAction
+    );
+  });
+
+  test('autoAccept timeout resolves with suggested index', async () => {
+    jest.useFakeTimers();
+    timeoutConfigSpy.mockReturnValue({
+      enabled: true,
+      timeoutMs: 5,
+      policy: 'autoAccept',
+      waitActionHints: [],
+    });
+
+    const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(undefined) };
+    const llmProvider = new LLMDecisionProvider({
+      llmChooser: { choose: jest.fn() },
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    });
+
+    const availableActions = [
+      {
+        index: 1,
+        actionId: 'act1',
+        description: 'One',
+        commandString: 'cmd1',
+      },
+      {
+        index: 2,
+        actionId: 'act2',
+        description: 'Two',
+        commandString: 'cmd2',
+      },
+    ];
+
+    ctx.getPlayerPromptService = () => ({
+      prompt: jest.fn(() => new Promise(() => {})),
+    });
+    ctx.getPromptSignal = jest.fn(() => new AbortController().signal);
+    ctx.setAwaitingExternalEvent = jest.fn();
+    ctx.cancelActivePrompt = jest.fn();
+    ctx.getSafeEventDispatcher = () => safeDispatcher;
+
+    strategy = {
+      decisionProvider: llmProvider,
+      turnActionFactory: {
+        create: jest.fn().mockImplementation((composite) => ({
+          actionDefinitionId: composite.actionId,
+          commandString: composite.commandString,
+        })),
+      },
+    };
+
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1', commandString: 'cmd1' },
+      extractedData: { speech: 'hi' },
+      availableActions,
+      suggestedIndex: 1,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    const runPromise = workflow.run();
+    await jest.runAllTimersAsync();
+    await runPromise;
+
+    expect(ctx.cancelActivePrompt).toHaveBeenCalled();
+    expect(ctx.requestProcessingCommandStateTransition).toHaveBeenCalledWith(
+      'cmd1',
+      expect.objectContaining({ actionDefinitionId: 'act1' })
+    );
+    expect(state._recordDecision).toHaveBeenCalledWith(
+      ctx,
+      expect.objectContaining({ actionDefinitionId: 'act1' }),
+      expect.objectContaining({
+        suggestedIndex: 1,
+        submittedIndex: 1,
+        resolvedByTimeout: true,
+        timeoutPolicy: 'autoAccept',
+      })
+    );
+  });
+
+  test('autoWait timeout prefers wait action', async () => {
+    jest.useFakeTimers();
+    timeoutConfigSpy.mockReturnValue({
+      enabled: true,
+      timeoutMs: 5,
+      policy: 'autoWait',
+      waitActionHints: ['wait'],
+    });
+
+    const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(undefined) };
+    const llmProvider = new LLMDecisionProvider({
+      llmChooser: { choose: jest.fn() },
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    });
+
+    const availableActions = [
+      {
+        index: 1,
+        actionId: 'act1',
+        description: 'One',
+        commandString: 'cmd1',
+      },
+      {
+        index: 2,
+        actionId: 'wait_action',
+        description: 'Wait it out',
+        commandString: 'wait',
+      },
+    ];
+
+    ctx.getPlayerPromptService = () => ({
+      prompt: jest.fn(() => new Promise(() => {})),
+    });
+    ctx.getPromptSignal = jest.fn(() => new AbortController().signal);
+    ctx.setAwaitingExternalEvent = jest.fn();
+    ctx.cancelActivePrompt = jest.fn();
+    ctx.getSafeEventDispatcher = () => safeDispatcher;
+
+    strategy = {
+      decisionProvider: llmProvider,
+      turnActionFactory: {
+        create: jest.fn().mockImplementation((composite) => ({
+          actionDefinitionId: composite.actionId,
+          commandString: composite.commandString,
+        })),
+      },
+    };
+
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1', commandString: 'cmd1' },
+      extractedData: { speech: 'hi' },
+      availableActions,
+      suggestedIndex: 1,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    const runPromise = workflow.run();
+    await jest.runAllTimersAsync();
+    await runPromise;
+
+    expect(ctx.cancelActivePrompt).toHaveBeenCalled();
+    expect(ctx.requestProcessingCommandStateTransition).toHaveBeenCalledWith(
+      'wait',
+      expect.objectContaining({ actionDefinitionId: 'wait_action' })
+    );
+    expect(state._recordDecision).toHaveBeenCalledWith(
+      ctx,
+      expect.objectContaining({ actionDefinitionId: 'wait_action' }),
+      expect.objectContaining({
+        submittedIndex: 2,
+        timeoutPolicy: 'autoWait',
+        resolvedByTimeout: true,
+      })
+    );
+  });
+
+  test('noop policy waits past timeout', async () => {
+    jest.useFakeTimers();
+    timeoutConfigSpy.mockReturnValue({
+      enabled: true,
+      timeoutMs: 5,
+      policy: 'noop',
+      waitActionHints: ['wait'],
+    });
+
+    const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(undefined) };
+    const llmProvider = new LLMDecisionProvider({
+      llmChooser: { choose: jest.fn() },
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    });
+
+    const availableActions = [
+      {
+        index: 1,
+        actionId: 'act1',
+        description: 'One',
+        commandString: 'cmd1',
+      },
+      {
+        index: 2,
+        actionId: 'act2',
+        description: 'Two',
+        commandString: 'cmd2',
+      },
+    ];
+
+    let resolvePrompt;
+    const promptPromise = new Promise((resolve) => {
+      resolvePrompt = resolve;
+    });
+
+    ctx.getPlayerPromptService = () => ({
+      prompt: jest.fn(() => promptPromise),
+    });
+    ctx.getPromptSignal = jest.fn(() => new AbortController().signal);
+    ctx.setAwaitingExternalEvent = jest.fn();
+    ctx.cancelActivePrompt = jest.fn();
+    ctx.getSafeEventDispatcher = () => safeDispatcher;
+
+    strategy = {
+      decisionProvider: llmProvider,
+      turnActionFactory: {
+        create: jest.fn().mockImplementation((composite) => ({
+          actionDefinitionId: composite.actionId,
+          commandString: composite.commandString,
+        })),
+      },
+    };
+
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1', commandString: 'cmd1' },
+      extractedData: { speech: 'hi' },
+      availableActions,
+      suggestedIndex: 1,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    const runPromise = workflow.run();
+
+    await jest.runAllTimersAsync();
+    expect(ctx.requestProcessingCommandStateTransition).not.toHaveBeenCalled();
+    expect(ctx.cancelActivePrompt).not.toHaveBeenCalled();
+
+    resolvePrompt({ chosenIndex: 2 });
+    await runPromise;
+
+    expect(state._recordDecision).toHaveBeenCalledWith(
+      ctx,
+      expect.objectContaining({ actionDefinitionId: 'act2' }),
+      expect.objectContaining({
+        submittedIndex: 2,
+        resolvedByTimeout: false,
+        timeoutPolicy: 'noop',
+      })
     );
   });
 });

@@ -180,7 +180,7 @@ describe('buildSpeechMeta clipboard interactions', () => {
 
   it('copies assembled payload for copy-all and shows success feedback', async () => {
     assembleCopyAllPayload.mockReturnValue({
-      text: '"Hello"\n\nThoughts:\nDeep',
+      text: 'Echo says: "Hello"\n\nThoughts:\nDeep',
       hasSpeech: true,
       hasThoughts: true,
       hasNotes: false,
@@ -216,7 +216,9 @@ describe('buildSpeechMeta clipboard interactions', () => {
       speechContent: 'Hello',
       thoughts: 'Deep',
     });
-    expect(copyToClipboard).toHaveBeenCalledWith('"Hello"\n\nThoughts:\nDeep');
+    expect(copyToClipboard).toHaveBeenCalledWith(
+      'Echo says: "Hello"\n\nThoughts:\nDeep'
+    );
     expect(showCopyFeedback).toHaveBeenCalledWith(button, 'Copied!');
   });
 

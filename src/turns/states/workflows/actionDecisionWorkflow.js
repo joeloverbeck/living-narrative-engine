@@ -6,6 +6,7 @@
 import { LLMDecisionProvider } from '../../providers/llmDecisionProvider.js';
 import { getSafeEventDispatcher } from '../helpers/contextUtils.js';
 import { LLM_SUGGESTED_ACTION_ID } from '../../../constants/eventIds.js';
+import { getLLMTimeoutConfig } from '../../../config/llmTimeout.config.js';
 
 /**
  * @class ActionDecisionWorkflow
@@ -132,6 +133,58 @@ export class ActionDecisionWorkflow {
     }
   }
 
+  _getTimeoutSettings() {
+    const config = getLLMTimeoutConfig();
+    return {
+      enabled: config.enabled === true,
+      timeoutMs: config.timeoutMs,
+      policy: config.policy,
+      waitActionHints: Array.isArray(config.waitActionHints)
+        ? config.waitActionHints
+        : [],
+    };
+  }
+
+  _cancelPrompt() {
+    if (typeof this._turnContext.cancelActivePrompt === 'function') {
+      try {
+        this._turnContext.cancelActivePrompt();
+      } catch (err) {
+        this._turnContext
+          .getLogger()
+          .warn(
+            `${this._state.getStateName()}: Failed to cancel prompt after timeout – ${err.message}`
+          );
+      }
+    }
+  }
+
+  _findWaitActionIndex(actions, waitActionHints = []) {
+    if (!Array.isArray(actions) || actions.length === 0) {
+      return null;
+    }
+
+    const hints = waitActionHints
+      .filter((hint) => typeof hint === 'string' && hint.trim().length > 0)
+      .map((hint) => hint.toLowerCase());
+
+    const candidate = actions.find((action) => {
+      const fields = [
+        action.actionDefinitionId,
+        action.actionId,
+        action.commandString,
+        action.description,
+      ];
+      return fields.some(
+        (field) =>
+          typeof field === 'string' &&
+          hints.some((hint) => field.toLowerCase().includes(hint))
+      );
+    });
+
+    return candidate?.index ?? null;
+  }
+
   async _emitSuggestedActionEvent(clampedIndex, descriptor, extractedData) {
     const dispatcher = getSafeEventDispatcher(this._turnContext, this._state._handler);
     if (!dispatcher) return;
@@ -175,30 +228,133 @@ export class ActionDecisionWorkflow {
     return fallbackAction;
   }
 
-  async _awaitHumanSubmission(actions, fallbackIndex, suggestedDescriptor) {
-    const promptService = this._turnContext.getPlayerPromptService?.();
-    if (promptService && Array.isArray(actions) && actions.length > 0) {
-      const suggestedAction =
-        Number.isInteger(fallbackIndex) && fallbackIndex > 0
-          ? {
-              index: fallbackIndex,
-              descriptor: this._describeActionDescriptor(suggestedDescriptor),
-            }
-          : null;
+  async _resolveTimeoutPolicy({
+    policy,
+    actions,
+    fallbackIndex,
+    suggestedDescriptor,
+    promptOutcomePromise,
+    waitActionHints,
+  }) {
+    const logger = this._turnContext.getLogger();
+    const baseMsg = `${this._state.getStateName()}: LLM suggestion timed out`;
 
-      return promptService.prompt(this._actor, {
-        indexedComposites: actions,
-        cancellationSignal: this._turnContext.getPromptSignal(),
-        ...(suggestedAction ? { suggestedAction } : {}),
-      });
+    if (policy === 'noop') {
+      logger.warn(
+        `${baseMsg}; policy=noop – continuing to wait for submission.`
+      );
+      const outcome = await promptOutcomePromise;
+      if (outcome.kind === 'error') {
+        throw outcome.error;
+      }
+      return {
+        ...outcome.result,
+        timeout: false,
+        timeoutPolicy: 'noop',
+      };
     }
 
+    if (policy === 'autoWait') {
+      const waitIndex =
+        this._findWaitActionIndex(actions, waitActionHints) ?? fallbackIndex;
+      logger.warn(
+        `${baseMsg}; policy=autoWait -> index ${waitIndex ?? 'none found'}.`
+      );
+      this._cancelPrompt();
+      return {
+        chosenIndex: waitIndex,
+        speech: null,
+        thoughts: null,
+        notes: null,
+        timeout: true,
+        timeoutPolicy: 'autoWait',
+      };
+    }
+
+    logger.warn(
+      `${baseMsg}; policy=autoAccept -> index ${fallbackIndex ?? 'none found'}.`,
+      { suggestedDescriptor: this._describeActionDescriptor(suggestedDescriptor) }
+    );
+    this._cancelPrompt();
     return {
       chosenIndex: fallbackIndex,
       speech: null,
       thoughts: null,
       notes: null,
+      timeout: true,
+      timeoutPolicy: 'autoAccept',
     };
+  }
+
+  async _awaitHumanSubmission(
+    actions,
+    fallbackIndex,
+    suggestedDescriptor,
+    timeoutSettings
+  ) {
+    const promptService = this._turnContext.getPlayerPromptService?.();
+    const promptPromise =
+      promptService && Array.isArray(actions) && actions.length > 0
+        ? promptService.prompt(this._actor, {
+            indexedComposites: actions,
+            cancellationSignal: this._turnContext.getPromptSignal(),
+            ...(Number.isInteger(fallbackIndex) && fallbackIndex > 0
+              ? {
+                  suggestedAction: {
+                    index: fallbackIndex,
+                    descriptor: this._describeActionDescriptor(
+                      suggestedDescriptor
+                    ),
+                  },
+                }
+              : {}),
+          })
+        : Promise.resolve({
+            chosenIndex: fallbackIndex,
+            speech: null,
+            thoughts: null,
+            notes: null,
+          });
+
+    const safePromptPromise = Promise.resolve(promptPromise)
+      .then((result) => ({ kind: 'submission', result }))
+      .catch((error) => ({ kind: 'error', error }));
+
+    if (!timeoutSettings?.enabled) {
+      const outcome = await safePromptPromise;
+      if (outcome.kind === 'error') {
+        throw outcome.error;
+      }
+      return outcome.result;
+    }
+
+    let timeoutId;
+    const timeoutPromise = new Promise((resolve) => {
+      timeoutId = setTimeout(
+        () => resolve({ kind: 'timeout' }),
+        timeoutSettings.timeoutMs
+      );
+    });
+
+    const outcome = await Promise.race([safePromptPromise, timeoutPromise]);
+    if (timeoutId) clearTimeout(timeoutId);
+
+    if (outcome.kind === 'timeout') {
+      return this._resolveTimeoutPolicy({
+        policy: timeoutSettings.policy,
+        actions,
+        fallbackIndex,
+        suggestedDescriptor,
+        promptOutcomePromise: safePromptPromise,
+        waitActionHints: timeoutSettings.waitActionHints,
+      });
+    }
+
+    if (outcome.kind === 'error') {
+      throw outcome.error;
+    }
+
+    return outcome.result;
   }
 
   async _handleLLMPendingApproval({
@@ -210,6 +366,7 @@ export class ActionDecisionWorkflow {
     const logger = this._turnContext.getLogger();
     const actions = Array.isArray(availableActions) ? availableActions : [];
     const baseMeta = extractedData || {};
+    const timeoutSettings = this._getTimeoutSettings();
     const { value: clampedIndex } = this._clampIndex(
       suggestedIndex ?? baseMeta.chosenIndex ?? null,
       actions.length
@@ -230,7 +387,8 @@ export class ActionDecisionWorkflow {
       const submission = await this._awaitHumanSubmission(
         actions,
         clampedIndex,
-        descriptor
+        descriptor,
+        timeoutSettings
       );
       const { value: submittedIndex } = this._clampIndex(
         submission?.chosenIndex,
@@ -245,6 +403,8 @@ export class ActionDecisionWorkflow {
         notes: submission?.notes ?? baseMeta.notes ?? null,
         suggestedIndex: clampedIndex,
         submittedIndex: finalIndex,
+        resolvedByTimeout: submission?.timeout === true,
+        timeoutPolicy: submission?.timeoutPolicy ?? null,
       };
 
       const finalAction = this._buildActionForIndex(
