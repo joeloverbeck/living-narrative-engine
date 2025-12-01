@@ -11,6 +11,13 @@
       "maxHealth": 6,
       "state": "healthy"
     },
+    "anatomy:visibility_rules": {
+      "clothingSlotId": "torso_lower",
+      "nonBlockingLayers": [
+        "underwear",
+        "accessories"
+      ]
+    },
     "core:name": {
       "text": "testicle"
     }

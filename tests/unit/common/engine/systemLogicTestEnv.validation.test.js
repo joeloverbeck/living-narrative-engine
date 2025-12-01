@@ -12,9 +12,14 @@ import {
   createBaseRuleEnvironment,
   createRuleTestEnvironment,
 } from '../../../common/engine/systemLogicTestEnv.js';
+import { jest } from '@jest/globals';
 
 describe('systemLogicTestEnv schema validation (SCHVALTESINT-003)', () => {
   let schemaValidator;
+
+  const minimalHandlers = () => ({
+    LOG: { execute: jest.fn() },
+  });
 
   /**
    * Helper to load required schemas for rule validation.
@@ -231,7 +236,7 @@ describe('systemLogicTestEnv schema validation (SCHVALTESINT-003)', () => {
 
         expect(() =>
           createBaseRuleEnvironment({
-            createHandlers: () => ({}),
+            createHandlers: minimalHandlers,
             schemaValidator,
             rules: [invalidRule],
             validateOnSetup: true,
@@ -248,7 +253,7 @@ describe('systemLogicTestEnv schema validation (SCHVALTESINT-003)', () => {
 
         // Should not throw because validateOnSetup is false
         const env = createBaseRuleEnvironment({
-          createHandlers: () => ({}),
+          createHandlers: minimalHandlers,
           schemaValidator,
           rules: [invalidRule],
           validateOnSetup: false,
@@ -269,7 +274,7 @@ describe('systemLogicTestEnv schema validation (SCHVALTESINT-003)', () => {
 
         // Should not throw because no validator is provided
         const env = createBaseRuleEnvironment({
-          createHandlers: () => ({}),
+          createHandlers: minimalHandlers,
           rules: [invalidRule],
         });
 

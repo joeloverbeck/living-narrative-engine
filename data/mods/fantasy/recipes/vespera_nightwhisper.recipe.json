@@ -89,6 +89,14 @@
         }
       }
     },
+    "nose": {
+      "partType": "nose",
+      "properties": {
+        "descriptors:size_category": {
+          "size": "small"
+        }
+      }
+    },
     "left_breast": {
       "partType": "breast",
       "preferId": "anatomy:human_breast_c_cup_soft"

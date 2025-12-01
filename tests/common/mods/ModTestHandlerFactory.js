@@ -49,6 +49,22 @@ import UnwieldItemHandler from '../../../src/logic/operationHandlers/unwieldItem
 import PrepareActionContextHandler from '../../../src/logic/operationHandlers/prepareActionContextHandler.js';
 import * as closenessCircleService from '../../../src/logic/services/closenessCircleService.js';
 import { validateDependency } from '../../../src/utils/dependencyUtils.js';
+import AutoMoveClosenessPartnersHandler from '../../../src/logic/operationHandlers/autoMoveClosenessPartnersHandler.js';
+import BreakFollowRelationHandler from '../../../src/logic/operationHandlers/breakFollowRelationHandler.js';
+import CheckFollowCycleHandler from '../../../src/logic/operationHandlers/checkFollowCycleHandler.js';
+import DispatchSpeechHandler from '../../../src/logic/operationHandlers/dispatchSpeechHandler.js';
+import DispatchThoughtHandler from '../../../src/logic/operationHandlers/dispatchThoughtHandler.js';
+import DigestFoodHandler from '../../../src/logic/operationHandlers/digestFoodHandler.js';
+import EstablishFollowRelationHandler from '../../../src/logic/operationHandlers/establishFollowRelationHandler.js';
+import HasComponentHandler from '../../../src/logic/operationHandlers/hasComponentHandler.js';
+import IfCoLocatedHandler from '../../../src/logic/operationHandlers/ifCoLocatedHandler.js';
+import QueryEntitiesHandler from '../../../src/logic/operationHandlers/queryEntitiesHandler.js';
+import RebuildLeaderListCacheHandler from '../../../src/logic/operationHandlers/rebuildLeaderListCacheHandler.js';
+import RemoveFromClosenessCircleHandler from '../../../src/logic/operationHandlers/removeFromClosenessCircleHandler.js';
+import RemoveSittingClosenessHandler from '../../../src/logic/operationHandlers/removeSittingClosenessHandler.js';
+import ResolveOutcomeHandler from '../../../src/logic/operationHandlers/resolveOutcomeHandler.js';
+import SystemMoveEntityHandler from '../../../src/logic/operationHandlers/systemMoveEntityHandler.js';
+import UpdateHungerStateHandler from '../../../src/logic/operationHandlers/updateHungerStateHandler.js';
 
 const ITEM_OPERATION_TYPES = new Set([
   'TRANSFER_ITEM',
@@ -143,30 +159,35 @@ export class ModTestHandlerFactory {
       return null;
     }
 
-    const macroName = macroId.includes(':')
-      ? macroId.split(':')[1]
-      : macroId;
+    const [namespace, macroName] = macroId.includes(':')
+      ? macroId.split(':')
+      : [null, macroId];
 
-    const candidates = [
-      resolvePath(
+    const searchNamespaces = [];
+    if (namespace) {
+      searchNamespaces.push(namespace);
+    }
+    if (modCategory && modCategory !== namespace) {
+      searchNamespaces.push(modCategory);
+    }
+    searchNamespaces.push('core');
+
+    for (const namespaceCandidate of searchNamespaces) {
+      const candidate = resolvePath(
         process.cwd(),
         'data',
         'mods',
-        modCategory || '',
+        namespaceCandidate || '',
         'macros',
         `${macroName}.macro.json`
-      ),
-      resolvePath(
-        process.cwd(),
-        'data',
-        'mods',
-        'core',
-        'macros',
-        `${macroName}.macro.json`
-      ),
-    ];
+      );
 
-    return candidates.find((candidate) => existsSync(candidate)) || null;
+      if (existsSync(candidate)) {
+        return candidate;
+      }
+    }
+
+    return null;
   }
 
   static #expandMacroOperations(modCategory, macroRefs, operations) {
@@ -217,6 +238,18 @@ export class ModTestHandlerFactory {
     const operations = new Set();
     const macroRefs = new Set();
 
+    const collectFromDefinition = (definition) => {
+      if (!definition) {
+        return;
+      }
+
+      this.#collectOperationsFromNode(
+        definition.actions || definition.operations || definition,
+        operations,
+        macroRefs
+      );
+    };
+
     const rulesDir = resolvePath(
       process.cwd(),
       'data',
@@ -237,11 +270,31 @@ export class ModTestHandlerFactory {
           continue;
         }
 
-        this.#collectOperationsFromNode(
-          ruleDefinition.actions,
-          operations,
-          macroRefs
-        );
+        collectFromDefinition(ruleDefinition);
+      }
+    }
+
+    const actionsDir = resolvePath(
+      process.cwd(),
+      'data',
+      'mods',
+      modCategory || '',
+      'actions'
+    );
+
+    if (modCategory && existsSync(actionsDir)) {
+      const actionFiles = readdirSync(actionsDir).filter((file) =>
+        file.endsWith('.json')
+      );
+
+      for (const file of actionFiles) {
+        const filePath = resolvePath(actionsDir, file);
+        const actionDefinition = this.#readJsonFileSafe(filePath);
+        if (!actionDefinition) {
+          continue;
+        }
+
+        collectFromDefinition(actionDefinition);
       }
     }
 
@@ -250,6 +303,13 @@ export class ModTestHandlerFactory {
     const profile = { operations };
     this.#operationProfileCache.set(modCategory, profile);
     return profile;
+  }
+
+  static getOperationProfileForCategory(modCategory) {
+    const profile = this.#scanOperationsForMod(modCategory);
+    return {
+      operations: new Set(profile.operations),
+    };
   }
 
   static #buildProfileHint(modCategory) {
@@ -385,6 +445,8 @@ export class ModTestHandlerFactory {
       }),
       SET_VARIABLE: new SetVariableHandler({ logger }),
       LOG_MESSAGE: new LogHandler({ logger }),
+      // Alias used by older schemas/tests
+      LOG: new LogHandler({ logger }),
       PREPARE_ACTION_CONTEXT: new PrepareActionContextHandler({
         entityManager,
         logger,
@@ -1114,6 +1176,39 @@ export class ModTestHandlerFactory {
         return Promise.resolve(true);
       }),
     };
+    const operationInterpreter = () => ({ execute: jest.fn() });
+    const jsonLogicEvaluationService = {
+      evaluate: jest.fn((rule, data) => data),
+    };
+    const systemMoveEntityHandler = new SystemMoveEntityHandler({
+      entityManager,
+      safeEventDispatcher: safeDispatcher,
+      logger,
+    });
+    const rebuildLeaderListCacheHandler = new RebuildLeaderListCacheHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    });
+    const autoMoveClosenessPartnersHandler = new AutoMoveClosenessPartnersHandler({
+      logger,
+      entityManager,
+      safeEventDispatcher: safeDispatcher,
+      systemMoveEntityHandler,
+      operationInterpreter,
+    });
+    const chanceCalculationService = {
+      resolveOutcome: jest.fn(() => ({
+        outcome: 'SUCCESS',
+        roll: 1,
+        threshold: 1,
+        margin: 0,
+        isCritical: false,
+        actorSkill: 0,
+        targetSkill: 0,
+        breakdown: {},
+      })),
+    };
 
     // Create a mock body description composer for testing
     const bodyDescriptionComposer = {
@@ -1189,6 +1284,37 @@ export class ModTestHandlerFactory {
         logger,
         safeEventDispatcher: safeDispatcher,
       }),
+      HAS_COMPONENT: new HasComponentHandler({
+        logger,
+        entityManager,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      QUERY_ENTITIES: new QueryEntitiesHandler({
+        entityManager,
+        logger,
+        jsonLogicEvaluationService,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      IF_CO_LOCATED: new IfCoLocatedHandler({
+        logger,
+        entityManager,
+        operationInterpreter,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      SYSTEM_MOVE_ENTITY: systemMoveEntityHandler,
+      AUTO_MOVE_CLOSENESS_PARTNERS: autoMoveClosenessPartnersHandler,
+      REMOVE_SITTING_CLOSENESS: new RemoveSittingClosenessHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+        closenessCircleService,
+      }),
+      REMOVE_FROM_CLOSENESS_CIRCLE: new RemoveFromClosenessCircleHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+        closenessCircleService,
+      }),
       BREAK_CLOSENESS_WITH_TARGET: new BreakClosenessWithTargetHandler({
         entityManager,
         logger,
@@ -1205,6 +1331,46 @@ export class ModTestHandlerFactory {
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
+      }),
+      DISPATCH_SPEECH: new DispatchSpeechHandler({
+        dispatcher: eventBus,
+        logger,
+      }),
+      DISPATCH_THOUGHT: new DispatchThoughtHandler({
+        dispatcher: eventBus,
+        logger,
+      }),
+      DIGEST_FOOD: new DigestFoodHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      UPDATE_HUNGER_STATE: new UpdateHungerStateHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      REBUILD_LEADER_LIST_CACHE: rebuildLeaderListCacheHandler,
+      ESTABLISH_FOLLOW_RELATION: new EstablishFollowRelationHandler({
+        logger,
+        entityManager,
+        rebuildLeaderListCacheHandler,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      BREAK_FOLLOW_RELATION: new BreakFollowRelationHandler({
+        logger,
+        entityManager,
+        rebuildLeaderListCacheHandler,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      CHECK_FOLLOW_CYCLE: new CheckFollowCycleHandler({
+        logger,
+        entityManager,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      RESOLVE_OUTCOME: new ResolveOutcomeHandler({
+        chanceCalculationService,
+        logger,
       }),
       // Mock handler for LOCK_GRABBING - satisfies fail-fast enforcement
       LOCK_GRABBING: {
