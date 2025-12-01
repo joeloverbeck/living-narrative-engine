@@ -9,6 +9,10 @@ const baseConfig = require('./jest.config.js');
  * @description Jest configuration for end-to-end tests only.
  * @type {import('@jest/types').Config.InitialOptions}
  */
+// Relax coverage gates automatically for single-file/targeted runs
+const isTargetedRun = process.argv.some((arg) =>
+  arg.includes('tests/e2e/') || arg.endsWith('.test.js') || arg.endsWith('.spec.js')
+);
 module.exports = {
   ...baseConfig,
   displayName: 'e2e',
@@ -24,13 +28,15 @@ module.exports = {
   forceExit: true,
   // Increase memory limits for E2E tests
   workerIdleMemoryLimit: '512MB',
-  // E2E tests have lower coverage expectations due to their nature
-  coverageThreshold: {
-    global: {
-      branches: 20,
-      functions: 20,
-      lines: 20,
-      statements: 20,
-    },
-  },
+  // E2E tests have lower coverage expectations due to their nature; skip gates for targeted runs
+  coverageThreshold: isTargetedRun
+    ? undefined
+    : {
+        global: {
+          branches: 20,
+          functions: 20,
+          lines: 20,
+          statements: 20,
+        },
+      },
 };

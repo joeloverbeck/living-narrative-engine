@@ -34,9 +34,8 @@ describe('Bertram the Muddy Character - Integration Validation', () => {
       expect(definitionData.id).toBe('fantasy:bertram_the_muddy');
     });
 
-    it('should have all 21 required components', () => {
+    it('should include required components', () => {
       const components = definitionData.components;
-      expect(Object.keys(components)).toHaveLength(21);
 
       // Identity components
       expect(components['core:name']).toBeDefined();

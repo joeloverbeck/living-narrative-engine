@@ -354,6 +354,22 @@ export class TargetComponentValidationStage extends PipelineStage {
           targetEntities
         );
 
+      if (forbiddenValidation.filteredTargets) {
+        const placeholderSource =
+          item.placeholderSource ||
+          actionDef?.targetDefinitions ||
+          actionDef?.targets ||
+          null;
+
+        item.resolvedTargets = forbiddenValidation.filteredTargets;
+        targetEntities = forbiddenValidation.filteredTargets;
+        item.targetContexts = this.#filterTargetContexts({
+          targetContexts: item.targetContexts,
+          keptTargets: forbiddenValidation.filteredTargets,
+          placeholderSource,
+        });
+      }
+
       // Apply lenient mode if configured
       if (strictness === 'lenient' && !forbiddenValidation.valid) {
         // In lenient mode, allow actions with certain types of failures

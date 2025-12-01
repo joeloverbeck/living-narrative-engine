@@ -26,6 +26,10 @@
     {
       "id": "positioning",
       "version": "^1.0.0"
+    },
+    {
+      "id": "skills",
+      "version": "^1.0.0"
     }
   ],
   "content": {
@@ -34,6 +38,7 @@
       "force_to_knees.action.json",
       "push_off.action.json",
       "push_onto_lying_furniture.action.json",
+      "restrain_target.action.json",
       "turn_around.action.json"
     ],
     "rules": [
@@ -41,6 +46,7 @@
       "handle_force_to_knees.rule.json",
       "handle_push_off.rule.json",
       "handle_push_onto_lying_furniture.rule.json",
+      "handle_restrain_target.rule.json",
       "handle_turn_around.rule.json"
     ],
     "conditions": [
@@ -48,6 +54,7 @@
       "event-is-action-force-to-knees.condition.json",
       "event-is-action-push-off.condition.json",
       "event-is-action-push-onto-lying-furniture.condition.json",
+      "event-is-action-restrain-target.condition.json",
       "event-is-action-turn-around.condition.json"
     ],
     "events": [

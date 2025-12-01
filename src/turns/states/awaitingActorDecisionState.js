@@ -213,6 +213,8 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
     return {
       action: decision ? decision.action || decision : null,
       extractedData: decision?.extractedData ?? null,
+      availableActions: decision?.availableActions ?? null,
+      suggestedIndex: decision?.suggestedIndex ?? null,
     };
   }
 

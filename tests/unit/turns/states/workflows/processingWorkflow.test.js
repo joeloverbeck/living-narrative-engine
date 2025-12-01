@@ -95,6 +95,15 @@ describe('ProcessingWorkflow.run', () => {
     expect(state.isProcessing).toBe(false);
   });
 
+  test('halts processing while awaiting external event', async () => {
+    ctx.isAwaitingExternalEvent = () => true;
+
+    await workflow.run(handler, null);
+
+    expect(state._processCommandInternal).not.toHaveBeenCalled();
+    expect(state._processingGuard.finish).toHaveBeenCalled();
+  });
+
   test('aborts when already processing', async () => {
     state.startProcessing();
     await workflow.run(handler, null);

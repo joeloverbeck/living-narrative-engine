@@ -281,7 +281,7 @@ describe('TargetComponentValidator', () => {
         expect(result.reason).toContain("tertiary target 'tertiary-entity' has forbidden component");
       });
 
-      it('should reject arrays when any candidate has forbidden component', () => {
+      it('filters forbidden candidates in arrays while keeping valid ones', () => {
         const actionDef = {
           id: 'test-action',
           forbidden_components: {
@@ -302,12 +302,20 @@ describe('TargetComponentValidator', () => {
 
         const result = validator.validateTargetComponents(actionDef, targetEntities);
 
-        expect(result.valid).toBe(false);
-        expect(result.reason).toContain("primary target 'forbidden-entity' has forbidden component 'core:forbidden'");
+        expect(result.valid).toBe(true);
+        expect(result.filteredTargets.primary).toEqual([{ id: 'safe-entity' }]);
+        expect(result.removedTargets).toEqual([
+          {
+            role: 'primary',
+            targetId: 'forbidden-entity',
+            component: 'core:forbidden',
+          },
+        ]);
+        expect(result.reason).toBeUndefined();
         expect(mockEntityManager.getAllComponentTypesForEntity).toHaveBeenCalledTimes(2);
       });
 
-      it('should short-circuit on first validation failure', () => {
+      it('marks the action invalid when all candidates are filtered out', () => {
         const actionDef = {
           id: 'test-action',
           forbidden_components: {
@@ -323,15 +331,17 @@ describe('TargetComponentValidator', () => {
           tertiary: { id: 'tertiary-entity' }
         };
 
-        // Primary has forbidden component
         mockEntityManager.getAllComponentTypesForEntity
-          .mockReturnValueOnce(['core:forbidden']);
+          .mockReturnValueOnce(['core:forbidden'])
+          .mockReturnValueOnce(['core:restricted'])
+          .mockReturnValueOnce(['core:blocked']);
 
         const result = validator.validateTargetComponents(actionDef, targetEntities);
 
         expect(result.valid).toBe(false);
-        // Should only check primary, not secondary or tertiary
-        expect(mockEntityManager.getAllComponentTypesForEntity).toHaveBeenCalledTimes(1);
+        expect(result.filteredTargets.primary).toBeNull();
+        expect(result.removedTargets).toHaveLength(3);
+        expect(mockEntityManager.getAllComponentTypesForEntity).toHaveBeenCalledTimes(3);
       });
 
       it('should handle mixed legacy and modern formats', () => {

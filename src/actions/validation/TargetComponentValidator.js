@@ -47,7 +47,7 @@ export class TargetComponentValidator {
    *
    * @param {object} actionDef - Action definition with forbidden_components
    * @param {object} targetEntities - Object with target entities by role
-   * @returns {{valid: boolean, reason?: string}} Validation result
+   * @returns {{valid: boolean, reason?: string, filteredTargets?: object|null, removedTargets?: Array<object>}} Validation result
    */
   validateTargetComponents(actionDef, targetEntities) {
     const startTime = performance.now();
@@ -168,6 +168,8 @@ export class TargetComponentValidator {
   #validateLegacyFormat(actionDef, targetEntities) {
     const forbiddenComponents = actionDef.forbidden_components.target;
     const targetEntity = targetEntities.target;
+    const filteredTargets = { ...targetEntities };
+    const removedTargets = [];
 
     // No target entity means validation passes
     if (!targetEntity) {
@@ -186,9 +188,18 @@ export class TargetComponentValidator {
 
       this.#logger.debug(reason);
 
+      filteredTargets.target = null;
+      removedTargets.push({
+        role: 'target',
+        targetId: targetEntity.id || null,
+        component: validation.component || null,
+      });
+
       return {
         valid: false,
         reason,
+        filteredTargets,
+        removedTargets,
       };
     }
 
@@ -206,6 +217,10 @@ export class TargetComponentValidator {
   #validateMultiTargetFormat(actionDef, targetEntities) {
     const forbiddenConfig = actionDef.forbidden_components;
     const targetRoles = ALL_TARGET_ROLES;
+    const filteredTargets = { ...targetEntities };
+    const removedTargets = [];
+    let hasRemovals = false;
+    let firstFailureReason = null;
 
     // Check each target role
     for (const role of targetRoles) {
@@ -240,6 +255,10 @@ export class TargetComponentValidator {
         continue;
       }
 
+      const validCandidates = [];
+
+      let lastInvalidReason = null;
+
       for (const candidate of targetCandidates) {
         const entity = candidate && (candidate.entity || candidate);
 
@@ -253,22 +272,48 @@ export class TargetComponentValidator {
         );
 
         if (!validation.valid) {
+          hasRemovals = true;
           const reason =
             `Action '${actionDef.id}' cannot be performed: ` +
             `${role} target '${entity.id || 'unknown'}' has forbidden component '${validation.component}'`;
 
           this.#logger.debug(reason);
-
-          // Short-circuit on first failure
-          return {
-            valid: false,
-            reason,
-          };
+          lastInvalidReason = reason;
+          removedTargets.push({
+            role,
+            targetId: entity.id || null,
+            component: validation.component || null,
+          });
+          continue;
         }
+
+        validCandidates.push(candidate);
+      }
+
+      if (Array.isArray(rawTarget)) {
+        filteredTargets[role] = validCandidates;
+      } else {
+        filteredTargets[role] = validCandidates.length > 0 ? validCandidates[0] : null;
+      }
+
+      if (validCandidates.length === 0 && targetCandidates.length > 0) {
+        firstFailureReason =
+          firstFailureReason ||
+          lastInvalidReason ||
+          `Action '${actionDef.id}' cannot be performed: ${role} target lacks eligible candidates after forbidden component filtering`;
       }
     }
 
-    return { valid: true };
+    if (hasRemovals && removedTargets.length > 0) {
+      return {
+        valid: !firstFailureReason,
+        reason: firstFailureReason || undefined,
+        filteredTargets,
+        removedTargets,
+      };
+    }
+
+    return { valid: !firstFailureReason, reason: firstFailureReason || undefined };
   }
 }
 

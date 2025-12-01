@@ -398,6 +398,9 @@
     },
     "skills:defense_skill": {
       "value": 73
+    },
+    "skills:grappling_skill": {
+        "value": 79
     }
   }
 }

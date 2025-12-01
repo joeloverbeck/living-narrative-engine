@@ -1,5 +1,8 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { ACTION_DECIDED_ID } from '../../src/constants/eventIds.js';
+import {
+  ACTION_DECIDED_ID,
+  LLM_SUGGESTED_ACTION_ID,
+} from '../../src/constants/eventIds.js';
 import { TurnActionChoicePipeline } from '../../src/turns/pipeline/turnActionChoicePipeline.js';
 import { GenericTurnStrategy } from '../../src/turns/strategies/genericTurnStrategy.js';
 import { HumanDecisionProvider } from '../../src/turns/providers/humanDecisionProvider.js';
@@ -100,6 +103,8 @@ describe('Integration – Human and AI turn parity', () => {
       turnEndPort: {},
       entityManager: {},
       actionDiscoverySystem: discoverySvc,
+      // Provide promptCoordinator so LLM suggestions can be human-approved
+      promptCoordinator,
     };
 
     // --- Human Turn Setup ---
@@ -135,7 +140,7 @@ describe('Integration – Human and AI turn parity', () => {
     await aiState.enterState(aiHandler, null);
 
     // --- Assertions ---
-    expect(eventDispatcher.dispatch).toHaveBeenCalledTimes(2);
+    expect(eventDispatcher.dispatch).toHaveBeenCalledTimes(3);
     expect(eventDispatcher.dispatch).toHaveBeenNthCalledWith(
       1,
       ACTION_DECIDED_ID,
@@ -143,6 +148,15 @@ describe('Integration – Human and AI turn parity', () => {
     );
     expect(eventDispatcher.dispatch).toHaveBeenNthCalledWith(
       2,
+      LLM_SUGGESTED_ACTION_ID,
+      expect.objectContaining({
+        actorId: aiActor.id,
+        suggestedActionDescriptor: 'Wait',
+        suggestedIndex: 1,
+      })
+    );
+    expect(eventDispatcher.dispatch).toHaveBeenNthCalledWith(
+      3,
       ACTION_DECIDED_ID,
       expect.objectContaining({ actorId: aiActor.id, actorType: 'ai' })
     );
@@ -164,6 +178,13 @@ describe('Integration – Human and AI turn parity', () => {
       action: aiContext.getChosenAction(),
       meta: aiContext.getDecisionMeta(),
     };
-    expect(aiEndState).toEqual(humanEndState);
+
+    expect(aiEndState.action).toEqual(humanEndState.action);
+    expect(humanEndState.meta).toEqual(
+      expect.objectContaining({ chosenIndex: 1, speech: null, thoughts: null })
+    );
+    expect(aiEndState.meta).toEqual(
+      expect.objectContaining({ suggestedIndex: 1, submittedIndex: 1 })
+    );
   });
 });

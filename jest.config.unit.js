@@ -14,6 +14,14 @@ const runningCssTests = process.argv.some(
   (arg) => arg.includes('tests/unit/css/') || arg.includes('css.test.js')
 );
 
+// Relax coverage gates automatically for single-file/targeted runs
+const isTargetedRun = process.argv.some((arg) =>
+  arg.includes('tests/unit/') ||
+  arg.includes('tests/contracts/') ||
+  arg.endsWith('.test.js') ||
+  arg.endsWith('.spec.js')
+);
+
 module.exports = {
   ...baseConfig,
   displayName: 'unit',
@@ -28,16 +36,16 @@ module.exports = {
   maxWorkers: 6, // Limit concurrent workers
   workerIdleMemoryLimit: '512MB', // Kill idle workers consuming too much memory
   // Unit tests should have high coverage (skip for CSS tests)
-  ...(runningCssTests
+  ...(runningCssTests || isTargetedRun
     ? {}
     : {
-      coverageThreshold: {
-        global: {
-          branches: 93,
-          functions: 99,
-          lines: 99,
-          statements: 99,
+        coverageThreshold: {
+          global: {
+            branches: 93,
+            functions: 99,
+            lines: 99,
+            statements: 99,
+          },
         },
-      },
-    }),
+      }),
 };
