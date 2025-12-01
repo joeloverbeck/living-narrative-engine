@@ -25,6 +25,21 @@ import {
   PORTRAIT_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 import { PORTRAIT_CLICKED } from '../../../src/constants/eventIds.js';
+import {
+  copyToClipboard,
+  showCopyFeedback,
+} from '../../../src/domUI/helpers/clipboardUtils.js';
+
+jest.mock('../../../src/domUI/helpers/clipboardUtils.js', () => {
+  const actual = jest.requireActual(
+    '../../../src/domUI/helpers/clipboardUtils.js'
+  );
+  return {
+    ...actual,
+    copyToClipboard: jest.fn(),
+    showCopyFeedback: jest.fn(),
+  };
+});
 
 /**
  *
@@ -70,6 +85,8 @@ describe('SpeechBubbleRenderer integration coverage', () => {
   beforeEach(() => {
     logger = createLoggerMock();
     document.body.innerHTML = '<div id="outputDiv"></div><div id="message-list"></div>';
+    copyToClipboard.mockResolvedValue(true);
+    showCopyFeedback.mockImplementation(() => {});
     documentContext = new DocumentContext(document);
     domElementFactory = new DomElementFactory(documentContext);
     eventBus = new EventBus({ logger });
@@ -109,6 +126,8 @@ describe('SpeechBubbleRenderer integration coverage', () => {
 
   afterEach(() => {
     document.body.innerHTML = '';
+    copyToClipboard.mockReset();
+    showCopyFeedback.mockReset();
     jest.restoreAllMocks();
   });
 
@@ -121,6 +140,114 @@ describe('SpeechBubbleRenderer integration coverage', () => {
     entityStore.set(config.id, entity);
     return entity;
   }
+
+  it('renders copy-all for player speech without metadata and copies only the speech text', () => {
+    registerEntity({
+      id: 'player-entity',
+      definitionId: 'core:player',
+      components: {
+        [NAME_COMPONENT_ID]: { text: 'Player Character' },
+        [PLAYER_TYPE_COMPONENT_ID]: { type: 'human' },
+        [PLAYER_COMPONENT_ID]: { active: true },
+      },
+    });
+
+    const speechBubbleRenderer = new SpeechBubbleRenderer(baseDependencies);
+
+    speechBubbleRenderer.renderSpeech({
+      entityId: 'player-entity',
+      speechContent: 'Stay <em>calm</em> *nod*',
+      allowHtml: true,
+    });
+
+    const entry = document.querySelector('.speech-entry');
+    const metaContainer = entry?.querySelector('.speech-meta');
+    expect(metaContainer).not.toBeNull();
+
+    const buttons = Array.from(metaContainer?.querySelectorAll('.meta-btn') ?? []);
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0].classList.contains('copy-all')).toBe(true);
+
+    buttons[0].dispatchEvent(new Event('click', { bubbles: true }));
+
+    expect(copyToClipboard).toHaveBeenCalledTimes(1);
+    expect(copyToClipboard).toHaveBeenCalledWith(
+      'Player Character says: "Stay calm *nod*"'
+    );
+  });
+
+  it('appends copy-all after existing meta buttons and assembles payloads for speech and thought bubbles', () => {
+    registerEntity({
+      id: 'npc-with-meta',
+      definitionId: 'core:npc',
+      components: {
+        [NAME_COMPONENT_ID]: { text: 'Archivist' },
+      },
+    });
+
+    const speechBubbleRenderer = new SpeechBubbleRenderer(baseDependencies);
+
+    speechBubbleRenderer.renderSpeech({
+      entityId: 'npc-with-meta',
+      speechContent: 'Observe the relic',
+      thoughts: 'Need to log this',
+      notes: [
+        {
+          text: 'Recovered fragment catalogued.',
+          subject: 'Archivist Log',
+          context: 'Restricted Archives',
+        },
+      ],
+    });
+
+    speechBubbleRenderer.renderThought({
+      entityId: 'npc-with-meta',
+      thoughts: 'Separate channel',
+      notes: [
+        {
+          text: 'Secure storage ready',
+          subject: 'Reminder',
+          context: 'Vault',
+        },
+      ],
+    });
+
+    const [speechMeta, thoughtMeta] = document.querySelectorAll('.speech-meta');
+    const listButtonTypes = (container) =>
+      Array.from(container.querySelectorAll('.meta-btn')).map((btn) => {
+        if (btn.classList.contains('thoughts')) return 'thoughts';
+        if (btn.classList.contains('notes')) return 'notes';
+        if (btn.classList.contains('copy-all')) return 'copy-all';
+        return 'other';
+      });
+
+    expect(listButtonTypes(speechMeta)).toEqual([
+      'thoughts',
+      'notes',
+      'copy-all',
+    ]);
+    expect(listButtonTypes(thoughtMeta)).toEqual([
+      'thoughts',
+      'notes',
+      'copy-all',
+    ]);
+
+    copyToClipboard.mockClear();
+    speechMeta
+      .querySelector('.meta-btn.copy-all')
+      ?.dispatchEvent(new Event('click', { bubbles: true }));
+    expect(copyToClipboard).toHaveBeenCalledWith(
+      `Archivist says: "Observe the relic"\n\nArchivist's thoughts:\nNeed to log this\n\nArchivist Log: Recovered fragment catalogued.\n  (Context: Restricted Archives)`
+    );
+
+    copyToClipboard.mockClear();
+    thoughtMeta
+      .querySelector('.meta-btn.copy-all')
+      ?.dispatchEvent(new Event('click', { bubbles: true }));
+    expect(copyToClipboard).toHaveBeenCalledWith(
+      `Archivist's thoughts:\nSeparate channel\n\nReminder: Secure storage ready\n  (Context: Vault)`
+    );
+  });
 
   it('renders complex speech, handles HTML variations, and gracefully reacts to missing portraits and entities', () => {
     registerEntity({

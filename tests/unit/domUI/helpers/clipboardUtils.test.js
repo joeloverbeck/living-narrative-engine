@@ -315,10 +315,20 @@ describe('clipboardUtils', () => {
         allowSpeechHtml: true,
       });
 
-      expect(text).toBe('"Hello *wave*"');
+      expect(text).toBe('Unknown says: "Hello *wave*"');
       expect(hasSpeech).toBe(true);
       expect(hasThoughts).toBe(false);
       expect(hasNotes).toBe(false);
+    });
+
+    it('falls back to Unknown speaker when name is missing', () => {
+      const { text, hasSpeech } = assembleCopyAllPayload({
+        speechContent: 'Hi there',
+        thoughts: 'Inner',
+      });
+
+      expect(text).toBe('Unknown says: "Hi there"\n\nUnknown\'s thoughts:\nInner');
+      expect(hasSpeech).toBe(true);
     });
 
     it('assembles speech, thoughts, and notes in order with blank lines', () => {
@@ -330,7 +340,7 @@ describe('clipboardUtils', () => {
       });
 
       expect(text).toBe(
-        '"Hello"\n\nIris\'s thoughts:\nThinking...\n\nNote here'
+        'Iris says: "Hello"\n\nIris\'s thoughts:\nThinking...\n\nNote here'
       );
       expect(hasSpeech).toBe(true);
       expect(hasThoughts).toBe(true);

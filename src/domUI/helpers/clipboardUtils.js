@@ -83,6 +83,10 @@ export function assembleCopyAllPayload({
   notes,
   speakerName,
 }) {
+  const effectiveSpeaker = isNonBlankString(speakerName)
+    ? speakerName.trim()
+    : 'Unknown';
+
   const speechText = isNonBlankString(speechContent)
     ? speechContent.trim()
     : '';
@@ -93,11 +97,18 @@ export function assembleCopyAllPayload({
   const quotedSpeech = isNonBlankString(speechWithoutHtml)
     ? `"${speechWithoutHtml}"`
     : '';
+  const speechSegment =
+    isNonBlankString(quotedSpeech) && isNonBlankString(speechContent)
+      ? `${effectiveSpeaker} says: ${quotedSpeech}`
+      : quotedSpeech;
 
-  const formattedThoughts = formatThoughtsForClipboard(thoughts, speakerName);
+  const formattedThoughts = formatThoughtsForClipboard(
+    thoughts,
+    isNonBlankString(thoughts) ? effectiveSpeaker : speakerName
+  );
   const formattedNotes = formatNotesForClipboard(notes);
 
-  const segments = [quotedSpeech, formattedThoughts, formattedNotes].filter(
+  const segments = [speechSegment, formattedThoughts, formattedNotes].filter(
     (segment) => isNonBlankString(segment)
   );
 
@@ -105,7 +116,7 @@ export function assembleCopyAllPayload({
 
   return {
     text,
-    hasSpeech: isNonBlankString(quotedSpeech),
+    hasSpeech: isNonBlankString(speechSegment),
     hasThoughts: isNonBlankString(formattedThoughts),
     hasNotes: isNonBlankString(formattedNotes),
   };
