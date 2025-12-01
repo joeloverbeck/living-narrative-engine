@@ -1043,11 +1043,19 @@ describe('SpeechBubbleRenderer', () => {
         expect(buildSpeechMeta).toHaveBeenCalledWith(
           docContext.document,
           domFactory,
-          {
+          expect.objectContaining({
             thoughts: 'Inner thoughts',
             notes: 'Private notes',
             speakerName: 'Unknown Speaker',
-          }
+            copyAll: expect.objectContaining({
+              allowHtml: false,
+              bubbleType: 'speech',
+              isPlayer: false,
+              notes: 'Private notes',
+              speechContent: 'Test',
+              thoughts: 'Inner thoughts',
+            }),
+          })
         );
 
         const speechBubbleDiv = domFactory.create.mock.results.find(
@@ -1062,7 +1070,7 @@ describe('SpeechBubbleRenderer', () => {
         expect(speechBubbleDiv.appendChild).toHaveBeenCalledWith(mockFragment);
       });
 
-      it('should not add meta when no thoughts or notes provided', () => {
+      it('should not add meta when buildSpeechMeta returns null', () => {
         const {
           buildSpeechMeta,
         } = require('../../../src/domUI/helpers/buildSpeechMeta.js');
@@ -1076,11 +1084,19 @@ describe('SpeechBubbleRenderer', () => {
         expect(buildSpeechMeta).toHaveBeenCalledWith(
           docContext.document,
           domFactory,
-          {
+          expect.objectContaining({
             thoughts: undefined,
             notes: undefined,
             speakerName: 'Unknown Speaker',
-          }
+            copyAll: expect.objectContaining({
+              allowHtml: false,
+              bubbleType: 'speech',
+              isPlayer: false,
+              notes: undefined,
+              speechContent: 'Test',
+              thoughts: undefined,
+            }),
+          })
         );
 
         const speechBubbleDiv = domFactory.create.mock.results.find(

@@ -5,6 +5,7 @@
 import { getIcon } from '../icons.js';
 import { formatNotesAsRichHtml } from './noteTooltipFormatter.js';
 import {
+  assembleCopyAllPayload,
   copyToClipboard,
   formatNotesForClipboard,
   formatThoughtsForClipboard,
@@ -21,7 +22,44 @@ import {
  * @property {string} [thoughts] - The inner thoughts of the character.
  * @property {*} [notes] - Structured notes data for rich HTML display.
  * @property {string} [speakerName] - The name of the speaker (for clipboard formatting).
+ * @property {object} [copyAll] - Copy-all configuration and data.
+ * @property {string} [copyAll.speechContent] - Speech text to include.
+ * @property {boolean} [copyAll.allowHtml] - Whether speech content allows HTML.
+ * @property {string} [copyAll.bubbleType] - 'speech' | 'thought' for aria context.
+ * @property {boolean} [copyAll.isPlayer] - Whether the bubble belongs to a player.
+ * @property {string} [copyAll.thoughts] - Thoughts to include in copy-all (defaults to thoughts param).
+ * @property {*} [copyAll.notes] - Notes to include in copy-all (defaults to notes param).
  */
+
+function buildCopyAllLabel({
+  bubbleType = 'speech',
+  isPlayer = false,
+  hasSpeech,
+  hasThoughts,
+  hasNotes,
+}) {
+  const parts = [];
+  if (hasSpeech) parts.push('speech');
+  if (hasThoughts) parts.push('thoughts');
+  if (hasNotes) parts.push('notes');
+
+  const joinParts = () => {
+    if (parts.length === 0) return bubbleType === 'thought' ? 'thoughts' : 'speech';
+    if (parts.length === 1) return parts[0];
+    if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
+    return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
+  };
+
+  const description = joinParts();
+  const target =
+    bubbleType === 'thought'
+      ? 'thought bubble'
+      : isPlayer
+        ? 'player speech bubble'
+        : 'speech bubble';
+
+  return `Copy ${description} from the ${target} to clipboard`;
+}
 
 /**
  * Builds a document fragment containing metadata buttons (for thoughts, notes) for a speech bubble.
@@ -34,13 +72,18 @@ import {
 export function buildSpeechMeta(
   document,
   domFactory,
-  { thoughts, notes, speakerName }
+  { thoughts, notes, speakerName, copyAll }
 ) {
-  if (!thoughts && !notes) {
+  const hasCopyAll = Boolean(copyAll);
+
+  if (!thoughts && !notes && !hasCopyAll) {
     return null;
   }
 
-  const fragment = document.createDocumentFragment();
+  const fragment =
+    document && typeof document.createDocumentFragment === 'function'
+      ? document.createDocumentFragment()
+      : domFactory?.create?.('div');
   const metaContainer = domFactory.create('div', { cls: 'speech-meta' });
 
   if (thoughts) {
@@ -51,7 +94,9 @@ export function buildSpeechMeta(
         title: 'Click to copy thoughts',
       },
     });
-    btn.style.setProperty('--clr', 'var(--thoughts-icon-color)');
+    if (btn?.style?.setProperty) {
+      btn.style.setProperty('--clr', 'var(--thoughts-icon-color)');
+    }
     btn.innerHTML = getIcon('thoughts');
 
     const tooltip = domFactory.create('div', { cls: 'meta-tooltip' });
@@ -88,7 +133,9 @@ export function buildSpeechMeta(
           title: 'Click to copy notes',
         },
       });
-      btn.style.setProperty('--clr', 'var(--notes-icon-color)');
+      if (btn?.style?.setProperty) {
+        btn.style.setProperty('--clr', 'var(--notes-icon-color)');
+      }
       btn.innerHTML = getIcon('notes');
 
       const tooltip = domFactory.create('div', {
@@ -118,11 +165,81 @@ export function buildSpeechMeta(
     }
   }
 
+  if (hasCopyAll) {
+    const copyAllThoughts =
+      copyAll.thoughts !== undefined ? copyAll.thoughts : thoughts;
+    const copyAllNotes = copyAll.notes !== undefined ? copyAll.notes : notes;
+    const { speechContent, allowHtml, bubbleType, isPlayer } = copyAll;
+
+    const copyAllButton = domFactory.create('button', {
+      cls: 'meta-btn copy-all',
+    });
+
+    const { text: assembledText, hasSpeech, hasThoughts, hasNotes } =
+      assembleCopyAllPayload({
+        speechContent,
+        allowSpeechHtml: allowHtml,
+        thoughts: copyAllThoughts,
+        notes: copyAllNotes,
+        speakerName,
+      });
+
+    const label = buildCopyAllLabel({
+      bubbleType,
+      isPlayer,
+      hasSpeech,
+      hasThoughts,
+      hasNotes,
+    });
+
+    copyAllButton.setAttribute('aria-label', label);
+    copyAllButton.setAttribute('title', label);
+    if (copyAllButton?.style?.setProperty) {
+      copyAllButton.style.setProperty(
+        '--clr',
+        'var(--copy-all-icon-color, var(--notes-icon-color))'
+      );
+    }
+    copyAllButton.innerHTML = getIcon('copy-all');
+
+    copyAllButton.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const payload = assembleCopyAllPayload({
+        speechContent,
+        allowSpeechHtml: allowHtml,
+        thoughts: copyAllThoughts,
+        notes: copyAllNotes,
+        speakerName,
+      });
+
+      if (!payload.text) {
+        showCopyFeedback(copyAllButton, 'Copy failed', 1500);
+        return;
+      }
+
+      const success = await copyToClipboard(payload.text);
+
+      if (success) {
+        showCopyFeedback(copyAllButton, 'Copied!');
+      } else {
+        showCopyFeedback(copyAllButton, 'Copy failed', 1500);
+      }
+    });
+
+    metaContainer.appendChild(copyAllButton);
+  }
+
   // If no buttons were added to the container, return null
   if (metaContainer.children.length === 0) {
     return null;
   }
 
-  fragment.appendChild(metaContainer);
-  return fragment;
+  if (fragment && fragment !== metaContainer) {
+    fragment.appendChild(metaContainer);
+    return fragment;
+  }
+
+  return fragment || metaContainer;
 }

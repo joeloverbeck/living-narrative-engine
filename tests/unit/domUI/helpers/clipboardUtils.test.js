@@ -4,6 +4,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import {
+  assembleCopyAllPayload,
   copyToClipboard,
   formatNotesForClipboard,
   formatThoughtsForClipboard,
@@ -304,6 +305,49 @@ describe('clipboardUtils', () => {
       showCopyFeedback(button, 'Custom message!', 100);
       const feedback = button.querySelector('.copy-feedback');
       expect(feedback.textContent).toBe('Custom message!');
+    });
+  });
+
+  describe('assembleCopyAllPayload', () => {
+    it('assembles speech only with quotes and strips HTML when allowed', () => {
+      const { text, hasSpeech, hasThoughts, hasNotes } = assembleCopyAllPayload({
+        speechContent: '<b>Hello</b> *wave*',
+        allowSpeechHtml: true,
+      });
+
+      expect(text).toBe('"Hello *wave*"');
+      expect(hasSpeech).toBe(true);
+      expect(hasThoughts).toBe(false);
+      expect(hasNotes).toBe(false);
+    });
+
+    it('assembles speech, thoughts, and notes in order with blank lines', () => {
+      const { text, hasSpeech, hasThoughts, hasNotes } = assembleCopyAllPayload({
+        speechContent: 'Hello',
+        thoughts: 'Thinking...',
+        notes: { text: 'Note here' },
+        speakerName: 'Iris',
+      });
+
+      expect(text).toBe(
+        '"Hello"\n\nIris\'s thoughts:\nThinking...\n\nNote here'
+      );
+      expect(hasSpeech).toBe(true);
+      expect(hasThoughts).toBe(true);
+      expect(hasNotes).toBe(true);
+    });
+
+    it('returns empty payload when all segments are blank', () => {
+      const payload = assembleCopyAllPayload({
+        speechContent: '   ',
+        thoughts: ' ',
+        notes: [],
+      });
+
+      expect(payload.text).toBe('');
+      expect(payload.hasSpeech).toBe(false);
+      expect(payload.hasThoughts).toBe(false);
+      expect(payload.hasNotes).toBe(false);
     });
   });
 });

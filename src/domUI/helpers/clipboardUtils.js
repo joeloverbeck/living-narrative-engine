@@ -5,6 +5,15 @@
 import { isNonBlankString } from '../../utils/textUtils.js';
 
 /**
+ * @typedef {object} CopyAllPayload
+ * @property {string} [speechContent]
+ * @property {boolean} [allowSpeechHtml]
+ * @property {string} [thoughts]
+ * @property {import('../../turns/states/helpers/noteFormatter.js').NoteObject|import('../../turns/states/helpers/noteFormatter.js').NoteObject[]} [notes]
+ * @property {string} [speakerName]
+ */
+
+/**
  * @typedef {import('../../turns/states/helpers/noteFormatter.js').NoteObject} NoteObject
  */
 
@@ -58,6 +67,48 @@ export async function copyToClipboard(text) {
     console.error('[clipboardUtils] All clipboard methods failed:', err);
     return false;
   }
+}
+
+/**
+ * Builds an aggregated clipboard payload for copy-all interactions.
+ * Returns both the assembled text and flags indicating which sections were included.
+ *
+ * @param {CopyAllPayload} params
+ * @returns {{ text: string, hasSpeech: boolean, hasThoughts: boolean, hasNotes: boolean }}
+ */
+export function assembleCopyAllPayload({
+  speechContent,
+  allowSpeechHtml = false,
+  thoughts,
+  notes,
+  speakerName,
+}) {
+  const speechText = isNonBlankString(speechContent)
+    ? speechContent.trim()
+    : '';
+
+  const speechWithoutHtml = allowSpeechHtml
+    ? speechText.replace(/<[^>]*>/g, '')
+    : speechText;
+  const quotedSpeech = isNonBlankString(speechWithoutHtml)
+    ? `"${speechWithoutHtml}"`
+    : '';
+
+  const formattedThoughts = formatThoughtsForClipboard(thoughts, speakerName);
+  const formattedNotes = formatNotesForClipboard(notes);
+
+  const segments = [quotedSpeech, formattedThoughts, formattedNotes].filter(
+    (segment) => isNonBlankString(segment)
+  );
+
+  const text = segments.join('\n\n').trim();
+
+  return {
+    text,
+    hasSpeech: isNonBlankString(quotedSpeech),
+    hasThoughts: isNonBlankString(formattedThoughts),
+    hasNotes: isNonBlankString(formattedNotes),
+  };
 }
 
 /**

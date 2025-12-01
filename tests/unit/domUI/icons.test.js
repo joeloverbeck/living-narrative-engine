@@ -7,6 +7,7 @@ import {
 
 const THOUGHTS_FALLBACK = '<svg';
 const NOTES_FALLBACK = '<svg';
+const COPY_ALL_FALLBACK = '<svg';
 
 describe('getIcon', () => {
   afterEach(() => {
@@ -16,6 +17,7 @@ describe('getIcon', () => {
   it('returns fallback icons when registry is not set', () => {
     expect(getIcon('thoughts')).toContain(THOUGHTS_FALLBACK);
     expect(getIcon('notes')).toContain(NOTES_FALLBACK);
+    expect(getIcon('copy-all')).toContain(COPY_ALL_FALLBACK);
   });
 
   it('retrieves icons from the registry when available', () => {
@@ -23,25 +25,29 @@ describe('getIcon', () => {
       get: (type, id) => {
         if (type === 'ui-icons' && id === 'notes') return '<svg id="n" />';
         if (type === 'ui-icons' && id === 'thoughts') return '<svg id="t" />';
+        if (type === 'ui-icons' && id === 'copy-all')
+          return '<svg id="copy-all" />';
         return undefined;
       },
     };
     setIconRegistry(registry);
     expect(getIcon('notes')).toBe('<svg id="n" />');
     expect(getIcon('thoughts')).toBe('<svg id="t" />');
+    expect(getIcon('copy-all')).toBe('<svg id="copy-all" />');
   });
 
   it('falls back when registry lookup fails', () => {
     const registry = { get: () => undefined };
     setIconRegistry(registry);
     expect(getIcon('thoughts')).toContain(THOUGHTS_FALLBACK);
+    expect(getIcon('copy-all')).toContain(COPY_ALL_FALLBACK);
   });
 
   it('supports registry responses that provide markup objects', () => {
     const registry = {
       get: (type, id) => {
-        if (type === 'ui-icons' && id === 'notes') {
-          return { markup: '<svg id="notes-object" />' };
+        if (type === 'ui-icons' && id === 'copy-all') {
+          return { markup: '<svg id="copy-all-object" />' };
         }
         return undefined;
       },
@@ -49,7 +55,7 @@ describe('getIcon', () => {
 
     setIconRegistry(registry);
 
-    expect(getIcon('notes')).toBe('<svg id="notes-object" />');
+    expect(getIcon('copy-all')).toBe('<svg id="copy-all-object" />');
   });
 
   it('returns an empty string when no fallback icon exists', () => {
@@ -76,10 +82,14 @@ describe('IconRegistry', () => {
         if (type === 'ui-icons' && id === 'thoughts') {
           return { markup: 42 };
         }
+        if (type === 'ui-icons' && id === 'copy-all') {
+          return { markup: null };
+        }
         return null;
       },
     });
 
     expect(instance.getIcon('thoughts')).toContain(THOUGHTS_FALLBACK);
+    expect(instance.getIcon('copy-all')).toContain(COPY_ALL_FALLBACK);
   });
 });

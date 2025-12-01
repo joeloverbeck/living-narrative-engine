@@ -248,15 +248,19 @@ describe('ActionButtonsRenderer', () => {
       consoleSpy.mockRestore();
     });
 
-    it('should subscribe to VED event core:update_available_actions', () => {
+    it('should subscribe to VED events for actions, theme, and LLM suggestions', () => {
       createRenderer();
-      expect(mockVed.subscribe).toHaveBeenCalledTimes(2);
+      expect(mockVed.subscribe).toHaveBeenCalledTimes(3);
       expect(mockVed.subscribe).toHaveBeenCalledWith(
         'core:update_available_actions',
         expect.any(Function)
       );
       expect(mockVed.subscribe).toHaveBeenCalledWith(
         'THEME_CHANGED',
+        expect.any(Function)
+      );
+      expect(mockVed.subscribe).toHaveBeenCalledWith(
+        'llm:suggested_action',
         expect.any(Function)
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
