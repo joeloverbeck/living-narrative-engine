@@ -146,7 +146,11 @@ describe('seduction:brush_hair_back_coyly prerequisites', () => {
       expect(brushHairAction.template).toBe('brush your hair back coyly');
       expect(brushHairAction.targets).toBe('none');
       expect(brushHairAction.forbidden_components).toEqual({
-        actor: ['positioning:hugging', 'positioning:doing_complex_performance'],
+        actor: [
+          'positioning:hugging',
+          'positioning:doing_complex_performance',
+          'positioning:restraining',
+        ],
       });
       expect(brushHairAction.visual).toBeDefined();
       expect(brushHairAction.visual.backgroundColor).toBe('#f57f17');

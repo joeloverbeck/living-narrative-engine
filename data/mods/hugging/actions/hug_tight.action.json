@@ -5,11 +5,20 @@
   "description": "Give someone a tight, tender hug.",
   "targets": "positioning:close_actors_facing_each_other_or_behind_target",
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": [
+      "positioning:closeness"
+    ]
   },
   "forbidden_components": {
-    "actor": ["positioning:hugging", "positioning:being_hugged", "positioning:giving_blowjob"],
-    "primary": ["positioning:being_hugged"]
+    "actor": [
+      "positioning:hugging",
+      "positioning:being_hugged",
+      "positioning:giving_blowjob",
+      "positioning:restraining"
+    ],
+    "primary": [
+      "positioning:being_hugged"
+    ]
   },
   "template": "hug {target} tight",
   "prerequisites": [],

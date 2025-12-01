@@ -6,27 +6,40 @@
   "targets": "none",
   "required_components": {},
   "forbidden_components": {
-    "actor": ["positioning:hugging", "positioning:receiving_blowjob", "positioning:fucking_anally"]
+    "actor": [
+      "positioning:hugging",
+      "positioning:receiving_blowjob",
+      "positioning:fucking_anally",
+      "positioning:restraining"
+    ]
   },
   "template": "stroke your penis to draw attention",
   "prerequisites": [
     {
       "logic": {
-        "hasPartOfType": ["actor", "penis"]
+        "hasPartOfType": [
+          "actor",
+          "penis"
+        ]
       },
       "failure_message": "You need a penis to perform this action."
     },
     {
       "logic": {
         "not": {
-          "isSocketCovered": ["actor", "penis"]
+          "isSocketCovered": [
+            "actor",
+            "penis"
+          ]
         }
       },
       "failure_message": "Your penis must be uncovered to perform this action."
     },
     {
       "logic": {
-        "hasOtherActorsAtLocation": ["actor"]
+        "hasOtherActorsAtLocation": [
+          "actor"
+        ]
       },
       "failure_message": "There is nobody here to draw attention from."
     }

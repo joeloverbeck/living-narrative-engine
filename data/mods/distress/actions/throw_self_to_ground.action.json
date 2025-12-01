@@ -9,7 +9,8 @@
     "actor": [
       "positioning:fallen",
       "positioning:lying_down",
-      "positioning:being_restrained"
+      "positioning:being_restrained",
+      "positioning:restraining"
     ]
   },
   "template": "throw yourself to the ground in grief",

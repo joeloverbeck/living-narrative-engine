@@ -23,7 +23,8 @@
     "actor": [
       "positioning:sitting_on",
       "positioning:kneeling_before",
-      "positioning:bending_over"
+      "positioning:bending_over",
+      "positioning:restraining"
     ]
   },
   "template": "sit down on {seat} at a distance from {occupant}",

@@ -14,7 +14,8 @@
       "positioning:hugging",
       "positioning:being_hugged",
       "positioning:lying_down",
-      "positioning:being_restrained"
+      "positioning:being_restrained",
+      "positioning:restraining"
     ],
     "primary": ["positioning:sitting_on"]
   },

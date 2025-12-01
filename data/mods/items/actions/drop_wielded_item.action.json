@@ -4,7 +4,9 @@
   "name": "Drop Wielded Item",
   "description": "Release and drop an item you are currently wielding",
   "required_components": {
-    "actor": ["positioning:wielding"]
+    "actor": [
+      "positioning:wielding"
+    ]
   },
   "targets": {
     "primary": {
@@ -14,7 +16,10 @@
     }
   },
   "forbidden_components": {
-    "actor": ["positioning:doing_complex_performance"]
+    "actor": [
+      "positioning:doing_complex_performance",
+      "positioning:restraining"
+    ]
   },
   "prerequisites": [],
   "template": "drop {item}",

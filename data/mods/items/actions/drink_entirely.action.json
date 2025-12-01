@@ -17,6 +17,10 @@
     ]
   },
   "forbidden_components": {
+    "actor": [
+      "positioning:being_restrained",
+      "positioning:restraining"
+    ],
     "primary": [
       "items:empty"
     ]

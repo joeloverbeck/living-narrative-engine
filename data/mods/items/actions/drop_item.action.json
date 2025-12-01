@@ -11,7 +11,10 @@
     }
   },
   "forbidden_components": {
-    "actor": ["positioning:doing_complex_performance"]
+    "actor": [
+      "positioning:doing_complex_performance",
+      "positioning:restraining"
+    ]
   },
   "prerequisites": [
     {

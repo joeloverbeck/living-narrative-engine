@@ -20,7 +20,8 @@
     "actor": [
       "positioning:bending_over",
       "positioning:biting_neck",
-      "positioning:being_restrained"
+      "positioning:being_restrained",
+      "positioning:restraining"
     ]
   },
   "template": "turn around to face {target}",

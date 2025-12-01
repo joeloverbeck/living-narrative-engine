@@ -267,7 +267,7 @@ describe('distress:clutch_onto_upper_clothing action discovery', () => {
         'positioning:closeness',
       ]);
       expect(clutchOntoUpperClothingAction.forbidden_components).toEqual({
-        actor: ['positioning:hugging'],
+        actor: ['positioning:hugging', 'positioning:restraining'],
         primary: ['positioning:giving_blowjob'],
         secondary: [],
       });
