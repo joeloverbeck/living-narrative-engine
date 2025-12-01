@@ -85,7 +85,8 @@ describe('LLM pending gate integration', () => {
     expect(ctx.setAwaitingExternalEvent).toHaveBeenLastCalledWith(false, 'actor-1');
     expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
       LLM_SUGGESTED_ACTION_ID,
-      expect.objectContaining({ actorId: 'actor-1', suggestedIndex: 1 })
+      expect.objectContaining({ actorId: 'actor-1', suggestedIndex: 1 }),
+      expect.objectContaining({ allowSchemaNotFound: true })
     );
     expect(promptService.prompt).toHaveBeenCalledWith(actor, {
       indexedComposites: availableActions,

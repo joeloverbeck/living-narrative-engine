@@ -135,16 +135,16 @@
           "description": "Explicit categorization of the note's subject type: entity (who/what/where), event (past occurrences), plan (future intentions), knowledge (information/theories), state (mental/emotional conditions), other"
         },
         "context": {
-          "type": "string",
+          "type": ["string", "null"],
           "description": "Where/how this was observed (optional)"
         },
         "timestamp": {
-          "type": "string",
+          "type": ["string", "null"],
           "format": "date-time",
           "description": "When the note was created"
         }
       },
-      "required": ["text", "subject", "subjectType"],
+      "required": ["text", "subject"],
       "additionalProperties": false
     },
     "templateString": {

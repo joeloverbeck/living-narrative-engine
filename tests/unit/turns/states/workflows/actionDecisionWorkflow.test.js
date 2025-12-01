@@ -152,7 +152,8 @@ describe('ActionDecisionWorkflow.run', () => {
     expect(ctx.setAwaitingExternalEvent).toHaveBeenLastCalledWith(false, 'a1');
     expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
       LLM_SUGGESTED_ACTION_ID,
-      expect.objectContaining({ actorId: 'a1', suggestedIndex: 1 })
+      expect.objectContaining({ actorId: 'a1', suggestedIndex: 1 }),
+      expect.objectContaining({ allowSchemaNotFound: true })
     );
     expect(prompt.prompt).toHaveBeenCalledWith(actor, {
       indexedComposites: availableActions,
@@ -214,7 +215,8 @@ describe('ActionDecisionWorkflow.run', () => {
     expect(ctx.setAwaitingExternalEvent).toHaveBeenLastCalledWith(false, 'a1');
     expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
       LLM_SUGGESTED_ACTION_ID,
-      expect.objectContaining({ actorId: 'a1', suggestedIndex: null })
+      expect.objectContaining({ actorId: 'a1', suggestedIndex: null }),
+      expect.objectContaining({ allowSchemaNotFound: true })
     );
     expect(prompt.prompt).not.toHaveBeenCalled();
     expect(logger.warn).toHaveBeenCalledWith(
@@ -285,7 +287,8 @@ describe('ActionDecisionWorkflow.run', () => {
     expect(ctx.setAwaitingExternalEvent).toHaveBeenCalledWith(true, 'a1');
     expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
       LLM_SUGGESTED_ACTION_ID,
-      expect.objectContaining({ actorId: 'a1', suggestedIndex: 1 })
+      expect.objectContaining({ actorId: 'a1', suggestedIndex: 1 }),
+      expect.objectContaining({ allowSchemaNotFound: true })
     );
     expect(ctx.requestProcessingCommandStateTransition).toHaveBeenCalledWith(
       'cmd1',
@@ -344,7 +347,8 @@ describe('ActionDecisionWorkflow.run', () => {
     expect(ctx.setAwaitingExternalEvent).toHaveBeenLastCalledWith(false, 'a1');
     expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
       LLM_SUGGESTED_ACTION_ID,
-      expect.objectContaining({ actorId: 'a1', suggestedIndex: 1 })
+      expect.objectContaining({ actorId: 'a1', suggestedIndex: 1 }),
+      expect.objectContaining({ allowSchemaNotFound: true })
     );
     expect(state._recordDecision).toHaveBeenCalledWith(
       ctx,
@@ -417,6 +421,81 @@ describe('ActionDecisionWorkflow.run', () => {
       expect.objectContaining({ actionDefinitionId: 'act1' })
     );
     expect(ctx.endTurn).not.toHaveBeenCalledWith(expect.any(Error));
+  });
+
+  test('clears pending flag and keeps telemetry when suggested_action validation fails', async () => {
+    const safeDispatcher = {
+      dispatch: jest.fn().mockResolvedValue(false),
+    };
+    const llmProvider = new LLMDecisionProvider({
+      llmChooser: { choose: jest.fn() },
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    });
+
+    const availableActions = [
+      {
+        index: 1,
+        actionId: 'act1',
+        description: 'One',
+        commandString: 'cmd1',
+      },
+      {
+        index: 2,
+        actionId: 'act2',
+        description: 'Two',
+        commandString: 'cmd2',
+      },
+    ];
+
+    const prompt = {
+      prompt: jest.fn().mockResolvedValue({ chosenIndex: 2 }),
+    };
+
+    const finalAction = { actionDefinitionId: 'act2', commandString: 'cmd2' };
+
+    ctx.getPlayerPromptService = () => prompt;
+    ctx.getPromptSignal = jest.fn(() => new AbortController().signal);
+    ctx.setAwaitingExternalEvent = jest.fn();
+    ctx.getSafeEventDispatcher = () => safeDispatcher;
+
+    strategy = {
+      decisionProvider: llmProvider,
+      turnActionFactory: {
+        create: jest.fn().mockReturnValue(finalAction),
+      },
+    };
+
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1', commandString: 'cmd1' },
+      extractedData: { speech: 'hi', thoughts: 'ok' },
+      availableActions,
+      suggestedIndex: 1,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
+      LLM_SUGGESTED_ACTION_ID,
+      expect.objectContaining({ actorId: 'a1', suggestedIndex: 1 }),
+      { allowSchemaNotFound: true }
+    );
+    expect(ctx.setAwaitingExternalEvent).toHaveBeenNthCalledWith(1, true, 'a1');
+    expect(ctx.setAwaitingExternalEvent).toHaveBeenLastCalledWith(false, 'a1');
+    const telemetryCalls = logger.debug.mock.calls.filter(([msg]) =>
+      msg.includes('LLM suggestion telemetry')
+    );
+    expect(telemetryCalls).toHaveLength(1);
+    expect(state._recordDecision).toHaveBeenCalledWith(
+      ctx,
+      finalAction,
+      expect.objectContaining({ submittedIndex: 2, suggestedIndex: 1 })
+    );
+    expect(ctx.requestProcessingCommandStateTransition).toHaveBeenCalledWith(
+      'cmd2',
+      finalAction
+    );
   });
 
   test('logs telemetry once with invalid suggestion correction and override', async () => {
@@ -542,7 +621,18 @@ describe('ActionDecisionWorkflow.run', () => {
 
     state._decideAction.mockResolvedValue({
       action: { actionDefinitionId: 'act1', commandString: 'cmd1' },
-      extractedData: { speech: 'hi' },
+      extractedData: {
+        speech: 'hi',
+        thoughts: 'note',
+        notes: [
+          {
+            text: 'Containment vessel is ready',
+            subject: 'chicken coop',
+            subjectType: 'event',
+            context: '12 Kiln Lane',
+          },
+        ],
+      },
       availableActions,
       suggestedIndex: 1,
     });
@@ -630,7 +720,18 @@ describe('ActionDecisionWorkflow.run', () => {
 
     state._decideAction.mockResolvedValue({
       action: { actionDefinitionId: 'act1', commandString: 'cmd1' },
-      extractedData: { speech: 'hi' },
+      extractedData: {
+        speech: 'hi',
+        thoughts: 'consider safety',
+        notes: [
+          {
+            text: 'Containment vessel is ready',
+            subject: 'chicken coop',
+            subjectType: 'event',
+            context: '12 Kiln Lane',
+          },
+        ],
+      },
       availableActions,
       suggestedIndex: 1,
     });
@@ -712,7 +813,18 @@ describe('ActionDecisionWorkflow.run', () => {
 
     state._decideAction.mockResolvedValue({
       action: { actionDefinitionId: 'act1', commandString: 'cmd1' },
-      extractedData: { speech: 'hi' },
+      extractedData: {
+        speech: 'hi',
+        thoughts: 'consider safety',
+        notes: [
+          {
+            text: 'Containment vessel is ready',
+            subject: 'chicken coop',
+            subjectType: 'event',
+            context: '12 Kiln Lane',
+          },
+        ],
+      },
       availableActions,
       suggestedIndex: 1,
     });
@@ -804,13 +916,45 @@ describe('ActionDecisionWorkflow.run', () => {
 
     state._decideAction.mockResolvedValue({
       action: { actionDefinitionId: 'act1', commandString: 'cmd1' },
-      extractedData: { speech: 'hi' },
+      extractedData: {
+        speech: 'hi',
+        thoughts: 'consider safety',
+        notes: [
+          {
+            text: 'Containment vessel is ready',
+            subject: 'chicken coop',
+            subjectType: 'event',
+            context: '12 Kiln Lane',
+          },
+        ],
+      },
       availableActions,
       suggestedIndex: 1,
     });
 
+    const emitSpy = jest.spyOn(
+      ActionDecisionWorkflow.prototype,
+      '_emitSuggestedActionEvent'
+    );
     const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
     await workflow.run();
+
+    expect(emitSpy).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ description: 'One' }),
+      expect.objectContaining({
+        notes: [
+          expect.objectContaining({
+            text: 'Containment vessel is ready',
+            subject: 'chicken coop',
+            subjectType: 'event',
+          }),
+        ],
+        thoughts: 'consider safety',
+        speech: 'hi',
+      })
+    );
+    emitSpy.mockRestore();
 
     expect(eventBus.dispatch).toHaveBeenCalledWith(
       LLM_SUGGESTED_ACTION_ID,
@@ -818,6 +962,14 @@ describe('ActionDecisionWorkflow.run', () => {
         actorId: 'a1',
         suggestedIndex: 1,
         suggestedActionDescriptor: 'One',
+        notes: [
+          expect.objectContaining({
+            subjectType: 'event',
+            subject: 'chicken coop',
+            text: 'Containment vessel is ready',
+            context: '12 Kiln Lane',
+          }),
+        ],
       })
     );
     expect(vedLogger.warn).not.toHaveBeenCalled();

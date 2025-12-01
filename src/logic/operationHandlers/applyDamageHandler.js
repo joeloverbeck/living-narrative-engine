@@ -152,12 +152,68 @@ class ApplyDamageHandler extends BaseOperationHandler {
     }
   }
 
+  async #propagateDamage({
+    entityId,
+    parentPartId,
+    damageAmount,
+    damageType,
+    propagationRules,
+    executionContext,
+  }) {
+    if (!propagationRules || typeof propagationRules !== 'object') return;
+
+    const log = this.getLogger(executionContext);
+    const entries = Object.entries(propagationRules);
+    if (!entries.length) return;
+
+    for (const [childPartId, rule] of entries) {
+      if (!rule || typeof rule !== 'object' || childPartId === parentPartId) {
+        continue;
+      }
+
+      const allowedTypes = Array.isArray(rule.damage_types)
+        ? rule.damage_types
+        : null;
+      if (allowedTypes && allowedTypes.length > 0 && !allowedTypes.includes(damageType)) {
+        continue;
+      }
+
+      const probabilityRaw = typeof rule.probability === 'number' ? rule.probability : 1;
+      const probability = Math.min(1, Math.max(0, probabilityRaw));
+      if (Math.random() > probability) continue;
+
+      const fraction = typeof rule.damage_fraction === 'number' ? rule.damage_fraction : 0.5;
+      const propagatedAmount = damageAmount * fraction;
+      if (!(propagatedAmount > 0)) continue;
+
+      const joint = this.#entityManager.getComponentData(childPartId, 'anatomy:joint');
+      const jointParentId = joint?.parentId || joint?.parentEntityId;
+      if (jointParentId !== parentPartId) {
+        log.debug(
+          `APPLY_DAMAGE: Skipping propagation to ${childPartId} - not a child of ${parentPartId}`
+        );
+        continue;
+      }
+
+      await this.execute(
+        {
+          entity_ref: entityId,
+          part_ref: childPartId,
+          amount: propagatedAmount,
+          damage_type: damageType,
+          propagatedFrom: parentPartId,
+        },
+        executionContext
+      );
+    }
+  }
+
   async execute(params, executionContext) {
     const log = this.getLogger(executionContext);
 
     if (!assertParamsObject(params, this.#dispatcher, 'APPLY_DAMAGE')) return;
 
-    const { entity_ref, part_ref, amount, damage_type } = params;
+    const { entity_ref, part_ref, amount, damage_type, propagatedFrom = null } = params;
 
     // 1. Resolve Entity
     const entityId = this.#resolveRef(entity_ref, executionContext, log);
@@ -200,14 +256,28 @@ class ApplyDamageHandler extends BaseOperationHandler {
       partId,
       amount: damageAmount,
       damageType,
+      propagatedFrom,
       timestamp: Date.now()
     });
+
+    const partComponent = this.#entityManager.hasComponent(partId, PART_COMPONENT_ID)
+      ? this.#entityManager.getComponentData(partId, PART_COMPONENT_ID)
+      : null;
+    const propagationRules = partComponent?.damage_propagation;
 
     // 5. Update Health
     if (!this.#entityManager.hasComponent(partId, PART_HEALTH_COMPONENT_ID)) {
       // It's possible we hit a part without health (e.g. hair?), though likely all parts have health.
-      // If no health component, we stop here (damage applied, but no health logic).
+      // If no health component, still propagate damage if rules exist.
       log.debug(`APPLY_DAMAGE: Part ${partId} has no health component. Skipping health update.`);
+      await this.#propagateDamage({
+        entityId,
+        parentPartId: partId,
+        damageAmount,
+        damageType,
+        propagationRules,
+        executionContext,
+      });
       return;
     }
 
@@ -237,10 +307,9 @@ class ApplyDamageHandler extends BaseOperationHandler {
       // Getting extra info for the event
       let partType = 'unknown';
       let ownerEntityId = null;
-      if (this.#entityManager.hasComponent(partId, PART_COMPONENT_ID)) {
-         const partComp = this.#entityManager.getComponentData(partId, PART_COMPONENT_ID);
-         partType = partComp.subType || 'unknown';
-         ownerEntityId = partComp.ownerEntityId;
+      if (partComponent) {
+         partType = partComponent.subType || 'unknown';
+         ownerEntityId = partComponent.ownerEntityId;
       }
 
       this.#dispatcher.dispatch(PART_HEALTH_CHANGED_EVENT, {
@@ -272,7 +341,17 @@ class ApplyDamageHandler extends BaseOperationHandler {
     } catch (error) {
       log.error('APPLY_DAMAGE operation failed', error, { partId });
       safeDispatchError(this.#dispatcher, `APPLY_DAMAGE: Operation failed - ${error.message}`, { partId, error: error.message }, log);
+      return;
     }
+
+    await this.#propagateDamage({
+      entityId,
+      parentPartId: partId,
+      damageAmount,
+      damageType,
+      propagationRules,
+      executionContext,
+    });
   }
 }
 
