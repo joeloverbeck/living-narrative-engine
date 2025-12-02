@@ -21,6 +21,7 @@ import { HasFreeGrabbingAppendagesOperator } from './operators/hasFreeGrabbingAp
 import { CanActorGrabItemOperator } from './operators/canActorGrabItemOperator.js';
 import { IsItemBeingGrabbedOperator } from './operators/isItemBeingGrabbedOperator.js';
 import { GetSkillValueOperator } from './operators/getSkillValueOperator.js';
+import { HasDamageCapabilityOperator } from './operators/hasDamageCapabilityOperator.js';
 import { validateOperatorWhitelist } from './operatorRegistrationValidator.js';
 import { hasValidEntityId } from './utils/entityPathResolver.js';
 
@@ -241,6 +242,11 @@ export class JsonLogicCustomOperators extends BaseService {
     });
 
     const getSkillValueOp = new GetSkillValueOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
+    const hasDamageCapabilityOp = new HasDamageCapabilityOperator({
       entityManager: this.#entityManager,
       logger: this.#logger,
     });
@@ -480,6 +486,16 @@ export class JsonLogicCustomOperators extends BaseService {
           [entityPath, componentId, propertyPath, defaultValue],
           this
         );
+      },
+      jsonLogicEvaluationService
+    );
+
+    // Register has_damage_capability operator
+    this.#registerOperator(
+      'has_damage_capability',
+      function (entityPath, damageTypeName) {
+        // 'this' is the evaluation context
+        return hasDamageCapabilityOp.evaluate([entityPath, damageTypeName], this);
       },
       jsonLogicEvaluationService
     );

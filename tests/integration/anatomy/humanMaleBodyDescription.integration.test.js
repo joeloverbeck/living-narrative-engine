@@ -2,7 +2,7 @@
  * @file Integration test for human male body description generation
  */
 
-import { describe, it, expect, beforeAll, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import {
   ANATOMY_BODY_COMPONENT_ID,
@@ -22,6 +22,9 @@ import bodyComponent from '../../../data/mods/anatomy/components/body.component.
 import jointComponent from '../../../data/mods/anatomy/components/joint.component.json';
 import partComponent from '../../../data/mods/anatomy/components/part.component.json';
 import socketsComponent from '../../../data/mods/anatomy/components/sockets.component.json';
+import vitalOrganComponent from '../../../data/mods/anatomy/components/vital_organ.component.json';
+import partHealthComponent from '../../../data/mods/anatomy/components/part_health.component.json';
+import damagePropagationComponent from '../../../data/mods/anatomy/components/damage_propagation.component.json';
 
 // Import descriptor components
 import sizeCategoryComponent from '../../../data/mods/descriptors/components/size_category.component.json';
@@ -60,6 +63,9 @@ import humanMaleRecipe from '../../../data/mods/anatomy/recipes/human_male.recip
 import humanoidCorePart from '../../../data/mods/anatomy/parts/humanoid_core.part.json';
 import humanoidSlotLibrary from '../../../data/mods/anatomy/libraries/humanoid.slot-library.json';
 import blueprintSlot from '../../../data/mods/anatomy/entities/definitions/blueprint_slot.entity.json';
+import humanHeart from '../../../data/mods/anatomy/entities/definitions/human_heart.entity.json';
+import humanBrain from '../../../data/mods/anatomy/entities/definitions/human_brain.entity.json';
+import humanSpine from '../../../data/mods/anatomy/entities/definitions/human_spine.entity.json';
 
 // Import core components
 import nameComponent from '../../../data/mods/core/components/name.component.json';
@@ -158,6 +164,9 @@ describe('Human Male Body Description Integration Test', () => {
       'anatomy:joint': jointComponent,
       'anatomy:part': partComponent,
       'anatomy:sockets': socketsComponent,
+      'anatomy:vital_organ': vitalOrganComponent,
+      'anatomy:part_health': partHealthComponent,
+      'anatomy:damage_propagation': damagePropagationComponent,
     });
 
     // Load entity definitions
@@ -180,6 +189,9 @@ describe('Human Male Body Description Integration Test', () => {
       'anatomy:human_ass_cheek': humanAssCheek,
       'anatomy:human_hand': humanHand,
       'anatomy:human_foot': humanFoot,
+      'anatomy:human_heart': humanHeart,
+      'anatomy:human_brain': humanBrain,
+      'anatomy:human_spine': humanSpine,
       'test:human_male': testHumanMale,
     });
 

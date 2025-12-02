@@ -9,7 +9,8 @@
   ],
   "content": {
     "components": [
-      "can_cut.component.json"
+      "can_cut.component.json",
+      "damage_capabilities.component.json"
     ]
   }
 }

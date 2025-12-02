@@ -129,6 +129,40 @@
             "ass_cheek"
           ],
           "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "heart_socket",
+          "allowedTypes": ["heart"],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "spine_socket",
+          "allowedTypes": ["spine"],
+          "nameTpl": "{{type}}"
+        }
+      ]
+    },
+    "anatomy:damage_propagation": {
+      "rules": [
+        {
+          "childSocketId": "heart_socket",
+          "baseProbability": 0.3,
+          "damageFraction": 0.5,
+          "damageTypeModifiers": {
+            "piercing": 1.5,
+            "blunt": 0.3,
+            "slashing": 0.8
+          }
+        },
+        {
+          "childSocketId": "spine_socket",
+          "baseProbability": 0.2,
+          "damageFraction": 0.5,
+          "damageTypeModifiers": {
+            "piercing": 1.2,
+            "blunt": 0.5,
+            "slashing": 0.6
+          }
         }
       ]
     },

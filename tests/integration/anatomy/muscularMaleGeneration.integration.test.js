@@ -2,7 +2,7 @@
  * @file Integration test for muscular male anatomy generation
  */
 
-import { describe, it, expect, beforeAll, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import { ANATOMY_BODY_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 
@@ -11,6 +11,9 @@ import bodyComponent from '../../../data/mods/anatomy/components/body.component.
 import jointComponent from '../../../data/mods/anatomy/components/joint.component.json';
 import partComponent from '../../../data/mods/anatomy/components/part.component.json';
 import socketsComponent from '../../../data/mods/anatomy/components/sockets.component.json';
+import vitalOrganComponent from '../../../data/mods/anatomy/components/vital_organ.component.json';
+import partHealthComponent from '../../../data/mods/anatomy/components/part_health.component.json';
+import damagePropagationComponent from '../../../data/mods/anatomy/components/damage_propagation.component.json';
 
 // Import descriptor components
 import buildComponent from '../../../data/mods/descriptors/components/build.component.json';
@@ -58,6 +61,9 @@ import humanMaleBlueprint from '../../../data/mods/anatomy/blueprints/human_male
 import humanoidSlotLibrary from '../../../data/mods/anatomy/libraries/humanoid.slot-library.json';
 import humanoidCorePart from '../../../data/mods/anatomy/parts/humanoid_core.part.json';
 import blueprintSlot from '../../../data/mods/anatomy/entities/definitions/blueprint_slot.entity.json';
+import humanHeart from '../../../data/mods/anatomy/entities/definitions/human_heart.entity.json';
+import humanBrain from '../../../data/mods/anatomy/entities/definitions/human_brain.entity.json';
+import humanSpine from '../../../data/mods/anatomy/entities/definitions/human_spine.entity.json';
 
 // Import core components needed for anatomy
 import nameComponent from '../../../data/mods/core/components/name.component.json';
@@ -145,6 +151,9 @@ describe('Muscular Male Anatomy Generation Integration Test', () => {
       'anatomy:joint': jointComponent,
       'anatomy:part': partComponent,
       'anatomy:sockets': socketsComponent,
+      'anatomy:vital_organ': vitalOrganComponent,
+      'anatomy:part_health': partHealthComponent,
+      'anatomy:damage_propagation': damagePropagationComponent,
     });
 
     // Load entity definitions
@@ -176,6 +185,9 @@ describe('Muscular Male Anatomy Generation Integration Test', () => {
       'anatomy:human_hair_raven': humanHairRaven,
       'anatomy:human_hair_blonde': humanHairBlonde,
       'anatomy:human_pubic_hair': humanPubicHair,
+      'anatomy:human_heart': humanHeart,
+      'anatomy:human_brain': humanBrain,
+      'anatomy:human_spine': humanSpine,
       'test:muscular_male': muscularMale,
     });
 

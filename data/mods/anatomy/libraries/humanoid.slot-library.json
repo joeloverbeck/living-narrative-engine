@@ -109,6 +109,28 @@
         "partType": "ass_cheek",
         "components": ["anatomy:part"]
       }
+    },
+    "standard_heart": {
+      "socket": "heart_socket",
+      "requirements": {
+        "partType": "heart",
+        "components": ["anatomy:part", "anatomy:vital_organ"]
+      }
+    },
+    "standard_spine": {
+      "socket": "spine_socket",
+      "requirements": {
+        "partType": "spine",
+        "components": ["anatomy:part", "anatomy:vital_organ"]
+      }
+    },
+    "standard_brain": {
+      "parent": "head",
+      "socket": "brain_socket",
+      "requirements": {
+        "partType": "brain",
+        "components": ["anatomy:part", "anatomy:vital_organ"]
+      }
     }
   },
   "clothingDefinitions": {

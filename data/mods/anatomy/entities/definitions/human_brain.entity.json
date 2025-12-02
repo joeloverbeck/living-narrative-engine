@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_brain",
+  "description": "A human brain - vital organ for consciousness and bodily control",
+  "components": {
+    "anatomy:part": {
+      "subType": "brain"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 40,
+      "maxHealth": 40,
+      "state": "healthy"
+    },
+    "anatomy:vital_organ": {
+      "organType": "brain"
+    },
+    "core:name": {
+      "text": "brain"
+    }
+  }
+}

@@ -14,6 +14,7 @@ Create a new JSON Logic operator `has_damage_capability` that checks if an entit
 |------|--------|-------------|
 | `src/logic/operators/hasDamageCapabilityOperator.js` | CREATE | New operator class |
 | `src/logic/jsonLogicCustomOperators.js` | UPDATE | Register operator |
+| `src/logic/jsonLogicEvaluationService.js` | UPDATE | Add to operator whitelist |
 | `tests/unit/logic/operators/hasDamageCapabilityOperator.test.js` | CREATE | Unit tests |
 
 ## Out of Scope
@@ -110,3 +111,41 @@ Test cases:
 - 1 new operator file (~60 lines)
 - 1 registration update (~10 lines)
 - 1 new test file (~150 lines)
+
+## Outcome
+
+**Status**: ✅ Completed
+
+### Implementation Notes
+
+1. **Ticket Correction**: Added missing `src/logic/jsonLogicEvaluationService.js` to Files to Touch table - required for operator whitelist registration.
+
+2. **Operator Implementation**: Created `HasDamageCapabilityOperator` following `HasComponentOperator` pattern rather than the ticket's suggested `BaseOperator` approach. The codebase uses direct class instantiation with dependency injection, not a `BaseOperator` base class.
+
+3. **Entity Resolution**: Implemented comprehensive entity path resolution supporting:
+   - String paths (e.g., `"entity"`, `"primary"`, `"."`)
+   - JSON Logic expressions (e.g., `{"var": "entity.equipped"}`)
+   - Direct entity objects with `id` property
+   - String entity IDs
+
+4. **Test Coverage**: 23 unit tests covering all acceptance criteria plus additional edge cases:
+   - Null/undefined entries in arrays
+   - Non-array entries property
+   - Whitespace-only damage type names
+   - Invalid parameter types
+   - Error handling with proper logging
+
+### Files Modified/Created
+
+| File | Action | Lines |
+|------|--------|-------|
+| `src/logic/operators/hasDamageCapabilityOperator.js` | CREATE | 239 |
+| `src/logic/jsonLogicCustomOperators.js` | UPDATE | +12 |
+| `src/logic/jsonLogicEvaluationService.js` | UPDATE | +2 |
+| `tests/unit/logic/operators/hasDamageCapabilityOperator.test.js` | CREATE | 307 |
+
+### Validation
+
+- ✅ All 23 unit tests pass
+- ✅ ESLint: 0 errors (only pre-existing warnings)
+- ✅ TypeCheck: Only pre-existing errors, none related to changes
