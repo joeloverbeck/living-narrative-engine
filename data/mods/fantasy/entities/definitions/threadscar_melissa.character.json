@@ -5,6 +5,9 @@
     "core:name": {
       "text": "\"Threadscar\" Melissa"
     },
+    "core:gender": {
+        "gender": "female"
+    },
     "core:portrait": {
       "imagePath": "portraits/threadscar_melissa.png",
       "altText": "\"Threadscar\" Melissa - Battle-hardened mercenary veteran."

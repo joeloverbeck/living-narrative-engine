@@ -5,6 +5,9 @@
     "core:name": {
       "text": "Rill"
     },
+    "core:gender": {
+        "gender": "female"
+    },
     "core:portrait": {
       "imagePath": "portraits/rill.png",
       "altText": "Rill - Furious would-be apprentice from the north-road waystation."

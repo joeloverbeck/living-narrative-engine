@@ -5,6 +5,9 @@
         "core:name": {
             "text": "Aldous"
         },
+        "core:gender": {
+            "gender": "male"
+        },
         "core:portrait": {
             "imagePath": "portraits/aldous.png",
             "altText": "Aldous - Anxious potter-exorcist who treats hauntings as craft problems"

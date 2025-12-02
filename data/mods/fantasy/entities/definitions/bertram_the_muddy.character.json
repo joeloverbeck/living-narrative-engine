@@ -5,6 +5,9 @@
         "core:name": {
             "text": "Bertram"
         },
+        "core:gender": {
+            "gender": "male"
+        },
         "core:portrait": {
             "imagePath": "portraits/bertram.png",
             "altText": "Bertram the Muddy - Transparently-horny laborer"
