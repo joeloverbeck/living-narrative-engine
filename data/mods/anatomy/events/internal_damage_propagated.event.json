@@ -1,0 +1,62 @@
+{
+  "$schema": "../../../schemas/event.schema.json",
+  "id": "anatomy:internal_damage_propagated",
+  "description": "Dispatched when damage propagates to internal parts.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "ownerEntityId": {
+        "type": "string",
+        "description": "Entity ID of the character that owns the affected parts"
+      },
+      "sourcePartId": {
+        "type": "string",
+        "description": "Entity ID of the part that received the original damage"
+      },
+      "sourcePartType": {
+        "type": "string",
+        "description": "The subType of the source part (e.g., 'torso', 'chest')"
+      },
+      "targetPartId": {
+        "type": "string",
+        "description": "Entity ID of the internal part that received propagated damage"
+      },
+      "targetPartType": {
+        "type": "string",
+        "description": "The subType of the target part (e.g., 'heart', 'lung')"
+      },
+      "damageAmount": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Amount of damage propagated to the internal part"
+      },
+      "damageTypeId": {
+        "type": "string",
+        "description": "ID of the damage type (e.g., 'piercing', 'blunt', 'slashing')"
+      },
+      "previousState": {
+        "type": "string",
+        "enum": ["healthy", "bruised", "wounded", "badly_damaged", "destroyed"],
+        "description": "Health state of the target part before propagation"
+      },
+      "newState": {
+        "type": "string",
+        "enum": ["healthy", "bruised", "wounded", "badly_damaged", "destroyed"],
+        "description": "Health state of the target part after propagation"
+      },
+      "effectsTriggered": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "List of effects triggered by the propagated damage (e.g., 'bleeding', 'burning')"
+      },
+      "timestamp": {
+        "type": "integer",
+        "description": "Unix timestamp when the propagation occurred"
+      }
+    },
+    "required": ["ownerEntityId", "sourcePartId", "targetPartId", "damageAmount", "timestamp"],
+    "additionalProperties": false
+  }
+}

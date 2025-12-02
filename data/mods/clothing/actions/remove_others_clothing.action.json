@@ -22,7 +22,8 @@
       "positioning:bending_over",
       "positioning:fallen",
       "positioning:being_restrained",
-      "positioning:restraining"
+      "positioning:restraining",
+      "positioning:fallen"
     ]
   },
   "generateCombinations": true,

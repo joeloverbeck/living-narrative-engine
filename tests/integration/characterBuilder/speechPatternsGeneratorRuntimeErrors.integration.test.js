@@ -65,6 +65,12 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
     global.document = document;
     global.window = window;
 
+    // Mock fetch to avoid timer dependency during bootstrap
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({}),
+    });
+
     // Capture console errors and warnings
     consoleErrors = [];
     consoleWarnings = [];
@@ -78,9 +84,11 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
       consoleWarnings.push(args.join(' '));
       originalConsoleWarn(...args);
     };
+    // jest.useFakeTimers(); // Moved to individual tests to avoid blocking bootstrap
   });
 
   afterEach(() => {
+    jest.useRealTimers();
     console.error = originalConsoleError;
     console.warn = originalConsoleWarn;
     jest.clearAllMocks();
@@ -97,6 +105,7 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
         controllerClass: SpeechPatternsGeneratorController,
         includeModLoading: true, // With mod loading, service should be available
       });
+      jest.useFakeTimers();
 
       // Simulate user entering valid character data
       const textarea = document.getElementById('character-definition');
@@ -120,7 +129,9 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
       textarea.dispatchEvent(inputEvent);
 
       // Wait for debounce
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      // Wait for debounce
+      jest.advanceTimersByTime(600);
+      await Promise.resolve();
 
       // Now click the generate button - should NOT trigger undefined error
       const generateBtn = document.getElementById('generate-btn');
@@ -131,7 +142,8 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
       generateBtn.dispatchEvent(clickEvent);
 
       // Wait a bit for async operations
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      jest.advanceTimersByTime(100);
+      await Promise.resolve();
 
       // Check that NO undefined errors were logged
       const hasUndefinedError = consoleErrors.some((error) =>
@@ -168,9 +180,11 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
           speechPatternsGenerator: mockSpeechPatternsGenerator, // Use camelCase key
         },
       });
+      jest.useFakeTimers();
 
       // Wait for controller initialization
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      jest.advanceTimersByTime(100);
+      await Promise.resolve();
 
       // Simulate user entering valid character data with more detailed content
       const textarea = document.getElementById('character-definition');
@@ -203,11 +217,14 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
       textarea.dispatchEvent(inputEvent);
 
       // Wait for debounce
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      // Wait for debounce
+      jest.advanceTimersByTime(600);
+      await Promise.resolve();
 
       // Trigger blur to complete validation
       textarea.dispatchEvent(blurEvent);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      jest.advanceTimersByTime(100);
+      await Promise.resolve();
 
       // The generate button should be enabled now
       const generateBtn = document.getElementById('generate-btn');
@@ -222,7 +239,8 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
       generateBtn.dispatchEvent(clickEvent);
 
       // Wait for async operations
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      jest.advanceTimersByTime(200);
+      await Promise.resolve();
 
       // Check that no errors about undefined service were logged
       const hasUndefinedError = consoleErrors.some((error) =>
@@ -262,9 +280,11 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
         controllerClass: SpeechPatternsGeneratorController,
         includeModLoading: true, // This loads the event definitions
       });
+      jest.useFakeTimers();
 
       // Wait for initialization which triggers _showState
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      jest.advanceTimersByTime(100);
+      await Promise.resolve();
 
       // Check that NO event warning was logged
       const hasEventWarning = consoleWarnings.some((warning) =>
@@ -320,9 +340,11 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
           },
         ],
       });
+      jest.useFakeTimers();
 
       // Wait for initialization
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      jest.advanceTimersByTime(100);
+      await Promise.resolve();
 
       // Check that no event warning was logged
       const hasEventWarning = consoleWarnings.some((warning) =>
@@ -570,6 +592,7 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
           eventBus: mockEventBus,
         },
       });
+      jest.useFakeTimers();
 
       // Clear console logs and mock calls
       consoleErrors = [];
@@ -601,7 +624,8 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
       generateBtn.dispatchEvent(clickEvent);
 
       // Wait for async operations
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      jest.advanceTimersByTime(100);
+      await Promise.resolve();
 
       // Verify no "[object Object]" errors in console
       const hasObjectObjectError = consoleErrors.some(
@@ -886,6 +910,7 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
           speechPatternsGenerator: mockSpeechPatternsGenerator,
         },
       });
+      jest.useFakeTimers();
 
       // Clear console tracking
       consoleErrors = [];
@@ -898,7 +923,9 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
       // Trigger input validation
       const inputEvent = new window.Event('input', { bubbles: true });
       textarea.dispatchEvent(inputEvent);
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      // Wait for debounce
+      jest.advanceTimersByTime(600);
+      await Promise.resolve();
 
       // Try to generate
       const generateBtn = document.getElementById('generate-btn');
@@ -908,7 +935,8 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
 
       const clickEvent = new window.Event('click', { bubbles: true });
       generateBtn.dispatchEvent(clickEvent);
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      jest.advanceTimersByTime(200);
+      await Promise.resolve();
 
       // Verify no character validation errors
       const hasValidationError = consoleErrors.some(

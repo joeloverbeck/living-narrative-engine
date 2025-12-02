@@ -19,6 +19,13 @@
         "core:perception_log": {
             "maxEntries": 50,
             "logEntries": []
+        },
+        "warding:corrupted": {},
+        "skills:defense_skill": {
+            "value": 36
+        },
+        "skills:grappling_skill": {
+            "value": 22
         }
     }
 }

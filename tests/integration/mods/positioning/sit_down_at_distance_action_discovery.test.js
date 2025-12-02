@@ -138,6 +138,7 @@ describe('positioning:sit_down_at_distance action discovery', () => {
         'positioning:kneeling_before',
         'positioning:bending_over',
         'positioning:restraining',
+        'positioning:fallen',
       ]);
     });
 

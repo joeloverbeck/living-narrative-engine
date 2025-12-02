@@ -1,0 +1,28 @@
+{
+  "$schema": "../../../schemas/event.schema.json",
+  "id": "anatomy:entity_stabilized",
+  "description": "Dispatched when a dying entity is stabilized.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "Entity ID of the stabilized entity"
+      },
+      "entityName": {
+        "type": "string",
+        "description": "Name of the stabilized entity"
+      },
+      "stabilizedBy": {
+        "type": "string",
+        "description": "Entity ID of the entity that performed the stabilization"
+      },
+      "timestamp": {
+        "type": "integer",
+        "description": "Unix timestamp when stabilization occurred"
+      }
+    },
+    "required": ["entityId", "entityName", "stabilizedBy", "timestamp"],
+    "additionalProperties": false
+  }
+}

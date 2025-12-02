@@ -62,6 +62,14 @@
     {
       "id": "armor",
       "version": "^1.0.0"
+    },
+    {
+      "id": "skills",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "warding",
+      "version": "^1.0.0"
     }
   ],
   "content": {

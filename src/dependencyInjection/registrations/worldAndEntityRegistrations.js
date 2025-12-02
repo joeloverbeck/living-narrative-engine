@@ -79,9 +79,12 @@ import RecipeValidationRunner from '../../anatomy/validation/RecipeValidationRun
 import AnatomySocketIndex from '../../anatomy/services/anatomySocketIndex.js';
 import { AnatomyCacheCoordinator } from '../../anatomy/cache/anatomyCacheCoordinator.js';
 import DamageTypeEffectsService from '../../anatomy/services/damageTypeEffectsService.js';
+import DamagePropagationService from '../../anatomy/services/damagePropagationService.js';
 import BleedingTickSystem from '../../anatomy/services/bleedingTickSystem.js';
 import BurningTickSystem from '../../anatomy/services/burningTickSystem.js';
 import PoisonTickSystem from '../../anatomy/services/poisonTickSystem.js';
+import InjuryAggregationService from '../../anatomy/services/injuryAggregationService.js';
+import DeathCheckService from '../../anatomy/services/deathCheckService.js';
 import EntityMatcherService from '../../anatomy/services/entityMatcherService.js';
 import BlueprintProcessorService from '../../anatomy/services/blueprintProcessorService.js';
 import SlotResolver from '../../anatomy/integration/SlotResolver.js';
@@ -838,6 +841,20 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
+  // Register DamagePropagationService
+  registrar.singletonFactory(tokens.DamagePropagationService, (c) => {
+    return new DamagePropagationService({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+      eventBus: c.resolve(tokens.ISafeEventDispatcher),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.DamagePropagationService
+    )}.`
+  );
+
   // Register BleedingTickSystem
   registrar.singletonFactory(tokens.BleedingTickSystem, (c) => {
     return new BleedingTickSystem({
@@ -880,6 +897,35 @@ export function registerWorldAndEntity(container) {
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.PoisonTickSystem
+    )}.`
+  );
+
+  // Register InjuryAggregationService
+  registrar.singletonFactory(tokens.InjuryAggregationService, (c) => {
+    return new InjuryAggregationService({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+      bodyGraphService: c.resolve(tokens.BodyGraphService),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.InjuryAggregationService
+    )}.`
+  );
+
+  // Register DeathCheckService
+  registrar.singletonFactory(tokens.DeathCheckService, (c) => {
+    return new DeathCheckService({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+      eventBus: c.resolve(tokens.ISafeEventDispatcher),
+      injuryAggregationService: c.resolve(tokens.InjuryAggregationService),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.DeathCheckService
     )}.`
   );
 

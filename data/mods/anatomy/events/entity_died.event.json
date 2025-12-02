@@ -1,0 +1,40 @@
+{
+  "$schema": "../../../schemas/event.schema.json",
+  "id": "anatomy:entity_died",
+  "description": "Dispatched when an entity dies.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "Entity ID of the dead entity"
+      },
+      "entityName": {
+        "type": "string",
+        "description": "Name of the dead entity"
+      },
+      "causeOfDeath": {
+        "type": "string",
+        "description": "What killed the entity (e.g., 'vital_organ_destroyed', 'bleeding_out', 'overall_health_depleted')"
+      },
+      "vitalOrganDestroyed": {
+        "type": ["string", "null"],
+        "description": "If death was due to vital organ destruction, which organ (e.g., 'brain', 'heart', 'spine')"
+      },
+      "killedBy": {
+        "type": ["string", "null"],
+        "description": "Entity ID of the killer (if applicable)"
+      },
+      "finalMessage": {
+        "type": "string",
+        "description": "Narrative death message for display"
+      },
+      "timestamp": {
+        "type": "integer",
+        "description": "Unix timestamp when death occurred"
+      }
+    },
+    "required": ["entityId", "entityName", "causeOfDeath", "timestamp"],
+    "additionalProperties": false
+  }
+}

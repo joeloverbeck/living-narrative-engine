@@ -38,6 +38,7 @@ import LockMouthEngagementHandler from '../../../src/logic/operationHandlers/loc
 import UnlockMouthEngagementHandler from '../../../src/logic/operationHandlers/unlockMouthEngagementHandler.js';
 import BreakClosenessWithTargetHandler from '../../../src/logic/operationHandlers/breakClosenessWithTargetHandler.js';
 import MergeClosenessCircleHandler from '../../../src/logic/operationHandlers/mergeClosenessCircleHandler.js';
+import EstablishBidirectionalClosenessHandler from '../../../src/logic/operationHandlers/establishBidirectionalClosenessHandler.js';
 import EstablishLyingClosenessHandler from '../../../src/logic/operationHandlers/establishLyingClosenessHandler.js';
 import EstablishSittingClosenessHandler from '../../../src/logic/operationHandlers/establishSittingClosenessHandler.js';
 import RemoveLyingClosenessHandler from '../../../src/logic/operationHandlers/removeLyingClosenessHandler.js';
@@ -97,6 +98,7 @@ const MUTATION_OR_PERCEPTION_TYPES = new Set([
   'MERGE_CLOSENESS_CIRCLE',
   'ESTABLISH_LYING_CLOSENESS',
   'ESTABLISH_SITTING_CLOSENESS',
+  'ESTABLISH_BIDIRECTIONAL_CLOSENESS',
   'REMOVE_LYING_CLOSENESS',
   'LOCK_MOVEMENT',
   'UNLOCK_MOVEMENT',
@@ -1217,6 +1219,13 @@ export class ModTestHandlerFactory {
       ),
     };
 
+    const regenerateDescriptionHandler = new RegenerateDescriptionHandler({
+      entityManager,
+      bodyDescriptionComposer,
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    });
+
     return {
       ...baseHandlers,
       ADD_COMPONENT: new AddComponentHandler({
@@ -1240,6 +1249,12 @@ export class ModTestHandlerFactory {
         logger,
         safeEventDispatcher: safeDispatcher,
         closenessCircleService,
+      }),
+      ESTABLISH_BIDIRECTIONAL_CLOSENESS: new EstablishBidirectionalClosenessHandler({
+        entityManager,
+        safeEventDispatcher: safeDispatcher,
+        regenerateDescriptionHandler,
+        logger,
       }),
       ESTABLISH_LYING_CLOSENESS: new EstablishLyingClosenessHandler({
         entityManager,
@@ -1321,12 +1336,7 @@ export class ModTestHandlerFactory {
         safeEventDispatcher: safeDispatcher,
         closenessCircleService,
       }),
-      REGENERATE_DESCRIPTION: new RegenerateDescriptionHandler({
-        entityManager,
-        bodyDescriptionComposer,
-        logger,
-        safeEventDispatcher: safeDispatcher,
-      }),
+      REGENERATE_DESCRIPTION: regenerateDescriptionHandler,
       CONSUME_ITEM: new ConsumeItemHandler({
         entityManager,
         logger,

@@ -19,6 +19,9 @@
       "body.component.json",
       "burning.component.json",
       "can_grab.component.json",
+      "damage_propagation.component.json",
+      "dead.component.json",
+      "dying.component.json",
       "fractured.component.json",
       "joint.component.json",
       "part.component.json",
@@ -27,7 +30,8 @@
       "requires_grabbing.component.json",
       "sockets.component.json",
       "stunned.component.json",
-      "visibility_rules.component.json"
+      "visibility_rules.component.json",
+      "vital_organ.component.json"
     ],
     "entities": {
       "definitions": [
@@ -282,11 +286,15 @@
     ],
     "events": [
       "anatomy_generated.event.json",
+      "entity_died.event.json",
+      "entity_dying.event.json",
+      "entity_stabilized.event.json",
       "interaction_click.event.json",
       "interaction_pan.event.json",
       "interaction_panend.event.json",
       "interaction_panstart.event.json",
       "interaction_zoom.event.json",
+      "internal_damage_propagated.event.json",
       "limb_detached.event.json",
       "part_health_changed.event.json",
       "part_state_changed.event.json",

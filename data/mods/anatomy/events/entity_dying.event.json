@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../schemas/event.schema.json",
+  "id": "anatomy:entity_dying",
+  "description": "Dispatched when an entity enters the dying state.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "Entity ID of the dying entity"
+      },
+      "entityName": {
+        "type": "string",
+        "description": "Name of the dying entity"
+      },
+      "turnsRemaining": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Turns until death if not stabilized"
+      },
+      "causeOfDying": {
+        "type": "string",
+        "description": "What triggered the dying state (e.g., 'overall_health_critical', 'heart_failing')"
+      },
+      "timestamp": {
+        "type": "integer",
+        "description": "Unix timestamp when the dying state began"
+      }
+    },
+    "required": ["entityId", "entityName", "turnsRemaining", "causeOfDying", "timestamp"],
+    "additionalProperties": false
+  }
+}

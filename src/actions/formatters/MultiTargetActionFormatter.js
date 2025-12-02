@@ -179,11 +179,28 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
         _options?.chanceCalculationService &&
         _options?.actorId
       ) {
-        const targetRole =
-          actionDef.chanceBased.targetSkill?.targetRole ?? 'secondary';
-        const targetId = combination[targetRole]?.[0]?.id;
+        // Determine if we need a target for chance calculation
+        // Fixed-difficulty actions don't require a target (actor skill vs fixed difficulty)
+        // Contested/opposed actions require a target for the opponent's skill
+        const contestType = actionDef.chanceBased.contestType;
+        const isFixedDifficulty = contestType === 'fixed_difficulty';
 
-        if (targetId) {
+        let targetId = null;
+        if (!isFixedDifficulty && actionDef.chanceBased.targetSkill?.targetRole) {
+          // Contested action with explicit target role
+          const targetRole = actionDef.chanceBased.targetSkill.targetRole;
+          targetId = combination[targetRole]?.[0]?.id;
+        } else if (!isFixedDifficulty) {
+          // Contested action without explicit targetRole - fallback to secondary then primary
+          targetId =
+            combination.secondary?.[0]?.id ?? combination.primary?.[0]?.id;
+        }
+        // For fixed-difficulty, targetId remains null - ChanceCalculationService handles this
+
+        // Calculate if: fixed-difficulty (no target needed) OR we have a target for contested
+        const canCalculate = isFixedDifficulty || !!targetId;
+
+        if (canCalculate) {
           const displayResult =
             _options.chanceCalculationService.calculateForDisplay({
               actorId: _options.actorId,

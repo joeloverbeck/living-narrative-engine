@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globa
 
 import ApplyDamageHandler from '../../../src/logic/operationHandlers/applyDamageHandler.js';
 import BodyGraphService from '../../../src/anatomy/bodyGraphService.js';
+import DamagePropagationService from '../../../src/anatomy/services/damagePropagationService.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';
@@ -64,6 +65,12 @@ describe('Damage Application Mechanics', () => {
     const damageTypeEffectsService = {
       applyEffectsForDamage: jest.fn().mockResolvedValue(undefined),
     };
+    // Use real DamagePropagationService for integration testing
+    const damagePropagationService = new DamagePropagationService({
+      logger,
+      entityManager,
+      eventBus: dispatcher,
+    });
     handler = new ApplyDamageHandler({
       logger,
       entityManager,
@@ -71,6 +78,7 @@ describe('Damage Application Mechanics', () => {
       jsonLogicService,
       bodyGraphService,
       damageTypeEffectsService,
+      damagePropagationService,
     });
     executionContext = {
       evaluationContext: { context: {} },

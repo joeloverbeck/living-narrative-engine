@@ -34,6 +34,7 @@ const PART_DESTROYED_EVENT = 'anatomy:part_destroyed';
 /** @type {{ evaluate: jest.Mock }} */ let jsonLogicService;
 /** @type {{ getAllParts: jest.Mock }} */ let bodyGraphService;
 /** @type {{ applyEffectsForDamage: jest.Mock }} */ let damageTypeEffectsService;
+/** @type {{ propagateDamage: jest.Mock }} */ let damagePropagationService;
 
 beforeEach(() => {
   log = {
@@ -53,6 +54,7 @@ beforeEach(() => {
   jsonLogicService = { evaluate: jest.fn() };
   bodyGraphService = { getAllParts: jest.fn() };
   damageTypeEffectsService = { applyEffectsForDamage: jest.fn() };
+  damagePropagationService = { propagateDamage: jest.fn().mockReturnValue([]) };
 });
 
 afterEach(() => jest.clearAllMocks());
@@ -67,7 +69,8 @@ describe('ApplyDamageHandler', () => {
         safeEventDispatcher: dispatcher,
         jsonLogicService,
         bodyGraphService,
-        damageTypeEffectsService
+        damageTypeEffectsService,
+        damagePropagationService
       });
       expect(handler).toBeInstanceOf(ApplyDamageHandler);
     });
@@ -80,7 +83,8 @@ describe('ApplyDamageHandler', () => {
               entityManager: em,
               safeEventDispatcher: dispatcher,
               jsonLogicService,
-              damageTypeEffectsService
+              damageTypeEffectsService,
+              damagePropagationService
             })
         ).toThrow(/bodyGraphService/i);
       });
@@ -93,9 +97,24 @@ describe('ApplyDamageHandler', () => {
               entityManager: em,
               safeEventDispatcher: dispatcher,
               jsonLogicService,
-              bodyGraphService
+              bodyGraphService,
+              damagePropagationService
             })
         ).toThrow(/damageTypeEffectsService/i);
+      });
+
+    test('throws if damagePropagationService is missing', () => {
+        expect(
+          () =>
+            new ApplyDamageHandler({
+              logger: log,
+              entityManager: em,
+              safeEventDispatcher: dispatcher,
+              jsonLogicService,
+              bodyGraphService,
+              damageTypeEffectsService
+            })
+        ).toThrow(/damagePropagationService/i);
       });
   });
 
@@ -110,7 +129,8 @@ describe('ApplyDamageHandler', () => {
         safeEventDispatcher: dispatcher,
         jsonLogicService,
         bodyGraphService,
-        damageTypeEffectsService
+        damageTypeEffectsService,
+        damagePropagationService
       });
       executionContext = {
         evaluationContext: { context: {} },
@@ -120,7 +140,7 @@ describe('ApplyDamageHandler', () => {
     });
 
     describe('propagation', () => {
-      test('propagates damage to child when probability/type pass', async () => {
+      test('propagates damage to child when service returns results', async () => {
         const params = {
           entity_ref: 'entity1',
           part_ref: 'parent',
@@ -151,15 +171,18 @@ describe('ApplyDamageHandler', () => {
               maxHealth: 40,
               state: 'healthy',
               turnsInState: 0
-            },
-            'anatomy:joint': { parentId: 'parent' }
+            }
           }
         };
 
         em.hasComponent.mockImplementation((id, comp) => Boolean(components[id]?.[comp]));
         em.getComponentData.mockImplementation((id, comp) => components[id]?.[comp] || null);
 
-        const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.1);
+        // Mock the service to return propagation result on first call, then empty array
+        // to prevent infinite recursion (child has no further propagation)
+        damagePropagationService.propagateDamage
+          .mockReturnValueOnce([{ childPartId: 'child', damageApplied: 10, damageTypeId: 'piercing' }])
+          .mockReturnValue([]);
 
         await handler.execute(params, executionContext);
 
@@ -177,11 +200,9 @@ describe('ApplyDamageHandler', () => {
           DAMAGE_APPLIED_EVENT,
           expect.objectContaining({ partId: 'child', propagatedFrom: 'parent' })
         );
-
-        randomSpy.mockRestore();
       });
 
-      test('does not propagate when probability check fails', async () => {
+      test('does not propagate when service returns empty array', async () => {
         const params = {
           entity_ref: 'entity1',
           part_ref: 'parent',
@@ -212,13 +233,15 @@ describe('ApplyDamageHandler', () => {
               maxHealth: 30,
               state: 'healthy',
               turnsInState: 0
-            },
-            'anatomy:joint': { parentId: 'parent' }
+            }
           }
         };
 
         em.hasComponent.mockImplementation((id, comp) => Boolean(components[id]?.[comp]));
         em.getComponentData.mockImplementation((id, comp) => components[id]?.[comp] || null);
+
+        // Mock the service to return empty array (no propagation)
+        damagePropagationService.propagateDamage.mockReturnValue([]);
 
         await handler.execute(params, executionContext);
 
@@ -234,7 +257,7 @@ describe('ApplyDamageHandler', () => {
         );
       });
 
-      test('does not propagate when damage type filter mismatches', async () => {
+      test('calls propagation service with correct parameters', async () => {
         const params = {
           entity_ref: 'entity1',
           part_ref: 'parent',
@@ -242,18 +265,16 @@ describe('ApplyDamageHandler', () => {
           damage_type: 'blunt'
         };
 
+        const propagationRules = {
+          child: { probability: 1, damage_fraction: 0.5, damage_types: ['piercing'] }
+        };
+
         const components = {
           parent: {
             [PART_COMPONENT_ID]: {
               subType: 'torso',
               ownerEntityId: 'entity1',
-              damage_propagation: {
-                child: {
-                  probability: 1,
-                  damage_fraction: 0.5,
-                  damage_types: ['piercing']
-                }
-              }
+              damage_propagation: propagationRules
             },
             [PART_HEALTH_COMPONENT_ID]: {
               currentHealth: 80,
@@ -261,16 +282,6 @@ describe('ApplyDamageHandler', () => {
               state: 'healthy',
               turnsInState: 0
             }
-          },
-          child: {
-            [PART_COMPONENT_ID]: { subType: 'heart', ownerEntityId: 'entity1' },
-            [PART_HEALTH_COMPONENT_ID]: {
-              currentHealth: 40,
-              maxHealth: 40,
-              state: 'healthy',
-              turnsInState: 0
-            },
-            'anatomy:joint': { parentId: 'parent' }
           }
         };
 
@@ -279,23 +290,20 @@ describe('ApplyDamageHandler', () => {
 
         await handler.execute(params, executionContext);
 
-        expect(em.addComponent).toHaveBeenCalledWith(
-          'parent',
-          PART_HEALTH_COMPONENT_ID,
-          expect.objectContaining({ currentHealth: 70 })
-        );
-        expect(em.addComponent).not.toHaveBeenCalledWith(
-          'child',
-          PART_HEALTH_COMPONENT_ID,
-          expect.anything()
+        expect(damagePropagationService.propagateDamage).toHaveBeenCalledWith(
+          'parent',       // parentPartId
+          10,             // damageAmount
+          'blunt',        // damageType
+          'entity1',      // ownerEntityId
+          propagationRules
         );
       });
 
-      test('skips propagation when rule target is not a child of the part', async () => {
+      test('propagates multiple damage results from service', async () => {
         const params = {
           entity_ref: 'entity1',
           part_ref: 'parent',
-          amount: 8,
+          amount: 20,
           damage_type: 'piercing'
         };
 
@@ -304,46 +312,57 @@ describe('ApplyDamageHandler', () => {
             [PART_COMPONENT_ID]: {
               subType: 'torso',
               ownerEntityId: 'entity1',
-              damage_propagation: {
-                unrelated: { probability: 1, damage_fraction: 1 }
-              }
+              damage_propagation: {}
             },
             [PART_HEALTH_COMPONENT_ID]: {
-              currentHealth: 25,
-              maxHealth: 25,
+              currentHealth: 100,
+              maxHealth: 100,
               state: 'healthy',
               turnsInState: 0
             }
           },
-          unrelated: {
-            [PART_COMPONENT_ID]: { subType: 'tail', ownerEntityId: 'entity1' },
+          child1: {
             [PART_HEALTH_COMPONENT_ID]: {
-              currentHealth: 15,
-              maxHealth: 15,
+              currentHealth: 50,
+              maxHealth: 50,
               state: 'healthy',
               turnsInState: 0
-            },
-            'anatomy:joint': { parentId: 'anotherParent' }
+            }
+          },
+          child2: {
+            [PART_HEALTH_COMPONENT_ID]: {
+              currentHealth: 30,
+              maxHealth: 30,
+              state: 'healthy',
+              turnsInState: 0
+            }
           }
         };
 
         em.hasComponent.mockImplementation((id, comp) => Boolean(components[id]?.[comp]));
         em.getComponentData.mockImplementation((id, comp) => components[id]?.[comp] || null);
 
+        // Mock the service to return multiple propagation results on first call,
+        // then empty array to prevent infinite recursion (children have no further propagation)
+        damagePropagationService.propagateDamage
+          .mockReturnValueOnce([
+            { childPartId: 'child1', damageApplied: 10, damageTypeId: 'piercing' },
+            { childPartId: 'child2', damageApplied: 5, damageTypeId: 'piercing' }
+          ])
+          .mockReturnValue([]);
+
         await handler.execute(params, executionContext);
 
-        // Verify log message
-        expect(log.debug).toHaveBeenCalledWith(expect.stringContaining('not a child of'));
-
+        // Both children should receive damage
         expect(em.addComponent).toHaveBeenCalledWith(
-          'parent',
+          'child1',
           PART_HEALTH_COMPONENT_ID,
-          expect.objectContaining({ currentHealth: 17 })
+          expect.objectContaining({ currentHealth: 40 })
         );
-        expect(em.addComponent).not.toHaveBeenCalledWith(
-          'unrelated',
+        expect(em.addComponent).toHaveBeenCalledWith(
+          'child2',
           PART_HEALTH_COMPONENT_ID,
-          expect.anything()
+          expect.objectContaining({ currentHealth: 25 })
         );
       });
     });
@@ -527,7 +546,7 @@ describe('ApplyDamageHandler', () => {
         logger: log
       };
 
-      jsonLogicService.evaluate.mockImplementation((rule, ctx) => {
+      jsonLogicService.evaluate.mockImplementation((rule) => {
         if (rule['+']) return 20;
         if (rule.var === 'dtype') return 'fire';
         return null;
@@ -663,39 +682,45 @@ describe('ApplyDamageHandler', () => {
             damage_type: 'fire'
         };
 
+        const propagationRules = {
+            scalp: { probability: 1, damage_fraction: 1 }
+        };
+
         // Mock PART_COMPONENT to have propagation rules, but no health component
         em.hasComponent.mockImplementation((id, comp) => {
             if (comp === PART_COMPONENT_ID && id === 'hair') return true;
             // Child part has health
             if (comp === PART_HEALTH_COMPONENT_ID && id === 'scalp') return true;
-            if (comp === 'anatomy:joint' && id === 'scalp') return true; // joint
-            
+
             return false;
         });
 
         em.getComponentData.mockImplementation((id, comp) => {
             if (comp === PART_COMPONENT_ID && id === 'hair') {
                 return {
-                    damage_propagation: {
-                        scalp: { probability: 1, damage_fraction: 1 }
-                    }
+                    damage_propagation: propagationRules
                 };
             }
             // Child part has health
             if (comp === PART_HEALTH_COMPONENT_ID && id === 'scalp') {
-                return { currentHealth: 50, maxHealth: 50 };
-            }
-            if (comp === 'anatomy:joint' && id === 'scalp') {
-                return { parentId: 'hair' };
+                return { currentHealth: 50, maxHealth: 50, state: 'healthy' };
             }
             return null;
         });
+
+        // Mock service to return propagation result on first call,
+        // then empty array to prevent infinite recursion
+        damagePropagationService.propagateDamage
+            .mockReturnValueOnce([
+                { childPartId: 'scalp', damageApplied: 10, damageTypeId: 'fire' }
+            ])
+            .mockReturnValue([]);
 
         await handler.execute(params, executionContext);
 
         // Should log debug message
         expect(log.debug).toHaveBeenCalledWith(expect.stringContaining('has no health component'));
-        
+
         // Should not update 'hair' health
         expect(em.addComponent).not.toHaveBeenCalledWith('hair', PART_HEALTH_COMPONENT_ID, expect.anything());
 
@@ -765,7 +790,7 @@ describe('ApplyDamageHandler', () => {
         }));
     });
 
-    test('handles propagation probability edge cases', async () => {
+    test('applies propagation results from service correctly', async () => {
          const params = {
           entity_ref: 'entity1',
           part_ref: 'parent',
@@ -773,41 +798,43 @@ describe('ApplyDamageHandler', () => {
           damage_type: 'type'
         };
 
-        // Rule with missing probability (should default to 1)
-        // Rule with probability > 1 (should clamp to 1)
-        // Rule with probability < 0 (should clamp to 0)
+        // Service determines which children receive damage based on probability edge cases
+        // (probability handling is tested in the service tests)
         const components = {
           parent: {
             [PART_COMPONENT_ID]: {
               subType: 'torso',
               ownerEntityId: 'entity1',
               damage_propagation: {
-                child1: { probability: undefined, damage_fraction: 1 }, // Defaults to 1
-                child2: { probability: 1.5, damage_fraction: 1 },       // Clamps to 1
-                child3: { probability: -0.5, damage_fraction: 1 }       // Clamps to 0
+                child1: { probability: undefined, damage_fraction: 1 },
+                child2: { probability: 1.5, damage_fraction: 1 },
+                child3: { probability: -0.5, damage_fraction: 1 }
               }
             },
-            [PART_HEALTH_COMPONENT_ID]: { currentHealth: 100, maxHealth: 100 }
+            [PART_HEALTH_COMPONENT_ID]: { currentHealth: 100, maxHealth: 100, state: 'healthy' }
           },
-          child1: { [PART_HEALTH_COMPONENT_ID]: { currentHealth: 10, maxHealth: 10 }, 'anatomy:joint': { parentId: 'parent' } },
-          child2: { [PART_HEALTH_COMPONENT_ID]: { currentHealth: 10, maxHealth: 10 }, 'anatomy:joint': { parentId: 'parent' } },
-          child3: { [PART_HEALTH_COMPONENT_ID]: { currentHealth: 10, maxHealth: 10 }, 'anatomy:joint': { parentId: 'parent' } }
+          child1: { [PART_HEALTH_COMPONENT_ID]: { currentHealth: 10, maxHealth: 10, state: 'healthy' } },
+          child2: { [PART_HEALTH_COMPONENT_ID]: { currentHealth: 10, maxHealth: 10, state: 'healthy' } }
         };
 
         em.hasComponent.mockImplementation((id, comp) => Boolean(components[id]?.[comp]));
         em.getComponentData.mockImplementation((id, comp) => components[id]?.[comp] || null);
 
-        // Force random to allow probability 1 (random < 1) and disallow 0 (random > 0)
-        jest.spyOn(Math, 'random').mockReturnValue(0.5);
+        // Mock service to return propagation results on first call (service handles probability logic),
+        // then empty array to prevent infinite recursion
+        damagePropagationService.propagateDamage
+          .mockReturnValueOnce([
+            { childPartId: 'child1', damageApplied: 20, damageTypeId: 'type' },
+            { childPartId: 'child2', damageApplied: 20, damageTypeId: 'type' }
+            // child3 not included because probability was clamped to 0
+          ])
+          .mockReturnValue([]);
 
         await handler.execute(params, executionContext);
 
-        // child1 (undefined -> 1) should be hit
+        // child1 and child2 should be hit (service decided they should propagate)
         expect(em.addComponent).toHaveBeenCalledWith('child1', PART_HEALTH_COMPONENT_ID, expect.anything());
-        // child2 (1.5 -> 1) should be hit
         expect(em.addComponent).toHaveBeenCalledWith('child2', PART_HEALTH_COMPONENT_ID, expect.anything());
-        // child3 (-0.5 -> 0) should NOT be hit (0.5 > 0)
-        expect(em.addComponent).not.toHaveBeenCalledWith('child3', PART_HEALTH_COMPONENT_ID, expect.anything());
     });
   });
 });

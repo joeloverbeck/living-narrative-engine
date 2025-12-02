@@ -12,7 +12,8 @@
   "forbidden_components": {
     "actor": [
       "positioning:being_restrained",
-      "positioning:restraining"
+      "positioning:restraining",
+      "positioning:fallen"
     ]
   },
   "template": "straighten up from {target}",
