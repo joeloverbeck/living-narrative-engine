@@ -590,6 +590,466 @@ describe('ActorDataExtractor', () => {
         new TypeError('actorState must be an object')
       );
     });
+
+    describe('health state extraction', () => {
+      let mockInjuryAggregationService;
+      let mockInjuryNarrativeFormatterService;
+      let extractorWithHealth;
+
+      beforeEach(() => {
+        mockInjuryAggregationService = {
+          aggregateInjuries: jest.fn(),
+        };
+        mockInjuryNarrativeFormatterService = {
+          formatFirstPerson: jest.fn(),
+        };
+        extractorWithHealth = new ActorDataExtractor({
+          anatomyDescriptionService: mockAnatomyDescriptionService,
+          entityFinder: mockEntityFinder,
+          injuryAggregationService: mockInjuryAggregationService,
+          injuryNarrativeFormatterService: mockInjuryNarrativeFormatterService,
+        });
+      });
+
+      test('should return null healthState when injuryAggregationService not provided', () => {
+        const extractorWithoutHealth = new ActorDataExtractor({
+          anatomyDescriptionService: mockAnatomyDescriptionService,
+          entityFinder: mockEntityFinder,
+        });
+        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const result = extractorWithoutHealth.extractPromptData(
+          actorState,
+          'actor-1'
+        );
+        expect(result.healthState).toBeNull();
+      });
+
+      test('should return null healthState when actorId not provided', () => {
+        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const result = extractorWithHealth.extractPromptData(actorState);
+        expect(result.healthState).toBeNull();
+        expect(mockInjuryAggregationService.aggregateInjuries).not.toHaveBeenCalled();
+      });
+
+      test('should return null healthState for healthy characters (100% health, no injuries)', () => {
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          overallHealthPercentage: 100,
+          injuredParts: [],
+          isDying: false,
+          isDead: false,
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+        });
+
+        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const result = extractorWithHealth.extractPromptData(
+          actorState,
+          'actor-1'
+        );
+
+        expect(result.healthState).toBeNull();
+        expect(mockInjuryAggregationService.aggregateInjuries).toHaveBeenCalledWith(
+          'actor-1'
+        );
+      });
+
+      test('should return null healthState when aggregation service returns null', () => {
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue(null);
+
+        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const result = extractorWithHealth.extractPromptData(
+          actorState,
+          'actor-1'
+        );
+
+        expect(result.healthState).toBeNull();
+      });
+
+      test('should return ActorHealthStateDTO for injured characters', () => {
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          overallHealthPercentage: 75,
+          injuredParts: [
+            {
+              partType: 'arm',
+              orientation: 'left',
+              state: 'wounded',
+              healthPercentage: 50,
+              isBleeding: true,
+              bleedingSeverity: 'moderate',
+              isBurning: false,
+              isPoisoned: false,
+              isFractured: false,
+            },
+          ],
+          isDying: false,
+          isDead: false,
+          bleedingParts: [{ partType: 'arm' }],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          dyingTurnsRemaining: null,
+        });
+        mockInjuryNarrativeFormatterService.formatFirstPerson.mockReturnValue(
+          'My left arm is wounded and bleeding.'
+        );
+
+        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const result = extractorWithHealth.extractPromptData(
+          actorState,
+          'actor-1'
+        );
+
+        expect(result.healthState).toEqual({
+          overallHealthPercentage: 75,
+          overallStatus: 'wounded',
+          injuries: [
+            {
+              partName: 'left arm',
+              partType: 'arm',
+              state: 'wounded',
+              healthPercent: 50,
+              effects: ['bleeding_moderate'],
+            },
+          ],
+          activeEffects: ['bleeding'],
+          isDying: false,
+          turnsUntilDeath: null,
+          firstPersonNarrative: 'My left arm is wounded and bleeding.',
+        });
+      });
+
+      test('should include firstPersonNarrative when formatter available', () => {
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          overallHealthPercentage: 60,
+          injuredParts: [
+            {
+              partType: 'leg',
+              orientation: null,
+              state: 'injured',
+              healthPercentage: 40,
+              isBleeding: false,
+              isBurning: false,
+              isPoisoned: true,
+              isFractured: false,
+            },
+          ],
+          isDying: false,
+          isDead: false,
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [{ partType: 'leg' }],
+          fracturedParts: [],
+        });
+        mockInjuryNarrativeFormatterService.formatFirstPerson.mockReturnValue(
+          'My leg feels numb from the poison.'
+        );
+
+        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const result = extractorWithHealth.extractPromptData(
+          actorState,
+          'actor-1'
+        );
+
+        expect(result.healthState.firstPersonNarrative).toBe(
+          'My leg feels numb from the poison.'
+        );
+        expect(
+          mockInjuryNarrativeFormatterService.formatFirstPerson
+        ).toHaveBeenCalled();
+      });
+
+      test('should correctly map overallStatus based on health percentage', () => {
+        // Thresholds: 100+ healthy, 80+ scratched, 60+ wounded, 40+ injured, <40 critical
+        const testCases = [
+          { percentage: 100, expected: 'healthy' },
+          { percentage: 85, expected: 'scratched' },
+          { percentage: 80, expected: 'scratched' },
+          { percentage: 79, expected: 'wounded' },
+          { percentage: 75, expected: 'wounded' },
+          { percentage: 65, expected: 'wounded' },
+          { percentage: 60, expected: 'wounded' },
+          { percentage: 59, expected: 'injured' },
+          { percentage: 50, expected: 'injured' },
+          { percentage: 40, expected: 'injured' },
+          { percentage: 39, expected: 'critical' },
+          { percentage: 35, expected: 'critical' },
+          { percentage: 10, expected: 'critical' },
+        ];
+
+        testCases.forEach(({ percentage, expected }) => {
+          mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+            overallHealthPercentage: percentage,
+            injuredParts: [
+              {
+                partType: 'chest',
+                orientation: null,
+                state: 'wounded',
+                healthPercentage: percentage,
+                isBleeding: false,
+                isBurning: false,
+                isPoisoned: false,
+                isFractured: false,
+              },
+            ],
+            isDying: false,
+            isDead: false,
+            bleedingParts: [],
+            burningParts: [],
+            poisonedParts: [],
+            fracturedParts: [],
+          });
+
+          const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+          const result = extractorWithHealth.extractPromptData(
+            actorState,
+            `actor-${percentage}`
+          );
+
+          expect(result.healthState.overallStatus).toBe(expected);
+        });
+      });
+
+      test('should return dying status when isDying is true', () => {
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          overallHealthPercentage: 5,
+          injuredParts: [
+            {
+              partType: 'torso',
+              orientation: null,
+              state: 'critical',
+              healthPercentage: 5,
+              isBleeding: true,
+              bleedingSeverity: 'severe',
+              isBurning: false,
+              isPoisoned: false,
+              isFractured: false,
+            },
+          ],
+          isDying: true,
+          isDead: false,
+          dyingTurnsRemaining: 3,
+          bleedingParts: [{ partType: 'torso' }],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+        });
+
+        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const result = extractorWithHealth.extractPromptData(
+          actorState,
+          'actor-dying'
+        );
+
+        expect(result.healthState.overallStatus).toBe('dying');
+        expect(result.healthState.isDying).toBe(true);
+        expect(result.healthState.turnsUntilDeath).toBe(3);
+      });
+
+      test('should return dead status when isDead is true', () => {
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          overallHealthPercentage: 0,
+          injuredParts: [
+            {
+              partType: 'head',
+              orientation: null,
+              state: 'destroyed',
+              healthPercentage: 0,
+              isBleeding: false,
+              isBurning: false,
+              isPoisoned: false,
+              isFractured: false,
+            },
+          ],
+          isDying: false,
+          isDead: true,
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+        });
+
+        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const result = extractorWithHealth.extractPromptData(
+          actorState,
+          'actor-dead'
+        );
+
+        expect(result.healthState.overallStatus).toBe('dead');
+      });
+
+      test('should collect part effects correctly (bleeding, burning, poisoned, fractured)', () => {
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          overallHealthPercentage: 30,
+          injuredParts: [
+            {
+              partType: 'arm',
+              orientation: 'right',
+              state: 'critical',
+              healthPercentage: 20,
+              isBleeding: true,
+              bleedingSeverity: 'severe',
+              isBurning: true,
+              isPoisoned: true,
+              isFractured: true,
+            },
+          ],
+          isDying: false,
+          isDead: false,
+          bleedingParts: [{ partType: 'arm' }],
+          burningParts: [{ partType: 'arm' }],
+          poisonedParts: [{ partType: 'arm' }],
+          fracturedParts: [{ partType: 'arm' }],
+        });
+
+        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const result = extractorWithHealth.extractPromptData(
+          actorState,
+          'actor-1'
+        );
+
+        expect(result.healthState.injuries[0].effects).toEqual([
+          'bleeding_severe',
+          'burning',
+          'poisoned',
+          'fractured',
+        ]);
+        expect(result.healthState.activeEffects).toEqual([
+          'bleeding',
+          'burning',
+          'poisoned',
+          'fractured',
+        ]);
+      });
+
+      test('should handle aggregation service errors gracefully', () => {
+        mockInjuryAggregationService.aggregateInjuries.mockImplementation(() => {
+          throw new Error('Service unavailable');
+        });
+
+        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const result = extractorWithHealth.extractPromptData(
+          actorState,
+          'actor-1'
+        );
+
+        expect(result.healthState).toBeNull();
+      });
+
+      test('should format part names with orientation correctly', () => {
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          overallHealthPercentage: 50,
+          injuredParts: [
+            {
+              partType: 'arm',
+              orientation: 'left',
+              state: 'wounded',
+              healthPercentage: 50,
+              isBleeding: false,
+              isBurning: false,
+              isPoisoned: false,
+              isFractured: false,
+            },
+            {
+              partType: 'leg',
+              orientation: 'right',
+              state: 'scratched',
+              healthPercentage: 80,
+              isBleeding: false,
+              isBurning: false,
+              isPoisoned: false,
+              isFractured: false,
+            },
+            {
+              partType: 'torso',
+              orientation: null,
+              state: 'injured',
+              healthPercentage: 40,
+              isBleeding: false,
+              isBurning: false,
+              isPoisoned: false,
+              isFractured: false,
+            },
+          ],
+          isDying: false,
+          isDead: false,
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+        });
+
+        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const result = extractorWithHealth.extractPromptData(
+          actorState,
+          'actor-1'
+        );
+
+        expect(result.healthState.injuries[0].partName).toBe('left arm');
+        expect(result.healthState.injuries[1].partName).toBe('right leg');
+        expect(result.healthState.injuries[2].partName).toBe('torso');
+      });
+
+      test('should not include firstPersonNarrative when formatter not available', () => {
+        const extractorWithoutFormatter = new ActorDataExtractor({
+          anatomyDescriptionService: mockAnatomyDescriptionService,
+          entityFinder: mockEntityFinder,
+          injuryAggregationService: mockInjuryAggregationService,
+        });
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          overallHealthPercentage: 70,
+          injuredParts: [
+            {
+              partType: 'hand',
+              orientation: 'left',
+              state: 'scratched',
+              healthPercentage: 85,
+              isBleeding: false,
+              isBurning: false,
+              isPoisoned: false,
+              isFractured: false,
+            },
+          ],
+          isDying: false,
+          isDead: false,
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+        });
+
+        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const result = extractorWithoutFormatter.extractPromptData(
+          actorState,
+          'actor-1'
+        );
+
+        expect(result.healthState.firstPersonNarrative).toBeNull();
+      });
+
+      test('should not call formatter when no injured parts', () => {
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          overallHealthPercentage: 95,
+          injuredParts: [],
+          isDying: true,
+          isDead: false,
+          dyingTurnsRemaining: 5,
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+        });
+
+        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        extractorWithHealth.extractPromptData(actorState, 'actor-1');
+
+        expect(
+          mockInjuryNarrativeFormatterService.formatFirstPerson
+        ).not.toHaveBeenCalled();
+      });
+    });
   });
 });
 

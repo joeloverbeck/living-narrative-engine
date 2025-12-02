@@ -30,6 +30,8 @@ import { IActorDataExtractor } from '../../interfaces/IActorDataExtractor.js';
 
 // ActorPromptDataDTO is defined in AIGameStateDTO.js as per the provided context
 /** @typedef {import('../dtos/AIGameStateDTO.js').ActorPromptDataDTO} ActorPromptDataDTO */
+/** @typedef {import('../dtos/AIGameStateDTO.js').ActorHealthStateDTO} ActorHealthStateDTO */
+/** @typedef {import('../dtos/AIGameStateDTO.js').ActorInjuryDTO} ActorInjuryDTO */
 
 /**
  * Retrieve and trim the text from a component if available.
@@ -61,10 +63,24 @@ function getTrimmedComponentText(actorState, componentId) {
  * to populate the ActorPromptDataDTO.
  */
 class ActorDataExtractor extends IActorDataExtractor {
-  constructor({ anatomyDescriptionService, entityFinder }) {
+  /** @type {object | null} */
+  #injuryAggregationService;
+
+  /** @type {object | null} */
+  #injuryNarrativeFormatterService;
+
+  constructor({
+    anatomyDescriptionService,
+    entityFinder,
+    injuryAggregationService,
+    injuryNarrativeFormatterService,
+  }) {
     super();
     this.anatomyDescriptionService = anatomyDescriptionService;
     this.entityFinder = entityFinder;
+    this.#injuryAggregationService = injuryAggregationService ?? null;
+    this.#injuryNarrativeFormatterService =
+      injuryNarrativeFormatterService ?? null;
   }
 
   /**
@@ -188,7 +204,123 @@ class ActorDataExtractor extends IActorDataExtractor {
       promptData.apparentAge = apparentAgeData;
     }
 
+    // Health State - returns null for healthy characters (optimization)
+    promptData.healthState = this.#extractHealthData(actorId);
+
     return /** @type {ActorPromptDataDTO} */ (promptData);
+  }
+
+  /**
+   * Extracts health state data for LLM context.
+   * Returns null for healthy characters to optimize token usage.
+   *
+   * @param {string|null} actorId - Actor entity ID
+   * @returns {ActorHealthStateDTO|null} Health state or null if healthy/no anatomy
+   */
+  #extractHealthData(actorId) {
+    if (!actorId || !this.#injuryAggregationService) return null;
+
+    try {
+      const summary = this.#injuryAggregationService.aggregateInjuries(actorId);
+      if (!summary) return null;
+
+      // Optimization: return null for healthy characters
+      if (
+        summary.injuredParts.length === 0 &&
+        !summary.isDying &&
+        !summary.isDead &&
+        summary.overallHealthPercentage >= 100
+      ) {
+        return null;
+      }
+
+      // Get first-person narrative if formatter available
+      let firstPersonNarrative = null;
+      if (
+        this.#injuryNarrativeFormatterService &&
+        summary.injuredParts.length > 0
+      ) {
+        firstPersonNarrative =
+          this.#injuryNarrativeFormatterService.formatFirstPerson(summary);
+      }
+
+      return {
+        overallHealthPercentage: summary.overallHealthPercentage,
+        overallStatus: this.#determineOverallStatus(summary),
+        injuries: summary.injuredParts.map((part) => ({
+          partName: this.#formatPartName(part.partType, part.orientation),
+          partType: part.partType,
+          state: part.state,
+          healthPercent: part.healthPercentage,
+          effects: this.#collectPartEffects(part),
+        })),
+        activeEffects: this.#collectActiveEffects(summary),
+        isDying: summary.isDying,
+        turnsUntilDeath: summary.dyingTurnsRemaining,
+        firstPersonNarrative,
+      };
+    } catch (error) {
+      // Silently handle errors to maintain stability
+      return null;
+    }
+  }
+
+  /**
+   * Determines overall health status string from summary.
+   *
+   * @param {object} summary - Injury summary
+   * @returns {string} Status string
+   */
+  #determineOverallStatus(summary) {
+    if (summary.isDead) return 'dead';
+    if (summary.isDying) return 'dying';
+    const pct = summary.overallHealthPercentage;
+    if (pct >= 100) return 'healthy';
+    if (pct >= 80) return 'scratched';
+    if (pct >= 60) return 'wounded';
+    if (pct >= 40) return 'injured';
+    return 'critical';
+  }
+
+  /**
+   * Formats a part name with optional orientation.
+   *
+   * @param {string} partType - Type of body part
+   * @param {string|null} orientation - left/right/null
+   * @returns {string} Formatted part name
+   */
+  #formatPartName(partType, orientation) {
+    return orientation ? `${orientation} ${partType}` : partType;
+  }
+
+  /**
+   * Collects active effects for a single part.
+   *
+   * @param {object} part - Part info from summary
+   * @returns {string[]} Array of effect strings
+   */
+  #collectPartEffects(part) {
+    const effects = [];
+    if (part.isBleeding) effects.push(`bleeding_${part.bleedingSeverity}`);
+    if (part.isBurning) effects.push('burning');
+    if (part.isPoisoned) effects.push('poisoned');
+    if (part.isFractured) effects.push('fractured');
+    return effects;
+  }
+
+  /**
+   * Collects summary of active effects across all parts.
+   *
+   * @param {object} summary - Injury summary
+   * @returns {string[]} Array of active effect types
+   */
+  #collectActiveEffects(summary) {
+    const effects = [];
+    if (summary.bleedingParts.length > 0) effects.push('bleeding');
+    if (summary.burningParts.length > 0) effects.push('burning');
+    if (summary.poisonedParts.length > 0) effects.push('poisoned');
+    if (summary.fracturedParts.length > 0) effects.push('fractured');
+    return effects;
   }
 }
 

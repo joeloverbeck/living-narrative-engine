@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_spine",
+  "description": "A human spine - vital organ for structural support and neural transmission",
+  "components": {
+    "anatomy:part": {
+      "subType": "spine"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 60,
+      "maxHealth": 60,
+      "state": "healthy"
+    },
+    "anatomy:vital_organ": {
+      "organType": "spine"
+    },
+    "core:name": {
+      "text": "spine"
+    }
+  }
+}

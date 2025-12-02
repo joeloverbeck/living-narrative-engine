@@ -68,3 +68,41 @@ Add health state data to ActorPromptDataDTO and extend ActorDataExtractor.
 ## Reference
 
 See `specs/injury-reporting-and-user-interface.md` section 8.1 for DTO specification.
+
+## Outcome
+
+**Status**: COMPLETED
+
+**Implementation Date**: 2025-12-02
+
+### Changes Made
+
+1. **AIGameStateDTO.js** (`src/turns/dtos/AIGameStateDTO.js`):
+   - Added `ActorHealthStateDTO` typedef with `overallHealthPercentage` (spec naming)
+   - Added `ActorInjuryDTO` typedef
+   - Extended `ActorPromptDataDTO` with `healthState` property
+
+2. **ActorDataExtractor.js** (`src/turns/services/actorDataExtractor.js`):
+   - Added private fields `#injuryAggregationService` and `#injuryNarrativeFormatterService`
+   - Modified constructor to accept new optional dependencies (null-safe)
+   - Added `#extractHealthData(actorId)` private method
+   - Added helper methods: `#determineOverallStatus`, `#formatPartName`, `#collectPartEffects`, `#collectActiveEffects`
+   - Health state extraction is called in `extractPromptData()` method
+
+3. **DI Registration** (`src/dependencyInjection/registrations/aiRegistrations.js`):
+   - Added `injuryAggregationService` and `injuryNarrativeFormatterService` to ActorDataExtractor factory
+
+4. **Tests** (`tests/unit/turns/services/actorDataExtractor.test.js`):
+   - Added 14 new tests covering health state extraction scenarios
+   - Tests cover: missing dependencies, healthy characters, injured characters, status mapping, effects collection, error handling, part name formatting, narrative inclusion
+
+### Corrections
+
+- Used `overallHealthPercentage` (from spec section 8.1) instead of `overallHealthPercent` (ticket typo)
+
+### Notes
+
+- Dependencies are optional with null-safe injection for backward compatibility
+- Health state returns `null` for healthy characters to optimize token usage in LLM context
+- All 96 existing + new tests pass
+- No ESLint errors (only pre-existing warnings)

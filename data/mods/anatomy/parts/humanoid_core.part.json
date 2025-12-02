@@ -80,6 +80,16 @@
     "right_ass": {
       "$use": "standard_ass_cheek",
       "socket": "right_ass"
+    },
+    "heart": {
+      "$use": "standard_heart"
+    },
+    "spine": {
+      "$use": "standard_spine"
+    },
+    "brain": {
+      "$use": "standard_brain",
+      "parent": "head"
     }
   },
   "clothingSlotMappings": {

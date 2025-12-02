@@ -289,6 +289,10 @@ export function registerAIGameStateProviders(registrar, logger) {
     return new ActorDataExtractor({
       anatomyDescriptionService: c.resolve(tokens.AnatomyDescriptionService),
       entityFinder: c.resolve(tokens.IEntityManager),
+      injuryAggregationService: c.resolve(tokens.InjuryAggregationService),
+      injuryNarrativeFormatterService: c.resolve(
+        tokens.InjuryNarrativeFormatterService
+      ),
     });
   });
   registrar.single(tokens.IActorStateProvider, ActorStateProvider);

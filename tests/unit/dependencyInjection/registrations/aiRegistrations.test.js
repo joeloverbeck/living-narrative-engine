@@ -621,11 +621,17 @@ describe('aiRegistrations', () => {
         createFactoryContext({
           [tokens.AnatomyDescriptionService]: { anatomy: true },
           [tokens.IEntityManager]: { entityManager: true },
+          [tokens.InjuryAggregationService]: { injuryAggregation: true },
+          [tokens.InjuryNarrativeFormatterService]: {
+            injuryNarrativeFormatter: true,
+          },
         })
       );
       expect(ActorDataExtractorMock).toHaveBeenCalledWith({
         anatomyDescriptionService: { anatomy: true },
         entityFinder: { entityManager: true },
+        injuryAggregationService: { injuryAggregation: true },
+        injuryNarrativeFormatterService: { injuryNarrativeFormatter: true },
       });
 
       const availableActionsCall = container.register.mock.calls.find(

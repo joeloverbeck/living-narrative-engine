@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_heart",
+  "description": "A human heart - vital organ for blood circulation",
+  "components": {
+    "anatomy:part": {
+      "subType": "heart"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 50,
+      "maxHealth": 50,
+      "state": "healthy"
+    },
+    "anatomy:vital_organ": {
+      "organType": "heart"
+    },
+    "core:name": {
+      "text": "heart"
+    }
+  }
+}

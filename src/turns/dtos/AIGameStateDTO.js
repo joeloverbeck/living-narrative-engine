@@ -121,6 +121,27 @@
  * @property {Array<object>} [memories] - Character's memory entries
  * @property {Array<object>} [relationships] - Character's relationships with other entities
  * @property {object} [notes] - Character's notes and observations
+ * @property {ActorHealthStateDTO|null} [healthState] - Current physical condition (null if healthy)
+ */
+
+/**
+ * @typedef {object} ActorHealthStateDTO
+ * @property {number} overallHealthPercentage - 0-100
+ * @property {string} overallStatus - healthy|scratched|wounded|injured|critical|dying|dead
+ * @property {ActorInjuryDTO[]} injuries
+ * @property {string[]} activeEffects
+ * @property {boolean} isDying
+ * @property {number|null} turnsUntilDeath
+ * @property {string|null} firstPersonNarrative
+ */
+
+/**
+ * @typedef {object} ActorInjuryDTO
+ * @property {string} partName
+ * @property {string} partType
+ * @property {string} state - healthy|scratched|wounded|injured|critical|destroyed
+ * @property {number} healthPercent
+ * @property {string[]} effects
  */
 
 // To make this file a module and allow JSDoc types to be potentially imported

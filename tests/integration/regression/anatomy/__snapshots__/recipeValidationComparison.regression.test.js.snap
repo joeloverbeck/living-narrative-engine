@@ -567,7 +567,7 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
     },
     {
       "check": "socket_slot_compatibility",
-      "message": "All 24 slot socket references valid",
+      "message": "All 27 slot socket references valid",
     },
   ],
   "recipeId": "anatomy:human_male",
@@ -634,7 +634,7 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
     },
     {
       "check": "socket_slot_compatibility",
-      "message": "All 24 slot socket references valid",
+      "message": "All 27 slot socket references valid",
     },
   ],
   "recipeId": "tests:human_male_unused_clone",
@@ -765,7 +765,7 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
     },
     {
       "check": "socket_slot_compatibility",
-      "message": "All 24 slot socket references valid",
+      "message": "All 27 slot socket references valid",
     },
   ],
   "recipeId": "anatomy:human_male",

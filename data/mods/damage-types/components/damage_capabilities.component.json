@@ -1,0 +1,20 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "damage-types:damage_capabilities",
+  "description": "Defines damage types and amounts a weapon can inflict, including effect configurations",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "entries": {
+        "type": "array",
+        "description": "Array of damage type entries this weapon can inflict",
+        "minItems": 1,
+        "items": {
+          "$ref": "schema://living-narrative-engine/damage-capability-entry.schema.json"
+        }
+      }
+    },
+    "required": ["entries"],
+    "additionalProperties": false
+  }
+}
