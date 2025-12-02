@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:chicken_wing_copper_metallic",
+  "description": "Feathered wing of a chicken with copper plumage and metallic sheen",
+  "components": {
+    "anatomy:part": {
+      "subType": "chicken_wing"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 8,
+      "maxHealth": 8,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "copper chicken wing"
+    },
+    "descriptors:texture": {
+      "texture": "feathered"
+    },
+    "descriptors:color_extended": {
+      "color": "copper"
+    },
+    "descriptors:plumage_sheen": {
+      "sheen": "metallic"
+    }
+  }
+}

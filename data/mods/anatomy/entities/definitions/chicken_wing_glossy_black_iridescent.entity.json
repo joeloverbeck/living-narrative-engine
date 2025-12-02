@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:chicken_wing_glossy_black_iridescent",
+  "description": "Feathered wing of a chicken with glossy black plumage and iridescent sheen",
+  "components": {
+    "anatomy:part": {
+      "subType": "chicken_wing"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 8,
+      "maxHealth": 8,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "glossy black chicken wing"
+    },
+    "descriptors:texture": {
+      "texture": "feathered"
+    },
+    "descriptors:color_extended": {
+      "color": "glossy-black"
+    },
+    "descriptors:plumage_sheen": {
+      "sheen": "iridescent"
+    }
+  }
+}

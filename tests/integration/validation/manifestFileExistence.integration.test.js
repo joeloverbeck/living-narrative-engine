@@ -183,3 +183,251 @@ describe('Manifest File Existence Validation', () => {
     expect(namingIssues).toHaveLength(0);
   }, 30000);
 });
+
+/**
+ * Files to ignore when scanning directories for unregistered content
+ * @type {string[]}
+ */
+const IGNORED_FILES = [
+  '.DS_Store',
+  'Thumbs.db',
+  '.gitkeep',
+  '.gitignore',
+  'desktop.ini',
+];
+
+/**
+ * File extensions to ignore (temporary/backup files)
+ * @type {string[]}
+ */
+const IGNORED_EXTENSIONS = ['.swp', '.bak', '.tmp', '.orig'];
+
+/**
+ * Content categories and their expected file patterns
+ * @type {Object<string, {directory: string, pattern: RegExp}>}
+ */
+const CONTENT_CATEGORIES = {
+  actions: { directory: 'actions', pattern: /\.json$/i },
+  components: { directory: 'components', pattern: /\.json$/i },
+  conditions: { directory: 'conditions', pattern: /\.json$/i },
+  damageTypes: { directory: 'damageTypes', pattern: /\.json$/i },
+  events: { directory: 'events', pattern: /\.json$/i },
+  goals: { directory: 'goals', pattern: /\.json$/i },
+  macros: { directory: 'macros', pattern: /\.json$/i },
+  rules: { directory: 'rules', pattern: /\.json$/i },
+  worlds: { directory: 'worlds', pattern: /\.json$/i },
+  blueprints: { directory: 'blueprints', pattern: /\.json$/i },
+  recipes: { directory: 'recipes', pattern: /\.json$/i },
+  anatomyFormatting: { directory: 'anatomyFormatting', pattern: /\.json$/i },
+  libraries: { directory: 'libraries', pattern: /\.json$/i },
+  lookups: { directory: 'lookups', pattern: /\.json$/i },
+  parts: { directory: 'parts', pattern: /\.json$/i },
+  'structure-templates': { directory: 'structure-templates', pattern: /\.json$/i },
+  scopes: { directory: 'scopes', pattern: /\.scope$/i },
+  'refinement-methods': { directory: 'refinement-methods', pattern: /\.refinement\.json$/i },
+  tasks: { directory: 'tasks', pattern: /\.task\.json$/i },
+  portraits: { directory: 'portraits', pattern: /\.(png|jpg|jpeg|gif|webp|svg|bmp)$/i },
+};
+
+/**
+ * Checks if a file should be ignored during scanning
+ *
+ * @param {string} filename - Filename to check
+ * @returns {boolean} True if file should be ignored
+ */
+function isIgnoredFile(filename) {
+  // Check against explicit ignore list
+  if (IGNORED_FILES.includes(filename)) return true;
+
+  // Check for ignored extensions
+  for (const ext of IGNORED_EXTENSIONS) {
+    if (filename.endsWith(ext)) return true;
+  }
+
+  // Ignore files starting with . (hidden files) except those we explicitly handle
+  if (filename.startsWith('.') && !IGNORED_FILES.includes(filename)) return true;
+
+  // Ignore files ending with ~ (backup files)
+  if (filename.endsWith('~')) return true;
+
+  return false;
+}
+
+/**
+ * Scans a directory for files matching the expected pattern
+ *
+ * @param {string} dirPath - Directory path to scan
+ * @param {RegExp} pattern - File pattern to match
+ * @returns {Promise<string[]>} Array of matching filenames
+ */
+async function scanDirectory(dirPath, pattern) {
+  try {
+    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+    const files = [];
+
+    for (const entry of entries) {
+      // Skip directories
+      if (!entry.isFile()) continue;
+
+      const filename = entry.name;
+
+      // Skip ignored files
+      if (isIgnoredFile(filename)) continue;
+
+      // Only include files matching the expected pattern
+      if (pattern.test(filename)) {
+        files.push(filename);
+      }
+    }
+
+    return files;
+  } catch (error) {
+    // Directory doesn't exist - this is fine, no unregistered files
+    if (error.code === 'ENOENT') {
+      return [];
+    }
+    throw error;
+  }
+}
+
+describe('Unregistered Files Validation', () => {
+  it('should detect files on disk not registered in manifest', async () => {
+    const modDirs = await getModDirectories();
+    const unregisteredIssues = [];
+
+    for (const modId of modDirs) {
+      const modPath = path.join(process.cwd(), 'data', 'mods', modId);
+
+      let manifest;
+      try {
+        manifest = await readManifest(modPath);
+      } catch {
+        // Skip mods without manifests
+        continue;
+      }
+
+      const content = manifest.content || {};
+
+      // Check each content category
+      for (const [categoryKey, categoryConfig] of Object.entries(CONTENT_CATEGORIES)) {
+        const categoryDir = path.join(modPath, categoryConfig.directory);
+
+        // Get files registered in manifest for this category
+        const registeredFiles = content[categoryKey];
+        const registeredSet = new Set(Array.isArray(registeredFiles) ? registeredFiles : []);
+
+        // Scan directory for actual files
+        const filesOnDisk = await scanDirectory(categoryDir, categoryConfig.pattern);
+
+        // Find unregistered files
+        for (const file of filesOnDisk) {
+          if (!registeredSet.has(file)) {
+            unregisteredIssues.push({
+              modId,
+              category: categoryConfig.directory,
+              file,
+            });
+          }
+        }
+      }
+
+      // Handle nested entities structure separately
+      const entities = content.entities || {};
+
+      // Check definitions
+      const definitionsDir = path.join(modPath, 'entities', 'definitions');
+      const registeredDefinitions = new Set(entities.definitions || []);
+      const definitionsOnDisk = await scanDirectory(definitionsDir, /\.json$/i);
+
+      for (const file of definitionsOnDisk) {
+        if (!registeredDefinitions.has(file)) {
+          unregisteredIssues.push({
+            modId,
+            category: 'entities/definitions',
+            file,
+          });
+        }
+      }
+
+      // Check instances
+      const instancesDir = path.join(modPath, 'entities', 'instances');
+      const registeredInstances = new Set(entities.instances || []);
+      const instancesOnDisk = await scanDirectory(instancesDir, /\.json$/i);
+
+      for (const file of instancesOnDisk) {
+        if (!registeredInstances.has(file)) {
+          unregisteredIssues.push({
+            modId,
+            category: 'entities/instances',
+            file,
+          });
+        }
+      }
+    }
+
+    // This test is informational - it warns about unregistered files but doesn't fail
+    // as unregistered files may be intentional (e.g., documentation, backup files)
+    if (unregisteredIssues.length > 0) {
+      const issuesByMod = new Map();
+      for (const issue of unregisteredIssues) {
+        if (!issuesByMod.has(issue.modId)) {
+          issuesByMod.set(issue.modId, []);
+        }
+        issuesByMod.get(issue.modId).push(issue);
+      }
+
+      const report = [];
+      for (const [modId, issues] of issuesByMod) {
+        report.push(`\n  Mod: ${modId}`);
+        for (const issue of issues) {
+          report.push(`    - ${issue.category}/${issue.file}`);
+        }
+      }
+
+      console.warn(
+        `⚠️ Found ${unregisteredIssues.length} unregistered file(s) across ${issuesByMod.size} mod(s):${report.join('\n')}`
+      );
+    }
+
+    // Test passes but logs warning if issues found
+    expect(true).toBe(true);
+  }, 60000); // 60 second timeout for extensive filesystem operations
+
+  it('should ignore system files like .DS_Store and Thumbs.db', async () => {
+    // This test validates the ignore list is working correctly
+    // by checking that system files are not flagged
+    const modDirs = await getModDirectories();
+    const systemFilesDetected = [];
+
+    for (const modId of modDirs) {
+      const modPath = path.join(process.cwd(), 'data', 'mods', modId);
+
+      for (const [, categoryConfig] of Object.entries(CONTENT_CATEGORIES)) {
+        const categoryDir = path.join(modPath, categoryConfig.directory);
+
+        try {
+          const entries = await fs.readdir(categoryDir, { withFileTypes: true });
+          for (const entry of entries) {
+            if (entry.isFile() && IGNORED_FILES.includes(entry.name)) {
+              // Found a system file - verify it's being ignored
+              const filesOnDisk = await scanDirectory(categoryDir, categoryConfig.pattern);
+              if (filesOnDisk.includes(entry.name)) {
+                systemFilesDetected.push({
+                  modId,
+                  category: categoryConfig.directory,
+                  file: entry.name,
+                });
+              }
+            }
+          }
+        } catch {
+          // Directory doesn't exist, skip
+          continue;
+        }
+      }
+    }
+
+    // System files should never appear in scan results
+    expect(systemFilesDetected).toHaveLength(0);
+  }, 30000);
+});

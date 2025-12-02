@@ -1,0 +1,37 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:plumage_sheen",
+  "description": "Plumage sheen descriptors for birds and feathered creatures",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "sheen": {
+        "type": "string",
+        "description": "The sheen or reflective quality of plumage",
+        "enum": [
+          "matte",
+          "glossy",
+          "iridescent",
+          "metallic",
+          "oily-sheen"
+        ],
+        "default": "matte"
+      }
+    },
+    "required": ["sheen"],
+    "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid plumage sheen: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Plumage sheen is required",
+      "invalidType": "Invalid type for plumage sheen: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
+  }
+}

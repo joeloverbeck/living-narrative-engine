@@ -9,15 +9,16 @@
         "type": "string",
         "description": "The general size category",
         "enum": [
-          "tiny",
-          "small",
-          "medium",
-          "large",
-          "huge",
-          "massive",
+          "bantam",
           "colossal",
           "enormous",
           "gigantic",
+          "huge",
+          "large",
+          "massive",
+          "medium",
+          "small",
+          "tiny",
           "titanic"
         ],
         "default": "medium"

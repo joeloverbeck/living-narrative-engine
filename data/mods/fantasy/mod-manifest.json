@@ -149,10 +149,15 @@
     "recipes": [
       "aldous.recipe.json",
       "bertram_the_muddy.recipe.json",
+      "copper_backed_rooster.recipe.json",
+      "kink_necked_black_pullet.recipe.json",
+      "large_speckled_hen.recipe.json",
       "registrar_copperplate.recipe.json",
       "rill.recipe.json",
+      "slate_blue_bantam.recipe.json",
       "threadscar_melissa.recipe.json",
-      "vespera_nightwhisper.recipe.json"
+      "vespera_nightwhisper.recipe.json",
+      "white_faced_buff_hen.recipe.json"
     ],
     "portraits": [
       "12_kiln_lane.png",

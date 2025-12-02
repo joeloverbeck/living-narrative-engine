@@ -309,6 +309,39 @@ class ModValidationOrchestrator {
         );
       }
 
+      // Phase 6: Unregistered files validation (inverse of Phase 5)
+      this.#logger.info('Phase 6: Validating for unregistered files on disk');
+      const unregisteredFilesStartTime = performance.now();
+
+      try {
+        results.unregisteredFiles = await this.#fileExistenceValidator.validateAllModsUnregistered(manifestsMap);
+        results.performance.phases.set(
+          'unregistered-files-validation',
+          performance.now() - unregisteredFilesStartTime
+        );
+
+        const modsWithUnregistered = Array.from(results.unregisteredFiles.values()).filter(r => !r.isValid);
+        if (modsWithUnregistered.length > 0) {
+          const totalUnregistered = modsWithUnregistered.reduce(
+            (sum, r) => sum + r.unregisteredFiles.length,
+            0
+          );
+          this.#logger.warn(
+            `Unregistered files validation found ${totalUnregistered} file(s) in ${modsWithUnregistered.length} mod(s)`
+          );
+
+          // Unregistered files are warnings, not errors (don't fail validation)
+          results.warnings.push(
+            `Unregistered files validation found ${totalUnregistered} file(s) in ${modsWithUnregistered.length} mod(s)`
+          );
+        }
+      } catch (error) {
+        this.#logger.error('Unregistered files validation failed', error);
+        results.errors.push(
+          `Unregistered files validation failed: ${error.message}`
+        );
+      }
+
       // Determine overall validation status
       results.isValid =
         results.dependencies?.isValid &&

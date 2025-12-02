@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:chicken_comb_large_coarse",
+  "description": "Large fleshy red comb atop a chicken's head with coarse texture",
+  "components": {
+    "anatomy:part": {
+      "subType": "chicken_comb"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 3,
+      "maxHealth": 3,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "large coarse chicken comb"
+    },
+    "descriptors:texture": {
+      "texture": "coarse"
+    },
+    "descriptors:color_basic": {
+      "color": "red"
+    },
+    "descriptors:size_category": {
+      "size": "large"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:chicken_head_rust_red",
+  "description": "Small feathered head of a chicken with rust-red coloring",
+  "components": {
+    "anatomy:part": {
+      "subType": "chicken_head"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 8,
+      "maxHealth": 8,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "rust-red chicken head"
+    },
+    "descriptors:size_category": {
+      "size": "small"
+    },
+    "descriptors:texture": {
+      "texture": "feathered"
+    },
+    "descriptors:color_extended": {
+      "color": "rust-red"
+    }
+  }
+}

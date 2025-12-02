@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:chicken_head_twisted_joints",
+  "description": "Small feathered head of a chicken with twisted deformity",
+  "components": {
+    "anatomy:part": {
+      "subType": "chicken_head"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 8,
+      "maxHealth": 8,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "twisted chicken head"
+    },
+    "descriptors:size_category": {
+      "size": "small"
+    },
+    "descriptors:texture": {
+      "texture": "feathered"
+    },
+    "descriptors:deformity": {
+      "deformity": "twisted-joints"
+    }
+  }
+}

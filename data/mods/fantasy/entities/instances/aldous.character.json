@@ -4,7 +4,7 @@
     "definitionId": "fantasy:aldous",
     "componentOverrides": {
         "core:position": {
-            "locationId": "fantasy:12_kiln_lane_instance"
+            "locationId": "fantasy:interior_of_chicken_coop_instance"
         },
         "items:inventory": {
             "items": [

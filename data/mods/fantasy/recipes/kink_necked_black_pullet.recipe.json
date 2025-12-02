@@ -1,0 +1,57 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "fantasy:kink_necked_black_pullet",
+  "blueprintId": "anatomy:hen",
+  "bodyDescriptors": {
+    "build": "slim",
+    "height": "petite",
+    "hairDensity": "furred",
+    "composition": "lean",
+    "skinColor": "glossy-black with green sheen",
+    "smell": "burnt clay"
+  },
+  "slots": {
+    "head": {
+      "partType": "chicken_head",
+      "preferId": "anatomy:chicken_head_twisted_joints"
+    },
+    "beak": {
+      "partType": "chicken_beak",
+      "preferId": "anatomy:chicken_beak"
+    },
+    "comb": {
+      "partType": "chicken_comb",
+      "preferId": "anatomy:chicken_comb"
+    },
+    "wattle": {
+      "partType": "chicken_wattle",
+      "preferId": "anatomy:chicken_wattle"
+    },
+    "tail": {
+      "partType": "chicken_tail",
+      "preferId": "anatomy:chicken_tail"
+    }
+  },
+  "patterns": [
+    {
+      "matches": ["left_wing", "right_wing"],
+      "partType": "chicken_wing",
+      "preferId": "anatomy:chicken_wing_glossy_black_iridescent"
+    },
+    {
+      "matches": ["left_leg", "right_leg"],
+      "partType": "chicken_leg",
+      "preferId": "anatomy:chicken_leg"
+    },
+    {
+      "matches": ["left_foot", "right_foot"],
+      "partType": "chicken_foot",
+      "preferId": "anatomy:chicken_foot"
+    },
+    {
+      "matches": ["left_eye", "right_eye"],
+      "partType": "eye",
+      "preferId": "anatomy:feline_eye_amber_slit"
+    }
+  ]
+}
