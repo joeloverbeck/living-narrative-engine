@@ -23,7 +23,8 @@
       "positioning:hugging",
       "positioning:closeness",
       "positioning:being_restrained",
-      "positioning:restraining"
+      "positioning:restraining",
+      "positioning:fallen"
     ],
     "primary": [
       "positioning:kneeling_before",

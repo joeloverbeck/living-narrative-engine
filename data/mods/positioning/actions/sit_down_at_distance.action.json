@@ -24,7 +24,8 @@
       "positioning:sitting_on",
       "positioning:kneeling_before",
       "positioning:bending_over",
-      "positioning:restraining"
+      "positioning:restraining",
+      "positioning:fallen"
     ]
   },
   "template": "sit down on {seat} at a distance from {occupant}",

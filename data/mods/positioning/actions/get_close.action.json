@@ -17,7 +17,8 @@
       "positioning:doing_complex_performance",
       "positioning:wielding",
       "positioning:being_restrained",
-      "positioning:restraining"
+      "positioning:restraining",
+      "positioning:fallen"
     ]
   },
   "template": "get close to {target}",

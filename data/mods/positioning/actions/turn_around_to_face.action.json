@@ -21,7 +21,8 @@
       "positioning:bending_over",
       "positioning:biting_neck",
       "positioning:being_restrained",
-      "positioning:restraining"
+      "positioning:restraining",
+      "positioning:fallen"
     ]
   },
   "template": "turn around to face {target}",

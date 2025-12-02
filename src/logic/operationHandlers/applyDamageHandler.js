@@ -45,8 +45,9 @@ class ApplyDamageHandler extends BaseOperationHandler {
   /** @type {import('../jsonLogicEvaluationService.js').default} */ #jsonLogicService;
   /** @type {import('../../anatomy/bodyGraphService.js').default} */ #bodyGraphService;
   /** @type {import('../../anatomy/services/damageTypeEffectsService.js').default} */ #damageTypeEffectsService;
+  /** @type {import('../../anatomy/services/damagePropagationService.js').default} */ #damagePropagationService;
 
-  constructor({ logger, entityManager, safeEventDispatcher, jsonLogicService, bodyGraphService, damageTypeEffectsService }) {
+  constructor({ logger, entityManager, safeEventDispatcher, jsonLogicService, bodyGraphService, damageTypeEffectsService, damagePropagationService }) {
     super('ApplyDamageHandler', {
       logger: { value: logger },
       entityManager: {
@@ -69,12 +70,17 @@ class ApplyDamageHandler extends BaseOperationHandler {
         value: damageTypeEffectsService,
         requiredMethods: ['applyEffectsForDamage'],
       },
+      damagePropagationService: {
+        value: damagePropagationService,
+        requiredMethods: ['propagateDamage'],
+      },
     });
     this.#entityManager = entityManager;
     this.#dispatcher = safeEventDispatcher;
     this.#jsonLogicService = jsonLogicService;
     this.#bodyGraphService = bodyGraphService;
     this.#damageTypeEffectsService = damageTypeEffectsService;
+    this.#damagePropagationService = damagePropagationService;
   }
 
   #calculateHealthState(healthPercentage) {
@@ -158,6 +164,18 @@ class ApplyDamageHandler extends BaseOperationHandler {
     }
   }
 
+  /**
+   * Propagates damage to child parts using the DamagePropagationService.
+   *
+   * @param {object} params - Propagation parameters
+   * @param {string} params.entityId - Owner entity ID
+   * @param {string} params.parentPartId - Parent part that received damage
+   * @param {number} params.damageAmount - Amount of damage to propagate
+   * @param {string} params.damageType - Type of damage
+   * @param {object} params.propagationRules - Rules for propagation
+   * @param {object} params.executionContext - Execution context
+   * @private
+   */
   async #propagateDamage({
     entityId,
     parentPartId,
@@ -166,47 +184,23 @@ class ApplyDamageHandler extends BaseOperationHandler {
     propagationRules,
     executionContext,
   }) {
-    if (!propagationRules || typeof propagationRules !== 'object') return;
+    // Use the DamagePropagationService to calculate which child parts receive damage
+    const propagationResults = this.#damagePropagationService.propagateDamage(
+      parentPartId,
+      damageAmount,
+      damageType,
+      entityId,
+      propagationRules
+    );
 
-    const log = this.getLogger(executionContext);
-    const entries = Object.entries(propagationRules);
-    if (!entries.length) return;
-
-    for (const [childPartId, rule] of entries) {
-      if (!rule || typeof rule !== 'object' || childPartId === parentPartId) {
-        continue;
-      }
-
-      const allowedTypes = Array.isArray(rule.damage_types)
-        ? rule.damage_types
-        : null;
-      if (allowedTypes && allowedTypes.length > 0 && !allowedTypes.includes(damageType)) {
-        continue;
-      }
-
-      const probabilityRaw = typeof rule.probability === 'number' ? rule.probability : 1;
-      const probability = Math.min(1, Math.max(0, probabilityRaw));
-      if (Math.random() > probability) continue;
-
-      const fraction = typeof rule.damage_fraction === 'number' ? rule.damage_fraction : 0.5;
-      const propagatedAmount = damageAmount * fraction;
-      if (!(propagatedAmount > 0)) continue;
-
-      const joint = this.#entityManager.getComponentData(childPartId, 'anatomy:joint');
-      const jointParentId = joint?.parentId || joint?.parentEntityId;
-      if (jointParentId !== parentPartId) {
-        log.debug(
-          `APPLY_DAMAGE: Skipping propagation to ${childPartId} - not a child of ${parentPartId}`
-        );
-        continue;
-      }
-
+    // Apply damage to each child part
+    for (const result of propagationResults) {
       await this.execute(
         {
           entity_ref: entityId,
-          part_ref: childPartId,
-          amount: propagatedAmount,
-          damage_type: damageType,
+          part_ref: result.childPartId,
+          amount: result.damageApplied,
+          damage_type: result.damageTypeId,
           propagatedFrom: parentPartId,
         },
         executionContext

@@ -12,7 +12,8 @@
   },
   "forbidden_components": {
     "actor": [
-      "positioning:being_restrained"
+      "positioning:being_restrained",
+      "positioning:fallen"
     ],
     "primary": [
       "positioning:being_restrained"
