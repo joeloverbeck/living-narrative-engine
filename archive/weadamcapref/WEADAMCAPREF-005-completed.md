@@ -9,6 +9,32 @@ Update `ApplyDamageHandler` to accept a `damage_entry` parameter containing the 
 - WEADAMCAPREF-001 (schema for damage entry structure)
 - WEADAMCAPREF-004 (DamageTypeEffectsService accepts damageEntry)
 
+## Assumption Corrections (Discovered During Implementation)
+
+**Critical Bug Found**: The current `ApplyDamageHandler` passes incompatible parameters to `DamageTypeEffectsService`.
+
+| Assumption | Actual State |
+|------------|--------------|
+| Handler passes `amount` + `damageType` to service | ❌ Service signature changed in WEADAMCAPREF-004 |
+| Service expects `amount` and `damageType` | ❌ Service now expects `damageEntry` object |
+| This is only a feature addition | ❌ **Also a critical bug fix** |
+
+**Current broken call** (line ~348):
+```javascript
+await this.#damageTypeEffectsService.applyEffectsForDamage({
+  entityId, partId, amount: damageAmount, damageType, maxHealth, currentHealth
+});
+```
+
+**Service now expects**:
+```javascript
+await this.#damageTypeEffectsService.applyEffectsForDamage({
+  entityId, partId, damageEntry: { name, amount, ...effects }, maxHealth, currentHealth
+});
+```
+
+**Impact**: All damage type effects (bleed, burn, fracture, dismember, poison) are non-functional until this ticket is completed.
+
 ## Files to Touch
 
 | File | Action | Description |
@@ -126,3 +152,66 @@ Test cases:
 - 1 handler file (~30-50 lines changed)
 - 1 schema file (~20 lines added)
 - 1 test file (~80-120 lines changed/added)
+
+---
+
+## Outcome (Completed)
+
+### Status: ✅ COMPLETED
+
+### What Was Actually Changed vs Originally Planned
+
+**Originally Planned:**
+- Add `damage_entry` parameter support to ApplyDamageHandler
+- Update schema to include `damage_entry`
+- Add tests for new functionality
+
+**Actually Changed (exceeded scope due to critical bug fix):**
+
+1. **`data/schemas/operations/applyDamage.schema.json`**
+   - Added `damage_entry` property with reference to `damage-capability-entry.schema.json`
+   - Updated `damage_type` and `amount` descriptions with DEPRECATED notes
+   - Changed `required` from `["entity_ref", "amount", "damage_type"]` to `["entity_ref"]`
+
+2. **`src/logic/operationHandlers/applyDamageHandler.js`**
+   - Added `damage_entry` parameter extraction
+   - Added resolution logic for `damage_entry` (supports direct object or JSON Logic)
+   - Added validation for required `name` and `amount` fields
+   - Legacy mode now constructs `resolvedDamageEntry` from `damage_type` + `amount` with deprecation warning
+   - **Fixed critical bug**: Service call now passes `damageEntry: resolvedDamageEntry` instead of `amount`/`damageType`
+   - Updated propagation to use `damage_entry` structure internally
+
+3. **`src/configuration/staticConfiguration.js`** (additional change needed)
+   - Added `damage-capability-entry.schema.json` to schema files list for proper schema loading
+
+4. **`tests/unit/logic/operationHandlers/applyDamageHandler.test.js`**
+   - Added new `describe` block: `damage_entry parameter (WEADAMCAPREF-005)`
+   - 11 new test cases covering all acceptance criteria
+
+### Test Results
+
+| Test | Result |
+|------|--------|
+| Handler accepts `damage_entry` and applies damage correctly | ✅ |
+| Handler calls DamageTypeEffectsService with damageEntry object | ✅ |
+| Legacy `damage_type` + `amount` backward compatibility | ✅ |
+| Deprecation warning for legacy mode | ✅ |
+| Error when missing both parameter modes | ✅ |
+| JSON Logic resolution in `damage_entry` | ✅ |
+| Validation for missing `amount` field | ✅ |
+| Validation for missing `name` field | ✅ |
+| Full effect configuration handling | ✅ |
+| Damage propagation with new structure | ✅ |
+| Schema validation passes | ✅ |
+
+### Critical Bug Fixed
+
+This ticket also fixed a **critical integration bug** where all damage type effects (bleed, burn, fracture, dismember, poison) were non-functional due to incompatible parameters being passed to `DamageTypeEffectsService` after WEADAMCAPREF-004 was completed.
+
+### All Invariants Preserved
+
+- Health reduction calculation remains identical
+- Part resolution logic unchanged
+- Events dispatched remain unchanged
+- Legacy callers continue to work
+- No breaking changes to existing rules

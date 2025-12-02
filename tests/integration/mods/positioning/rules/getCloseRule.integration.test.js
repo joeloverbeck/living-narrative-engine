@@ -3,13 +3,8 @@
  */
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import Ajv from 'ajv';
 import ruleSchema from '../../../../../data/schemas/rule.schema.json';
-import commonSchema from '../../../../../data/schemas/common.schema.json';
-import operationSchema from '../../../../../data/schemas/operation.schema.json';
-import jsonLogicSchema from '../../../../../data/schemas/json-logic.schema.json';
-import loadOperationSchemas from '../../../../unit/helpers/loadOperationSchemas.js';
-import loadConditionSchemas from '../../../../unit/helpers/loadConditionSchemas.js';
+import createTestAjv from '../../../../common/validation/createTestAjv.js';
 import getCloseRule from '../../../../../data/mods/positioning/rules/get_close.rule.json';
 import eventIsActionGetClose from '../../../../../data/mods/positioning/conditions/event-is-action-get-close.condition.json';
 import SetVariableHandler from '../../../../../src/logic/operationHandlers/setVariableHandler.js';
@@ -331,21 +326,7 @@ describe('positioning_handle_get_close rule integration', () => {
   });
 
   it('validates get_close.rule.json against schema', () => {
-    const ajv = new Ajv({ allErrors: true });
-    ajv.addSchema(
-      commonSchema,
-      'schema://living-narrative-engine/common.schema.json'
-    );
-    ajv.addSchema(
-      operationSchema,
-      'schema://living-narrative-engine/operation.schema.json'
-    );
-    loadOperationSchemas(ajv);
-    loadConditionSchemas(ajv);
-    ajv.addSchema(
-      jsonLogicSchema,
-      'schema://living-narrative-engine/json-logic.schema.json'
-    );
+    const ajv = createTestAjv();
     const valid = ajv.validate(ruleSchema, getCloseRule);
     if (!valid) console.error(ajv.errors);
     expect(valid).toBe(true);

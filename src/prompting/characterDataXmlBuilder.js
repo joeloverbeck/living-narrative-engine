@@ -466,13 +466,20 @@ class CharacterDataXmlBuilder {
   }
 
   /**
-   * Builds the current state section with goals, notes, and recent thoughts
+   * Builds the current state section with physical condition, goals, notes, and recent thoughts.
+   * Physical condition is placed first for prominence per spec section 8.3.
    *
    * @param {object} data - Character data
    * @returns {string} Current state section XML or empty string
    */
   #buildCurrentStateSection(data) {
     const elements = [];
+
+    // Physical condition (placed first for prominence per spec)
+    const physicalConditionContent = this.#buildPhysicalConditionSection(data.healthState);
+    if (physicalConditionContent) {
+      elements.push(physicalConditionContent);
+    }
 
     // Goals
     const goalsContent = this.#formatGoalsList(data.goals);
@@ -585,6 +592,110 @@ class CharacterDataXmlBuilder {
   #wrapSection(sectionName, elements) {
     const indent = '  ';
     return `${indent}<${sectionName}>\n${elements.join('\n')}\n${indent}</${sectionName}>`;
+  }
+
+  // ========================================================================
+  // Physical Condition Section (INJREPANDUSEINT-012)
+  // ========================================================================
+
+  /**
+   * Builds the physical condition section for injured characters.
+   * Returns empty string for healthy characters (null healthState) to optimize tokens.
+   *
+   * @param {object|null} healthState - ActorHealthStateDTO or null
+   * @returns {string} Physical condition section XML or empty string
+   */
+  #buildPhysicalConditionSection(healthState) {
+    if (!healthState) {
+      return '';
+    }
+
+    const parts = [];
+
+    // Overall status with percentage
+    const statusText = this.#getOverallStatusText(healthState.overallStatus);
+    parts.push(
+      this.#xmlBuilder.wrap(
+        'overall_status',
+        `${this.#xmlBuilder.escape(statusText)} (${healthState.overallHealthPercentage}%)`,
+        2
+      )
+    );
+
+    // Injuries list
+    if (healthState.injuries && healthState.injuries.length > 0) {
+      const injuryLines = healthState.injuries.map((injury) => {
+        const effectsStr =
+          injury.effects && injury.effects.length > 0
+            ? this.#xmlBuilder.escape(injury.effects.join(', '))
+            : '';
+        const partAttr = this.#xmlBuilder.escape(injury.partName);
+        return `      <injury part="${partAttr}" state="${injury.state}">${effectsStr}</injury>`;
+      });
+      parts.push(`    <injuries>\n${injuryLines.join('\n')}\n    </injuries>`);
+    }
+
+    // Active effects summary
+    if (healthState.activeEffects && healthState.activeEffects.length > 0) {
+      parts.push(
+        this.#xmlBuilder.wrap(
+          'active_effects',
+          this.#xmlBuilder.escape(healthState.activeEffects.join(', ')),
+          2
+        )
+      );
+    }
+
+    // Critical warning
+    if (healthState.isDying) {
+      parts.push(
+        this.#xmlBuilder.wrap(
+          'critical_warning',
+          `You are dying! ${healthState.turnsUntilDeath} turns until death.`,
+          2
+        )
+      );
+    } else if (healthState.overallStatus === 'critical') {
+      parts.push(
+        this.#xmlBuilder.wrap(
+          'critical_warning',
+          'You are critically injured and may die soon.',
+          2
+        )
+      );
+    }
+
+    // First-person narrative experience
+    if (healthState.firstPersonNarrative) {
+      parts.push(
+        this.#xmlBuilder.wrap(
+          'first_person_experience',
+          this.#xmlBuilder.escape(healthState.firstPersonNarrative),
+          2
+        )
+      );
+    }
+
+    return this.#wrapSection('physical_condition', parts);
+  }
+
+  /**
+   * Maps overall status code to human-readable first-person text per spec section 8.3.
+   *
+   * @param {string} status - Status code (healthy, scratched, wounded, injured, critical, dying, dead)
+   * @returns {string} Human-readable status text
+   */
+  #getOverallStatusText(status) {
+    const statusMap = {
+      healthy: 'You feel fine',
+      scratched: 'You have minor scratches',
+      wounded: 'You are wounded',
+      injured: 'You are seriously injured',
+      critical: 'You are critically injured',
+      dying: 'You are dying',
+      dead: 'You are dead',
+    };
+    return statusMap[status] || `Unknown status`;
   }
 }
 

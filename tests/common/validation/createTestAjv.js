@@ -34,6 +34,7 @@ export default function createTestAjv() {
   );
 
   // Load operation and condition schemas using existing helpers
+  // Note: loadOperationSchemas already adds damage-capability-entry.schema.json
   // Note: loadConditionSchemas already adds condition.schema.json and condition-container.schema.json
   loadOperationSchemas(ajv);
   loadConditionSchemas(ajv);

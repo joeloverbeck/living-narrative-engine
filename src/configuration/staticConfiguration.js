@@ -143,6 +143,7 @@ class StaticConfiguration {
       'component.schema.json',
       'condition.schema.json',
       'damage-type.schema.json',
+      'damage-capability-entry.schema.json',
       'entity-definition.schema.json', // CORRECTED
       'entity-instance.schema.json', // CORRECTED
       'event.schema.json',

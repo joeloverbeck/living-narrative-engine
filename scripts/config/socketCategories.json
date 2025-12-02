@@ -1,0 +1,71 @@
+{
+  "categories": {
+    "vital_organs": {
+      "description": "Essential internal organs for humanoid torsos",
+      "sockets": ["heart_socket", "spine_socket"],
+      "appliesTo": {
+        "subTypes": ["torso"],
+        "inferFrom": {
+          "any_socket": ["heart_socket", "spine_socket", "vagina", "penis", "left_chest"]
+        }
+      }
+    },
+    "bipedal_base": {
+      "description": "Standard humanoid torso structure",
+      "sockets": ["neck", "left_shoulder", "right_shoulder", "left_hip", "right_hip"],
+      "appliesTo": {
+        "subTypes": ["torso"]
+      }
+    },
+    "female_anatomy": {
+      "description": "Female-specific reproductive anatomy",
+      "sockets": ["vagina", "left_chest", "right_chest"],
+      "appliesTo": {
+        "inferFrom": {
+          "any_socket": ["vagina"]
+        }
+      }
+    },
+    "male_anatomy": {
+      "description": "Male-specific reproductive anatomy",
+      "sockets": ["penis", "left_testicle", "right_testicle"],
+      "appliesTo": {
+        "inferFrom": {
+          "any_socket": ["penis"]
+        }
+      }
+    },
+    "gluteal_region": {
+      "description": "Buttocks anatomy",
+      "sockets": ["asshole", "left_ass", "right_ass"],
+      "appliesTo": {
+        "inferFrom": {
+          "any_socket": ["asshole"]
+        }
+      }
+    },
+    "pubic_region": {
+      "description": "Pubic hair attachment",
+      "sockets": ["pubic_hair"],
+      "appliesTo": {
+        "inferFrom": {
+          "any_socket": ["pubic_hair"]
+        }
+      }
+    },
+    "tail_attachment": {
+      "description": "Tail attachment for tailed species",
+      "sockets": ["lower_back"],
+      "appliesTo": {
+        "inferFrom": {
+          "any_socket": ["lower_back"],
+          "id_contains": ["cat_girl", "cat_boy"]
+        }
+      }
+    }
+  },
+  "validationRules": {
+    "strictMode": false,
+    "warnOnUnmapped": true
+  }
+}

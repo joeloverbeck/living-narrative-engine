@@ -4,13 +4,8 @@
  */
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import Ajv from 'ajv';
 import ruleSchema from '../../../../data/schemas/rule.schema.json';
-import commonSchema from '../../../../data/schemas/common.schema.json';
-import operationSchema from '../../../../data/schemas/operation.schema.json';
-import jsonLogicSchema from '../../../../data/schemas/json-logic.schema.json';
-import loadOperationSchemas from '../../../unit/helpers/loadOperationSchemas.js';
-import loadConditionSchemas from '../../../unit/helpers/loadConditionSchemas.js';
+import createTestAjv from '../../../common/validation/createTestAjv.js';
 import eventIsActionStopFollowing from '../../../../data/mods/companionship/conditions/event-is-action-stop-following.condition.json';
 import stopFollowingRule from '../../../../data/mods/companionship/rules/stop_following.rule.json';
 import logFailureAndEndTurn from '../../../../data/mods/core/macros/logFailureAndEndTurn.macro.json';
@@ -385,21 +380,7 @@ describe('stop_following rule integration', () => {
   });
 
   it('validates stop_following.rule.json against schema', () => {
-    const ajv = new Ajv({ allErrors: true });
-    ajv.addSchema(
-      commonSchema,
-      'schema://living-narrative-engine/common.schema.json'
-    );
-    ajv.addSchema(
-      operationSchema,
-      'schema://living-narrative-engine/operation.schema.json'
-    );
-    loadOperationSchemas(ajv);
-    loadConditionSchemas(ajv);
-    ajv.addSchema(
-      jsonLogicSchema,
-      'schema://living-narrative-engine/json-logic.schema.json'
-    );
+    const ajv = createTestAjv();
     const valid = ajv.validate(ruleSchema, stopFollowingRule);
     if (!valid) console.error(ajv.errors);
     expect(valid).toBe(true);

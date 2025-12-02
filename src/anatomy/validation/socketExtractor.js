@@ -372,8 +372,9 @@ function generateSocketIds(idTemplate, arrangement, count) {
  * @param {object} dataRegistry - Data registry for lookups
  * @returns {Promise<string|null>} Resolved entity ID or null
  * @private
+ * @internal Exported for unit testing only
  */
-async function resolveEntityId(partType, dataRegistry) {
+export async function resolveEntityId(partType, dataRegistry) {
   if (!dataRegistry || !partType) {
     return null;
   }
@@ -387,15 +388,44 @@ async function resolveEntityId(partType, dataRegistry) {
     allEntities = dataRegistry.getAllEntityDefinitions() || [];
   }
 
-  // Find first entity with anatomy:part.subType matching the partType
-  for (const entity of allEntities) {
+  // Find all entities with matching subType
+  const candidates = allEntities.filter((entity) => {
     const partComponent = entity?.components?.['anatomy:part'];
-    if (partComponent?.subType === partType) {
-      return entity.id;
-    }
+    return partComponent?.subType === partType;
+  });
+
+  if (candidates.length === 0) {
+    return null;
   }
 
-  return null;
+  if (candidates.length === 1) {
+    return candidates[0].id;
+  }
+
+  // Multiple candidates: apply deterministic priority rules
+  candidates.sort((a, b) => {
+    const aId = a.id || '';
+    const bId = b.id || '';
+
+    // Rule 1: Fewer underscores = higher priority (base entities)
+    const aUnderscores = (aId.match(/_/g) || []).length;
+    const bUnderscores = (bId.match(/_/g) || []).length;
+
+    if (aUnderscores !== bUnderscores) {
+      return aUnderscores - bUnderscores;
+    }
+
+    // Rule 2: Alphabetical for determinism and to prefer humanoid_head over kraken_head
+    const alpha = aId.localeCompare(bId);
+    if (alpha !== 0) {
+      return alpha;
+    }
+
+    // Rule 3: Shorter ID = higher priority (fallback)
+    return aId.length - bId.length;
+  });
+
+  return candidates[0].id;
 }
 
 /**

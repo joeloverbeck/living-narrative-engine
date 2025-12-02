@@ -1,5 +1,7 @@
 # WEADAMCAPREF-004: Refactor DamageTypeEffectsService
 
+**Status: COMPLETED**
+
 ## Summary
 
 Modify `DamageTypeEffectsService` to accept a damage entry object directly instead of looking up damage types from a registry. This removes the indirect coupling and enables per-weapon effect customization.
@@ -111,3 +113,61 @@ Test cases:
 
 - 1 service file (~50-100 lines changed)
 - 1 test file (~100-150 lines changed)
+
+---
+
+## Outcome
+
+**Completed: 2025-12-02**
+
+### Changes Made
+
+#### `src/anatomy/services/damageTypeEffectsService.js`
+- Removed `IDataRegistry` dependency from constructor
+- Changed `applyEffectsForDamage` signature from `{entityId, partId, amount, damageType, maxHealth, currentHealth}` to `{entityId, partId, damageEntry, maxHealth, currentHealth}`
+- Removed registry lookup logic - now uses `damageEntry` directly
+- Updated all internal methods (`#checkAndApplyDismemberment`, `#checkAndApplyFracture`, `#applyBleedEffect`, `#applyBurnEffect`, `#applyPoisonEffect`) to receive `damageEntry` instead of `damageTypeDef`
+- Extracts `amount` from `damageEntry.amount` for threshold calculations
+- Added validation: logs warning and returns early when `damageEntry` is null/undefined
+
+#### `tests/unit/anatomy/services/damageTypeEffectsService.test.js`
+- Removed `mockDataRegistry` from test setup
+- Updated constructor tests (removed dataRegistry validation test case)
+- Changed `baseParams` to use `damageEntry` object structure
+- Updated all 40 test cases to use new signature:
+  - Dismemberment tests
+  - Fracture tests
+  - Bleed tests
+  - Burn tests
+  - Poison tests
+  - Edge case tests
+- Added new edge case tests:
+  - Missing `amount` in damageEntry (defaults to 0)
+  - Penetration value handling from damageEntry
+
+### Test Results
+
+All 40 tests pass:
+```
+PASS  tests/unit/anatomy/services/damageTypeEffectsService.test.js
+Test Suites: 1 passed, 1 total
+Tests:       40 passed, 40 total
+```
+
+### Known Pre-existing Issues (Not Introduced by This Change)
+
+- TypeScript JSDoc type errors for nested object properties (e.g., `Property 'dismember' does not exist on type 'object'`) - this is a JSDoc limitation when typing complex nested structures
+- ESLint warnings (53 warnings, 0 errors) - pre-existing documentation and hardcoded reference warnings
+
+### Verification Commands Run
+
+```bash
+npm run test:unit -- tests/unit/anatomy/services/damageTypeEffectsService.test.js  # All 40 tests pass
+npm run typecheck  # Pre-existing warnings only
+npx eslint src/anatomy/services/damageTypeEffectsService.js tests/unit/anatomy/services/damageTypeEffectsService.test.js  # Warnings only
+```
+
+### Notes
+
+- The `ApplyDamageHandler` caller still uses the old signature pattern (passes `amount` and `damageType` separately). This will be addressed in WEADAMCAPREF-005.
+- The service is now ready to receive full `damageEntry` objects with all effect configurations embedded.

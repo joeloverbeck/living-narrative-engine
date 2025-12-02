@@ -62,6 +62,11 @@ const THEMATIC_DIRECTION_SCHEMA = {
   type: 'object',
   additionalProperties: true,
 };
+const DAMAGE_CAPABILITY_ENTRY_SCHEMA = {
+  $schema: 'http://json-schema.org/draft-07/schema#',
+  type: 'object',
+  additionalProperties: true,
+};
 
 // --- Loader Imports ---
 import ActionLoader from '../../loaders/actionLoader.js';
@@ -196,6 +201,11 @@ export async function registerLoaders(container) {
           {
             schema: CHARACTER_CONCEPT_SCHEMA,
             id: 'character-concept',
+          },
+          // Register damage-capability-entry with full URI (referenced by applyDamage.schema.json)
+          {
+            schema: DAMAGE_CAPABILITY_ENTRY_SCHEMA,
+            id: 'schema://living-narrative-engine/damage-capability-entry.schema.json',
           },
         ],
       })

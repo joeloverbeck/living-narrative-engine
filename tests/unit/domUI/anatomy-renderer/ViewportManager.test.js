@@ -184,7 +184,7 @@ describe('ViewportManager', () => {
       });
     });
 
-    it('should adjust pan for zoom scale', () => {
+    it('should NOT adjust pan for zoom scale (consistent pan speed)', () => {
       // First zoom to scale 2
       viewportManager.zoom(2, 400, 300);
       const initialViewport = viewportManager.getViewport();
@@ -195,9 +195,9 @@ describe('ViewportManager', () => {
       const viewport = viewportManager.getViewport();
       const transform = viewportManager.getTransform();
 
-      // At scale 2, world delta = screen delta / scale
-      expect(viewport.x).toBe(initialViewport.x - 50);
-      expect(viewport.y).toBe(initialViewport.y - 25);
+      // Pan speed is consistent regardless of zoom - no scale adjustment
+      expect(viewport.x).toBe(initialViewport.x - 100);
+      expect(viewport.y).toBe(initialViewport.y - 50);
       expect(transform.x).toBe(100);
       expect(transform.y).toBe(50);
     });

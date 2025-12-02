@@ -3,13 +3,8 @@
  */
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import Ajv from 'ajv';
 import ruleSchema from '../../../../data/schemas/rule.schema.json';
-import commonSchema from '../../../../data/schemas/common.schema.json';
-import operationSchema from '../../../../data/schemas/operation.schema.json';
-import jsonLogicSchema from '../../../../data/schemas/json-logic.schema.json';
-import loadOperationSchemas from '../../../unit/helpers/loadOperationSchemas.js';
-import loadConditionSchemas from '../../../unit/helpers/loadConditionSchemas.js';
+import createTestAjv from '../../../common/validation/createTestAjv.js';
 import eventIsActionGo from '../../../../data/mods/movement/conditions/event-is-action-go.condition.json';
 import goRule from '../../../../data/mods/movement/rules/go.rule.json';
 import displaySuccessAndEndTurn from '../../../../data/mods/core/macros/displaySuccessAndEndTurn.macro.json';
@@ -289,21 +284,7 @@ describe('core_handle_go rule integration', () => {
   });
 
   it('validates go.rule.json against schema', () => {
-    const ajv = new Ajv({ allErrors: true });
-    ajv.addSchema(
-      commonSchema,
-      'schema://living-narrative-engine/common.schema.json'
-    );
-    ajv.addSchema(
-      operationSchema,
-      'schema://living-narrative-engine/operation.schema.json'
-    );
-    loadOperationSchemas(ajv);
-    loadConditionSchemas(ajv);
-    ajv.addSchema(
-      jsonLogicSchema,
-      'schema://living-narrative-engine/json-logic.schema.json'
-    );
+    const ajv = createTestAjv();
     const valid = ajv.validate(ruleSchema, goRule);
     if (!valid) console.error(ajv.errors);
     expect(valid).toBe(true);

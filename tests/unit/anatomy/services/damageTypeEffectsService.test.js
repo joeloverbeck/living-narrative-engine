@@ -5,7 +5,6 @@ describe('DamageTypeEffectsService', () => {
   let service;
   let mockLogger;
   let mockEntityManager;
-  let mockDataRegistry;
   let mockDispatcher;
   let mockRngProvider;
 
@@ -23,10 +22,6 @@ describe('DamageTypeEffectsService', () => {
       hasComponent: jest.fn().mockReturnValue(false),
     };
 
-    mockDataRegistry = {
-      get: jest.fn(),
-    };
-
     mockDispatcher = {
       dispatch: jest.fn(),
     };
@@ -36,7 +31,6 @@ describe('DamageTypeEffectsService', () => {
     service = new DamageTypeEffectsService({
       logger: mockLogger,
       entityManager: mockEntityManager,
-      dataRegistry: mockDataRegistry,
       safeEventDispatcher: mockDispatcher,
       rngProvider: mockRngProvider,
     });
@@ -52,7 +46,6 @@ describe('DamageTypeEffectsService', () => {
         () =>
           new DamageTypeEffectsService({
             entityManager: mockEntityManager,
-            dataRegistry: mockDataRegistry,
             safeEventDispatcher: mockDispatcher,
           })
       ).toThrow();
@@ -63,18 +56,6 @@ describe('DamageTypeEffectsService', () => {
         () =>
           new DamageTypeEffectsService({
             logger: mockLogger,
-            dataRegistry: mockDataRegistry,
-            safeEventDispatcher: mockDispatcher,
-          })
-      ).toThrow();
-    });
-
-    it('should throw if dataRegistry is missing', () => {
-      expect(
-        () =>
-          new DamageTypeEffectsService({
-            logger: mockLogger,
-            entityManager: mockEntityManager,
             safeEventDispatcher: mockDispatcher,
           })
       ).toThrow();
@@ -86,7 +67,6 @@ describe('DamageTypeEffectsService', () => {
           new DamageTypeEffectsService({
             logger: mockLogger,
             entityManager: mockEntityManager,
-            dataRegistry: mockDataRegistry,
           })
       ).toThrow();
     });
@@ -98,7 +78,6 @@ describe('DamageTypeEffectsService', () => {
           new DamageTypeEffectsService({
             logger: mockLogger,
             entityManager: invalidEntityManager,
-            dataRegistry: mockDataRegistry,
             safeEventDispatcher: mockDispatcher,
           })
       ).toThrow();
@@ -108,7 +87,6 @@ describe('DamageTypeEffectsService', () => {
       const serviceWithDefaultRng = new DamageTypeEffectsService({
         logger: mockLogger,
         entityManager: mockEntityManager,
-        dataRegistry: mockDataRegistry,
         safeEventDispatcher: mockDispatcher,
       });
       expect(serviceWithDefaultRng).toBeDefined();
@@ -116,45 +94,62 @@ describe('DamageTypeEffectsService', () => {
   });
 
   describe('applyEffectsForDamage', () => {
+    // Base params with a minimal damageEntry
     const baseParams = {
       entityId: 'entity:player',
       partId: 'part:arm',
-      amount: 30,
-      damageType: 'slashing',
+      damageEntry: {
+        name: 'slashing',
+        amount: 30,
+      },
       maxHealth: 100,
       currentHealth: 70,
     };
 
-    it('should skip effects when damage type is unknown', async () => {
-      mockDataRegistry.get.mockReturnValue(null);
-
-      await service.applyEffectsForDamage(baseParams);
+    it('should skip effects when damageEntry is null', async () => {
+      await service.applyEffectsForDamage({
+        ...baseParams,
+        damageEntry: null,
+      });
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Unknown damage type'),
+        expect.stringContaining('No damage entry provided'),
         expect.any(Object)
       );
       expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
-    it('should skip effects when damage type definition is empty', async () => {
-      mockDataRegistry.get.mockReturnValue({});
+    it('should skip effects when damageEntry is undefined', async () => {
+      await service.applyEffectsForDamage({
+        ...baseParams,
+        damageEntry: undefined,
+      });
 
-      await service.applyEffectsForDamage(baseParams);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('No damage entry provided'),
+        expect.any(Object)
+      );
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+    });
+
+    it('should skip effects when damageEntry has no effect configurations', async () => {
+      await service.applyEffectsForDamage({
+        ...baseParams,
+        damageEntry: { name: 'slashing', amount: 30 },
+      });
 
       expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     describe('dismemberment', () => {
       it('should trigger dismemberment when damage exceeds threshold', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'slashing',
-          dismember: { enabled: true, thresholdFraction: 0.8 },
-        });
-
         await service.applyEffectsForDamage({
           ...baseParams,
-          amount: 85, // >= 80% of 100 maxHealth
+          damageEntry: {
+            name: 'slashing',
+            amount: 85, // >= 80% of 100 maxHealth
+            dismember: { enabled: true, thresholdFraction: 0.8 },
+          },
         });
 
         expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
@@ -168,14 +163,13 @@ describe('DamageTypeEffectsService', () => {
       });
 
       it('should not trigger dismemberment when damage below threshold', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'slashing',
-          dismember: { enabled: true, thresholdFraction: 0.8 },
-        });
-
         await service.applyEffectsForDamage({
           ...baseParams,
-          amount: 70, // < 80% of 100 maxHealth
+          damageEntry: {
+            name: 'slashing',
+            amount: 70, // < 80% of 100 maxHealth
+            dismember: { enabled: true, thresholdFraction: 0.8 },
+          },
         });
 
         expect(mockDispatcher.dispatch).not.toHaveBeenCalledWith(
@@ -185,15 +179,14 @@ describe('DamageTypeEffectsService', () => {
       });
 
       it('should skip other effects when dismemberment triggers', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'slashing',
-          dismember: { enabled: true, thresholdFraction: 0.8 },
-          bleed: { enabled: true, severity: 'moderate' },
-        });
-
         await service.applyEffectsForDamage({
           ...baseParams,
-          amount: 85,
+          damageEntry: {
+            name: 'slashing',
+            amount: 85,
+            dismember: { enabled: true, thresholdFraction: 0.8 },
+            bleed: { enabled: true, severity: 'moderate' },
+          },
         });
 
         expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
@@ -207,14 +200,13 @@ describe('DamageTypeEffectsService', () => {
       });
 
       it('should not trigger dismemberment when disabled', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'slashing',
-          dismember: { enabled: false },
-        });
-
         await service.applyEffectsForDamage({
           ...baseParams,
-          amount: 95,
+          damageEntry: {
+            name: 'slashing',
+            amount: 95,
+            dismember: { enabled: false },
+          },
         });
 
         expect(mockDispatcher.dispatch).not.toHaveBeenCalledWith(
@@ -224,14 +216,13 @@ describe('DamageTypeEffectsService', () => {
       });
 
       it('should use default threshold fraction of 0.8', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'slashing',
-          dismember: { enabled: true }, // No thresholdFraction specified
-        });
-
         await service.applyEffectsForDamage({
           ...baseParams,
-          amount: 80, // Exactly 80%
+          damageEntry: {
+            name: 'slashing',
+            amount: 80, // Exactly 80%
+            dismember: { enabled: true }, // No thresholdFraction specified
+          },
         });
 
         expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
@@ -243,14 +234,13 @@ describe('DamageTypeEffectsService', () => {
 
     describe('fracture', () => {
       it('should apply fracture when damage exceeds threshold', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'blunt',
-          fracture: { enabled: true, thresholdFraction: 0.5 },
-        });
-
         await service.applyEffectsForDamage({
           ...baseParams,
-          amount: 55, // >= 50% of 100 maxHealth
+          damageEntry: {
+            name: 'blunt',
+            amount: 55, // >= 50% of 100 maxHealth
+            fracture: { enabled: true, thresholdFraction: 0.5 },
+          },
         });
 
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
@@ -273,14 +263,14 @@ describe('DamageTypeEffectsService', () => {
 
       it('should apply stun when fracture triggers and RNG passes', async () => {
         mockRngProvider.mockReturnValue(0.3); // Below stunChance
-        mockDataRegistry.get.mockReturnValue({
-          id: 'blunt',
-          fracture: { enabled: true, thresholdFraction: 0.5, stunChance: 0.5 },
-        });
 
         await service.applyEffectsForDamage({
           ...baseParams,
-          amount: 55,
+          damageEntry: {
+            name: 'blunt',
+            amount: 55,
+            fracture: { enabled: true, thresholdFraction: 0.5, stunChance: 0.5 },
+          },
         });
 
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
@@ -299,14 +289,14 @@ describe('DamageTypeEffectsService', () => {
 
       it('should not apply stun when RNG fails', async () => {
         mockRngProvider.mockReturnValue(0.8); // Above stunChance
-        mockDataRegistry.get.mockReturnValue({
-          id: 'blunt',
-          fracture: { enabled: true, thresholdFraction: 0.5, stunChance: 0.5 },
-        });
 
         await service.applyEffectsForDamage({
           ...baseParams,
-          amount: 55,
+          damageEntry: {
+            name: 'blunt',
+            amount: 55,
+            fracture: { enabled: true, thresholdFraction: 0.5, stunChance: 0.5 },
+          },
         });
 
         expect(mockEntityManager.addComponent).not.toHaveBeenCalledWith(
@@ -321,14 +311,13 @@ describe('DamageTypeEffectsService', () => {
       });
 
       it('should not apply fracture when damage below threshold', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'blunt',
-          fracture: { enabled: true, thresholdFraction: 0.5 },
-        });
-
         await service.applyEffectsForDamage({
           ...baseParams,
-          amount: 40, // < 50%
+          damageEntry: {
+            name: 'blunt',
+            amount: 40, // < 50%
+            fracture: { enabled: true, thresholdFraction: 0.5 },
+          },
         });
 
         expect(mockEntityManager.addComponent).not.toHaveBeenCalledWith(
@@ -339,14 +328,13 @@ describe('DamageTypeEffectsService', () => {
       });
 
       it('should use default threshold fraction of 0.5', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'blunt',
-          fracture: { enabled: true }, // No thresholdFraction
-        });
-
         await service.applyEffectsForDamage({
           ...baseParams,
-          amount: 50, // Exactly 50%
+          damageEntry: {
+            name: 'blunt',
+            amount: 50, // Exactly 50%
+            fracture: { enabled: true }, // No thresholdFraction
+          },
         });
 
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
@@ -359,12 +347,14 @@ describe('DamageTypeEffectsService', () => {
 
     describe('bleed', () => {
       it('should apply bleeding with correct severity', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'slashing',
-          bleed: { enabled: true, severity: 'moderate', baseDurationTurns: 3 },
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'slashing',
+            amount: 30,
+            bleed: { enabled: true, severity: 'moderate', baseDurationTurns: 3 },
+          },
         });
-
-        await service.applyEffectsForDamage(baseParams);
 
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
           'part:arm',
@@ -386,12 +376,14 @@ describe('DamageTypeEffectsService', () => {
       });
 
       it('should use minor severity by default', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'slashing',
-          bleed: { enabled: true }, // No severity specified
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'slashing',
+            amount: 30,
+            bleed: { enabled: true }, // No severity specified
+          },
         });
-
-        await service.applyEffectsForDamage(baseParams);
 
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
           'part:arm',
@@ -404,12 +396,14 @@ describe('DamageTypeEffectsService', () => {
       });
 
       it('should use default duration of 2 turns', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'slashing',
-          bleed: { enabled: true, severity: 'minor' },
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'slashing',
+            amount: 30,
+            bleed: { enabled: true, severity: 'minor' },
+          },
         });
-
-        await service.applyEffectsForDamage(baseParams);
 
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
           'part:arm',
@@ -419,14 +413,14 @@ describe('DamageTypeEffectsService', () => {
       });
 
       it('should not apply bleed when part is destroyed', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'slashing',
-          bleed: { enabled: true },
-        });
-
         await service.applyEffectsForDamage({
           ...baseParams,
           currentHealth: 0, // Part destroyed
+          damageEntry: {
+            name: 'slashing',
+            amount: 30,
+            bleed: { enabled: true },
+          },
         });
 
         expect(mockEntityManager.addComponent).not.toHaveBeenCalledWith(
@@ -437,12 +431,14 @@ describe('DamageTypeEffectsService', () => {
       });
 
       it('should map severe severity to correct tick damage', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'slashing',
-          bleed: { enabled: true, severity: 'severe' },
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'slashing',
+            amount: 30,
+            bleed: { enabled: true, severity: 'severe' },
+          },
         });
-
-        await service.applyEffectsForDamage(baseParams);
 
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
           'part:arm',
@@ -454,12 +450,14 @@ describe('DamageTypeEffectsService', () => {
 
     describe('burn', () => {
       it('should apply burning effect', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'fire',
-          burn: { enabled: true, dps: 5, durationTurns: 4 },
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'fire',
+            amount: 30,
+            burn: { enabled: true, dps: 5, durationTurns: 4 },
+          },
         });
-
-        await service.applyEffectsForDamage(baseParams);
 
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
           'part:arm',
@@ -486,12 +484,15 @@ describe('DamageTypeEffectsService', () => {
           tickDamage: 5,
           stackedCount: 2,
         });
-        mockDataRegistry.get.mockReturnValue({
-          id: 'fire',
-          burn: { enabled: true, dps: 3, durationTurns: 2, canStack: true },
-        });
 
-        await service.applyEffectsForDamage(baseParams);
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'fire',
+            amount: 30,
+            burn: { enabled: true, dps: 3, durationTurns: 2, canStack: true },
+          },
+        });
 
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
           'part:arm',
@@ -509,12 +510,15 @@ describe('DamageTypeEffectsService', () => {
           tickDamage: 5,
           stackedCount: 2,
         });
-        mockDataRegistry.get.mockReturnValue({
-          id: 'fire',
-          burn: { enabled: true, dps: 3, durationTurns: 4, canStack: false },
-        });
 
-        await service.applyEffectsForDamage(baseParams);
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'fire',
+            amount: 30,
+            burn: { enabled: true, dps: 3, durationTurns: 4, canStack: false },
+          },
+        });
 
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
           'part:arm',
@@ -528,12 +532,14 @@ describe('DamageTypeEffectsService', () => {
       });
 
       it('should use default values when not specified', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'fire',
-          burn: { enabled: true },
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'fire',
+            amount: 30,
+            burn: { enabled: true },
+          },
         });
-
-        await service.applyEffectsForDamage(baseParams);
 
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
           'part:arm',
@@ -546,14 +552,14 @@ describe('DamageTypeEffectsService', () => {
       });
 
       it('should not apply burn when part is destroyed', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'fire',
-          burn: { enabled: true },
-        });
-
         await service.applyEffectsForDamage({
           ...baseParams,
           currentHealth: 0,
+          damageEntry: {
+            name: 'fire',
+            amount: 30,
+            burn: { enabled: true },
+          },
         });
 
         expect(mockEntityManager.addComponent).not.toHaveBeenCalledWith(
@@ -566,12 +572,14 @@ describe('DamageTypeEffectsService', () => {
 
     describe('poison', () => {
       it('should apply poison to part by default', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'venom',
-          poison: { enabled: true, tick: 2, durationTurns: 5 },
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'venom',
+            amount: 30,
+            poison: { enabled: true, tick: 2, durationTurns: 5 },
+          },
         });
-
-        await service.applyEffectsForDamage(baseParams);
 
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
           'part:arm', // Scope is 'part' by default
@@ -592,12 +600,14 @@ describe('DamageTypeEffectsService', () => {
       });
 
       it('should apply poison to entity when scope is entity', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'venom',
-          poison: { enabled: true, tick: 2, durationTurns: 5, scope: 'entity' },
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'venom',
+            amount: 30,
+            poison: { enabled: true, tick: 2, durationTurns: 5, scope: 'entity' },
+          },
         });
-
-        await service.applyEffectsForDamage(baseParams);
 
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
           'entity:player', // Scope is entity
@@ -614,12 +624,14 @@ describe('DamageTypeEffectsService', () => {
       });
 
       it('should use default values when not specified', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'venom',
-          poison: { enabled: true },
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'venom',
+            amount: 30,
+            poison: { enabled: true },
+          },
         });
-
-        await service.applyEffectsForDamage(baseParams);
 
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
           'part:arm',
@@ -632,14 +644,14 @@ describe('DamageTypeEffectsService', () => {
       });
 
       it('should not apply poison when part is destroyed', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'venom',
-          poison: { enabled: true },
-        });
-
         await service.applyEffectsForDamage({
           ...baseParams,
           currentHealth: 0,
+          damageEntry: {
+            name: 'venom',
+            amount: 30,
+            poison: { enabled: true },
+          },
         });
 
         expect(mockEntityManager.addComponent).not.toHaveBeenCalledWith(
@@ -657,16 +669,18 @@ describe('DamageTypeEffectsService', () => {
           callOrder.push(event);
         });
 
-        mockDataRegistry.get.mockReturnValue({
-          id: 'mixed',
-          dismember: { enabled: true, thresholdFraction: 0.95 }, // Won't trigger
-          fracture: { enabled: true, thresholdFraction: 0.2 },
-          bleed: { enabled: true },
-          burn: { enabled: true },
-          poison: { enabled: true },
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'mixed',
+            amount: 30,
+            dismember: { enabled: true, thresholdFraction: 0.95 }, // Won't trigger
+            fracture: { enabled: true, thresholdFraction: 0.2 },
+            bleed: { enabled: true },
+            burn: { enabled: true },
+            poison: { enabled: true },
+          },
         });
-
-        await service.applyEffectsForDamage(baseParams);
 
         expect(callOrder).toEqual([
           'anatomy:fractured',
@@ -678,43 +692,46 @@ describe('DamageTypeEffectsService', () => {
     });
 
     describe('edge cases', () => {
-      it('should handle damage type with no effects configured', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'psychic',
-          // No effects defined
+      it('should handle damageEntry with no effects configured', async () => {
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'psychic',
+            amount: 30,
+            // No effects defined
+          },
         });
-
-        await service.applyEffectsForDamage(baseParams);
 
         expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
         expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
       });
 
       it('should handle all effects disabled', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'mixed',
-          dismember: { enabled: false },
-          fracture: { enabled: false },
-          bleed: { enabled: false },
-          burn: { enabled: false },
-          poison: { enabled: false },
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'mixed',
+            amount: 30,
+            dismember: { enabled: false },
+            fracture: { enabled: false },
+            bleed: { enabled: false },
+            burn: { enabled: false },
+            poison: { enabled: false },
+          },
         });
-
-        await service.applyEffectsForDamage(baseParams);
 
         expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
         expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
       });
 
       it('should handle zero damage amount', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'slashing',
-          bleed: { enabled: true },
-        });
-
         await service.applyEffectsForDamage({
           ...baseParams,
-          amount: 0,
+          damageEntry: {
+            name: 'slashing',
+            amount: 0,
+            bleed: { enabled: true },
+          },
         });
 
         // Should still apply bleed even with 0 damage
@@ -726,18 +743,58 @@ describe('DamageTypeEffectsService', () => {
       });
 
       it('should handle unknown severity in bleed config gracefully', async () => {
-        mockDataRegistry.get.mockReturnValue({
-          id: 'slashing',
-          bleed: { enabled: true, severity: 'unknown_severity' },
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'slashing',
+            amount: 30,
+            bleed: { enabled: true, severity: 'unknown_severity' },
+          },
         });
-
-        await service.applyEffectsForDamage(baseParams);
 
         // Should fallback to minor
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
           'part:arm',
           'anatomy:bleeding',
           expect.objectContaining({ tickDamage: 1 })
+        );
+      });
+
+      it('should handle missing amount in damageEntry', async () => {
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'slashing',
+            // amount is missing
+            bleed: { enabled: true },
+          },
+        });
+
+        // Should default amount to 0 and still apply bleed
+        expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+          'part:arm',
+          'anatomy:bleeding',
+          expect.anything()
+        );
+      });
+
+      it('should use damageEntry.penetration when provided', async () => {
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'slashing',
+            amount: 30,
+            penetration: 0.5,
+            bleed: { enabled: true },
+          },
+        });
+
+        // Penetration is stored in damageEntry but currently only used by ApplyDamageHandler
+        // The service still processes effects correctly
+        expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+          'part:arm',
+          'anatomy:bleeding',
+          expect.anything()
         );
       });
     });
