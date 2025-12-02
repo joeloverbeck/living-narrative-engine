@@ -85,6 +85,9 @@ const createDependencies = () => {
     socketGenerator,
     slotGenerator,
     recipePatternResolver,
+    blueprintProcessorService: {
+      processBlueprint: jest.fn((blueprint) => blueprint),
+    },
   };
 };
 
@@ -117,7 +120,7 @@ describe('BodyBlueprintFactory additional coverage', () => {
     });
   });
 
-  it('processes v2 blueprints through template generation and pattern resolution', async () => {
+  it('processes v2 blueprints through blueprintProcessorService and pattern resolution', async () => {
     const blueprint = {
       id: 'anatomy:v2',
       schemaVersion: '2.0',
@@ -140,6 +143,7 @@ describe('BodyBlueprintFactory additional coverage', () => {
     const generatedSockets = [
       { id: 'shoulder_socket', orientation: 'forward', nameTpl: 'Shoulder' },
       { id: 'upper_arm_socket', orientation: undefined, nameTpl: 'Arm {{side}}' },
+      { id: 'aux_socket', allowedTypes: ['sensor'], orientation: undefined, nameTpl: 'Auxiliary' },
     ];
     const generatedSlots = {
       shoulder: {
@@ -152,51 +156,28 @@ describe('BodyBlueprintFactory additional coverage', () => {
         socket: 'upper_arm_socket',
         requirements: { partType: 'arm' },
       },
+      auxiliary_sensor: {
+        parent: null,
+        socket: 'aux_socket',
+        requirements: { partType: 'sensor' },
+      },
+    };
+
+    // The processed blueprint from blueprintProcessorService
+    const processedBlueprint = {
+      ...blueprint,
+      slots: generatedSlots,
+      _generatedSockets: generatedSockets,
+      _generatedSlots: generatedSlots,
     };
 
     deps.dataRegistry.get.mockImplementation((type, id) => {
       if (type === 'anatomyBlueprints') return blueprint;
-      if (type === 'anatomyStructureTemplates' && id === 'template:humanoid')
-        return {
-          id: 'template:humanoid',
-          topology: {
-            rootType: 'torso',
-            limbSets: [
-              {
-                type: 'shoulder',
-                count: 1,
-                socketPattern: {
-                  idTemplate: 'shoulder_socket',
-                  orientationScheme: 'bilateral',
-                },
-              },
-              {
-                type: 'arm',
-                count: 1,
-                socketPattern: {
-                  idTemplate: 'upper_arm_socket',
-                  orientationScheme: 'linear',
-                },
-              },
-            ],
-            appendages: [
-              {
-                type: 'sensor',
-                count: 1,
-                socketPattern: {
-                  idTemplate: 'aux_socket',
-                  orientationScheme: 'linear',
-                },
-              },
-            ],
-          },
-        };
       return null;
     });
     deps.recipeProcessor.loadRecipe.mockReturnValue(recipe);
     deps.recipeProcessor.processRecipe.mockReturnValue(recipe);
-    deps.socketGenerator.generateSockets.mockReturnValue(generatedSockets);
-    deps.slotGenerator.generateBlueprintSlots.mockReturnValue(generatedSlots);
+    deps.blueprintProcessorService.processBlueprint.mockReturnValue(processedBlueprint);
     deps.validator.validateGraph.mockResolvedValue({
       valid: true,
       errors: [],
@@ -213,12 +194,7 @@ describe('BodyBlueprintFactory additional coverage', () => {
       })
       .mockReturnValueOnce({
         valid: true,
-        socket: {
-          id: 'aux_socket',
-          allowedTypes: ['sensor'],
-          orientation: undefined,
-          nameTpl: 'Auxiliary',
-        },
+        socket: generatedSockets[2],
       });
     deps.partSelectionService.selectPart
       .mockResolvedValueOnce('part:shoulder')
@@ -242,6 +218,9 @@ describe('BodyBlueprintFactory additional coverage', () => {
       { ownerId: 'owner:1' }
     );
 
+    // Verify blueprintProcessorService was called with the raw blueprint
+    expect(deps.blueprintProcessorService.processBlueprint).toHaveBeenCalledWith(blueprint);
+
     expect(deps.recipePatternResolver.resolveRecipePatterns).toHaveBeenCalledWith(
       recipe,
       expect.objectContaining({ id: 'anatomy:v2' })
@@ -249,9 +228,6 @@ describe('BodyBlueprintFactory additional coverage', () => {
     expect(deps.entityGraphBuilder.addSocketsToEntity).toHaveBeenCalledWith(
       'entity:root',
       generatedSockets
-    );
-    expect(deps.socketGenerator.generateSockets).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'template:humanoid' })
     );
     expect(deps.entityGraphBuilder.createAndAttachPart).toHaveBeenCalledWith(
       'entity:shoulder',
@@ -273,7 +249,7 @@ describe('BodyBlueprintFactory additional coverage', () => {
     ]);
   });
 
-  it('handles v2 blueprints without additional slots by relying on generated data', async () => {
+  it('handles v2 blueprints without additional slots by relying on blueprintProcessorService', async () => {
     const blueprint = {
       id: 'anatomy:v2:minimal',
       schemaVersion: '2.0',
@@ -292,30 +268,19 @@ describe('BodyBlueprintFactory additional coverage', () => {
       },
     };
 
+    // The processed blueprint from blueprintProcessorService
+    const processedBlueprint = {
+      ...blueprint,
+      slots: generatedSlots,
+      _generatedSockets: generatedSockets,
+      _generatedSlots: generatedSlots,
+    };
+
     deps.dataRegistry.get.mockImplementation((type, id) => {
       if (type === 'anatomyBlueprints') return blueprint;
-      if (type === 'anatomyStructureTemplates' && id === 'template:minimal')
-        return {
-          id: 'template:minimal',
-          topology: {
-            rootType: 'core',
-            limbSets: [],
-            appendages: [
-              {
-                type: 'core',
-                count: 1,
-                socketPattern: {
-                  idTemplate: 'core_socket',
-                  orientationScheme: 'linear',
-                },
-              },
-            ],
-          },
-        };
       return null;
     });
-    deps.socketGenerator.generateSockets.mockReturnValue(generatedSockets);
-    deps.slotGenerator.generateBlueprintSlots.mockReturnValue(generatedSlots);
+    deps.blueprintProcessorService.processBlueprint.mockReturnValue(processedBlueprint);
     deps.recipeProcessor.loadRecipe.mockReturnValue(recipe);
     deps.recipeProcessor.processRecipe.mockReturnValue(recipe);
     deps.socketManager.validateSocketAvailability.mockReturnValue({
@@ -338,9 +303,8 @@ describe('BodyBlueprintFactory additional coverage', () => {
       'recipe:v2:minimal'
     );
 
-    expect(deps.slotGenerator.generateBlueprintSlots).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'template:minimal' })
-    );
+    // Verify blueprintProcessorService was called
+    expect(deps.blueprintProcessorService.processBlueprint).toHaveBeenCalledWith(blueprint);
     expect(deps.entityGraphBuilder.createAndAttachPart).toHaveBeenCalledWith(
       'entity:root',
       'core_socket',
@@ -558,7 +522,7 @@ describe('BodyBlueprintFactory additional coverage', () => {
     );
   });
 
-  it('throws when structure template for a v2 blueprint is missing', async () => {
+  it('throws when blueprintProcessorService throws for missing structure template', async () => {
     const blueprint = {
       id: 'anatomy:v2:missing-template',
       schemaVersion: '2.0',
@@ -573,12 +537,17 @@ describe('BodyBlueprintFactory additional coverage', () => {
     deps.recipeProcessor.loadRecipe.mockReturnValue(recipe);
     deps.recipeProcessor.processRecipe.mockReturnValue(recipe);
 
+    // blueprintProcessorService throws when structure template is missing
+    deps.blueprintProcessorService.processBlueprint.mockImplementation(() => {
+      throw new ValidationError('Structure template not found: template:missing');
+    });
+
     const factory = new BodyBlueprintFactory(deps);
 
     await expect(
       factory.createAnatomyGraph('anatomy:v2:missing-template', 'recipe:v2')
     ).rejects.toThrow(ValidationError);
-    expect(deps.socketGenerator.generateSockets).not.toHaveBeenCalled();
+    expect(deps.blueprintProcessorService.processBlueprint).toHaveBeenCalledWith(blueprint);
     expect(deps.eventDispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({

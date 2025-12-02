@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { BodyBlueprintFactory } from '../../../src/anatomy/bodyBlueprintFactory/bodyBlueprintFactory.js';
 import SocketGenerator from '../../../src/anatomy/socketGenerator.js';
 import SlotGenerator from '../../../src/anatomy/slotGenerator.js';
+import BlueprintProcessorService from '../../../src/anatomy/services/blueprintProcessorService.js';
 
 import giantSpiderBlueprint from '../../../data/mods/anatomy/blueprints/giant_spider.blueprint.json';
 import redDragonBlueprint from '../../../data/mods/anatomy/blueprints/red_dragon.blueprint.json';
@@ -58,6 +59,7 @@ describe('BodyBlueprintFactory - Example blueprint coverage', () => {
   let socketGenerator;
   let slotGenerator;
   let mockRecipePatternResolver;
+  let blueprintProcessorService;
   let baseRecipe;
 
   beforeEach(() => {
@@ -132,6 +134,14 @@ describe('BodyBlueprintFactory - Example blueprint coverage', () => {
     socketGenerator = new SocketGenerator({ logger: mockLogger });
     slotGenerator = new SlotGenerator({ logger: mockLogger });
 
+    // Use real BlueprintProcessorService for integration testing
+    blueprintProcessorService = new BlueprintProcessorService({
+      dataRegistry: mockDataRegistry,
+      socketGenerator,
+      slotGenerator,
+      logger: mockLogger,
+    });
+
     factory = new BodyBlueprintFactory({
       entityManager: mockEntityManager,
       dataRegistry: mockDataRegistry,
@@ -147,6 +157,7 @@ describe('BodyBlueprintFactory - Example blueprint coverage', () => {
       socketGenerator,
       slotGenerator,
       recipePatternResolver: mockRecipePatternResolver,
+      blueprintProcessorService,
     });
 
     baseRecipe = { recipeId: TEST_RECIPE_ID, slots: {} };

@@ -145,6 +145,7 @@ describe('RecipePatternResolver integration coverage', () => {
       logger: testBed.logger,
       socketGenerator: testBed.socketGenerator,
       slotGenerator: testBed.slotGenerator,
+      blueprintProcessorService: testBed.blueprintProcessorService,
     });
 
     const recipe = {
@@ -193,6 +194,7 @@ describe('RecipePatternResolver integration coverage', () => {
       logger: testBed.logger,
       socketGenerator: testBed.socketGenerator,
       slotGenerator: testBed.slotGenerator,
+      blueprintProcessorService: testBed.blueprintProcessorService,
     });
 
     const recipe = {
@@ -230,6 +232,7 @@ describe('RecipePatternResolver integration coverage', () => {
       logger: testBed.logger,
       socketGenerator: testBed.socketGenerator,
       slotGenerator: testBed.slotGenerator,
+      blueprintProcessorService: testBed.blueprintProcessorService,
     });
 
     const recipe = {
@@ -267,6 +270,7 @@ describe('RecipePatternResolver integration coverage', () => {
       logger: testBed.logger,
       socketGenerator: testBed.socketGenerator,
       slotGenerator: testBed.slotGenerator,
+      blueprintProcessorService: testBed.blueprintProcessorService,
     });
 
     const recipe = {

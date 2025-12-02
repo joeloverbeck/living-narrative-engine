@@ -18,6 +18,7 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
   let mockValidator;
   let mockSocketGenerator;
   let mockSlotGenerator;
+  let mockBlueprintProcessorService;
 
   beforeEach(() => {
     // Create base mocks
@@ -93,6 +94,10 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       generateBlueprintSlots: jest.fn(),
     };
 
+    mockBlueprintProcessorService = {
+      processBlueprint: jest.fn((blueprint) => blueprint),
+    };
+
     // Create factory instance
     factory = new BodyBlueprintFactory({
       entityManager: mockEntityManager,
@@ -111,6 +116,7 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       recipePatternResolver: {
         resolveRecipePatterns: jest.fn(recipe => recipe),
       },
+      blueprintProcessorService: mockBlueprintProcessorService,
     });
   });
 
@@ -248,30 +254,12 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
   });
 
   describe('V2 Blueprint Processing', () => {
-    it('should process v2 blueprint with structureTemplate', async () => {
+    it('should use processed blueprint from blueprintProcessorService', async () => {
       const v2Blueprint = {
         id: 'anatomy:spider_v2',
         schemaVersion: '2.0',
         root: 'anatomy:spider_body',
         structureTemplate: 'anatomy:template_spider_octopedal',
-      };
-
-      const structureTemplate = {
-        id: 'anatomy:template_spider_octopedal',
-        topology: {
-          rootType: 'spider_body',
-          limbSets: [
-            {
-              type: 'leg',
-              count: 8,
-              socketPattern: {
-                idTemplate: 'leg_{{orientation}}',
-                orientationScheme: 'radial',
-                allowedTypes: ['spider_leg'],
-              },
-            },
-          ],
-        },
       };
 
       const generatedSockets = [
@@ -292,14 +280,21 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         },
       };
 
+      // The processed blueprint returned by blueprintProcessorService
+      const processedBlueprint = {
+        ...v2Blueprint,
+        slots: generatedSlots,
+        _generatedSockets: generatedSockets,
+        _generatedSlots: generatedSlots,
+      };
+
       mockDataRegistry.get.mockImplementation((type, id) => {
         if (type === 'anatomyBlueprints') return v2Blueprint;
-        if (type === 'anatomyStructureTemplates') return structureTemplate;
         return null;
       });
 
-      mockSocketGenerator.generateSockets.mockReturnValue(generatedSockets);
-      mockSlotGenerator.generateBlueprintSlots.mockReturnValue(generatedSlots);
+      // Mock blueprintProcessorService to return processed blueprint
+      mockBlueprintProcessorService.processBlueprint.mockReturnValue(processedBlueprint);
 
       const recipe = { recipeId: 'anatomy:spider_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
@@ -308,23 +303,17 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
 
       await factory.createAnatomyGraph('anatomy:spider_v2', 'anatomy:spider_standard');
 
-      // Verify template processing was triggered
-      expect(mockDataRegistry.get).toHaveBeenCalledWith(
-        'anatomyStructureTemplates',
-        'anatomy:template_spider_octopedal'
-      );
-      expect(mockSocketGenerator.generateSockets).toHaveBeenCalledWith(structureTemplate);
-      expect(mockSlotGenerator.generateBlueprintSlots).toHaveBeenCalledWith(structureTemplate);
+      // Verify blueprintProcessorService was called with the raw blueprint
+      expect(mockBlueprintProcessorService.processBlueprint).toHaveBeenCalledWith(v2Blueprint);
+
+      // Verify sockets from processed blueprint were added to root entity
       expect(mockEntityGraphBuilder.addSocketsToEntity).toHaveBeenCalledWith(
         'root-entity-1',
         generatedSockets
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Generated 2 sockets and 2 slots from template')
-      );
     });
 
-    it('should merge generated slots with additionalSlots (additionalSlots take precedence)', async () => {
+    it('should use merged slots from blueprintProcessorService (additionalSlots merged)', async () => {
       const v2Blueprint = {
         id: 'anatomy:centaur_v2',
         schemaVersion: '2.0',
@@ -339,26 +328,8 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         },
       };
 
-      const structureTemplate = {
-        id: 'anatomy:template_centaur',
-        topology: {
-          rootType: 'centaur_body',
-          limbSets: [
-            {
-              type: 'leg',
-              count: 4,
-              socketPattern: {
-                idTemplate: 'leg_{{orientation}}',
-                orientationScheme: 'bilateral',
-                arrangement: 'quadrupedal',
-                allowedTypes: ['horse_leg'],
-              },
-            },
-          ],
-        },
-      };
-
-      const generatedSlots = {
+      // The merged slots (generated + additionalSlots) returned by blueprintProcessorService
+      const mergedSlots = {
         leg_left_front: {
           socket: 'leg_left_front',
           requirements: { partType: 'leg' },
@@ -369,16 +340,28 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
           requirements: { partType: 'leg' },
           optional: false,
         },
+        head: {
+          socket: 'neck',
+          requirements: { partType: 'head', tags: ['human'] },
+          optional: false,
+        },
+      };
+
+      // Processed blueprint returned by blueprintProcessorService
+      const processedBlueprint = {
+        ...v2Blueprint,
+        slots: mergedSlots,
+        _generatedSockets: [],
+        _generatedSlots: mergedSlots,
       };
 
       mockDataRegistry.get.mockImplementation((type, id) => {
         if (type === 'anatomyBlueprints') return v2Blueprint;
-        if (type === 'anatomyStructureTemplates') return structureTemplate;
         return null;
       });
 
-      mockSocketGenerator.generateSockets.mockReturnValue([]);
-      mockSlotGenerator.generateBlueprintSlots.mockReturnValue(generatedSlots);
+      // Mock blueprintProcessorService to return the processed blueprint with merged slots
+      mockBlueprintProcessorService.processBlueprint.mockReturnValue(processedBlueprint);
 
       const recipe = { recipeId: 'anatomy:centaur_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
@@ -387,15 +370,14 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
 
       await factory.createAnatomyGraph('anatomy:centaur_v2', 'anatomy:centaur_standard');
 
-      // Verify blueprint processing merged slots correctly
-      expect(mockSlotGenerator.generateBlueprintSlots).toHaveBeenCalledWith(structureTemplate);
+      // Verify blueprintProcessorService was called with the raw blueprint
+      expect(mockBlueprintProcessorService.processBlueprint).toHaveBeenCalledWith(v2Blueprint);
 
-      // The merged blueprint should have both generated slots and additionalSlots
-      // additionalSlots should override if there's a conflict
-      expect(mockLogger.info).toHaveBeenCalled();
+      // Verify that mergeSlotRequirements was called for all 3 slots (2 generated + 1 additional)
+      expect(mockRecipeProcessor.mergeSlotRequirements).toHaveBeenCalledTimes(3);
     });
 
-    it('should allow additionalSlots to override generated slot definitions', async () => {
+    it('should use additionalSlots override from blueprintProcessorService', async () => {
       const v2Blueprint = {
         id: 'anatomy:griffin_v2',
         schemaVersion: '2.0',
@@ -410,40 +392,32 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         },
       };
 
-      const structureTemplate = {
-        id: 'anatomy:template_griffin',
-        topology: {
-          rootType: 'griffin_body',
-          limbSets: [
-            {
-              type: 'wing',
-              count: 2,
-              socketPattern: {
-                idTemplate: 'wing_{{side}}',
-                orientationScheme: 'bilateral',
-              },
-            },
-          ],
-          appendages: [],
+      // The processed blueprint has the additionalSlots merged (overriding generated ones)
+      const processedSlots = {
+        wing_left: {
+          socket: 'wing_left_socket',
+          requirements: { partType: 'enchanted_wing' }, // additionalSlots took precedence
+          optional: false,
         },
+      };
+
+      const generatedSockets = [
+        { id: 'wing_left_socket', orientation: 'left', allowedTypes: ['wing'] },
+      ];
+
+      const processedBlueprint = {
+        ...v2Blueprint,
+        slots: processedSlots,
+        _generatedSockets: generatedSockets,
+        _generatedSlots: processedSlots,
       };
 
       mockDataRegistry.get.mockImplementation((type, id) => {
         if (type === 'anatomyBlueprints') return v2Blueprint;
-        if (type === 'anatomyStructureTemplates') return structureTemplate;
         return null;
       });
 
-      mockSocketGenerator.generateSockets.mockReturnValue([
-        { id: 'wing_left_socket', orientation: 'left', allowedTypes: ['wing'] },
-      ]);
-      mockSlotGenerator.generateBlueprintSlots.mockReturnValue({
-        wing_left: {
-          socket: 'wing_left_socket',
-          requirements: { partType: 'standard_wing' },
-          optional: false,
-        },
-      });
+      mockBlueprintProcessorService.processBlueprint.mockReturnValue(processedBlueprint);
 
       const recipe = { recipeId: 'anatomy:griffin_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
@@ -469,13 +443,12 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         entities: ['griffin-root', 'child-entity-1'],
       });
 
-      expect(mockRecipeProcessor.mergeSlotRequirements).toHaveBeenCalledWith(
-        v2Blueprint.additionalSlots.wing_left.requirements,
-        undefined
-      );
+      // Verify blueprintProcessorService was called
+      expect(mockBlueprintProcessorService.processBlueprint).toHaveBeenCalledWith(v2Blueprint);
 
+      // Verify part selection used the overridden requirements (enchanted_wing)
       expect(mockPartSelectionService.selectPart).toHaveBeenCalledWith(
-        v2Blueprint.additionalSlots.wing_left.requirements,
+        { partType: 'enchanted_wing' }, // From additionalSlots override
         ['wing'],
         undefined,
         expect.any(Function)
@@ -489,17 +462,11 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         'left',
         {}
       );
-
-      expect(mockSocketManager.occupySocket).toHaveBeenCalledWith(
-        'griffin-root',
-        'wing_left_socket',
-        expect.any(Set)
-      );
     });
   });
 
   describe('Error Handling', () => {
-    it('should throw ValidationError if structure template not found', async () => {
+    it('should throw ValidationError if blueprintProcessorService throws on missing template', async () => {
       const v2Blueprint = {
         id: 'anatomy:dragon_v2',
         schemaVersion: '2.0',
@@ -509,8 +476,30 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
 
       mockDataRegistry.get.mockImplementation((type, id) => {
         if (type === 'anatomyBlueprints') return v2Blueprint;
-        if (type === 'anatomyStructureTemplates') return null; // Template not found
         return null;
+      });
+
+      // Create a factory with a blueprintProcessorService that throws on missing template
+      const errorFactory = new BodyBlueprintFactory({
+        entityManager: mockEntityManager,
+        dataRegistry: mockDataRegistry,
+        logger: mockLogger,
+        eventDispatcher: mockEventDispatcher,
+        eventDispatchService: mockEventDispatchService,
+        recipeProcessor: mockRecipeProcessor,
+        partSelectionService: mockPartSelectionService,
+        socketManager: mockSocketManager,
+        entityGraphBuilder: mockEntityGraphBuilder,
+        constraintEvaluator: mockConstraintEvaluator,
+        validator: mockValidator,
+        socketGenerator: mockSocketGenerator,
+        slotGenerator: mockSlotGenerator,
+        recipePatternResolver: { resolveRecipePatterns: jest.fn(recipe => recipe) },
+        blueprintProcessorService: {
+          processBlueprint: jest.fn().mockImplementation(() => {
+            throw new ValidationError('Structure template not found: anatomy:template_dragon_missing');
+          }),
+        },
       });
 
       const recipe = { recipeId: 'anatomy:dragon_standard', slots: {} };
@@ -518,15 +507,15 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
 
       await expect(
-        factory.createAnatomyGraph('anatomy:dragon_v2', 'anatomy:dragon_standard')
+        errorFactory.createAnatomyGraph('anatomy:dragon_v2', 'anatomy:dragon_standard')
       ).rejects.toThrow(ValidationError);
 
       await expect(
-        factory.createAnatomyGraph('anatomy:dragon_v2', 'anatomy:dragon_standard')
+        errorFactory.createAnatomyGraph('anatomy:dragon_v2', 'anatomy:dragon_standard')
       ).rejects.toThrow('Structure template not found: anatomy:template_dragon_missing');
     });
 
-    it('should handle errors from socketGenerator gracefully', async () => {
+    it('should handle errors from blueprintProcessorService during socket generation', async () => {
       const v2Blueprint = {
         id: 'anatomy:spider_v2',
         schemaVersion: '2.0',
@@ -534,19 +523,32 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         structureTemplate: 'anatomy:template_spider',
       };
 
-      const structureTemplate = {
-        id: 'anatomy:template_spider',
-        topology: { rootType: 'spider_body', limbSets: [], appendages: [] },
-      };
-
       mockDataRegistry.get.mockImplementation((type, id) => {
         if (type === 'anatomyBlueprints') return v2Blueprint;
-        if (type === 'anatomyStructureTemplates') return structureTemplate;
         return null;
       });
 
-      mockSocketGenerator.generateSockets.mockImplementation(() => {
-        throw new Error('Invalid template structure');
+      // Create a factory with a blueprintProcessorService that throws during socket generation
+      const errorFactory = new BodyBlueprintFactory({
+        entityManager: mockEntityManager,
+        dataRegistry: mockDataRegistry,
+        logger: mockLogger,
+        eventDispatcher: mockEventDispatcher,
+        eventDispatchService: mockEventDispatchService,
+        recipeProcessor: mockRecipeProcessor,
+        partSelectionService: mockPartSelectionService,
+        socketManager: mockSocketManager,
+        entityGraphBuilder: mockEntityGraphBuilder,
+        constraintEvaluator: mockConstraintEvaluator,
+        validator: mockValidator,
+        socketGenerator: mockSocketGenerator,
+        slotGenerator: mockSlotGenerator,
+        recipePatternResolver: { resolveRecipePatterns: jest.fn(recipe => recipe) },
+        blueprintProcessorService: {
+          processBlueprint: jest.fn().mockImplementation(() => {
+            throw new Error('Invalid template structure');
+          }),
+        },
       });
 
       const recipe = { recipeId: 'anatomy:spider_standard', slots: {} };
@@ -554,11 +556,11 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
 
       await expect(
-        factory.createAnatomyGraph('anatomy:spider_v2', 'anatomy:spider_standard')
+        errorFactory.createAnatomyGraph('anatomy:spider_v2', 'anatomy:spider_standard')
       ).rejects.toThrow('Invalid template structure');
     });
 
-    it('should handle errors from slotGenerator gracefully', async () => {
+    it('should handle errors from blueprintProcessorService during slot generation', async () => {
       const v2Blueprint = {
         id: 'anatomy:spider_v2',
         schemaVersion: '2.0',
@@ -566,20 +568,32 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         structureTemplate: 'anatomy:template_spider',
       };
 
-      const structureTemplate = {
-        id: 'anatomy:template_spider',
-        topology: { rootType: 'spider_body', limbSets: [], appendages: [] },
-      };
-
       mockDataRegistry.get.mockImplementation((type, id) => {
         if (type === 'anatomyBlueprints') return v2Blueprint;
-        if (type === 'anatomyStructureTemplates') return structureTemplate;
         return null;
       });
 
-      mockSocketGenerator.generateSockets.mockReturnValue([]);
-      mockSlotGenerator.generateBlueprintSlots.mockImplementation(() => {
-        throw new Error('Invalid slot generation');
+      // Create a factory with a blueprintProcessorService that throws during slot generation
+      const errorFactory = new BodyBlueprintFactory({
+        entityManager: mockEntityManager,
+        dataRegistry: mockDataRegistry,
+        logger: mockLogger,
+        eventDispatcher: mockEventDispatcher,
+        eventDispatchService: mockEventDispatchService,
+        recipeProcessor: mockRecipeProcessor,
+        partSelectionService: mockPartSelectionService,
+        socketManager: mockSocketManager,
+        entityGraphBuilder: mockEntityGraphBuilder,
+        constraintEvaluator: mockConstraintEvaluator,
+        validator: mockValidator,
+        socketGenerator: mockSocketGenerator,
+        slotGenerator: mockSlotGenerator,
+        recipePatternResolver: { resolveRecipePatterns: jest.fn(recipe => recipe) },
+        blueprintProcessorService: {
+          processBlueprint: jest.fn().mockImplementation(() => {
+            throw new Error('Invalid slot generation');
+          }),
+        },
       });
 
       const recipe = { recipeId: 'anatomy:spider_standard', slots: {} };
@@ -587,13 +601,13 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
 
       await expect(
-        factory.createAnatomyGraph('anatomy:spider_v2', 'anatomy:spider_standard')
+        errorFactory.createAnatomyGraph('anatomy:spider_v2', 'anatomy:spider_standard')
       ).rejects.toThrow('Invalid slot generation');
     });
   });
 
   describe('Schema Version Detection', () => {
-    it('should trigger v2 processing only when schemaVersion is "2.0"', async () => {
+    it('should call blueprintProcessorService.processBlueprint for all blueprints', async () => {
       const v2Blueprint = {
         id: 'anatomy:test_v2',
         schemaVersion: '2.0',
@@ -601,32 +615,48 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         structureTemplate: 'anatomy:template_test',
       };
 
-      const structureTemplate = {
-        id: 'anatomy:template_test',
-        topology: { rootType: 'test_body', limbSets: [], appendages: [] },
-      };
-
       mockDataRegistry.get.mockImplementation((type, id) => {
         if (type === 'anatomyBlueprints') return v2Blueprint;
-        if (type === 'anatomyStructureTemplates') return structureTemplate;
         return null;
       });
 
-      mockSocketGenerator.generateSockets.mockReturnValue([]);
-      mockSlotGenerator.generateBlueprintSlots.mockReturnValue({});
+      // Create a factory with a spy on blueprintProcessorService
+      const mockProcessBlueprint = jest.fn((blueprint) => ({
+        ...blueprint,
+        slots: {},
+        _generatedSockets: [],
+        _generatedSlots: {},
+      }));
+
+      const testFactory = new BodyBlueprintFactory({
+        entityManager: mockEntityManager,
+        dataRegistry: mockDataRegistry,
+        logger: mockLogger,
+        eventDispatcher: mockEventDispatcher,
+        eventDispatchService: mockEventDispatchService,
+        recipeProcessor: mockRecipeProcessor,
+        partSelectionService: mockPartSelectionService,
+        socketManager: mockSocketManager,
+        entityGraphBuilder: mockEntityGraphBuilder,
+        constraintEvaluator: mockConstraintEvaluator,
+        validator: mockValidator,
+        socketGenerator: mockSocketGenerator,
+        slotGenerator: mockSlotGenerator,
+        recipePatternResolver: { resolveRecipePatterns: jest.fn(recipe => recipe) },
+        blueprintProcessorService: { processBlueprint: mockProcessBlueprint },
+      });
 
       const recipe = { recipeId: 'anatomy:test_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
       mockEntityGraphBuilder.createRootEntity.mockResolvedValue('root-entity-1');
 
-      await factory.createAnatomyGraph('anatomy:test_v2', 'anatomy:test_standard');
+      await testFactory.createAnatomyGraph('anatomy:test_v2', 'anatomy:test_standard');
 
-      expect(mockSocketGenerator.generateSockets).toHaveBeenCalled();
-      expect(mockSlotGenerator.generateBlueprintSlots).toHaveBeenCalled();
+      expect(mockProcessBlueprint).toHaveBeenCalledWith(v2Blueprint);
     });
 
-    it('should not trigger v2 processing when schemaVersion is "2.0" but structureTemplate is missing', async () => {
+    it('should use blueprint slots from blueprintProcessorService for v2 blueprints without structureTemplate', async () => {
       const v2BlueprintNoTemplate = {
         id: 'anatomy:test_v2_no_template',
         schemaVersion: '2.0',
@@ -650,19 +680,19 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
       mockEntityGraphBuilder.createRootEntity.mockResolvedValue('root-entity-1');
 
+      // Blueprint processor returns the blueprint unchanged (v1 path for blueprints without template)
       await factory.createAnatomyGraph('anatomy:test_v2_no_template', 'anatomy:test_standard');
 
-      // Should use v1 path since structureTemplate is missing
-      expect(mockSocketGenerator.generateSockets).not.toHaveBeenCalled();
-      expect(mockSlotGenerator.generateBlueprintSlots).not.toHaveBeenCalled();
+      // Factory still processes the slots from the blueprint
+      expect(mockEntityGraphBuilder.createRootEntity).toHaveBeenCalled();
     });
 
-    it('should use v1 path when schemaVersion is "1.0" even with structureTemplate present', async () => {
+    it('should process v1 blueprint through blueprintProcessorService', async () => {
       const v1Blueprint = {
         id: 'anatomy:test_v1',
         schemaVersion: '1.0',
         root: 'anatomy:test_body',
-        structureTemplate: 'anatomy:template_test', // Present but should be ignored
+        structureTemplate: 'anatomy:template_test', // Present but should be ignored by v1 processing
         slots: {
           arm: {
             socket: 'shoulder',
@@ -684,9 +714,8 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
 
       await factory.createAnatomyGraph('anatomy:test_v1', 'anatomy:test_standard');
 
-      // Should use v1 path
-      expect(mockSocketGenerator.generateSockets).not.toHaveBeenCalled();
-      expect(mockSlotGenerator.generateBlueprintSlots).not.toHaveBeenCalled();
+      // Factory processes the blueprint and creates entities
+      expect(mockEntityGraphBuilder.createRootEntity).toHaveBeenCalled();
     });
   });
 });

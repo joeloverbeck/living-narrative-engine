@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { BodyBlueprintFactory } from '../../../src/anatomy/bodyBlueprintFactory/bodyBlueprintFactory.js';
 import SocketGenerator from '../../../src/anatomy/socketGenerator.js';
 import SlotGenerator from '../../../src/anatomy/slotGenerator.js';
+import BlueprintProcessorService from '../../../src/anatomy/services/blueprintProcessorService.js';
 import { ValidationError } from '../../../src/errors/validationError.js';
 
 describe('BodyBlueprintFactory - V2 Integration Tests', () => {
@@ -93,7 +94,15 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
       resolveRecipePatterns: jest.fn((recipe) => recipe),
     };
 
-    // Create factory with real generators
+    // Create real BlueprintProcessorService for V2 integration testing
+    const blueprintProcessorService = new BlueprintProcessorService({
+      logger: mockLogger,
+      dataRegistry: mockDataRegistry,
+      socketGenerator,
+      slotGenerator,
+    });
+
+    // Create factory with real generators and real processor service
     factory = new BodyBlueprintFactory({
       entityManager: mockEntityManager,
       dataRegistry: mockDataRegistry,
@@ -109,6 +118,7 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
       socketGenerator,
       slotGenerator,
       recipePatternResolver: mockRecipePatternResolver,
+      blueprintProcessorService,
     });
   });
 
@@ -168,7 +178,7 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
       // Verify that 8 sockets and 8 slots were generated
       const logCalls = mockLogger.info.mock.calls;
       const blueprintLogCall = logCalls.find((call) =>
-        call[0].includes('Generated') && call[0].includes('slots from template')
+        call[0].includes('processed successfully') && call[0].includes('sockets')
       );
 
       expect(blueprintLogCall).toBeDefined();
@@ -238,16 +248,15 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
 
       await factory.createAnatomyGraph('anatomy:centaur_v2', 'anatomy:centaur_standard');
 
-      // Verify that 5 sockets and 5 slots were generated from template
-      // Note: additionalSlots are merged after generation, so log shows 5 slots generated
+      // Verify that 5 sockets and 6 slots were processed (5 generated + 1 additional)
       const logCalls = mockLogger.info.mock.calls;
       const blueprintLogCall = logCalls.find((call) =>
-        call[0].includes('Generated') && call[0].includes('slots from template')
+        call[0].includes('processed successfully') && call[0].includes('sockets')
       );
 
       expect(blueprintLogCall).toBeDefined();
       expect(blueprintLogCall[0]).toContain('5 sockets');
-      expect(blueprintLogCall[0]).toContain('5 slots'); // Generated from template only
+      expect(blueprintLogCall[0]).toContain('6 slots'); // 5 generated + 1 additional (head)
     });
 
     it('should process dragon hexapedal template correctly', async () => {
@@ -331,7 +340,7 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
       // Verify that 8 sockets and 8 slots were generated (4 legs + 2 wings + 1 tail + 1 head)
       const logCalls = mockLogger.info.mock.calls;
       const blueprintLogCall = logCalls.find((call) =>
-        call[0].includes('Generated') && call[0].includes('slots from template')
+        call[0].includes('processed successfully') && call[0].includes('sockets')
       );
 
       expect(blueprintLogCall).toBeDefined();
@@ -379,9 +388,12 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
 
       await factory.createAnatomyGraph('anatomy:test_v2', 'anatomy:test_standard');
 
-      // Verify generators were called
+      // Verify processors logged success with correct counts
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Generated 2 sockets and 2 slots')
+        expect.stringContaining('2 sockets')
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('2 slots')
       );
     });
 
@@ -437,7 +449,7 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
       // Verify that socket count matches slot count
       const logCalls = mockLogger.info.mock.calls;
       const blueprintLogCall = logCalls.find((call) =>
-        call[0].includes('Generated') && call[0].includes('slots from template')
+        call[0].includes('processed successfully') && call[0].includes('sockets')
       );
 
       expect(blueprintLogCall).toBeDefined();
@@ -574,7 +586,7 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
 
       const logCalls = mockLogger.info.mock.calls;
       const blueprintLogCall = logCalls.find((call) =>
-        call[0].includes('Generated') && call[0].includes('slots from template')
+        call[0].includes('processed successfully') && call[0].includes('sockets')
       );
       expect(blueprintLogCall).toBeDefined();
       expect(blueprintLogCall[0]).toContain('8 sockets');
