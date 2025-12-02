@@ -291,7 +291,7 @@
         },
         "properties": {
           "type": "object",
-          "description": "Required property values for components on matching parts",
+          "description": "Filters entities by exact component property values. NOT for runtime overrides.",
           "additionalProperties": true
         }
       },
@@ -341,7 +341,7 @@
         },
         "properties": {
           "type": "object",
-          "description": "Required property values for components on matching parts",
+          "description": "Filters entities by exact component property values. NOT for runtime overrides.",
           "additionalProperties": true
         }
       },
@@ -407,7 +407,7 @@
         },
         "properties": {
           "type": "object",
-          "description": "Required property values for components on matching parts",
+          "description": "Filters entities by exact component property values. NOT for runtime overrides.",
           "additionalProperties": true
         },
         "exclude": {

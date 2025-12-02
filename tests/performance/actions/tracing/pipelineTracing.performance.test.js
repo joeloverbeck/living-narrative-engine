@@ -475,9 +475,21 @@ describe('Pipeline Tracing Performance', () => {
         verbosity: 'standard',
       });
 
-      const start1 = performance.now();
-      await service1.getValidActions(actor, context, { trace: true });
-      const duration1 = performance.now() - start1;
+      // Extended warm up for service 1
+      for (let i = 0; i < 5; i++) {
+        await service1.getValidActions(actor, context, { trace: true });
+      }
+
+      // Collect service 1 timings
+      const runs = 20;
+      const service1Times = [];
+      for (let i = 0; i < runs; i++) {
+        const start = performance.now();
+        await service1.getValidActions(actor, context, { trace: true });
+        service1Times.push(performance.now() - start);
+      }
+      service1Times.sort((a, b) => a - b);
+      const duration1 = service1Times[Math.floor(runs / 2)];
 
       // Test with all actions traced
       const serviceAll = testBed.createDiscoveryServiceWithTracing({
@@ -486,9 +498,20 @@ describe('Pipeline Tracing Performance', () => {
         verbosity: 'standard',
       });
 
-      const startAll = performance.now();
-      await serviceAll.getValidActions(actor, context, { trace: true });
-      const durationAll = performance.now() - startAll;
+      // Extended warm up for service all
+      for (let i = 0; i < 5; i++) {
+        await serviceAll.getValidActions(actor, context, { trace: true });
+      }
+
+      // Collect service all timings
+      const serviceAllTimes = [];
+      for (let i = 0; i < runs; i++) {
+        const start = performance.now();
+        await serviceAll.getValidActions(actor, context, { trace: true });
+        serviceAllTimes.push(performance.now() - start);
+      }
+      serviceAllTimes.sort((a, b) => a - b);
+      const durationAll = serviceAllTimes[Math.floor(runs / 2)];
 
       // Calculate scaling factor
       const scalingFactor = durationAll / duration1;
@@ -497,7 +520,7 @@ describe('Pipeline Tracing Performance', () => {
       if (scalingFactor > 10) {
         console.log(`=== Scaling Test Debug Info ===`);
         console.log(
-          `Single action time: ${duration1.toFixed(3)}ms, All actions time: ${durationAll.toFixed(3)}ms`
+          `Single action time (median): ${duration1.toFixed(3)}ms, All actions time (median): ${durationAll.toFixed(3)}ms`
         );
         console.log(`Scaling factor: ${scalingFactor.toFixed(2)}x`);
 

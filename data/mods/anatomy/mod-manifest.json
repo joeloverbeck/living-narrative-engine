@@ -29,11 +29,6 @@
       "stunned.component.json",
       "visibility_rules.component.json"
     ],
-    "damageTypes": [
-      "blunt.json",
-      "slashing.json",
-      "piercing.json"
-    ],
     "entities": {
       "definitions": [
         "beak.entity.json",
@@ -309,6 +304,11 @@
       "actor-has-free-grabbing-appendage.condition.json",
       "actor-has-two-free-grabbing-appendages.condition.json"
     ],
-    "lookups": []
+    "lookups": [],
+    "damageTypes": [
+      "blunt.json",
+      "piercing.json",
+      "slashing.json"
+    ]
   }
 }

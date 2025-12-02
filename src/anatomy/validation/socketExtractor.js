@@ -46,7 +46,7 @@ export function extractSocketsFromEntity(entity) {
  * Supports the hierarchical socket architecture where:
  * - Root entity has direct sockets
  * - Structure template generates parts (limbs, head, tail) with their own sockets
- * - Blueprint additionalSlots can reference child part sockets via 'parent' property
+ * - Blueprint slots/additionalSlots can reference child part sockets via 'parent' property
  *
  * @param {object} blueprint - Blueprint definition
  * @param {object} rootEntity - Root entity definition
@@ -81,7 +81,98 @@ export async function extractHierarchicalSockets(
     );
   }
 
+  // 3. For blueprints with compose instruction, extract slots from composed parts
+  //    This supports V1 blueprints that use composition instead of structure templates
+  //
+  // NOTE: After loading by AnatomyBlueprintLoader, the compose property is deleted
+  // and slots are merged into blueprint.slots. The extractSlotChildSockets function
+  // handles both V1 (slots) and V2 (additionalSlots) by processing all slots with
+  // partType requirements.
+  if (blueprint?.compose && dataRegistry) {
+    await extractComposedSlots(blueprint, hierarchicalSockets, dataRegistry);
+  }
+
+  // 4. For blueprints without structure template, extract child sockets
+  //    from entities attached to slots that have child slots with parent refs
+  if (!structureTemplate && dataRegistry && blueprint) {
+    await extractSlotChildSockets(
+      blueprint,
+      hierarchicalSockets,
+      dataRegistry
+    );
+  }
+
   return hierarchicalSockets;
+}
+
+/**
+ * Extracts child sockets from entities that will be attached to parent slots.
+ * This supports the older blueprint `slots` format (without structure templates)
+ * where child slots reference parent slots via the `parent` property.
+ *
+ * For each slot without a parent, we look up its entity definition and extract
+ * its sockets, making them available to child slots that reference it.
+ *
+ * @param {object} blueprint - Blueprint definition
+ * @param {Map<string, object>} hierarchicalSockets - Socket map to populate
+ * @param {object} dataRegistry - Data registry for entity lookups
+ * @returns {Promise<void>}
+ * @private
+ */
+async function extractSlotChildSockets(
+  blueprint,
+  hierarchicalSockets,
+  dataRegistry
+) {
+  // Combine both slots and additionalSlots for complete coverage
+  const allSlots = {
+    ...(blueprint?.slots || {}),
+    ...(blueprint?.additionalSlots || {}),
+  };
+
+  // Identify all slots with partType requirements
+  // This includes both top-level slots AND nested slots (e.g., mouth which has parent: head)
+  // because any slot with a partType can have its own child sockets
+  const slotsWithPartType = new Map();
+  for (const [slotName, slotConfig] of Object.entries(allSlots)) {
+    // Include all slots that have requirements.partType, regardless of parent
+    if (slotConfig?.requirements?.partType) {
+      slotsWithPartType.set(slotName, slotConfig);
+    }
+  }
+
+  // For each slot with partType, look up its entity and extract sockets
+  for (const [slotName, slotConfig] of slotsWithPartType) {
+    const partType = slotConfig.requirements?.partType;
+    if (!partType) {
+      continue;
+    }
+
+    // Try to find entity definition for this part type
+    const entityId = await resolveEntityId(partType, dataRegistry);
+    if (!entityId) {
+      continue;
+    }
+
+    const partEntity = await getEntityDefinition(dataRegistry, entityId);
+    if (!partEntity) {
+      continue;
+    }
+
+    // Extract sockets from this slot's entity
+    const partSockets = extractSocketsFromEntity(partEntity);
+
+    // Add each socket to the hierarchical map with parent context
+    for (const [socketId, socketData] of partSockets) {
+      hierarchicalSockets.set(socketId, {
+        ...socketData,
+        source: 'slot_child',
+        parent: slotName,
+        parentEntity: entityId,
+        hierarchicalKey: `${slotName}:${socketId}`,
+      });
+    }
+  }
 }
 
 /**
@@ -273,26 +364,35 @@ function generateSocketIds(idTemplate, arrangement, count) {
 }
 
 /**
- * Resolves partType to entity ID.
- * In the anatomy system, partTypes often correspond to entity IDs with "anatomy:" namespace.
+ * Resolves partType to entity ID by searching for entities with matching anatomy:part.subType.
+ * Entity IDs don't directly match partTypes (e.g., partType "head" → entity "anatomy:humanoid_head"),
+ * so we search all entity definitions to find one with matching subType.
  *
- * @param {string} partType - Part type identifier
+ * @param {string} partType - Part type identifier (e.g., "head", "arm", "leg")
  * @param {object} dataRegistry - Data registry for lookups
  * @returns {Promise<string|null>} Resolved entity ID or null
  * @private
  */
 async function resolveEntityId(partType, dataRegistry) {
-  // Try with anatomy: namespace
-  const anatomyId = `anatomy:${partType}`;
-  const entity = await getEntityDefinition(dataRegistry, anatomyId);
-  if (entity) {
-    return anatomyId;
+  if (!dataRegistry || !partType) {
+    return null;
   }
 
-  // Try without namespace (might already include it)
-  const entityDirect = await getEntityDefinition(dataRegistry, partType);
-  if (entityDirect) {
-    return partType;
+  // Get all entity definitions and search for one with matching partType
+  let allEntities = [];
+
+  if (typeof dataRegistry.getAll === 'function') {
+    allEntities = dataRegistry.getAll('entityDefinitions') || [];
+  } else if (typeof dataRegistry.getAllEntityDefinitions === 'function') {
+    allEntities = dataRegistry.getAllEntityDefinitions() || [];
+  }
+
+  // Find first entity with anatomy:part.subType matching the partType
+  for (const entity of allEntities) {
+    const partComponent = entity?.components?.['anatomy:part'];
+    if (partComponent?.subType === partType) {
+      return entity.id;
+    }
   }
 
   return null;
@@ -320,4 +420,180 @@ async function getEntityDefinition(dataRegistry, entityId) {
   }
 
   return undefined;
+}
+
+/**
+ * Gets blueprint part from registry.
+ *
+ * @param {object} dataRegistry - Data registry
+ * @param {string} partId - Blueprint part identifier
+ * @returns {Promise<object|undefined>} Blueprint part if found
+ * @private
+ */
+async function getBlueprintPart(dataRegistry, partId) {
+  if (!dataRegistry) {
+    return undefined;
+  }
+
+  if (typeof dataRegistry.get === 'function') {
+    return dataRegistry.get('anatomyBlueprintParts', partId);
+  }
+
+  return undefined;
+}
+
+/**
+ * Gets slot library from registry.
+ *
+ * @param {object} dataRegistry - Data registry
+ * @param {string} libraryId - Slot library identifier
+ * @returns {Promise<object|undefined>} Slot library if found
+ * @private
+ */
+async function getSlotLibrary(dataRegistry, libraryId) {
+  if (!dataRegistry) {
+    return undefined;
+  }
+
+  if (typeof dataRegistry.get === 'function') {
+    return dataRegistry.get('anatomySlotLibraries', libraryId);
+  }
+
+  return undefined;
+}
+
+/**
+ * Resolves a slot definition by merging $use references with overrides.
+ *
+ * @param {object} slotConfig - Slot configuration (may have $use reference)
+ * @param {object|null} library - Slot library containing definitions
+ * @returns {object} Resolved slot configuration
+ * @private
+ */
+function resolveSlotDefinition(slotConfig, library) {
+  if (!slotConfig?.$use || !library?.slotDefinitions) {
+    return slotConfig;
+  }
+
+  const libraryDef = library.slotDefinitions[slotConfig.$use];
+  if (!libraryDef) {
+    return slotConfig;
+  }
+
+  // Merge library definition with overrides
+  const resolved = { ...libraryDef };
+  for (const [key, value] of Object.entries(slotConfig)) {
+    if (key !== '$use') {
+      resolved[key] = value;
+    }
+  }
+
+  return resolved;
+}
+
+/**
+ * Extracts slots from composed blueprint parts.
+ * V1 blueprints use `compose` instruction to merge slots from separate part files.
+ * This function loads those parts, resolves $use references, and registers:
+ * 1. Slots themselves as valid parent targets
+ * 2. Sockets from entities that attach to parent slots (for child slot validation)
+ *
+ * @param {object} blueprint - Blueprint definition with compose instruction
+ * @param {Map<string, object>} hierarchicalSockets - Socket map to populate
+ * @param {object} dataRegistry - Data registry for part lookups
+ * @returns {Promise<void>}
+ * @private
+ */
+async function extractComposedSlots(blueprint, hierarchicalSockets, dataRegistry) {
+  const composeInstructions = blueprint?.compose;
+  if (!Array.isArray(composeInstructions)) {
+    return;
+  }
+
+  for (const instruction of composeInstructions) {
+    const partId = instruction.part;
+    if (!partId) {
+      continue;
+    }
+
+    // Only process if 'slots' is included in the compose instruction
+    const includeList = instruction.include;
+    if (!Array.isArray(includeList) || !includeList.includes('slots')) {
+      continue;
+    }
+
+    // Load the blueprint part
+    const part = await getBlueprintPart(dataRegistry, partId);
+    if (!part?.slots) {
+      continue;
+    }
+
+    // Load the slot library if the part references one
+    let library = null;
+    if (part.library) {
+      library = await getSlotLibrary(dataRegistry, part.library);
+      // DEBUG: Log library loading
+      console.log(`[DEBUG socketExtractor] Library ${part.library}: ${library ? 'LOADED' : 'NOT FOUND'}`);
+    }
+
+    // First pass: collect all resolved slots and register them as valid parents
+    const resolvedSlots = new Map();
+    for (const [slotName, slotConfig] of Object.entries(part.slots)) {
+      if (!slotConfig || typeof slotConfig !== 'object') {
+        continue;
+      }
+
+      // Resolve $use references
+      const resolved = resolveSlotDefinition(slotConfig, library);
+      resolvedSlots.set(slotName, resolved);
+
+      // Register the slot itself as a valid parent target
+      if (!hierarchicalSockets.has(slotName)) {
+        hierarchicalSockets.set(slotName, {
+          id: slotName,
+          source: 'composed_slot',
+          slotName,
+          partId,
+          parent: resolved.parent || null,
+          requirements: resolved.requirements,
+        });
+      }
+    }
+
+    // Second pass: for ALL slots with requirements.partType, extract entity sockets
+    // This enables validation of nested hierarchies (e.g., head→mouth→teeth)
+    // Any slot with a partType requirement can potentially have child sockets
+    for (const [slotName, resolved] of resolvedSlots) {
+      const partType = resolved.requirements?.partType;
+      if (!partType) {
+        // Skip slots without partType - they don't reference specific entity types
+        continue;
+      }
+
+      // Try to find entity definition for this part type
+      const entityId = await resolveEntityId(partType, dataRegistry);
+      if (!entityId) {
+        continue;
+      }
+
+      const partEntity = await getEntityDefinition(dataRegistry, entityId);
+      if (!partEntity) {
+        continue;
+      }
+
+      // Extract sockets from this parent's entity
+      const partSockets = extractSocketsFromEntity(partEntity);
+
+      // Add each socket to the hierarchical map with parent context
+      for (const [socketId, socketData] of partSockets) {
+        hierarchicalSockets.set(socketId, {
+          ...socketData,
+          source: 'composed_part_child',
+          parent: slotName,
+          parentEntity: entityId,
+          hierarchicalKey: `${slotName}:${socketId}`,
+        });
+      }
+    }
+  }
 }

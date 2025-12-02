@@ -134,7 +134,7 @@ const createValidator = ({
       );
       expect(result.errors).toHaveLength(0);
       expect(result.passed).toContainEqual({
-        message: 'All 1 additionalSlot socket references valid',
+        message: 'All 1 slot socket references valid',
         check: 'socket_slot_compatibility',
       });
     });
@@ -253,7 +253,7 @@ const createValidator = ({
 
       expect(result.errors).toHaveLength(0);
       expect(result.passed).toContainEqual({
-        message: 'All 1 additionalSlot socket references valid',
+        message: 'All 1 slot socket references valid',
         check: 'socket_slot_compatibility',
       });
     });
@@ -331,7 +331,7 @@ const createValidator = ({
 
       expect(result.errors).toHaveLength(0);
       expect(result.passed).toContainEqual({
-        message: 'All 1 additionalSlot socket references valid',
+        message: 'All 1 slot socket references valid',
         check: 'socket_slot_compatibility',
       });
     });
@@ -345,7 +345,7 @@ const createValidator = ({
       expect(result.errors).toHaveLength(0);
       expect(result.passed).toEqual([
         {
-          message: 'All 0 additionalSlot socket references valid',
+          message: 'All 0 slot socket references valid',
           check: 'socket_slot_compatibility',
         },
       ]);

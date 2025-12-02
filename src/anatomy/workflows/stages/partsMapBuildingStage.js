@@ -72,6 +72,18 @@ function buildPartsMap(partEntityIds, entityManager, logger) {
       const key = name || partEntityId;
 
       if (key) {
+        // Fail-fast: detect duplicate names before they cause silent overwrites
+        if (parts.has(key)) {
+          const existingEntityId = parts.get(key);
+          const errorMsg =
+            `PartsMapBuildingStage: Duplicate part name '${key}' detected. ` +
+            `Entity '${partEntityId}' would overwrite existing entity '${existingEntityId}'. ` +
+            `This indicates a nameTpl configuration issue in socket definitions.`;
+
+          logger.error(errorMsg);
+          throw new Error(errorMsg);
+        }
+
         parts.set(key, partEntityId);
 
         logger.debug(

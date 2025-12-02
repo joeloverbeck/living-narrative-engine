@@ -69,14 +69,12 @@ describe('AnatomyGenerationWorkflow - Events', () => {
         { id: 'socket2', orientation: 'forward' },
       ];
 
-      // Mock entity instance
-      const mockEntity = {
+      // Mock entity instances with unique names to avoid duplicate detection
+      mockEntityManager.getEntityInstance.mockImplementation((entityId) => ({
         hasComponent: jest.fn(() => true),
-        getComponentData: jest.fn(() => ({ text: 'test-part' })),
-      };
-
-      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
-      mockDataRegistry.get.mockImplementation((type, id) => {
+        getComponentData: jest.fn(() => ({ text: `test-part-${entityId}` })),
+      }));
+      mockDataRegistry.get.mockImplementation((type) => {
         if (type === 'anatomyRecipes') return mockRecipe;
         if (type === 'anatomyBlueprints') return mockBlueprint;
         return null;
@@ -129,13 +127,12 @@ describe('AnatomyGenerationWorkflow - Events', () => {
         slots: {},
       };
 
-      const mockEntity = {
+      // Mock entity instances with unique names to avoid duplicate detection
+      mockEntityManager.getEntityInstance.mockImplementation((entityId) => ({
         hasComponent: jest.fn(() => true),
-        getComponentData: jest.fn(() => ({ text: 'test-part' })),
-      };
-
-      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
-      mockDataRegistry.get.mockImplementation((type, id) => {
+        getComponentData: jest.fn(() => ({ text: `test-part-${entityId}` })),
+      }));
+      mockDataRegistry.get.mockImplementation((type) => {
         if (type === 'anatomyRecipes') return mockRecipe;
         if (type === 'anatomyBlueprints') return mockBlueprint;
         return null;
@@ -175,13 +172,12 @@ describe('AnatomyGenerationWorkflow - Events', () => {
         slots: {},
       };
 
-      const mockEntity = {
+      // Mock entity instances with unique names to avoid duplicate detection
+      mockEntityManager.getEntityInstance.mockImplementation((entityId) => ({
         hasComponent: jest.fn(() => true),
-        getComponentData: jest.fn(() => ({ text: 'test-part' })),
-      };
-
-      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
-      mockDataRegistry.get.mockImplementation((type, id) => {
+        getComponentData: jest.fn(() => ({ text: `test-part-${entityId}` })),
+      }));
+      mockDataRegistry.get.mockImplementation((type) => {
         if (type === 'anatomyRecipes') return mockRecipe;
         if (type === 'anatomyBlueprints') return mockBlueprint;
         return null;
@@ -222,13 +218,12 @@ describe('AnatomyGenerationWorkflow - Events', () => {
         slots: {},
       };
 
-      const mockEntity = {
+      // Mock entity instances with unique names to avoid duplicate detection
+      mockEntityManager.getEntityInstance.mockImplementation((entityId) => ({
         hasComponent: jest.fn(() => true),
-        getComponentData: jest.fn(() => ({ text: 'test-part' })),
-      };
-
-      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
-      mockDataRegistry.get.mockImplementation((type, id) => {
+        getComponentData: jest.fn(() => ({ text: `test-part-${entityId}` })),
+      }));
+      mockDataRegistry.get.mockImplementation((type) => {
         if (type === 'anatomyRecipes') return mockRecipe;
         if (type === 'anatomyBlueprints') return mockBlueprint;
         return null;
@@ -324,7 +319,7 @@ describe('AnatomyGenerationWorkflow - Events', () => {
         'slot-entity-1'
       );
 
-      mockDataRegistry.get.mockImplementation((type, id) => {
+      mockDataRegistry.get.mockImplementation((type) => {
         if (type === 'anatomyRecipes') return mockRecipe;
         if (type === 'anatomyBlueprints') return mockBlueprint;
         return null;

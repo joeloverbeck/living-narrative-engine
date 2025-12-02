@@ -1528,4 +1528,46 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
       expect(ok).toBe(true);
     });
   });
+
+  describe('Schema Documentation - Properties Field Semantics', () => {
+    test('slotDefinition properties field description clarifies filtering semantics', () => {
+      const slotDef = anatomyRecipeSchema.definitions.slotDefinition;
+      expect(slotDef.properties.properties.description).toContain(
+        'Filters entities by exact component property values'
+      );
+      expect(slotDef.properties.properties.description).toContain(
+        'NOT for runtime overrides'
+      );
+    });
+
+    test('v1PatternDefinition properties field description clarifies filtering semantics', () => {
+      const v1Pattern = anatomyRecipeSchema.definitions.v1PatternDefinition;
+      expect(v1Pattern.properties.properties.description).toContain(
+        'Filters entities by exact component property values'
+      );
+      expect(v1Pattern.properties.properties.description).toContain(
+        'NOT for runtime overrides'
+      );
+    });
+
+    test('enhancedPatternDefinition properties field description clarifies filtering semantics', () => {
+      const enhancedPattern = anatomyRecipeSchema.definitions.enhancedPatternDefinition;
+      expect(enhancedPattern.properties.properties.description).toContain(
+        'Filters entities by exact component property values'
+      );
+      expect(enhancedPattern.properties.properties.description).toContain(
+        'NOT for runtime overrides'
+      );
+    });
+
+    test('clothingEntities properties field description allows overrides (different semantics)', () => {
+      const clothingEntity =
+        anatomyRecipeSchema.properties.clothingEntities.items.properties.properties;
+      // clothingEntities.properties IS for overrides - verify it does NOT have the filtering language
+      expect(clothingEntity.description).toContain('override');
+      expect(clothingEntity.description).not.toContain(
+        'NOT for runtime overrides'
+      );
+    });
+  });
 });

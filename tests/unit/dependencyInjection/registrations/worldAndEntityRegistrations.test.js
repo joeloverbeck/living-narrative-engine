@@ -833,7 +833,7 @@ describe('registerWorldAndEntity', () => {
       const factory = getFactoryForToken(tokens.IRecipeValidationRunner);
       const dependencyMap = {
         [tokens.ILogger]: createTestLogger(),
-        [tokens.IDataRegistry]: { get: jest.fn(), getAll: jest.fn() },
+        [tokens.IDataRegistry]: { get: jest.fn(), getAll: jest.fn(), getEntityDefinition: jest.fn() },
         [tokens.IAnatomyBlueprintRepository]: {
           getBlueprint: jest.fn(),
           getRecipe: jest.fn(),

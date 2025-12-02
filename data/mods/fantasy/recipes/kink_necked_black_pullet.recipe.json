@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
-  "recipeId": "fantasy:kink_necked_black_pullet",
+  "recipeId": "fantasy:kink_necked_black_pullet_recipe",
   "blueprintId": "anatomy:hen",
   "bodyDescriptors": {
     "build": "slim",

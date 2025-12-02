@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
-  "recipeId": "fantasy:white_faced_buff_hen",
+  "recipeId": "fantasy:white_faced_buff_hen_recipe",
   "blueprintId": "anatomy:hen",
   "bodyDescriptors": {
     "build": "stocky",

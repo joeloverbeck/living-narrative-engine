@@ -77,6 +77,7 @@ export const coreTokens = freeze({
   AnatomySlotLibraryLoader: 'AnatomySlotLibraryLoader',
   AnatomyFormattingLoader: 'AnatomyFormattingLoader',
   AnatomyStructureTemplateLoader: 'AnatomyStructureTemplateLoader',
+  DamageTypeLoader: 'DamageTypeLoader',
   GameDataRepository: 'GameDataRepository',
   EntityManager: 'EntityManager',
   SpatialIndexSynchronizer: 'SpatialIndexSynchronizer',

@@ -11,6 +11,20 @@
       "maxHealth": 8,
       "state": "healthy"
     },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "foot",
+          "allowedTypes": ["chicken_foot"],
+          "nameTpl": "{{effective_orientation}} {{type}}"
+        },
+        {
+          "id": "spur",
+          "allowedTypes": ["chicken_spur"],
+          "nameTpl": "{{effective_orientation}} {{type}}"
+        }
+      ]
+    },
     "core:name": {
       "text": "chicken leg"
     },

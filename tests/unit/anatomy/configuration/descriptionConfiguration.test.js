@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { DescriptionConfiguration } from '../../../../src/anatomy/configuration/descriptionConfiguration.js';
+import {
+  DescriptionConfiguration,
+  createPluralizer,
+} from '../../../../src/anatomy/configuration/descriptionConfiguration.js';
 
 describe('DescriptionConfiguration', () => {
   let config;
@@ -252,6 +255,86 @@ describe('DescriptionConfiguration', () => {
 
       const newPlurals = config.getIrregularPlurals();
       expect(newPlurals.test).toBeUndefined();
+    });
+  });
+});
+
+describe('createPluralizer', () => {
+  const irregularPlurals = {
+    foot: 'feet',
+    tooth: 'teeth',
+  };
+
+  describe('exact matches', () => {
+    it('should pluralize "foot" to "feet"', () => {
+      const pluralizer = createPluralizer(irregularPlurals);
+      expect(pluralizer('foot')).toBe('feet');
+    });
+
+    it('should pluralize "tooth" to "teeth"', () => {
+      const pluralizer = createPluralizer(irregularPlurals);
+      expect(pluralizer('tooth')).toBe('teeth');
+    });
+  });
+
+  describe('compound word handling', () => {
+    it('should pluralize "chicken_foot" to "chicken_feet"', () => {
+      const pluralizer = createPluralizer(irregularPlurals);
+      expect(pluralizer('chicken_foot')).toBe('chicken_feet');
+    });
+
+    it('should pluralize "tortoise_foot" to "tortoise_feet"', () => {
+      const pluralizer = createPluralizer(irregularPlurals);
+      expect(pluralizer('tortoise_foot')).toBe('tortoise_feet');
+    });
+
+    it('should pluralize "dragon_tooth" to "dragon_teeth"', () => {
+      const pluralizer = createPluralizer(irregularPlurals);
+      expect(pluralizer('dragon_tooth')).toBe('dragon_teeth');
+    });
+
+    it('should handle multiple underscore compound words', () => {
+      const pluralizer = createPluralizer(irregularPlurals);
+      expect(pluralizer('left_chicken_foot')).toBe('left_chicken_feet');
+    });
+  });
+
+  describe('regular pluralization fallback', () => {
+    it('should add "s" to regular words', () => {
+      const pluralizer = createPluralizer(irregularPlurals);
+      expect(pluralizer('arm')).toBe('arms');
+    });
+
+    it('should add "s" to compound words without irregular suffix', () => {
+      const pluralizer = createPluralizer(irregularPlurals);
+      expect(pluralizer('chicken_wing')).toBe('chicken_wings');
+    });
+
+    it('should add "s" to compound words with unrelated suffix', () => {
+      const pluralizer = createPluralizer(irregularPlurals);
+      expect(pluralizer('chicken_spur')).toBe('chicken_spurs');
+    });
+  });
+
+  describe('edge cases', () => {
+    it('should not match partial word endings (e.g., "bigfoot" should not match "foot")', () => {
+      const pluralizer = createPluralizer(irregularPlurals);
+      // "bigfoot" does NOT have "_foot" suffix, so it should add "s"
+      expect(pluralizer('bigfoot')).toBe('bigfoots');
+    });
+
+    it('should handle empty irregular plurals map', () => {
+      const pluralizer = createPluralizer({});
+      expect(pluralizer('foot')).toBe('foots');
+      expect(pluralizer('arm')).toBe('arms');
+    });
+
+    it('should work with custom irregular plurals', () => {
+      const customPlurals = { mouse: 'mice', goose: 'geese' };
+      const pluralizer = createPluralizer(customPlurals);
+      expect(pluralizer('mouse')).toBe('mice');
+      expect(pluralizer('field_mouse')).toBe('field_mice');
+      expect(pluralizer('wild_goose')).toBe('wild_geese');
     });
   });
 });

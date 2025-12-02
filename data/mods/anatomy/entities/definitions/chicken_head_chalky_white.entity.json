@@ -11,6 +11,37 @@
       "maxHealth": 8,
       "state": "healthy"
     },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "beak_mount",
+          "allowedTypes": ["chicken_beak"],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "left_eye",
+          "orientation": "left",
+          "allowedTypes": ["eye"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_eye",
+          "orientation": "right",
+          "allowedTypes": ["eye"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "comb_mount",
+          "allowedTypes": ["chicken_comb"],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "wattle_mount",
+          "allowedTypes": ["chicken_wattle"],
+          "nameTpl": "{{type}}"
+        }
+      ]
+    },
     "core:name": {
       "text": "chalky-white chicken head"
     },

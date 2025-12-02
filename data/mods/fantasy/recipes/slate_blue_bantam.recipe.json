@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
-  "recipeId": "fantasy:slate_blue_bantam",
+  "recipeId": "fantasy:slate_blue_bantam_recipe",
   "blueprintId": "anatomy:hen",
   "bodyDescriptors": {
     "build": "frail",

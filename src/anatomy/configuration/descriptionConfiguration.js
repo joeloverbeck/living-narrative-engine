@@ -94,6 +94,34 @@ export class DescriptionConfiguration {
 }
 
 /**
+ * Creates a pluralizer function that handles both exact matches and compound words.
+ * For compound words like "chicken_foot", it detects the irregular suffix "foot"
+ * and transforms it to "chicken_feet".
+ *
+ * @param {Object<string, string>} irregularPlurals - Map of singular to plural forms
+ * @returns {Function} Pluralizer function
+ */
+export function createPluralizer(irregularPlurals) {
+  return (word) => {
+    // Check exact match first
+    if (irregularPlurals[word]) {
+      return irregularPlurals[word];
+    }
+
+    // Check if compound word ends with an irregular plural word
+    for (const [singular, plural] of Object.entries(irregularPlurals)) {
+      if (word.endsWith('_' + singular)) {
+        // Replace the ending: "chicken_foot" → "chicken_feet"
+        return word.slice(0, -singular.length) + plural;
+      }
+    }
+
+    // Default: add 's'
+    return `${word}s`;
+  };
+}
+
+/**
  * Export all configuration constants as a single object for convenient access
  */
 export const DESCRIPTION_CONFIG_CONSTANTS = {

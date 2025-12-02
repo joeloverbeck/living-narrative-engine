@@ -39,7 +39,13 @@ const IGNORE_DIRS = new Set(['.git', '.idea', 'node_modules']);
 // Map folder names to manifest keys for special cases
 const FOLDER_TO_KEY_MAP = {
   'anatomy-formatting': 'anatomyFormatting',
+  'damage-types': 'damageTypes',
 };
+
+// Reverse mapping: manifest keys to folder names
+const KEY_TO_FOLDER_MAP = Object.fromEntries(
+  Object.entries(FOLDER_TO_KEY_MAP).map(([folder, key]) => [key, folder])
+);
 
 /**
  * Enhanced options interface for manifest updates with validation
@@ -673,8 +679,8 @@ async function processContentType(modPath, contentType, manifest, opts) {
   };
   
   try {
-    // Special case: anatomyFormatting maps to anatomy-formatting folder
-    const folderName = contentType === 'anatomyFormatting' ? 'anatomy-formatting' : contentType;
+    // Map manifest keys to folder names (handles camelCase → kebab-case mappings)
+    const folderName = KEY_TO_FOLDER_MAP[contentType] || contentType;
     const contentDirPath = path.join(modPath, folderName);
     let files = [];
 

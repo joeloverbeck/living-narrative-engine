@@ -1,0 +1,24 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "fantasy:copper_backed_rooster",
+    "components": {
+        "core:name": {
+            "text": "copper-backed rooster"
+        },
+        "core:portrait": {
+            "imagePath": "portraits/copper_backed_rooster.png",
+            "altText": "Copper-backed rooster"
+        },
+        "anatomy:body": {
+            "recipeId": "fantasy:copper_backed_rooster_recipe"
+        },
+        "core:actor": {},
+        "core:player_type": {
+            "type": "human"
+        },
+        "core:perception_log": {
+            "maxEntries": 50,
+            "logEntries": []
+        }
+    }
+}

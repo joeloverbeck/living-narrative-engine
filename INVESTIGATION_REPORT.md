@@ -1,219 +1,351 @@
-# Analysis: Failing Tests After ModifyPartHealth Handler Addition
+# Investigation: Performance Test Failures for validate-recipe.js
 
-## Executive Summary
-
-The test failures stem from a **mismatch between test expectations and production code** after the `ModifyPartHealthHandler` was added. The test file `operationHandlerRegistrations.test.js` maintains an explicit `handlerExpectations` array that must match the actual handler registrations, but it was **not updated** when `ModifyPartHealthHandler` was added to production.
-
-## Root Cause Analysis
-
-### What Changed in Production
-
-Recent commits added the `ModifyPartHealthHandler` to the system with these additions:
-
-1. **Token Definition** (`src/dependencyInjection/tokens/tokens-core.js`):
-   ```javascript
-   ModifyPartHealthHandler: 'ModifyPartHealthHandler',
-   ```
-
-2. **Handler Registration** (`src/dependencyInjection/registrations/operationHandlerRegistrations.js`):
-   ```javascript
-   import ModifyPartHealthHandler from '../../logic/operationHandlers/modifyPartHealthHandler.js';
-   
-   // In handlerFactories array (lines 186-196):
-   [
-     tokens.ModifyPartHealthHandler,
-     ModifyPartHealthHandler,
-     (c, Handler) =>
-       new Handler({
-         entityManager: c.resolve(tokens.IEntityManager),
-         logger: c.resolve(tokens.ILogger),
-         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-         jsonLogicService: c.resolve(tokens.JsonLogicEvaluationService),
-       }),
-   ],
-   ```
-
-3. **Interpreter Registration** (`src/dependencyInjection/registrations/interpreterRegistrations.js`):
-   ```javascript
-   registry.register(
-     'MODIFY_PART_HEALTH',
-     bind(tokens.ModifyPartHealthHandler)
-   );
-   ```
-
-4. **Pre-validation Whitelist** (`src/utils/preValidationUtils.js`):
-   ```javascript
-   'MODIFY_PART_HEALTH',  // Added to KNOWN_OPERATION_TYPES array
-   ```
-
-### What Was NOT Updated
-
-The test file `tests/unit/dependencyInjection/registrations/operationHandlerRegistrations.test.js` was **not updated**. This test file maintains an explicit `handlerExpectations` array (starting at line 231) that lists every expected handler with its token and dependencies.
-
-## Why Tests Are Failing
-
-### Test File Logic
-
-The test performs two main validations:
-
-1. **Test "registers each operation handler token exactly once"** (line 900):
-   ```javascript
-   const registeredTokens = Array.from(registrations.keys());
-   const expectedTokens = handlerExpectations.map(({ token }) => token);
-   expect(registeredTokens).toEqual(expectedTokens);
-   ```
-   
-   This assertion compares:
-   - **Actual**: All tokens registered in production
-   - **Expected**: All tokens in the test's `handlerExpectations` array
-   
-   **MISMATCH**: Production now has `ModifyPartHealthHandler` token, but `handlerExpectations` does not include it.
-
-2. **Test "creates each handler with resolved dependencies"** (line 912):
-   ```javascript
-   handlerExpectations.forEach((expectation) => {
-     const factory = registrations.get(expectation.token);
-     // ... validates the factory and dependencies
-   });
-   ```
-   
-   This assertion iterates over `handlerExpectations` and validates each handler's dependencies match expectations. **It will skip validating the new `ModifyPartHealthHandler` entirely**, which is fine for the test to pass but doesn't validate the new handler.
-
-### Why The Bootstrap Test Passes
-
-The `tests/unit/main.test.js` passes because:
-- It uses **mocked stages** created during test setup (lines 61-98)
-- The mocked `registerOperationHandlers` function is never actually called
-- The test mocks out the entire DI registration infrastructure
-- There's no validation that handlers match expectations
-
-## Test Assumptions vs Production Reality
-
-### Bootstrap Test (`tests/unit/main.test.js`)
-
-The bootstrap test makes these assumptions:
-
-1. **GameEngine is not initialized before bootstrapApp** 
-   - Test verifies this with "reports fatal error when beginGame is invoked before bootstrapApp" (line 252)
-   - Production check at line 285: `if (!gameEngine) { ... }`
-   - Status: ✅ Assumption matches production
-
-2. **Bootstrap stages execute in sequence**:
-   1. ensureCriticalDOMElementsStage
-   2. setupDIContainerStage
-   3. resolveLoggerStage
-   4. **NEW**: Handler Completeness Validation (diagnostic, line 134-168)
-   5. initializeGlobalConfigStage
-   6. initializeGameEngineStage
-   7. initializeAuxiliaryServicesStage
-   8. setupMenuButtonListenersStage
-   9. setupGlobalEventListenersStage
-   10. startGameStage
-   
-   The test does **not need to mock** the new Handler Completeness Validation stage because:
-   - It's diagnostic only (line 162-167)
-   - Failures don't block startup (line 163: "Validation is diagnostic only - never block startup")
-   - The test mocks don't include this stage, but it doesn't matter
-   - Status: ✅ Test assumption still valid
-
-3. **Stages produce result objects** with `success` and optional `error`/`payload`
-   - Test verifies this structure (line 61-98)
-   - Status: ✅ Assumption matches production
-
-4. **startWorld is loaded from game.json**
-   - Test verifies this behavior (line 102)
-   - Status: ✅ Assumption matches production
-
-## Solution Strategy
-
-To fix the tests, `operationHandlerRegistrations.test.js` must be updated with a new expectation entry for `ModifyPartHealthHandler`.
-
-### Required Changes
-
-1. Ensure `ModifyPartHealthHandler` is in the `handlerModuleDefinitions` array (line 13-170) - it likely needs to be added
-2. Add a new expectation object to the `handlerExpectations` array (starting line 231)
-
-### Implementation Details
-
-**Location**: `tests/unit/dependencyInjection/registrations/operationHandlerRegistrations.test.js`
-
-**Current handlerExpectations structure** (excerpt):
-```javascript
-handlerExpectations = [
-  // ... many existing handlers ...
-  {
-    token: tokens.ModifyComponentHandler,
-    handlerName: 'ModifyComponentHandler',
-    dependencies: [
-      { property: 'entityManager', token: IEntityManager },
-      { property: 'logger', token: ILogger },
-      { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
-    ],
-  },
-  // NEW ENTRY NEEDED HERE (after ModifyComponentHandler, before AddComponentHandler)
-  {
-    token: tokens.DrinkEntirelyHandler,  // Last entry before new handler
-    handlerName: 'DrinkEntirelyHandler',
-    dependencies: [
-      { property: 'logger', token: ILogger },
-      { property: 'entityManager', token: IEntityManager },
-      { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
-    ],
-  },
-];
-```
-
-**New entry to add** (alphabetically after ModifyComponentHandler, before AddComponentHandler):
-```javascript
-{
-  token: tokens.ModifyPartHealthHandler,
-  handlerName: 'ModifyPartHealthHandler',
-  dependencies: [
-    { property: 'entityManager', token: IEntityManager },
-    { property: 'logger', token: ILogger },
-    { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
-    { property: 'jsonLogicService', token: JsonLogicEvaluationServiceToken },
-  ],
-},
-```
-
-The dependencies match what's in the production handler registration (lines 186-196 of `operationHandlerRegistrations.js`).
-
-## Key Insight
-
-The test failure is **not a production bug** - it's a **test maintenance issue**. The production code is correctly implemented. The test simply needs to be updated to reflect the new handler that was added to the system.
-
-The `handlerExpectations` array is essentially a **specification** that documents what handlers should exist and their expected dependencies. When a new handler is added to production, this specification must be updated to match.
-
-## Verification Checklist
-
-Before considering this fixed:
-
-1. ✅ ModifyPartHealthHandler is imported in operationHandlerRegistrations.js (line 38)
-2. ✅ Handler is added to handlerFactories array (lines 186-196)
-3. ✅ Token is defined in tokens-core.js
-4. ✅ Operation type 'MODIFY_PART_HEALTH' is in KNOWN_OPERATION_TYPES
-5. ✅ Interpreter registration maps 'MODIFY_PART_HEALTH' to token
-6. ❌ **Test expectation is NOT updated** ← FIX NEEDED
-
-## Production Code Status
-
-All production code changes are **complete and correct**:
-- Handler implementation ✅
-- Token definition ✅
-- DI registration ✅
-- Interpreter mapping ✅
-- Pre-validation whitelist ✅
-- Schema files ✅
-
-## Test Code Status
-
-The only remaining work is to **update test expectations** to match the new handler.
+**Status**: Complete  
+**Date**: 2025-12-02  
+**Findings**: Root cause identified with 4 solution options
 
 ---
 
-**Files to Modify**: 
-- `tests/unit/dependencyInjection/registrations/operationHandlerRegistrations.test.js` - Add `ModifyPartHealthHandler` to `handlerExpectations` array
+## Executive Summary
 
-**Tests Expected to Pass After Fix**:
-- `npm run test:unit` - All unit tests including operationHandlerRegistrations.test.js
+The performance tests fail with exit code 1 because the `human_male.blueprint.json` uses the **V1 `compose` system**, but the validation code (`SocketSlotCompatibilityValidator.js`) does **NOT implement composition handling**. 
+
+The recipe references slots like `head`, `left_arm`, etc., but these come from a composed blueprint part (`anatomy:humanoid_core`), NOT from the blueprint's own explicit `slots` property. The validator cannot find these slots because it doesn't process the `compose` instruction.
+
+---
+
+## Root Cause Analysis
+
+### The Validation Error
+```
+[ERROR] Socket 'left_eye' not found on parent slot 'head'
+[ERROR] Parent slot 'head' not found in structure template. Verify structure template 'undefined' generates slot 'head'
+```
+
+The "structure template 'undefined'" is the smoking gun—the blueprint has no structure template because it's a V1 blueprint using `compose` instead.
+
+### The Data Flow
+
+1. **Recipe** (`human_male.recipe.json`) defines slots: `head`, `left_arm`, `right_arm`, `left_leg`, `right_leg`
+2. **Blueprint** (`human_male.blueprint.json`) is V1 with `compose` instruction
+3. **Composed part** (`humanoid_core.part.json`) defines the missing slots
+4. **Validator** attempts to validate socket compatibility
+5. **Problem**: Validator never loads the composed part
+
+### Code Chain
+
+| Component | File | Issue |
+|-----------|------|-------|
+| Blueprint Loader | `blueprintLoader.js` | Processes V2+structureTemplate only; ignores `compose` |
+| Socket Extractor | `socketExtractor.js` | Tries `extractSlotChildSockets()` but requires explicit `requirements.partType` in blueprint slots |
+| Validator | `SocketSlotCompatibilityValidator.js` | Can't find slots from composed parts |
+
+### Why V1 Compose Isn't Processed
+
+The blueprint loader has this logic (line 48-54):
+```javascript
+// Route v2 blueprints through template processor
+if (blueprint.schemaVersion === '2.0' && blueprint.structureTemplate) {
+  return processV2Blueprint(...);
+}
+// V1 blueprints pass through unchanged
+return blueprint;
+```
+
+V1 blueprints with `compose` are passed through unchanged—no composition processing happens.
+
+---
+
+## Structural Evidence
+
+### human_male.blueprint.json (V1 with compose)
+```json
+{
+  "id": "anatomy:human_male",
+  "root": "anatomy:human_male_torso",
+  "compose": [
+    {
+      "part": "anatomy:humanoid_core",
+      "include": ["slots", "clothingSlotMappings"]
+    }
+  ],
+  "slots": {
+    "penis": { "socket": "penis" },
+    "left_testicle": { "socket": "left_testicle" },
+    "right_testicle": { "socket": "right_testicle" }
+  }
+}
+```
+
+**What it declares**: Only 3 explicit slots
+**What it needs**: 5 more slots from humanoid_core
+
+### humanoid_core.part.json (Blueprint part)
+```json
+{
+  "id": "anatomy:humanoid_core",
+  "slots": {
+    "head": { "$use": "standard_head" },
+    "left_arm": { "$use": "standard_arm", "socket": "left_shoulder" },
+    "right_arm": { "$use": "standard_arm", "socket": "right_shoulder" },
+    "left_leg": { "$use": "standard_leg", "socket": "left_hip" },
+    "right_leg": { "$use": "standard_leg", "socket": "right_hip" },
+    ...
+  }
+}
+```
+
+**What it provides**: The 5 missing slots
+
+### red_dragon.blueprint.json (V2 with structureTemplate)
+```json
+{
+  "id": "anatomy:red_dragon",
+  "schemaVersion": "2.0",
+  "root": "anatomy:dragon_torso",
+  "structureTemplate": "anatomy:structure_winged_quadruped",
+  "clothingSlotMappings": { ... }
+}
+```
+
+**Contrast**: Uses `structureTemplate` instead of `compose`; validated successfully
+
+### Socket Hierarchy Verification
+
+Root entity has sockets:
+- `left_shoulder`, `right_shoulder` (for arms)
+- `left_hip`, `right_hip` (for legs)  
+- `neck` (for head)
+
+Child entities have sockets:
+- `humanoid_arm`: has `wrist` socket
+- `humanoid_head_bearded`: has `left_eye`, `right_eye`, `left_ear`, `right_ear`, etc.
+
+The architecture is **hierarchically sound**—the problem is purely in the validator not processing `compose`.
+
+---
+
+## Test Expectations vs Reality
+
+### What Tests Expect
+```javascript
+const result = executeCLI([recipePath]);
+expect(result.exitCode).toBe(0);  // Success
+```
+
+### What Actually Happens
+1. CLI calls validator on `human_male.recipe.json`
+2. Validator loads blueprint `human_male`
+3. Validator tries to resolve slots `head`, `left_arm`, etc.
+4. Blueprint has no `structureTemplate` (it's V1)
+5. Socket extraction falls back to looking for explicit slots
+6. Explicit slots don't include these (they're in composed part)
+7. Validation fails, exit code = 1
+
+---
+
+## Solution Options
+
+### Option A: Implement `compose` Support in Validator
+**Approach**: Modify `socketExtractor.js` to process blueprint `compose` instruction
+
+**Pros**:
+- Validates V1 blueprints correctly
+- Honors original blueprint architecture
+
+**Cons**:
+- Complex logic needed for composition merging
+- Risk of subtle bugs
+- Maintains legacy V1 system
+
+**Effort**: High (requires new socket extraction logic)
+
+---
+
+### Option B: Convert to V2 with Structure Template (RECOMMENDED)
+**Approach**: Update `human_male.blueprint.json` to V2 schema with `structureTemplate`
+
+**Pros**:
+- Aligns with current validation system
+- Consistent with other humanoid blueprints in future
+- Structure templates are already working
+- Simpler than implementing compose support
+
+**Cons**:
+- Requires defining/updating structure template
+- Breaking change from V1 to V2 format
+
+**Effort**: Medium (mostly data/schema work)
+
+**Required Changes**:
+1. Create or reuse structure template for humanoid biped
+2. Update `human_male.blueprint.json` to reference it
+3. Remove `compose` instruction
+4. Tests should pass immediately
+
+---
+
+### Option C: Update Test Expectations
+**Approach**: Change test to expect `exitCode === 1` for `human_male`
+
+**Pros**:
+- Immediate test passage
+- No data changes needed
+
+**Cons**:
+- Masks architectural problem
+- Recipe remains unvalidated
+- Poor documentation of issue
+- Tests aren't actually validating anything
+
+**Effort**: Low (1-line test change)
+
+---
+
+### Option D: Mark Recipe as Invalid
+**Approach**: Move recipe to a separate "unsupported" directory; skip from validation tests
+
+**Pros**:
+- Honest about system limitations
+- Documents deprecated format
+- Tests stay accurate
+
+**Cons**:
+- Feature loss (can't use this recipe)
+- Recipe isn't validated before use
+
+**Effort**: Low (move files, update tests)
+
+---
+
+## Schema Version Analysis
+
+### V1 Blueprints (Legacy)
+- Optional: `compose`, `slots`
+- Not allowed: `schemaVersion`, `structureTemplate`, `additionalSlots`
+- Support: Full blueprint composition via `compose` instruction
+- Validator Support: ❌ Not implemented
+
+### V2 Blueprints (Current)  
+- Required: `schemaVersion: "2.0"`, `structureTemplate`
+- Allowed: `additionalSlots`
+- Not allowed: `compose`, `slots`, `parts`
+- Support: Structure template with automatic slot generation
+- Validator Support: ✅ Fully implemented
+
+---
+
+## Validator Code Logic
+
+The validator in `SocketSlotCompatibilityValidator.js` calls `extractHierarchicalSockets()` which:
+
+1. **Extracts root sockets** (from root entity) ✓
+2. **Extracts structure template sockets** (if V2) ✓
+3. **Extracts slot child sockets** (for V1):
+   ```javascript
+   // For each slot without a parent, look up its partType
+   // and extract sockets from that part entity
+   const partType = parentSlotConfig.requirements?.partType;
+   ```
+   
+This only works if slots have explicit `requirements.partType` properties. The `compose` instruction doesn't add these—it's supposed to merge the slots directly.
+
+---
+
+## Test Failure Root Cause Chain
+
+```
+Tests expect: exit code 0 for human_male
+        ↓
+CLI calls validation
+        ↓
+SocketSlotCompatibilityValidator.validateSocketSlotCompatibility()
+        ↓
+extractHierarchicalSockets(blueprint, rootEntity, structureTemplate, dataRegistry)
+        ↓
+blueprint.structureTemplate === undefined (V1 blueprint)
+        ↓
+falls through to extractSlotChildSockets()
+        ↓
+Looks for blueprint slots with requirements.partType
+        ↓
+Blueprint only has explicit: penis, left_testicle, right_testicle
+        ↓
+Missing: head, left_arm, right_arm, left_leg, right_foot
+        ↓
+Composed parts never loaded
+        ↓
+validation errors for missing slots
+        ↓
+exit code 1 ❌
+```
+
+---
+
+## Recommendation
+
+**Implement Option B: Convert to V2 with Structure Template**
+
+This approach:
+1. ✓ Makes tests pass
+2. ✓ Aligns with current validation system
+3. ✓ Documented migration path
+4. ✓ No validator code changes needed
+5. ✓ Future-proofs the recipe
+6. ✓ Consistent with project architecture
+
+The V1 `compose` system appears effectively deprecated. No other recent code implements or tests compose functionality. The project has moved to structure templates for all modern blueprints.
+
+---
+
+## Files Involved
+
+### Blueprints
+- `data/mods/anatomy/blueprints/human_male.blueprint.json` (V1 with compose)
+- `data/mods/anatomy/blueprints/human_female.blueprint.json` (V1 with compose)  
+- `data/mods/anatomy/blueprints/human_futa.blueprint.json` (V1 with compose)
+- `data/mods/anatomy/blueprints/red_dragon.blueprint.json` (V2 with structureTemplate) ✓
+
+### Parts
+- `data/mods/anatomy/parts/humanoid_core.part.json` (composed content)
+
+### Recipes
+- `data/mods/anatomy/recipes/human_male.recipe.json` (references composed blueprint)
+
+### Validator
+- `src/anatomy/validation/validators/SocketSlotCompatibilityValidator.js`
+- `src/anatomy/validation/socketExtractor.js`
+- `src/anatomy/bodyBlueprintFactory/blueprintLoader.js`
+
+### Tests
+- `tests/performance/scripts/validateRecipe.performance.test.js`
+
+---
+
+## Files to Modify (Option B Recommendation)
+
+1. `data/mods/anatomy/blueprints/human_male.blueprint.json`
+   - Remove `compose` instruction
+   - Add `schemaVersion: "2.0"`
+   - Add `structureTemplate` reference
+   - Remove explicit `slots` property (except additionalSlots for male-specific parts)
+
+2. `data/mods/anatomy/blueprints/human_female.blueprint.json`
+   - Same changes as human_male
+
+3. `data/mods/anatomy/blueprints/human_futa.blueprint.json`
+   - Same changes as human_male
+
+4. Create or update structure template
+   - May reuse existing `humanoid` structure or create new one
+
+5. Update tests if needed
+   - Should pass once blueprints are V2
+
+---
+
+## Conclusion
+
+The validation failure is not due to incorrect recipes or validation bugs. It's due to an architectural mismatch: V1 blueprints use `compose` for composition, but the current validator only supports V2 with `structureTemplate`.
+
+The recommended path forward is to migrate the remaining V1 blueprints to V2 schema, aligning with the project's current direction and making the validator fully functional.

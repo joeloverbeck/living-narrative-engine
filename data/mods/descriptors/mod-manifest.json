@@ -32,6 +32,7 @@
       "luminosity.component.json",
       "nail_condition.component.json",
       "pattern.component.json",
+      "plumage_sheen.component.json",
       "professional_markers.component.json",
       "projection.component.json",
       "pupil_shape.component.json",

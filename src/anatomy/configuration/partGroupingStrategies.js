@@ -2,6 +2,8 @@
  * @file Strategies for grouping and formatting body part descriptions
  */
 
+import { createPluralizer } from './descriptionConfiguration.js';
+
 /**
  * Base interface for part grouping strategies
  */
@@ -69,10 +71,7 @@ export class PairedPartsStrategy extends PartGroupingStrategy {
     if (allSame) {
       // Same description for both parts
       const irregularPlurals = config.getIrregularPlurals();
-      const pluralizer = (type) => {
-        if (irregularPlurals[type]) return irregularPlurals[type];
-        return `${type}s`;
-      };
+      const pluralizer = createPluralizer(irregularPlurals);
       const pairedParts = config.getPairedParts();
       const label = textFormatter.getPartLabel(
         partType,
@@ -127,10 +126,7 @@ export class MultiplePartsStrategy extends PartGroupingStrategy {
 
     if (allSame) {
       const irregularPlurals = config.getIrregularPlurals();
-      const pluralizer = (type) => {
-        if (irregularPlurals[type]) return irregularPlurals[type];
-        return `${type}s`;
-      };
+      const pluralizer = createPluralizer(irregularPlurals);
       const pairedParts = config.getPairedParts();
       const label = textFormatter.getPartLabel(
         partType,

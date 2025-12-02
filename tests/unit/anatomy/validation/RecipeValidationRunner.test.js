@@ -42,6 +42,7 @@ describe('RecipeValidationRunner', () => {
     mockDataRegistry = {
       get: jest.fn(() => undefined),
       getAll: jest.fn(() => []),
+      getEntityDefinition: jest.fn(() => undefined),
     };
 
     mockAnatomyBlueprintRepository = {
@@ -72,6 +73,10 @@ describe('RecipeValidationRunner', () => {
       }),
       socketSlotCompatibility: createValidatorStub('socket-slot-compatibility', {
         priority: 20,
+      }),
+      socketNameTpl: createValidatorStub('socket-nametpl-uniqueness', {
+        priority: 23,
+        failFast: true,
       }),
       partAvailability: createValidatorStub('part-availability', {
         priority: 25,

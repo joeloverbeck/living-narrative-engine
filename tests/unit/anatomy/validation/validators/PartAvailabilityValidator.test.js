@@ -132,7 +132,8 @@ describe('PartAvailabilityValidator', () => {
           type: 'PART_UNAVAILABLE',
           severity: 'error',
           location: { type: 'slot', name: 'arm' },
-          message: "No entity definitions found for slot 'arm'",
+          message:
+            "No entity definitions found for slot 'arm'. Check that 'properties' matches exact values in entity components. It is a filter, not an override.",
           details: {
             partType: 'core:arm',
             requiredTags: ['anatomy:limb'],
@@ -170,7 +171,8 @@ describe('PartAvailabilityValidator', () => {
         }),
         expect.objectContaining({
           location: { type: 'pattern', index: 0 },
-          message: 'No entity definitions found for pattern 0',
+          message:
+            "No entity definitions found for pattern 0. Check that 'properties' matches exact values in entity components. It is a filter, not an override.",
           details: expect.objectContaining({
             requiredTags: ['flying'],
             requiredProperties: ['span'],
@@ -234,6 +236,44 @@ describe('PartAvailabilityValidator', () => {
         check: 'part_availability',
         error: 'matcher failed',
       });
+    });
+
+    it('includes properties filter hint when slot uses properties', async () => {
+      const recipe = createRecipe({
+        slots: {
+          comb: {
+            partType: 'anatomy:comb',
+            properties: { 'descriptors:size': 'large' },
+          },
+        },
+      });
+
+      const { validator } = createValidator({ matcherImpl: () => [] });
+
+      const result = await validator.validate(recipe);
+
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0].message).toContain(
+        "Check that 'properties' matches exact values in entity components. It is a filter, not an override."
+      );
+    });
+
+    it('excludes properties filter hint when slot has no properties', async () => {
+      const recipe = createRecipe({
+        slots: {
+          head: { partType: 'core:head' },
+        },
+      });
+
+      const { validator } = createValidator({ matcherImpl: () => [] });
+
+      const result = await validator.validate(recipe);
+
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0].message).toBe(
+        "No entity definitions found for slot 'head'"
+      );
+      expect(result.errors[0].message).not.toContain('properties');
     });
 
     it('records validation error when the registry throws inside performValidation', async () => {

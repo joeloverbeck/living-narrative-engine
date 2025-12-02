@@ -93,16 +93,16 @@ describe('RadialLayoutStrategy integration coverage', () => {
     const firstChild = nodes.get('child-0');
     expect(firstChild).toBeDefined();
 
-    // With high-degree node handling (24+ children >= 10 threshold):
+    // With high-degree node handling (24+ children >= 7 threshold):
     // The radius is increased to prevent overlap of many children
-    // baseRadius (120) * depth (1) * crowdingFactor * highDegreeMultiplier (1.8)
+    // baseRadius (120) * depth (1) * crowdingFactor * highDegreeMultiplier (2.2)
     // For high-degree nodes, expect significantly larger radius than base calculation
-    const baseExpectedRadius = 120 * ((childCount + 1) / 8); // Old calculation: ~375
+    const baseExpectedRadius = 120 * ((childCount + 1) / 6); // crowdingFactor=6: ~500
     expect(firstChild.radius).toBeGreaterThan(baseExpectedRadius);
 
-    // The actual radius should be around 675 with high-degree handling
-    // (exact value depends on internal calculation)
-    expect(firstChild.radius).toBeCloseTo(675, 0);
+    // The actual radius should be around 1100 with high-degree handling
+    // (baseRadius 120 * crowdingFactor ~4.17 * highDegreeMultiplier 2.2)
+    expect(firstChild.radius).toBeCloseTo(1100, 0);
 
     // Note: The duplicate edge causes child-0 to appear twice in the children array
     // So the effective child count is 25 (24 unique children + 1 duplicate)
