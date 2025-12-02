@@ -19,6 +19,7 @@ import { PatternMatchingValidator } from './validators/PatternMatchingValidator.
 import { DescriptorCoverageValidator } from './validators/DescriptorCoverageValidator.js';
 import { LoadFailureValidator } from './validators/LoadFailureValidator.js';
 import { RecipeUsageValidator } from './validators/RecipeUsageValidator.js';
+import { SlotKeyUniquenessValidator } from './validators/SlotKeyUniquenessValidator.js';
 
 /**
  * @description Primary entry point for recipe validation. Builds the validator
@@ -229,6 +230,13 @@ export class RecipeValidationRunner {
         new BlueprintExistenceValidator({
           logger: this.#logger,
           anatomyBlueprintRepository,
+        }),
+      validators.slotKeyUniqueness ??
+        new SlotKeyUniquenessValidator({
+          logger: this.#logger,
+          anatomyBlueprintRepository,
+          slotGenerator,
+          dataRegistry,
         }),
       validators.socketSlotCompatibility ??
         new SocketSlotCompatibilityValidator({

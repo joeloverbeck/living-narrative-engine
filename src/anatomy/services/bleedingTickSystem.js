@@ -20,8 +20,9 @@ import {
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 
-// Component ID for part health
+// Component IDs
 const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
+const PART_COMPONENT_ID = 'anatomy:part';
 
 /**
  * System responsible for processing bleeding effects each turn.
@@ -123,6 +124,10 @@ class BleedingTickSystem extends BaseService {
 
     const { severity, remainingTurns, tickDamage } = bleedingData;
 
+    // Get owner entity ID from part component for event payload
+    const partComponent = this.#entityManager.getComponentData(partId, PART_COMPONENT_ID);
+    const ownerEntityId = partComponent?.ownerEntityId ?? null;
+
     // Check if part is destroyed (no health component or currentHealth <= 0)
     const partHealth = this.#entityManager.hasComponent(partId, PART_HEALTH_COMPONENT_ID)
       ? this.#entityManager.getComponentData(partId, PART_HEALTH_COMPONENT_ID)
@@ -132,7 +137,7 @@ class BleedingTickSystem extends BaseService {
 
     // If part is destroyed, remove bleeding and emit stopped event
     if (partDestroyed) {
-      await this.#stopBleeding(partId, severity, 'part_destroyed');
+      await this.#stopBleeding(partId, severity, ownerEntityId, 'part_destroyed');
       return;
     }
 
@@ -154,7 +159,7 @@ class BleedingTickSystem extends BaseService {
 
     if (newRemainingTurns <= 0) {
       // Duration expired - stop bleeding
-      await this.#stopBleeding(partId, severity, 'duration_expired');
+      await this.#stopBleeding(partId, severity, ownerEntityId, 'duration_expired');
     } else {
       // Update component with decremented duration
       await this.#entityManager.addComponent(partId, BLEEDING_COMPONENT_ID, {
@@ -170,13 +175,15 @@ class BleedingTickSystem extends BaseService {
    *
    * @param {string} partId - The part entity ID
    * @param {string} severity - The bleeding severity
+   * @param {string|null} entityId - The owner entity ID
    * @param {string} reason - Reason for stopping ('duration_expired' | 'part_destroyed')
    * @private
    */
-  async #stopBleeding(partId, severity, reason) {
+  async #stopBleeding(partId, severity, entityId, reason) {
     await this.#entityManager.removeComponent(partId, BLEEDING_COMPONENT_ID);
 
     this.#dispatcher.dispatch(BLEEDING_STOPPED_EVENT, {
+      entityId,
       partId,
       severity,
       reason,

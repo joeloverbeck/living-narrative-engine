@@ -154,6 +154,7 @@ function processV2Blueprint(blueprint, { dataRegistry, logger, socketGenerator, 
       ...additionalSlots,
     },
     _generatedSockets: generatedSockets,
+    _generatedSlots: generatedSlots,
   };
 }
 
