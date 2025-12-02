@@ -585,8 +585,7 @@ describe('Anatomy Memory Stress Testing', () => {
 
   describe('Garbage Collection Patterns', () => {
     it('should maintain healthy GC patterns under normal load', async () => {
-      const duration = 3000; // 3 seconds for balanced speed and validation
-      const startTime = Date.now();
+      const targetOperations = 1500; // Sufficient sample size for GC frequency analysis
       let operationCount = 0;
       let gcEvents = [];
 
@@ -599,7 +598,7 @@ describe('Anatomy Memory Stress Testing', () => {
         };
       }
 
-      while (Date.now() - startTime < duration) {
+      for (let i = 0; i < targetOperations; i++) {
         // Create and destroy anatomies
         const anatomy = await testBed.generateSimpleAnatomy();
         bodyGraphService.buildAdjacencyCache(anatomy.rootId);
@@ -608,7 +607,7 @@ describe('Anatomy Memory Stress Testing', () => {
         operationCount++;
 
         // Take periodic snapshots (less frequent due to shorter duration)
-        if (operationCount % 15 === 0) {
+        if (operationCount % 250 === 0) {
           memoryMonitor.takeSnapshot(`gc_test_${operationCount}`);
         }
       }

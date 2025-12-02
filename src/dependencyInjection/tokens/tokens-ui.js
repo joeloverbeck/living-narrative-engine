@@ -52,4 +52,5 @@ export const uiTokens = freeze({
   ThematicDirectionController: 'ThematicDirectionController',
   TurnOrderTickerRenderer: 'TurnOrderTickerRenderer',
   InjuryStatusPanel: 'InjuryStatusPanel',
+  DamageEventMessageRenderer: 'DamageEventMessageRenderer',
 });

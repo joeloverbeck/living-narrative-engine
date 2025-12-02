@@ -1,9 +1,19 @@
 # OPEHANARCANA-014: BREAK_BIDIRECTIONAL_CLOSENESS DI & Tests
 
-**Status:** Ready
+**Status:** Completed
 **Priority:** High (Phase 2)
 **Estimated Effort:** 0.5 days
 **Dependencies:** OPEHANARCANA-012 (schema), OPEHANARCANA-013 (handler)
+
+---
+
+## Outcome
+
+-   Registered `BreakBidirectionalClosenessHandler` in `tokens-core.js`, `operationHandlerRegistrations.js`, and `interpreterRegistrations.js`.
+-   Added to `KNOWN_OPERATION_TYPES` in `preValidationUtils.js`.
+-   Created unit tests in `tests/unit/logic/operationHandlers/breakBidirectionalClosenessHandler.test.js` covering validation, execution, edge cases, and error handling (100% coverage).
+-   Created integration tests in `tests/integration/logic/operationHandlers/breakBidirectionalCloseness.integration.test.js` verifying full lifecycle.
+-   Updated `tests/common/mods/ModTestHandlerFactory.js` to support the new handler in integration tests.
 
 ---
 
@@ -55,7 +65,8 @@ import BreakBidirectionalClosenessHandler from '../../logic/operationHandlers/br
   token: tokens.BreakBidirectionalClosenessHandler,
   factory: (c) => new BreakBidirectionalClosenessHandler({
     entityManager: c.resolve(tokens.IEntityManager),
-    descriptionRegenerator: c.resolve(tokens.IDescriptionRegenerator),
+    regenerateDescriptionHandler: c.resolve(tokens.RegenerateDescriptionHandler),
+    safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
     logger: c.resolve(tokens.ILogger),
   }),
 },

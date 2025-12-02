@@ -175,6 +175,7 @@ describe('registerUI - main orchestration function', () => {
         `UI Registrations: Eagerly instantiated ${tokens.ChatAlertRenderer} to attach listeners.`,
         `UI Registrations: Eagerly instantiated ${tokens.ActionResultRenderer}.`,
         `UI Registrations: Eagerly instantiated ${tokens.InjuryStatusPanel}.`,
+        `UI Registrations: Eagerly instantiated ${tokens.DamageEventMessageRenderer}.`,
         'UI Registrations: Complete.',
       ]);
     });

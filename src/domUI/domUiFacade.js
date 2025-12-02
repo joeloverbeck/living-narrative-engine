@@ -15,6 +15,7 @@
 /** @typedef {import('./entityLifecycleMonitor.js').EntityLifecycleMonitor} EntityLifecycleMonitor */
 /** @typedef {import('./turnOrderTickerRenderer.js').TurnOrderTickerRenderer} TurnOrderTickerRenderer */
 /** @typedef {import('./injuryStatusPanel.js').InjuryStatusPanel} InjuryStatusPanel */
+/** @typedef {import('./damageEventMessageRenderer.js').DamageEventMessageRenderer} DamageEventMessageRenderer */
 
 /**
  * Provides a single point of access to the various UI rendering/controller components.
@@ -35,6 +36,7 @@ export class DomUiFacade {
   #entityLifecycleMonitor;
   #turnOrderTickerRenderer;
   #injuryStatusPanel;
+  #damageEventMessageRenderer;
 
   /**
    * Creates an instance of DomUiFacade.
@@ -52,6 +54,7 @@ export class DomUiFacade {
    * @param {TurnOrderTickerRenderer} deps.turnOrderTickerRenderer - Renderer for turn order ticker.
    * @param {InjuryStatusPanel} deps.injuryStatusPanel - The Injury Status Panel widget.
    * @param {EntityLifecycleMonitor} [deps.entityLifecycleMonitor] - The Entity Lifecycle Monitor component (optional, disabled for performance).
+   * @param {DamageEventMessageRenderer} [deps.damageEventMessageRenderer] - The Damage Event Message Renderer (optional, event-driven).
    * @throws {Error} If any required dependency is missing or invalid.
    */
   constructor({
@@ -67,6 +70,7 @@ export class DomUiFacade {
     turnOrderTickerRenderer,
     injuryStatusPanel,
     entityLifecycleMonitor = null, // OPTIONAL - disabled for performance
+    damageEventMessageRenderer = null, // OPTIONAL - event-driven, no external access needed
   }) {
     // Basic validation to ensure all renderers are provided
     if (
@@ -135,6 +139,14 @@ export class DomUiFacade {
       throw new Error(
         'DomUiFacade: Invalid entityLifecycleMonitor dependency.'
       );
+    // DamageEventMessageRenderer is optional (event-driven, no external access needed)
+    if (
+      damageEventMessageRenderer &&
+      typeof damageEventMessageRenderer.dispose !== 'function'
+    )
+      throw new Error(
+        'DomUiFacade: Invalid damageEventMessageRenderer dependency.'
+      );
 
     this.#actionButtonsRenderer = actionButtonsRenderer;
     this.#locationRenderer = locationRenderer;
@@ -148,6 +160,7 @@ export class DomUiFacade {
     this.#turnOrderTickerRenderer = turnOrderTickerRenderer;
     this.#injuryStatusPanel = injuryStatusPanel;
     this.#entityLifecycleMonitor = entityLifecycleMonitor;
+    this.#damageEventMessageRenderer = damageEventMessageRenderer;
   }
 
   /**
@@ -259,6 +272,15 @@ export class DomUiFacade {
   }
 
   /**
+   * Provides the DamageEventMessageRenderer instance.
+   *
+   * @returns {DamageEventMessageRenderer|null} Renderer for damage messages, or null if not provided.
+   */
+  get damageEventMessages() {
+    return this.#damageEventMessageRenderer;
+  }
+
+  /**
    * Optional: Dispose method to potentially call dispose on all managed renderers.
    * Useful if the facade's lifecycle manages the renderers' lifecycle.
    */
@@ -275,5 +297,6 @@ export class DomUiFacade {
     this.#turnOrderTickerRenderer?.dispose?.();
     this.#injuryStatusPanel?.dispose?.();
     this.#entityLifecycleMonitor?.dispose?.();
+    this.#damageEventMessageRenderer?.dispose?.();
   }
 }
