@@ -12,6 +12,10 @@
     {
       "id": "skills",
       "version": ">=1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": ">=1.0.0"
     }
   ],
   "content": {
@@ -19,13 +23,17 @@
       "corrupted.component.json"
     ],
     "conditions": [
-      "entity-has-corrupted-component.condition.json"
+      "entity-has-corrupted-component.condition.json",
+      "event-is-action-draw-salt-boundary.condition.json"
     ],
     "scopes": [
       "corrupted_actors.scope"
     ],
     "actions": [
       "draw_salt_boundary.action.json"
+    ],
+    "rules": [
+      "handle_draw_salt_boundary.rule.json"
     ]
   }
 }
