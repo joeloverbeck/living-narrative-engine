@@ -112,12 +112,10 @@ class ViewportManager {
    * @param {number} deltaY - Y offset in screen coordinates
    */
   pan(deltaX, deltaY) {
-    // Convert screen delta to world delta based on zoom
-    const worldDeltaX = deltaX / this.#transform.scale;
-    const worldDeltaY = deltaY / this.#transform.scale;
-
-    this.#viewport.x -= worldDeltaX;
-    this.#viewport.y -= worldDeltaY;
+    // Use raw screen deltas for consistent pan speed at all zoom levels
+    // No division by scale - panning feels the same regardless of zoom
+    this.#viewport.x -= deltaX;
+    this.#viewport.y -= deltaY;
 
     // Update transform for smooth panning
     this.#transform.x += deltaX;

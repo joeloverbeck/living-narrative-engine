@@ -51,6 +51,7 @@ describe('systemLogicTestEnv schema validation (SCHVALTESINT-003)', () => {
       'base-operation.schema.json',
       'nested-operation.schema.json',
       'component-ref.schema.json',
+      'damage-capability-entry.schema.json',
     ];
 
     for (const filename of schemaFiles) {

@@ -41,6 +41,22 @@ function loadOperationSchemas(ajv) {
     'schema://living-narrative-engine/nested-operation.schema.json'
   );
 
+  // Load damage-capability-entry schema that applyDamage operation depends on
+  const damageCapabilityEntryPath = path.join(
+    __dirname,
+    '..',
+    '..',
+    '..',
+    'data',
+    'schemas',
+    'damage-capability-entry.schema.json'
+  );
+  const damageCapabilityEntrySchema = require(damageCapabilityEntryPath);
+  ajv.addSchema(
+    damageCapabilityEntrySchema,
+    'schema://living-narrative-engine/damage-capability-entry.schema.json'
+  );
+
   // Then load all individual operation schemas
   const dir = path.join(
     __dirname,

@@ -33,22 +33,29 @@
             { "type": "object" }
           ]
         },
+        "damage_entry": {
+          "description": "Full damage entry object from weapon's damage_capabilities component. Preferred over legacy amount/damage_type parameters.",
+          "oneOf": [
+            { "$ref": "schema://living-narrative-engine/damage-capability-entry.schema.json" },
+            { "type": "object" }
+          ]
+        },
         "amount": {
-          "description": "Amount of damage to apply. Must be positive. Can be a number or JSON Logic expression.",
+          "description": "DEPRECATED: Use damage_entry instead. Amount of damage to apply. Required only when not using damage_entry.",
           "oneOf": [
             { "type": "number" },
             { "type": "object" }
           ]
         },
         "damage_type": {
-          "description": "Type of damage (e.g., 'blunt', 'piercing', 'slashing'). Can be a string or JSON Logic.",
+          "description": "DEPRECATED: Use damage_entry instead. Type of damage (e.g., 'blunt', 'piercing', 'slashing'). Required only when not using damage_entry.",
           "oneOf": [
             { "type": "string" },
             { "type": "object" }
           ]
         }
       },
-      "required": ["entity_ref", "amount", "damage_type"],
+      "required": ["entity_ref"],
       "additionalProperties": false
     }
   }

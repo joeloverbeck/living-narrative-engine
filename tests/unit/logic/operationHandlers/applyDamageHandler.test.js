@@ -1062,5 +1062,351 @@ describe('ApplyDamageHandler', () => {
         );
       });
     });
+
+    describe('damage_entry parameter (WEADAMCAPREF-005)', () => {
+      test('should accept damage_entry parameter and apply damage correctly', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          damage_entry: {
+            name: 'slashing',
+            amount: 25
+          }
+        };
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => comp === PART_HEALTH_COMPONENT_ID);
+        em.getComponentData.mockReturnValue(healthComponent);
+
+        await handler.execute(params, executionContext);
+
+        expect(dispatcher.dispatch).toHaveBeenCalledWith(DAMAGE_APPLIED_EVENT, expect.objectContaining({
+          entityId: 'entity1',
+          partId: 'part1',
+          amount: 25,
+          damageType: 'slashing'
+        }));
+
+        expect(em.addComponent).toHaveBeenCalledWith('part1', PART_HEALTH_COMPONENT_ID, expect.objectContaining({
+          currentHealth: 75
+        }));
+      });
+
+      test('should call DamageTypeEffectsService with damageEntry object', async () => {
+        const damageEntry = {
+          name: 'slashing',
+          amount: 30,
+          bleed: { enabled: true, severity: 'moderate' },
+          dismember: { enabled: true, thresholdFraction: 0.8 }
+        };
+
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          damage_entry: damageEntry
+        };
+
+        const partComponent = {
+          subType: 'arm',
+          ownerEntityId: 'victim-entity'
+        };
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => {
+          if (comp === PART_HEALTH_COMPONENT_ID) return true;
+          if (comp === PART_COMPONENT_ID && id === 'part1') return true;
+          return false;
+        });
+        em.getComponentData.mockImplementation((id, comp) => {
+          if (comp === PART_HEALTH_COMPONENT_ID) return healthComponent;
+          if (comp === PART_COMPONENT_ID && id === 'part1') return partComponent;
+          return null;
+        });
+
+        await handler.execute(params, executionContext);
+
+        expect(damageTypeEffectsService.applyEffectsForDamage).toHaveBeenCalledWith({
+          entityId: 'victim-entity',
+          partId: 'part1',
+          damageEntry: damageEntry,
+          maxHealth: 100,
+          currentHealth: 70
+        });
+      });
+
+      test('should work with legacy damage_type + amount parameters (backward compatibility)', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          amount: 20,
+          damage_type: 'blunt'
+        };
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => comp === PART_HEALTH_COMPONENT_ID);
+        em.getComponentData.mockReturnValue(healthComponent);
+
+        await handler.execute(params, executionContext);
+
+        // Should still work
+        expect(em.addComponent).toHaveBeenCalledWith('part1', PART_HEALTH_COMPONENT_ID, expect.objectContaining({
+          currentHealth: 80
+        }));
+
+        // Should emit deprecation warning
+        expect(log.warn).toHaveBeenCalledWith(expect.stringContaining('DEPRECATED'));
+      });
+
+      test('should emit deprecation warning for legacy mode', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          amount: 15,
+          damage_type: 'piercing'
+        };
+
+        const healthComponent = {
+          currentHealth: 50,
+          maxHealth: 50,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => comp === PART_HEALTH_COMPONENT_ID);
+        em.getComponentData.mockReturnValue(healthComponent);
+
+        await handler.execute(params, executionContext);
+
+        expect(log.warn).toHaveBeenCalledWith(
+          'DEPRECATED: Using damage_type + amount parameters. Migrate to damage_entry object.'
+        );
+      });
+
+      test('should throw error when missing both damage_entry and legacy params', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1'
+          // No damage_entry, amount, or damage_type
+        };
+
+        await handler.execute(params, executionContext);
+
+        expect(dispatcher.dispatch).toHaveBeenCalledWith('core:system_error_occurred', expect.objectContaining({
+          message: expect.stringContaining('Either damage_entry or (damage_type + amount) required')
+        }));
+      });
+
+      test('should resolve JSON Logic expressions in damage_entry parameter', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          damage_entry: { var: 'context.dmgEntry' }
+        };
+
+        const resolvedDamageEntry = {
+          name: 'fire',
+          amount: 15,
+          burn: { enabled: true, dps: 2 }
+        };
+
+        jsonLogicService.evaluate.mockReturnValue(resolvedDamageEntry);
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => comp === PART_HEALTH_COMPONENT_ID);
+        em.getComponentData.mockReturnValue(healthComponent);
+
+        await handler.execute(params, executionContext);
+
+        expect(jsonLogicService.evaluate).toHaveBeenCalledWith(
+          { var: 'context.dmgEntry' },
+          executionContext
+        );
+
+        expect(em.addComponent).toHaveBeenCalledWith('part1', PART_HEALTH_COMPONENT_ID, expect.objectContaining({
+          currentHealth: 85
+        }));
+
+        expect(damageTypeEffectsService.applyEffectsForDamage).toHaveBeenCalledWith(
+          expect.objectContaining({
+            damageEntry: resolvedDamageEntry
+          })
+        );
+      });
+
+      test('should fail if damage_entry is missing required amount field', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          damage_entry: {
+            name: 'slashing'
+            // Missing amount
+          }
+        };
+
+        await handler.execute(params, executionContext);
+
+        expect(dispatcher.dispatch).toHaveBeenCalledWith('core:system_error_occurred', expect.objectContaining({
+          message: expect.stringContaining('Invalid damage_entry (missing amount)')
+        }));
+      });
+
+      test('should fail if damage_entry is missing required name field', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          damage_entry: {
+            amount: 20
+            // Missing name
+          }
+        };
+
+        await handler.execute(params, executionContext);
+
+        expect(dispatcher.dispatch).toHaveBeenCalledWith('core:system_error_occurred', expect.objectContaining({
+          message: expect.stringContaining('Invalid damage_entry (missing name)')
+        }));
+      });
+
+      test('should handle damage_entry with all effect configurations', async () => {
+        const fullDamageEntry = {
+          name: 'slashing',
+          amount: 50,
+          penetration: 0.3,
+          bleed: { enabled: true, severity: 'severe', baseDurationTurns: 5 },
+          fracture: { enabled: false },
+          burn: { enabled: false },
+          poison: { enabled: false },
+          dismember: { enabled: true, thresholdFraction: 0.6 },
+          flags: ['magical', 'cursed']
+        };
+
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          damage_entry: fullDamageEntry
+        };
+
+        const partComponent = {
+          subType: 'torso',
+          ownerEntityId: 'victim-entity'
+        };
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => {
+          if (comp === PART_HEALTH_COMPONENT_ID) return true;
+          if (comp === PART_COMPONENT_ID && id === 'part1') return true;
+          return false;
+        });
+        em.getComponentData.mockImplementation((id, comp) => {
+          if (comp === PART_HEALTH_COMPONENT_ID) return healthComponent;
+          if (comp === PART_COMPONENT_ID && id === 'part1') return partComponent;
+          return null;
+        });
+
+        await handler.execute(params, executionContext);
+
+        // Full damage entry should be passed to effects service
+        expect(damageTypeEffectsService.applyEffectsForDamage).toHaveBeenCalledWith({
+          entityId: 'victim-entity',
+          partId: 'part1',
+          damageEntry: fullDamageEntry,
+          maxHealth: 100,
+          currentHealth: 50
+        });
+      });
+
+      test('should propagate damage using damage_entry structure', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'parent',
+          damage_entry: {
+            name: 'piercing',
+            amount: 20,
+            penetration: 0.5
+          }
+        };
+
+        const components = {
+          parent: {
+            [PART_COMPONENT_ID]: {
+              subType: 'torso',
+              ownerEntityId: 'entity1',
+              damage_propagation: {
+                child: { probability: 1, damage_fraction: 0.5 }
+              }
+            },
+            [PART_HEALTH_COMPONENT_ID]: {
+              currentHealth: 100,
+              maxHealth: 100,
+              state: 'healthy',
+              turnsInState: 0
+            }
+          },
+          child: {
+            [PART_COMPONENT_ID]: { subType: 'heart', ownerEntityId: 'entity1' },
+            [PART_HEALTH_COMPONENT_ID]: {
+              currentHealth: 40,
+              maxHealth: 40,
+              state: 'healthy',
+              turnsInState: 0
+            }
+          }
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => Boolean(components[id]?.[comp]));
+        em.getComponentData.mockImplementation((id, comp) => components[id]?.[comp] || null);
+
+        // Mock the service to return propagation result on first call, then empty array
+        damagePropagationService.propagateDamage
+          .mockReturnValueOnce([{ childPartId: 'child', damageApplied: 10, damageTypeId: 'piercing' }])
+          .mockReturnValue([]);
+
+        await handler.execute(params, executionContext);
+
+        // Parent damage applied
+        expect(em.addComponent).toHaveBeenCalledWith(
+          'parent',
+          PART_HEALTH_COMPONENT_ID,
+          expect.objectContaining({ currentHealth: 80 })
+        );
+
+        // Child damage applied (via propagation)
+        expect(em.addComponent).toHaveBeenCalledWith(
+          'child',
+          PART_HEALTH_COMPONENT_ID,
+          expect.objectContaining({ currentHealth: 30 })
+        );
+      });
+    });
   });
 });

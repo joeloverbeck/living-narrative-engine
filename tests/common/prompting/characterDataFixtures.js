@@ -275,3 +275,139 @@ export function createShortTermMemory(count) {
     })),
   };
 }
+
+// ========================================================================
+// Health State Fixtures (INJREPANDUSEINT-012)
+// ========================================================================
+
+/**
+ * Character with injuries (injured status, multiple body parts affected)
+ */
+export const CHARACTER_WITH_INJURIES = {
+  name: 'Wounded Warrior',
+  personality: 'Stoic despite the pain',
+  healthState: {
+    overallHealthPercentage: 45,
+    overallStatus: 'injured',
+    injuries: [
+      {
+        partName: 'left arm',
+        partType: 'arm',
+        state: 'wounded',
+        healthPercent: 30,
+        effects: ['bleeding_moderate'],
+      },
+      {
+        partName: 'torso',
+        partType: 'torso',
+        state: 'bruised',
+        healthPercent: 60,
+        effects: [],
+      },
+    ],
+    activeEffects: ['bleeding'],
+    isDying: false,
+    turnsUntilDeath: null,
+    firstPersonNarrative: 'Sharp pain radiates from my left arm.',
+  },
+};
+
+/**
+ * Character who is dying with turns until death countdown
+ */
+export const CHARACTER_DYING = {
+  name: 'Near Death',
+  personality: 'Fading consciousness',
+  healthState: {
+    overallHealthPercentage: 8,
+    overallStatus: 'dying',
+    injuries: [
+      {
+        partName: 'heart',
+        partType: 'heart',
+        state: 'critical',
+        healthPercent: 10,
+        effects: [],
+      },
+    ],
+    activeEffects: ['bleeding'],
+    isDying: true,
+    turnsUntilDeath: 2,
+    firstPersonNarrative: null,
+  },
+};
+
+/**
+ * Character who is critically injured but not dying
+ */
+export const CHARACTER_CRITICAL = {
+  name: 'Critical Fighter',
+  personality: 'Desperately holding on',
+  healthState: {
+    overallHealthPercentage: 15,
+    overallStatus: 'critical',
+    injuries: [
+      {
+        partName: 'chest',
+        partType: 'torso',
+        state: 'critical',
+        healthPercent: 12,
+        effects: ['bleeding_severe', 'fractured'],
+      },
+    ],
+    activeEffects: ['bleeding', 'fractured'],
+    isDying: false,
+    turnsUntilDeath: null,
+    firstPersonNarrative: 'Every breath feels like my last.',
+  },
+};
+
+/**
+ * Character with null healthState (healthy, no injuries)
+ */
+export const CHARACTER_HEALTHY = {
+  name: 'Healthy Hero',
+  personality: 'Full of vigor',
+  healthState: null,
+};
+
+/**
+ * Character with empty injuries array but has active effects
+ */
+export const CHARACTER_WITH_EFFECTS_ONLY = {
+  name: 'Afflicted One',
+  personality: 'Suffering silently',
+  healthState: {
+    overallHealthPercentage: 70,
+    overallStatus: 'wounded',
+    injuries: [],
+    activeEffects: ['poisoned', 'burning'],
+    isDying: false,
+    turnsUntilDeath: null,
+    firstPersonNarrative: 'The poison courses through my veins.',
+  },
+};
+
+/**
+ * Character with special characters in injury data (for XML escaping tests)
+ */
+export const CHARACTER_WITH_SPECIAL_CHARS_INJURY = {
+  name: 'Test & Escape',
+  healthState: {
+    overallHealthPercentage: 50,
+    overallStatus: 'wounded',
+    injuries: [
+      {
+        partName: 'left "arm" & shoulder',
+        partType: 'arm',
+        state: 'wounded',
+        healthPercent: 40,
+        effects: ['bleeding <moderate>'],
+      },
+    ],
+    activeEffects: ['bleeding'],
+    isDying: false,
+    turnsUntilDeath: null,
+    firstPersonNarrative: 'Pain in my "arm" & shoulder <sharp>.',
+  },
+};

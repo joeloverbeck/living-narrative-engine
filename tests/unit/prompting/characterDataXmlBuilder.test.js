@@ -24,6 +24,13 @@ import {
   createCharacterData,
   createGoals,
   createNotes,
+  // Health state fixtures (INJREPANDUSEINT-012)
+  CHARACTER_WITH_INJURIES,
+  CHARACTER_DYING,
+  CHARACTER_CRITICAL,
+  CHARACTER_HEALTHY,
+  CHARACTER_WITH_EFFECTS_ONLY,
+  CHARACTER_WITH_SPECIAL_CHARS_INJURY,
 } from '../../common/prompting/characterDataFixtures.js';
 
 describe('CharacterDataXmlBuilder', () => {
@@ -854,6 +861,230 @@ describe('CharacterDataXmlBuilder', () => {
       expect(result).toContain('ruthlessly ambitious');
       expect(result).toContain('Feline Verbal Tics');
       expect(result).toContain('Compose three masterpieces');
+    });
+  });
+
+  // ========================================================================
+  // Physical Condition Section Tests (INJREPANDUSEINT-012)
+  // ========================================================================
+
+  describe('Physical Condition Section', () => {
+    describe('Healthy Characters (null healthState)', () => {
+      it('should not include physical_condition when healthState is null', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_HEALTHY);
+        expect(result).not.toContain('<physical_condition>');
+        expect(result).not.toContain('</physical_condition>');
+      });
+
+      it('should not include physical_condition when healthState is undefined', () => {
+        const result = builder.buildCharacterDataXml({
+          name: 'Test',
+          healthState: undefined,
+        });
+        expect(result).not.toContain('<physical_condition>');
+      });
+    });
+
+    describe('Injured Characters', () => {
+      it('should render full physical_condition XML for injured character', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_WITH_INJURIES);
+
+        // Verify section structure
+        expect(result).toContain('<physical_condition>');
+        expect(result).toContain('</physical_condition>');
+
+        // Verify overall status with percentage
+        expect(result).toContain('<overall_status>');
+        expect(result).toContain('You are seriously injured (45%)');
+        expect(result).toContain('</overall_status>');
+
+        // Verify injuries list
+        expect(result).toContain('<injuries>');
+        expect(result).toContain('<injury part="left arm" state="wounded">bleeding_moderate</injury>');
+        expect(result).toContain('<injury part="torso" state="bruised"></injury>');
+        expect(result).toContain('</injuries>');
+
+        // Verify active effects
+        expect(result).toContain('<active_effects>bleeding</active_effects>');
+
+        // Verify first-person narrative
+        expect(result).toContain('<first_person_experience>');
+        expect(result).toContain('Sharp pain radiates from my left arm.');
+        expect(result).toContain('</first_person_experience>');
+      });
+
+      it('should place physical_condition first in current_state section', () => {
+        const dataWithHealthAndGoals = {
+          name: 'Test',
+          healthState: CHARACTER_WITH_INJURIES.healthState,
+          goals: [{ text: 'Survive' }],
+        };
+        const result = builder.buildCharacterDataXml(dataWithHealthAndGoals);
+
+        // Physical condition should appear before goals in current_state
+        const physicalConditionIndex = result.indexOf('<physical_condition>');
+        const goalsIndex = result.indexOf('<goals>');
+        expect(physicalConditionIndex).toBeLessThan(goalsIndex);
+      });
+    });
+
+    describe('Critical Warning', () => {
+      it('should include dying warning with turns countdown when isDying is true', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_DYING);
+
+        expect(result).toContain('<critical_warning>');
+        expect(result).toContain('You are dying! 2 turns until death.');
+        expect(result).toContain('</critical_warning>');
+      });
+
+      it('should include critical warning for critical status (not dying)', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_CRITICAL);
+
+        expect(result).toContain('<critical_warning>');
+        expect(result).toContain('You are critically injured and may die soon.');
+        expect(result).toContain('</critical_warning>');
+      });
+
+      it('should not include critical warning for non-critical injuries', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_WITH_INJURIES);
+        expect(result).not.toContain('<critical_warning>');
+      });
+    });
+
+    describe('Overall Status Text Mapping', () => {
+      it('should map "injured" status to "You are seriously injured"', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_WITH_INJURIES);
+        expect(result).toContain('You are seriously injured');
+      });
+
+      it('should map "dying" status to "You are dying"', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_DYING);
+        expect(result).toContain('You are dying');
+      });
+
+      it('should map "critical" status to "You are critically injured"', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_CRITICAL);
+        expect(result).toContain('You are critically injured');
+      });
+
+      it('should map "wounded" status to "You are wounded"', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_WITH_EFFECTS_ONLY);
+        expect(result).toContain('You are wounded');
+      });
+
+      it('should handle unknown status gracefully', () => {
+        const unknownStatusData = {
+          name: 'Test',
+          healthState: {
+            overallHealthPercentage: 50,
+            overallStatus: 'unknown_status',
+            injuries: [],
+            activeEffects: [],
+            isDying: false,
+            turnsUntilDeath: null,
+            firstPersonNarrative: null,
+          },
+        };
+        const result = builder.buildCharacterDataXml(unknownStatusData);
+        expect(result).toContain('Unknown status');
+      });
+    });
+
+    describe('Empty or Partial Health Data', () => {
+      it('should handle empty injuries array', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_WITH_EFFECTS_ONLY);
+
+        // Should have physical_condition section
+        expect(result).toContain('<physical_condition>');
+
+        // Should NOT have injuries element when array is empty
+        expect(result).not.toContain('<injuries>');
+        expect(result).not.toContain('</injuries>');
+
+        // Should still have active effects
+        expect(result).toContain('<active_effects>poisoned, burning</active_effects>');
+      });
+
+      it('should handle missing firstPersonNarrative', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_DYING);
+
+        // firstPersonNarrative is null in CHARACTER_DYING
+        expect(result).not.toContain('<first_person_experience>');
+      });
+
+      it('should handle empty activeEffects array', () => {
+        const noEffectsData = {
+          name: 'Test',
+          healthState: {
+            overallHealthPercentage: 80,
+            overallStatus: 'scratched',
+            injuries: [{ partName: 'hand', partType: 'hand', state: 'scratched', healthPercent: 85, effects: [] }],
+            activeEffects: [],
+            isDying: false,
+            turnsUntilDeath: null,
+            firstPersonNarrative: null,
+          },
+        };
+        const result = builder.buildCharacterDataXml(noEffectsData);
+
+        expect(result).toContain('<physical_condition>');
+        expect(result).not.toContain('<active_effects>');
+      });
+    });
+
+    describe('XML Escaping in Health Data', () => {
+      it('should escape ampersand in partName', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_WITH_SPECIAL_CHARS_INJURY);
+
+        // Check that ampersand is escaped
+        expect(result).toContain('&amp; shoulder');
+      });
+
+      it('should escape angle brackets in effects', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_WITH_SPECIAL_CHARS_INJURY);
+
+        // Effects should be escaped
+        expect(result).toContain('bleeding &lt;moderate&gt;');
+      });
+
+      it('should escape angle brackets and ampersand in firstPersonNarrative', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_WITH_SPECIAL_CHARS_INJURY);
+
+        // Narrative should have ampersand and angle brackets escaped
+        expect(result).toContain('&amp; shoulder');
+        expect(result).toContain('&lt;sharp&gt;');
+      });
+    });
+
+    describe('Integration with Current State Section', () => {
+      it('should include physical_condition in current_state when injured', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_WITH_INJURIES);
+
+        // Current state section should exist and contain physical_condition
+        expect(result).toContain('<current_state>');
+        expect(result).toContain('<physical_condition>');
+
+        // physical_condition should be inside current_state
+        const currentStateStart = result.indexOf('<current_state>');
+        const currentStateEnd = result.indexOf('</current_state>');
+        const physicalConditionStart = result.indexOf('<physical_condition>');
+
+        expect(physicalConditionStart).toBeGreaterThan(currentStateStart);
+        expect(physicalConditionStart).toBeLessThan(currentStateEnd);
+      });
+
+      it('should still generate current_state for healthy character with goals', () => {
+        const healthyWithGoals = {
+          name: 'Test',
+          healthState: null,
+          goals: [{ text: 'Complete the quest' }],
+        };
+        const result = builder.buildCharacterDataXml(healthyWithGoals);
+
+        expect(result).toContain('<current_state>');
+        expect(result).not.toContain('<physical_condition>');
+        expect(result).toContain('<goals>');
+      });
     });
   });
 });

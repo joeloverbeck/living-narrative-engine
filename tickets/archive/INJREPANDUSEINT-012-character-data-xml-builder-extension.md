@@ -10,6 +10,7 @@ Add physical_condition XML section to character data for LLM context.
 |------|--------|
 | `src/prompting/characterDataXmlBuilder.js` | MODIFY - add #buildPhysicalConditionSection |
 | `tests/unit/prompting/characterDataXmlBuilder.test.js` | MODIFY - add physical condition tests |
+| `tests/common/prompting/characterDataFixtures.js` | MODIFY - add health state fixtures |
 
 ## Out of Scope
 
@@ -65,3 +66,39 @@ Add physical_condition XML section to character data for LLM context.
 ## Reference
 
 See `specs/injury-reporting-and-user-interface.md` section 8.3 for XML structure specification.
+
+## Outcome
+
+**Status**: COMPLETED
+
+**Implementation Summary**:
+1. Added `#buildPhysicalConditionSection(healthState)` method to CharacterDataXmlBuilder (lines 601-673)
+2. Added `#getOverallStatusText(status)` helper method with spec-compliant status mappings (lines 681-692)
+3. Modified `#buildCurrentStateSection(data)` to call physical condition builder first for prominence (lines 478-482)
+4. Added 6 new health state fixtures to `characterDataFixtures.js`:
+   - `CHARACTER_WITH_INJURIES` - injured status with multiple body parts
+   - `CHARACTER_DYING` - dying status with turns countdown
+   - `CHARACTER_CRITICAL` - critical but not dying
+   - `CHARACTER_HEALTHY` - null healthState (healthy)
+   - `CHARACTER_WITH_EFFECTS_ONLY` - empty injuries but has active effects
+   - `CHARACTER_WITH_SPECIAL_CHARS_INJURY` - XML escaping test case
+5. Added comprehensive test suite with 22 new test cases covering:
+   - Healthy characters (null healthState)
+   - Injured characters with full XML structure
+   - Physical condition ordering in current_state section
+   - Critical warnings for dying and critical status
+   - Status text mapping verification
+   - Edge cases (empty injuries, missing narrative, empty effects)
+   - XML escaping for special characters
+   - Integration with current_state section
+
+**Tests Modified/Added**:
+| Test File | Changes | Rationale |
+|-----------|---------|-----------|
+| `tests/unit/prompting/characterDataXmlBuilder.test.js` | Added "Physical Condition Section" describe block with 22 tests | Cover all ticket invariants and edge cases |
+| `tests/common/prompting/characterDataFixtures.js` | Added 6 health state fixtures | Provide reusable test data for health-related scenarios |
+
+**Verification**:
+- All 109 tests pass in `characterDataXmlBuilder.test.js`
+- ESLint passes with only pre-existing warnings (JSDoc description style)
+- No breaking changes to public API

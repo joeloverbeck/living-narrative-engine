@@ -167,6 +167,7 @@ export class ModTestFixture {
 
     // Order matters: base schemas first, then schemas that reference them
     // nested-operation.schema.json is required by operations/if.schema.json
+    // damage-capability-entry.schema.json is required by operations/applyDamage.schema.json
     const schemaFiles = [
       'common.schema.json',
       'json-logic.schema.json',
@@ -174,6 +175,7 @@ export class ModTestFixture {
       'condition.schema.json',
       'base-operation.schema.json',
       'nested-operation.schema.json',
+      'damage-capability-entry.schema.json',
     ];
 
     // Load base schemas first

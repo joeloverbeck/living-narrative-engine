@@ -327,18 +327,15 @@ describe('Damage Type Event Payloads', () => {
     });
 
     test('should emit bleeding_started event with entityId and partId', async () => {
-      // Arrange
-      dataRegistry.get.mockReturnValue({
-        id: 'slashing',
-        bleed: { enabled: true, severity: 'moderate', baseDurationTurns: 3 },
-      });
-
       // Act
       await effectsService.applyEffectsForDamage({
         entityId: ids.entity,
         partId: ids.part,
-        amount: 20,
-        damageType: 'slashing',
+        damageEntry: {
+          id: 'slashing',
+          amount: 20,
+          bleed: { enabled: true, severity: 'moderate', baseDurationTurns: 3 },
+        },
         maxHealth: 100,
         currentHealth: 80,
       });
@@ -356,18 +353,15 @@ describe('Damage Type Event Payloads', () => {
     });
 
     test('should emit burning_started event with entityId, partId, and stackedCount', async () => {
-      // Arrange
-      dataRegistry.get.mockReturnValue({
-        id: 'fire',
-        burn: { enabled: true, dps: 5, durationTurns: 2, canStack: false },
-      });
-
       // Act
       await effectsService.applyEffectsForDamage({
         entityId: ids.entity,
         partId: ids.part,
-        amount: 15,
-        damageType: 'fire',
+        damageEntry: {
+          id: 'fire',
+          amount: 15,
+          burn: { enabled: true, dps: 5, durationTurns: 2, canStack: false },
+        },
         maxHealth: 100,
         currentHealth: 85,
       });
@@ -385,18 +379,15 @@ describe('Damage Type Event Payloads', () => {
     });
 
     test('should emit poisoned_started event with scope-based fields', async () => {
-      // Arrange - entity-scoped poison
-      dataRegistry.get.mockReturnValue({
-        id: 'poison',
-        poison: { enabled: true, tick: 2, durationTurns: 4, scope: 'entity' },
-      });
-
-      // Act
+      // Act - entity-scoped poison
       await effectsService.applyEffectsForDamage({
         entityId: ids.entity,
         partId: ids.part,
-        amount: 10,
-        damageType: 'poison',
+        damageEntry: {
+          id: 'poison',
+          amount: 10,
+          poison: { enabled: true, tick: 2, durationTurns: 4, scope: 'entity' },
+        },
         maxHealth: 100,
         currentHealth: 90,
       });
@@ -414,18 +405,15 @@ describe('Damage Type Event Payloads', () => {
     });
 
     test('should emit poisoned_started event with partId when part-scoped', async () => {
-      // Arrange - part-scoped poison
-      dataRegistry.get.mockReturnValue({
-        id: 'venom',
-        poison: { enabled: true, tick: 3, durationTurns: 3, scope: 'part' },
-      });
-
-      // Act
+      // Act - part-scoped poison
       await effectsService.applyEffectsForDamage({
         entityId: ids.entity,
         partId: ids.part,
-        amount: 12,
-        damageType: 'venom',
+        damageEntry: {
+          id: 'venom',
+          amount: 12,
+          poison: { enabled: true, tick: 3, durationTurns: 3, scope: 'part' },
+        },
         maxHealth: 100,
         currentHealth: 88,
       });
@@ -441,16 +429,12 @@ describe('Damage Type Event Payloads', () => {
       );
     });
 
-    test('should log warning and skip effects for unknown damage type', async () => {
-      // Arrange - dataRegistry returns undefined
-      dataRegistry.get.mockReturnValue(undefined);
-
-      // Act
+    test('should log warning and skip effects when no damageEntry provided', async () => {
+      // Act - omit damageEntry to test validation
       await effectsService.applyEffectsForDamage({
         entityId: ids.entity,
         partId: ids.part,
-        amount: 25,
-        damageType: 'unknown_damage',
+        // damageEntry intentionally omitted
         maxHealth: 100,
         currentHealth: 75,
       });
@@ -458,8 +442,8 @@ describe('Damage Type Event Payloads', () => {
       // Assert - no events dispatched, warning logged
       expect(dispatcher.dispatch).not.toHaveBeenCalled();
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Unknown damage type'),
-        expect.objectContaining({ damageType: 'unknown_damage' })
+        expect.stringContaining('No damage entry provided'),
+        expect.objectContaining({ entityId: ids.entity, partId: ids.part })
       );
     });
   });

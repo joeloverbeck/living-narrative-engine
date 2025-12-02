@@ -205,8 +205,11 @@ class ApplyDamageHandler extends BaseOperationHandler {
         {
           entity_ref: entityId,
           part_ref: result.childPartId,
-          amount: result.damageApplied,
-          damage_type: result.damageTypeId,
+          // Construct minimal damage_entry for propagated damage
+          damage_entry: {
+            name: result.damageTypeId,
+            amount: result.damageApplied,
+          },
           propagatedFrom: parentPartId,
         },
         executionContext
@@ -219,7 +222,7 @@ class ApplyDamageHandler extends BaseOperationHandler {
 
     if (!assertParamsObject(params, this.#dispatcher, 'APPLY_DAMAGE')) return;
 
-    const { entity_ref, part_ref, amount, damage_type, propagatedFrom = null } = params;
+    const { entity_ref, part_ref, damage_entry, amount, damage_type, propagatedFrom = null } = params;
 
     // 1. Resolve Entity
     const entityId = this.#resolveRef(entity_ref, executionContext, log);
@@ -233,7 +236,7 @@ class ApplyDamageHandler extends BaseOperationHandler {
     if (part_ref) {
       partId = this.#resolveRef(part_ref, executionContext, log);
     }
-    
+
     if (!partId) {
       // Auto-resolve if missing or failed to resolve
       partId = this.#selectRandomPart(entityId, log);
@@ -243,18 +246,54 @@ class ApplyDamageHandler extends BaseOperationHandler {
       }
     }
 
-    // 3. Resolve Amount & Type
-    const damageAmount = this.#resolveValue(amount, executionContext, log, 'number');
-    const damageType = this.#resolveValue(damage_type, executionContext, log, 'string');
+    // 3. Resolve damage entry or construct from legacy parameters
+    let resolvedDamageEntry;
+    if (damage_entry) {
+      // New mode: use damage_entry object directly or resolve from JSON Logic
+      if (typeof damage_entry === 'object' && damage_entry !== null && !damage_entry.var && !damage_entry.if) {
+        // Direct object with damage entry structure
+        resolvedDamageEntry = damage_entry;
+      } else {
+        // JSON Logic expression - evaluate it
+        try {
+          resolvedDamageEntry = this.#jsonLogicService.evaluate(damage_entry, executionContext);
+        } catch (err) {
+          safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Failed to evaluate damage_entry', { error: err.message }, log);
+          return;
+        }
+      }
+      if (!resolvedDamageEntry || typeof resolvedDamageEntry.amount !== 'number') {
+        safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Invalid damage_entry (missing amount)', { damage_entry: resolvedDamageEntry }, log);
+        return;
+      }
+      if (!resolvedDamageEntry.name) {
+        safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Invalid damage_entry (missing name)', { damage_entry: resolvedDamageEntry }, log);
+        return;
+      }
+    } else if (damage_type !== undefined && amount !== undefined) {
+      // Legacy mode: construct damage entry from individual parameters
+      log.warn('DEPRECATED: Using damage_type + amount parameters. Migrate to damage_entry object.');
+      const resolvedAmount = this.#resolveValue(amount, executionContext, log, 'number');
+      const resolvedType = this.#resolveValue(damage_type, executionContext, log, 'string');
 
-    if (isNaN(damageAmount) || damageAmount < 0) {
-       safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Invalid amount', { amount: damageAmount }, log);
-       return;
+      if (isNaN(resolvedAmount) || resolvedAmount < 0) {
+        safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Invalid amount', { amount: resolvedAmount }, log);
+        return;
+      }
+      if (!resolvedType) {
+        safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Invalid damage_type', { damage_type }, log);
+        return;
+      }
+
+      resolvedDamageEntry = { name: resolvedType, amount: resolvedAmount };
+    } else {
+      safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Either damage_entry or (damage_type + amount) required', { params }, log);
+      return;
     }
-    if (!damageType) {
-       safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Invalid damage_type', { damage_type }, log);
-       return;
-    }
+
+    // Extract values from damage entry for use in this handler
+    const damageAmount = resolvedDamageEntry.amount;
+    const damageType = resolvedDamageEntry.name;
 
     // 4. Dispatch damage applied event
     this.#dispatcher.dispatch(DAMAGE_APPLIED_EVENT, {
@@ -348,8 +387,7 @@ class ApplyDamageHandler extends BaseOperationHandler {
       await this.#damageTypeEffectsService.applyEffectsForDamage({
         entityId: ownerEntityId || entityId,
         partId,
-        amount: damageAmount,
-        damageType,
+        damageEntry: resolvedDamageEntry,
         maxHealth,
         currentHealth: newHealth,
       });

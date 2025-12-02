@@ -58,8 +58,8 @@ npm run test:integration -- --testPathPattern="recipeValidationComparison"
 ### Priority Rules to Implement
 
 1. **Fewer underscores wins**: Prefer `humanoid_head` over `humanoid_head_bearded`
-2. **Shorter ID wins** (tie-breaker): Prefer shorter entity IDs
-3. **Alphabetical order** (final tie-breaker): Ensure determinism across platforms
+2. **Alphabetical order**: Prefer `humanoid_head` over `kraken_head` (fixes regression where shorter `kraken_head` was selected)
+3. **Shorter ID wins** (final tie-breaker): Keep as fallback
 
 ### Invariants That Must Remain True
 
@@ -141,13 +141,14 @@ async function resolveEntityId(partType, dataRegistry) {
       return aUnderscores - bUnderscores;
     }
 
-    // Rule 2: Shorter ID = higher priority
-    if (aId.length !== bId.length) {
-      return aId.length - bId.length;
+    // Rule 2: Alphabetical for determinism and to prefer humanoid_head over kraken_head
+    const alpha = aId.localeCompare(bId);
+    if (alpha !== 0) {
+        return alpha;
     }
 
-    // Rule 3: Alphabetical for determinism
-    return aId.localeCompare(bId);
+    // Rule 3: Shorter ID = higher priority (fallback)
+    return aId.length - bId.length;
   });
 
   return candidates[0].id;

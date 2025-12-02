@@ -551,4 +551,197 @@ describe('Death Check Integration', () => {
       );
     });
   });
+
+  describe('processDyingTurn - dying countdown', () => {
+    test('should decrement turnsRemaining each turn', () => {
+      const entityId = 'dying-entity';
+
+      entityManager.hasComponent.mockImplementation((id, comp) => {
+        if (comp === DYING_COMPONENT_ID && id === entityId) return true;
+        return false;
+      });
+
+      entityManager.getComponentData.mockImplementation((id, comp) => {
+        if (comp === DYING_COMPONENT_ID && id === entityId) {
+          return {
+            turnsRemaining: 3,
+            causeOfDying: 'overall_health_critical',
+            stabilizedBy: null,
+          };
+        }
+        return null;
+      });
+
+      const result = deathCheckService.processDyingTurn(entityId);
+
+      // Should not trigger death yet (countdown not expired)
+      expect(result).toBe(false);
+
+      // Should update dying component with decremented turns
+      expect(entityManager.addComponent).toHaveBeenCalledWith(
+        entityId,
+        DYING_COMPONENT_ID,
+        expect.objectContaining({
+          turnsRemaining: 2,
+          causeOfDying: 'overall_health_critical',
+          stabilizedBy: null,
+        })
+      );
+    });
+
+    test('should trigger death when turnsRemaining reaches 0', () => {
+      const entityId = 'dying-entity';
+
+      entityManager.hasComponent.mockImplementation((id, comp) => {
+        if (comp === DYING_COMPONENT_ID && id === entityId) return true;
+        return false;
+      });
+
+      entityManager.getComponentData.mockImplementation((id, comp) => {
+        if (comp === DYING_COMPONENT_ID && id === entityId) {
+          return {
+            turnsRemaining: 1, // Will become 0 after decrement
+            causeOfDying: 'overall_health_critical',
+            stabilizedBy: null,
+          };
+        }
+        return null;
+      });
+
+      const result = deathCheckService.processDyingTurn(entityId);
+
+      // Should trigger death
+      expect(result).toBe(true);
+
+      // Should dispatch death event with 'bleeding_out' cause
+      expect(eventBus.dispatch).toHaveBeenCalledWith(
+        'anatomy:entity_died',
+        expect.objectContaining({
+          entityId,
+          causeOfDeath: 'bleeding_out',
+        })
+      );
+    });
+
+    test('should skip countdown processing if entity is stabilized', () => {
+      const entityId = 'stabilized-entity';
+
+      entityManager.hasComponent.mockImplementation((id, comp) => {
+        if (comp === DYING_COMPONENT_ID && id === entityId) return true;
+        return false;
+      });
+
+      entityManager.getComponentData.mockImplementation((id, comp) => {
+        if (comp === DYING_COMPONENT_ID && id === entityId) {
+          return {
+            turnsRemaining: 2,
+            causeOfDying: 'overall_health_critical',
+            stabilizedBy: 'healer-entity', // Entity has been stabilized
+          };
+        }
+        return null;
+      });
+
+      const result = deathCheckService.processDyingTurn(entityId);
+
+      // Should not trigger death (stabilized)
+      expect(result).toBe(false);
+
+      // Should NOT update the dying component (countdown skipped)
+      expect(entityManager.addComponent).not.toHaveBeenCalledWith(
+        entityId,
+        DYING_COMPONENT_ID,
+        expect.anything()
+      );
+
+      // Should NOT dispatch death event
+      expect(eventBus.dispatch).not.toHaveBeenCalledWith(
+        'anatomy:entity_died',
+        expect.anything()
+      );
+    });
+
+    test('should return false for entity not in dying state', () => {
+      const entityId = 'healthy-entity';
+
+      entityManager.hasComponent.mockImplementation(() => false);
+
+      const result = deathCheckService.processDyingTurn(entityId);
+
+      expect(result).toBe(false);
+      expect(entityManager.addComponent).not.toHaveBeenCalled();
+      expect(eventBus.dispatch).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('stabilization flow', () => {
+    test('should prevent death when entity is stabilized before countdown expires', () => {
+      const entityId = 'stabilized-entity';
+
+      // First, set up entity as dying
+      entityManager.hasComponent.mockImplementation((id, comp) => {
+        if (comp === DYING_COMPONENT_ID && id === entityId) return true;
+        return false;
+      });
+
+      entityManager.getComponentData.mockImplementation((id, comp) => {
+        if (comp === DYING_COMPONENT_ID && id === entityId) {
+          return {
+            turnsRemaining: 1, // Would die next turn if not stabilized
+            causeOfDying: 'overall_health_critical',
+            stabilizedBy: 'healer-entity', // Stabilized!
+          };
+        }
+        return null;
+      });
+
+      // Process dying turn
+      const result = deathCheckService.processDyingTurn(entityId);
+
+      // Should not die (stabilized)
+      expect(result).toBe(false);
+
+      // Should NOT dispatch death event
+      expect(eventBus.dispatch).not.toHaveBeenCalledWith(
+        'anatomy:entity_died',
+        expect.anything()
+      );
+    });
+
+    test('should allow multiple dying turns to pass without death when stabilized', () => {
+      const entityId = 'stabilized-entity';
+      let dyingData = {
+        turnsRemaining: 3,
+        causeOfDying: 'overall_health_critical',
+        stabilizedBy: 'healer-entity',
+      };
+
+      entityManager.hasComponent.mockImplementation((id, comp) => {
+        if (comp === DYING_COMPONENT_ID && id === entityId) return true;
+        return false;
+      });
+
+      entityManager.getComponentData.mockImplementation((id, comp) => {
+        if (comp === DYING_COMPONENT_ID && id === entityId) {
+          return dyingData;
+        }
+        return null;
+      });
+
+      // Process multiple turns
+      for (let i = 0; i < 5; i++) {
+        const result = deathCheckService.processDyingTurn(entityId);
+        expect(result).toBe(false);
+      }
+
+      // Should never dispatch death event
+      expect(eventBus.dispatch).not.toHaveBeenCalledWith(
+        'anatomy:entity_died',
+        expect.anything()
+      );
+
+      // Should never update the dying component (countdown frozen)
+      expect(entityManager.addComponent).not.toHaveBeenCalled();
+    });
+  });
 });
