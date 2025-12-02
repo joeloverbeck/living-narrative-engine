@@ -110,6 +110,9 @@ describe('BodyBlueprintFactory - Torso Override', () => {
       socketGenerator: mockSocketGenerator,
       slotGenerator: mockSlotGenerator,
       recipePatternResolver: mockRecipePatternResolver,
+      blueprintProcessorService: {
+        processBlueprint: jest.fn((blueprint) => blueprint),
+      },
     });
   });
 

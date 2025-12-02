@@ -193,10 +193,12 @@ class BlueprintProcessorService extends BaseService {
 
     // Step 5: Return enriched blueprint
     // CRITICAL: _generatedSockets MUST be array format (matches production)
+    // _generatedSlots preserves original generated slots for downstream consumers
     const enrichedBlueprint = {
       ...blueprint,
       slots: mergedSlots,
       _generatedSockets: generatedSockets, // Array of socket objects
+      _generatedSlots: generatedSlots, // Original generated slots before merge
     };
 
     this._logger.info(

@@ -58,6 +58,9 @@ describe('BodyBlueprintFactory uncovered branches', () => {
       recipePatternResolver: {
         resolveRecipePatterns: jest.fn(recipe => recipe),
       },
+      blueprintProcessorService: {
+        processBlueprint: jest.fn((blueprint) => blueprint),
+      },
     };
   });
 

@@ -372,6 +372,7 @@ export function registerWorldAndEntity(container) {
       socketGenerator: c.resolve(tokens.ISocketGenerator),
       slotGenerator: c.resolve(tokens.ISlotGenerator),
       recipePatternResolver: c.resolve(tokens.IRecipePatternResolver),
+      blueprintProcessorService: c.resolve(tokens.IBlueprintProcessorService),
     });
   });
   logger.debug(

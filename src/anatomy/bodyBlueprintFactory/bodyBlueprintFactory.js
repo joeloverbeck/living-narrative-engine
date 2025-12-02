@@ -68,6 +68,8 @@ export class BodyBlueprintFactory {
   #slotGenerator;
   /** @type {import('../recipePatternResolver/patternResolver.js').default} */
   #recipePatternResolver;
+  /** @type {import('../services/blueprintProcessorService.js').default} */
+  #blueprintProcessorService;
 
   /**
    * Creates a new BodyBlueprintFactory instance
@@ -87,6 +89,7 @@ export class BodyBlueprintFactory {
    * @param {SocketGenerator} deps.socketGenerator - Socket generator
    * @param {SlotGenerator} deps.slotGenerator - Slot generator
    * @param {import('../recipePatternResolver/patternResolver.js').default} deps.recipePatternResolver - Recipe pattern resolver
+   * @param {import('../services/blueprintProcessorService.js').default} deps.blueprintProcessorService - Blueprint processor service
    */
   constructor({
     entityManager,
@@ -103,6 +106,7 @@ export class BodyBlueprintFactory {
     socketGenerator,
     slotGenerator,
     recipePatternResolver,
+    blueprintProcessorService,
   }) {
     if (!dataRegistry)
       throw new InvalidArgumentError('dataRegistry is required');
@@ -128,6 +132,8 @@ export class BodyBlueprintFactory {
       throw new InvalidArgumentError('slotGenerator is required');
     if (!recipePatternResolver)
       throw new InvalidArgumentError('recipePatternResolver is required');
+    if (!blueprintProcessorService)
+      throw new InvalidArgumentError('blueprintProcessorService is required');
 
     this.#entityManager = entityManager;
     this.#dataRegistry = dataRegistry;
@@ -143,6 +149,7 @@ export class BodyBlueprintFactory {
     this.#socketGenerator = socketGenerator;
     this.#slotGenerator = slotGenerator;
     this.#recipePatternResolver = recipePatternResolver;
+    this.#blueprintProcessorService = blueprintProcessorService;
   }
 
   /**
@@ -163,9 +170,7 @@ export class BodyBlueprintFactory {
       // Phase 1: Load and validate blueprint (uses blueprintLoader module)
       const blueprint = loadBlueprint(blueprintId, {
         dataRegistry: this.#dataRegistry,
-        logger: this.#logger,
-        socketGenerator: this.#socketGenerator,
-        slotGenerator: this.#slotGenerator,
+        blueprintProcessorService: this.#blueprintProcessorService,
       });
 
       // Phase 2: Load and process recipe

@@ -109,6 +109,9 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
       recipePatternResolver: {
         resolveRecipePatterns: jest.fn(recipe => recipe),
       },
+      blueprintProcessorService: {
+        processBlueprint: jest.fn((blueprint) => blueprint),
+      },
     });
   });
 

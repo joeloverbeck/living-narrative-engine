@@ -14,6 +14,7 @@ import { RecipeConstraintEvaluator } from '../../../src/anatomy/recipeConstraint
 import SocketGenerator from '../../../src/anatomy/socketGenerator.js';
 import SlotGenerator from '../../../src/anatomy/slotGenerator.js';
 import RecipePatternResolver from '../../../src/anatomy/recipePatternResolver/patternResolver.js';
+import BlueprintProcessorService from '../../../src/anatomy/services/blueprintProcessorService.js';
 import { BodyDescriptionComposer } from '../../../src/anatomy/bodyDescriptionComposer.js';
 import { DescriptionTemplate } from '../../../src/anatomy/templates/descriptionTemplate.js';
 import { AnatomyInitializationService } from '../../../src/anatomy/anatomyInitializationService.js';
@@ -121,6 +122,13 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       logger: mocks.logger,
     });
 
+    this.blueprintProcessorService = new BlueprintProcessorService({
+      dataRegistry: mocks.registry,
+      socketGenerator: this.socketGenerator,
+      slotGenerator: this.slotGenerator,
+      logger: mocks.logger,
+    });
+
     // Create body blueprint factory
     this.bodyBlueprintFactory = new BodyBlueprintFactory({
       entityManager: this.entityManager,
@@ -137,6 +145,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       socketGenerator: this.socketGenerator,
       slotGenerator: this.slotGenerator,
       recipePatternResolver: this.recipePatternResolver,
+      blueprintProcessorService: this.blueprintProcessorService,
     });
 
     // Create body graph service

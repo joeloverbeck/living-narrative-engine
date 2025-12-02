@@ -564,6 +564,10 @@ describe('BodyBlueprintFactory integration', () => {
       resolveRecipePatterns: (recipe) => recipe,
     };
 
+    const mockBlueprintProcessorService = {
+      processBlueprint: (blueprint) => blueprint,
+    };
+
     return new BodyBlueprintFactory({
       entityManager,
       dataRegistry: registry,
@@ -579,6 +583,7 @@ describe('BodyBlueprintFactory integration', () => {
       socketGenerator: mockSocketGenerator,
       slotGenerator: mockSlotGenerator,
       recipePatternResolver: mockRecipePatternResolver,
+      blueprintProcessorService: mockBlueprintProcessorService,
       ...overrides,
     });
   };

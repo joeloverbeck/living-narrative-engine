@@ -244,6 +244,45 @@ describe('BlueprintProcessorService', () => {
       expect(Array.isArray(result._generatedSockets)).toBe(true);
     });
 
+    it('should return enriched blueprint with _generatedSlots object', () => {
+      const blueprint = {
+        id: 'test:humanoid',
+        schemaVersion: '2.0',
+        root: 'torso',
+        structureTemplate: 'core:humanoid_structure',
+      };
+
+      const result = service.processBlueprint(blueprint);
+
+      expect(result._generatedSlots).toEqual(mockGeneratedSlots);
+      expect(typeof result._generatedSlots).toBe('object');
+    });
+
+    it('should preserve original _generatedSlots before additionalSlots merge', () => {
+      const additionalSlots = {
+        head: { parent: 'custom_parent' },
+        extra_slot: { socket: 'extra' },
+      };
+
+      const blueprint = {
+        id: 'test:humanoid',
+        schemaVersion: '2.0',
+        root: 'torso',
+        structureTemplate: 'core:humanoid_structure',
+        additionalSlots,
+      };
+
+      const result = service.processBlueprint(blueprint);
+
+      // _generatedSlots should be the ORIGINAL generated slots, not the merged ones
+      expect(result._generatedSlots).toEqual(mockGeneratedSlots);
+      // slots should be the merged result
+      expect(result.slots).toEqual({
+        ...mockGeneratedSlots,
+        ...additionalSlots,
+      });
+    });
+
     it('should preserve original blueprint fields', () => {
       const blueprint = {
         id: 'test:humanoid',
