@@ -1,0 +1,30 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "anatomy:dead",
+  "description": "Entity has died and can no longer take actions.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "causeOfDeath": {
+        "type": "string",
+        "description": "What killed the entity (vital_organ_destroyed, bleeding_out, overall_health_depleted, etc.)"
+      },
+      "vitalOrganDestroyed": {
+        "type": ["string", "null"],
+        "default": null,
+        "description": "If death was due to vital organ destruction, which organ"
+      },
+      "killedBy": {
+        "type": ["string", "null"],
+        "default": null,
+        "description": "Entity ID of the killer (if applicable)"
+      },
+      "deathTimestamp": {
+        "type": "integer",
+        "description": "Unix timestamp when death occurred"
+      }
+    },
+    "required": ["causeOfDeath", "deathTimestamp"],
+    "additionalProperties": false
+  }
+}

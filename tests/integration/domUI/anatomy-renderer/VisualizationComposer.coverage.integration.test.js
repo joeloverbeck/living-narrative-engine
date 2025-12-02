@@ -356,7 +356,7 @@ describe('VisualizationComposer integration coverage', () => {
     ).toBe(true);
     expect(
       logger.warn.mock.calls.some(([message]) =>
-        message.includes('Failed to check entity error-child')
+        message.includes('Failed to index entity error-child')
       )
     ).toBe(true);
 

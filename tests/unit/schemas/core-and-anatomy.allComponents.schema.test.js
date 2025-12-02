@@ -130,6 +130,14 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
     'anatomy:fractured': { sourceDamageType: 'blunt', appliedAtHealth: 50 },
     'anatomy:poisoned': { remainingTurns: 3, tickDamage: 5 },
     'anatomy:stunned': { remainingTurns: 2 },
+    'anatomy:vital_organ': { organType: 'heart' },
+    'anatomy:dying': { turnsRemaining: 3, causeOfDying: 'overall_health_critical' },
+    'anatomy:dead': { causeOfDeath: 'vital_organ_destroyed', deathTimestamp: 1733143200 },
+    'anatomy:damage_propagation': {
+      rules: [
+        { childSocketId: 'heart_socket', baseProbability: 0.3 },
+      ],
+    },
   };
 
   /** @type {Record<string, unknown>} */
@@ -192,6 +200,10 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
     'anatomy:fractured': {},
     'anatomy:poisoned': { tickDamage: 'high' },
     'anatomy:stunned': {},
+    'anatomy:vital_organ': { organType: 'kidney' }, // Invalid enum value
+    'anatomy:dying': { turnsRemaining: -1 }, // Missing required causeOfDying, invalid minimum
+    'anatomy:dead': { vitalOrganDestroyed: 'heart' }, // Missing required causeOfDeath and deathTimestamp
+    'anatomy:damage_propagation': { rules: 'not_an_array' }, // Invalid type
   };
 
   Object.entries(validators).forEach(([id, validate]) => {

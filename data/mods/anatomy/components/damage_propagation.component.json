@@ -1,0 +1,48 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "anatomy:damage_propagation",
+  "description": "Configures internal damage propagation when this part is hit.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "rules": {
+        "type": "array",
+        "description": "Propagation rules for each child socket",
+        "items": {
+          "type": "object",
+          "properties": {
+            "childSocketId": {
+              "type": "string",
+              "description": "Socket ID containing the child part"
+            },
+            "baseProbability": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Base probability (0-1) that damage propagates to this child"
+            },
+            "damageFraction": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 0.5,
+              "description": "Fraction of parent damage applied to child (0-1)"
+            },
+            "damageTypeModifiers": {
+              "type": "object",
+              "description": "Probability modifiers per damage type (multiplied with base)",
+              "additionalProperties": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          "required": ["childSocketId", "baseProbability"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["rules"],
+    "additionalProperties": false
+  }
+}

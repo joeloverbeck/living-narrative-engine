@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "anatomy:dying",
+  "description": "Entity is in a dying state and will die if not stabilized.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "turnsRemaining": {
+        "type": "integer",
+        "minimum": 0,
+        "default": 3,
+        "description": "Turns until death if not stabilized"
+      },
+      "causeOfDying": {
+        "type": "string",
+        "description": "What triggered the dying state (e.g., 'overall_health_critical', 'heart_failing')"
+      },
+      "stabilizedBy": {
+        "type": ["string", "null"],
+        "default": null,
+        "description": "Entity ID that stabilized this entity (null if not stabilized)"
+      }
+    },
+    "required": ["turnsRemaining", "causeOfDying"],
+    "additionalProperties": false
+  }
+}
