@@ -26,11 +26,11 @@ class RadialLayoutStrategy {
     this.#options = {
       centerX: 600,
       centerY: 400,
-      baseRadius: 150,
-      minAngle: Math.PI / 10, // 18 degrees minimum (base value)
-      crowdingFactor: 8, // Node count threshold for spacing adjustment
-      highDegreeThreshold: 10, // Nodes with more than this many children use special layout
-      highDegreeRadiusMultiplier: 1.8, // Extra radius multiplier for high-degree nodes
+      baseRadius: 220, // Increased from 150 for better spacing
+      minAngle: Math.PI / 5.5, // ~33 degrees minimum (increased from 18)
+      crowdingFactor: 6, // Node count threshold for spacing adjustment (lowered from 8)
+      highDegreeThreshold: 7, // Nodes with more than this many children use special layout (lowered from 10)
+      highDegreeRadiusMultiplier: 2.2, // Extra radius multiplier for high-degree nodes (increased from 1.8)
     };
     this.#requiredSpace = { width: 1200, height: 800 };
   }

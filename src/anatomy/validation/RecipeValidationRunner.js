@@ -12,6 +12,7 @@ import { PropertySchemaValidator } from './validators/PropertySchemaValidator.js
 import { BlueprintExistenceValidator } from './validators/BlueprintExistenceValidator.js';
 import { RecipeBodyDescriptorValidator } from './validators/RecipeBodyDescriptorValidator.js';
 import { SocketSlotCompatibilityValidator } from './validators/SocketSlotCompatibilityValidator.js';
+import { SocketNameTplValidator } from './validators/SocketNameTplValidator.js';
 import { PartAvailabilityValidator } from './validators/PartAvailabilityValidator.js';
 import { GeneratedSlotPartsValidator } from './validators/GeneratedSlotPartsValidator.js';
 import { PatternMatchingValidator } from './validators/PatternMatchingValidator.js';
@@ -234,6 +235,11 @@ export class RecipeValidationRunner {
           logger: this.#logger,
           dataRegistry,
           anatomyBlueprintRepository,
+        }),
+      validators.socketNameTpl ??
+        new SocketNameTplValidator({
+          logger: this.#logger,
+          dataRegistry,
         }),
       validators.partAvailability ??
         new PartAvailabilityValidator({

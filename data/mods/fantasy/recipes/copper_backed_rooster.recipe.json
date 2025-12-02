@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
-  "recipeId": "fantasy:copper_backed_rooster",
+  "recipeId": "fantasy:copper_backed_rooster_recipe",
   "blueprintId": "anatomy:rooster",
   "bodyDescriptors": {
     "build": "barrel-chested",

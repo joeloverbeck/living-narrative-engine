@@ -114,7 +114,8 @@
     "tortoise_foot",
     "chicken_wing",
     "chicken_leg",
-    "chicken_foot"
+    "chicken_foot",
+    "chicken_spur"
   ],
   "irregularPlurals": {
     "foot": "feet",

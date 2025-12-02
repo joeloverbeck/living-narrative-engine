@@ -71,11 +71,13 @@ export class PartAvailabilityValidator extends BaseValidator {
         );
 
         if (matchingEntities.length === 0) {
+          const hasProperties =
+            Object.keys(slotCriteria.properties || {}).length > 0;
           issues.push({
             type: 'PART_UNAVAILABLE',
             severity: 'error',
             location: { type: 'slot', name: slotName },
-            message: `No entity definitions found for slot '${slotName}'`,
+            message: `No entity definitions found for slot '${slotName}'${hasProperties ? ". Check that 'properties' matches exact values in entity components. It is a filter, not an override." : ''}`,
             details: {
               partType: slotCriteria.partType,
               requiredTags: slotCriteria.tags || [],
@@ -95,11 +97,13 @@ export class PartAvailabilityValidator extends BaseValidator {
         );
 
         if (matchingEntities.length === 0) {
+          const hasProperties =
+            Object.keys(patternCriteria.properties || {}).length > 0;
           issues.push({
             type: 'PART_UNAVAILABLE',
             severity: 'error',
             location: { type: 'pattern', index },
-            message: `No entity definitions found for pattern ${index}`,
+            message: `No entity definitions found for pattern ${index}${hasProperties ? ". Check that 'properties' matches exact values in entity components. It is a filter, not an override." : ''}`,
             details: {
               partType: patternCriteria.partType,
               requiredTags: patternCriteria.tags || [],

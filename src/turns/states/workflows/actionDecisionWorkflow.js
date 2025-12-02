@@ -173,10 +173,6 @@ export class ActionDecisionWorkflow {
   }
 
   _findWaitActionIndex(actions, waitActionHints = []) {
-    if (!Array.isArray(actions) || actions.length === 0) {
-      return null;
-    }
-
     const hints = waitActionHints
       .filter((hint) => typeof hint === 'string' && hint.trim().length > 0)
       .map((hint) => hint.toLowerCase());

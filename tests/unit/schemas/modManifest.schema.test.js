@@ -356,5 +356,24 @@ describe('JSON-Schema – Mod Manifest', () => {
         })
       );
     });
+
+    test('✗ should NOT validate "damage-types" instead of "damageTypes" in content', () => {
+      const invalidManifest = {
+        id: 'test_mod',
+        version: '1.0.0',
+        name: 'Test Mod',
+        content: {
+          'damage-types': ['blunt.json'], // Incorrect: hyphenated instead of camelCase
+        },
+      };
+      expect(validate(invalidManifest)).toBe(false);
+      expect(validate.errors).toContainEqual(
+        expect.objectContaining({
+          instancePath: '/content',
+          message: 'must NOT have additional properties',
+          params: { additionalProperty: 'damage-types' },
+        })
+      );
+    });
   });
 });

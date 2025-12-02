@@ -62,7 +62,7 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
     },
     {
       "check": "socket_slot_compatibility",
-      "message": "All 2 additionalSlot socket references valid",
+      "message": "All 2 slot socket references valid",
     },
   ],
   "recipeId": "tests:broken_patterns",
@@ -494,7 +494,7 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
     },
     {
       "check": "socket_slot_compatibility",
-      "message": "All 2 additionalSlot socket references valid",
+      "message": "All 2 slot socket references valid",
     },
   ],
   "recipeId": "anatomy:giant_forest_spider",
@@ -555,7 +555,7 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
     },
     {
       "check": "socket_slot_compatibility",
-      "message": "All 0 additionalSlot socket references valid",
+      "message": "All 24 slot socket references valid",
     },
   ],
   "recipeId": "anatomy:human_male",
@@ -618,7 +618,7 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
     },
     {
       "check": "socket_slot_compatibility",
-      "message": "All 0 additionalSlot socket references valid",
+      "message": "All 24 slot socket references valid",
     },
   ],
   "recipeId": "tests:human_male_unused_clone",
@@ -745,7 +745,7 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
     },
     {
       "check": "socket_slot_compatibility",
-      "message": "All 0 additionalSlot socket references valid",
+      "message": "All 24 slot socket references valid",
     },
   ],
   "recipeId": "anatomy:human_male",

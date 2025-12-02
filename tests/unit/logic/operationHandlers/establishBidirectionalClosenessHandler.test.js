@@ -185,4 +185,241 @@ describe('EstablishBidirectionalClosenessHandler', () => {
     expect(dispatcher.dispatch).toHaveBeenCalled();
     expect(entityManager.addComponent).not.toHaveBeenCalled();
   });
+
+  it('catches recursion errors in template resolution (line 243)', async () => {
+    const circular = {};
+    circular.self = circular;
+
+    await handler.execute(
+      {
+        actor_component_type: 'type-a',
+        target_component_type: 'type-b',
+        actor_data: circular, // This should trigger stack overflow in recurse
+        target_data: {},
+      },
+      executionContext
+    );
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to resolve template variables'),
+      expect.any(Object)
+    );
+  });
+
+  it('handles read component failure during clean existing (lines 249-252)', async () => {
+    entityManager.getComponentData.mockImplementation(() => {
+      throw new Error('Read failed');
+    });
+
+    await handler.execute(
+      {
+        actor_component_type: 'type-a',
+        target_component_type: 'type-b',
+        actor_data: {},
+        target_data: {},
+        clean_existing: true,
+        existing_component_types_to_clean: ['type-a'],
+      },
+      executionContext
+    );
+
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('Unable to read component'),
+      expect.objectContaining({ error: 'Read failed' })
+    );
+  });
+
+  it('skips partner cleanup if partnerId is same as entityId (lines 262-266)', async () => {
+    // Mock existing component that points to self
+    entityManager.getComponentData.mockImplementation((entityId) => {
+      if (entityId === 'actor-1') {
+        return { embraced_entity_id: 'actor-1' }; // Self-reference
+      }
+      return null;
+    });
+
+    await handler.execute(
+      {
+        actor_component_type: 'type-a',
+        target_component_type: 'type-b',
+        actor_data: {},
+        target_data: {},
+        clean_existing: true,
+        existing_component_types_to_clean: ['type-a'],
+      },
+      executionContext
+    );
+
+    expect(entityManager.removeComponent).toHaveBeenCalledTimes(1);
+    expect(entityManager.removeComponent).toHaveBeenCalledWith('actor-1', 'type-a');
+  });
+
+  it('handles invalid params object (line 74)', async () => {
+    await handler.execute(null, executionContext);
+  });
+
+  it('handles missing actorId or targetId (lines 86-92)', async () => {
+    const badContext = {
+      evaluationContext: { event: { payload: {} } }, // No ids
+      logger,
+    };
+
+    await handler.execute(
+      {
+        actor_component_type: 'type-a',
+        target_component_type: 'type-b',
+        actor_data: {},
+        target_data: {},
+      },
+      badContext
+    );
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      'core:system_error_occurred',
+      expect.objectContaining({
+        message: expect.stringContaining('missing from event payload'),
+      })
+    );
+  });
+
+  it('handles main execution error (lines 135-144)', async () => {
+    entityManager.addComponent.mockRejectedValue(new Error('Add failed'));
+
+    await handler.execute(
+      {
+        actor_component_type: 'type-a',
+        target_component_type: 'type-b',
+        actor_data: {},
+        target_data: {},
+      },
+      executionContext
+    );
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      'core:system_error_occurred',
+      expect.objectContaining({
+        message: expect.stringContaining('handler failed'),
+      })
+    );
+  });
+
+  it('validates actor_data is object (lines 176-182)', async () => {
+    await handler.execute(
+      {
+        actor_component_type: 'type-a',
+        target_component_type: 'type-b',
+        actor_data: 'invalid-string',
+        target_data: {},
+      },
+      executionContext
+    );
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      'core:system_error_occurred',
+      expect.objectContaining({
+        message: expect.stringContaining('"actor_data" must be an object'),
+      })
+    );
+  });
+
+  it('validates target_data is object (lines 186-192)', async () => {
+    await handler.execute(
+      {
+        actor_component_type: 'type-a',
+        target_component_type: 'type-b',
+        actor_data: {},
+        target_data: 'invalid-string',
+      },
+      executionContext
+    );
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      'core:system_error_occurred',
+      expect.objectContaining({
+        message: expect.stringContaining('"target_data" must be an object'),
+      })
+    );
+  });
+
+  it('handles remove component failure (line 299)', async () => {
+    entityManager.getComponentData.mockReturnValue({}); 
+    entityManager.removeComponent.mockRejectedValue(new Error('Remove failed'));
+
+    await handler.execute(
+      {
+        actor_component_type: 'type-a',
+        target_component_type: 'type-b',
+        actor_data: {},
+        target_data: {},
+      },
+      executionContext
+    );
+
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('skipping removal'),
+      expect.objectContaining({ error: 'Remove failed' })
+    );
+  });
+
+  it('handles missing regenerateDescriptionHandler (lines 317-321)', async () => {
+    const handlerNoRegen = new EstablishBidirectionalClosenessHandler({
+      entityManager,
+      safeEventDispatcher: dispatcher,
+      logger, // regenerateDescriptionHandler omitted
+    });
+
+    await handlerNoRegen.execute(
+      {
+        actor_component_type: 'type-a',
+        target_component_type: 'type-b',
+        actor_data: {},
+        target_data: {},
+        regenerate_descriptions: true,
+      },
+      executionContext
+    );
+
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('regenerate_descriptions requested but handler not available'),
+      expect.any(Object)
+    );
+  });
+
+  it('handles regenerate execution failure (line 330)', async () => {
+    regenerator.execute.mockRejectedValue(new Error('Regen failed'));
+
+    await handler.execute(
+      {
+        actor_component_type: 'type-a',
+        target_component_type: 'type-b',
+        actor_data: {},
+        target_data: {},
+        regenerate_descriptions: true,
+      },
+      executionContext
+    );
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('description regeneration failed'),
+      expect.objectContaining({ error: 'Regen failed' })
+    );
+  });
+
+  it('leaves template string unresolved if path is not found (line 218 coverage)', async () => {
+    await handler.execute(
+      {
+        actor_component_type: 'type-a',
+        target_component_type: 'type-b',
+        actor_data: { field: '{non.existent.path}' },
+        target_data: {},
+      },
+      executionContext
+    );
+
+    expect(entityManager.addComponent).toHaveBeenCalledWith(
+      'actor-1',
+      'type-a',
+      { field: '{non.existent.path}' }
+    );
+  });
 });

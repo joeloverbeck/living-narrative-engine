@@ -284,4 +284,66 @@ describe('Chicken Recipes', () => {
       });
     });
   });
+
+  describe('Base Chicken Recipe Simplicity (RECVALROB-006 Regression)', () => {
+    /**
+     * Regression test for Failure 3 scenario from specs/recipe-validation-robustness.md
+     *
+     * IMPORTANT: The `properties` field is a VALID and useful feature for filtering
+     * entities that have specific component values. It is used extensively in
+     * character recipes (e.g., data/mods/fantasy/recipes/) to select specific
+     * eye colors, hair types, skin tones, etc.
+     *
+     * However, the BASE chicken recipes (anatomy:rooster, anatomy:hen) should NOT
+     * use `properties` because:
+     * 1. There are no entity variants for chicken parts (comb, wattle, tail, etc.)
+     *    with different component values to filter between
+     * 2. Using `properties` here would cause "No entity definitions found" errors
+     *    since no matching entities exist
+     * 3. These base recipes use only `preferId` to directly reference the single
+     *    available entity for each part type
+     *
+     * If chicken part variants are added in the future (e.g., large_comb, small_comb),
+     * then using `properties` to filter between them would be appropriate and these
+     * tests should be updated accordingly.
+     */
+
+    describe('Rooster Recipe', () => {
+      it('should not use properties field in any slot', () => {
+        const slots = Object.values(roosterRecipe.slots);
+        expect(slots.length).toBeGreaterThan(0);
+
+        slots.forEach((slotConfig) => {
+          expect(slotConfig.properties).toBeUndefined();
+        });
+      });
+
+      it('should not use properties field in any pattern', () => {
+        expect(roosterRecipe.patterns.length).toBeGreaterThan(0);
+
+        roosterRecipe.patterns.forEach((pattern) => {
+          expect(pattern.properties).toBeUndefined();
+        });
+      });
+    });
+
+    describe('Hen Recipe', () => {
+      it('should not use properties field in any slot', () => {
+        const slots = Object.values(henRecipe.slots);
+        expect(slots.length).toBeGreaterThan(0);
+
+        slots.forEach((slotConfig) => {
+          expect(slotConfig.properties).toBeUndefined();
+        });
+      });
+
+      it('should not use properties field in any pattern', () => {
+        expect(henRecipe.patterns.length).toBeGreaterThan(0);
+
+        henRecipe.patterns.forEach((pattern) => {
+          expect(pattern.properties).toBeUndefined();
+        });
+      });
+    });
+  });
 });

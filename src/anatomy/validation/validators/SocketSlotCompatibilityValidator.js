@@ -182,9 +182,14 @@ export async function validateSocketSlotCompatibility(blueprint, dataRegistry) {
     dataRegistry
   );
 
-  const additionalSlots = blueprint?.additionalSlots || {};
+  // Combine both older `slots` format and newer `additionalSlots` format
+  // This ensures validation coverage for both blueprint versions
+  const allSlots = {
+    ...(blueprint?.slots || {}),
+    ...(blueprint?.additionalSlots || {}),
+  };
 
-  for (const [slotName, slotConfig] of Object.entries(additionalSlots)) {
+  for (const [slotName, slotConfig] of Object.entries(allSlots)) {
     if (!slotConfig || typeof slotConfig !== 'object') {
       continue;
     }
@@ -391,9 +396,13 @@ export class SocketSlotCompatibilityValidator extends BaseValidator {
       );
 
       if (issues.length === 0) {
-        const slotCount = Object.keys(blueprint?.additionalSlots || {}).length;
+        const slotsCount = Object.keys(blueprint?.slots || {}).length;
+        const additionalSlotsCount = Object.keys(
+          blueprint?.additionalSlots || {}
+        ).length;
+        const totalCount = slotsCount + additionalSlotsCount;
         builder.addPassed(
-          `All ${slotCount} additionalSlot socket references valid`,
+          `All ${totalCount} slot socket references valid`,
           { check: 'socket_slot_compatibility' }
         );
       } else {

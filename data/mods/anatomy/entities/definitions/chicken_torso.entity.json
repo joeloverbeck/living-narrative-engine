@@ -11,6 +11,44 @@
       "maxHealth": 15,
       "state": "healthy"
     },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "neck",
+          "allowedTypes": ["chicken_head"],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "left_wing_root",
+          "orientation": "left",
+          "allowedTypes": ["chicken_wing"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_wing_root",
+          "orientation": "right",
+          "allowedTypes": ["chicken_wing"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "left_hip",
+          "orientation": "left",
+          "allowedTypes": ["chicken_leg"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_hip",
+          "orientation": "right",
+          "allowedTypes": ["chicken_leg"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "tail_root",
+          "allowedTypes": ["chicken_tail"],
+          "nameTpl": "{{type}}"
+        }
+      ]
+    },
     "core:name": {
       "text": "chicken torso"
     },
