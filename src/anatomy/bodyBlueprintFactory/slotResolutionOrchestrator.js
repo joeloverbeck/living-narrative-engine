@@ -37,7 +37,93 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/systemEventIds.js';
  * @property {RecipeProcessor} recipeProcessor - Recipe processor
  * @property {EventDispatchService} eventDispatchService - Event dispatch service
  * @property {ILogger} logger - Logger instance
+ * @property {object} dataRegistry - Data registry for entity definitions
  */
+
+/**
+ * Pre-validates blueprint for socket collisions before entity creation.
+ * Provides early, helpful error messages identifying conflicting slot keys.
+ * This is an additional safety net - runtime validation in SocketManager also catches collisions.
+ *
+ * @param {AnatomyBlueprint} blueprint - The processed blueprint with slots
+ * @throws {ValidationError} If socket collision is detected
+ */
+export function validateBlueprintSocketUniqueness(blueprint) {
+  const socketUsage = new Map();
+
+  for (const [slotKey, slot] of Object.entries(blueprint.slots || {})) {
+    if (!slot.parent || !slot.socket) continue;
+
+    const fullSocketKey = `${slot.parent}:${slot.socket}`;
+
+    if (socketUsage.has(fullSocketKey)) {
+      const conflictingSlot = socketUsage.get(fullSocketKey);
+      throw new ValidationError(
+        `Socket collision detected: socket '${slot.socket}' on parent '${slot.parent}' ` +
+          `is used by both slots '${conflictingSlot}' and '${slotKey}'. ` +
+          `Each socket can only attach one child per parent entity instance.`
+      );
+    }
+
+    socketUsage.set(fullSocketKey, slotKey);
+  }
+}
+
+/**
+ * Validates that component overrides reference components that exist on the entity definition.
+ * Logs warnings for invalid overrides to help modders identify configuration issues.
+ * This is an early validation step that provides actionable feedback during anatomy graph construction.
+ *
+ * @param {string} partDefinitionId - The entity definition ID for the part
+ * @param {object} componentOverrides - The component overrides from the recipe
+ * @param {object} dataRegistry - Registry to look up entity definitions
+ * @param {object} logger - Logger for warning output
+ * @param {object} [options] - Validation options
+ * @param {boolean} [options.strict] - Throw instead of warn on invalid overrides
+ * @returns {object} Filtered overrides containing only valid components
+ */
+export function validateComponentOverrides(partDefinitionId, componentOverrides, dataRegistry, logger, options = {}) {
+  const { strict = false } = options;
+
+  if (!componentOverrides || Object.keys(componentOverrides).length === 0) {
+    return componentOverrides;
+  }
+
+  const partDef = dataRegistry.get('entityDefinitions', partDefinitionId);
+  if (!partDef) {
+    logger.warn(
+      `Cannot validate component overrides: entity definition '${partDefinitionId}' not found`
+    );
+    return componentOverrides;
+  }
+
+  const validComponents = new Set(Object.keys(partDef.components || {}));
+  const invalidOverrides = [];
+  const validOverrides = {};
+
+  for (const componentId of Object.keys(componentOverrides)) {
+    if (validComponents.has(componentId)) {
+      validOverrides[componentId] = componentOverrides[componentId];
+    } else {
+      invalidOverrides.push(componentId);
+    }
+  }
+
+  if (invalidOverrides.length > 0) {
+    const message = `Component override validation for '${partDefinitionId}': ` +
+      `The following overrides reference non-existent components and will be ignored: ` +
+      `[${invalidOverrides.join(', ')}]. ` +
+      `Available components: [${Array.from(validComponents).join(', ')}]`;
+
+    if (strict) {
+      throw new ValidationError(message);
+    } else {
+      logger.warn(message);
+    }
+  }
+
+  return validOverrides;
+}
 
 /**
  * Processes blueprint slots to create the anatomy structure
@@ -51,11 +137,10 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/systemEventIds.js';
  * @returns {Promise<void>} Processes slots and updates context
  */
 export async function processBlueprintSlots(blueprint, recipe, context, ownerId, dependencies) {
-  const { entityGraphBuilder, partSelectionService, socketManager, recipeProcessor, eventDispatchService, logger } = dependencies;
+  const { entityGraphBuilder, partSelectionService, socketManager, recipeProcessor, eventDispatchService, logger, dataRegistry } = dependencies;
 
-  console.log('[DEBUG] #processBlueprintSlots CALLED');
-  console.log('[DEBUG]   blueprint.slots exists?', !!blueprint.slots);
-  console.log('[DEBUG]   blueprint.slots keys:', blueprint.slots ? Object.keys(blueprint.slots) : 'N/A');
+  // Pre-validate blueprint for socket collisions before any entity creation
+  validateBlueprintSocketUniqueness(blueprint);
 
   // Debug logging for recipe slots
   logger.debug(
@@ -65,10 +150,6 @@ export async function processBlueprintSlots(blueprint, recipe, context, ownerId,
 
   // Sort slots by dependency order
   const sortedSlots = sortSlotsByDependency(blueprint.slots);
-  console.log('[DEBUG] #processBlueprintSlots - after sort:');
-  console.log('[DEBUG]   sortedSlots type:', sortedSlots.constructor.name);
-  console.log('[DEBUG]   sortedSlots.length or size:', sortedSlots.length || sortedSlots.size);
-  console.log('[DEBUG]   sortedSlots keys:', Array.from(sortedSlots.keys()));
 
   logger.debug(
     `SlotResolutionOrchestrator: Processing ${sortedSlots.length} blueprint slots`,
@@ -189,11 +270,13 @@ export async function processBlueprintSlots(blueprint, recipe, context, ownerId,
 
       // Create and attach the part
       // Get slot properties from recipe patterns (descriptor components, etc.)
-      console.log(`[DEBUG] Processing slot: ${slotKey}`);
-      console.log('[DEBUG]   recipe.slots?.[slotKey]:', JSON.stringify(recipe.slots?.[slotKey], null, 2));
-      const componentOverrides = recipe.slots?.[slotKey]?.properties || {};
-      console.log('[DEBUG]   componentOverrides:', JSON.stringify(componentOverrides, null, 2));
-      console.log('[DEBUG]   componentOverrides keys:', Object.keys(componentOverrides));
+      const rawComponentOverrides = recipe.slots?.[slotKey]?.properties || {};
+      const componentOverrides = validateComponentOverrides(
+        partDefinitionId,
+        rawComponentOverrides,
+        dataRegistry,
+        logger
+      );
 
       logger.debug(
         `SlotResolutionOrchestrator: Checking for properties in recipe.slots['${slotKey}']`,
@@ -367,4 +450,6 @@ export default {
   processBlueprintSlots,
   sortSlotsByDependency,
   isEquipmentSlot,
+  validateBlueprintSocketUniqueness,
+  validateComponentOverrides,
 };

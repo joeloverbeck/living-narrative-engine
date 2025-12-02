@@ -33,6 +33,7 @@ const PART_DESTROYED_EVENT = 'anatomy:part_destroyed';
 /** @type {{ dispatch: jest.Mock }} */ let dispatcher;
 /** @type {{ evaluate: jest.Mock }} */ let jsonLogicService;
 /** @type {{ getAllParts: jest.Mock }} */ let bodyGraphService;
+/** @type {{ applyEffectsForDamage: jest.Mock }} */ let damageTypeEffectsService;
 
 beforeEach(() => {
   log = {
@@ -51,6 +52,7 @@ beforeEach(() => {
   dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
   jsonLogicService = { evaluate: jest.fn() };
   bodyGraphService = { getAllParts: jest.fn() };
+  damageTypeEffectsService = { applyEffectsForDamage: jest.fn() };
 });
 
 afterEach(() => jest.clearAllMocks());
@@ -64,7 +66,8 @@ describe('ApplyDamageHandler', () => {
         entityManager: em,
         safeEventDispatcher: dispatcher,
         jsonLogicService,
-        bodyGraphService
+        bodyGraphService,
+        damageTypeEffectsService
       });
       expect(handler).toBeInstanceOf(ApplyDamageHandler);
     });
@@ -76,9 +79,23 @@ describe('ApplyDamageHandler', () => {
               logger: log,
               entityManager: em,
               safeEventDispatcher: dispatcher,
-              jsonLogicService
+              jsonLogicService,
+              damageTypeEffectsService
             })
         ).toThrow(/bodyGraphService/i);
+      });
+
+    test('throws if damageTypeEffectsService is missing', () => {
+        expect(
+          () =>
+            new ApplyDamageHandler({
+              logger: log,
+              entityManager: em,
+              safeEventDispatcher: dispatcher,
+              jsonLogicService,
+              bodyGraphService
+            })
+        ).toThrow(/damageTypeEffectsService/i);
       });
   });
 
@@ -92,7 +109,8 @@ describe('ApplyDamageHandler', () => {
         entityManager: em,
         safeEventDispatcher: dispatcher,
         jsonLogicService,
-        bodyGraphService
+        bodyGraphService,
+        damageTypeEffectsService
       });
       executionContext = {
         evaluationContext: { context: {} },

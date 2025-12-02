@@ -245,6 +245,7 @@ export class BodyBlueprintFactory {
           recipeProcessor: this.#recipeProcessor,
           eventDispatchService: this.#eventDispatchService,
           logger: this.#logger,
+          dataRegistry: this.#dataRegistry,
         });
       } else {
         console.log('[DEBUG] BodyBlueprintFactory: Phase 2 - SKIPPED (blueprint.slots is falsy)', blueprint.slots);

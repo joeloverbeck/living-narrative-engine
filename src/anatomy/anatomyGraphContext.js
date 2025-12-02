@@ -4,6 +4,8 @@
  * @file Context object for tracking state during anatomy graph building
  */
 
+import { ValidationError } from '../errors/validationError.js';
+
 /**
  * Context that tracks state during anatomy graph construction
  */
@@ -140,8 +142,16 @@ export class AnatomyGraphContext {
    *
    * @param {string} slotKey - Slot key from blueprint
    * @param {string} entityId - Entity ID
+   * @throws {ValidationError} If slot key is already mapped to a different entity
    */
   mapSlotToEntity(slotKey, entityId) {
+    if (this.#slotToEntity.has(slotKey)) {
+      const existingEntityId = this.#slotToEntity.get(slotKey);
+      throw new ValidationError(
+        `Slot key '${slotKey}' already mapped to entity '${existingEntityId}'. ` +
+          `Cannot remap to '${entityId}'. Duplicate slot keys detected in blueprint.`
+      );
+    }
     this.#slotToEntity.set(slotKey, entityId);
   }
 

@@ -15,18 +15,27 @@
  * 4. Performance Under Load - Large-scale entity spatial operations
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeAll, afterAll, afterEach } from '@jest/globals';
 import EntityWorkflowTestBed from './common/entityWorkflowTestBed.js';
 
 describe('Spatial Indexing E2E Workflow', () => {
   let testBed;
 
-  beforeEach(async () => {
+  // Initialize once for all tests - avoids expensive container recreation
+  beforeAll(async () => {
     testBed = new EntityWorkflowTestBed();
     await testBed.initialize();
   });
 
+  // Clean up entities between tests for isolation
   afterEach(async () => {
+    if (testBed) {
+      await testBed.cleanupEntities();
+    }
+  });
+
+  // Full cleanup only at the end
+  afterAll(async () => {
     if (testBed) {
       await testBed.cleanup();
     }

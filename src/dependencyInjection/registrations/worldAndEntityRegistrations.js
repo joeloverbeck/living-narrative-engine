@@ -78,6 +78,10 @@ import AnatomyBlueprintRepository from '../../anatomy/repositories/anatomyBluepr
 import RecipeValidationRunner from '../../anatomy/validation/RecipeValidationRunner.js';
 import AnatomySocketIndex from '../../anatomy/services/anatomySocketIndex.js';
 import { AnatomyCacheCoordinator } from '../../anatomy/cache/anatomyCacheCoordinator.js';
+import DamageTypeEffectsService from '../../anatomy/services/damageTypeEffectsService.js';
+import BleedingTickSystem from '../../anatomy/services/bleedingTickSystem.js';
+import BurningTickSystem from '../../anatomy/services/burningTickSystem.js';
+import PoisonTickSystem from '../../anatomy/services/poisonTickSystem.js';
 import EntityMatcherService from '../../anatomy/services/entityMatcherService.js';
 import BlueprintProcessorService from '../../anatomy/services/blueprintProcessorService.js';
 import SlotResolver from '../../anatomy/integration/SlotResolver.js';
@@ -815,6 +819,66 @@ export function registerWorldAndEntity(container) {
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.IEntityMatcherService
+    )}.`
+  );
+
+  // Register DamageTypeEffectsService
+  registrar.singletonFactory(tokens.DamageTypeEffectsService, (c) => {
+    return new DamageTypeEffectsService({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.DamageTypeEffectsService
+    )}.`
+  );
+
+  // Register BleedingTickSystem
+  registrar.singletonFactory(tokens.BleedingTickSystem, (c) => {
+    return new BleedingTickSystem({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.BleedingTickSystem
+    )}.`
+  );
+
+  // Register BurningTickSystem
+  registrar.singletonFactory(tokens.BurningTickSystem, (c) => {
+    return new BurningTickSystem({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.BurningTickSystem
+    )}.`
+  );
+
+  // Register PoisonTickSystem
+  registrar.singletonFactory(tokens.PoisonTickSystem, (c) => {
+    return new PoisonTickSystem({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.PoisonTickSystem
     )}.`
   );
 
