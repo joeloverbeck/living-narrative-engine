@@ -267,6 +267,7 @@ beforeAll(async () => {
           token: JsonLogicEvaluationServiceToken,
         },
         { property: 'bodyGraphService', token: BodyGraphServiceToken },
+        { property: 'damageTypeEffectsService', token: tokens.DamageTypeEffectsService },
       ],
     },
     {

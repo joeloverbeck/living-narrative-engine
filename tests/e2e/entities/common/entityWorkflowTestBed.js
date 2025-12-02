@@ -1465,6 +1465,58 @@ export class EntityWorkflowTestBed extends BaseTestBed {
   }
 
   /**
+   * Clean up all test entities without destroying the container.
+   * Use this in afterEach when sharing a container across tests via beforeAll.
+   *
+   * This method:
+   * - Removes all created entities from the EntityManager (triggers ENTITY_REMOVED events)
+   * - SpatialIndexSynchronizer handles spatial index cleanup via event listeners
+   * - Clears event and entity tracking
+   * - Does NOT destroy container/services (reusable for next test)
+   *
+   * @returns {Promise<void>}
+   */
+  async cleanupEntities() {
+    // Remove all created entities from the EntityManager
+    // The SpatialIndexSynchronizer listens to ENTITY_REMOVED events and
+    // automatically removes entities from the spatial index.
+    for (const entityId of this.createdEntities) {
+      if (!this.removedEntities.has(entityId)) {
+        try {
+          await this.entityManager.removeEntityInstance(entityId);
+        } catch (error) {
+          // Entity may already be removed - that's OK
+          this.logger?.warn(
+            `cleanupEntities: Failed to remove entity ${entityId}: ${error.message}`
+          );
+        }
+      }
+    }
+
+    // Note: We do NOT manually clear the spatial index here.
+    // The SpatialIndexSynchronizer handles this via ENTITY_REMOVED events,
+    // which also properly clears its internal #entityPositions map.
+
+    // Reset EventBus recursion counters for clean state between tests.
+    // Without this, high-volume tests (100+ entities) can exhaust the
+    // recursion depth limit (100) and block subsequent tests.
+    try {
+      if (this.eventBus && typeof this.eventBus.resetRecursionCounters === 'function') {
+        this.eventBus.resetRecursionCounters();
+      }
+    } catch (error) {
+      this.logger?.warn(
+        `cleanupEntities: Failed to reset recursion counters: ${error.message}`
+      );
+    }
+
+    // Clear transient tracking state
+    this.clearTransientState();
+
+    this.logger?.debug('EntityWorkflowTestBed entities cleaned up');
+  }
+
+  /**
    * Verify that the test bed is in a clean state.
    * Useful for debugging test isolation issues.
    *

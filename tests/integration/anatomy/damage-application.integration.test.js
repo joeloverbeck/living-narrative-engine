@@ -60,12 +60,17 @@ describe('Damage Application Mechanics', () => {
       logger,
       eventDispatcher: dispatcher,
     });
+    // Mock damageTypeEffectsService with required method
+    const damageTypeEffectsService = {
+      applyEffectsForDamage: jest.fn().mockResolvedValue(undefined),
+    };
     handler = new ApplyDamageHandler({
       logger,
       entityManager,
       safeEventDispatcher: dispatcher,
       jsonLogicService,
       bodyGraphService,
+      damageTypeEffectsService,
     });
     executionContext = {
       evaluationContext: { context: {} },

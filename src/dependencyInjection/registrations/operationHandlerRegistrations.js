@@ -221,6 +221,7 @@ export function registerOperationHandlers(registrar) {
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
           jsonLogicService: c.resolve(tokens.JsonLogicEvaluationService),
           bodyGraphService: c.resolve(tokens.BodyGraphService),
+          damageTypeEffectsService: c.resolve(tokens.DamageTypeEffectsService),
         }),
     ],
     [

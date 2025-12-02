@@ -44,8 +44,9 @@ class ApplyDamageHandler extends BaseOperationHandler {
   /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */ #dispatcher;
   /** @type {import('../jsonLogicEvaluationService.js').default} */ #jsonLogicService;
   /** @type {import('../../anatomy/bodyGraphService.js').default} */ #bodyGraphService;
+  /** @type {import('../../anatomy/services/damageTypeEffectsService.js').default} */ #damageTypeEffectsService;
 
-  constructor({ logger, entityManager, safeEventDispatcher, jsonLogicService, bodyGraphService }) {
+  constructor({ logger, entityManager, safeEventDispatcher, jsonLogicService, bodyGraphService, damageTypeEffectsService }) {
     super('ApplyDamageHandler', {
       logger: { value: logger },
       entityManager: {
@@ -64,11 +65,16 @@ class ApplyDamageHandler extends BaseOperationHandler {
         value: bodyGraphService,
         requiredMethods: ['getAllParts'],
       },
+      damageTypeEffectsService: {
+        value: damageTypeEffectsService,
+        requiredMethods: ['applyEffectsForDamage'],
+      },
     });
     this.#entityManager = entityManager;
     this.#dispatcher = safeEventDispatcher;
     this.#jsonLogicService = jsonLogicService;
     this.#bodyGraphService = bodyGraphService;
+    this.#damageTypeEffectsService = damageTypeEffectsService;
   }
 
   #calculateHealthState(healthPercentage) {
@@ -337,6 +343,16 @@ class ApplyDamageHandler extends BaseOperationHandler {
       }
 
       log.debug(`APPLY_DAMAGE: Applied ${damageAmount} ${damageType} to ${partId}. Health: ${currentHealth} -> ${newHealth}. State: ${newState}.`);
+
+      // Apply damage type effects (bleed, burn, fracture, dismemberment, poison)
+      await this.#damageTypeEffectsService.applyEffectsForDamage({
+        entityId: ownerEntityId || entityId,
+        partId,
+        amount: damageAmount,
+        damageType,
+        maxHealth,
+        currentHealth: newHealth,
+      });
 
     } catch (error) {
       log.error('APPLY_DAMAGE operation failed', error, { partId });

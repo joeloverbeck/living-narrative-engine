@@ -1,5 +1,6 @@
 import { describe, it, expect } from '@jest/globals';
 import AnatomyGraphContext from '../../../src/anatomy/anatomyGraphContext.js';
+import { ValidationError } from '../../../src/errors/validationError.js';
 
 // Helper to create a context with deterministic RNG
 const createContext = (seed) => new AnatomyGraphContext(seed);
@@ -36,6 +37,49 @@ describe('AnatomyGraphContext', () => {
     ctx.mapSlotToEntity('s1', 'e1');
     expect(ctx.getEntityForSlot('s1')).toBe('e1');
     expect(ctx.getEntityForSlot('unknown')).toBeUndefined();
+  });
+
+  it('throws ValidationError when mapping duplicate slot key', () => {
+    const ctx = createContext();
+    ctx.mapSlotToEntity('left_arm', 'entity-123');
+
+    expect(() => {
+      ctx.mapSlotToEntity('left_arm', 'entity-456');
+    }).toThrow(ValidationError);
+
+    expect(() => {
+      ctx.mapSlotToEntity('left_arm', 'entity-456');
+    }).toThrow(/already mapped to entity 'entity-123'/);
+  });
+
+  it('allows mapping different slot keys to different entities', () => {
+    const ctx = createContext();
+    ctx.mapSlotToEntity('left_arm', 'entity-123');
+    ctx.mapSlotToEntity('right_arm', 'entity-456');
+
+    expect(ctx.getEntityForSlot('left_arm')).toBe('entity-123');
+    expect(ctx.getEntityForSlot('right_arm')).toBe('entity-456');
+  });
+
+  it('includes both entity IDs and slot key in error message for duplicate slot', () => {
+    const ctx = createContext();
+    ctx.mapSlotToEntity('torso', 'entity-original');
+
+    let caughtError;
+    expect(() => {
+      ctx.mapSlotToEntity('torso', 'entity-duplicate');
+    }).toThrow(ValidationError);
+
+    try {
+      ctx.mapSlotToEntity('torso', 'entity-duplicate');
+    } catch (err) {
+      caughtError = err;
+    }
+
+    expect(caughtError).toBeInstanceOf(ValidationError);
+    expect(caughtError.message).toContain('entity-original');
+    expect(caughtError.message).toContain('entity-duplicate');
+    expect(caughtError.message).toContain('torso');
   });
 
   it('produces deterministic random numbers when seeded', () => {
