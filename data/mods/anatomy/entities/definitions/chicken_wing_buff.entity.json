@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:chicken_wing_buff",
+  "description": "Feathered wing of a chicken with buff coloring",
+  "components": {
+    "anatomy:part": {
+      "subType": "chicken_wing"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 8,
+      "maxHealth": 8,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "buff chicken wing"
+    },
+    "descriptors:texture": {
+      "texture": "feathered"
+    },
+    "descriptors:color_extended": {
+      "color": "buff"
+    }
+  }
+}

@@ -57,6 +57,11 @@ const createDependencies = () => {
     getContentTypeSchemaId: jest.fn(),
   };
 
+  const fileExistenceValidator = {
+    validateAllMods: jest.fn(async () => new Map()),
+    validateAllModsUnregistered: jest.fn(async () => new Map()),
+  };
+
   return {
     logger,
     modDependencyValidator,
@@ -65,6 +70,7 @@ const createDependencies = () => {
     modManifestLoader,
     pathResolver,
     configuration,
+    fileExistenceValidator,
   };
 };
 

@@ -14,12 +14,14 @@
           "floral",
           "geometric",
           "heart",
+          "hexagonal-scutes",
+          "mottled",
           "plaid",
           "polka-dot",
           "serpentine",
           "solid",
-          "striped",
-          "hexagonal-scutes"
+          "speckled",
+          "striped"
         ],
         "default": "solid"
       }

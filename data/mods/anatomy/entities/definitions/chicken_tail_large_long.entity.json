@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:chicken_tail_large_long",
+  "description": "Large, very long feathered tail of a rooster",
+  "components": {
+    "anatomy:part": {
+      "subType": "chicken_tail"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 5,
+      "maxHealth": 5,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "large rooster tail"
+    },
+    "descriptors:texture": {
+      "texture": "feathered"
+    },
+    "descriptors:size_category": {
+      "size": "large"
+    },
+    "descriptors:length_category": {
+      "length": "very-long"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:feline_eye_abyssal_black_glow",
+  "description": "Feline eye with abyssal black color and faint otherworldly glow",
+  "components": {
+    "anatomy:part": {
+      "subType": "eye"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 10,
+      "maxHealth": 10,
+      "state": "healthy"
+    },
+    "descriptors:color_extended": {
+      "color": "abyssal-black"
+    },
+    "descriptors:shape_eye": {
+      "shape": "hooded"
+    },
+    "descriptors:pupil_shape": {
+      "shape": "slit-vertical"
+    },
+    "descriptors:luminosity": {
+      "luminosity": "faint-glow"
+    },
+    "core:name": {
+      "text": "abyssal eye"
+    }
+  }
+}

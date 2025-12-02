@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:chicken_head_chalky_white",
+  "description": "Small feathered head of a chicken with chalky-white coloring",
+  "components": {
+    "anatomy:part": {
+      "subType": "chicken_head"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 8,
+      "maxHealth": 8,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "chalky-white chicken head"
+    },
+    "descriptors:size_category": {
+      "size": "small"
+    },
+    "descriptors:texture": {
+      "texture": "feathered"
+    },
+    "descriptors:color_extended": {
+      "color": "chalky-white"
+    }
+  }
+}

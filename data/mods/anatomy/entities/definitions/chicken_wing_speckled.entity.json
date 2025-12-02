@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:chicken_wing_speckled",
+  "description": "Feathered wing of a chicken with speckled pattern",
+  "components": {
+    "anatomy:part": {
+      "subType": "chicken_wing"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 8,
+      "maxHealth": 8,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "speckled chicken wing"
+    },
+    "descriptors:texture": {
+      "texture": "feathered"
+    },
+    "descriptors:pattern": {
+      "pattern": "speckled"
+    }
+  }
+}

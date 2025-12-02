@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:chicken_wattle_large",
+  "description": "Large fleshy red wattle hanging below a chicken's beak",
+  "components": {
+    "anatomy:part": {
+      "subType": "chicken_wattle"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 3,
+      "maxHealth": 3,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "large chicken wattle"
+    },
+    "descriptors:texture": {
+      "texture": "fleshy"
+    },
+    "descriptors:color_basic": {
+      "color": "red"
+    },
+    "descriptors:size_category": {
+      "size": "large"
+    }
+  }
+}
