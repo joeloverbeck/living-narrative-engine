@@ -40,6 +40,7 @@ describe('registerUI token resolution', () => {
     });
     container.register(tokens.InjuryNarrativeFormatterService, {
       formatFirstPerson: jest.fn(),
+      formatDamageEvent: jest.fn(),
     });
   });
 

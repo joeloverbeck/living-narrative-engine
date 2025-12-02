@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/damage-capability-entry.schema.json",
+  "title": "DamageCapabilityEntry",
+  "description": "A single damage type entry with amount and effect configuration",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Damage type identifier (e.g., 'slashing', 'piercing', 'fire')",
+      "minLength": 1
+    },
+    "amount": {
+      "type": "number",
+      "description": "Base damage amount for this type",
+      "minimum": 0
+    },
+    "penetration": {
+      "type": "number",
+      "description": "Weighting for internal damage propagation (0-1)",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0
+    },
+    "bleed": {
+      "type": "object",
+      "description": "Bleeding effect configuration",
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "severity": {
+          "type": "string",
+          "enum": ["minor", "moderate", "severe"],
+          "default": "minor"
+        },
+        "baseDurationTurns": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 2
+        }
+      },
+      "required": ["enabled"],
+      "additionalProperties": false
+    },
+    "fracture": {
+      "type": "object",
+      "description": "Bone fracture effect configuration",
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "thresholdFraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.5
+        },
+        "stunChance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.2
+        }
+      },
+      "required": ["enabled"],
+      "additionalProperties": false
+    },
+    "burn": {
+      "type": "object",
+      "description": "Burning effect configuration",
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "dps": { "type": "number", "minimum": 0, "default": 1 },
+        "durationTurns": { "type": "integer", "minimum": 1, "default": 2 },
+        "canStack": { "type": "boolean", "default": false }
+      },
+      "required": ["enabled"],
+      "additionalProperties": false
+    },
+    "poison": {
+      "type": "object",
+      "description": "Poison effect configuration",
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "tickDamage": { "type": "number", "minimum": 0, "default": 1 },
+        "durationTurns": { "type": "integer", "minimum": 1, "default": 3 },
+        "scope": {
+          "type": "string",
+          "enum": ["part", "entity"],
+          "default": "part"
+        }
+      },
+      "required": ["enabled"],
+      "additionalProperties": false
+    },
+    "dismember": {
+      "type": "object",
+      "description": "Dismemberment effect configuration",
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "thresholdFraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.8,
+          "description": "Part must be below this health fraction for dismemberment to trigger"
+        }
+      },
+      "required": ["enabled"],
+      "additionalProperties": false
+    },
+    "flags": {
+      "type": "array",
+      "description": "Custom extensibility flags (e.g., 'magical', 'holy', 'silver')",
+      "items": { "type": "string" },
+      "default": []
+    }
+  },
+  "required": ["name", "amount"],
+  "additionalProperties": false
+}

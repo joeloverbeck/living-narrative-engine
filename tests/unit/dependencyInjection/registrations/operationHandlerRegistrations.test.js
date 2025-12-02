@@ -118,6 +118,10 @@ const handlerModuleDefinitions = [
     `${handlerBasePath}/removeLyingClosenessHandler.js`,
   ],
   [
+    'BreakBidirectionalClosenessHandler',
+    `${handlerBasePath}/breakBidirectionalClosenessHandler.js`,
+  ],
+  [
     'BreakClosenessWithTargetHandler',
     `${handlerBasePath}/breakClosenessWithTargetHandler.js`,
   ],
@@ -706,6 +710,19 @@ beforeAll(async () => {
           property: 'closenessCircleService',
           token: ClosenessCircleServiceToken,
         },
+      ],
+    },
+    {
+      token: tokens.BreakBidirectionalClosenessHandler,
+      handlerName: 'BreakBidirectionalClosenessHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        {
+          property: 'regenerateDescriptionHandler',
+          token: RegenerateDescriptionHandlerToken,
+        },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+        { property: 'logger', token: ILogger },
       ],
     },
     {

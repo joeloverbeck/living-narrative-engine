@@ -32,6 +32,7 @@ describe('registerUI', () => {
     });
     container.register(tokens.InjuryNarrativeFormatterService, {
       formatFirstPerson: jest.fn(),
+      formatDamageEvent: jest.fn(),
     });
 
     const doc = document;

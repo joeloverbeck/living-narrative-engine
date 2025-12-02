@@ -167,6 +167,10 @@ export function registerInterpreters(container) {
       bind(tokens.RemoveFromClosenessCircleHandler)
     );
     registry.register(
+      'BREAK_BIDIRECTIONAL_CLOSENESS',
+      bind(tokens.BreakBidirectionalClosenessHandler)
+    );
+    registry.register(
       'ESTABLISH_BIDIRECTIONAL_CLOSENESS',
       bind(tokens.EstablishBidirectionalClosenessHandler)
     );

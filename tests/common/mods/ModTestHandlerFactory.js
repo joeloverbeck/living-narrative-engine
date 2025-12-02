@@ -37,6 +37,7 @@ import AtomicModifyComponentHandler from '../../../src/logic/operationHandlers/a
 import LockMouthEngagementHandler from '../../../src/logic/operationHandlers/lockMouthEngagementHandler.js';
 import UnlockMouthEngagementHandler from '../../../src/logic/operationHandlers/unlockMouthEngagementHandler.js';
 import BreakClosenessWithTargetHandler from '../../../src/logic/operationHandlers/breakClosenessWithTargetHandler.js';
+import BreakBidirectionalClosenessHandler from '../../../src/logic/operationHandlers/breakBidirectionalClosenessHandler.js';
 import MergeClosenessCircleHandler from '../../../src/logic/operationHandlers/mergeClosenessCircleHandler.js';
 import EstablishBidirectionalClosenessHandler from '../../../src/logic/operationHandlers/establishBidirectionalClosenessHandler.js';
 import EstablishLyingClosenessHandler from '../../../src/logic/operationHandlers/establishLyingClosenessHandler.js';
@@ -99,6 +100,7 @@ const MUTATION_OR_PERCEPTION_TYPES = new Set([
   'ESTABLISH_LYING_CLOSENESS',
   'ESTABLISH_SITTING_CLOSENESS',
   'ESTABLISH_BIDIRECTIONAL_CLOSENESS',
+  'BREAK_BIDIRECTIONAL_CLOSENESS',
   'REMOVE_LYING_CLOSENESS',
   'LOCK_MOVEMENT',
   'UNLOCK_MOVEMENT',
@@ -1251,6 +1253,12 @@ export class ModTestHandlerFactory {
         closenessCircleService,
       }),
       ESTABLISH_BIDIRECTIONAL_CLOSENESS: new EstablishBidirectionalClosenessHandler({
+        entityManager,
+        safeEventDispatcher: safeDispatcher,
+        regenerateDescriptionHandler,
+        logger,
+      }),
+      BREAK_BIDIRECTIONAL_CLOSENESS: new BreakBidirectionalClosenessHandler({
         entityManager,
         safeEventDispatcher: safeDispatcher,
         regenerateDescriptionHandler,

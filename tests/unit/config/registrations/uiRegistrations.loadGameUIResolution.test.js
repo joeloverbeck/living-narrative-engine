@@ -43,6 +43,7 @@ describe('registerUI LoadGameUI resolution', () => {
     });
     container.register(tokens.InjuryNarrativeFormatterService, {
       formatFirstPerson: jest.fn(),
+      formatDamageEvent: jest.fn(),
     });
   });
 

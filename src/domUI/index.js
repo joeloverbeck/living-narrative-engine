@@ -45,6 +45,9 @@ export { EntityLifecycleMonitor } from './entityLifecycleMonitor.js';
 // Injury Status Panel
 export { InjuryStatusPanel } from './injuryStatusPanel.js';
 
+// Damage Event Message Renderer
+export { DamageEventMessageRenderer } from './damageEventMessageRenderer.js';
+
 // Facade
 export { DomUiFacade } from './domUiFacade.js';
 // --- FILE END ---

@@ -41,6 +41,9 @@
 /* Action-Result Bubbles */
 @import url('components/_action-result-bubbles.css');
 
+/* Damage Messages */
+@import url('components/_damage-messages.css');
+
 /* Add more component imports here as they are created/refactored if any were missed */
 
 /* 5. Utilities */
