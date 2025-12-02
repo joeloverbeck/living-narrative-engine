@@ -109,6 +109,9 @@ class VisualizationComposer {
   /** @type {boolean} */
   #isInitialized;
 
+  /** @type {Map<string, number>} */
+  #nameUsageCount = new Map();
+
   /**
    * Initialize the visualization composer
    *
@@ -193,6 +196,7 @@ class VisualizationComposer {
     // Clear data
     this.#nodes.clear();
     this.#edges = [];
+    this.#resetNameTracking();
 
     // Reset viewport
     this.#viewportManager.reset();
@@ -260,6 +264,9 @@ class VisualizationComposer {
       }
     );
 
+    // Build parent-child index once - O(n) instead of O(n²) during BFS
+    const parentChildIndex = await this.#buildParentChildIndex(allPartIds);
+
     // Process nodes breadth-first
     while (queue.length > 0) {
       const { id, depth, parent } = queue.shift();
@@ -287,13 +294,16 @@ class VisualizationComposer {
         const partComponent = entity.getComponentData('anatomy:part');
         const jointComponent = entity.getComponentData('anatomy:joint');
 
-        // Create node
+        // Create node with unique display name for collision handling
+        const baseName = nameComponent?.text || id;
+        const displayName = this.#getUniqueDisplayName(baseName);
         const node = new AnatomyNode(
           id,
-          nameComponent?.text || id,
+          displayName,
           partComponent?.subType || 'unknown',
           depth
         );
+        node.baseName = baseName; // Preserve original for tooltips
         node.description = descriptionComponent?.text || 'No description';
 
         // Collect descriptor components
@@ -316,44 +326,22 @@ class VisualizationComposer {
           this.#edges.push(edge);
         }
 
-        // Find children
+        // Find children using O(1) index lookup instead of O(n) iteration
+        const childIds = parentChildIndex.get(id) || [];
         const children = [];
-        for (const partId of allPartIds) {
-          if (!visited.has(partId)) {
-            try {
-              const partEntity =
-                await this.#entityManager.getEntityInstance(partId);
-              if (partEntity) {
-                const partJoint = partEntity.getComponentData('anatomy:joint');
-                if (partJoint && partJoint.parentId === id) {
-                  children.push(partId);
-                  queue.push({ id: partId, depth: depth + 1, parent: id });
+        for (const childId of childIds) {
+          if (!visited.has(childId)) {
+            children.push(childId);
+            queue.push({ id: childId, depth: depth + 1, parent: id });
 
-                  // DIAGNOSTIC 3: Log successful parent-child match
-                  this.#logger.debug(
-                    `VisualizationComposer: MATCH - Entity '${partId}' has parent '${id}'`,
-                    {
-                      childId: partId,
-                      parentId: id,
-                      jointSocketId: partJoint.socketId,
-                    }
-                  );
-                } else {
-                  // DIAGNOSTIC 4: Log parent-child match failure
-                  this.#logger.debug(
-                    `VisualizationComposer: NO MATCH - Entity '${partId}' parent is '${partJoint?.parentId || 'none'}', checking against '${id}'`,
-                    {
-                      partId,
-                      checkingAgainstParent: id,
-                      actualParent: partJoint?.parentId || 'none',
-                      hasJoint: !!partJoint,
-                    }
-                  );
-                }
+            // DIAGNOSTIC 3: Log successful parent-child match
+            this.#logger.debug(
+              `VisualizationComposer: MATCH - Entity '${childId}' has parent '${id}'`,
+              {
+                childId,
+                parentId: id,
               }
-            } catch (err) {
-              this.#logger.warn(`Failed to check entity ${partId}:`, err);
-            }
+            );
           }
         }
 
@@ -498,12 +486,16 @@ class VisualizationComposer {
             const nameComponent = entity.getComponentData('core:name');
             const partComponent = entity.getComponentData('anatomy:part');
 
+            // Create node with unique display name for collision handling
+            const baseName = nameComponent?.text || name || id;
+            const displayName = this.#getUniqueDisplayName(baseName);
             const node = new AnatomyNode(
               id,
-              nameComponent?.text || name || id,
+              displayName,
               partComponent?.subType || 'unknown',
               0 // Place at root level
             );
+            node.baseName = baseName; // Preserve original for tooltips
             node.description = 'Unconnected part';
 
             this.#nodes.set(id, node);
@@ -573,7 +565,7 @@ class VisualizationComposer {
             : 'none';
 
         const content = `
-          <div class="tooltip-header">${DomUtils.escapeHtml(node.name)}</div>
+          <div class="tooltip-header">${DomUtils.escapeHtml(node.baseName || node.name)}</div>
           <div class="tooltip-type">Type: ${DomUtils.escapeHtml(node.type)}</div>
           <div class="tooltip-description">${descriptionHtml}</div>
           <div class="tooltip-descriptors">Descriptors: ${DomUtils.escapeHtml(descriptorsText)}</div>
@@ -617,6 +609,70 @@ class VisualizationComposer {
         e.stopPropagation();
       });
     });
+  }
+
+  /**
+   * Resets name tracking for a new visualization.
+   * @private
+   */
+  #resetNameTracking() {
+    this.#nameUsageCount.clear();
+  }
+
+  /**
+   * Builds a parent-to-children index from the entity list.
+   * This allows O(1) child lookup instead of O(n) iteration during BFS.
+   *
+   * @private
+   * @param {Set<string>} allPartIds - All anatomy part IDs
+   * @returns {Promise<Map<string, string[]>>} Parent ID -> Child IDs mapping
+   */
+  async #buildParentChildIndex(allPartIds) {
+    /** @type {Map<string, string[]>} */
+    const parentToChildren = new Map();
+
+    for (const partId of allPartIds) {
+      try {
+        const entity = await this.#entityManager.getEntityInstance(partId);
+        const joint = entity?.getComponentData('anatomy:joint');
+        if (joint?.parentId) {
+          const children = parentToChildren.get(joint.parentId) || [];
+          children.push(partId);
+          parentToChildren.set(joint.parentId, children);
+        }
+      } catch (err) {
+        this.#logger.warn(
+          `VisualizationComposer: Failed to index entity ${partId}:`,
+          err
+        );
+      }
+    }
+
+    this.#logger.debug(
+      `VisualizationComposer: Built parent-child index with ${parentToChildren.size} parent entries`
+    );
+
+    return parentToChildren;
+  }
+
+  /**
+   * Generates a unique display name, appending an index if the name is already used.
+   *
+   * @private
+   * @param {string} baseName - The base name from the entity
+   * @returns {string} Unique display name
+   */
+  #getUniqueDisplayName(baseName) {
+    const currentCount = this.#nameUsageCount.get(baseName) || 0;
+    this.#nameUsageCount.set(baseName, currentCount + 1);
+
+    if (currentCount === 0) {
+      // First occurrence - use base name without suffix
+      return baseName;
+    }
+
+    // Subsequent occurrences - append index
+    return `${baseName} [${currentCount + 1}]`;
   }
 }
 

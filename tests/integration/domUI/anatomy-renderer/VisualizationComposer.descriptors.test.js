@@ -278,10 +278,11 @@ describe('VisualizationComposer - Descriptor Tooltips Integration', () => {
       }),
     };
 
-    mockEntityManager.getEntityInstance
-      .mockResolvedValueOnce(mockRootEntity)
-      .mockResolvedValueOnce(mockChildEntity)
-      .mockResolvedValueOnce(mockChildEntity);
+    mockEntityManager.getEntityInstance.mockImplementation((id) => {
+      if (id === 'root-entity') return Promise.resolve(mockRootEntity);
+      if (id === 'child-entity') return Promise.resolve(mockChildEntity);
+      return Promise.resolve(null);
+    });
 
     // Initialize and build graph
     visualizationComposer.initialize(container);

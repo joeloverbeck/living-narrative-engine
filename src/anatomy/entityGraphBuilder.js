@@ -204,19 +204,32 @@ export class EntityGraphBuilder {
         { componentOverrides }
       );
 
-      // Verify entity was created successfully before proceeding
-      const verifyChildEntity = this.#entityManager.getEntityInstance(childEntity.id);
-      if (!verifyChildEntity) {
-        this.#logger.error(
-          `EntityGraphBuilder: Created child entity ${childEntity.id} not immediately available`,
+      // Verify entity was created successfully before proceeding with component addition
+      // Use exponential backoff retry for better reliability under stress conditions
+      let verifyEntity = this.#entityManager.getEntityInstance(childEntity.id);
+      let retries = 0;
+      const maxRetries = 5;
+
+      while (!verifyEntity && retries < maxRetries) {
+        this.#logger.warn(
+          `EntityGraphBuilder: Created child entity ${childEntity.id} not immediately available, retry ${retries + 1}/${maxRetries}`,
           { entityId: childEntity.id, partDefinitionId, parentId }
         );
-        // Wait briefly and retry verification
-        await new Promise(resolve => setTimeout(resolve, 10));
-        const retryVerify = this.#entityManager.getEntityInstance(childEntity.id);
-        if (!retryVerify) {
-          throw new Error(`Child entity creation-verification race condition: ${childEntity.id}`);
-        }
+
+        // Exponential backoff: 10ms, 20ms, 40ms, 80ms, 160ms
+        const delay = 10 * Math.pow(2, retries);
+        await new Promise(resolve => setTimeout(resolve, delay));
+
+        verifyEntity = this.#entityManager.getEntityInstance(childEntity.id);
+        retries++;
+      }
+
+      if (!verifyEntity) {
+        this.#logger.error(
+          `EntityGraphBuilder: Child entity creation-verification failed after ${maxRetries} retries`,
+          { entityId: childEntity.id, partDefinitionId, parentId }
+        );
+        throw new Error(`Child entity creation-verification race condition: ${childEntity.id}`);
       }
 
       // Add ownership component if specified

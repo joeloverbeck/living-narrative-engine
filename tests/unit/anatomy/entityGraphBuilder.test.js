@@ -472,7 +472,7 @@ describe('EntityGraphBuilder', () => {
       expect(id).toBe('armDef');
     });
 
-    it('retries child verification before continuing', async () => {
+    it('retries child verification with exponential backoff before succeeding', async () => {
       jest.useFakeTimers();
       try {
         mocks.entityManager.createEntityInstance.mockResolvedValue({
@@ -480,6 +480,7 @@ describe('EntityGraphBuilder', () => {
         });
         const getEntityMock = jest
           .fn()
+          .mockReturnValueOnce(null)
           .mockReturnValueOnce(null)
           .mockReturnValueOnce({ id: 'child-1' });
         mocks.entityManager.getEntityInstance = getEntityMock;
@@ -490,22 +491,29 @@ describe('EntityGraphBuilder', () => {
           'armDef'
         );
 
+        // First retry after 10ms (10 * 2^0)
         await jest.advanceTimersByTimeAsync(10);
+        // Second retry after 20ms (10 * 2^1)
+        await jest.advanceTimersByTimeAsync(20);
 
         const id = await promise;
 
         expect(id).toBe('child-1');
-        expect(getEntityMock).toHaveBeenCalledTimes(2);
-        expect(mocks.logger.error).toHaveBeenCalledWith(
-          'EntityGraphBuilder: Created child entity child-1 not immediately available',
-          { entityId: 'child-1', partDefinitionId: 'armDef', parentId: 'torso' }
+        expect(getEntityMock).toHaveBeenCalledTimes(3);
+        expect(mocks.logger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('not immediately available, retry 1/5'),
+          expect.any(Object)
+        );
+        expect(mocks.logger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('not immediately available, retry 2/5'),
+          expect.any(Object)
         );
       } finally {
         jest.useRealTimers();
       }
     });
 
-    it('returns null when child verification fails after retry', async () => {
+    it('returns null when child verification fails after all 5 retries', async () => {
       jest.useFakeTimers();
       try {
         mocks.entityManager.createEntityInstance.mockResolvedValue({
@@ -520,14 +528,19 @@ describe('EntityGraphBuilder', () => {
           'armDef'
         );
 
+        // Advance through all 5 retries: 10ms, 20ms, 40ms, 80ms, 160ms
         await jest.advanceTimersByTimeAsync(10);
+        await jest.advanceTimersByTimeAsync(20);
+        await jest.advanceTimersByTimeAsync(40);
+        await jest.advanceTimersByTimeAsync(80);
+        await jest.advanceTimersByTimeAsync(160);
 
         const id = await promise;
 
         expect(id).toBeNull();
-        expect(getEntityMock).toHaveBeenCalledTimes(2);
+        expect(getEntityMock).toHaveBeenCalledTimes(6); // Initial + 5 retries
         expect(mocks.logger.error).toHaveBeenCalledWith(
-          'EntityGraphBuilder: Created child entity child-2 not immediately available',
+          'EntityGraphBuilder: Child entity creation-verification failed after 5 retries',
           { entityId: 'child-2', partDefinitionId: 'armDef', parentId: 'torso' }
         );
         expect(mocks.logger.error).toHaveBeenCalledWith(

@@ -465,7 +465,7 @@ describe('EntityGraphBuilder integration', () => {
       );
 
       expect(childId).toEqual(expect.any(String));
-      expect(ctx.logger.error).toHaveBeenCalledWith(
+      expect(ctx.logger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Created child entity'),
         expect.objectContaining({
           entityId: expect.any(String),
