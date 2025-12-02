@@ -61,6 +61,10 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
       "message": "All 0 property objects valid",
     },
     {
+      "check": "SLOT_KEY_UNIQUENESS_SKIP",
+      "message": "V1 blueprint or no structure template - slot key uniqueness not applicable",
+    },
+    {
       "check": "socket_slot_compatibility",
       "message": "All 2 slot socket references valid",
     },
@@ -493,6 +497,10 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
       "message": "Recipe is referenced by 1 entity definition(s)",
     },
     {
+      "check": "SLOT_KEY_UNIQUENESS_SKIP",
+      "message": "V1 blueprint or no structure template - slot key uniqueness not applicable",
+    },
+    {
       "check": "socket_slot_compatibility",
       "message": "All 2 slot socket references valid",
     },
@@ -552,6 +560,10 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
         "totalCount": 1,
       },
       "message": "Recipe is referenced by 1 entity definition(s)",
+    },
+    {
+      "check": "SLOT_KEY_UNIQUENESS_SKIP",
+      "message": "V1 blueprint or no structure template - slot key uniqueness not applicable",
     },
     {
       "check": "socket_slot_compatibility",
@@ -615,6 +627,10 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
     {
       "check": "property_schemas",
       "message": "All 0 property objects valid",
+    },
+    {
+      "check": "SLOT_KEY_UNIQUENESS_SKIP",
+      "message": "V1 blueprint or no structure template - slot key uniqueness not applicable",
     },
     {
       "check": "socket_slot_compatibility",
@@ -742,6 +758,10 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
         "totalCount": 1,
       },
       "message": "Recipe is referenced by 1 entity definition(s)",
+    },
+    {
+      "check": "SLOT_KEY_UNIQUENESS_SKIP",
+      "message": "V1 blueprint or no structure template - slot key uniqueness not applicable",
     },
     {
       "check": "socket_slot_compatibility",

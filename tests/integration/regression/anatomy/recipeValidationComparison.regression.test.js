@@ -54,6 +54,7 @@ describe('Recipe Validation Comparison Regression Suite', () => {
           'pattern_matching',
           'property_schemas',
           'recipe_usage',
+          'SLOT_KEY_UNIQUENESS_SKIP',
           'socket_slot_compatibility',
         ].sort()
       );

@@ -23,8 +23,9 @@ import {
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 
-// Component ID for part health
+// Component IDs
 const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
+const PART_COMPONENT_ID = 'anatomy:part';
 
 /**
  * System responsible for processing burning effects each turn.
@@ -126,6 +127,10 @@ class BurningTickSystem extends BaseService {
 
     const { remainingTurns, tickDamage, stackedCount } = burningData;
 
+    // Get owner entity ID from part component for event payload
+    const partComponent = this.#entityManager.getComponentData(partId, PART_COMPONENT_ID);
+    const ownerEntityId = partComponent?.ownerEntityId ?? null;
+
     // Check if part is destroyed (no health component or currentHealth <= 0)
     const partHealth = this.#entityManager.hasComponent(partId, PART_HEALTH_COMPONENT_ID)
       ? this.#entityManager.getComponentData(partId, PART_HEALTH_COMPONENT_ID)
@@ -135,7 +140,7 @@ class BurningTickSystem extends BaseService {
 
     // If part is destroyed, remove burning and emit stopped event
     if (partDestroyed) {
-      await this.#stopBurning(partId, stackedCount ?? 1, 'part_destroyed');
+      await this.#stopBurning(partId, stackedCount ?? 1, ownerEntityId, 'part_destroyed');
       return;
     }
 
@@ -157,7 +162,7 @@ class BurningTickSystem extends BaseService {
 
     if (newRemainingTurns <= 0) {
       // Duration expired - stop burning
-      await this.#stopBurning(partId, stackedCount ?? 1, 'duration_expired');
+      await this.#stopBurning(partId, stackedCount ?? 1, ownerEntityId, 'duration_expired');
     } else {
       // Update component with decremented duration
       await this.#entityManager.addComponent(partId, BURNING_COMPONENT_ID, {
@@ -173,13 +178,15 @@ class BurningTickSystem extends BaseService {
    *
    * @param {string} partId - The part entity ID
    * @param {number} stackedCount - The number of burn stacks
+   * @param {string|null} entityId - The owner entity ID
    * @param {string} reason - Reason for stopping ('duration_expired' | 'part_destroyed')
    * @private
    */
-  async #stopBurning(partId, stackedCount, reason) {
+  async #stopBurning(partId, stackedCount, entityId, reason) {
     await this.#entityManager.removeComponent(partId, BURNING_COMPONENT_ID);
 
     this.#dispatcher.dispatch(BURNING_STOPPED_EVENT, {
+      entityId,
       partId,
       stackedCount,
       reason,
