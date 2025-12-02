@@ -262,8 +262,11 @@ export class AnatomyInitializationService {
    * @throws {Error} If timeout is reached or generation fails
    */
   async waitForEntityGeneration(entityId, timeoutMs = 5000) {
-    // If not pending, return immediately
-    if (!this.#pendingGenerations.has(entityId)) {
+    // If not pending and not queued, return immediately
+    if (
+      !this.#pendingGenerations.has(entityId) &&
+      !this.#generationQueue.includes(entityId)
+    ) {
       return false;
     }
 

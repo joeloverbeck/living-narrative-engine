@@ -84,6 +84,7 @@ import BleedingTickSystem from '../../anatomy/services/bleedingTickSystem.js';
 import BurningTickSystem from '../../anatomy/services/burningTickSystem.js';
 import PoisonTickSystem from '../../anatomy/services/poisonTickSystem.js';
 import InjuryAggregationService from '../../anatomy/services/injuryAggregationService.js';
+import InjuryNarrativeFormatterService from '../../anatomy/services/injuryNarrativeFormatterService.js';
 import DeathCheckService from '../../anatomy/services/deathCheckService.js';
 import EntityMatcherService from '../../anatomy/services/entityMatcherService.js';
 import BlueprintProcessorService from '../../anatomy/services/blueprintProcessorService.js';
@@ -911,6 +912,18 @@ export function registerWorldAndEntity(container) {
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.InjuryAggregationService
+    )}.`
+  );
+
+  // Register InjuryNarrativeFormatterService
+  registrar.singletonFactory(tokens.InjuryNarrativeFormatterService, (c) => {
+    return new InjuryNarrativeFormatterService({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.InjuryNarrativeFormatterService
     )}.`
   );
 

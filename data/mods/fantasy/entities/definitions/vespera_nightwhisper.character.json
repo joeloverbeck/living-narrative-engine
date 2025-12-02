@@ -5,6 +5,9 @@
         "core:name": {
             "text": "Vespera Nightwhisper"
         },
+        "core:gender": {
+            "gender": "female"
+        },
         "core:portrait": {
             "imagePath": "portraits/vespera_nightwhisper.png",
             "altText": "Vespera Nightwhisper - Ambitious cat-girl bard."

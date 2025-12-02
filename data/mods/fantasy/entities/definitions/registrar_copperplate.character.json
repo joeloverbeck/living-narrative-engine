@@ -5,6 +5,9 @@
     "core:name": {
       "text": "Registrar Copperplate"
     },
+    "core:gender": {
+        "gender": "male"
+    },
     "core:portrait": {
       "imagePath": "portraits/registrar_copperplate.png",
       "altText": "Registrar Copperplate - Ancient tortoise-person Registry Master."
