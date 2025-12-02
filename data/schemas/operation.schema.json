@@ -210,6 +210,9 @@
           "$ref": "./operations/removeLyingCloseness.schema.json"
         },
         {
+          "$ref": "./operations/breakBidirectionalCloseness.schema.json"
+        },
+        {
           "$ref": "./operations/breakClosenessWithTarget.schema.json"
         },
         {

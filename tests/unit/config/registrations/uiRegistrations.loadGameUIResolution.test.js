@@ -38,6 +38,12 @@ describe('registerUI LoadGameUI resolution', () => {
       deleteManualSave: jest.fn(),
     });
     container.register(tokens.LLMAdapter, {});
+    container.register(tokens.InjuryAggregationService, {
+      aggregateInjuries: jest.fn(),
+    });
+    container.register(tokens.InjuryNarrativeFormatterService, {
+      formatFirstPerson: jest.fn(),
+    });
   });
 
   it('resolves LoadGameUI with IUserPrompt dependency', () => {

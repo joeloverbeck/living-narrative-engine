@@ -76,6 +76,15 @@ export class IntegrationTestBed extends BaseTestBed {
     actionButtonsContainer.id = 'action-buttons';
     outputDiv.appendChild(actionButtonsContainer);
 
+    // Create injury status panel elements for InjuryStatusPanel
+    const injuryNarrative = document.createElement('div');
+    injuryNarrative.id = 'injury-narrative';
+    outputDiv.appendChild(injuryNarrative);
+
+    const injuryStatusContent = document.createElement('div');
+    injuryStatusContent.id = 'injury-status-content';
+    outputDiv.appendChild(injuryStatusContent);
+
     // Append outputDiv to document body so selectors work
     document.body.appendChild(outputDiv);
 

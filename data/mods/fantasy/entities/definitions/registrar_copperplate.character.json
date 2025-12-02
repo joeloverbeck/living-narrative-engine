@@ -6,7 +6,7 @@
       "text": "Registrar Copperplate"
     },
     "core:gender": {
-        "gender": "male"
+      "value": "male"
     },
     "core:portrait": {
       "imagePath": "portraits/registrar_copperplate.png",
@@ -180,10 +180,10 @@
       "maxAge": 312
     },
     "skills:melee_skill": {
-        "value": 35
+      "value": 35
     },
     "skills:defense_skill": {
-        "value": 45
+      "value": 45
     }
   }
 }

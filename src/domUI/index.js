@@ -42,6 +42,9 @@ export { default as ActorParticipationController } from './actorParticipationCon
 // Entity Lifecycle Monitor
 export { EntityLifecycleMonitor } from './entityLifecycleMonitor.js';
 
+// Injury Status Panel
+export { InjuryStatusPanel } from './injuryStatusPanel.js';
+
 // Facade
 export { DomUiFacade } from './domUiFacade.js';
 // --- FILE END ---

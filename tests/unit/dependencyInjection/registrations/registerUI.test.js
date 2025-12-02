@@ -27,6 +27,12 @@ describe('registerUI', () => {
       dispatch: jest.fn(),
       subscribe: jest.fn(),
     });
+    container.register(tokens.InjuryAggregationService, {
+      aggregateInjuries: jest.fn(),
+    });
+    container.register(tokens.InjuryNarrativeFormatterService, {
+      formatFirstPerson: jest.fn(),
+    });
 
     const doc = document;
     elements = {

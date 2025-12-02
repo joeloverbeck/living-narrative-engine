@@ -35,6 +35,7 @@ const PART_DESTROYED_EVENT = 'anatomy:part_destroyed';
 /** @type {{ getAllParts: jest.Mock }} */ let bodyGraphService;
 /** @type {{ applyEffectsForDamage: jest.Mock }} */ let damageTypeEffectsService;
 /** @type {{ propagateDamage: jest.Mock }} */ let damagePropagationService;
+/** @type {{ checkDeathConditions: jest.Mock }} */ let deathCheckService;
 
 beforeEach(() => {
   log = {
@@ -55,6 +56,13 @@ beforeEach(() => {
   bodyGraphService = { getAllParts: jest.fn() };
   damageTypeEffectsService = { applyEffectsForDamage: jest.fn() };
   damagePropagationService = { propagateDamage: jest.fn().mockReturnValue([]) };
+  deathCheckService = {
+    checkDeathConditions: jest.fn().mockReturnValue({
+      isDead: false,
+      isDying: false,
+      deathInfo: null,
+    }),
+  };
 });
 
 afterEach(() => jest.clearAllMocks());
@@ -70,7 +78,8 @@ describe('ApplyDamageHandler', () => {
         jsonLogicService,
         bodyGraphService,
         damageTypeEffectsService,
-        damagePropagationService
+        damagePropagationService,
+        deathCheckService
       });
       expect(handler).toBeInstanceOf(ApplyDamageHandler);
     });
@@ -84,7 +93,8 @@ describe('ApplyDamageHandler', () => {
               safeEventDispatcher: dispatcher,
               jsonLogicService,
               damageTypeEffectsService,
-              damagePropagationService
+              damagePropagationService,
+              deathCheckService
             })
         ).toThrow(/bodyGraphService/i);
       });
@@ -98,7 +108,8 @@ describe('ApplyDamageHandler', () => {
               safeEventDispatcher: dispatcher,
               jsonLogicService,
               bodyGraphService,
-              damagePropagationService
+              damagePropagationService,
+              deathCheckService
             })
         ).toThrow(/damageTypeEffectsService/i);
       });
@@ -112,9 +123,25 @@ describe('ApplyDamageHandler', () => {
               safeEventDispatcher: dispatcher,
               jsonLogicService,
               bodyGraphService,
-              damageTypeEffectsService
+              damageTypeEffectsService,
+              deathCheckService
             })
         ).toThrow(/damagePropagationService/i);
+      });
+
+    test('throws if deathCheckService is missing', () => {
+        expect(
+          () =>
+            new ApplyDamageHandler({
+              logger: log,
+              entityManager: em,
+              safeEventDispatcher: dispatcher,
+              jsonLogicService,
+              bodyGraphService,
+              damageTypeEffectsService,
+              damagePropagationService
+            })
+        ).toThrow(/deathCheckService/i);
       });
   });
 
@@ -130,7 +157,8 @@ describe('ApplyDamageHandler', () => {
         jsonLogicService,
         bodyGraphService,
         damageTypeEffectsService,
-        damagePropagationService
+        damagePropagationService,
+        deathCheckService
       });
       executionContext = {
         evaluationContext: { context: {} },
@@ -835,6 +863,204 @@ describe('ApplyDamageHandler', () => {
         // child1 and child2 should be hit (service decided they should propagate)
         expect(em.addComponent).toHaveBeenCalledWith('child1', PART_HEALTH_COMPONENT_ID, expect.anything());
         expect(em.addComponent).toHaveBeenCalledWith('child2', PART_HEALTH_COMPONENT_ID, expect.anything());
+    });
+
+    describe('death condition checks', () => {
+      test('should call checkDeathConditions after top-level damage is applied', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          amount: 20,
+          damage_type: 'blunt'
+        };
+
+        const partComponent = {
+          subType: 'torso',
+          ownerEntityId: 'owner-entity-id'
+        };
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => {
+          if (comp === PART_HEALTH_COMPONENT_ID) return true;
+          if (comp === PART_COMPONENT_ID && id === 'part1') return true;
+          return false;
+        });
+        em.getComponentData.mockImplementation((id, comp) => {
+          if (comp === PART_HEALTH_COMPONENT_ID) return healthComponent;
+          if (comp === PART_COMPONENT_ID && id === 'part1') return partComponent;
+          return null;
+        });
+
+        await handler.execute(params, executionContext);
+
+        expect(deathCheckService.checkDeathConditions).toHaveBeenCalledWith(
+          'owner-entity-id',
+          null
+        );
+      });
+
+      test('should NOT call checkDeathConditions for propagated damage', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'child-part',
+          amount: 10,
+          damage_type: 'piercing',
+          propagatedFrom: 'parent-part-id'
+        };
+
+        const healthComponent = {
+          currentHealth: 50,
+          maxHealth: 50,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => comp === PART_HEALTH_COMPONENT_ID);
+        em.getComponentData.mockReturnValue(healthComponent);
+
+        await handler.execute(params, executionContext);
+
+        expect(deathCheckService.checkDeathConditions).not.toHaveBeenCalled();
+      });
+
+      test('should log death when entity dies', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          amount: 100,
+          damage_type: 'fire'
+        };
+
+        const partComponent = {
+          subType: 'heart',
+          ownerEntityId: 'victim-entity'
+        };
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => {
+          if (comp === PART_HEALTH_COMPONENT_ID) return true;
+          if (comp === PART_COMPONENT_ID && id === 'part1') return true;
+          return false;
+        });
+        em.getComponentData.mockImplementation((id, comp) => {
+          if (comp === PART_HEALTH_COMPONENT_ID) return healthComponent;
+          if (comp === PART_COMPONENT_ID && id === 'part1') return partComponent;
+          return null;
+        });
+
+        deathCheckService.checkDeathConditions.mockReturnValue({
+          isDead: true,
+          isDying: false,
+          deathInfo: { cause: 'vital_organ_destroyed' }
+        });
+
+        await handler.execute(params, executionContext);
+
+        expect(log.info).toHaveBeenCalledWith(
+          expect.stringContaining('victim-entity died from damage')
+        );
+      });
+
+      test('should log dying state when entity enters dying state', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          amount: 50,
+          damage_type: 'blunt'
+        };
+
+        const partComponent = {
+          subType: 'torso',
+          ownerEntityId: 'dying-entity'
+        };
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => {
+          if (comp === PART_HEALTH_COMPONENT_ID) return true;
+          if (comp === PART_COMPONENT_ID && id === 'part1') return true;
+          return false;
+        });
+        em.getComponentData.mockImplementation((id, comp) => {
+          if (comp === PART_HEALTH_COMPONENT_ID) return healthComponent;
+          if (comp === PART_COMPONENT_ID && id === 'part1') return partComponent;
+          return null;
+        });
+
+        deathCheckService.checkDeathConditions.mockReturnValue({
+          isDead: false,
+          isDying: true,
+          deathInfo: null
+        });
+
+        await handler.execute(params, executionContext);
+
+        expect(log.info).toHaveBeenCalledWith(
+          expect.stringContaining('dying-entity is now dying')
+        );
+      });
+
+      test('should pass damageCauserId from executionContext.actorId', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          amount: 30,
+          damage_type: 'slash'
+        };
+
+        const partComponent = {
+          subType: 'arm',
+          ownerEntityId: 'victim-id'
+        };
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        const executionContextWithActor = {
+          evaluationContext: { context: {} },
+          logger: log,
+          actorId: 'attacker-id'
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => {
+          if (comp === PART_HEALTH_COMPONENT_ID) return true;
+          if (comp === PART_COMPONENT_ID && id === 'part1') return true;
+          return false;
+        });
+        em.getComponentData.mockImplementation((id, comp) => {
+          if (comp === PART_HEALTH_COMPONENT_ID) return healthComponent;
+          if (comp === PART_COMPONENT_ID && id === 'part1') return partComponent;
+          return null;
+        });
+
+        await handler.execute(params, executionContextWithActor);
+
+        expect(deathCheckService.checkDeathConditions).toHaveBeenCalledWith(
+          'victim-id',
+          'attacker-id'
+        );
+      });
     });
   });
 });

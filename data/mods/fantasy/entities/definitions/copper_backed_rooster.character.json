@@ -6,7 +6,7 @@
             "text": "copper-backed rooster"
         },
         "core:gender": {
-            "gender": "male"
+            "value": "male"
         },
         "core:portrait": {
             "imagePath": "portraits/copper_backed_rooster.png",

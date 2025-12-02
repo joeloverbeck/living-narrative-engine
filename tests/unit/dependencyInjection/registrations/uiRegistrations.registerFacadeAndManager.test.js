@@ -67,6 +67,7 @@ describe('registerFacadeAndManager', () => {
           tokens.LoadGameUI,
           tokens.LlmSelectionModal,
           tokens.TurnOrderTickerRenderer,
+          tokens.InjuryStatusPanel,
           // EntityLifecycleMonitor is commented out for performance
           // TitleRenderer removed with title banner
         ],
@@ -330,14 +331,14 @@ describe('registerFacadeAndManager', () => {
   });
 
   describe('DomUiFacade dependencies', () => {
-    it('should have exactly 10 dependencies (TitleRenderer removed, EntityLifecycleMonitor removed, TurnOrderTickerRenderer added)', () => {
+    it('should have exactly 11 dependencies (TitleRenderer removed, EntityLifecycleMonitor removed, TurnOrderTickerRenderer and InjuryStatusPanel added)', () => {
       registerFacadeAndManager(mockRegistrar, mockLogger);
 
       const domUiFacadeCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.DomUiFacade
       );
 
-      expect(domUiFacadeCall[3].dependencies).toHaveLength(10);
+      expect(domUiFacadeCall[3].dependencies).toHaveLength(11);
     });
 
     it('should include all required renderer dependencies', () => {

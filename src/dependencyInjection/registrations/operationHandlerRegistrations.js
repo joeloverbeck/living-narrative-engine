@@ -223,6 +223,7 @@ export function registerOperationHandlers(registrar) {
           bodyGraphService: c.resolve(tokens.BodyGraphService),
           damageTypeEffectsService: c.resolve(tokens.DamageTypeEffectsService),
           damagePropagationService: c.resolve(tokens.DamagePropagationService),
+          deathCheckService: c.resolve(tokens.DeathCheckService),
         }),
     ],
     [

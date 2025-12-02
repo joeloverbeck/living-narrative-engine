@@ -17,6 +17,7 @@ const createDependencies = (overrides = {}) => ({
   loadGameUI: createRenderer({ show: jest.fn() }),
   llmSelectionModal: createRenderer({ show: jest.fn() }),
   turnOrderTickerRenderer: createRenderer({ render: jest.fn() }),
+  injuryStatusPanel: createRenderer({ updateForActor: jest.fn() }),
   entityLifecycleMonitor: createRenderer({ clearEvents: jest.fn() }),
   ...overrides,
 });
@@ -36,6 +37,7 @@ describe('DomUiFacade', () => {
     expect(facade.loadGame).toBe(deps.loadGameUI);
     expect(facade.llmSelectionModal).toBe(deps.llmSelectionModal);
     expect(facade.turnOrderTicker).toBe(deps.turnOrderTickerRenderer);
+    expect(facade.injuryStatus).toBe(deps.injuryStatusPanel);
     expect(facade.entityLifecycleMonitor).toBe(deps.entityLifecycleMonitor);
   });
 
@@ -105,6 +107,11 @@ describe('DomUiFacade', () => {
         'DomUiFacade: Missing or invalid turnOrderTickerRenderer dependency.',
       ],
       [
+        'injuryStatusPanel',
+        { injuryStatusPanel: createRenderer({}) },
+        'DomUiFacade: Missing or invalid injuryStatusPanel dependency.',
+      ],
+      [
         'entityLifecycleMonitor',
         { entityLifecycleMonitor: { dispose: jest.fn() } },
         'DomUiFacade: Invalid entityLifecycleMonitor dependency.',
@@ -132,6 +139,7 @@ describe('DomUiFacade', () => {
     expect(deps.loadGameUI.dispose).toHaveBeenCalledTimes(1);
     expect(deps.llmSelectionModal.dispose).toHaveBeenCalledTimes(1);
     expect(deps.turnOrderTickerRenderer.dispose).toHaveBeenCalledTimes(1);
+    expect(deps.injuryStatusPanel.dispose).toHaveBeenCalledTimes(1);
     expect(deps.entityLifecycleMonitor.dispose).toHaveBeenCalledTimes(1);
   });
 
@@ -147,6 +155,7 @@ describe('DomUiFacade', () => {
       loadGameUI: { show: jest.fn() },
       llmSelectionModal: { show: jest.fn() },
       turnOrderTickerRenderer: { render: jest.fn() },
+      injuryStatusPanel: { updateForActor: jest.fn() },
       entityLifecycleMonitor: null,
     });
 

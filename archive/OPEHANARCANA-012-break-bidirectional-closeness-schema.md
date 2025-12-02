@@ -1,6 +1,6 @@
 # OPEHANARCANA-012: BREAK_BIDIRECTIONAL_CLOSENESS Schema Definition
 
-**Status:** Ready
+**Status:** Completed
 **Priority:** High (Phase 2)
 **Estimated Effort:** 0.25 days
 **Dependencies:** OPEHANARCANA-009 (ESTABLISH schema as reference)
@@ -20,6 +20,7 @@ Create the JSON schema for the `BREAK_BIDIRECTIONAL_CLOSENESS` operation, which 
 
 ### Modified Files
 - `data/schemas/operation.schema.json` (add `$ref` entry)
+- `src/configuration/staticConfiguration.js` (add to `OPERATION_SCHEMA_FILES` list)
 
 ---
 
@@ -126,7 +127,7 @@ Add to the `anyOf` array in alphabetical order:
 
 1. All existing operation schemas remain unchanged
 2. All existing rules continue to validate successfully
-3. `npm run test:ci` passes (no regressions)
+3. `npm run test:ci` passes (no regressions) *Note: validate:operations will fail until handler is implemented*
 
 ---
 
@@ -152,3 +153,12 @@ npm run test:ci
 
 - Pattern to follow: `data/schemas/operations/establishBidirectionalCloseness.schema.json`
 - Base schema: `data/schemas/base-operation.schema.json`
+
+## Outcome
+
+- Created `data/schemas/operations/breakBidirectionalCloseness.schema.json`.
+- Added reference to `data/schemas/operation.schema.json`.
+- Added file to `src/configuration/staticConfiguration.js` (required for loading).
+- `npm run validate` passes.
+- `npm run validate:operations` fails as expected (missing implementation).
+- `npm run test:unit` has unrelated failures regarding `InjuryStatusPanel` and `DeathCheckService` (pre-existing).
