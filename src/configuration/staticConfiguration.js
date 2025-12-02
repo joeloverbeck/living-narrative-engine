@@ -14,6 +14,7 @@ const OPERATION_SCHEMA_FILES = [
   'atomicModifyComponent.schema.json',
   'autoMoveClosenessPartners.schema.json',
   'autoMoveFollowers.schema.json',
+  'breakBidirectionalCloseness.schema.json',
   'breakClosenessWithTarget.schema.json',
   'breakFollowRelation.schema.json',
   'burnEnergy.schema.json',

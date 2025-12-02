@@ -6,7 +6,7 @@
             "text": "Vespera Nightwhisper"
         },
         "core:gender": {
-            "gender": "female"
+            "value": "female"
         },
         "core:portrait": {
             "imagePath": "portraits/vespera_nightwhisper.png",

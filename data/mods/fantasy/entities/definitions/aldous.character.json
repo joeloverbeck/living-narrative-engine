@@ -6,7 +6,7 @@
             "text": "Aldous"
         },
         "core:gender": {
-            "gender": "male"
+            "value": "male"
         },
         "core:portrait": {
             "imagePath": "portraits/aldous.png",

@@ -32,6 +32,7 @@ import {
   WindowUserPrompt,
   SaveGameService,
   EntityLifecycleMonitor,
+  InjuryStatusPanel,
 } from '../../domUI/index.js';
 import { VisualizerState } from '../../domUI/visualizer/VisualizerState.js';
 import { AnatomyLoadingDetector } from '../../domUI/visualizer/AnatomyLoadingDetector.js';
@@ -377,6 +378,23 @@ export function registerRenderers(registrar, logger) {
     { lifecycle: 'singletonFactory' },
     logger
   );
+
+  registerWithLog(
+    registrar,
+    tokens.InjuryStatusPanel,
+    (c) =>
+      new InjuryStatusPanel({
+        logger: c.resolve(tokens.ILogger),
+        documentContext: c.resolve(tokens.IDocumentContext),
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        injuryAggregationService: c.resolve(tokens.InjuryAggregationService),
+        injuryNarrativeFormatterService: c.resolve(
+          tokens.InjuryNarrativeFormatterService
+        ),
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
+  );
 }
 
 /**
@@ -507,6 +525,7 @@ export function registerFacadeAndManager(registrar, logger) {
         tokens.LoadGameUI,
         tokens.LlmSelectionModal,
         tokens.TurnOrderTickerRenderer,
+        tokens.InjuryStatusPanel,
         // tokens.EntityLifecycleMonitor, // DISABLED FOR PERFORMANCE
       ],
     },
@@ -590,6 +609,11 @@ export function registerUI(
   container.resolve(tokens.ActionResultRenderer);
   logger.debug(
     `UI Registrations: Eagerly instantiated ${tokens.ActionResultRenderer}.`
+  );
+
+  container.resolve(tokens.InjuryStatusPanel);
+  logger.debug(
+    `UI Registrations: Eagerly instantiated ${tokens.InjuryStatusPanel}.`
   );
 
   logger.debug('UI Registrations: Complete.');

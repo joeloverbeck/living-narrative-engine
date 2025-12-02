@@ -36,6 +36,7 @@
 @import url('components/_critical-log-notifier.css');
 @import url('components/_actor-participation-panel.css');
 @import url('components/_turn-order-ticker.css');
+@import url('components/_injury-status-panel.css');
 
 /* Action-Result Bubbles */
 @import url('components/_action-result-bubbles.css');

@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/operations/breakBidirectionalCloseness.schema.json",
+  "title": "BREAK_BIDIRECTIONAL_CLOSENESS Operation",
+  "description": "Removes mutual relationship components from both actor and target, cleaning up the bidirectional closeness relationship",
+  "allOf": [
+    { "$ref": "../base-operation.schema.json" },
+    {
+      "properties": {
+        "type": { "const": "BREAK_BIDIRECTIONAL_CLOSENESS" },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "actor_component_type": {
+              "type": "string",
+              "description": "Component type to remove from actor, e.g., 'hugging:hugging'",
+              "pattern": "^[a-z_]+:[a-z_]+$"
+            },
+            "target_component_type": {
+              "type": "string",
+              "description": "Component type to remove from target, e.g., 'hugging:being_hugged'",
+              "pattern": "^[a-z_]+:[a-z_]+$"
+            },
+            "additional_component_types_to_remove": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Additional component types to remove from both entities"
+            },
+            "regenerate_descriptions": {
+              "type": "boolean",
+              "default": true,
+              "description": "Whether to regenerate entity descriptions after relationship removal"
+            }
+          },
+          "required": ["actor_component_type", "target_component_type"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["type", "parameters"]
+    }
+  ]
+}

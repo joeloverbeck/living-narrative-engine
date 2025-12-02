@@ -71,6 +71,10 @@ describe('Damage Application Mechanics', () => {
       entityManager,
       eventBus: dispatcher,
     });
+    // Mock deathCheckService with required method
+    const deathCheckService = {
+      checkDeathConditions: jest.fn().mockResolvedValue(undefined),
+    };
     handler = new ApplyDamageHandler({
       logger,
       entityManager,
@@ -79,6 +83,7 @@ describe('Damage Application Mechanics', () => {
       bodyGraphService,
       damageTypeEffectsService,
       damagePropagationService,
+      deathCheckService,
     });
     executionContext = {
       evaluationContext: { context: {} },

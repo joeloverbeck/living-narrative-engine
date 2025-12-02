@@ -35,6 +35,12 @@ describe('registerUI token resolution', () => {
     container.register(tokens.IDataRegistry, {});
     container.register(tokens.ISaveLoadService, {});
     container.register(tokens.LLMAdapter, {});
+    container.register(tokens.InjuryAggregationService, {
+      aggregateInjuries: jest.fn(),
+    });
+    container.register(tokens.InjuryNarrativeFormatterService, {
+      formatFirstPerson: jest.fn(),
+    });
   });
 
   it('registers DomUiFacade and EngineUIManager', () => {

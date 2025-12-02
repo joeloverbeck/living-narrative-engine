@@ -6,7 +6,7 @@
             "text": "Bertram"
         },
         "core:gender": {
-            "gender": "male"
+            "value": "male"
         },
         "core:portrait": {
             "imagePath": "portraits/bertram.png",

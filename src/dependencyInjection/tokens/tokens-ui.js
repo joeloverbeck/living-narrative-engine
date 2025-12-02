@@ -51,4 +51,5 @@ export const uiTokens = freeze({
   // Thematic Direction Generator
   ThematicDirectionController: 'ThematicDirectionController',
   TurnOrderTickerRenderer: 'TurnOrderTickerRenderer',
+  InjuryStatusPanel: 'InjuryStatusPanel',
 });

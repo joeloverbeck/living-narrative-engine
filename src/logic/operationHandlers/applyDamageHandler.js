@@ -46,8 +46,9 @@ class ApplyDamageHandler extends BaseOperationHandler {
   /** @type {import('../../anatomy/bodyGraphService.js').default} */ #bodyGraphService;
   /** @type {import('../../anatomy/services/damageTypeEffectsService.js').default} */ #damageTypeEffectsService;
   /** @type {import('../../anatomy/services/damagePropagationService.js').default} */ #damagePropagationService;
+  /** @type {import('../../anatomy/services/deathCheckService.js').default} */ #deathCheckService;
 
-  constructor({ logger, entityManager, safeEventDispatcher, jsonLogicService, bodyGraphService, damageTypeEffectsService, damagePropagationService }) {
+  constructor({ logger, entityManager, safeEventDispatcher, jsonLogicService, bodyGraphService, damageTypeEffectsService, damagePropagationService, deathCheckService }) {
     super('ApplyDamageHandler', {
       logger: { value: logger },
       entityManager: {
@@ -74,6 +75,10 @@ class ApplyDamageHandler extends BaseOperationHandler {
         value: damagePropagationService,
         requiredMethods: ['propagateDamage'],
       },
+      deathCheckService: {
+        value: deathCheckService,
+        requiredMethods: ['checkDeathConditions'],
+      },
     });
     this.#entityManager = entityManager;
     this.#dispatcher = safeEventDispatcher;
@@ -81,6 +86,7 @@ class ApplyDamageHandler extends BaseOperationHandler {
     this.#bodyGraphService = bodyGraphService;
     this.#damageTypeEffectsService = damageTypeEffectsService;
     this.#damagePropagationService = damagePropagationService;
+    this.#deathCheckService = deathCheckService;
   }
 
   #calculateHealthState(healthPercentage) {
@@ -362,6 +368,22 @@ class ApplyDamageHandler extends BaseOperationHandler {
       propagationRules,
       executionContext,
     });
+
+    // Check death conditions ONLY after top-level damage (not propagated damage)
+    // This ensures death is checked once after all propagation completes
+    if (!propagatedFrom) {
+      const deathCheckOwnerEntityId = partComponent?.ownerEntityId || entityId;
+      const deathResult = this.#deathCheckService.checkDeathConditions(
+        deathCheckOwnerEntityId,
+        executionContext?.actorId || null
+      );
+
+      if (deathResult.isDead) {
+        log.info(`APPLY_DAMAGE: Entity ${deathCheckOwnerEntityId} died from damage.`);
+      } else if (deathResult.isDying) {
+        log.info(`APPLY_DAMAGE: Entity ${deathCheckOwnerEntityId} is now dying.`);
+      }
+    }
   }
 }
 

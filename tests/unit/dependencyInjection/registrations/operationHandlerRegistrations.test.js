@@ -269,6 +269,7 @@ beforeAll(async () => {
         { property: 'bodyGraphService', token: BodyGraphServiceToken },
         { property: 'damageTypeEffectsService', token: tokens.DamageTypeEffectsService },
         { property: 'damagePropagationService', token: tokens.DamagePropagationService },
+        { property: 'deathCheckService', token: tokens.DeathCheckService },
       ],
     },
     {

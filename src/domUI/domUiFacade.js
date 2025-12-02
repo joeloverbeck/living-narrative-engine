@@ -14,6 +14,7 @@
 /** @typedef {import('./actionResultRenderer.js').ActionResultRenderer} ActionResultRenderer */
 /** @typedef {import('./entityLifecycleMonitor.js').EntityLifecycleMonitor} EntityLifecycleMonitor */
 /** @typedef {import('./turnOrderTickerRenderer.js').TurnOrderTickerRenderer} TurnOrderTickerRenderer */
+/** @typedef {import('./injuryStatusPanel.js').InjuryStatusPanel} InjuryStatusPanel */
 
 /**
  * Provides a single point of access to the various UI rendering/controller components.
@@ -33,6 +34,7 @@ export class DomUiFacade {
   #actionResultRenderer;
   #entityLifecycleMonitor;
   #turnOrderTickerRenderer;
+  #injuryStatusPanel;
 
   /**
    * Creates an instance of DomUiFacade.
@@ -48,6 +50,7 @@ export class DomUiFacade {
    * @param {LoadGameUI} deps.loadGameUI - The Load Game UI component.
    * @param {LlmSelectionModal} deps.llmSelectionModal - The LLM Selection Modal component.
    * @param {TurnOrderTickerRenderer} deps.turnOrderTickerRenderer - Renderer for turn order ticker.
+   * @param {InjuryStatusPanel} deps.injuryStatusPanel - The Injury Status Panel widget.
    * @param {EntityLifecycleMonitor} [deps.entityLifecycleMonitor] - The Entity Lifecycle Monitor component (optional, disabled for performance).
    * @throws {Error} If any required dependency is missing or invalid.
    */
@@ -62,6 +65,7 @@ export class DomUiFacade {
     loadGameUI,
     llmSelectionModal,
     turnOrderTickerRenderer,
+    injuryStatusPanel,
     entityLifecycleMonitor = null, // OPTIONAL - disabled for performance
   }) {
     // Basic validation to ensure all renderers are provided
@@ -116,6 +120,13 @@ export class DomUiFacade {
       throw new Error(
         'DomUiFacade: Missing or invalid turnOrderTickerRenderer dependency.'
       );
+    if (
+      !injuryStatusPanel ||
+      typeof injuryStatusPanel.updateForActor !== 'function'
+    )
+      throw new Error(
+        'DomUiFacade: Missing or invalid injuryStatusPanel dependency.'
+      );
     // EntityLifecycleMonitor is now optional (disabled for performance)
     if (
       entityLifecycleMonitor &&
@@ -135,6 +146,7 @@ export class DomUiFacade {
     this.#loadGameUI = loadGameUI;
     this.#llmSelectionModal = llmSelectionModal;
     this.#turnOrderTickerRenderer = turnOrderTickerRenderer;
+    this.#injuryStatusPanel = injuryStatusPanel;
     this.#entityLifecycleMonitor = entityLifecycleMonitor;
   }
 
@@ -238,6 +250,15 @@ export class DomUiFacade {
   }
 
   /**
+   * Provides the InjuryStatusPanel instance.
+   *
+   * @returns {InjuryStatusPanel} Panel for displaying injury status.
+   */
+  get injuryStatus() {
+    return this.#injuryStatusPanel;
+  }
+
+  /**
    * Optional: Dispose method to potentially call dispose on all managed renderers.
    * Useful if the facade's lifecycle manages the renderers' lifecycle.
    */
@@ -252,6 +273,7 @@ export class DomUiFacade {
     this.#loadGameUI?.dispose?.();
     this.#llmSelectionModal?.dispose?.();
     this.#turnOrderTickerRenderer?.dispose?.();
+    this.#injuryStatusPanel?.dispose?.();
     this.#entityLifecycleMonitor?.dispose?.();
   }
 }
