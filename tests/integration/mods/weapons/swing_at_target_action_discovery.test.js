@@ -4,6 +4,7 @@
  */
 
 import { describe, it, expect } from '@jest/globals';
+import { readFile } from 'fs/promises';
 import actionJson from '../../../../data/mods/weapons/actions/swing_at_target.action.json' assert { type: 'json' };
 import conditionJson from '../../../../data/mods/weapons/conditions/event-is-action-swing-at-target.condition.json' assert { type: 'json' };
 
@@ -46,8 +47,10 @@ describe('swing_at_target action definition', () => {
       expect(actionJson.required_components.primary).toContain('weapons:weapon');
     });
 
-    it('should require primary target to have damage-types:can_cut component', () => {
-      expect(actionJson.required_components.primary).toContain('damage-types:can_cut');
+    it('should require primary target to have damage-types:damage_capabilities component', () => {
+      expect(actionJson.required_components.primary).toContain(
+        'damage-types:damage_capabilities'
+      );
     });
   });
 
@@ -143,6 +146,23 @@ describe('swing_at_target action definition', () => {
       expect(actionJson).toHaveProperty('template');
       expect(actionJson).toHaveProperty('targets');
     });
+  });
+});
+
+describe('wielded_cutting_weapons scope definition', () => {
+  it('should filter wielded items to slashing-capable weapons', async () => {
+    const scopeContent = await readFile(
+      new URL(
+        '../../../../data/mods/weapons/scopes/wielded_cutting_weapons.scope',
+        import.meta.url
+      ),
+      'utf-8'
+    );
+
+    expect(scopeContent).toContain('weapons:weapon');
+    expect(scopeContent).toContain('damage-types:damage_capabilities');
+    expect(scopeContent).toContain('has_damage_capability');
+    expect(scopeContent).toContain('"slashing"');
   });
 });
 

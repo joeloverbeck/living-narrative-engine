@@ -25,6 +25,14 @@
       }
     },
     {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "primary",
+        "component_type": "damage-types:damage_capabilities",
+        "result_variable": "weaponDamage"
+      }
+    },
+    {
       "type": "RESOLVE_OUTCOME",
       "parameters": {
         "actor_skill_component": "skills:melee_skill",
@@ -74,6 +82,23 @@
             }
           },
           {
+            "type": "FOR_EACH",
+            "parameters": {
+              "collection": { "var": "context.weaponDamage.entries" },
+              "item_variable": "dmgEntry",
+              "actions": [
+                {
+                  "type": "APPLY_DAMAGE",
+                  "parameters": {
+                    "entity_ref": "secondary",
+                    "damage_entry": { "var": "context.dmgEntry" },
+                    "damage_multiplier": 1.5
+                  }
+                }
+              ]
+            }
+          },
+          {
             "type": "SET_VARIABLE",
             "parameters": {
               "variable_name": "logMessage",
@@ -100,6 +125,22 @@
               "perception_type": "action_target_general",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.secondaryId}"
+            }
+          },
+          {
+            "type": "FOR_EACH",
+            "parameters": {
+              "collection": { "var": "context.weaponDamage.entries" },
+              "item_variable": "dmgEntry",
+              "actions": [
+                {
+                  "type": "APPLY_DAMAGE",
+                  "parameters": {
+                    "entity_ref": "secondary",
+                    "damage_entry": { "var": "context.dmgEntry" }
+                  }
+                }
+              ]
             }
           },
           {

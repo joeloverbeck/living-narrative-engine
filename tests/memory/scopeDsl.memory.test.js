@@ -31,24 +31,26 @@ describe('ScopeDSL - Memory Tests', () => {
   let spatialIndexManager;
   let registry;
 
-  beforeEach(async () => {
-    // Force garbage collection before each test
+  // Reuse DOM + container across tests to avoid repeated heavyweight bootstraps
+  let outputDiv;
+  let inputElement;
+  let titleElement;
+
+  beforeAll(async () => {
     await global.memoryTestUtils.forceGCAndWait();
 
-    // Create real container for accurate memory testing
     container = new AppContainer();
 
-    // Create DOM elements with proper IDs for container configuration
-    const outputDiv = document.createElement('div');
+    outputDiv = document.createElement('div');
     outputDiv.id = 'outputDiv';
     const messageList = document.createElement('ul');
     messageList.id = 'message-list';
     outputDiv.appendChild(messageList);
 
-    const inputElement = document.createElement('input');
+    inputElement = document.createElement('input');
     inputElement.id = 'inputBox';
 
-    const titleElement = document.createElement('h1');
+    titleElement = document.createElement('h1');
     titleElement.id = 'gameTitle';
 
     document.body.appendChild(outputDiv);
@@ -56,7 +58,6 @@ describe('ScopeDSL - Memory Tests', () => {
     document.body.appendChild(titleElement);
 
     try {
-      // Configure container with error handling
       await configureContainer(container, {
         outputDiv,
         inputElement,
@@ -64,7 +65,6 @@ describe('ScopeDSL - Memory Tests', () => {
         document,
       });
 
-      // Get real services from container with validation
       entityManager = container.resolve(tokens.IEntityManager);
       scopeRegistry = container.resolve(tokens.IScopeRegistry);
       scopeEngine = container.resolve(tokens.IScopeEngine);
@@ -74,50 +74,47 @@ describe('ScopeDSL - Memory Tests', () => {
       spatialIndexManager = container.resolve(tokens.ISpatialIndexManager);
       registry = container.resolve(tokens.IDataRegistry);
 
-      // Verify critical services are available
       if (!entityManager || !scopeRegistry || !scopeEngine || !dslParser) {
         throw new Error(
           'Critical services not available after container configuration'
         );
       }
 
-      // Allow extra time for container stabilization
       await global.memoryTestUtils.forceGCAndWait();
-      await new Promise((resolve) => setTimeout(resolve, 100));
     } catch (error) {
-      console.error('Memory test beforeEach failed:', error);
+      console.error('Memory test beforeAll failed:', error);
 
-      // Clean up partially configured container
       if (container && typeof container.cleanup === 'function') {
         container.cleanup();
       }
 
-      // Re-throw to fail the test early
       throw new Error(`Memory test setup failed: ${error.message}`);
     }
   });
 
-  afterEach(async () => {
-    // Clean up DOM elements
-    document.body.innerHTML = '';
+  beforeEach(async () => {
+    // Reset state between tests without tearing everything down
+    if (entityManager?.clearAll) {
+      entityManager.clearAll();
+    }
+    if (spatialIndexManager?.clear) {
+      spatialIndexManager.clear();
+    }
+    if (registry?.clear) {
+      registry.clear();
+    }
+    if (scopeRegistry?.initialize) {
+      scopeRegistry.initialize({});
+    }
+  });
 
-    // Clean up container resources
+  afterAll(async () => {
     if (container && typeof container.cleanup === 'function') {
       container.cleanup();
     }
 
-    // Clear all references
-    container = null;
-    entityManager = null;
-    scopeRegistry = null;
-    scopeEngine = null;
-    dslParser = null;
-    logger = null;
-    jsonLogicService = null;
-    spatialIndexManager = null;
-    registry = null;
+    document.body.innerHTML = '';
 
-    // Force garbage collection after each test
     await global.memoryTestUtils.forceGCAndWait();
   });
 
@@ -404,40 +401,38 @@ describe('ScopeDSL - Memory Tests', () => {
       definitionId: locationId,
     });
 
-    // Create actors with varying stats
+    const entitySpecs = [];
+
+    // Create actors with deterministic stats to avoid RNG overhead
     for (let i = 0; i < count; i++) {
       const actorId = `test-memory-actor-${i}`;
+      const level = (i % 20) + 1;
+      const strength = ((i * 7) % 30) + 5; // simple, deterministic spread
+      const health = ((i * 11) % 100) + 1;
       const actorComponents = {
         'core:actor': {
           name: `Memory Test Actor ${i}`,
           isPlayer: i === 0,
         },
         'core:stats': {
-          level: Math.floor(Math.random() * 20) + 1,
-          strength: Math.floor(Math.random() * 30) + 5,
+          level,
+          strength,
         },
         'core:health': {
-          current: Math.floor(Math.random() * 100) + 1,
+          current: health,
           max: 100,
         },
         'core:location': { locationId: locationId },
       };
 
-      // Create actor definition
       const actorDefinition = new EntityDefinition(actorId, {
         id: actorId,
         description: `Test actor ${i} for memory testing`,
         components: actorComponents,
       });
 
-      // Register actor definition
       registry.store('entityDefinitions', actorId, actorDefinition);
-
-      // Create actor instance
-      await entityManager.createEntityInstance(actorId, {
-        instanceId: actorId,
-        definitionId: actorId,
-      });
+      entitySpecs.push({ definitionId: actorId, instanceId: actorId });
       actors.push({ id: actorId });
     }
 
@@ -449,25 +444,39 @@ describe('ScopeDSL - Memory Tests', () => {
         'core:item': {
           name: `Memory Test Item ${i}`,
         },
-        'core:value': Math.floor(Math.random() * 500),
+        'core:value': ((i + 3) * 13) % 500,
       };
 
-      // Create item definition
       const itemDefinition = new EntityDefinition(itemId, {
         id: itemId,
         description: `Test item ${i} for memory testing`,
         components: itemComponents,
       });
 
-      // Register item definition
       registry.store('entityDefinitions', itemId, itemDefinition);
-
-      // Create item instance
-      await entityManager.createEntityInstance(itemId, {
-        instanceId: itemId,
-        definitionId: itemId,
-      });
+      entitySpecs.push({ definitionId: itemId, instanceId: itemId });
       items.push({ id: itemId });
+    }
+
+    // Create entity instances in batches when supported to cut setup time
+    if (entityManager?.hasBatchSupport?.()) {
+      await entityManager.batchCreateEntities(
+        entitySpecs.map((spec) => ({
+          definitionId: spec.definitionId,
+          opts: { instanceId: spec.instanceId },
+        })),
+        {
+          batchSize: 250,
+          enableParallel: false,
+          stopOnError: true,
+        }
+      );
+    } else {
+      for (const spec of entitySpecs) {
+        await entityManager.createEntityInstance(spec.definitionId, {
+          instanceId: spec.instanceId,
+        });
+      }
     }
 
     return { actors, items, location: { id: locationId } };

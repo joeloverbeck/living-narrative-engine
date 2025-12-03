@@ -40,6 +40,13 @@
             { "type": "object" }
           ]
         },
+        "damage_multiplier": {
+          "description": "Optional multiplier applied to damage_entry.amount (and legacy amount). Must be non-negative. Defaults to 1.",
+          "oneOf": [
+            { "type": "number" },
+            { "type": "object" }
+          ]
+        },
         "amount": {
           "description": "DEPRECATED: Use damage_entry instead. Amount of damage to apply. Required only when not using damage_entry.",
           "oneOf": [

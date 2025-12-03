@@ -11,7 +11,7 @@
     ],
     "primary": [
       "weapons:weapon",
-      "damage-types:can_cut"
+      "damage-types:damage_capabilities"
     ]
   },
   "forbidden_components": {

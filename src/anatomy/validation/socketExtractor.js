@@ -41,6 +41,12 @@ export function extractSocketsFromEntity(entity) {
   return socketsMap;
 }
 
+let socketExtractorLogger = console;
+
+export function setSocketExtractorLogger(logger) {
+  socketExtractorLogger = logger || null;
+}
+
 /**
  * Extracts hierarchical socket map from blueprint, structure template, and entity definitions.
  * Supports the hierarchical socket architecture where:
@@ -379,6 +385,8 @@ export async function resolveEntityId(partType, dataRegistry) {
     return null;
   }
 
+  const logger = socketExtractorLogger ?? console;
+
   // Get all entity definitions and search for one with matching partType
   let allEntities = [];
 
@@ -424,6 +432,13 @@ export async function resolveEntityId(partType, dataRegistry) {
     // Rule 3: Shorter ID = higher priority (fallback)
     return aId.length - bId.length;
   });
+
+  const candidateIds = candidates.map((entity) => entity.id).filter(Boolean);
+  const selectedId = candidates[0].id;
+
+  logger?.debug?.(
+    `[socketExtractor] Multiple entities with subType "${partType}": ${candidateIds.join(', ')}. Selected "${selectedId}" (priority: fewest underscores, alphabetical, shortest ID).`
+  );
 
   return candidates[0].id;
 }

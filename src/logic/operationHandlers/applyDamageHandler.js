@@ -222,7 +222,15 @@ class ApplyDamageHandler extends BaseOperationHandler {
 
     if (!assertParamsObject(params, this.#dispatcher, 'APPLY_DAMAGE')) return;
 
-    const { entity_ref, part_ref, damage_entry, amount, damage_type, propagatedFrom = null } = params;
+    const {
+      entity_ref,
+      part_ref,
+      damage_entry,
+      amount,
+      damage_type,
+      damage_multiplier,
+      propagatedFrom = null,
+    } = params;
 
     // 1. Resolve Entity
     const entityId = this.#resolveRef(entity_ref, executionContext, log);
@@ -291,8 +299,30 @@ class ApplyDamageHandler extends BaseOperationHandler {
       return;
     }
 
+    // 3a. Resolve optional damage multiplier
+    const resolvedMultiplier =
+      damage_multiplier !== undefined
+        ? this.#resolveValue(damage_multiplier, executionContext, log, 'number')
+        : 1;
+
+    if (isNaN(resolvedMultiplier) || resolvedMultiplier < 0) {
+      safeDispatchError(
+        this.#dispatcher,
+        'APPLY_DAMAGE: Invalid damage_multiplier',
+        { damage_multiplier },
+        log
+      );
+      return;
+    }
+
+    // Apply multiplier to amount while preserving other fields
+    const finalDamageEntry = {
+      ...resolvedDamageEntry,
+      amount: resolvedDamageEntry.amount * resolvedMultiplier,
+    };
+
     // Extract values from damage entry for use in this handler
-    const damageAmount = resolvedDamageEntry.amount;
+    const damageAmount = finalDamageEntry.amount;
     const damageType = resolvedDamageEntry.name;
 
     // 4. Dispatch damage applied event
@@ -387,7 +417,7 @@ class ApplyDamageHandler extends BaseOperationHandler {
       await this.#damageTypeEffectsService.applyEffectsForDamage({
         entityId: ownerEntityId || entityId,
         partId,
-        damageEntry: resolvedDamageEntry,
+        damageEntry: finalDamageEntry,
         maxHealth,
         currentHealth: newHealth,
       });
