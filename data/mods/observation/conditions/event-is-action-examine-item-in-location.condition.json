@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "observation:event-is-action-examine-item-in-location",
+  "description": "True when event is attempting the examine_item_in_location action",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "observation:examine_item_in_location"
+    ]
+  }
+}

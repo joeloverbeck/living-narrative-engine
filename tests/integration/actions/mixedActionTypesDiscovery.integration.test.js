@@ -4,15 +4,16 @@
  * discovered and have correct structure when available simultaneously in the same pipeline.
  *
  * Test Strategy - Uses items mod exclusively:
- * - Single-target actions: examine_owned_item, drop_item, pick_up_item, open_container
- * - Multi-target actions: give_item, take_from_container
+ * - Single-target actions: drop_item, pick_up_item, open_container
+ * - Multi-target actions: take_from_container
+ *
+ * Note: give_item was moved to item-transfer mod and is tested separately.
  *
  * Bug scenario: When both action types are available, the pipeline may fall back to
  * legacy formatting mode, causing multi-target actions to have unresolved placeholders.
  *
  * Expected behavior after fix:
- * - Single-target: "examine {item}" → correct action definition
- * - Multi-target: "give {item} to {recipient}" → correct action definition
+ * - Single-target: "drop {item}" → correct action definition
  * - Multi-target: "take {secondary.name} from {primary.name}" → correct action definition
  * - All action types should have properly structured targets when discovered together
  */
@@ -30,11 +31,9 @@ describe('Mixed Action Types Discovery - Integration', () => {
   beforeEach(async () => {
     // Create a test fixture for the items mod
     // This mod contains both single-target and multi-target actions:
-    // - Single-target: examine_owned_item, drop_item, pick_up_item, open_container
-    // - Multi-target: give_item, take_from_container
-    // Note: Using take_from_container as the target action ensures the anatomy
-    // prerequisite condition (anatomy:actor-has-free-grabbing-appendage) is loaded,
-    // which is required for both take_from_container and give_item actions.
+    // - Single-target: drop_item, pick_up_item, open_container
+    // - Multi-target: take_from_container
+    // Note: give_item was moved to item-transfer mod and is tested separately.
     testFixture = await ModTestFixture.forAction(
       'items',
       'items:take_from_container'
@@ -51,7 +50,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       .withComponent('core:location', {})
       .build();
 
-    // Create items for actor's inventory (to give to recipient)
+    // Create items for actor's inventory (for examine_owned_item testing)
     const coinId = 'test:coin';
     const coin = new ModEntityBuilder(coinId)
       .withName('gold coin')
@@ -90,7 +89,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
     const actor = actorBuilder.build();
     const actorHandEntities = actorBuilder.getHandEntities();
 
-    // Create recipient actor (close to actor, for give_item)
+    // Create another actor (close to actor, for multi-actor scenario tests)
     const recipient = new ModEntityBuilder(recipientActorId)
       .withName('Bob')
       .asActor()
@@ -190,18 +189,18 @@ describe('Mixed Action Types Discovery - Integration', () => {
     it('should discover single-target and multi-target actions when conditions are met', async () => {
       // Debug: Check loaded action definitions
       const actionRepository = testFixture.testEnv.actionRepository;
-      const examineAction = actionRepository ? actionRepository.getActionDefinition('items:examine_owned_item') : null;
+      const dropAction = actionRepository ? actionRepository.getActionDefinition('items:drop_item') : null;
 
       console.log('\n=== ACTION DEFINITION DEBUG ===');
       console.log('Action repository exists:', !!actionRepository);
-      console.log('examine_owned_item definition exists:', !!examineAction);
-      if (examineAction) {
-        console.log('examine_owned_item targets:', examineAction.targets);
-        console.log('examine_owned_item required_components:', examineAction.required_components);
-        console.log('examine_owned_item forbidden_components:', examineAction.forbidden_components);
-        console.log('examine_owned_item prerequisites:', examineAction.prerequisites);
+      console.log('drop_item definition exists:', !!dropAction);
+      if (dropAction) {
+        console.log('drop_item targets:', dropAction.targets);
+        console.log('drop_item required_components:', dropAction.required_components);
+        console.log('drop_item forbidden_components:', dropAction.forbidden_components);
+        console.log('drop_item prerequisites:', dropAction.prerequisites);
       } else {
-        console.log('examine_owned_item action definition NOT LOADED');
+        console.log('drop_item action definition NOT LOADED');
         if (actionRepository) {
           const allActions = actionRepository.getAllActionDefinitions();
           console.log('All loaded actions:', allActions.map(a => a.id));
@@ -219,87 +218,61 @@ describe('Mixed Action Types Discovery - Integration', () => {
       console.log('DEBUG discovered actions:', actionIds);
 
       // Should have both single-target and multi-target action types
-      expect(actionIds).toContain('items:examine_owned_item'); // Single-target
-      expect(actionIds).toContain('items:give_item'); // Multi-target
+      expect(actionIds).toContain('items:drop_item'); // Single-target
       expect(actionIds).toContain('items:take_from_container'); // Multi-target
 
       // Count each action type
-      const examineActions = actions.filter(
-        (a) => a.id === 'items:examine_owned_item'
+      const dropActions = actions.filter(
+        (a) => a.id === 'items:drop_item'
       );
 
-      // Debug: Check examine_item action structure after discovery
-      console.log('\n=== EXAMINE_OWNED_ITEM AFTER DISCOVERY ===');
-      console.log('examine_owned_item count:', examineActions.length);
-      if (examineActions.length > 0) {
-        const examineAction = examineActions[0];
-        console.log('Has targets object:', !!examineAction.targets);
-        console.log('targets type:', typeof examineAction.targets);
-        console.log('Has targets.primary:', !!examineAction.targets?.primary);
-        console.log('targets.primary.scope:', examineAction.targets?.primary?.scope);
-        console.log('Template:', examineAction.template);
+      // Debug: Check drop_item action structure after discovery
+      console.log('\n=== DROP_ITEM AFTER DISCOVERY ===');
+      console.log('drop_item count:', dropActions.length);
+      if (dropActions.length > 0) {
+        const dropAction = dropActions[0];
+        console.log('Has targets object:', !!dropAction.targets);
+        console.log('targets type:', typeof dropAction.targets);
+        console.log('Has targets.primary:', !!dropAction.targets?.primary);
+        console.log('targets.primary.scope:', dropAction.targets?.primary?.scope);
+        console.log('Template:', dropAction.template);
       } else {
-        console.log('examine_owned_item NOT FOUND in discovered actions');
+        console.log('drop_item NOT FOUND in discovered actions');
       }
-      const giveActions = actions.filter((a) => a.id === 'items:give_item');
       const takeActions = actions.filter(
         (a) => a.id === 'items:take_from_container'
       );
 
-      expect(examineActions.length).toBeGreaterThan(0);
-      expect(giveActions.length).toBeGreaterThan(0);
+      expect(dropActions.length).toBeGreaterThan(0);
       expect(takeActions.length).toBeGreaterThan(0);
 
       console.log('✅ All action types discovered successfully');
-      console.log(`  - examine_owned_item (single-target): ${examineActions.length}`);
-      console.log(`  - give_item (multi-target): ${giveActions.length}`);
+      console.log(`  - drop_item (single-target): ${dropActions.length}`);
       console.log(
         `  - take_from_container (multi-target): ${takeActions.length}`
       );
     });
 
-    it('should have examine_owned_item action definition in mixed action context', async () => {
+    it('should have drop_item action definition in mixed action context', async () => {
       const actions = testFixture.discoverActions(actorId);
 
       expect(Array.isArray(actions)).toBe(true);
 
-      const examineActions = actions.filter(
-        (a) => a.id === 'items:examine_owned_item'
+      const dropActions = actions.filter(
+        (a) => a.id === 'items:drop_item'
       );
 
-      expect(examineActions.length).toBeGreaterThan(0);
+      expect(dropActions.length).toBeGreaterThan(0);
 
       // Check action definition properties (unformatted actions)
-      for (const action of examineActions) {
-        expect(action.id).toBe('items:examine_owned_item');
+      for (const action of dropActions) {
+        expect(action.id).toBe('items:drop_item');
         expect(action.template).toBeDefined();
-        expect(action.template).toBe('examine my {target}');
+        expect(action.template).toBe('drop {item}');
         expect(action.targets).toBeDefined();
         expect(action.targets.primary).toBeDefined();
 
-        console.log(`  ✅ examine_owned_item action definition found`);
-      }
-    });
-
-    it('should have give_item action definition in mixed action context', async () => {
-      const actions = testFixture.discoverActions(actorId);
-
-      expect(Array.isArray(actions)).toBe(true);
-
-      const giveActions = actions.filter((a) => a.id === 'items:give_item');
-
-      expect(giveActions.length).toBeGreaterThan(0);
-
-      // Check action definition properties (unformatted actions)
-      for (const action of giveActions) {
-        expect(action.id).toBe('items:give_item');
-        expect(action.template).toBeDefined();
-        expect(action.template).toBe('give {item} to {recipient}');
-        expect(action.targets).toBeDefined();
-        expect(action.targets.primary).toBeDefined(); // recipient
-        expect(action.targets.secondary).toBeDefined(); // item
-
-        console.log(`  ✅ give_item action definition found`);
+        console.log(`  ✅ drop_item action definition found`);
       }
     });
 
@@ -334,7 +307,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       expect(Array.isArray(actions)).toBe(true);
 
       // Check for duplicates in each action type
-      const actionTypes = ['items:examine_owned_item', 'items:give_item', 'items:take_from_container'];
+      const actionTypes = ['items:drop_item', 'items:take_from_container'];
 
       for (const actionType of actionTypes) {
         const typeActions = actions.filter((a) => a.id === actionType);
@@ -352,46 +325,6 @@ describe('Mixed Action Types Discovery - Integration', () => {
   });
 
   describe('Suite 2: Edge Cases', () => {
-    it('should handle multiple items in inventory for give_item', async () => {
-      // Actor has coin and letter in inventory (set up in beforeEach)
-      const actions = testFixture.discoverActions(actorId);
-
-      expect(Array.isArray(actions)).toBe(true);
-
-      const giveActions = actions.filter((a) => a.id === 'items:give_item');
-
-      // In the discovery pipeline there is a single give_item definition that
-      // generates combinations for all valid targets. We verify that the
-      // underlying scope exposes multiple inventory items for that action.
-      expect(giveActions.length).toBeGreaterThan(0);
-
-      const scopeResolver = testFixture.testEnv.unifiedScopeResolver;
-      expect(scopeResolver).toBeDefined();
-
-      const inventoryResult = scopeResolver.resolveSync('items:actor_inventory_items', {
-        actor: { id: actorId },
-      });
-
-      expect(inventoryResult?.success).toBe(true);
-
-      const inventoryItems = Array.from(inventoryResult.value ?? []);
-
-      expect(inventoryItems.length).toBeGreaterThanOrEqual(2); // coin and letter
-      expect(inventoryItems).toEqual(
-        expect.arrayContaining(['test:coin', 'test:letter'])
-      );
-
-      // Check action definition properties
-      for (const action of giveActions) {
-        expect(action.id).toBe('items:give_item');
-        expect(action.template).toBe('give {item} to {recipient}');
-        expect(action.targets).toBeDefined();
-        expect(action.generateCombinations).toBe(true);
-
-        console.log(`  ✅ Multiple inventory items handled: action found`);
-      }
-    });
-
     it('should handle multiple items in container for take_from_container', async () => {
       // Chest has gem and scroll inside (set up in beforeEach)
       const actions = testFixture.discoverActions(actorId);
@@ -442,66 +375,58 @@ describe('Mixed Action Types Discovery - Integration', () => {
       }
     });
 
-    it('should handle when only examine_item is available (no recipients or containers)', async () => {
-      // Remove the nearby recipient and container so only examinable items remain
-      testFixture.entityManager.deleteEntity(recipientActorId);
+    it('should handle when only drop_item is available (no containers)', async () => {
+      // Remove the container so only droppable items remain
       testFixture.entityManager.deleteEntity(containerId);
 
       const actions = testFixture.discoverActions(actorId);
 
       expect(Array.isArray(actions)).toBe(true);
 
-      const examineActions = actions.filter(
-        (a) => a.id === 'items:examine_owned_item'
+      const dropActions = actions.filter(
+        (a) => a.id === 'items:drop_item'
       );
-      const giveActions = actions.filter((a) => a.id === 'items:give_item');
       const takeActions = actions.filter(
         (a) => a.id === 'items:take_from_container'
       );
 
-      // Should only have examine actions (single-target)
-      expect(examineActions.length).toBeGreaterThan(0);
-      expect(giveActions.length).toBe(0);
+      // Should only have drop actions (single-target)
+      expect(dropActions.length).toBeGreaterThan(0);
       expect(takeActions.length).toBe(0);
 
-      // Examine actions should have proper structure
-      for (const action of examineActions) {
-        expect(action.id).toBe('items:examine_owned_item');
-        expect(action.template).toBe('examine my {target}');
-        console.log(`  ✅ Single-target only: examine_owned_item found`);
+      // Drop actions should have proper structure
+      for (const action of dropActions) {
+        expect(action.id).toBe('items:drop_item');
+        expect(action.template).toBe('drop {item}');
+        console.log(`  ✅ Single-target only: drop_item found`);
       }
     });
 
-    it('should handle when only multi-target actions are available (no examinable items)', async () => {
-      // Remove description components to make all items non-examinable
-      const bookId = 'test:book';
-      const lampId = 'test:lamp';
-      const coinId = 'test:coin';
-      const letterId = 'test:letter';
-      testFixture.entityManager.removeComponent(bookId, 'core:description');
-      testFixture.entityManager.removeComponent(lampId, 'core:description');
-      testFixture.entityManager.removeComponent(coinId, 'core:description');
-      testFixture.entityManager.removeComponent(letterId, 'core:description');
+    it('should handle when only multi-target actions are available (no droppable items)', async () => {
+      // Clear the actor's inventory so drop_item is not available
+      // Use addComponent to replace the existing inventory data
+      await testFixture.entityManager.addComponent(actorId, 'items:inventory', {
+        items: [],
+        capacity: { maxWeight: 50, maxItems: 10 }
+      });
 
       const actions = testFixture.discoverActions(actorId);
 
       expect(Array.isArray(actions)).toBe(true);
 
-      const examineActions = actions.filter(
-        (a) => a.id === 'items:examine_owned_item'
+      const dropActions = actions.filter(
+        (a) => a.id === 'items:drop_item'
       );
-      const giveActions = actions.filter((a) => a.id === 'items:give_item');
       const takeActions = actions.filter(
         (a) => a.id === 'items:take_from_container'
       );
 
-      // Should only have multi-target actions
-      expect(giveActions.length).toBeGreaterThan(0);
+      // Should only have multi-target actions (take_from_container)
       expect(takeActions.length).toBeGreaterThan(0);
-      expect(examineActions.length).toBe(0);
+      expect(dropActions.length).toBe(0);
 
       // Multi-target actions should have proper structure
-      for (const action of [...giveActions, ...takeActions]) {
+      for (const action of takeActions) {
         expect(action.id).toBeDefined();
         expect(action.template).toBeDefined();
         expect(action.targets.primary).toBeDefined();
@@ -512,33 +437,6 @@ describe('Mixed Action Types Discovery - Integration', () => {
   });
 
   describe('Suite 3: Pipeline Stage Verification', () => {
-    it('should have complete multi-target action structure for give_item', async () => {
-      // This test verifies that multi-target actions have all required structure
-      // even though they're not formatted (unformatted action definitions)
-
-      const actions = testFixture.discoverActions(actorId);
-
-      expect(Array.isArray(actions)).toBe(true);
-
-      const giveActions = actions.filter((a) => a.id === 'items:give_item');
-
-      expect(giveActions.length).toBeGreaterThan(0);
-
-      // Check that multi-target action structure is complete
-      for (const action of giveActions) {
-        expect(action.id).toBe('items:give_item');
-        expect(action.template).toBeDefined();
-        expect(action.template).toBe('give {item} to {recipient}');
-        expect(action.targets).toBeDefined();
-        expect(action.targets.primary).toBeDefined(); // recipient
-        expect(action.targets.secondary).toBeDefined(); // item
-
-        console.log(
-          `  ✅ Pipeline data structure complete for ${action.id}`
-        );
-      }
-    });
-
     it('should have complete multi-target action structure for take_from_container', async () => {
       const actions = testFixture.discoverActions(actorId);
 
@@ -571,36 +469,23 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
       expect(Array.isArray(actions)).toBe(true);
 
-      const examineActions = actions.filter(
-        (a) => a.id === 'items:examine_owned_item'
+      const dropActions = actions.filter(
+        (a) => a.id === 'items:drop_item'
       );
-      const giveActions = actions.filter((a) => a.id === 'items:give_item');
       const takeActions = actions.filter(
         (a) => a.id === 'items:take_from_container'
       );
 
-      expect(examineActions.length).toBeGreaterThan(0);
-      expect(giveActions.length).toBeGreaterThan(0);
+      expect(dropActions.length).toBeGreaterThan(0);
       expect(takeActions.length).toBeGreaterThan(0);
 
-      // Single-target actions have {target} placeholder
-      for (const action of examineActions) {
-        expect(action.template).toBe('examine my {target}');
+      // Single-target actions have {item} placeholder
+      for (const action of dropActions) {
+        expect(action.template).toBe('drop {item}');
         expect(action.targets.primary).toBeDefined();
 
         console.log(
           `  ✅ Single-target template: "${action.template}"`
-        );
-      }
-
-      // Multi-target give_item has {item} and {recipient} placeholders
-      for (const action of giveActions) {
-        expect(action.template).toBe('give {item} to {recipient}');
-        expect(action.targets.primary).toBeDefined();
-        expect(action.targets.secondary).toBeDefined();
-
-        console.log(
-          `  ✅ Multi-target template: "${action.template}"`
         );
       }
 
@@ -621,10 +506,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
       expect(Array.isArray(actions)).toBe(true);
 
-      const multiTargetActions = [
-        ...actions.filter((a) => a.id === 'items:give_item'),
-        ...actions.filter((a) => a.id === 'items:take_from_container'),
-      ];
+      const multiTargetActions = actions.filter((a) => a.id === 'items:take_from_container');
 
       expect(multiTargetActions.length).toBeGreaterThan(0);
 
@@ -639,9 +521,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
         expect(action.targets.secondary.scope).toBeDefined();
 
         // take_from_container has contextFrom
-        if (action.id === 'items:take_from_container') {
-          expect(action.targets.secondary.contextFrom).toBe('primary');
-        }
+        expect(action.targets.secondary.contextFrom).toBe('primary');
 
         console.log('  ✅ Multi-target structure:', {
           id: action.id,
@@ -660,8 +540,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
       const relevantActions = actions.filter(
         (a) =>
-          a.id === 'items:examine_owned_item' ||
-          a.id === 'items:give_item' ||
+          a.id === 'items:drop_item' ||
           a.id === 'items:take_from_container'
       );
 
@@ -673,13 +552,12 @@ describe('Mixed Action Types Discovery - Integration', () => {
         expect(action.template).toBeDefined();
 
         // Templates should use proper placeholder syntax
-        if (action.id === 'items:examine_owned_item') {
-          expect(action.template).toBe('examine my {target}');
-        } else if (action.id === 'items:give_item') {
-          expect(action.template).toBe('give {item} to {recipient}');
-        } else if (action.id === 'items:take_from_container') {
-          expect(action.template).toBe('take {secondary.name} from {primary.name}');
-        }
+        const expectedTemplates = {
+          'items:drop_item': 'drop {item}',
+          'items:take_from_container': 'take {secondary.name} from {primary.name}',
+        };
+        const expectedTemplate = expectedTemplates[action.id];
+        expect(action.template).toBe(expectedTemplate);
 
         console.log(`  ✅ Valid template for ${action.id}: "${action.template}"`);
       }
@@ -691,8 +569,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       expect(Array.isArray(actions)).toBe(true);
 
       const actionTypes = [
-        'items:examine_owned_item',
-        'items:give_item',
+        'items:drop_item',
         'items:take_from_container',
       ];
 

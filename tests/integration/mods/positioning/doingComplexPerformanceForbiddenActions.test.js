@@ -12,14 +12,14 @@ import { ModEntityScenarios, ModEntityBuilder } from '../../../common/mods/ModEn
 import removeClothingAction from '../../../../data/mods/clothing/actions/remove_clothing.action.json';
 import buryFaceInHandsAction from '../../../../data/mods/distress/actions/bury_face_in_hands.action.json';
 import dropItemAction from '../../../../data/mods/items/actions/drop_item.action.json';
-import examineItemAction from '../../../../data/mods/items/actions/examine_owned_item.action.json';
+import examineItemAction from '../../../../data/mods/observation/actions/examine_owned_item.action.json';
 import brushHairBackCoylyAction from '../../../../data/mods/seduction/actions/brush_hair_back_coyly.action.json';
 import drawAttentionToAssAction from '../../../../data/mods/seduction/actions/draw_attention_to_ass.action.json';
 import drawAttentionToBreastsAction from '../../../../data/mods/seduction/actions/draw_attention_to_breasts.action.json';
 import grabCrotchDrawAttentionAction from '../../../../data/mods/seduction/actions/grab_crotch_draw_attention.action.json';
 import stretchSexilyAction from '../../../../data/mods/seduction/actions/stretch_sexily.action.json';
 import goAction from '../../../../data/mods/movement/actions/go.action.json';
-import getCloseAction from '../../../../data/mods/positioning/actions/get_close.action.json';
+import getCloseAction from '../../../../data/mods/personal-space/actions/get_close.action.json';
 import kneelBeforeAction from '../../../../data/mods/positioning/actions/kneel_before.action.json';
 import placeYourselfBehindAction from '../../../../data/mods/positioning/actions/place_yourself_behind.action.json';
 import sitDownAction from '../../../../data/mods/positioning/actions/sit_down.action.json';
@@ -428,7 +428,7 @@ describe('actions forbidden when doing complex performance', () => {
         const availableActions = testFixture.testEnv.getAvailableActions('actor1');
         const ids = availableActions.map((action) => action.id);
 
-        expect(ids).not.toContain('positioning:get_close');
+        expect(ids).not.toContain('personal-space:get_close');
       });
 
       it('kneel_before is NOT available when actor is doing complex performance', () => {

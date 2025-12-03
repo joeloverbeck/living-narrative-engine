@@ -36,7 +36,7 @@ describe('handle_swing_at_target damage application', () => {
     );
 
     expect(forEachOp).toBeDefined();
-    expect(forEachOp.parameters.collection).toEqual({ var: 'context.weaponDamage.entries' });
+    expect(forEachOp.parameters.collection).toBe('context.weaponDamage.entries');
     expect(forEachOp.parameters.item_variable).toBe('dmgEntry');
 
     const applyDamage = forEachOp.parameters.actions.find(
@@ -48,6 +48,38 @@ describe('handle_swing_at_target damage application', () => {
     expect(applyDamage.parameters.damage_entry).toEqual({ var: 'context.dmgEntry' });
     expect(applyDamage.parameters.amount).toBeUndefined();
     expect(applyDamage.parameters.damage_type).toBeUndefined();
+  });
+
+  it('excludes piercing damage type on SUCCESS (swing excludes thrusting damage)', () => {
+    const successBranch = findOutcomeBranch('SUCCESS');
+    expect(successBranch).toBeDefined();
+
+    const forEachOp = successBranch.parameters.then_actions.find(
+      (op) => op.type === 'FOR_EACH'
+    );
+
+    const applyDamage = forEachOp.parameters.actions.find(
+      (action) => action.type === 'APPLY_DAMAGE'
+    );
+
+    expect(applyDamage.parameters.exclude_damage_types).toBeDefined();
+    expect(applyDamage.parameters.exclude_damage_types).toEqual(['piercing']);
+  });
+
+  it('excludes piercing damage type on CRITICAL_SUCCESS', () => {
+    const critBranch = findOutcomeBranch('CRITICAL_SUCCESS');
+    expect(critBranch).toBeDefined();
+
+    const forEachOp = critBranch.parameters.then_actions.find(
+      (op) => op.type === 'FOR_EACH'
+    );
+
+    const applyDamage = forEachOp.parameters.actions.find(
+      (action) => action.type === 'APPLY_DAMAGE'
+    );
+
+    expect(applyDamage.parameters.exclude_damage_types).toBeDefined();
+    expect(applyDamage.parameters.exclude_damage_types).toEqual(['piercing']);
   });
 
   it('applies 1.5x damage on CRITICAL_SUCCESS via damage_multiplier', () => {

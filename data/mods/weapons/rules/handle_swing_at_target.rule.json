@@ -82,9 +82,25 @@
             }
           },
           {
+            "type": "SET_VARIABLE",
+            "comment": "Set logMessage BEFORE damage loop so success message displays first",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} lands a devastating blow with their {context.weaponName} on {context.targetName}!"
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Display success message BEFORE damage details (which are deferred via queueMicrotask)",
+            "parameters": {
+              "eventType": "core:display_successful_action_result",
+              "payload": { "message": "{context.logMessage}" }
+            }
+          },
+          {
             "type": "FOR_EACH",
             "parameters": {
-              "collection": { "var": "context.weaponDamage.entries" },
+              "collection": "context.weaponDamage.entries",
               "item_variable": "dmgEntry",
               "actions": [
                 {
@@ -92,21 +108,15 @@
                   "parameters": {
                     "entity_ref": "secondary",
                     "damage_entry": { "var": "context.dmgEntry" },
-                    "damage_multiplier": 1.5
+                    "damage_multiplier": 1.5,
+                    "exclude_damage_types": ["piercing"]
                   }
                 }
               ]
             }
           },
           {
-            "type": "SET_VARIABLE",
-            "parameters": {
-              "variable_name": "logMessage",
-              "value": "{context.actorName} lands a devastating blow with their {context.weaponName} on {context.targetName}!"
-            }
-          },
-          {
-            "macro": "core:logSuccessOutcomeAndEndTurn"
+            "macro": "core:endTurnOnly"
           }
         ]
       }
@@ -128,30 +138,40 @@
             }
           },
           {
-            "type": "FOR_EACH",
-            "parameters": {
-              "collection": { "var": "context.weaponDamage.entries" },
-              "item_variable": "dmgEntry",
-              "actions": [
-                {
-                  "type": "APPLY_DAMAGE",
-                  "parameters": {
-                    "entity_ref": "secondary",
-                    "damage_entry": { "var": "context.dmgEntry" }
-                  }
-                }
-              ]
-            }
-          },
-          {
             "type": "SET_VARIABLE",
+            "comment": "Set logMessage BEFORE damage loop so success message displays first",
             "parameters": {
               "variable_name": "logMessage",
               "value": "{context.actorName} swings their {context.weaponName} at {context.targetName}, cutting their flesh."
             }
           },
           {
-            "macro": "core:logSuccessOutcomeAndEndTurn"
+            "type": "DISPATCH_EVENT",
+            "comment": "Display success message BEFORE damage details (which are deferred via queueMicrotask)",
+            "parameters": {
+              "eventType": "core:display_successful_action_result",
+              "payload": { "message": "{context.logMessage}" }
+            }
+          },
+          {
+            "type": "FOR_EACH",
+            "parameters": {
+              "collection": "context.weaponDamage.entries",
+              "item_variable": "dmgEntry",
+              "actions": [
+                {
+                  "type": "APPLY_DAMAGE",
+                  "parameters": {
+                    "entity_ref": "secondary",
+                    "damage_entry": { "var": "context.dmgEntry" },
+                    "exclude_damage_types": ["piercing"]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "macro": "core:endTurnOnly"
           }
         ]
       }

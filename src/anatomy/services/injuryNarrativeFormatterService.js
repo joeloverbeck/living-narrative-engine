@@ -210,58 +210,60 @@ class InjuryNarrativeFormatterService extends BaseService {
       orientation,
       damageType,
       damageAmount: _damageAmount, // Reserved for future severity-based narrative
-      previousState,
-      newState,
+      previousState: _previousState,
+      newState: _newState,
       effectsTriggered,
       propagatedDamage,
     } = damageEventData;
 
     const parts = [];
     const partName = this.#formatPartName(partType, orientation);
-    const pronounPossessive = this.#getPossessivePronoun(entityPronoun);
 
-    // Primary damage description
-    parts.push(
-      `${entityName} suffers ${damageType} damage to ${pronounPossessive} ${partName}.`
-    );
+    // Primary damage description: "{entityName}'s {partName} suffers {damageType} damage"
+    let primaryDamage = `${entityName}'s ${partName} suffers ${damageType} damage`;
 
-    // State change description (if state changed)
-    if (previousState !== newState) {
-      const stateDesc =
-        THIRD_PERSON_STATE_MAP[newState] ||
-        `is now in ${newState} condition`;
-      parts.push(`${this.#capitalizeFirst(pronounPossessive)} ${partName} ${stateDesc}.`);
-    }
-
-    // Effects triggered
+    // Effects triggered (bleeding, etc.) - append to same sentence
     if (effectsTriggered && effectsTriggered.length > 0) {
       const effectDescs = effectsTriggered
         .map((effect) => {
           const effectDesc = THIRD_PERSON_EFFECT_MAP[effect];
-          return effectDesc ? `${effectDesc}` : null;
+          return effectDesc ? effectDesc : null;
         })
         .filter(Boolean);
 
       if (effectDescs.length > 0) {
-        parts.push(
-          `The ${partName} ${effectDescs.join(' and ')}.`
-        );
+        primaryDamage += ` and ${effectDescs.join(' and ')}`;
       }
     }
 
-    // Propagated damage
+    primaryDamage += '.';
+    parts.push(primaryDamage);
+
+    // Propagated damage - narrative chain
     if (propagatedDamage && propagatedDamage.length > 0) {
-      for (const prop of propagatedDamage) {
-        const propPartName = this.#formatPartName(
-          prop.childPartType,
-          null
-        );
-        const propStateDesc =
-          THIRD_PERSON_STATE_MAP[prop.newState] || `is now ${prop.newState}`;
-        parts.push(
-          `As a result, ${pronounPossessive} ${propPartName} ${propStateDesc}.`
-        );
-      }
+      propagatedDamage.forEach((prop, index) => {
+        const propPartName = this.#formatPartName(prop.childPartType, prop.orientation);
+        const connector = index === 0 ? 'The damage propagates to' : 'The damage also propagates to';
+        
+        let propDamage = `${connector} ${entityName}'s ${propPartName}, that suffers ${damageType} damage`;
+
+        // Add effects for propagated damage
+        if (prop.effectsTriggered && prop.effectsTriggered.length > 0) {
+          const propEffectDescs = prop.effectsTriggered
+            .map((effect) => {
+              const effectDesc = THIRD_PERSON_EFFECT_MAP[effect];
+              return effectDesc ? effectDesc : null;
+            })
+            .filter(Boolean);
+
+          if (propEffectDescs.length > 0) {
+            propDamage += ` and ${propEffectDescs.join(' and ')}`;
+          }
+        }
+
+        propDamage += '.';
+        parts.push(propDamage);
+      });
     }
 
     return parts.join(' ');

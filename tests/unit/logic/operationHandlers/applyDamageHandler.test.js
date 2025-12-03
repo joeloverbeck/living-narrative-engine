@@ -473,7 +473,7 @@ describe('ApplyDamageHandler', () => {
             if (id === 'part1' && comp === PART_COMPONENT_ID) return true;
             return false;
         });
-        
+
         em.getComponentData.mockImplementation((id, comp) => {
             if (id === 'entity1' && comp === BODY_COMPONENT_ID) return { bodyId: 'body1' };
             if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID) return { currentHealth: 100, maxHealth: 100, state: 'healthy' };
@@ -487,6 +487,75 @@ describe('ApplyDamageHandler', () => {
 
         expect(dispatcher.dispatch).toHaveBeenCalledWith(DAMAGE_APPLIED_EVENT, expect.objectContaining({
             partId: 'part1'
+        }));
+    });
+
+    test('auto-resolves part when hit_probability_weight is undefined (defaults to 1.0)', async () => {
+        const params = {
+            entity_ref: 'entity1',
+            amount: 20,
+            damage_type: 'slashing'
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => {
+            if (id === 'entity1' && comp === BODY_COMPONENT_ID) return true;
+            if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID) return true;
+            if (id === 'part1' && comp === PART_COMPONENT_ID) return true;
+            return false;
+        });
+
+        em.getComponentData.mockImplementation((id, comp) => {
+            if (id === 'entity1' && comp === BODY_COMPONENT_ID) return { bodyId: 'body1' };
+            if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID) return { currentHealth: 100, maxHealth: 100, state: 'healthy' };
+            // Return anatomy:part WITHOUT hit_probability_weight - mimics real entity definitions
+            if (id === 'part1' && comp === PART_COMPONENT_ID) return { subType: 'torso' };
+            return null;
+        });
+
+        bodyGraphService.getAllParts.mockReturnValue(['part1']);
+
+        await handler.execute(params, executionContext);
+
+        // Should succeed with defaulted weight of 1.0
+        expect(dispatcher.dispatch).toHaveBeenCalledWith(DAMAGE_APPLIED_EVENT, expect.objectContaining({
+            partId: 'part1'
+        }));
+    });
+
+    test('excludes parts with explicit hit_probability_weight of 0', async () => {
+        const params = {
+            entity_ref: 'entity1',
+            amount: 20,
+            damage_type: 'slashing'
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => {
+            if (id === 'entity1' && comp === BODY_COMPONENT_ID) return true;
+            if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID) return true;
+            if (id === 'part1' && comp === PART_COMPONENT_ID) return true;
+            if (id === 'part2' && comp === PART_HEALTH_COMPONENT_ID) return true;
+            if (id === 'part2' && comp === PART_COMPONENT_ID) return true;
+            return false;
+        });
+
+        em.getComponentData.mockImplementation((id, comp) => {
+            if (id === 'entity1' && comp === BODY_COMPONENT_ID) return { bodyId: 'body1' };
+            // part1 has explicit 0 weight - should be excluded
+            if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID) return { currentHealth: 100, maxHealth: 100, state: 'healthy' };
+            if (id === 'part1' && comp === PART_COMPONENT_ID) return { subType: 'head', hit_probability_weight: 0 };
+            // part2 has undefined weight - should default to 1.0 and be selected
+            if (id === 'part2' && comp === PART_HEALTH_COMPONENT_ID) return { currentHealth: 100, maxHealth: 100, state: 'healthy' };
+            if (id === 'part2' && comp === PART_COMPONENT_ID) return { subType: 'torso' };
+            return null;
+        });
+
+        bodyGraphService.getAllParts.mockReturnValue(['part1', 'part2']);
+
+        await handler.execute(params, executionContext);
+
+        // Should select part2 (the only one with positive weight)
+        expect(dispatcher.dispatch).toHaveBeenCalledWith(DAMAGE_APPLIED_EVENT, expect.objectContaining({
+            partId: 'part2'
         }));
     });
 
@@ -1481,6 +1550,673 @@ describe('ApplyDamageHandler', () => {
           'child',
           PART_HEALTH_COMPONENT_ID,
           expect.objectContaining({ currentHealth: 30 })
+        );
+      });
+    });
+
+    describe('exclude_damage_types parameter', () => {
+      test('should skip damage when type is in exclusion list', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          damage_entry: {
+            name: 'piercing',
+            amount: 25
+          },
+          exclude_damage_types: ['piercing']
+        };
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => comp === PART_HEALTH_COMPONENT_ID);
+        em.getComponentData.mockReturnValue(healthComponent);
+
+        await handler.execute(params, executionContext);
+
+        // No damage should be applied
+        expect(em.addComponent).not.toHaveBeenCalled();
+        expect(dispatcher.dispatch).not.toHaveBeenCalledWith(DAMAGE_APPLIED_EVENT, expect.anything());
+        expect(log.debug).toHaveBeenCalledWith(
+          expect.stringContaining("Skipping excluded damage type 'piercing'"),
+          expect.objectContaining({ excluded: ['piercing'] })
+        );
+      });
+
+      test('should apply damage when type is NOT in exclusion list', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          damage_entry: {
+            name: 'slashing',
+            amount: 25
+          },
+          exclude_damage_types: ['piercing']
+        };
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => comp === PART_HEALTH_COMPONENT_ID);
+        em.getComponentData.mockReturnValue(healthComponent);
+
+        await handler.execute(params, executionContext);
+
+        // Damage should be applied normally
+        expect(dispatcher.dispatch).toHaveBeenCalledWith(DAMAGE_APPLIED_EVENT, expect.objectContaining({
+          entityId: 'entity1',
+          amount: 25,
+          damageType: 'slashing'
+        }));
+        expect(em.addComponent).toHaveBeenCalledWith('part1', PART_HEALTH_COMPONENT_ID, expect.objectContaining({
+          currentHealth: 75
+        }));
+      });
+
+      test('should apply damage when exclusion list is empty', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          damage_entry: {
+            name: 'slashing',
+            amount: 20
+          },
+          exclude_damage_types: []
+        };
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => comp === PART_HEALTH_COMPONENT_ID);
+        em.getComponentData.mockReturnValue(healthComponent);
+
+        await handler.execute(params, executionContext);
+
+        expect(dispatcher.dispatch).toHaveBeenCalledWith(DAMAGE_APPLIED_EVENT, expect.objectContaining({
+          amount: 20
+        }));
+        expect(em.addComponent).toHaveBeenCalled();
+      });
+
+      test('should apply damage when exclude_damage_types is undefined (backward compatibility)', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          damage_entry: {
+            name: 'slashing',
+            amount: 15
+          }
+          // No exclude_damage_types parameter
+        };
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => comp === PART_HEALTH_COMPONENT_ID);
+        em.getComponentData.mockReturnValue(healthComponent);
+
+        await handler.execute(params, executionContext);
+
+        expect(dispatcher.dispatch).toHaveBeenCalledWith(DAMAGE_APPLIED_EVENT, expect.objectContaining({
+          amount: 15
+        }));
+        expect(em.addComponent).toHaveBeenCalled();
+      });
+
+      test('should handle multiple exclusions correctly', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          damage_entry: {
+            name: 'fire',
+            amount: 30
+          },
+          exclude_damage_types: ['piercing', 'fire', 'bludgeoning']
+        };
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => comp === PART_HEALTH_COMPONENT_ID);
+        em.getComponentData.mockReturnValue(healthComponent);
+
+        await handler.execute(params, executionContext);
+
+        // Fire should be excluded
+        expect(em.addComponent).not.toHaveBeenCalled();
+        expect(log.debug).toHaveBeenCalledWith(
+          expect.stringContaining("Skipping excluded damage type 'fire'"),
+          expect.anything()
+        );
+      });
+
+      test('should resolve JSON Logic expression for exclusions', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          damage_entry: {
+            name: 'piercing',
+            amount: 20
+          },
+          exclude_damage_types: { var: 'context.excludedTypes' }
+        };
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        // JSON Logic evaluates to array of excluded types
+        jsonLogicService.evaluate.mockReturnValue(['piercing', 'slashing']);
+
+        em.hasComponent.mockImplementation((id, comp) => comp === PART_HEALTH_COMPONENT_ID);
+        em.getComponentData.mockReturnValue(healthComponent);
+
+        await handler.execute(params, executionContext);
+
+        expect(jsonLogicService.evaluate).toHaveBeenCalledWith(
+          { var: 'context.excludedTypes' },
+          executionContext
+        );
+        // Piercing should be excluded
+        expect(em.addComponent).not.toHaveBeenCalled();
+      });
+
+      test('should handle JSON Logic evaluation failure gracefully (fail-open)', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          damage_entry: {
+            name: 'slashing',
+            amount: 25
+          },
+          exclude_damage_types: { malformed: 'expression' }
+        };
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        // JSON Logic evaluation throws
+        jsonLogicService.evaluate.mockImplementation(() => {
+          throw new Error('Evaluation failed');
+        });
+
+        em.hasComponent.mockImplementation((id, comp) => comp === PART_HEALTH_COMPONENT_ID);
+        em.getComponentData.mockReturnValue(healthComponent);
+
+        await handler.execute(params, executionContext);
+
+        // Should warn about the failure
+        expect(log.warn).toHaveBeenCalledWith(
+          'APPLY_DAMAGE: Failed to evaluate exclude_damage_types',
+          expect.objectContaining({ error: 'Evaluation failed' })
+        );
+        // Should still apply damage (fail-open)
+        expect(dispatcher.dispatch).toHaveBeenCalledWith(DAMAGE_APPLIED_EVENT, expect.objectContaining({
+          amount: 25
+        }));
+        expect(em.addComponent).toHaveBeenCalled();
+      });
+
+      test('should be case-sensitive for damage type names', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          damage_entry: {
+            name: 'Piercing',  // Capital P
+            amount: 20
+          },
+          exclude_damage_types: ['piercing']  // lowercase
+        };
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => comp === PART_HEALTH_COMPONENT_ID);
+        em.getComponentData.mockReturnValue(healthComponent);
+
+        await handler.execute(params, executionContext);
+
+        // Damage should be applied because case doesn't match
+        expect(dispatcher.dispatch).toHaveBeenCalledWith(DAMAGE_APPLIED_EVENT, expect.objectContaining({
+          damageType: 'Piercing'
+        }));
+        expect(em.addComponent).toHaveBeenCalled();
+      });
+
+      test('should not affect damage_multiplier when exclusion applies', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          damage_entry: {
+            name: 'piercing',
+            amount: 20
+          },
+          damage_multiplier: 1.5,
+          exclude_damage_types: ['piercing']
+        };
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => comp === PART_HEALTH_COMPONENT_ID);
+        em.getComponentData.mockReturnValue(healthComponent);
+
+        await handler.execute(params, executionContext);
+
+        // No damage should be applied - exclusion happens before multiplier
+        expect(em.addComponent).not.toHaveBeenCalled();
+        expect(damageTypeEffectsService.applyEffectsForDamage).not.toHaveBeenCalled();
+      });
+
+      test('should work with legacy damage_type parameter', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          amount: 20,
+          damage_type: 'piercing',
+          exclude_damage_types: ['piercing']
+        };
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => comp === PART_HEALTH_COMPONENT_ID);
+        em.getComponentData.mockReturnValue(healthComponent);
+
+        await handler.execute(params, executionContext);
+
+        // Should skip damage due to exclusion
+        expect(em.addComponent).not.toHaveBeenCalled();
+        // Should still emit deprecation warning first
+        expect(log.warn).toHaveBeenCalledWith(expect.stringContaining('DEPRECATED'));
+        // Then skip with debug message
+        expect(log.debug).toHaveBeenCalledWith(
+          expect.stringContaining("Skipping excluded damage type 'piercing'"),
+          expect.anything()
+        );
+      });
+    });
+
+    describe('entity_ref placeholder resolution', () => {
+      test('should resolve "secondary" placeholder to entity ID from event payload', async () => {
+        const actualEntityId = 'actual-target-entity-123';
+        const params = {
+          entity_ref: 'secondary',
+          part_ref: 'part1',
+          damage_entry: { name: 'slashing', amount: 10 }
+        };
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        // Set up execution context with event payload containing secondaryId
+        executionContext = {
+          evaluationContext: {
+            context: {},
+            event: {
+              type: 'core:attempt_action',
+              payload: {
+                actionId: 'weapons:swing_at_target',
+                actorId: 'actor-123',
+                primaryId: 'weapon-456',
+                secondaryId: actualEntityId
+              }
+            }
+          },
+          logger: log,
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => {
+          if (id === actualEntityId && comp === BODY_COMPONENT_ID) return true;
+          if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID) return true;
+          if (id === 'part1' && comp === PART_COMPONENT_ID) return true;
+          return false;
+        });
+        em.getComponentData.mockImplementation((id, comp) => {
+          if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID) return healthComponent;
+          if (id === 'part1' && comp === PART_COMPONENT_ID) return { subType: 'torso', ownerEntityId: actualEntityId };
+          return null;
+        });
+
+        await handler.execute(params, executionContext);
+
+        // Verify damage was applied to the resolved entity (via part)
+        expect(dispatcher.dispatch).toHaveBeenCalledWith(
+          DAMAGE_APPLIED_EVENT,
+          expect.objectContaining({
+            entityId: actualEntityId,
+            partId: 'part1',
+            amount: 10,
+            damageType: 'slashing'
+          })
+        );
+      });
+
+      test('should resolve "primary" placeholder to entity ID from event payload', async () => {
+        const actualEntityId = 'weapon-entity-456';
+        const params = {
+          entity_ref: 'primary',
+          part_ref: 'blade-part',
+          damage_entry: { name: 'impact', amount: 5 }
+        };
+
+        const healthComponent = {
+          currentHealth: 50,
+          maxHealth: 50,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        executionContext = {
+          evaluationContext: {
+            context: {},
+            event: {
+              type: 'core:attempt_action',
+              payload: {
+                actionId: 'test:action',
+                actorId: 'actor-123',
+                primaryId: actualEntityId,
+                secondaryId: 'other-entity'
+              }
+            }
+          },
+          logger: log,
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => {
+          if (id === actualEntityId && comp === BODY_COMPONENT_ID) return true;
+          if (id === 'blade-part' && comp === PART_HEALTH_COMPONENT_ID) return true;
+          if (id === 'blade-part' && comp === PART_COMPONENT_ID) return true;
+          return false;
+        });
+        em.getComponentData.mockImplementation((id, comp) => {
+          if (id === 'blade-part' && comp === PART_HEALTH_COMPONENT_ID) return healthComponent;
+          if (id === 'blade-part' && comp === PART_COMPONENT_ID) return { subType: 'blade', ownerEntityId: actualEntityId };
+          return null;
+        });
+
+        await handler.execute(params, executionContext);
+
+        expect(dispatcher.dispatch).toHaveBeenCalledWith(
+          DAMAGE_APPLIED_EVENT,
+          expect.objectContaining({
+            entityId: actualEntityId,
+            partId: 'blade-part'
+          })
+        );
+      });
+
+      test('should resolve "actor" keyword to actor ID from evaluation context', async () => {
+        const actorEntityId = 'actor-entity-789';
+        const params = {
+          entity_ref: 'actor',
+          part_ref: 'hand-part',
+          damage_entry: { name: 'fire', amount: 8 }
+        };
+
+        const healthComponent = {
+          currentHealth: 30,
+          maxHealth: 30,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        executionContext = {
+          evaluationContext: {
+            context: {},
+            actor: { id: actorEntityId },
+            event: {
+              type: 'core:attempt_action',
+              payload: { actorId: actorEntityId }
+            }
+          },
+          logger: log,
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => {
+          if (id === actorEntityId && comp === BODY_COMPONENT_ID) return true;
+          if (id === 'hand-part' && comp === PART_HEALTH_COMPONENT_ID) return true;
+          if (id === 'hand-part' && comp === PART_COMPONENT_ID) return true;
+          return false;
+        });
+        em.getComponentData.mockImplementation((id, comp) => {
+          if (id === 'hand-part' && comp === PART_HEALTH_COMPONENT_ID) return healthComponent;
+          if (id === 'hand-part' && comp === PART_COMPONENT_ID) return { subType: 'hand', ownerEntityId: actorEntityId };
+          return null;
+        });
+
+        await handler.execute(params, executionContext);
+
+        expect(dispatcher.dispatch).toHaveBeenCalledWith(
+          DAMAGE_APPLIED_EVENT,
+          expect.objectContaining({
+            entityId: actorEntityId,
+            partId: 'hand-part'
+          })
+        );
+      });
+
+      test('should still work with direct entity ID strings', async () => {
+        const directEntityId = 'direct-entity-id-999';
+        const params = {
+          entity_ref: directEntityId,
+          part_ref: 'part1',
+          damage_entry: { name: 'bludgeoning', amount: 15 }
+        };
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => {
+          if (id === directEntityId && comp === BODY_COMPONENT_ID) return true;
+          if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID) return true;
+          if (id === 'part1' && comp === PART_COMPONENT_ID) return true;
+          return false;
+        });
+        em.getComponentData.mockImplementation((id, comp) => {
+          if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID) return healthComponent;
+          if (id === 'part1' && comp === PART_COMPONENT_ID) return { subType: 'torso', ownerEntityId: directEntityId };
+          return null;
+        });
+
+        await handler.execute(params, executionContext);
+
+        expect(dispatcher.dispatch).toHaveBeenCalledWith(
+          DAMAGE_APPLIED_EVENT,
+          expect.objectContaining({
+            entityId: directEntityId,
+            partId: 'part1'
+          })
+        );
+      });
+
+      test('should resolve "tertiary" placeholder to entity ID from event payload', async () => {
+        const tertiaryEntityId = 'tertiary-entity-321';
+        const params = {
+          entity_ref: 'tertiary',
+          part_ref: 'arm-part',
+          damage_entry: { name: 'cold', amount: 12 }
+        };
+
+        const healthComponent = {
+          currentHealth: 40,
+          maxHealth: 40,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        executionContext = {
+          evaluationContext: {
+            context: {},
+            event: {
+              type: 'core:attempt_action',
+              payload: {
+                actionId: 'test:multi-target',
+                actorId: 'actor-123',
+                primaryId: 'primary-entity',
+                secondaryId: 'secondary-entity',
+                tertiaryId: tertiaryEntityId
+              }
+            }
+          },
+          logger: log,
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => {
+          if (id === tertiaryEntityId && comp === BODY_COMPONENT_ID) return true;
+          if (id === 'arm-part' && comp === PART_HEALTH_COMPONENT_ID) return true;
+          if (id === 'arm-part' && comp === PART_COMPONENT_ID) return true;
+          return false;
+        });
+        em.getComponentData.mockImplementation((id, comp) => {
+          if (id === 'arm-part' && comp === PART_HEALTH_COMPONENT_ID) return healthComponent;
+          if (id === 'arm-part' && comp === PART_COMPONENT_ID) return { subType: 'arm', ownerEntityId: tertiaryEntityId };
+          return null;
+        });
+
+        await handler.execute(params, executionContext);
+
+        expect(dispatcher.dispatch).toHaveBeenCalledWith(
+          DAMAGE_APPLIED_EVENT,
+          expect.objectContaining({
+            entityId: tertiaryEntityId,
+            partId: 'arm-part'
+          })
+        );
+      });
+
+      test('should dispatch error when placeholder cannot be resolved', async () => {
+        const params = {
+          entity_ref: 'secondary',  // Placeholder that won't resolve
+          part_ref: 'part1',
+          damage_entry: { name: 'slashing', amount: 10 }
+        };
+
+        // Event payload missing secondaryId
+        executionContext = {
+          evaluationContext: {
+            context: {},
+            event: {
+              type: 'core:attempt_action',
+              payload: {
+                actionId: 'test:action',
+                actorId: 'actor-123'
+                // No primaryId, secondaryId, tertiaryId
+              }
+            }
+          },
+          logger: log,
+        };
+
+        await handler.execute(params, executionContext);
+
+        // Should dispatch error for invalid entity_ref
+        expect(dispatcher.dispatch).toHaveBeenCalledWith(
+          'core:system_error_occurred',
+          expect.objectContaining({
+            message: expect.stringContaining('Invalid entity_ref')
+          })
+        );
+      });
+
+      test('should still evaluate JSON Logic entity_ref objects', async () => {
+        const resolvedEntityId = 'json-logic-resolved-entity';
+        const params = {
+          entity_ref: { var: 'context.targetEntity.id' },
+          part_ref: 'part1',
+          damage_entry: { name: 'piercing', amount: 7 }
+        };
+
+        const healthComponent = {
+          currentHealth: 60,
+          maxHealth: 60,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        executionContext = {
+          evaluationContext: {
+            context: {
+              targetEntity: { id: resolvedEntityId }
+            }
+          },
+          logger: log,
+        };
+
+        // Mock JSON Logic evaluation
+        jsonLogicService.evaluate.mockReturnValue(resolvedEntityId);
+
+        em.hasComponent.mockImplementation((id, comp) => {
+          if (id === resolvedEntityId && comp === BODY_COMPONENT_ID) return true;
+          if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID) return true;
+          if (id === 'part1' && comp === PART_COMPONENT_ID) return true;
+          return false;
+        });
+        em.getComponentData.mockImplementation((id, comp) => {
+          if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID) return healthComponent;
+          if (id === 'part1' && comp === PART_COMPONENT_ID) return { subType: 'torso', ownerEntityId: resolvedEntityId };
+          return null;
+        });
+
+        await handler.execute(params, executionContext);
+
+        expect(jsonLogicService.evaluate).toHaveBeenCalledWith(
+          { var: 'context.targetEntity.id' },
+          executionContext
+        );
+        expect(dispatcher.dispatch).toHaveBeenCalledWith(
+          DAMAGE_APPLIED_EVENT,
+          expect.objectContaining({
+            entityId: resolvedEntityId,
+            partId: 'part1'
+          })
         );
       });
     });

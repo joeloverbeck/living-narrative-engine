@@ -148,9 +148,9 @@ describe('swing_at_target outcome resolution rule', () => {
         '{context.targetName}'
       );
 
-      // Check for success macro
+      // Check for success macro (endTurnOnly because message displayed earlier in rule)
       const hasMacro = thenActions.some(
-        (op) => op.macro === 'core:logSuccessOutcomeAndEndTurn'
+        (op) => op.macro === 'core:endTurnOnly'
       );
       expect(hasMacro).toBe(true);
     });
@@ -169,9 +169,9 @@ describe('swing_at_target outcome resolution rule', () => {
         'cutting their flesh'
       );
 
-      // Check for success macro
+      // Check for success macro (endTurnOnly because message displayed earlier in rule)
       const hasMacro = thenActions.some(
-        (op) => op.macro === 'core:logSuccessOutcomeAndEndTurn'
+        (op) => op.macro === 'core:endTurnOnly'
       );
       expect(hasMacro).toBe(true);
     });
@@ -328,12 +328,14 @@ describe('swing_at_target outcome resolution rule', () => {
   });
 
   describe('Macro Usage Validation', () => {
-    it('should use logSuccessOutcomeAndEndTurn macro for success outcomes', () => {
+    it('should use endTurnOnly macro for success outcomes (message displayed earlier in rule)', () => {
       const ruleString = JSON.stringify(swingAtTargetRule);
 
-      // Count success macro occurrences (should be 2: CRITICAL_SUCCESS and SUCCESS)
+      // Count endTurnOnly macro occurrences (should be 2: CRITICAL_SUCCESS and SUCCESS)
+      // Success message is now displayed via DISPATCH_EVENT before the damage loop,
+      // so we use endTurnOnly to just end the turn without repeating the message
       const successMacroMatches = ruleString.match(
-        /core:logSuccessOutcomeAndEndTurn/g
+        /core:endTurnOnly/g
       );
       expect(successMacroMatches?.length).toBe(2);
     });

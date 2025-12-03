@@ -361,10 +361,10 @@ describe('Action Formatting with Metadata - Integration', () => {
       const gameplayActions = [
         // Positioning actions
         { actionId: 'positioning:sit_down', commandString: 'sit on couch', description: 'Take a seat', index: 0 },
-        { actionId: 'positioning:get_close', commandString: 'approach Alice', description: 'Move closer', index: 1 },
+        { actionId: 'personal-space:get_close', commandString: 'approach Alice', description: 'Move closer', index: 1 },
         // Items actions
         { actionId: 'items:pick_up_item', commandString: 'pick up book', description: 'Pick up the book', index: 2 },
-        { actionId: 'items:give_item', commandString: 'give book to Alice', description: 'Hand over the book', index: 3 },
+        { actionId: 'item-transfer:give_item', commandString: 'give book to Alice', description: 'Hand over the book', index: 3 },
         // Core actions
         { actionId: 'core:wait', commandString: 'wait', description: 'Wait for a moment', index: 4 },
       ];

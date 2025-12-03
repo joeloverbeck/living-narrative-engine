@@ -5,16 +5,16 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../common/mods/ModEntityBuilder.js';
-import handleScootCloserRule from '../../data/mods/positioning/rules/handle_scoot_closer.rule.json' assert { type: 'json' };
-import eventIsActionScootCloser from '../../data/mods/positioning/conditions/event-is-action-scoot-closer.condition.json' assert { type: 'json' };
+import handleScootCloserRule from '../../data/mods/personal-space/rules/handle_scoot_closer.rule.json' assert { type: 'json' };
+import eventIsActionScootCloser from '../../data/mods/personal-space/conditions/event-is-action-scoot-closer.condition.json' assert { type: 'json' };
 
 describe('Debug canScootCloser in scope', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:scoot_closer',
+      'personal-space',
+      'personal-space:scoot_closer',
       handleScootCloserRule,
       eventIsActionScootCloser
     );
@@ -79,7 +79,7 @@ describe('Debug canScootCloser in scope', () => {
     console.log('=== END FULL ACTION OBJECTS ===\n');
 
     const scootAction = actions.find(
-      (a) => a.id === 'positioning:scoot_closer'
+      (a) => a.id === 'personal-space:scoot_closer'
     );
     console.log('\nscoot_closer found:', !!scootAction);
 
@@ -99,7 +99,7 @@ describe('Debug canScootCloser in scope', () => {
 
     // Scoot closer should be discovered - actor has empty spot to left with occupant beyond
     expect(scootAction).toBeDefined();
-    expect(scootAction.id).toBe('positioning:scoot_closer');
+    expect(scootAction.id).toBe('personal-space:scoot_closer');
     // Note: get_up_from_furniture action is not tested here - this test focuses on scoot_closer discovery
   });
 });

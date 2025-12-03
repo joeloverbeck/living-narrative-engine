@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "personal-space:event-is-action-sit-down-at-distance",
+  "description": "Checks if the event is a sit_down_at_distance action attempt",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "personal-space:sit_down_at_distance"]
+  }
+}

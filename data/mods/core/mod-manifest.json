@@ -179,6 +179,7 @@
     ],
     "macros": [
       "displaySuccessAndEndTurn.macro.json",
+      "endTurnOnly.macro.json",
       "logFailureAndEndTurn.macro.json",
       "logFailureOutcomeAndEndTurn.macro.json",
       "logSuccessAndEndTurn.macro.json",

@@ -44,8 +44,19 @@ export async function handleForEach(
 
   const { scopeLabel, jsonLogic, ...baseCtx } = nestedCtx;
 
+  // Type check collection parameter
+  if (typeof path !== 'string') {
+    const received = JSON.stringify(path);
+    const message =
+      path && typeof path === 'object' && 'var' in path
+        ? `FOR_EACH: 'collection' must be a string path, not a JSON Logic object. ` +
+          `Received: ${received}. Use: "${path.var}" instead of ${received}`
+        : `FOR_EACH: 'collection' must be a string path. Received: ${typeof path}`;
+    throw new TypeError(message);
+  }
+
   if (
-    !path?.trim() ||
+    !path.trim() ||
     !varName?.trim() ||
     !Array.isArray(actions) ||
     actions.length === 0

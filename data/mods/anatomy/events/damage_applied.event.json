@@ -1,0 +1,53 @@
+{
+  "$schema": "../../../schemas/event.schema.json",
+  "id": "anatomy:damage_applied",
+  "description": "Dispatched when damage is applied to a body part. Fires after damage calculation but before health updates and propagation. Includes entity and part metadata for message rendering.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "Entity ID of the character receiving damage"
+      },
+      "entityName": {
+        "type": "string",
+        "description": "Display name of the entity receiving damage (resolved from core:name component)"
+      },
+      "entityPronoun": {
+        "type": "string",
+        "description": "Pronoun for the entity receiving damage (resolved from core:gender component)"
+      },
+      "partId": {
+        "type": "string",
+        "description": "Entity ID of the body part receiving damage"
+      },
+      "partType": {
+        "type": ["string", "null"],
+        "description": "Type/subType of the body part (e.g., 'torso', 'arm', 'head')"
+      },
+      "orientation": {
+        "type": ["string", "null"],
+        "description": "Orientation of the body part if applicable (e.g., 'left', 'right', null)"
+      },
+      "amount": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Damage amount after multipliers are applied"
+      },
+      "damageType": {
+        "type": "string",
+        "description": "Type of damage being applied (e.g., 'slashing', 'bludgeoning', 'piercing')"
+      },
+      "propagatedFrom": {
+        "type": ["string", "null"],
+        "description": "Entity ID of the source part if this damage was propagated from another body part"
+      },
+      "timestamp": {
+        "type": "integer",
+        "description": "Unix timestamp when the damage was applied"
+      }
+    },
+    "required": ["entityId", "partId", "amount", "damageType", "timestamp"],
+    "additionalProperties": false
+  }
+}

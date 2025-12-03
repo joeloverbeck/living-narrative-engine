@@ -16,6 +16,7 @@ const PART_COMPONENT_ID = 'anatomy:part';
 const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
 const JOINT_COMPONENT_ID = 'anatomy:joint';
 const BODY_COMPONENT_ID = 'anatomy:body';
+const DAMAGE_PROPAGATION_COMPONENT_ID = 'anatomy:damage_propagation';
 
 const DAMAGE_APPLIED_EVENT = 'anatomy:damage_applied';
 const PART_HEALTH_CHANGED_EVENT = 'anatomy:part_health_changed';
@@ -116,13 +117,18 @@ describe('Damage Application Mechanics', () => {
       subType: 'torso',
       ownerEntityId: ids.actor,
       hit_probability_weight: 50,
-      damage_propagation: {
-        [ids.heart]: {
-          probability: 1,
-          damage_fraction: 0.5,
-          damage_types: ['piercing'],
+    });
+    // Use standalone damage_propagation component (new format)
+    // Using damage_types whitelist to only allow piercing damage (matches original test behavior)
+    await entityManager.addComponent(ids.torso, DAMAGE_PROPAGATION_COMPONENT_ID, {
+      rules: [
+        {
+          childPartId: ids.heart,
+          baseProbability: 1,
+          damageFraction: 0.5,
+          damage_types: ['piercing'], // Only piercing damage propagates (whitelist)
         },
-      },
+      ],
     });
     await entityManager.addComponent(ids.torso, PART_HEALTH_COMPONENT_ID, {
       currentHealth: 100,
@@ -425,13 +431,21 @@ describe('Damage Application Mechanics', () => {
       socketId: 'misc',
     });
 
-    const torsoPart = entityManager.getComponentData(ids.torso, PART_COMPONENT_ID);
-    await entityManager.addComponent(ids.torso, PART_COMPONENT_ID, {
-      ...torsoPart,
-      damage_propagation: {
-        ...torsoPart.damage_propagation,
-        [orphanId]: { probability: 1, damage_fraction: 1, damage_types: ['piercing'] },
-      },
+    // Add orphan to damage propagation rules using standalone component
+    const existingPropagation = entityManager.getComponentData(
+      ids.torso,
+      DAMAGE_PROPAGATION_COMPONENT_ID
+    );
+    await entityManager.addComponent(ids.torso, DAMAGE_PROPAGATION_COMPONENT_ID, {
+      rules: [
+        ...(existingPropagation?.rules || []),
+        {
+          childPartId: orphanId,
+          baseProbability: 1,
+          damageFraction: 1,
+          damageTypeModifiers: { piercing: 1.0 },
+        },
+      ],
     });
 
     const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);

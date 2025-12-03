@@ -1,5 +1,0 @@
-// Scope for occupants on the target furniture who have two empty spots to their right
-// and are the rightmost occupant (no one sitting further right than them)
-positioning:actors_sitting_with_space_to_right := entities(core:actor)[{
-  "hasSittingSpaceToRight": ["entity", "target", 2]
-}]

@@ -1,11 +1,11 @@
 /**
  * @jest-environment node
- * @file Integration tests for items:give_item action prerequisites
+ * @file Integration tests for item-transfer:give_item action prerequisites
  * @description Tests that the action correctly requires one free grabbing appendage
  *
  * Tests the prerequisite `anatomy:actor-has-free-grabbing-appendage` which uses
  * the hasFreeGrabbingAppendages custom JSON Logic operator.
- * @see data/mods/items/actions/give_item.action.json
+ * @see data/mods/item-transfer/actions/give_item.action.json
  * @see data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json
  * @see tickets/GRAPREEXP-005-give-item-prerequisite.md
  */
@@ -15,7 +15,7 @@ import { PrerequisiteEvaluationService } from '../../../../src/actions/validatio
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
 import JsonLogicCustomOperators from '../../../../src/logic/jsonLogicCustomOperators.js';
 import { ActionValidationContextBuilder } from '../../../../src/actions/validation/actionValidationContextBuilder.js';
-import giveItemAction from '../../../../data/mods/items/actions/give_item.action.json';
+import giveItemAction from '../../../../data/mods/item-transfer/actions/give_item.action.json';
 import actorHasFreeGrabbingCondition from '../../../../data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json';
 
 // Mock grabbingUtils to control the free appendage count
@@ -23,7 +23,7 @@ jest.mock('../../../../src/utils/grabbingUtils.js', () => ({
   countFreeGrabbingAppendages: jest.fn(),
 }));
 
-describe('items:give_item prerequisites', () => {
+describe('item-transfer:give_item prerequisites', () => {
   let prerequisiteService;
   let jsonLogicService;
   let customOperators;
@@ -131,7 +131,7 @@ describe('items:give_item prerequisites', () => {
     });
 
     test('should preserve other action properties', () => {
-      expect(giveItemAction.id).toBe('items:give_item');
+      expect(giveItemAction.id).toBe('item-transfer:give_item');
       expect(giveItemAction.generateCombinations).toBe(true);
       expect(giveItemAction.targets.primary.scope).toBe(
         'core:actors_in_location'

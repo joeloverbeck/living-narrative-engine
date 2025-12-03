@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../schemas/event.schema.json",
+  "id": "anatomy:part_destroyed",
+  "description": "Dispatched when a body part is destroyed (health transitions from >0 to <=0). Fires immediately after health change event, before damage type effects are applied.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "Entity ID of the character owning the destroyed part"
+      },
+      "partId": {
+        "type": "string",
+        "description": "Entity ID of the destroyed body part"
+      },
+      "timestamp": {
+        "type": "integer",
+        "description": "Unix timestamp when the part was destroyed"
+      }
+    },
+    "required": ["entityId", "partId", "timestamp"],
+    "additionalProperties": false
+  }
+}

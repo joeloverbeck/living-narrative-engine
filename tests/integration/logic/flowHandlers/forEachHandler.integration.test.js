@@ -202,10 +202,6 @@ describe('handleForEach integration', () => {
         actions: [],
       }),
     },
-    {
-      name: 'missing parameters object',
-      parameters: () => undefined,
-    },
   ])('warns and skips when parameters invalid (%s)', async ({ parameters }) => {
     const { evaluationContext, executionContext } = buildExecutionContext(logger, {
       items: [{ id: 'alpha', quantity: 1 }],
@@ -239,6 +235,33 @@ describe('handleForEach integration', () => {
           entry.args[0] === 'InvalidLoop FOR_EACH#1: invalid parameters.'
       )
     ).toBe(true);
+  });
+
+  test('throws TypeError when collection parameter is not a string', async () => {
+    const { executionContext } = buildExecutionContext(logger, {
+      items: [{ id: 'alpha', quantity: 1 }],
+      processed: [],
+      totalQuantity: 0,
+      currentItem: 'original',
+    });
+
+    await expect(
+      executeActionSequence(
+        [
+          {
+            type: 'FOR_EACH',
+            parameters: undefined, // Missing parameters object means collection is undefined
+          },
+        ],
+        {
+          ...executionContext,
+          scopeLabel: 'InvalidLoop',
+          jsonLogic,
+        },
+        logger,
+        operationInterpreter
+      )
+    ).rejects.toThrow(TypeError);
   });
 
   test('warns when the collection path does not resolve to an array', async () => {

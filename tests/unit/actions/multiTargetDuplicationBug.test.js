@@ -27,7 +27,7 @@ describe('Multi-target action duplication bug', () => {
     // Currently these all have the SAME params with ALL targets
     const discovered = [
       {
-        id: 'positioning:get_close',
+        id: 'personal-space:get_close',
         command: 'get close to Amaia Castillo',
         params: {
           targetIds: {
@@ -41,7 +41,7 @@ describe('Multi-target action duplication bug', () => {
         description: 'Move closer to target',
       },
       {
-        id: 'positioning:get_close',
+        id: 'personal-space:get_close',
         command: 'get close to Jon Ureña',
         params: {
           targetIds: {
@@ -71,7 +71,7 @@ describe('Multi-target action duplication bug', () => {
 
     const discovered = [
       {
-        id: 'positioning:get_close',
+        id: 'personal-space:get_close',
         command: 'get close to Amaia Castillo',
         params: {
           targetIds: {
@@ -83,7 +83,7 @@ describe('Multi-target action duplication bug', () => {
         description: 'Move closer to target',
       },
       {
-        id: 'positioning:get_close',
+        id: 'personal-space:get_close',
         command: 'get close to Jon Ureña',
         params: {
           targetIds: {
@@ -108,7 +108,7 @@ describe('Multi-target action duplication bug', () => {
   describe('MultiTargetActionFormatter behavior', () => {
     it('should generate combinations for multiple targets', () => {
       const actionDef = {
-        id: 'positioning:get_close',
+        id: 'personal-space:get_close',
         name: 'Get Close',
         template: 'get close to {target}',
       };

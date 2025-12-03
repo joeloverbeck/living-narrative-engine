@@ -1,0 +1,39 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "observation",
+  "version": "1.0.0",
+  "name": "Observation",
+  "description": "Actions for examining and observing items and the environment. Focuses on information gathering and perception.",
+  "actionPurpose": "Examine items to learn their details and descriptions.",
+  "actionConsiderWhen": "Wanting to inspect items closely, learn more about objects, or gather information about surroundings.",
+  "author": "Living Narrative Engine",
+  "gameVersion": "0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "items",
+      "version": "1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "examine_item_in_location.action.json",
+      "examine_owned_item.action.json"
+    ],
+    "conditions": [
+      "event-is-action-examine-item-in-location.condition.json",
+      "event-is-action-examine-owned-item.condition.json"
+    ],
+    "rules": [
+      "handle_examine_item_in_location.rule.json",
+      "handle_examine_owned_item.rule.json"
+    ]
+  }
+}

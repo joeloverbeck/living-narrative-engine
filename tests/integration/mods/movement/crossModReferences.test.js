@@ -29,9 +29,10 @@ describe('Cross-Mod References', () => {
     });
 
     it('should have get_close action reference positioning condition', () => {
+      // get_close was migrated to personal-space mod
       const getClosePath = path.resolve(
         process.cwd(),
-        'data/mods/positioning/actions/get_close.action.json',
+        'data/mods/personal-space/actions/get_close.action.json',
       );
       const getCloseAction = JSON.parse(fs.readFileSync(getClosePath, 'utf8'));
 

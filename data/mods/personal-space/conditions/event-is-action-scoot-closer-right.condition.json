@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "personal-space:event-is-action-scoot-closer-right",
+  "description": "Condition that checks if the event is the scoot_closer_right action",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "personal-space:scoot_closer_right"
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "observation:examine_item_in_location",
+  "name": "Examine Item in Location",
+  "description": "Inspect an item at your current location to learn its details",
+  "targets": {
+    "primary": {
+      "scope": "items:items_at_actor_location",
+      "placeholder": "target",
+      "description": "Item at location to examine"
+    }
+  },
+  "required_components": {
+    "primary": [
+      "items:item",
+      "core:description"
+    ]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:doing_complex_performance",
+      "positioning:fallen",
+      "positioning:being_restrained",
+      "positioning:restraining"
+    ]
+  },
+  "prerequisites": [],
+  "template": "examine {target} in location",
+  "visual": {
+    "backgroundColor": "#01579b",
+    "textColor": "#e1f5fe",
+    "hoverBackgroundColor": "#0277bd",
+    "hoverTextColor": "#ffffff"
+  }
+}

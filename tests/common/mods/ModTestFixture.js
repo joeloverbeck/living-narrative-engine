@@ -14,6 +14,7 @@ import displaySuccessMacro from '../../../data/mods/core/macros/displaySuccessAn
 import logFailureMacro from '../../../data/mods/core/macros/logFailureAndEndTurn.macro.json';
 import logSuccessOutcomeMacro from '../../../data/mods/core/macros/logSuccessOutcomeAndEndTurn.macro.json';
 import logFailureOutcomeMacro from '../../../data/mods/core/macros/logFailureOutcomeAndEndTurn.macro.json';
+import endTurnOnlyMacro from '../../../data/mods/core/macros/endTurnOnly.macro.json';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 import { promises as fs } from 'fs';
 import { resolve } from 'path';
@@ -1032,6 +1033,7 @@ class BaseModTestFixture {
       'core:logFailureAndEndTurn': logFailureMacro,
       'core:logSuccessOutcomeAndEndTurn': logSuccessOutcomeMacro,
       'core:logFailureOutcomeAndEndTurn': logFailureOutcomeMacro,
+      'core:endTurnOnly': endTurnOnlyMacro,
     };
 
     // Load action definitions for the mod to enable action discovery
@@ -1831,10 +1833,10 @@ export class ModActionTestFixture extends BaseModTestFixture {
      */
     this._knownScopes = {
       positioning: [
-        'positioning:furniture_actor_sitting_on',
+        'personal-space:furniture_actor_sitting_on',
         'positioning:actors_sitting_on_same_furniture',
-        'positioning:closest_leftmost_occupant',
-        'positioning:closest_rightmost_occupant',
+        'personal-space:closest_leftmost_occupant',
+        'personal-space:closest_rightmost_occupant',
         'positioning:furniture_allowing_sitting_at_location',
         'positioning:standing_actors_at_location',
         'positioning:sitting_actors',
@@ -1850,7 +1852,7 @@ export class ModActionTestFixture extends BaseModTestFixture {
         'positioning:close_actors_or_entity_kneeling_before_actor',
         'positioning:actor_im_straddling',
         'positioning:entity_actor_is_kneeling_before',
-        'positioning:actors_sitting_with_space_to_right',
+        'personal-space:actors_sitting_with_space_to_right',
         'positioning:available_furniture',
         'positioning:available_lying_furniture',
         'positioning:furniture_im_lying_on',

@@ -47,6 +47,17 @@
             { "type": "object" }
           ]
         },
+        "exclude_damage_types": {
+          "description": "Array of damage type names to skip. If the damage_entry's name matches any value, the damage is not applied. Can be a direct array or JSON Logic expression that resolves to an array.",
+          "oneOf": [
+            {
+              "type": "array",
+              "items": { "type": "string" },
+              "uniqueItems": true
+            },
+            { "type": "object" }
+          ]
+        },
         "amount": {
           "description": "DEPRECATED: Use damage_entry instead. Amount of damage to apply. Required only when not using damage_entry.",
           "oneOf": [

@@ -8,25 +8,25 @@ describe('actionValidationProxy - Property Validation', () => {
   it('should accept valid action definitions for scoot closer variants', () => {
     const validActions = [
       {
-        id: 'positioning:scoot_closer',
+        id: 'personal-space:scoot_closer',
         name: 'Scoot Closer',
         targets: {
           primary: {
-            scope: 'positioning:closest_leftmost_occupant',
+            scope: 'personal-space:closest_leftmost_occupant',
             placeholder: 'someone',
           },
         },
       },
       {
-        id: 'positioning:scoot_closer_right',
+        id: 'personal-space:scoot_closer_right',
         name: 'Scoot Closer Right',
         targets: {
           primary: {
-            scope: 'positioning:furniture_actor_sitting_on',
+            scope: 'personal-space:furniture_actor_sitting_on',
             placeholder: 'seat',
           },
           secondary: {
-            scope: 'positioning:closest_rightmost_occupant',
+            scope: 'personal-space:closest_rightmost_occupant',
             placeholder: 'occupant',
             contextFrom: 'primary',
           },
@@ -43,7 +43,7 @@ describe('actionValidationProxy - Property Validation', () => {
 
   it('should catch typo: action_id instead of id', () => {
     const invalidAction = {
-      action_id: 'positioning:scoot_closer',
+      action_id: 'personal-space:scoot_closer',
       name: 'Scoot Closer',
     };
 
@@ -80,11 +80,11 @@ describe('actionValidationProxy - Property Validation', () => {
 describe('actionValidationProxy - Target Validation', () => {
   it('should catch target_id in action definition', () => {
     const invalidAction = {
-      id: 'positioning:scoot_closer',
+      id: 'personal-space:scoot_closer',
       name: 'Scoot Closer',
       targets: {
         primary: {
-          scope: 'positioning:closest_leftmost_occupant',
+          scope: 'personal-space:closest_leftmost_occupant',
           placeholder: 'someone',
           target_id: 'should-not-be-here', // Runtime-only property
         },
@@ -98,7 +98,7 @@ describe('actionValidationProxy - Target Validation', () => {
 
   it('should catch missing required target properties', () => {
     const invalidAction = {
-      id: 'positioning:scoot_closer',
+      id: 'personal-space:scoot_closer',
       name: 'Scoot Closer',
       targets: {
         primary: {
@@ -117,7 +117,7 @@ describe('actionValidationProxy - Target Validation', () => {
 
   it('should catch invalid contextFrom value', () => {
     const invalidAction = {
-      id: 'positioning:scoot_closer',
+      id: 'personal-space:scoot_closer',
       name: 'Scoot Closer',
       targets: {
         secondary: {
@@ -135,7 +135,7 @@ describe('actionValidationProxy - Target Validation', () => {
 
   it('should catch circular contextFrom reference', () => {
     const invalidAction = {
-      id: 'positioning:scoot_closer',
+      id: 'personal-space:scoot_closer',
       name: 'Scoot Closer',
       targets: {
         secondary: {
@@ -155,7 +155,7 @@ describe('actionValidationProxy - Target Validation', () => {
 describe('actionValidationProxy - Component Constraints', () => {
   it('should validate required_components structure', () => {
     const invalidAction = {
-      id: 'positioning:scoot_closer',
+      id: 'personal-space:scoot_closer',
       name: 'Scoot Closer',
       required_components: ['positioning:sitting_on'], // Should be object, not array
     };
@@ -167,7 +167,7 @@ describe('actionValidationProxy - Component Constraints', () => {
 
   it('should catch invalid role in component constraints', () => {
     const invalidAction = {
-      id: 'positioning:scoot_closer',
+      id: 'personal-space:scoot_closer',
       name: 'Scoot Closer',
       required_components: {
         player: ['positioning:sitting_on'], // Invalid role - should be 'actor'

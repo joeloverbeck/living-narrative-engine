@@ -554,9 +554,9 @@ export function createBaseRuleEnvironment({
           };
         }
 
-        // Handle the positioning:furniture_im_sitting_on and positioning:furniture_actor_sitting_on scopes
+        // Handle the positioning:furniture_im_sitting_on and personal-space:furniture_actor_sitting_on scopes
         // These are equivalent - both find the furniture the actor is sitting on
-        if (scopeName === 'positioning:furniture_im_sitting_on' || scopeName === 'positioning:furniture_actor_sitting_on') {
+        if (scopeName === 'positioning:furniture_im_sitting_on' || scopeName === 'personal-space:furniture_actor_sitting_on') {
           // This scope should find furniture that the actor is currently sitting on
           // The scope definition is: entities(positioning:allows_sitting)[][{"==": [{"var": "entity.id"}, {"var": "actor.components.positioning:sitting_on.furniture_id"}]}]
 
@@ -893,8 +893,8 @@ export function createBaseRuleEnvironment({
           return { success: true, value: new Set(containerComponent.contents) };
         }
 
-        // Handle the positioning:closest_leftmost_occupant scope
-        if (scopeName === 'positioning:closest_leftmost_occupant') {
+        // Handle the personal-space:closest_leftmost_occupant scope
+        if (scopeName === 'personal-space:closest_leftmost_occupant') {
           // This scope finds the closest occupant to the left of the actor on furniture
           // It requires the furniture entity in context.target (from contextFrom: primary)
           const furnitureId = context?.target?.id;
@@ -944,7 +944,7 @@ export function createBaseRuleEnvironment({
           return { success: true, value: new Set() };
         }
 
-        if (scopeName === 'positioning:closest_rightmost_occupant') {
+        if (scopeName === 'personal-space:closest_rightmost_occupant') {
           const furnitureId = context?.target?.id;
           const actorId = context?.actor?.id;
 
@@ -992,8 +992,8 @@ export function createBaseRuleEnvironment({
           return { success: true, value: new Set() };
         }
 
-        // Handle the positioning:actors_sitting_with_space_to_right scope
-        if (scopeName === 'positioning:actors_sitting_with_space_to_right') {
+        // Handle the personal-space:actors_sitting_with_space_to_right scope
+        if (scopeName === 'personal-space:actors_sitting_with_space_to_right') {
           // Get target furniture from context
           const targetId = context?.target?.id;
           if (!targetId) {

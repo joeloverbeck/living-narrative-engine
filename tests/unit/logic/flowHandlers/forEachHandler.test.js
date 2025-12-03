@@ -53,8 +53,28 @@ describe('handleForEach', () => {
     expect(ctx.evaluationContext.context.i).toBeUndefined();
   });
 
-  test('logs warning and skips when parameters invalid', async () => {
+  test('throws TypeError when collection is undefined', async () => {
     const node = { parameters: {} };
+    await expect(
+      handleForEach(
+        node,
+        { ...baseCtx, jsonLogic, scopeLabel: 'Loop' },
+        logger,
+        interpreter,
+        executeActionSequence
+      )
+    ).rejects.toThrow(TypeError);
+    expect(executeActionSequence).not.toHaveBeenCalled();
+  });
+
+  test('logs warning and skips when collection is empty string', async () => {
+    const node = {
+      parameters: {
+        collection: '',
+        item_variable: 'item',
+        actions: [{ type: 'LOG' }],
+      },
+    };
     await handleForEach(
       node,
       { ...baseCtx, jsonLogic, scopeLabel: 'Loop' },

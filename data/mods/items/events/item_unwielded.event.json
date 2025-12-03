@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "items:item_unwielded",
+  "description": "Dispatched when an item is unwielded by an actor",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "actorEntity": {
+        "type": "string",
+        "description": "Actor who unwielded the item"
+      },
+      "itemEntity": {
+        "type": "string",
+        "description": "Item that was unwielded"
+      },
+      "remainingWieldedItems": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Array of item IDs still wielded"
+      }
+    },
+    "required": ["actorEntity", "itemEntity", "remainingWieldedItems"],
+    "additionalProperties": false
+  }
+}

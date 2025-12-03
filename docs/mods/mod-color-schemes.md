@@ -13,9 +13,9 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 ## Current Status
 
-**Total Schemes**: 42 defined color combinations
-**In Use**: 27 schemes actively implemented across mods
-**Available**: 15 schemes ready for future mods
+**Total Schemes**: 43 defined color combinations
+**In Use**: 30 schemes actively implemented across mods
+**Available**: 13 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
 
@@ -35,6 +35,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 | Kissing                  | Rose Pink          | 3.2     | `#ad1457`        | Active   |
 | Movement                 | Explorer Cyan      | 9.3     | `#006064`        | Active   |
 | Music                    | Starlight Navy     | 11.4    | `#1a2332`        | Active   |
+| Observation              | Ocean Blue         | 4.3     | `#01579b`        | Active   |
 | Physical-Control         | Ironclad Slate     | 11.2    | `#2f2f2f`        | Active   |
 | Positioning              | Deep Orange Energy | 10.2    | `#bf360c`        | Active   |
 | Seduction                | Golden Divine      | 5.2     | `#f57f17`        | Active   |
@@ -50,6 +51,8 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 | Violence                 | Dark Crimson       | 2.2     | `#8b0000`        | Active   |
 | Warding                  | Cool Grey Modern   | 10.3    | `#424242`        | Active   |
 | Weapons                  | Arctic Steel       | 11.8    | `#112a46`        | Active   |
+| Item-Transfer            | Trade Amber        | 13.1    | `#7d5a00`        | Active   |
+| Personal-Space           | Molten Copper      | 11.6    | `#7c2d12`        | Active   |
 
 ## Available Color Schemes by Category
 
@@ -62,7 +65,6 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 ### Nature/Environment
 - **Forest Green** (4.1) - Nature magic, outdoor actions
-- **Ocean Blue** (4.3) - Water abilities, fluid movements
 
 ### Warning/Alert
 - **Amber Warning** (6.1) - Caution actions, moderate warnings
@@ -85,8 +87,6 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 ### Expansion Set
 - **Evergreen Shadow** (11.5) - Stealth exploration, healing rituals
-- **Molten Copper** (11.6) - Forging, charismatic performances
-- **Arctic Steel** (11.8) - High-tech interfaces, frost magic
 
 ## Complete Color Scheme Definitions
 
@@ -290,7 +290,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 - **Use Cases**: Clothing interactions, crafting, physical items
 - **Theme**: Stability, reliability, groundedness
 
-#### 4.3 Ocean Blue 🟢 AVAILABLE
+#### 4.3 Ocean Blue ✅ IN USE: Observation
 
 ```json
 {
@@ -303,8 +303,8 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 - **Normal Contrast**: 11.25:1 🌟 AAA
 - **Hover Contrast**: 6.26:1 ✅ AA
-- **Use Cases**: Water abilities, naval actions, fluid movements
-- **Theme**: Depth, flow, adaptability
+- **Use Cases**: Examining items, observing environment, perception-based actions
+- **Theme**: Clarity, perception, discovery
 
 ### 5. Magic/Special Colors
 
@@ -656,7 +656,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 - **Use Cases**: Stealth exploration, nature attunement, healing rituals
 - **Theme**: Quiet resilience, verdant focus
 
-#### 11.6 Molten Copper 🟢 AVAILABLE
+#### 11.6 Molten Copper ✅ IN USE: Personal-Space
 
 ```json
 {
@@ -801,6 +801,24 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 - **Hover Contrast**: 9.56:1 🌟 AAA
 - **Use Cases**: Anal teasing, exploratory penetration build-up
 - **Theme**: Cool, deliberate teal-black depth for focused exploration
+
+### 13. Exchange/Transaction Colors
+
+#### 13.1 Trade Amber ✅ IN USE: Item-Transfer
+
+```json
+{
+  "backgroundColor": "#7d5a00",
+  "textColor": "#fff8e1",
+  "hoverBackgroundColor": "#9a7000",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 8.7:1 🌟 AAA
+- **Hover Contrast**: 6.2:1 ✅ AA
+- **Use Cases**: Item exchange between characters, gift giving, trade actions
+- **Theme**: Warm amber evoking commerce and exchange
 
 ## Implementation Guide
 
