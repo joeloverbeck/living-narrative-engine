@@ -156,7 +156,7 @@ describe('ModifyPartHealthHandler', () => {
       );
     });
 
-    test('calculates bruised state when health is 51-75%', async () => {
+    test('calculates scratched state when health is 61-80%', async () => {
       const healthComponent = {
         currentHealth: 100,
         maxHealth: 100,
@@ -169,9 +169,9 @@ describe('ModifyPartHealthHandler', () => {
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
-      // Apply delta of -40 -> health becomes 60 (60% = bruised)
+      // Apply delta of -30 -> health becomes 70 (70% = scratched)
       await handler.execute(
-        { part_entity_ref: 'part1', delta: -40 },
+        { part_entity_ref: 'part1', delta: -30 },
         executionContext
       );
 
@@ -179,13 +179,13 @@ describe('ModifyPartHealthHandler', () => {
         'part1',
         PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
-          currentHealth: 60,
-          state: 'bruised',
+          currentHealth: 70,
+          state: 'scratched',
         })
       );
     });
 
-    test('calculates wounded state when health is 26-50%', async () => {
+    test('calculates wounded state when health is 41-60%', async () => {
       const healthComponent = {
         currentHealth: 100,
         maxHealth: 100,
@@ -198,9 +198,9 @@ describe('ModifyPartHealthHandler', () => {
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
-      // Apply delta of -60 -> health becomes 40 (40% = wounded)
+      // Apply delta of -50 -> health becomes 50 (50% = wounded)
       await handler.execute(
-        { part_entity_ref: 'part1', delta: -60 },
+        { part_entity_ref: 'part1', delta: -50 },
         executionContext
       );
 
@@ -208,13 +208,13 @@ describe('ModifyPartHealthHandler', () => {
         'part1',
         PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
-          currentHealth: 40,
+          currentHealth: 50,
           state: 'wounded',
         })
       );
     });
 
-    test('calculates badly_damaged state when health is 1-25%', async () => {
+    test('calculates critical state when health is 1-20%', async () => {
       const healthComponent = {
         currentHealth: 100,
         maxHealth: 100,
@@ -227,7 +227,7 @@ describe('ModifyPartHealthHandler', () => {
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
-      // Apply delta of -85 -> health becomes 15 (15% = badly_damaged)
+      // Apply delta of -85 -> health becomes 15 (15% = critical)
       await handler.execute(
         { part_entity_ref: 'part1', delta: -85 },
         executionContext
@@ -238,7 +238,7 @@ describe('ModifyPartHealthHandler', () => {
         PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 15,
-          state: 'badly_damaged',
+          state: 'critical',
         })
       );
     });
@@ -378,7 +378,7 @@ describe('ModifyPartHealthHandler', () => {
       const healthComponent = {
         currentHealth: 20,
         maxHealth: 100,
-        state: 'badly_damaged',
+        state: 'critical',
         turnsInState: 4,
       };
 
@@ -481,7 +481,7 @@ describe('ModifyPartHealthHandler', () => {
       const healthComponent = {
         currentHealth: 10,
         maxHealth: 100,
-        state: 'badly_damaged',
+        state: 'critical',
         turnsInState: 0,
       };
 
@@ -567,7 +567,7 @@ describe('ModifyPartHealthHandler', () => {
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
-      // Apply delta that changes state to bruised (51-75%)
+      // Apply delta that changes state to wounded (41-60%)
       await handler.execute(
         { part_entity_ref: 'part1', delta: -20 },
         executionContext
@@ -578,7 +578,7 @@ describe('ModifyPartHealthHandler', () => {
         PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 60,
-          state: 'bruised',
+          state: 'wounded',
           turnsInState: 0, // reset to 0
         })
       );
@@ -657,6 +657,7 @@ describe('ModifyPartHealthHandler', () => {
         executionContext
       );
 
+      // 60% health is 'wounded' (41-60% threshold)
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         PART_HEALTH_CHANGED_EVENT,
         expect.objectContaining({
@@ -668,7 +669,7 @@ describe('ModifyPartHealthHandler', () => {
           maxHealth: 100,
           healthPercentage: 60,
           previousState: 'healthy',
-          newState: 'bruised',
+          newState: 'wounded',
           delta: -20,
           timestamp: expect.any(Number),
         })
@@ -1166,8 +1167,9 @@ describe('ModifyPartHealthHandler', () => {
     });
 
     test('handles zero delta (no change)', async () => {
+      // Use 81% health which is at the 'healthy' threshold (>= 81%)
       const healthComponent = {
-        currentHealth: 80,
+        currentHealth: 81,
         maxHealth: 100,
         state: 'healthy',
         turnsInState: 5,
@@ -1187,7 +1189,7 @@ describe('ModifyPartHealthHandler', () => {
         'part1',
         PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
-          currentHealth: 80,
+          currentHealth: 81,
           state: 'healthy',
           turnsInState: 6, // Still increments because state unchanged
         })
@@ -1207,9 +1209,9 @@ describe('ModifyPartHealthHandler', () => {
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
-      // Reduce to exactly 76% (threshold for healthy)
+      // Reduce to exactly 81% (threshold for healthy)
       await handler.execute(
-        { part_entity_ref: 'part1', delta: -24 },
+        { part_entity_ref: 'part1', delta: -19 },
         executionContext
       );
 
@@ -1217,13 +1219,13 @@ describe('ModifyPartHealthHandler', () => {
         'part1',
         PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
-          currentHealth: 76,
-          state: 'healthy', // 76% is still healthy
+          currentHealth: 81,
+          state: 'healthy', // 81% is still healthy
         })
       );
     });
 
-    test('handles state boundary at exactly 75% (bruised threshold)', async () => {
+    test('handles state boundary at exactly 80% (scratched threshold)', async () => {
       const healthComponent = {
         currentHealth: 100,
         maxHealth: 100,
@@ -1236,9 +1238,9 @@ describe('ModifyPartHealthHandler', () => {
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
-      // Reduce to exactly 75% (below healthy threshold)
+      // Reduce to exactly 80% (below healthy threshold)
       await handler.execute(
-        { part_entity_ref: 'part1', delta: -25 },
+        { part_entity_ref: 'part1', delta: -20 },
         executionContext
       );
 
@@ -1246,8 +1248,8 @@ describe('ModifyPartHealthHandler', () => {
         'part1',
         PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
-          currentHealth: 75,
-          state: 'bruised', // 75% is bruised (below 76%)
+          currentHealth: 80,
+          state: 'scratched', // 80% is scratched (below 81%)
         })
       );
     });

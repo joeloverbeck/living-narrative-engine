@@ -4,7 +4,8 @@
   "description": "Atrophied humanoid arm twisted at impossible angles",
   "components": {
     "anatomy:part": {
-      "subType": "eldritch_vestigial_arm"
+      "subType": "eldritch_vestigial_arm",
+      "hit_probability_weight": 3
     },
     "anatomy:part_health": {
       "currentHealth": 15,
@@ -15,7 +16,9 @@
       "sockets": [
         {
           "id": "malformed_hand",
-          "allowedTypes": ["eldritch_malformed_hand"],
+          "allowedTypes": [
+            "eldritch_malformed_hand"
+          ],
           "nameTpl": "malformed hand"
         }
       ]

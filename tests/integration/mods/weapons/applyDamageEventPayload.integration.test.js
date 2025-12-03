@@ -178,7 +178,7 @@ describe('APPLY_DAMAGE event payload - entity resolution', () => {
         damageAmount: 10,
         damageType: 'blunt',
         previousState: 'healthy',
-        newState: 'bruised',
+        newState: 'scratched',
         effectsTriggered: [],
         propagatedDamage: [],
       };
@@ -218,7 +218,7 @@ describe('APPLY_DAMAGE event payload - entity resolution', () => {
             childPartType: 'spine',
             orientation: null,
             damageApplied: 10,
-            newState: 'bruised',
+            newState: 'scratched',
             effectsTriggered: [],
           },
         ],

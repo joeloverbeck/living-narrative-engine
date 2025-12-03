@@ -4,7 +4,8 @@
   "description": "The bulbous abdomen of a spider",
   "components": {
     "anatomy:part": {
-      "subType": "spider_abdomen"
+      "subType": "spider_abdomen",
+      "hit_probability_weight": 30
     },
     "anatomy:part_health": {
       "currentHealth": 40,

@@ -4,7 +4,8 @@
   "description": "A kraken head with massive beak",
   "components": {
     "anatomy:part": {
-      "subType": "head"
+      "subType": "head",
+      "hit_probability_weight": 18
     },
     "anatomy:part_health": {
       "currentHealth": 80,

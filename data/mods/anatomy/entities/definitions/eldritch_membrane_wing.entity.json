@@ -4,7 +4,8 @@
   "description": "Translucent veined membrane wing displaying bioluminescent patterns",
   "components": {
     "anatomy:part": {
-      "subType": "eldritch_membrane_wing"
+      "subType": "eldritch_membrane_wing",
+      "hit_probability_weight": 8
     },
     "anatomy:part_health": {
       "currentHealth": 25,

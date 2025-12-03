@@ -4,7 +4,8 @@
   "description": "Human pubic hair with curly texture",
   "components": {
     "anatomy:part": {
-      "subType": "pubic_hair"
+      "subType": "pubic_hair",
+      "hit_probability_weight": 0.2
     },
     "anatomy:part_health": {
       "currentHealth": 3,

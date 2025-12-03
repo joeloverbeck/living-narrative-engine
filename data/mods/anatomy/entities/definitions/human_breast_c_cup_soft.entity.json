@@ -1,27 +1,28 @@
 {
-    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-    "id": "anatomy:human_breast_c_cup_soft",
-    "description": "A C-cup, soft breast",
-    "components": {
-        "anatomy:part": {
-            "subType": "breast"
-        },
-        "anatomy:part_health": {
-            "currentHealth": 20,
-            "maxHealth": 20,
-            "state": "healthy"
-        },
-        "descriptors:size_specific": {
-            "size": "C-cup"
-        },
-        "descriptors:weight_feel": {
-            "weight": "moderate"
-        },
-        "descriptors:firmness": {
-            "firmness": "soft"
-        },
-        "core:name": {
-            "text": "breast"
-        }
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_breast_c_cup_soft",
+  "description": "A C-cup, soft breast",
+  "components": {
+    "anatomy:part": {
+      "subType": "breast",
+      "hit_probability_weight": 3
+    },
+    "anatomy:part_health": {
+      "currentHealth": 20,
+      "maxHealth": 20,
+      "state": "healthy"
+    },
+    "descriptors:size_specific": {
+      "size": "C-cup"
+    },
+    "descriptors:weight_feel": {
+      "weight": "moderate"
+    },
+    "descriptors:firmness": {
+      "firmness": "soft"
+    },
+    "core:name": {
+      "text": "breast"
     }
+  }
 }

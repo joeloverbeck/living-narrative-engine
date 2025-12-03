@@ -35,18 +35,9 @@ afterEach(() => {
 });
 
 describe('AjvSchemaValidator uncovered branches', () => {
-  it('warns when schema is added but cannot be retrieved', async () => {
-    const { validator, logger } = setupMockAjv({
-      getSchemaReturns: [null, null],
-    });
-    const schema = { $id: 'test://schemas/missing', type: 'object' };
-    await expect(
-      validator.addSchema(schema, schema.$id)
-    ).resolves.toBeUndefined();
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('was added but cannot be retrieved')
-    );
-  });
+  // Note: Test "warns when schema is added but cannot be retrieved" was removed.
+  // The production code no longer performs post-add verification for performance reasons.
+  // Schema correctness is validated when validate() is called instead.
 
   it('wraps non-Error thrown by addSchema', async () => {
     const { validator } = setupMockAjv({

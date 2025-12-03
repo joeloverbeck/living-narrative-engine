@@ -167,7 +167,7 @@ describe('Injury Reporting Flow Integration', () => {
           [PART_HEALTH_COMPONENT_ID]: {
             currentHealth: 70,
             maxHealth: 120,
-            state: 'bruised',
+            state: 'wounded',
             turnsInState: 3,
           },
         },
@@ -546,7 +546,7 @@ describe('Injury Reporting Flow Integration', () => {
           [PART_HEALTH_COMPONENT_ID]: {
             currentHealth: 80,
             maxHealth: 100,
-            state: 'bruised',
+            state: 'scratched',
             turnsInState: 1,
           },
         },
@@ -636,7 +636,7 @@ describe('Injury Reporting Flow Integration', () => {
           [PART_HEALTH_COMPONENT_ID]: {
             currentHealth: 65,
             maxHealth: 100,
-            state: 'bruised',
+            state: 'scratched',
             turnsInState: 1,
           },
         },

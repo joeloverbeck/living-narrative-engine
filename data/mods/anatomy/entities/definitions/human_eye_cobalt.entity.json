@@ -4,7 +4,8 @@
   "description": "A human eye with striking cobalt blue iris",
   "components": {
     "anatomy:part": {
-      "subType": "eye"
+      "subType": "eye",
+      "hit_probability_weight": 0.5
     },
     "anatomy:part_health": {
       "currentHealth": 10,

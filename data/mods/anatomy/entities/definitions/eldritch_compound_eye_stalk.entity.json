@@ -4,7 +4,8 @@
   "description": "Flexible stalk topped with insectoid compound eye cluster",
   "components": {
     "anatomy:part": {
-      "subType": "eldritch_compound_eye_stalk"
+      "subType": "eldritch_compound_eye_stalk",
+      "hit_probability_weight": 3
     },
     "anatomy:part_health": {
       "currentHealth": 12,

@@ -257,26 +257,26 @@ describe('Part Health Lifecycle - Integration Tests', () => {
 
     test('should reset turnsInState when state changes', async () => {
       createPartWithHealth(PART_ENTITY_ID, {
-        currentHealth: 80,
+        currentHealth: 90,
         maxHealth: 100,
         state: 'healthy',
         turnsInState: 5,
       });
 
-      // Damage to cross threshold from healthy (>75%) to bruised (51-75%)
+      // Damage to cross threshold from healthy (>=81%) to scratched (61-80%)
       await modifyHandler.execute(
-        { part_entity_ref: PART_ENTITY_ID, delta: -10 },
+        { part_entity_ref: PART_ENTITY_ID, delta: -20 },
         executionContext
       );
 
-      // Now health is 70 (70% = bruised)
+      // Now health is 70 (70% = scratched)
       const healthData = entityManager.getComponentData(
         PART_ENTITY_ID,
         PART_HEALTH_COMPONENT
       );
 
       expect(healthData.currentHealth).toBe(70);
-      expect(healthData.state).toBe('bruised');
+      expect(healthData.state).toBe('scratched');
       expect(healthData.turnsInState).toBe(0);
     });
   });
@@ -306,9 +306,9 @@ describe('Part Health Lifecycle - Integration Tests', () => {
         executionContext
       );
 
-      // Heal leg
+      // Heal leg (50 + 31 = 81, which is >= 81% threshold for 'healthy')
       await modifyHandler.execute(
-        { part_entity_ref: PART_LEG, delta: +30 },
+        { part_entity_ref: PART_LEG, delta: +31 },
         executionContext
       );
 
@@ -323,9 +323,9 @@ describe('Part Health Lifecycle - Integration Tests', () => {
       );
 
       expect(armHealth.currentHealth).toBe(70);
-      expect(armHealth.state).toBe('bruised');
+      expect(armHealth.state).toBe('scratched');
 
-      expect(legHealth.currentHealth).toBe(80);
+      expect(legHealth.currentHealth).toBe(81);
       expect(legHealth.state).toBe('healthy');
     });
   });
@@ -335,7 +335,7 @@ describe('Part Health Lifecycle - Integration Tests', () => {
       createPartWithHealth(PART_ENTITY_ID, {
         currentHealth: 10,
         maxHealth: 100,
-        state: 'badly_damaged',
+        state: 'critical',
       });
 
       // Damage to exactly 0
@@ -357,7 +357,7 @@ describe('Part Health Lifecycle - Integration Tests', () => {
       createPartWithHealth(PART_ENTITY_ID, {
         currentHealth: 10,
         maxHealth: 100,
-        state: 'badly_damaged',
+        state: 'critical',
       });
 
       // Try to apply damage beyond zero
@@ -400,9 +400,9 @@ describe('Part Health Lifecycle - Integration Tests', () => {
     });
 
     test('should handle exact threshold boundaries', async () => {
-      // Test at exactly 75% (should be bruised, not healthy)
+      // Test at exactly 80% (should be scratched, not healthy)
       createPartWithHealth(PART_ENTITY_ID, {
-        currentHealth: 75,
+        currentHealth: 80,
         maxHealth: 100,
         state: 'healthy',
         turnsInState: 0,
@@ -417,13 +417,13 @@ describe('Part Health Lifecycle - Integration Tests', () => {
         PART_ENTITY_ID,
         PART_HEALTH_COMPONENT
       );
-      expect(healthData.state).toBe('bruised');
+      expect(healthData.state).toBe('scratched');
 
-      // Test at exactly 50% (should be wounded)
+      // Test at exactly 60% (should be wounded)
       entityManager.addComponent(PART_ENTITY_ID, PART_HEALTH_COMPONENT, {
-        currentHealth: 50,
+        currentHealth: 60,
         maxHealth: 100,
-        state: 'bruised',
+        state: 'scratched',
         turnsInState: 0,
       });
 
@@ -438,9 +438,9 @@ describe('Part Health Lifecycle - Integration Tests', () => {
       );
       expect(healthData.state).toBe('wounded');
 
-      // Test at exactly 25% (should be badly_damaged)
+      // Test at exactly 40% (should be injured)
       entityManager.addComponent(PART_ENTITY_ID, PART_HEALTH_COMPONENT, {
-        currentHealth: 25,
+        currentHealth: 40,
         maxHealth: 100,
         state: 'wounded',
         turnsInState: 0,
@@ -455,7 +455,26 @@ describe('Part Health Lifecycle - Integration Tests', () => {
         PART_ENTITY_ID,
         PART_HEALTH_COMPONENT
       );
-      expect(healthData.state).toBe('badly_damaged');
+      expect(healthData.state).toBe('injured');
+
+      // Test at exactly 20% (should be critical)
+      entityManager.addComponent(PART_ENTITY_ID, PART_HEALTH_COMPONENT, {
+        currentHealth: 20,
+        maxHealth: 100,
+        state: 'injured',
+        turnsInState: 0,
+      });
+
+      await updateHandler.execute(
+        { part_entity_ref: PART_ENTITY_ID },
+        executionContext
+      );
+
+      healthData = entityManager.getComponentData(
+        PART_ENTITY_ID,
+        PART_HEALTH_COMPONENT
+      );
+      expect(healthData.state).toBe('critical');
     });
   });
 

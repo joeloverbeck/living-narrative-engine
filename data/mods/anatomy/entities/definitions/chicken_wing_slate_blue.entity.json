@@ -4,7 +4,8 @@
   "description": "Feathered wing of a chicken with slate-blue coloring",
   "components": {
     "anatomy:part": {
-      "subType": "chicken_wing"
+      "subType": "chicken_wing",
+      "hit_probability_weight": 6
     },
     "anatomy:part_health": {
       "currentHealth": 8,

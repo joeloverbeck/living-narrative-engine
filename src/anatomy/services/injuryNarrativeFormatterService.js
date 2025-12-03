@@ -216,11 +216,25 @@ class InjuryNarrativeFormatterService extends BaseService {
       propagatedDamage,
     } = damageEventData;
 
+    // Defensive null checks with fallbacks for incomplete event data
+    const resolvedEntityName = entityName || 'An entity';
+    const resolvedPartType = partType || 'body part';
+    const resolvedDamageType = damageType || 'damage';
+
+    // Log warning for incomplete data (helps with debugging propagation events)
+    if (!entityName || !partType || !damageType) {
+      this.#logger.warn('formatDamageEvent received incomplete data', {
+        hasEntityName: !!entityName,
+        hasPartType: !!partType,
+        hasDamageType: !!damageType,
+      });
+    }
+
     const parts = [];
-    const partName = this.#formatPartName(partType, orientation);
+    const partName = this.#formatPartName(resolvedPartType, orientation);
 
     // Primary damage description: "{entityName}'s {partName} suffers {damageType} damage"
-    let primaryDamage = `${entityName}'s ${partName} suffers ${damageType} damage`;
+    let primaryDamage = `${resolvedEntityName}'s ${partName} suffers ${resolvedDamageType} damage`;
 
     // Effects triggered (bleeding, etc.) - append to same sentence
     if (effectsTriggered && effectsTriggered.length > 0) {
@@ -245,7 +259,7 @@ class InjuryNarrativeFormatterService extends BaseService {
         const propPartName = this.#formatPartName(prop.childPartType, prop.orientation);
         const connector = index === 0 ? 'The damage propagates to' : 'The damage also propagates to';
         
-        let propDamage = `${connector} ${entityName}'s ${propPartName}, that suffers ${damageType} damage`;
+        let propDamage = `${connector} ${resolvedEntityName}'s ${propPartName}, that suffers ${resolvedDamageType} damage`;
 
         // Add effects for propagated damage
         if (prop.effectsTriggered && prop.effectsTriggered.length > 0) {
@@ -356,7 +370,7 @@ class InjuryNarrativeFormatterService extends BaseService {
    * @private
    */
   #formatPartName(partType, orientation) {
-    const normalizedType = partType?.toLowerCase() || 'body part';
+    const normalizedType = (partType?.toLowerCase() || 'body part').replace(/_/g, ' ');
 
     if (orientation) {
       return `${orientation} ${normalizedType}`;

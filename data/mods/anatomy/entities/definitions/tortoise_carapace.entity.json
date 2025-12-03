@@ -4,7 +4,8 @@
   "description": "Domed upper shell (carapace) with growth rings",
   "components": {
     "anatomy:part": {
-      "subType": "shell_carapace"
+      "subType": "shell_carapace",
+      "hit_probability_weight": 32
     },
     "anatomy:part_health": {
       "currentHealth": 100,

@@ -318,7 +318,7 @@ describe('InjuryAggregationService', () => {
           (id, componentId) => {
             if (componentId === 'anatomy:body') return { partIds: [partId] };
             if (id === partId && componentId === 'anatomy:part_health') {
-              return { currentHealth: 60, maxHealth: 100, state: 'bruised' };
+              return { currentHealth: 60, maxHealth: 100, state: 'wounded' };
             }
             if (id === partId && componentId === 'anatomy:part') {
               return { subType: 'leg', orientation: 'right' };
@@ -350,7 +350,7 @@ describe('InjuryAggregationService', () => {
           (id, componentId) => {
             if (componentId === 'anatomy:body') return { partIds: [partId] };
             if (id === partId && componentId === 'anatomy:part_health') {
-              return { currentHealth: 80, maxHealth: 100, state: 'bruised' };
+              return { currentHealth: 80, maxHealth: 100, state: 'scratched' };
             }
             if (id === partId && componentId === 'anatomy:part') {
               return { subType: 'hand', orientation: 'left' };
@@ -378,7 +378,7 @@ describe('InjuryAggregationService', () => {
           (id, componentId) => {
             if (componentId === 'anatomy:body') return { partIds: [partId] };
             if (id === partId && componentId === 'anatomy:part_health') {
-              return { currentHealth: 70, maxHealth: 100, state: 'bruised' };
+              return { currentHealth: 70, maxHealth: 100, state: 'scratched' };
             }
             if (id === partId && componentId === 'anatomy:part') {
               return { subType: 'torso', orientation: null };
@@ -409,7 +409,7 @@ describe('InjuryAggregationService', () => {
               return {
                 currentHealth: 30,
                 maxHealth: 100,
-                state: 'badly_damaged',
+                state: 'injured',
               };
             }
             if (id === partId && componentId === 'anatomy:part') {
@@ -671,7 +671,7 @@ describe('InjuryAggregationService', () => {
               id === 'part:with_health' &&
               componentId === 'anatomy:part_health'
             ) {
-              return { currentHealth: 80, maxHealth: 100, state: 'bruised' };
+              return { currentHealth: 80, maxHealth: 100, state: 'scratched' };
             }
             if (
               id === 'part:with_health' &&
@@ -904,7 +904,7 @@ describe('InjuryAggregationService', () => {
               return {
                 currentHealth: 30,
                 maxHealth: 100,
-                state: 'badly_damaged',
+                state: 'injured',
               };
             }
             if (id === partId && componentId === 'anatomy:part') {

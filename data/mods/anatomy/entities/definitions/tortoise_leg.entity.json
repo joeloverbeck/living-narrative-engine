@@ -4,7 +4,8 @@
   "description": "Sturdy reptilian leg with foot socket",
   "components": {
     "anatomy:part": {
-      "subType": "tortoise_leg"
+      "subType": "tortoise_leg",
+      "hit_probability_weight": 7
     },
     "anatomy:part_health": {
       "currentHealth": 30,

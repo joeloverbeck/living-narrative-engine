@@ -100,7 +100,7 @@ describe('formatAjvErrorsEnhanced', () => {
       }),
     ];
 
-    const message = formatAjvErrorsEnhanced(errors, {});
+    const message = formatAjvErrorsEnhanced(errors, { parameters: { perception_type: 'C' } });
 
     // Pattern detection now catches the enum error first
     expect(message).toContain("Invalid enum value 'C'. Allowed values: [A, B]");

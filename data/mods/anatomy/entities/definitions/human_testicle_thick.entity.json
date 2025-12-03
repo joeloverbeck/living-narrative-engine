@@ -4,7 +4,8 @@
   "description": "A thick human male reproductive gland",
   "components": {
     "anatomy:part": {
-      "subType": "testicle"
+      "subType": "testicle",
+      "hit_probability_weight": 1.1
     },
     "anatomy:part_health": {
       "currentHealth": 6,

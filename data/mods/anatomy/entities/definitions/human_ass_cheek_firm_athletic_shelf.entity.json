@@ -1,27 +1,28 @@
 {
-    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
   "id": "anatomy:human_ass_cheek_firm_athletic_shelf",
-    "description": "A human ass cheek that is athletic, muscular, and shelf",
-    "components": {
-        "anatomy:part": {
-            "subType": "ass_cheek"
-        },
-        "anatomy:part_health": {
-            "currentHealth": 20,
-            "maxHealth": 20,
-            "state": "healthy"
-        },
-        "descriptors:firmness": {
-            "firmness": "firm"
-        },
-        "descriptors:build": {
-            "build": "athletic"
-        },
-        "descriptors:projection": {
-            "projection": "shelf"
-        },
-        "core:name": {
-            "text": "ass cheek"
-        }
+  "description": "A human ass cheek that is athletic, muscular, and shelf",
+  "components": {
+    "anatomy:part": {
+      "subType": "ass_cheek",
+      "hit_probability_weight": 4
+    },
+    "anatomy:part_health": {
+      "currentHealth": 20,
+      "maxHealth": 20,
+      "state": "healthy"
+    },
+    "descriptors:firmness": {
+      "firmness": "firm"
+    },
+    "descriptors:build": {
+      "build": "athletic"
+    },
+    "descriptors:projection": {
+      "projection": "shelf"
+    },
+    "core:name": {
+      "text": "ass cheek"
     }
+  }
 }

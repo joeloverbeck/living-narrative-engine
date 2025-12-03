@@ -4,7 +4,8 @@
   "description": "Short, thick reptilian tail",
   "components": {
     "anatomy:part": {
-      "subType": "tortoise_tail"
+      "subType": "tortoise_tail",
+      "hit_probability_weight": 3
     },
     "anatomy:part_health": {
       "currentHealth": 15,

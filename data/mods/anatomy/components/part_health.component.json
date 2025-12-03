@@ -19,12 +19,13 @@
         "type": "string",
         "enum": [
           "healthy",
-          "bruised",
+          "scratched",
           "wounded",
-          "badly_damaged",
+          "injured",
+          "critical",
           "destroyed"
         ],
-        "description": "Narrative health state based on percentage thresholds. healthy (76-100%), bruised (51-75%), wounded (26-50%), badly_damaged (1-25%), destroyed (0%)."
+        "description": "Narrative health state based on percentage thresholds. healthy (81-100%), scratched (61-80%), wounded (41-60%), injured (21-40%), critical (1-20%), destroyed (0%)."
       },
       "turnsInState": {
         "type": "integer",
@@ -43,7 +44,7 @@
   "validationRules": {
     "generateValidator": true,
     "errorMessages": {
-      "invalidEnum": "Invalid health state: {{value}}. Valid states: healthy, bruised, wounded, badly_damaged, destroyed",
+      "invalidEnum": "Invalid health state: {{value}}. Valid states: healthy, scratched, wounded, injured, critical, destroyed",
       "missingRequired": "{PropertyLabel} is required",
       "invalidType": "Invalid type for {propertyName}: expected {{expected}}, got {{actual}}",
       "minimum": "{PropertyLabel} must be at least {{limit}}"

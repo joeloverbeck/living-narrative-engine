@@ -4,7 +4,8 @@
   "description": "A small chicken brain handling basic instincts and reflexes",
   "components": {
     "anatomy:part": {
-      "subType": "chicken_brain"
+      "subType": "chicken_brain",
+      "hit_probability_weight": 0
     },
     "anatomy:part_health": {
       "currentHealth": 6,

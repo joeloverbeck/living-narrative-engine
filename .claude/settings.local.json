@@ -633,7 +633,12 @@
       "Bash(data/mods/positioning/scopes/actors_sitting_with_space_to_right.scope )",
       "Bash(data/mods/positioning/scopes/closest_leftmost_occupant.scope )",
       "Bash(data/mods/positioning/scopes/closest_rightmost_occupant.scope )",
-      "Bash(data/mods/positioning/scopes/furniture_actor_sitting_on.scope)"
+      "Bash(data/mods/positioning/scopes/furniture_actor_sitting_on.scope)",
+      "Bash(ls:*)",
+      "Bash(wc:*)",
+      "Bash(paste:*)",
+      "Bash(sort:*)",
+      "Bash(do jq -r '.components[\"\"\"\"anatomy:part\"\"\"\"].subType // empty' $f)"
     ],
     "deny": [],
     "ask": []

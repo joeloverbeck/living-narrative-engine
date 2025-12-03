@@ -9,7 +9,8 @@
       "locked": false
     },
     "anatomy:part": {
-      "subType": "eldritch_hand"
+      "subType": "eldritch_hand",
+      "hit_probability_weight": 5
     },
     "anatomy:part_health": {
       "currentHealth": 12,

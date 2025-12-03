@@ -4,7 +4,8 @@
   "description": "Horny beak structure for herbivorous diet",
   "components": {
     "anatomy:part": {
-      "subType": "tortoise_beak"
+      "subType": "tortoise_beak",
+      "hit_probability_weight": 1.5
     },
     "anatomy:part_health": {
       "currentHealth": 8,

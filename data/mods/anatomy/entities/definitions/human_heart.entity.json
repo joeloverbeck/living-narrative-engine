@@ -4,7 +4,8 @@
   "description": "A human heart - vital organ for blood circulation",
   "components": {
     "anatomy:part": {
-      "subType": "heart"
+      "subType": "heart",
+      "hit_probability_weight": 0
     },
     "anatomy:part_health": {
       "currentHealth": 50,

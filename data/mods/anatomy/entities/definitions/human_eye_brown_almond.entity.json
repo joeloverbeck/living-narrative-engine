@@ -4,7 +4,8 @@
   "description": "A human eye with brown iris and almond shape",
   "components": {
     "anatomy:part": {
-      "subType": "eye"
+      "subType": "eye",
+      "hit_probability_weight": 0.5
     },
     "anatomy:part_health": {
       "currentHealth": 10,

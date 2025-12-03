@@ -36,17 +36,19 @@ const PART_HEALTH_CHANGED_EVENT = 'anatomy:part_health_changed';
 
 /**
  * Health state thresholds (matching component definition):
- * - healthy: 76-100%
- * - bruised: 51-75%
- * - wounded: 26-50%
- * - badly_damaged: 1-25%
+ * - healthy: 81-100%
+ * - scratched: 61-80%
+ * - wounded: 41-60%
+ * - injured: 21-40%
+ * - critical: 1-20%
  * - destroyed: 0%
  */
 const HEALTH_STATE_THRESHOLDS = {
-  healthy: 76,
-  bruised: 51,
-  wounded: 26,
-  badly_damaged: 1,
+  healthy: 81,
+  scratched: 61,
+  wounded: 41,
+  injured: 21,
+  critical: 1,
   destroyed: 0,
 };
 
@@ -91,15 +93,15 @@ class ModifyPartHealthHandler extends BaseOperationHandler {
    * Calculate health state from percentage
    *
    * @param {number} healthPercentage - Current health as percentage of maximum (0-100)
-   * @returns {string} Health state: healthy, bruised, wounded, badly_damaged, or destroyed
+   * @returns {string} Health state: healthy, scratched, wounded, injured, critical, or destroyed
    * @private
    */
   #calculateHealthState(healthPercentage) {
     if (healthPercentage >= HEALTH_STATE_THRESHOLDS.healthy) return 'healthy';
-    if (healthPercentage >= HEALTH_STATE_THRESHOLDS.bruised) return 'bruised';
+    if (healthPercentage >= HEALTH_STATE_THRESHOLDS.scratched) return 'scratched';
     if (healthPercentage >= HEALTH_STATE_THRESHOLDS.wounded) return 'wounded';
-    if (healthPercentage >= HEALTH_STATE_THRESHOLDS.badly_damaged)
-      return 'badly_damaged';
+    if (healthPercentage >= HEALTH_STATE_THRESHOLDS.injured) return 'injured';
+    if (healthPercentage >= HEALTH_STATE_THRESHOLDS.critical) return 'critical';
     return 'destroyed';
   }
 

@@ -17,7 +17,7 @@
       "entries": [
         {
           "name": "piercing",
-          "amount": 2,
+          "amount": 10,
           "penetration": 0.8,
           "bleed": {
             "enabled": true,

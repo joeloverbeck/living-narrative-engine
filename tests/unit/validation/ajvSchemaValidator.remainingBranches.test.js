@@ -102,34 +102,11 @@ describe('AjvSchemaValidator - Remaining Branch Coverage', () => {
     });
   });
 
-  describe('Line 387 - Non-Error in addSchema verification catch', () => {
-    it('should handle non-Error during schema verification after add', async () => {
+  // NOTE: Line 387 test removed - addSchema verification step was removed for performance
+  // Schema compilation errors are now caught during validate() calls instead
+  describe('addSchema without verification step', () => {
+    it('should add schema without post-add verification for performance', async () => {
       jest.resetModules();
-
-      const mockAjvInstance = {
-        addSchema: jest.fn(),
-        getSchema: jest.fn(),
-        removeSchema: jest.fn(),
-        compile: jest.fn(),
-        schemas: {},
-      };
-
-      // Make getSchema throw a non-Error on second call (verification)
-      let callCount = 0;
-      mockAjvInstance.getSchema.mockImplementation(() => {
-        callCount++;
-        if (callCount === 1) {
-          // First call checks if schema exists
-          return null;
-        }
-        // Second call verifies after adding - throw non-Error
-        throw { code: 'CUSTOM_ERROR', details: 'Schema verification failed' };
-      });
-
-      jest.doMock('ajv', () => {
-        return jest.fn(() => mockAjvInstance);
-      });
-      jest.doMock('ajv-formats', () => jest.fn());
 
       const AjvSchemaValidator = (
         await import('../../../src/validation/ajvSchemaValidator.js')
@@ -138,18 +115,17 @@ describe('AjvSchemaValidator - Remaining Branch Coverage', () => {
       const validator = new AjvSchemaValidator({ logger: mockLogger });
 
       const testSchema = {
-        $id: 'schema://test/verify-error.json',
+        $id: 'schema://test/no-verify.json',
         type: 'string',
       };
 
       await validator.addSchema(testSchema, testSchema.$id);
 
-      // Check that the warn was called with String(error) for non-Error
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringMatching(
-          /Schema.*was added but cannot be compiled.*\[object Object\]/
-        )
-      );
+      // Schema should be added successfully
+      expect(validator.isSchemaLoaded(testSchema.$id)).toBe(true);
+
+      // No warnings should be logged (verification step removed)
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
   });
 
@@ -247,12 +223,11 @@ describe('AjvSchemaValidator - Remaining Branch Coverage', () => {
       mockValidatorFn.errors = null;
 
       const mockAjvInstance = {
-        addSchema: jest.fn(),
-        getSchema: jest
-          .fn()
-          .mockReturnValueOnce(null) // First call - schema doesn't exist for addSchema
-          .mockReturnValueOnce(null) // Second call - verification after add
-          .mockReturnValue(mockValidatorFn), // Subsequent calls return validator
+        addSchema: jest.fn().mockImplementation(function (schema, id) {
+          // Simulate schema being added to the schemas map
+          this.schemas[id] = { schema };
+        }),
+        getSchema: jest.fn().mockReturnValue(mockValidatorFn), // getValidator calls getSchema
         removeSchema: jest.fn(),
         schemas: {},
       };
@@ -297,8 +272,10 @@ describe('AjvSchemaValidator - Remaining Branch Coverage', () => {
     });
   });
 
-  describe('Line 636 - Non-Error in isSchemaLoaded catch', () => {
-    it('should handle non-Error thrown during schema compilation check', async () => {
+  // NOTE: isSchemaLoaded no longer triggers compilation (performance optimization)
+  // It only checks the schema map, so no compilation errors can occur
+  describe('isSchemaLoaded - schema map check only', () => {
+    it('should check schema map without triggering compilation', async () => {
       jest.resetModules();
 
       const mockAjvInstance = {
@@ -323,19 +300,15 @@ describe('AjvSchemaValidator - Remaining Branch Coverage', () => {
 
       const validator = new AjvSchemaValidator({ logger: mockLogger });
 
+      // isSchemaLoaded only checks the schema map, not compilation
+      // So it returns true even if getSchema would throw
       const isLoaded = validator.isSchemaLoaded(
         'schema://test/compile-error.json'
       );
 
-      expect(isLoaded).toBe(false);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringMatching(
-          /Schema.*is registered but cannot be compiled.*\[object Object\]/
-        ),
-        expect.objectContaining({
-          schemaId: 'schema://test/compile-error.json',
-        })
-      );
+      expect(isLoaded).toBe(true); // Schema is in the map
+      expect(mockAjvInstance.getSchema).not.toHaveBeenCalled(); // No compilation attempted
+      expect(mockLogger.warn).not.toHaveBeenCalled(); // No warning needed
     });
   });
 

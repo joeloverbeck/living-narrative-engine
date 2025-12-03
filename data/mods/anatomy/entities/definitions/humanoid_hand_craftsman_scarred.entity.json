@@ -4,12 +4,13 @@
   "description": "Craftsman hands marked by staining, scars, and work-worn skin",
   "components": {
     "anatomy:can_grab": {
-      "gripStrength": 1.0,
+      "gripStrength": 1,
       "heldItemId": null,
       "locked": false
     },
     "anatomy:part": {
-      "subType": "hand"
+      "subType": "hand",
+      "hit_probability_weight": 3
     },
     "anatomy:part_health": {
       "currentHealth": 15,
@@ -28,11 +29,17 @@
       "length": "short"
     },
     "descriptors:professional_markers": {
-      "markers": ["tool-calluses", "chemical-staining"],
+      "markers": [
+        "tool-calluses",
+        "chemical-staining"
+      ],
       "profession": "potter"
     },
     "descriptors:skin_condition": {
-      "conditions": ["scarred", "work-worn"]
+      "conditions": [
+        "scarred",
+        "work-worn"
+      ]
     },
     "descriptors:texture": {
       "texture": "rough"

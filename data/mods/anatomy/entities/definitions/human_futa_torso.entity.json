@@ -4,7 +4,8 @@
   "description": "A futanari torso with breasts and male genitalia",
   "components": {
     "anatomy:part": {
-      "subType": "torso"
+      "subType": "torso",
+      "hit_probability_weight": 45
     },
     "anatomy:part_health": {
       "currentHealth": 50,
@@ -132,12 +133,16 @@
         },
         {
           "id": "heart_socket",
-          "allowedTypes": ["heart"],
+          "allowedTypes": [
+            "heart"
+          ],
           "nameTpl": "{{type}}"
         },
         {
           "id": "spine_socket",
-          "allowedTypes": ["spine"],
+          "allowedTypes": [
+            "spine"
+          ],
           "nameTpl": "{{type}}"
         }
       ]

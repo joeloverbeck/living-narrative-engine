@@ -17,7 +17,7 @@
       "entries": [
         {
           "name": "slashing",
-          "amount": 4,
+          "amount": 22,
           "penetration": 0.3,
           "bleed": {
             "enabled": true,

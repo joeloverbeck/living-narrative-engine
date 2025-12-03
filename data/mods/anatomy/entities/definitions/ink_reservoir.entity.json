@@ -4,7 +4,8 @@
   "description": "Massive ink reservoir for a titanic kraken",
   "components": {
     "anatomy:part": {
-      "subType": "ink_reservoir"
+      "subType": "ink_reservoir",
+      "hit_probability_weight": 0
     },
     "anatomy:part_health": {
       "currentHealth": 30,

@@ -4,7 +4,8 @@
   "description": "Scaled reptilian arm with hand socket",
   "components": {
     "anatomy:part": {
-      "subType": "tortoise_arm"
+      "subType": "tortoise_arm",
+      "hit_probability_weight": 7
     },
     "anatomy:part_health": {
       "currentHealth": 25,
@@ -15,7 +16,9 @@
       "sockets": [
         {
           "id": "hand",
-          "allowedTypes": ["tortoise_hand"],
+          "allowedTypes": [
+            "tortoise_hand"
+          ],
           "nameTpl": "{{orientation}} hand"
         }
       ]

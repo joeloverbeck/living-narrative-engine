@@ -1,35 +1,36 @@
 {
-    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-    "id": "anatomy:humanoid_arm_hulking_hairy",
-    "description": "A hulking, hairy humanoid arm",
-    "components": {
-        "anatomy:part": {
-            "subType": "arm"
-        },
-        "anatomy:part_health": {
-            "currentHealth": 25,
-            "maxHealth": 25,
-            "state": "healthy"
-        },
-        "anatomy:sockets": {
-            "sockets": [
-                {
-                    "id": "wrist",
-                    "allowedTypes": [
-                        "hand"
-                    ],
-                    "nameTpl": "{{effective_orientation}} {{type}}"
-                }
-            ]
-        },
-        "descriptors:build": {
-            "build": "hulking"
-        },
-        "descriptors:body_hair": {
-            "hairDensity": "hairy"
-        },
-        "core:name": {
-            "text": "hulking, hairy arm"
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:humanoid_arm_hulking_hairy",
+  "description": "A hulking, hairy humanoid arm",
+  "components": {
+    "anatomy:part": {
+      "subType": "arm",
+      "hit_probability_weight": 9.6
+    },
+    "anatomy:part_health": {
+      "currentHealth": 25,
+      "maxHealth": 25,
+      "state": "healthy"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "wrist",
+          "allowedTypes": [
+            "hand"
+          ],
+          "nameTpl": "{{effective_orientation}} {{type}}"
         }
+      ]
+    },
+    "descriptors:build": {
+      "build": "hulking"
+    },
+    "descriptors:body_hair": {
+      "hairDensity": "hairy"
+    },
+    "core:name": {
+      "text": "hulking, hairy arm"
     }
+  }
 }

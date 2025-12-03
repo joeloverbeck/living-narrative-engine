@@ -4,7 +4,8 @@
   "description": "A slim humanoid arm",
   "components": {
     "anatomy:part": {
-      "subType": "arm"
+      "subType": "arm",
+      "hit_probability_weight": 7.2
     },
     "anatomy:part_health": {
       "currentHealth": 25,
@@ -15,7 +16,9 @@
       "sockets": [
         {
           "id": "wrist",
-          "allowedTypes": ["hand"],
+          "allowedTypes": [
+            "hand"
+          ],
           "nameTpl": "{{effective_orientation}} {{type}}"
         }
       ]

@@ -4,7 +4,8 @@
   "description": "Reptilian head with beak mount and eye sockets",
   "components": {
     "anatomy:part": {
-      "subType": "tortoise_head"
+      "subType": "tortoise_head",
+      "hit_probability_weight": 8
     },
     "anatomy:part_health": {
       "currentHealth": 40,
@@ -15,17 +16,23 @@
       "sockets": [
         {
           "id": "left_eye",
-          "allowedTypes": ["tortoise_eye"],
+          "allowedTypes": [
+            "tortoise_eye"
+          ],
           "nameTpl": "left eye"
         },
         {
           "id": "right_eye",
-          "allowedTypes": ["tortoise_eye"],
+          "allowedTypes": [
+            "tortoise_eye"
+          ],
           "nameTpl": "right eye"
         },
         {
           "id": "beak_mount",
-          "allowedTypes": ["tortoise_beak"],
+          "allowedTypes": [
+            "tortoise_beak"
+          ],
           "nameTpl": "beak"
         }
       ]

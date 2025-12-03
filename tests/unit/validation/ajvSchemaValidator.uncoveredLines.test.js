@@ -195,7 +195,9 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
       expect(validator.isSchemaLoaded(childSchema.$id)).toBe(true);
     });
 
-    it('should warn when schema has unresolved reference instead of throwing', async () => {
+    // NOTE: addSchema no longer verifies compilation after add (performance optimization)
+    // Schema compilation errors are detected during validate() or getValidator() calls
+    it('should add schema with unresolved ref without warning (deferred compilation)', async () => {
       jest.resetModules();
 
       const AjvSchemaValidator = (
@@ -214,22 +216,24 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
         },
       };
 
-      // The validator now logs warnings for unresolved refs instead of throwing
+      // addSchema no longer verifies compilation (performance optimization)
       await expect(
         validator.addSchema(schemaWithBadRef, schemaWithBadRef.$id)
       ).resolves.toBeUndefined();
 
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "Schema 'schema://living-narrative-engine/bad-ref.json' was added but cannot be compiled"
-        )
+      // No warning during addSchema (verification step removed)
+      expect(mockLogger.warn).not.toHaveBeenCalledWith(
+        expect.stringContaining('was added but cannot be compiled')
       );
 
-      expect(validator.isSchemaLoaded(schemaWithBadRef.$id)).toBe(false);
+      // Schema is registered but compilation status is unknown until getValidator/validate
+      expect(validator.isSchemaLoaded(schemaWithBadRef.$id)).toBe(true);
 
+      // getValidator will fail for unresolved refs
       const validatorFn = validator.getValidator(schemaWithBadRef.$id);
       expect(validatorFn).toBeUndefined();
 
+      // Now the warning is logged (during getValidator, not addSchema)
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Error accessing schema'),
         expect.objectContaining({

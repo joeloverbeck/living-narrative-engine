@@ -1,27 +1,28 @@
 {
-    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-    "id": "anatomy:human_hair_raven_medium_straight",
-    "description": "Raven-black medium-length, straight hair",
-    "components": {
-        "anatomy:part": {
-            "subType": "hair"
-        },
-        "anatomy:part_health": {
-            "currentHealth": 3,
-            "maxHealth": 3,
-            "state": "healthy"
-        },
-        "descriptors:color_extended": {
-            "color": "raven-black"
-        },
-        "descriptors:length_hair": {
-            "length": "medium"
-        },
-        "descriptors:hair_style": {
-            "style": "straight"
-        },
-        "core:name": {
-            "text": "hair"
-        }
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_hair_raven_medium_straight",
+  "description": "Raven-black medium-length, straight hair",
+  "components": {
+    "anatomy:part": {
+      "subType": "hair",
+      "hit_probability_weight": 0.25
+    },
+    "anatomy:part_health": {
+      "currentHealth": 3,
+      "maxHealth": 3,
+      "state": "healthy"
+    },
+    "descriptors:color_extended": {
+      "color": "raven-black"
+    },
+    "descriptors:length_hair": {
+      "length": "medium"
+    },
+    "descriptors:hair_style": {
+      "style": "straight"
+    },
+    "core:name": {
+      "text": "hair"
     }
+  }
 }

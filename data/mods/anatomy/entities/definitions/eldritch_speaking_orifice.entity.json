@@ -4,7 +4,8 @@
   "description": "Specialized mouth capable of producing maddening speech",
   "components": {
     "anatomy:part": {
-      "subType": "eldritch_mouth"
+      "subType": "eldritch_mouth",
+      "hit_probability_weight": 4
     },
     "anatomy:part_health": {
       "currentHealth": 15,

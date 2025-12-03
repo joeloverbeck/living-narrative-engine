@@ -4,7 +4,8 @@
   "description": "Small bantam-sized fleshy red comb atop a chicken's head",
   "components": {
     "anatomy:part": {
-      "subType": "chicken_comb"
+      "subType": "chicken_comb",
+      "hit_probability_weight": 0.5
     },
     "anatomy:part_health": {
       "currentHealth": 3,

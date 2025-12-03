@@ -205,7 +205,9 @@ describe('AjvSchemaValidator - Schema Loader Coverage', () => {
       expect(invalidResult.errors).toBeTruthy();
     });
 
-    it('should handle unresolved schema references without throwing', async () => {
+    // NOTE: addSchema no longer verifies compilation after add (performance optimization)
+    // Schema compilation errors are detected during validate() or getValidator() calls
+    it('should handle unresolved schema references (deferred compilation)', async () => {
       const validator = new AjvSchemaValidator({
         logger: mockLogger,
       });
@@ -218,19 +220,24 @@ describe('AjvSchemaValidator - Schema Loader Coverage', () => {
         },
       };
 
+      // addSchema succeeds without verification (performance optimization)
       await expect(
         validator.addSchema(schemaWithBadRef, schemaWithBadRef.$id)
       ).resolves.toBeUndefined();
 
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      // No warning during addSchema (verification step removed)
+      expect(mockLogger.warn).not.toHaveBeenCalledWith(
         expect.stringContaining('was added but cannot be compiled')
       );
 
-      expect(validator.isSchemaLoaded(schemaWithBadRef.$id)).toBe(false);
+      // Schema is registered (compilation status unknown until used)
+      expect(validator.isSchemaLoaded(schemaWithBadRef.$id)).toBe(true);
 
+      // getValidator will fail for unresolved refs
       const validatorFn = validator.getValidator(schemaWithBadRef.$id);
       expect(validatorFn).toBeUndefined();
 
+      // Warning is logged during getValidator, not addSchema
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Error accessing schema'),
         expect.objectContaining({

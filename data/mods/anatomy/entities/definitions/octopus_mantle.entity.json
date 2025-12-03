@@ -4,7 +4,8 @@
   "description": "Common octopus mantle body with medium size and reddish-brown bumpy texture",
   "components": {
     "anatomy:part": {
-      "subType": "mantle"
+      "subType": "mantle",
+      "hit_probability_weight": 40
     },
     "anatomy:part_health": {
       "currentHealth": 80,
@@ -15,12 +16,18 @@
       "sockets": [
         {
           "id": "ink_sac",
-          "allowedTypes": ["ink_reservoir", "ink_sac"],
+          "allowedTypes": [
+            "ink_reservoir",
+            "ink_sac"
+          ],
           "nameTpl": "ink sac"
         },
         {
           "id": "beak",
-          "allowedTypes": ["beak", "cephalopod_beak"],
+          "allowedTypes": [
+            "beak",
+            "cephalopod_beak"
+          ],
           "nameTpl": "beak"
         }
       ]

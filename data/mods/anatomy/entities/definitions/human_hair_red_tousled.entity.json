@@ -1,27 +1,28 @@
 {
-    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-    "id": "anatomy:human_hair_red_tousled",
-    "description": "Tousled human hair with red color",
-    "components": {
-        "anatomy:part": {
-            "subType": "hair"
-        },
-        "anatomy:part_health": {
-            "currentHealth": 3,
-            "maxHealth": 3,
-            "state": "healthy"
-        },
-        "descriptors:color_basic": {
-            "color": "red"
-        },
-        "descriptors:length_hair": {
-            "length": "medium"
-        },
-        "descriptors:hair_style": {
-            "style": "tousled"
-        },
-        "core:name": {
-            "text": "hair"
-        }
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_hair_red_tousled",
+  "description": "Tousled human hair with red color",
+  "components": {
+    "anatomy:part": {
+      "subType": "hair",
+      "hit_probability_weight": 0.25
+    },
+    "anatomy:part_health": {
+      "currentHealth": 3,
+      "maxHealth": 3,
+      "state": "healthy"
+    },
+    "descriptors:color_basic": {
+      "color": "red"
+    },
+    "descriptors:length_hair": {
+      "length": "medium"
+    },
+    "descriptors:hair_style": {
+      "style": "tousled"
+    },
+    "core:name": {
+      "text": "hair"
     }
+  }
 }

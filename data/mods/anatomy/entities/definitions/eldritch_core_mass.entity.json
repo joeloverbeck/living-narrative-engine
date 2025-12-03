@@ -4,7 +4,8 @@
   "description": "Central bulbous mass of The Writhing Observer - a pulsating core of impossible flesh",
   "components": {
     "anatomy:part": {
-      "subType": "eldritch_core"
+      "subType": "eldritch_core",
+      "hit_probability_weight": 35
     },
     "anatomy:part_health": {
       "currentHealth": 80,
@@ -15,262 +16,378 @@
       "sockets": [
         {
           "id": "tentacle_1",
-          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_large"],
+          "allowedTypes": [
+            "eldritch_tentacle",
+            "eldritch_tentacle_large"
+          ],
           "nameTpl": "tentacle 1"
         },
         {
           "id": "tentacle_2",
-          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_large"],
+          "allowedTypes": [
+            "eldritch_tentacle",
+            "eldritch_tentacle_large"
+          ],
           "nameTpl": "tentacle 2"
         },
         {
           "id": "tentacle_3",
-          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_large"],
+          "allowedTypes": [
+            "eldritch_tentacle",
+            "eldritch_tentacle_large"
+          ],
           "nameTpl": "tentacle 3"
         },
         {
           "id": "tentacle_4",
-          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_large"],
+          "allowedTypes": [
+            "eldritch_tentacle",
+            "eldritch_tentacle_large"
+          ],
           "nameTpl": "tentacle 4"
         },
         {
           "id": "tentacle_5",
-          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_sensory"],
+          "allowedTypes": [
+            "eldritch_tentacle",
+            "eldritch_tentacle_sensory"
+          ],
           "nameTpl": "tentacle 5"
         },
         {
           "id": "tentacle_6",
-          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_sensory"],
+          "allowedTypes": [
+            "eldritch_tentacle",
+            "eldritch_tentacle_sensory"
+          ],
           "nameTpl": "tentacle 6"
         },
         {
           "id": "tentacle_7",
-          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_sensory"],
+          "allowedTypes": [
+            "eldritch_tentacle",
+            "eldritch_tentacle_sensory"
+          ],
           "nameTpl": "tentacle 7"
         },
         {
           "id": "tentacle_8",
-          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_sensory"],
+          "allowedTypes": [
+            "eldritch_tentacle",
+            "eldritch_tentacle_sensory"
+          ],
           "nameTpl": "tentacle 8"
         },
         {
           "id": "tentacle_9",
-          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_sensory"],
+          "allowedTypes": [
+            "eldritch_tentacle",
+            "eldritch_tentacle_sensory"
+          ],
           "nameTpl": "tentacle 9"
         },
         {
           "id": "tentacle_10",
-          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_sensory"],
+          "allowedTypes": [
+            "eldritch_tentacle",
+            "eldritch_tentacle_sensory"
+          ],
           "nameTpl": "tentacle 10"
         },
         {
           "id": "tentacle_11",
-          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_feeding"],
+          "allowedTypes": [
+            "eldritch_tentacle",
+            "eldritch_tentacle_feeding"
+          ],
           "nameTpl": "tentacle 11"
         },
         {
           "id": "tentacle_12",
-          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_feeding"],
+          "allowedTypes": [
+            "eldritch_tentacle",
+            "eldritch_tentacle_feeding"
+          ],
           "nameTpl": "tentacle 12"
         },
         {
           "id": "vestigial_arm_1",
-          "allowedTypes": ["eldritch_vestigial_arm"],
+          "allowedTypes": [
+            "eldritch_vestigial_arm"
+          ],
           "nameTpl": "vestigial arm 1"
         },
         {
           "id": "vestigial_arm_2",
-          "allowedTypes": ["eldritch_vestigial_arm"],
+          "allowedTypes": [
+            "eldritch_vestigial_arm"
+          ],
           "nameTpl": "vestigial arm 2"
         },
         {
           "id": "vestigial_arm_3",
-          "allowedTypes": ["eldritch_vestigial_arm"],
+          "allowedTypes": [
+            "eldritch_vestigial_arm"
+          ],
           "nameTpl": "vestigial arm 3"
         },
         {
           "id": "vestigial_arm_4",
-          "allowedTypes": ["eldritch_vestigial_arm"],
+          "allowedTypes": [
+            "eldritch_vestigial_arm"
+          ],
           "nameTpl": "vestigial arm 4"
         },
         {
           "id": "vestigial_arm_5",
-          "allowedTypes": ["eldritch_vestigial_arm"],
+          "allowedTypes": [
+            "eldritch_vestigial_arm"
+          ],
           "nameTpl": "vestigial arm 5"
         },
         {
           "id": "vestigial_arm_6",
-          "allowedTypes": ["eldritch_vestigial_arm"],
+          "allowedTypes": [
+            "eldritch_vestigial_arm"
+          ],
           "nameTpl": "vestigial arm 6"
         },
         {
           "id": "wing_1",
-          "allowedTypes": ["eldritch_membrane_wing"],
+          "allowedTypes": [
+            "eldritch_membrane_wing"
+          ],
           "nameTpl": "membrane wing 1"
         },
         {
           "id": "wing_2",
-          "allowedTypes": ["eldritch_membrane_wing"],
+          "allowedTypes": [
+            "eldritch_membrane_wing"
+          ],
           "nameTpl": "membrane wing 2"
         },
         {
           "id": "wing_3",
-          "allowedTypes": ["eldritch_membrane_wing"],
+          "allowedTypes": [
+            "eldritch_membrane_wing"
+          ],
           "nameTpl": "membrane wing 3"
         },
         {
           "id": "wing_4",
-          "allowedTypes": ["eldritch_membrane_wing"],
+          "allowedTypes": [
+            "eldritch_membrane_wing"
+          ],
           "nameTpl": "membrane wing 4"
         },
         {
           "id": "eye_stalk_1",
-          "allowedTypes": ["eldritch_compound_eye_stalk"],
+          "allowedTypes": [
+            "eldritch_compound_eye_stalk"
+          ],
           "nameTpl": "eye stalk 1"
         },
         {
           "id": "eye_stalk_2",
-          "allowedTypes": ["eldritch_compound_eye_stalk"],
+          "allowedTypes": [
+            "eldritch_compound_eye_stalk"
+          ],
           "nameTpl": "eye stalk 2"
         },
         {
           "id": "eye_stalk_3",
-          "allowedTypes": ["eldritch_compound_eye_stalk"],
+          "allowedTypes": [
+            "eldritch_compound_eye_stalk"
+          ],
           "nameTpl": "eye stalk 3"
         },
         {
           "id": "mouth_1",
-          "allowedTypes": ["eldritch_lamprey_mouth"],
+          "allowedTypes": [
+            "eldritch_lamprey_mouth"
+          ],
           "nameTpl": "lamprey mouth 1"
         },
         {
           "id": "mouth_2",
-          "allowedTypes": ["eldritch_lamprey_mouth"],
+          "allowedTypes": [
+            "eldritch_lamprey_mouth"
+          ],
           "nameTpl": "lamprey mouth 2"
         },
         {
           "id": "mouth_3",
-          "allowedTypes": ["eldritch_lamprey_mouth"],
+          "allowedTypes": [
+            "eldritch_lamprey_mouth"
+          ],
           "nameTpl": "lamprey mouth 3"
         },
         {
           "id": "mouth_4",
-          "allowedTypes": ["eldritch_vertical_maw"],
+          "allowedTypes": [
+            "eldritch_vertical_maw"
+          ],
           "nameTpl": "vertical maw"
         },
         {
           "id": "mouth_5",
-          "allowedTypes": ["eldritch_speaking_orifice"],
+          "allowedTypes": [
+            "eldritch_speaking_orifice"
+          ],
           "nameTpl": "speaking orifice"
         },
         {
           "id": "sensory_stalk_1",
-          "allowedTypes": ["eldritch_sensory_stalk"],
+          "allowedTypes": [
+            "eldritch_sensory_stalk"
+          ],
           "nameTpl": "sensory stalk 1"
         },
         {
           "id": "sensory_stalk_2",
-          "allowedTypes": ["eldritch_sensory_stalk"],
+          "allowedTypes": [
+            "eldritch_sensory_stalk"
+          ],
           "nameTpl": "sensory stalk 2"
         },
         {
           "id": "sensory_stalk_3",
-          "allowedTypes": ["eldritch_sensory_stalk"],
+          "allowedTypes": [
+            "eldritch_sensory_stalk"
+          ],
           "nameTpl": "sensory stalk 3"
         },
         {
           "id": "sensory_stalk_4",
-          "allowedTypes": ["eldritch_sensory_stalk"],
+          "allowedTypes": [
+            "eldritch_sensory_stalk"
+          ],
           "nameTpl": "sensory stalk 4"
         },
         {
           "id": "sensory_stalk_5",
-          "allowedTypes": ["eldritch_sensory_stalk"],
+          "allowedTypes": [
+            "eldritch_sensory_stalk"
+          ],
           "nameTpl": "sensory stalk 5"
         },
         {
           "id": "sensory_stalk_6",
-          "allowedTypes": ["eldritch_sensory_stalk"],
+          "allowedTypes": [
+            "eldritch_sensory_stalk"
+          ],
           "nameTpl": "sensory stalk 6"
         },
         {
           "id": "central_eye",
-          "allowedTypes": ["eldritch_baleful_eye"],
+          "allowedTypes": [
+            "eldritch_baleful_eye"
+          ],
           "nameTpl": "central baleful eye"
         },
         {
           "id": "surface_eye_1",
-          "allowedTypes": ["eldritch_surface_eye"],
+          "allowedTypes": [
+            "eldritch_surface_eye"
+          ],
           "nameTpl": "surface eye 1"
         },
         {
           "id": "surface_eye_2",
-          "allowedTypes": ["eldritch_surface_eye"],
+          "allowedTypes": [
+            "eldritch_surface_eye"
+          ],
           "nameTpl": "surface eye 2"
         },
         {
           "id": "surface_eye_3",
-          "allowedTypes": ["eldritch_surface_eye"],
+          "allowedTypes": [
+            "eldritch_surface_eye"
+          ],
           "nameTpl": "surface eye 3"
         },
         {
           "id": "surface_eye_4",
-          "allowedTypes": ["eldritch_surface_eye"],
+          "allowedTypes": [
+            "eldritch_surface_eye"
+          ],
           "nameTpl": "surface eye 4"
         },
         {
           "id": "surface_eye_5",
-          "allowedTypes": ["eldritch_surface_eye"],
+          "allowedTypes": [
+            "eldritch_surface_eye"
+          ],
           "nameTpl": "surface eye 5"
         },
         {
           "id": "surface_eye_6",
-          "allowedTypes": ["eldritch_surface_eye"],
+          "allowedTypes": [
+            "eldritch_surface_eye"
+          ],
           "nameTpl": "surface eye 6"
         },
         {
           "id": "surface_eye_7",
-          "allowedTypes": ["eldritch_surface_eye"],
+          "allowedTypes": [
+            "eldritch_surface_eye"
+          ],
           "nameTpl": "surface eye 7"
         },
         {
           "id": "surface_eye_8",
-          "allowedTypes": ["eldritch_surface_eye"],
+          "allowedTypes": [
+            "eldritch_surface_eye"
+          ],
           "nameTpl": "surface eye 8"
         },
         {
           "id": "surface_eye_9",
-          "allowedTypes": ["eldritch_surface_eye"],
+          "allowedTypes": [
+            "eldritch_surface_eye"
+          ],
           "nameTpl": "surface eye 9"
         },
         {
           "id": "surface_eye_10",
-          "allowedTypes": ["eldritch_surface_eye"],
+          "allowedTypes": [
+            "eldritch_surface_eye"
+          ],
           "nameTpl": "surface eye 10"
         },
         {
           "id": "surface_eye_11",
-          "allowedTypes": ["eldritch_surface_eye"],
+          "allowedTypes": [
+            "eldritch_surface_eye"
+          ],
           "nameTpl": "surface eye 11"
         },
         {
           "id": "surface_eye_12",
-          "allowedTypes": ["eldritch_surface_eye"],
+          "allowedTypes": [
+            "eldritch_surface_eye"
+          ],
           "nameTpl": "surface eye 12"
         },
         {
           "id": "vocal_sac_1",
-          "allowedTypes": ["eldritch_vocal_sac"],
+          "allowedTypes": [
+            "eldritch_vocal_sac"
+          ],
           "nameTpl": "vocal sac 1"
         },
         {
           "id": "vocal_sac_2",
-          "allowedTypes": ["eldritch_vocal_sac"],
+          "allowedTypes": [
+            "eldritch_vocal_sac"
+          ],
           "nameTpl": "vocal sac 2"
         },
         {
           "id": "vocal_sac_3",
-          "allowedTypes": ["eldritch_vocal_sac"],
+          "allowedTypes": [
+            "eldritch_vocal_sac"
+          ],
           "nameTpl": "vocal sac 3"
         }
       ]

@@ -4,7 +4,8 @@
   "description": "A chicken heart sized for a lightweight circulatory system",
   "components": {
     "anatomy:part": {
-      "subType": "chicken_heart"
+      "subType": "chicken_heart",
+      "hit_probability_weight": 0
     },
     "anatomy:part_health": {
       "currentHealth": 10,

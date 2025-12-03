@@ -6,9 +6,9 @@ This report documents the complete damage system architecture in the Living Narr
 
 **Key Findings:**
 - 5 distinct damage workflows identified
-- 2 e2e tests now exist (throw action + swing_at_target full flow)
+- 3 e2e tests now exist (throw action + swing_at_target full flow + death mechanics)
 - 24+ integration tests provide component-level coverage but no end-to-end validation
-- Critical gaps remain in: death mechanics, damage effects, propagation
+- Critical gaps remain in: damage effects, propagation
 - Known bug: message ordering (damage appears before success message)
 
 ---
@@ -343,6 +343,7 @@ APPLY_DAMAGE completes (top-level only)
 
 **Vital Organs:** brain, heart, spine
 **Dying State:** 3 turns to be stabilized or die
+**Overall Health Calculation:** Weighted average (torso weight 3, vitals 0.5, limbs 1); dropping below 10% usually requires multiple heavily damaged parts.
 
 **Key File:** `src/anatomy/services/deathCheckService.js`
 
@@ -446,12 +447,13 @@ Four weapon entities analyzed with damage configurations:
 
 ## Current Test Coverage
 
-### E2E Tests (2 total)
+### E2E Tests (3 total)
 
 | File | Coverage | Notes |
 |------|----------|-------|
 | `tests/e2e/actions/realRuleExecution.e2e.test.js` | Tests throw action | Does NOT test combat damage |
 | `tests/e2e/actions/swingAtTargetFullFlow.e2e.test.js` | Full swing_at_target flow | Covers damage, bleed trigger, piercing exclusion, critical multiplier, fumble drop |
+| `tests/e2e/actions/deathMechanics.e2e.test.js` | Death & dying resolution | Vital organ destruction → death, weighted overall-health <10% → dying, 3-turn countdown → bleeding_out death, `anatomy:entity_died` payload |
 
 ### Integration Tests (24+ in weapons/)
 
@@ -474,8 +476,8 @@ Four weapon entities analyzed with damage configurations:
 | Fracture effect triggering | 0% | HIGH |
 | Dismemberment triggering | 0% | HIGH |
 | Damage propagation to internal parts | ~5% | HIGH |
-| Death via vital organ destruction | 0% | CRITICAL |
-| Multi-turn combat with dying state | 0% | HIGH |
+| Death via vital organ destruction | ✅ Covered by deathMechanics.e2e.test.js | LOW |
+| Multi-turn combat with dying state | ✅ Countdown covered in deathMechanics.e2e.test.js | MEDIUM (stabilization/turn hooks untested) |
 | Critical success 1.5x multiplier execution | ~5% | MEDIUM |
 | Fumble weapon drop execution | ~5% | MEDIUM |
 
@@ -528,6 +530,11 @@ Four weapon entities analyzed with damage configurations:
 3. Overall health < 10% → dying state (3 turns)
 4. Dying countdown expiration → death
 5. anatomy:entity_died event payload verification
+
+**Status:** Implemented at `tests/e2e/actions/deathMechanics.e2e.test.js`. Notes:
+- Dying state is triggered by **weighted overall health** < 10%; with torso weight 3 and vital organs weight 0.5, multiple parts must be heavily damaged before entering dying.
+- Vital organ destruction emits `anatomy:entity_died` with `causeOfDeath: vital_organ_destroyed`, `vitalOrganDestroyed`, `killedBy`, `entityName`, `finalMessage`, and `timestamp`.
+- Dying countdown starts at 3 turns and expires to `causeOfDeath: bleeding_out` when not stabilized.
 
 ### Test Suite 3: damageEffectsTriggers.e2e.test.js (HIGH)
 
@@ -594,10 +601,9 @@ Four weapon entities analyzed with damage configurations:
 
 ## Recommendations
 
-1. **Immediate Priority:** Add deathMechanics.e2e.test.js; swingAtTargetFullFlow.e2e.test.js is now in place
-2. **High Priority:** Implement damageEffectsTriggers.e2e.test.js to validate effect system
-3. **Medium Priority:** Implement damagePropagationFlow.e2e.test.js and multiTurnCombatScenario.e2e.test.js
-4. **Bug Fix:** Address message ordering issue in DamageEventMessageRenderer
+1. **Immediate Priority:** Implement damageEffectsTriggers.e2e.test.js to validate effect system
+2. **High Priority:** Implement damagePropagationFlow.e2e.test.js and multiTurnCombatScenario.e2e.test.js
+3. **Bug Fix:** Address message ordering issue in DamageEventMessageRenderer
 
 ---
 

@@ -4,12 +4,13 @@
   "description": "A human hand",
   "components": {
     "anatomy:can_grab": {
-      "gripStrength": 1.0,
+      "gripStrength": 1,
       "heldItemId": null,
       "locked": false
     },
     "anatomy:part": {
-      "subType": "hand"
+      "subType": "hand",
+      "hit_probability_weight": 3
     },
     "anatomy:part_health": {
       "currentHealth": 15,

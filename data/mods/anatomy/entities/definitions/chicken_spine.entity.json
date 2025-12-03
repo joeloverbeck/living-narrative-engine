@@ -4,7 +4,8 @@
   "description": "A lightweight chicken spine providing support and nerve routing",
   "components": {
     "anatomy:part": {
-      "subType": "chicken_spine"
+      "subType": "chicken_spine",
+      "hit_probability_weight": 0
     },
     "anatomy:part_health": {
       "currentHealth": 12,

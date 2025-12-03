@@ -4,7 +4,8 @@
   "description": "A human female genital organ with large size, soft muscle tone, and smooth texture",
   "components": {
     "anatomy:part": {
-      "subType": "vagina"
+      "subType": "vagina",
+      "hit_probability_weight": 2
     },
     "anatomy:part_health": {
       "currentHealth": 6,

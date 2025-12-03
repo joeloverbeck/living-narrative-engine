@@ -16,7 +16,7 @@
             "entries": [
                 {
                     "name": "blunt",
-                    "amount": 1,
+                    "amount": 5,
                     "fracture": {
                         "enabled": true,
                         "thresholdFraction": 0.7,

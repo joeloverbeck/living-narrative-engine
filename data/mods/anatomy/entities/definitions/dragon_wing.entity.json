@@ -4,7 +4,8 @@
   "description": "A broad, leathery dragon wing",
   "components": {
     "anatomy:part": {
-      "subType": "dragon_wing"
+      "subType": "dragon_wing",
+      "hit_probability_weight": 10
     },
     "anatomy:part_health": {
       "currentHealth": 45,

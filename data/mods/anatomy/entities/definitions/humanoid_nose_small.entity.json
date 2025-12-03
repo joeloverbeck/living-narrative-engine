@@ -4,7 +4,8 @@
   "description": "A small humanoid nose",
   "components": {
     "anatomy:part": {
-      "subType": "nose"
+      "subType": "nose",
+      "hit_probability_weight": 0.54
     },
     "anatomy:part_health": {
       "currentHealth": 8,

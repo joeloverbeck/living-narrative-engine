@@ -4,7 +4,8 @@
   "description": "Reptilian eye with protective nictitating membrane",
   "components": {
     "anatomy:part": {
-      "subType": "tortoise_eye"
+      "subType": "tortoise_eye",
+      "hit_probability_weight": 0.5
     },
     "anatomy:part_health": {
       "currentHealth": 10,

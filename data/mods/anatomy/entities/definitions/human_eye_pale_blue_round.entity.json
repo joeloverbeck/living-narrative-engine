@@ -1,24 +1,25 @@
 {
-    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-    "id": "anatomy:human_eye_pale_blue_round",
-    "description": "A human eye with pale-blue iris and round shape",
-    "components": {
-        "anatomy:part": {
-            "subType": "eye"
-        },
-        "anatomy:part_health": {
-            "currentHealth": 10,
-            "maxHealth": 10,
-            "state": "healthy"
-        },
-        "descriptors:color_extended": {
-            "color": "pale-blue"
-        },
-        "descriptors:shape_eye": {
-            "shape": "round"
-        },
-        "core:name": {
-            "text": "eye"
-        }
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_eye_pale_blue_round",
+  "description": "A human eye with pale-blue iris and round shape",
+  "components": {
+    "anatomy:part": {
+      "subType": "eye",
+      "hit_probability_weight": 0.5
+    },
+    "anatomy:part_health": {
+      "currentHealth": 10,
+      "maxHealth": 10,
+      "state": "healthy"
+    },
+    "descriptors:color_extended": {
+      "color": "pale-blue"
+    },
+    "descriptors:shape_eye": {
+      "shape": "round"
+    },
+    "core:name": {
+      "text": "eye"
     }
+  }
 }

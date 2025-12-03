@@ -24,7 +24,7 @@ function createRecordingLogger() {
       }
       try {
         return JSON.stringify(item);
-      } catch (error) {
+      } catch {
         return String(item);
       }
     });
@@ -64,8 +64,15 @@ describe('AjvSchemaValidator with project schemas', () => {
 
     await validator.addSchema(dispatchSchema, dispatchSchema.$id);
 
-    expect(validator.isSchemaLoaded(dispatchSchema.$id)).toBe(false);
+    // CHANGED: isSchemaLoaded() now only checks if the schema ID exists in the map,
+    // not whether it can be compiled. This is a performance optimization that
+    // avoids 20-75ms compilation overhead per schema lookup.
+    expect(validator.isSchemaLoaded(dispatchSchema.$id)).toBe(true);
 
+    // However, the schema has unresolved $refs, so validateSchemaRefs returns false
+    expect(validator.validateSchemaRefs(dispatchSchema.$id)).toBe(false);
+
+    // getValidator() tries to compile, which fails due to missing $refs
     const missingValidator = validator.getValidator(dispatchSchema.$id);
     expect(missingValidator).toBeUndefined();
 

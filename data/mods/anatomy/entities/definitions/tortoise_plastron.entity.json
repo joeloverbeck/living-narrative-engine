@@ -4,7 +4,8 @@
   "description": "Flat lower shell (plastron) protecting underside",
   "components": {
     "anatomy:part": {
-      "subType": "shell_plastron"
+      "subType": "shell_plastron",
+      "hit_probability_weight": 26
     },
     "anatomy:part_health": {
       "currentHealth": 100,

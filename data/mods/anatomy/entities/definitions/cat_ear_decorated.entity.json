@@ -4,7 +4,8 @@
   "description": "Feline ear decorated with silver hoops and small charms",
   "components": {
     "anatomy:part": {
-      "subType": "ear"
+      "subType": "ear",
+      "hit_probability_weight": 0.5
     },
     "anatomy:part_health": {
       "currentHealth": 8,

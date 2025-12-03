@@ -16,9 +16,9 @@
     "damage-types:damage_capabilities": {
       "entries": [
         {
-          "name": "slashing",
-          "amount": 3,
-          "penetration": 0.3,
+          "name": "piercing",
+          "amount": 18,
+          "penetration": 0.6,
           "bleed": {
             "enabled": true,
             "severity": "moderate",
@@ -27,6 +27,16 @@
           "dismember": {
             "enabled": true,
             "thresholdFraction": 0.8
+          }
+        },
+        {
+          "name": "slashing",
+          "amount": 8,
+          "penetration": 0.1,
+          "bleed": {
+            "enabled": true,
+            "severity": "minor",
+            "baseDurationTurns": 2
           }
         }
       ]

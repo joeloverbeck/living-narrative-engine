@@ -4,7 +4,8 @@
   "description": "Humanoid teeth",
   "components": {
     "anatomy:part": {
-      "subType": "teeth"
+      "subType": "teeth",
+      "hit_probability_weight": 0
     },
     "anatomy:part_health": {
       "currentHealth": 5,
