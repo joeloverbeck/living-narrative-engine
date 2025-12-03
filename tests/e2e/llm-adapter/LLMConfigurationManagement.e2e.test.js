@@ -10,38 +10,55 @@
  * - Testing token limit changes
  * - Error handling for invalid configurations
  * - Configuration persistence across operations
+ *
+ * Performance Optimization:
+ * - Uses lightweight mode (skips temp directory creation)
+ * - Skips schema loading (uses mocked data fetcher)
+ * - Reuses test bed instance with reset() between tests where possible
  */
 
 import {
   describe,
+  beforeAll,
+  afterAll,
   beforeEach,
-  afterEach,
   test,
   expect,
-  jest,
 } from '@jest/globals';
 import { LLMAdapterTestBed } from './common/llmAdapterTestBed.js';
-import { ConfigurationError } from '../../../src/errors/configurationError.js';
 
 /**
  * E2E test suite for LLM Configuration Management
  * Tests the complete configuration loading and switching workflow
+ *
+ * Optimized for performance by:
+ * 1. Using lightweight mode (no file system temp directories)
+ * 2. Reusing single test bed instance with reset() between tests
+ *
+ * Note: Schema loading cannot be skipped because LlmConfigLoader requires
+ * schema validation. However, schemas are mocked so loading is fast.
  */
 describe('E2E: LLM Configuration Management', () => {
   let testBed;
 
-  beforeEach(async () => {
-    // Initialize test bed
-    testBed = new LLMAdapterTestBed();
+  // Initialize once for all tests - significantly faster than per-test initialization
+  beforeAll(async () => {
+    testBed = new LLMAdapterTestBed({
+      lightweight: true, // Skip temp directory creation
+      // Note: skipSchemaLoading cannot be used - LlmConfigLoader requires schema validation
+    });
     await testBed.initialize();
-
-    // Clear any events from initialization
-    testBed.clearRecordedEvents();
   });
 
-  afterEach(async () => {
-    // Clean up test bed
+  afterAll(async () => {
+    // Clean up test bed after all tests complete
     await testBed.cleanup();
+  });
+
+  beforeEach(async () => {
+    // Reset state between tests (much faster than full re-initialization)
+    await testBed.reset();
+    testBed.clearRecordedEvents();
   });
 
   /**
@@ -189,13 +206,11 @@ describe('E2E: LLM Configuration Management', () => {
     expect(initialConfig.configId).toBe('test-llm-toolcalling');
 
     // Act - Try to switch to non-existent config
-    try {
-      await testBed.switchLLMConfig('non-existent-llm');
-    } catch (error) {
-      // Expected to throw an error
-    }
+    // The implementation returns false rather than throwing, so we verify
+    // the config remains unchanged regardless of the error handling approach
+    await testBed.switchLLMConfig('non-existent-llm');
 
-    // Assert - Config should remain unchanged
+    // Assert - Config should remain unchanged (switch failed gracefully)
     const currentConfig = await testBed.getCurrentLLMConfig();
     expect(currentConfig.configId).toBe('test-llm-toolcalling');
   });
@@ -317,11 +332,25 @@ describe('E2E: LLM Configuration Management', () => {
     ];
     expect(validMethods).toContain(config.jsonOutputStrategy.method);
 
-    if (config.jsonOutputStrategy.method === 'openrouter_tool_calling') {
-      expect(config.jsonOutputStrategy.toolName).toBeDefined();
-    } else if (config.jsonOutputStrategy.method === 'openrouter_json_schema') {
-      expect(config.jsonOutputStrategy.jsonSchema).toBeDefined();
-    }
+    // Validate method-specific properties using type guard pattern
+    // (avoids conditional expects while still validating structure)
+    const isToolCalling =
+      config.jsonOutputStrategy.method === 'openrouter_tool_calling';
+    const isJsonSchema =
+      config.jsonOutputStrategy.method === 'openrouter_json_schema';
+
+    // At least one strategy must be valid with its required properties
+    const hasValidToolCallingConfig =
+      isToolCalling && config.jsonOutputStrategy.toolName !== undefined;
+    const hasValidJsonSchemaConfig =
+      isJsonSchema && config.jsonOutputStrategy.jsonSchema !== undefined;
+    const hasOtherValidConfig = !isToolCalling && !isJsonSchema;
+
+    expect(
+      hasValidToolCallingConfig ||
+        hasValidJsonSchemaConfig ||
+        hasOtherValidConfig
+    ).toBe(true);
   });
 
   /**
