@@ -178,7 +178,7 @@ describe('DamageTypeEffectsService', () => {
         );
       });
 
-      it('should skip other effects when dismemberment triggers', async () => {
+      it('should continue to apply other effects when dismemberment triggers', async () => {
         await service.applyEffectsForDamage({
           ...baseParams,
           damageEntry: {
@@ -193,7 +193,8 @@ describe('DamageTypeEffectsService', () => {
           'anatomy:dismembered',
           expect.anything()
         );
-        expect(mockDispatcher.dispatch).not.toHaveBeenCalledWith(
+        // Verify we DO proceed to bleed
+        expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
           'anatomy:bleeding_started',
           expect.anything()
         );

@@ -1,0 +1,15 @@
+{
+  "id": "anatomy:dismembered",
+  "description": "Indicates the part has been severed from the body.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "sourceDamageType": {
+        "type": "string",
+        "description": "The ID of the damage type that caused the dismemberment."
+      }
+    },
+    "required": ["sourceDamageType"],
+    "additionalProperties": false
+  }
+}

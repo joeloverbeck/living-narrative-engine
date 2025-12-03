@@ -26,6 +26,7 @@ const BLEEDING_COMPONENT_ID = 'anatomy:bleeding';
 const BURNING_COMPONENT_ID = 'anatomy:burning';
 const POISONED_COMPONENT_ID = 'anatomy:poisoned';
 const FRACTURED_COMPONENT_ID = 'anatomy:fractured';
+const DISMEMBERED_COMPONENT_ID = 'anatomy:dismembered';
 const STUNNED_COMPONENT_ID = 'anatomy:stunned';
 
 // Event types - started events
@@ -41,7 +42,7 @@ export const BURNING_STOPPED_EVENT = 'anatomy:burning_stopped';
 export const POISONED_STOPPED_EVENT = 'anatomy:poisoned_stopped';
 
 // Export component IDs for use by tick systems
-export { BLEEDING_COMPONENT_ID, BURNING_COMPONENT_ID, POISONED_COMPONENT_ID };
+export { BLEEDING_COMPONENT_ID, BURNING_COMPONENT_ID, POISONED_COMPONENT_ID, DISMEMBERED_COMPONENT_ID };
 
 // Severity to tick damage mapping per spec
 const BLEED_SEVERITY_MAP = {
@@ -97,7 +98,11 @@ class DamageTypeEffectsService extends BaseService {
    *
    * @param {object} params
    * @param {string} params.entityId - Owner entity ID
+   * @param {string} [params.entityName] - Name of the entity (for events)
+   * @param {string} [params.entityPronoun] - Pronoun (for events)
    * @param {string} params.partId - Target part entity ID
+   * @param {string} [params.partType] - Type of part (for events)
+   * @param {string} [params.orientation] - Orientation (for events)
    * @param {object} params.damageEntry - Complete damage entry object from weapon
    * @param {string} params.damageEntry.name - Damage type name
    * @param {number} params.damageEntry.amount - Damage amount
@@ -111,7 +116,17 @@ class DamageTypeEffectsService extends BaseService {
    * @param {number} params.currentHealth - Part's health AFTER damage was applied
    * @returns {Promise<void>}
    */
-  async applyEffectsForDamage({ entityId, partId, damageEntry, maxHealth, currentHealth }) {
+  async applyEffectsForDamage({
+    entityId,
+    entityName,
+    entityPronoun,
+    partId,
+    partType,
+    orientation,
+    damageEntry,
+    maxHealth,
+    currentHealth,
+  }) {
     // Validate damageEntry is provided
     if (!damageEntry) {
       this.#logger.warn('DamageTypeEffectsService: No damage entry provided, skipping effects.', {
@@ -125,10 +140,19 @@ class DamageTypeEffectsService extends BaseService {
     const partDestroyed = currentHealth <= 0;
 
     // 1. Dismemberment check (before all other effects)
-    if (this.#checkAndApplyDismemberment({ entityId, partId, amount, maxHealth, damageEntry })) {
-      // Dismemberment triggered - skip all other effects for this part
-      return;
-    }
+    await this.#checkAndApplyDismemberment({
+      entityId,
+      entityName,
+      entityPronoun,
+      partId,
+      partType,
+      orientation,
+      amount,
+      maxHealth,
+      damageEntry,
+    });
+    // Note: We continue execution so that secondary effects (especially bleed) are applied.
+    // A dismembered part should definitely bleed!
 
     // 2. Fracture check
     await this.#checkAndApplyFracture({
@@ -160,14 +184,28 @@ class DamageTypeEffectsService extends BaseService {
    *
    * @param {object} params
    * @param {string} params.entityId
+   * @param {string} [params.entityName]
+   * @param {string} [params.entityPronoun]
    * @param {string} params.partId
+   * @param {string} [params.partType]
+   * @param {string} [params.orientation]
    * @param {number} params.amount
    * @param {number} params.maxHealth
    * @param {object} params.damageEntry
-   * @returns {boolean} True if dismemberment was triggered
+   * @returns {Promise<boolean>} True if dismemberment was triggered
    * @private
    */
-  #checkAndApplyDismemberment({ entityId, partId, amount, maxHealth, damageEntry }) {
+  async #checkAndApplyDismemberment({
+    entityId,
+    entityName,
+    entityPronoun,
+    partId,
+    partType,
+    orientation,
+    amount,
+    maxHealth,
+    damageEntry,
+  }) {
     const dismemberConfig = damageEntry.dismember;
     if (!dismemberConfig?.enabled) {
       return false;
@@ -177,9 +215,18 @@ class DamageTypeEffectsService extends BaseService {
     const threshold = thresholdFraction * maxHealth;
 
     if (amount >= threshold) {
+      // Mark part as dismembered
+      await this.#entityManager.addComponent(partId, DISMEMBERED_COMPONENT_ID, {
+        sourceDamageType: damageEntry.name,
+      });
+
       this.#dispatcher.dispatch(DISMEMBERED_EVENT, {
         entityId,
+        entityName,
+        entityPronoun,
         partId,
+        partType,
+        orientation,
         damageTypeId: damageEntry.name,
         timestamp: Date.now(),
       });
