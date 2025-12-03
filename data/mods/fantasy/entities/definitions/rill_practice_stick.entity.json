@@ -12,6 +12,19 @@
         "items:item": {},
         "items:portable": {},
         "weapons:weapon": {},
+        "damage-types:damage_capabilities": {
+            "entries": [
+                {
+                    "name": "blunt",
+                    "amount": 1,
+                    "fracture": {
+                        "enabled": true,
+                        "thresholdFraction": 0.7,
+                        "stunChance": 0.1
+                    }
+                }
+            ]
+        },
         "items:weight": {
             "weight": 0.9
         },

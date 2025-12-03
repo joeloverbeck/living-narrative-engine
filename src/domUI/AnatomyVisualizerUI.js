@@ -173,6 +173,7 @@ class AnatomyVisualizerUI {
         break;
 
       case 'LOADED':
+        this._clearGraphMessage();
         if (anatomyData && selectedEntity) {
           await this._handleAnatomyLoaded(selectedEntity, anatomyData);
         }
@@ -436,6 +437,8 @@ class AnatomyVisualizerUI {
     // Clear any created entities
     await this._clearPreviousEntities();
 
+    // Clear any status messages or previous SVGs
+    this._clearGraphMessage();
     // Clear graph
     if (this._visualizationComposer) {
       this._visualizationComposer.clear();
@@ -496,6 +499,23 @@ class AnatomyVisualizerUI {
     if (graphContainer) {
       const escapedMessage = this._escapeHtml(message);
       graphContainer.innerHTML = `<div class="message">${escapedMessage}</div>`;
+    }
+  }
+
+  /**
+   * Remove any status messages from the graph container
+   *
+   * @private
+   */
+  _clearGraphMessage() {
+    const graphContainer = this._document.getElementById(
+      'anatomy-graph-container'
+    );
+    if (!graphContainer) return;
+
+    const messageEl = graphContainer.querySelector('.message');
+    if (messageEl) {
+      messageEl.remove();
     }
   }
 

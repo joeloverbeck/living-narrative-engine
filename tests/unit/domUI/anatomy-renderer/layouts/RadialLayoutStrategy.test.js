@@ -169,7 +169,7 @@ describe('RadialLayoutStrategy', () => {
       expect(child.angle).toBeDefined();
       expect(child.angle).toBeGreaterThanOrEqual(0);
       expect(child.angle).toBeLessThanOrEqual(2 * Math.PI);
-      expect(child.radius).toBe(220); // baseRadius * depth
+      expect(child.radius).toBeCloseTo(88); // 220 * 1 * 0.4 (baseRadius * depth * rootChildRadiusScale)
     });
 
     it('should distribute multiple children evenly', () => {
@@ -211,10 +211,10 @@ describe('RadialLayoutStrategy', () => {
       expect(child2.angle).toBeDefined();
       expect(child3.angle).toBeDefined();
 
-      // All at same radius
-      expect(child1.radius).toBe(220);
-      expect(child2.radius).toBe(220);
-      expect(child3.radius).toBe(220);
+      // All at same radius (220 * 1 * 0.4 = 88 for depth 1)
+      expect(child1.radius).toBeCloseTo(88);
+      expect(child2.radius).toBeCloseTo(88);
+      expect(child3.radius).toBeCloseTo(88);
 
       // Different angles
       expect(child1.angle).not.toBe(child2.angle);
@@ -246,8 +246,8 @@ describe('RadialLayoutStrategy', () => {
 
       expect(root.x).toBe(600);
       expect(root.y).toBe(400);
-      expect(child.radius).toBe(220); // depth 1
-      expect(grandchild.radius).toBe(440); // depth 2
+      expect(child.radius).toBeCloseTo(88); // 220 * 1 * 0.4 (depth 1 with rootChildRadiusScale)
+      expect(grandchild.radius).toBeCloseTo(440); // 220 * 2 * 1 (depth 2 with grandchild multiplier)
     });
 
     it('should calculate leaf counts correctly', () => {
@@ -364,7 +364,7 @@ describe('RadialLayoutStrategy', () => {
 
       // With 10 nodes and crowdingFactor of 6, radius should be increased
       const child0 = nodes.get('child0');
-      expect(child0.radius).toBeGreaterThan(220); // More than base radius
+      expect(child0.radius).toBeGreaterThan(154); // More than base scaled radius
     });
 
     it('should update viewport to fit all nodes', () => {
@@ -414,9 +414,9 @@ describe('RadialLayoutStrategy', () => {
       // Each node should be at increasing radius
       expect(nodes.get('node0').x).toBe(600);
       expect(nodes.get('node0').y).toBe(400);
-      expect(nodes.get('node1').radius).toBe(220);
-      expect(nodes.get('node2').radius).toBe(440);
-      expect(nodes.get('node3').radius).toBe(660);
+      expect(nodes.get('node1').radius).toBeCloseTo(88); // 220 * 1 * 0.4
+      expect(nodes.get('node2').radius).toBeCloseTo(440); // 220 * 2 * 1
+      expect(nodes.get('node3').radius).toBeCloseTo(660); // 220 * 3 * 1
     });
 
     it('should handle angle wrap-around near 2π', () => {
@@ -461,8 +461,9 @@ describe('RadialLayoutStrategy', () => {
       strategy.calculate(nodes, edges, renderContext);
 
       // With root at origin, child position should match polar conversion
-      const expectedX = 220 * Math.cos(child.angle);
-      const expectedY = 220 * Math.sin(child.angle);
+      // Radius is 88 (220 * 1 * 0.4) for depth 1
+      const expectedX = 88 * Math.cos(child.angle);
+      const expectedY = 88 * Math.sin(child.angle);
 
       expect(child.x).toBeCloseTo(expectedX, 5);
       expect(child.y).toBeCloseTo(expectedY, 5);

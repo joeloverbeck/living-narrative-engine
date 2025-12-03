@@ -11,6 +11,7 @@ import { PatternMatchingValidator } from '../../../../src/anatomy/validation/val
 import { DescriptorCoverageValidator } from '../../../../src/anatomy/validation/validators/DescriptorCoverageValidator.js';
 import { LoadFailureValidator } from '../../../../src/anatomy/validation/validators/LoadFailureValidator.js';
 import { RecipeUsageValidator } from '../../../../src/anatomy/validation/validators/RecipeUsageValidator.js';
+import { PreferredPartSocketValidator } from '../../../../src/anatomy/validation/validators/PreferredPartSocketValidator.js';
 
 /**
  *
@@ -142,6 +143,29 @@ describe('Validator logging contract', () => {
           anatomyBlueprintRepository: {
             getBlueprint: () => {
               throw new Error('socket blueprint missing');
+            },
+          },
+        }),
+      recipe: baseRecipe,
+    },
+    {
+      name: 'preferred-part-sockets',
+      create: (logger) =>
+        new PreferredPartSocketValidator({
+          logger,
+          dataRegistry: {
+            get: () => {
+              throw new Error('preferred part registry failure');
+            },
+          },
+          slotGenerator: {
+            extractSlotKeysFromLimbSet: () => ({}),
+            extractSlotKeysFromAppendage: () => ({}),
+            generateBlueprintSlots: () => ({}),
+          },
+          anatomyBlueprintRepository: {
+            getBlueprint: () => {
+              throw new Error('preferred part blueprint missing');
             },
           },
         }),

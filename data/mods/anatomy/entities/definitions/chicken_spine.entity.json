@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:chicken_spine",
+  "description": "A lightweight chicken spine providing support and nerve routing",
+  "components": {
+    "anatomy:part": {
+      "subType": "chicken_spine"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 12,
+      "maxHealth": 12,
+      "state": "healthy"
+    },
+    "anatomy:vital_organ": {
+      "organType": "spine"
+    },
+    "core:name": {
+      "text": "chicken spine"
+    }
+  }
+}

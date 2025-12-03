@@ -13,7 +13,24 @@
     "items:item": {},
     "items:portable": {},
     "weapons:weapon": {},
-    "damage-types:can_cut": {},
+    "damage-types:damage_capabilities": {
+      "entries": [
+        {
+          "name": "slashing",
+          "amount": 3,
+          "penetration": 0.3,
+          "bleed": {
+            "enabled": true,
+            "severity": "moderate",
+            "baseDurationTurns": 3
+          },
+          "dismember": {
+            "enabled": true,
+            "thresholdFraction": 0.8
+          }
+        }
+      ]
+    },
     "items:weight": {
       "weight": 1.2
     },

@@ -3,13 +3,12 @@
   "id": "damage-types",
   "version": "1.0.0",
   "name": "Damage Types System",
-  "description": "Marker components for entity damage capabilities",
+  "description": "Components for entity damage capabilities",
   "dependencies": [
     { "id": "core", "version": ">=1.0.0" }
   ],
   "content": {
     "components": [
-      "can_cut.component.json",
       "damage_capabilities.component.json"
     ]
   }

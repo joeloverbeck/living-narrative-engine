@@ -22,145 +22,22 @@
       }
     },
     {
-      "type": "QUERY_COMPONENTS",
+      "type": "ESTABLISH_BIDIRECTIONAL_CLOSENESS",
       "parameters": {
-        "entity_ref": "actor",
-        "pairs": [
-          {
-            "component_type": "positioning:hugging",
-            "result_variable": "actorExistingHuggingComponent"
-          },
-          {
-            "component_type": "positioning:being_hugged",
-            "result_variable": "actorExistingBeingHuggedComponent"
-          }
-        ]
-      }
-    },
-    {
-      "type": "QUERY_COMPONENTS",
-      "parameters": {
-        "entity_ref": "target",
-        "pairs": [
-          {
-            "component_type": "positioning:hugging",
-            "result_variable": "targetExistingHuggingComponent"
-          },
-          {
-            "component_type": "positioning:being_hugged",
-            "result_variable": "targetExistingBeingHuggedComponent"
-          }
-        ]
-      }
-    },
-    {
-      "type": "IF",
-      "parameters": {
-        "condition": { "var": "context.actorExistingHuggingComponent" },
-        "then_actions": [
-          {
-            "type": "REMOVE_COMPONENT",
-            "parameters": {
-              "entity_ref": "{context.actorExistingHuggingComponent.embraced_entity_id}",
-              "component_type": "positioning:being_hugged"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "type": "IF",
-      "parameters": {
-        "condition": { "var": "context.actorExistingBeingHuggedComponent" },
-        "then_actions": [
-          {
-            "type": "REMOVE_COMPONENT",
-            "parameters": {
-              "entity_ref": "{context.actorExistingBeingHuggedComponent.hugging_entity_id}",
-              "component_type": "positioning:hugging"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "type": "IF",
-      "parameters": {
-        "condition": { "var": "context.targetExistingHuggingComponent" },
-        "then_actions": [
-          {
-            "type": "REMOVE_COMPONENT",
-            "parameters": {
-              "entity_ref": "{context.targetExistingHuggingComponent.embraced_entity_id}",
-              "component_type": "positioning:being_hugged"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "type": "IF",
-      "parameters": {
-        "condition": { "var": "context.targetExistingBeingHuggedComponent" },
-        "then_actions": [
-          {
-            "type": "REMOVE_COMPONENT",
-            "parameters": {
-              "entity_ref": "{context.targetExistingBeingHuggedComponent.hugging_entity_id}",
-              "component_type": "positioning:hugging"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "type": "REMOVE_COMPONENT",
-      "parameters": {
-        "entity_ref": "actor",
-        "component_type": "positioning:hugging"
-      }
-    },
-    {
-      "type": "REMOVE_COMPONENT",
-      "parameters": {
-        "entity_ref": "actor",
-        "component_type": "positioning:being_hugged"
-      }
-    },
-    {
-      "type": "REMOVE_COMPONENT",
-      "parameters": {
-        "entity_ref": "target",
-        "component_type": "positioning:hugging"
-      }
-    },
-    {
-      "type": "REMOVE_COMPONENT",
-      "parameters": {
-        "entity_ref": "target",
-        "component_type": "positioning:being_hugged"
-      }
-    },
-    {
-      "type": "ADD_COMPONENT",
-      "parameters": {
-        "entity_ref": "actor",
-        "component_type": "positioning:hugging",
-        "value": {
+        "actor_component_type": "positioning:hugging",
+        "target_component_type": "positioning:being_hugged",
+        "actor_data": {
           "embraced_entity_id": "{event.payload.targetId}",
           "initiated": true
-        }
-      }
-    },
-    {
-      "type": "ADD_COMPONENT",
-      "parameters": {
-        "entity_ref": "target",
-        "component_type": "positioning:being_hugged",
-        "value": {
+        },
+        "target_data": {
           "hugging_entity_id": "{event.payload.actorId}",
           "consented": true
-        }
+        },
+        "existing_component_types_to_clean": [
+          "positioning:hugging",
+          "positioning:being_hugged"
+        ]
       }
     },
     {
@@ -189,18 +66,6 @@
       "parameters": {
         "variable_name": "targetId",
         "value": "{event.payload.targetId}"
-      }
-    },
-    {
-      "type": "REGENERATE_DESCRIPTION",
-      "parameters": {
-        "entity_ref": "actor"
-      }
-    },
-    {
-      "type": "REGENERATE_DESCRIPTION",
-      "parameters": {
-        "entity_ref": "target"
       }
     },
     { "macro": "core:logSuccessAndEndTurn" }

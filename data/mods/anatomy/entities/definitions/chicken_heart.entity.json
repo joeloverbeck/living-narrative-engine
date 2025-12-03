@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:chicken_heart",
+  "description": "A chicken heart sized for a lightweight circulatory system",
+  "components": {
+    "anatomy:part": {
+      "subType": "chicken_heart"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 10,
+      "maxHealth": 10,
+      "state": "healthy"
+    },
+    "anatomy:vital_organ": {
+      "organType": "heart"
+    },
+    "core:name": {
+      "text": "chicken heart"
+    }
+  }
+}

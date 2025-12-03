@@ -28,6 +28,18 @@
     "tail": {
       "partType": "chicken_tail",
       "preferId": "anatomy:chicken_tail"
+    },
+    "heart": {
+      "partType": "chicken_heart",
+      "preferId": "anatomy:chicken_heart"
+    },
+    "spine": {
+      "partType": "chicken_spine",
+      "preferId": "anatomy:chicken_spine"
+    },
+    "brain": {
+      "partType": "chicken_brain",
+      "preferId": "anatomy:chicken_brain"
     }
   },
   "patterns": [

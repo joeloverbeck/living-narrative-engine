@@ -25,7 +25,6 @@ describe('defaultLoaderConfig', () => {
       anatomySlotLibraries: stubLoader,
       anatomyFormatting: stubLoader,
       anatomyStructureTemplates: stubLoader,
-      damageTypes: stubLoader,
     };
     const config = createContentLoadersConfig(loaderMap);
     expect(config).toEqual(
@@ -93,7 +92,6 @@ describe('defaultLoaderConfig', () => {
       anatomySlotLibraryLoader: stubLoader,
       anatomyFormattingLoader: stubLoader,
       anatomyStructureTemplateLoader: stubLoader,
-      damageTypeLoader: stubLoader,
     };
     const config = createDefaultContentLoadersConfig(deps);
     expect(config).toEqual(
@@ -129,10 +127,6 @@ describe('defaultLoaderConfig', () => {
         expect.objectContaining({
           loader: stubLoader,
           registryKey: 'anatomyStructureTemplates',
-        }),
-        expect.objectContaining({
-          loader: stubLoader,
-          registryKey: 'damageTypes',
         }),
       ])
     );

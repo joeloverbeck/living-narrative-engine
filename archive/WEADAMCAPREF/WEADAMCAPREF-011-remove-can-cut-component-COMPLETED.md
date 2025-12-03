@@ -1,15 +1,25 @@
 # WEADAMCAPREF-011: Remove can_cut component
 
+**Status**: COMPLETED
+
 ## Summary
 
 Remove the deprecated `damage-types:can_cut` marker component from the codebase. This is the final cleanup ticket, removing backward compatibility for the old marker-based system.
 
 ## Dependencies
 
-- WEADAMCAPREF-006 (swing_at_target no longer requires can_cut)
-- WEADAMCAPREF-007 (scope no longer checks can_cut)
-- WEADAMCAPREF-009 (weapons have damage_capabilities component)
-- WEADAMCAPREF-010 (loader infrastructure removed)
+- WEADAMCAPREF-006 (swing_at_target no longer requires can_cut) - VERIFIED
+- WEADAMCAPREF-007 (scope no longer checks can_cut) - VERIFIED
+- WEADAMCAPREF-009 (weapons have damage_capabilities component) - VERIFIED
+- WEADAMCAPREF-010 (loader infrastructure removed) - VERIFIED
+
+## Assumption Corrections (Discovered During Implementation)
+
+1. **Test file not mentioned in original ticket**: `tests/integration/mods/weapons/weaponCanCutComponentValidation.test.js` validates can_cut presence/absence and must be updated.
+
+2. **Entity file corrections**:
+   - `vespera_main_gauche.entity.json` - Already has NO can_cut (piercing weapon, no change needed)
+   - `rill_practice_stick.entity.json` - Already has NO can_cut (blunt weapon, no change needed)
 
 ## Files to Touch
 
@@ -18,15 +28,14 @@ Remove the deprecated `damage-types:can_cut` marker component from the codebase.
 | `data/mods/damage-types/components/can_cut.component.json` | DELETE | Deprecated component |
 | `data/mods/damage-types/mod-manifest.json` | UPDATE | Remove can_cut reference |
 | `data/mods/fantasy/entities/definitions/vespera_rapier.entity.json` | UPDATE | Remove can_cut component |
-| `data/mods/fantasy/entities/definitions/vespera_main_gauche.entity.json` | UPDATE | Remove can_cut component |
-| `data/mods/fantasy/entities/definitions/rill_practice_stick.entity.json` | UPDATE | Remove can_cut component (if present) |
 | `data/mods/fantasy/entities/definitions/threadscar_melissa_longsword.entity.json` | UPDATE | Remove can_cut component |
+| `tests/integration/mods/weapons/weaponCanCutComponentValidation.test.js` | UPDATE | Remove can_cut tests, strengthen damage_capabilities tests |
 
 ## Out of Scope
 
 - Service changes
 - Rule changes
-- JavaScript code changes
+- JavaScript source code changes (tests are acceptable)
 - Adding new components or functionality
 
 ## Implementation Details
@@ -116,4 +125,31 @@ Remove `"damage-types:can_cut": {}` from each weapon entity file.
 
 - 1 component file deleted (~10 lines)
 - 1 manifest file updated (~1 line)
-- 4 entity files updated (~1 line each)
+- 2 entity files updated (~1 line each)
+- 1 test file refactored (significant changes)
+
+## Outcome
+
+### What Was Actually Changed vs Originally Planned
+
+**Originally Planned:**
+- Delete `can_cut.component.json` ✅
+- Update manifest ✅
+- Update 4 entity files (rapier, main-gauche, practice stick, longsword)
+
+**Actually Changed:**
+- Delete `can_cut.component.json` ✅
+- Update manifest ✅
+- Update 2 entity files (rapier, longsword) - main-gauche and practice stick already had no can_cut
+- **ADDED**: Refactored `tests/integration/mods/weapons/weaponCanCutComponentValidation.test.js` (not in original ticket)
+
+**Key Discovery:**
+The original ticket did not account for the test file `weaponCanCutComponentValidation.test.js` which had 20+ tests explicitly validating `can_cut` presence. This test file was refactored to:
+1. Remove tests that validated `can_cut` presence/absence
+2. Add new tests validating weapon type classification via `damage_capabilities` entries (slashing, piercing, blunt)
+3. Strengthen coverage of the new `has_damage_capability` operator-based classification
+
+**Verification:**
+- `npm run validate` passes (0 violations)
+- All 18 weapon test suites pass (242 tests)
+- No remaining `can_cut` references in code or data files

@@ -13,6 +13,20 @@
     "items:item": {},
     "items:portable": {},
     "weapons:weapon": {},
+    "damage-types:damage_capabilities": {
+      "entries": [
+        {
+          "name": "piercing",
+          "amount": 2,
+          "penetration": 0.8,
+          "bleed": {
+            "enabled": true,
+            "severity": "minor",
+            "baseDurationTurns": 2
+          }
+        }
+      ]
+    },
     "items:weight": {
       "weight": 0.5
     },
