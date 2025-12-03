@@ -48,22 +48,22 @@ describe('ModTestFixture - Auto-Loading Integration', () => {
       expect(fixture.conditionFile.logic).toBeDefined();
     });
 
-    it('should auto-load positioning:kneel_before files', async () => {
+    it('should auto-load deference:kneel_before files', async () => {
       const fixture = await ModTestFixture.forActionAutoLoad(
-        'positioning',
-        'positioning:kneel_before'
+        'deference',
+        'deference:kneel_before'
       );
 
       expect(fixture).toBeInstanceOf(ModActionTestFixture);
-      expect(fixture.modId).toBe('positioning');
-      expect(fixture.actionId).toBe('positioning:kneel_before');
+      expect(fixture.modId).toBe('deference');
+      expect(fixture.actionId).toBe('deference:kneel_before');
       expect(fixture.ruleFile).toBeDefined();
       expect(fixture.conditionFile).toBeDefined();
 
       // Verify the files are loaded correctly
       expect(fixture.ruleFile.rule_id).toBeDefined();
       expect(fixture.conditionFile.id).toBe(
-        'positioning:event-is-action-kneel-before'
+        'deference:event-is-action-kneel-before'
       );
     });
 
@@ -253,8 +253,8 @@ describe('ModTestFixture - Auto-Loading Integration', () => {
       const fixtures = await Promise.all([
         ModTestFixture.forActionAutoLoad('kissing', 'kissing:kiss_cheek'),
         ModTestFixture.forActionAutoLoad(
-          'positioning',
-          'positioning:kneel_before'
+          'deference',
+          'deference:kneel_before'
         ),
         ModTestFixture.forActionAutoLoad('violence', 'violence:sucker_punch'),
       ]);

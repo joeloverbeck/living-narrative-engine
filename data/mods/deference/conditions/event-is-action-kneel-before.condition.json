@@ -1,8 +1,8 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "positioning:event-is-action-kneel-before",
+  "id": "deference:event-is-action-kneel-before",
   "description": "Checks if the event is attempting the 'Kneel Before' action.",
   "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "positioning:kneel_before"]
+    "==": [{ "var": "event.payload.actionId" }, "deference:kneel_before"]
   }
 }

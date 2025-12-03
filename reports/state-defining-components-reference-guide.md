@@ -453,14 +453,14 @@ sex-core:actor_kneeling_before_target_with_penis := actor.components.positioning
 
 ### Associated Actions
 
-#### State Addition: `positioning:kneel_before`
+#### State Addition: `deference:kneel_before`
 
 - **Required Components**: None
 - **Forbidden Components**: `positioning:kneeling_before` (one kneel at a time)
 - **Targets**: `core:actors_in_location`
 - **Side Effects**: Movement lock
 
-#### State Removal: `positioning:stand_up`
+#### State Removal: `deference:stand_up`
 
 - **Required Components**: `positioning:kneeling_before`
 - **Side Effects**: Movement unlock

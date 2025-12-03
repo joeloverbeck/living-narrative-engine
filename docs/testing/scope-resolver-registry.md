@@ -56,7 +56,7 @@ ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
 ```javascript
 // Action that uses this scope
 {
-  "id": "positioning:stand_up",
+  "id": "deference:stand_up",
   "targets": "positioning:furniture_actor_sitting_on",
   // ...
 }

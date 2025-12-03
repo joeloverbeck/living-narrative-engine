@@ -621,8 +621,8 @@ describe('Cross-Mod Action Integration E2E', () => {
     expect(result.aiDecision.actionId).toBe('personal-space:get_close');
     expect(result.validation.success).toBe(true);
 
-    // Verify it's from positioning mod (migrated from intimacy)
+    // Verify it's from personal-space mod (migrated from intimacy/positioning)
     const [modNamespace] = result.aiDecision.actionId.split(':');
-    expect(modNamespace).toBe('positioning');
+    expect(modNamespace).toBe('personal-space');
   });
 });

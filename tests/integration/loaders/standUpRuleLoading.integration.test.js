@@ -12,7 +12,7 @@ import path from 'path';
 
 describe('Stand Up Rule Loading Integration', () => {
   let testBed, schemaValidator, logger;
-  const testModPath = './tests/temp/positioning';
+  const testModPath = './tests/temp/deference';
   const testRulePath = path.join(testModPath, 'rules', 'stand_up.rule.json');
 
   beforeEach(async () => {
@@ -49,11 +49,11 @@ describe('Stand Up Rule Loading Integration', () => {
     // This is the exact content from the actual rule file
     const standUpRuleContent = {
       $schema: 'schema://living-narrative-engine/rule.schema.json',
-      rule_id: 'handle_stand_up',
+      rule_id: 'deference_handle_stand_up',
       comment:
-        "Handles the 'positioning:stand_up' action. Removes kneeling component, dispatches descriptive text and ends the turn.",
+        "Handles the 'deference:stand_up' action. Removes kneeling component, dispatches descriptive text and ends the turn.",
       event_type: 'core:attempt_action',
-      condition: { condition_ref: 'positioning:event-is-action-stand-up' },
+      condition: { condition_ref: 'deference:event-is-action-stand-up' },
       actions: [
         {
           type: 'GET_NAME',
@@ -123,9 +123,9 @@ describe('Stand Up Rule Loading Integration', () => {
 
     // Create a mock mod manifest
     const modManifest = {
-      id: 'positioning',
+      id: 'deference',
       version: '1.0.0',
-      name: 'Positioning Test Mod',
+      name: 'Deference Test Mod',
       dependencies: ['core'],
     };
 

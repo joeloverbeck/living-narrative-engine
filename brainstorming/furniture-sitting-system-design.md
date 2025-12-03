@@ -420,7 +420,7 @@ Once seated, enable contextual actions:
 - `intimate:lean_against` (if multiple occupants)
 - `social:whisper_to_neighbor`
 - `positioning:scoot_over`
-- `positioning:stand_up`
+- `deference:stand_up`
 
 ---
 

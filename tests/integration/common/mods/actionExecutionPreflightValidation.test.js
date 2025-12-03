@@ -10,8 +10,8 @@ describe('Action Execution Validation Integration', () => {
     // Use stand_up action which requires kneeling_before component
     // Note: Actual action requirements verified against data/mods/positioning/actions/
     testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:stand_up',
+      'deference',
+      'deference:stand_up',
       null,
       null
     );

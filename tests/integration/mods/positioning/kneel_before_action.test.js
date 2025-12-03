@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the positioning:kneel_before action and rule.
+ * @file Integration tests for the deference:kneel_before action and rule.
  * @description Tests the rule execution after the kneel_before action is performed.
  * Note: This test does not test action discovery or scope resolution - it assumes
  * the action is valid and dispatches it directly.
@@ -271,13 +271,13 @@ function setupStraddlingScenario() {
   return { ...scenario, chair, straddledTarget };
 }
 
-describe('positioning:kneel_before action integration', () => {
+describe('deference:kneel_before action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:kneel_before'
+      'deference',
+      'deference:kneel_before'
     );
   });
 

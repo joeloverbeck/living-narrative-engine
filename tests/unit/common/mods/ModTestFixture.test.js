@@ -749,7 +749,7 @@ describe('ModTestFixture - Comprehensive Unit Tests', () => {
 
         await fixture.testRuleTriggers(
           'alice',
-          'positioning:kneel_before',
+          'deference:kneel_before',
           'bob'
         );
 

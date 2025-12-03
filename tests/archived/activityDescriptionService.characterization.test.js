@@ -340,7 +340,7 @@ describe('ActivityDescriptionService - Metadata Collection Characterization', ()
   describe('Tier 3: Dedicated Metadata Collection', () => {
     it('should collect dedicated metadata component when present', () => {
       const entity = createEntityWithDedicatedMetadata({
-        sourceComponent: 'positioning:kneel_before',
+        sourceComponent: 'deference:kneel_before',
         verb: 'kneeling before',
         template: '{actor} is kneeling before {target}',
         priority: 70,
@@ -351,7 +351,7 @@ describe('ActivityDescriptionService - Metadata Collection Characterization', ()
 
       expect(activities).toHaveLength(1);
       expect(activities[0].type).toBe('dedicated');
-      expect(activities[0].sourceComponent).toBe('positioning:kneel_before');
+      expect(activities[0].sourceComponent).toBe('deference:kneel_before');
       expect(activities[0].verb).toBe('kneeling before');
       expect(activities[0].priority).toBe(70);
     });

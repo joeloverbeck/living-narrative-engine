@@ -13,10 +13,10 @@ import {
   jest,
 } from '@jest/globals';
 import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
-import kneelBeforeRule from '../../../data/mods/positioning/rules/kneel_before.rule.json';
-import standUpRule from '../../../data/mods/positioning/rules/stand_up.rule.json';
-import eventIsActionKneelBefore from '../../../data/mods/positioning/conditions/event-is-action-kneel-before.condition.json';
-import eventIsActionStandUp from '../../../data/mods/positioning/conditions/event-is-action-stand-up.condition.json';
+import kneelBeforeRule from '../../../data/mods/deference/rules/kneel_before.rule.json';
+import standUpRule from '../../../data/mods/deference/rules/stand_up.rule.json';
+import eventIsActionKneelBefore from '../../../data/mods/deference/conditions/event-is-action-kneel-before.condition.json';
+import eventIsActionStandUp from '../../../data/mods/deference/conditions/event-is-action-stand-up.condition.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
@@ -131,10 +131,10 @@ describe('Movement Lock - Edge Cases', () => {
         { ...standUpRule, actions: expandedStandActions },
       ]),
       getConditionDefinition: jest.fn((id) => {
-        if (id === 'positioning:event-is-action-kneel-before') {
+        if (id === 'deference:event-is-action-kneel-before') {
           return eventIsActionKneelBefore;
         }
-        if (id === 'positioning:event-is-action-stand-up') {
+        if (id === 'deference:event-is-action-stand-up') {
           return eventIsActionStandUp;
         }
         return undefined;
@@ -245,7 +245,7 @@ describe('Movement Lock - Edge Cases', () => {
       // Execute: Dispatch attempt action event (this triggers rule processing)
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
-        actionId: 'positioning:kneel_before',
+        actionId: 'deference:kneel_before',
         actorId: actorId,
         targetId: targetId,
         originalInput: `kneel_before ${targetId}`,
@@ -304,7 +304,7 @@ describe('Movement Lock - Edge Cases', () => {
       // Execute: Kneel (coil?) action
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
-        actionId: 'positioning:kneel_before',
+        actionId: 'deference:kneel_before',
         actorId: actorId,
         targetId: targetId,
         originalInput: `kneel_before ${targetId}`,
@@ -366,7 +366,7 @@ describe('Movement Lock - Edge Cases', () => {
       // Execute: Kneel on one leg
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
-        actionId: 'positioning:kneel_before',
+        actionId: 'deference:kneel_before',
         actorId: actorId,
         targetId: targetId,
         originalInput: `kneel_before ${targetId}`,
@@ -382,7 +382,7 @@ describe('Movement Lock - Edge Cases', () => {
       // Execute: Stand up
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
-        actionId: 'positioning:stand_up',
+        actionId: 'deference:stand_up',
         actorId: actorId,
         targetId: 'none',
         originalInput: 'stand up',
@@ -453,7 +453,7 @@ describe('Movement Lock - Edge Cases', () => {
       // Execute: Kneel
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
-        actionId: 'positioning:kneel_before',
+        actionId: 'deference:kneel_before',
         actorId: actorId,
         targetId: targetId,
         originalInput: `kneel_before ${targetId}`,
@@ -482,7 +482,7 @@ describe('Movement Lock - Edge Cases', () => {
       // Execute: Stand up without kneeling first
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
-        actionId: 'positioning:stand_up',
+        actionId: 'deference:stand_up',
         actorId: actorId,
         targetId: 'none',
         originalInput: 'stand up',
@@ -529,7 +529,7 @@ describe('Movement Lock - Edge Cases', () => {
       for (const actorId of actors) {
         await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
           eventName: 'core:attempt_action',
-          actionId: 'positioning:kneel_before',
+          actionId: 'deference:kneel_before',
           actorId: actorId,
           targetId: targetId,
           originalInput: `kneel_before ${targetId}`,
@@ -557,7 +557,7 @@ describe('Movement Lock - Edge Cases', () => {
       for (const actorId of actors) {
         await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
           eventName: 'core:attempt_action',
-          actionId: 'positioning:stand_up',
+          actionId: 'deference:stand_up',
           actorId: actorId,
           targetId: 'none',
           originalInput: 'stand up',
@@ -602,7 +602,7 @@ describe('Movement Lock - Edge Cases', () => {
       // Execute: Rapid state changes
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
-        actionId: 'positioning:kneel_before',
+        actionId: 'deference:kneel_before',
         actorId: actorId,
         targetId: targetId,
         originalInput: `kneel_before ${targetId}`,
@@ -612,7 +612,7 @@ describe('Movement Lock - Edge Cases', () => {
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
-        actionId: 'positioning:stand_up',
+        actionId: 'deference:stand_up',
         actorId: actorId,
         targetId: 'none',
         originalInput: 'stand up',
@@ -622,7 +622,7 @@ describe('Movement Lock - Edge Cases', () => {
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
-        actionId: 'positioning:kneel_before',
+        actionId: 'deference:kneel_before',
         actorId: actorId,
         targetId: targetId,
         originalInput: `kneel_before ${targetId}`,
@@ -668,7 +668,7 @@ describe('Movement Lock - Edge Cases', () => {
       // Execute: Kneel with non-existent actor
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
-        actionId: 'positioning:kneel_before',
+        actionId: 'deference:kneel_before',
         actorId: 'non-existent-actor',
         targetId: targetId,
         originalInput: `kneel_before ${targetId}`,
@@ -717,7 +717,7 @@ describe('Movement Lock - Edge Cases', () => {
       // Execute: Should handle gracefully
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
-        actionId: 'positioning:kneel_before',
+        actionId: 'deference:kneel_before',
         actorId: actorId,
         targetId: targetId,
         originalInput: `kneel_before ${targetId}`,
@@ -769,7 +769,7 @@ describe('Movement Lock - Edge Cases', () => {
       // Execute: Should handle type coercion or validation
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
-        actionId: 'positioning:kneel_before',
+        actionId: 'deference:kneel_before',
         actorId: actorId,
         targetId: targetId,
         originalInput: `kneel_before ${targetId}`,

@@ -43,7 +43,7 @@ Primitive action steps use the `PrimitiveActionStep` type defined in `refinement
 - **`stepType`**: Must be `"primitive_action"` (constant)
 - **`actionId`**: Reference to existing action in format `"modId:actionId"`
   - Example: `"items:pick_up_item"`
-  - Example: `"positioning:crawl_to"`
+  - Example: `"deference:crawl_to"`
   - Example: `"intimacy:hold_hand"`
 
 ### Optional Fields
@@ -80,7 +80,7 @@ Actions use the multi-target format with **placeholder names**. Each action defi
 |--------|------------------|-------------|
 | `items:pick_up_item` | `"item"` | The item to pick up |
 | `items:drink_from` | `"primary"` | The drinkable item |
-| `positioning:crawl_to` | `"target"` | The destination |
+| `deference:crawl_to` | `"target"` | The destination |
 | `intimacy:hold_hand` | `"target"` | The person whose hand to hold |
 
 **Critical Rule**: You cannot use generic placeholder names. You must use the exact placeholder name defined by each action.
@@ -459,7 +459,7 @@ Demonstrates:
 "targetBindings": {"item": "task.params.item"}
 
 // Action 2 uses "target"
-"actionId": "positioning:crawl_to"
+"actionId": "deference:crawl_to"
 "targetBindings": {"target": "task.params.location"}
 
 // Action 3 uses "primary"

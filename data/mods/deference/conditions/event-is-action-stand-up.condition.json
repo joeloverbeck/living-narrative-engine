@@ -1,8 +1,8 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "positioning:event-is-action-stand-up",
+  "id": "deference:event-is-action-stand-up",
   "description": "Checks if the event is attempting the 'Stand Up' action.",
   "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "positioning:stand_up"]
+    "==": [{ "var": "event.payload.actionId" }, "deference:stand_up"]
   }
 }

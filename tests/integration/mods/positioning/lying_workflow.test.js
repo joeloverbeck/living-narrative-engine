@@ -291,7 +291,7 @@ describe('Complete Lying Workflow', () => {
         .asActor()
         .build();
 
-      const kneelFixture = await ModTestFixture.forAction('positioning', 'kneel_before');
+      const kneelFixture = await ModTestFixture.forAction('deference', 'deference:kneel_before');
       kneelFixture.reset([room, actor, bed, king]);
 
       // Act: Try to kneel (should throw validation error due to lying_down component)

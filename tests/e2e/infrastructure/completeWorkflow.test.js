@@ -236,13 +236,13 @@ describe('Complete Workflow E2E Tests', () => {
       it('should validate action preconditions and postconditions', async () => {
         // Use kneel_before action for positioning tests
         const fixture = await ModTestFixture.forActionAutoLoad(
-          'positioning',
-          'positioning:kneel_before'
+          'deference',
+          'deference:kneel_before'
         );
 
         expect(fixture).toBeDefined();
-        expect(fixture.modId).toBe('positioning');
-        expect(fixture.actionId).toBe('positioning:kneel_before');
+        expect(fixture.modId).toBe('deference');
+        expect(fixture.actionId).toBe('deference:kneel_before');
 
         // Create actor and target for kneeling action
         const scenario = fixture.createStandardActorTarget([

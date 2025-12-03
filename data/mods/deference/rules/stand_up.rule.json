@@ -1,9 +1,9 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "handle_stand_up",
-  "comment": "Handles the 'positioning:stand_up' action. Removes kneeling component, dispatches descriptive text and ends the turn.",
+  "rule_id": "deference_handle_stand_up",
+  "comment": "Handles the 'deference:stand_up' action. Removes kneeling component, dispatches descriptive text and ends the turn.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "positioning:event-is-action-stand-up" },
+  "condition": { "condition_ref": "deference:event-is-action-stand-up" },
   "actions": [
     {
       "type": "GET_NAME",

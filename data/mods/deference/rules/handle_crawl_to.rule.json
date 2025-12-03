@@ -1,10 +1,10 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "positioning_handle_crawl_to",
-  "comment": "Handles the 'positioning:crawl_to' action. Merges actor and target into a closeness circle while preserving the kneeling state.",
+  "rule_id": "deference_handle_crawl_to",
+  "comment": "Handles the 'deference:crawl_to' action. Merges actor and target into a closeness circle while preserving the kneeling state.",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "positioning:event-is-action-crawl-to"
+    "condition_ref": "deference:event-is-action-crawl-to"
   },
   "actions": [
     {

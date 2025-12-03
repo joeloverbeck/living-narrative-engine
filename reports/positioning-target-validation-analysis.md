@@ -26,11 +26,11 @@ During gameplay, an LLM-controlled character successfully executed the `kneel_be
 
 ### Action Definition Structure
 
-**File**: `data/mods/positioning/actions/kneel_before.action.json`
+**File**: `data/mods/deference/actions/kneel_before.action.json`
 
 ```json
 {
-  "id": "positioning:kneel_before",
+  "id": "deference:kneel_before",
   "targets": {
     "primary": {
       "scope": "positioning:actors_in_location_facing"
@@ -438,7 +438,7 @@ describe('Positioning Target Validation Scenarios', () => {
       entityId: 'other_character'
     });
 
-    const result = await testBed.executeAction('positioning:kneel_before', {
+    const result = await testBed.executeAction('deference:kneel_before', {
       actor: scenario.actor.id,
       target: scenario.target.id
     });
@@ -451,7 +451,7 @@ describe('Positioning Target Validation Scenarios', () => {
     const scenario = setupKneelingScenario();
     // Target has no positioning components (standing)
 
-    const result = await testBed.executeAction('positioning:kneel_before', {
+    const result = await testBed.executeAction('deference:kneel_before', {
       actor: scenario.actor.id,
       target: scenario.target.id
     });
@@ -464,13 +464,13 @@ describe('Positioning Target Validation Scenarios', () => {
     const scenario = setupMultiActorKneelingScenario();
 
     // Character A kneels before Character B
-    await testBed.executeAction('positioning:kneel_before', {
+    await testBed.executeAction('deference:kneel_before', {
       actor: scenario.actorA.id,
       target: scenario.actorB.id
     });
 
     // Character C tries to kneel before Character B (should succeed)
-    const result = await testBed.executeAction('positioning:kneel_before', {
+    const result = await testBed.executeAction('deference:kneel_before', {
       actor: scenario.actorC.id,
       target: scenario.actorB.id
     });
@@ -482,13 +482,13 @@ describe('Positioning Target Validation Scenarios', () => {
     const scenario = setupKneelingScenario();
 
     // Actor kneels before target
-    await testBed.executeAction('positioning:kneel_before', {
+    await testBed.executeAction('deference:kneel_before', {
       actor: scenario.actor.id,
       target: scenario.target.id
     });
 
     // Target tries to kneel before actor (should be prevented)
-    const result = await testBed.executeAction('positioning:kneel_before', {
+    const result = await testBed.executeAction('deference:kneel_before', {
       actor: scenario.target.id,
       target: scenario.actor.id
     });
@@ -681,7 +681,7 @@ This enhancement establishes a robust foundation for declarative action validati
 - `data/schemas/action.schema.json` - Schema definition enhancement
 - `src/actions/pipeline/stages/TargetComponentValidationStage.js` - New validation stage
 - `src/actions/pipeline/Pipeline.js` - Pipeline stage registration
-- `data/mods/positioning/actions/kneel_before.action.json` - Updated with target validation
+- `data/mods/deference/actions/kneel_before.action.json` - Updated with target validation
 - Multiple test files as specified in test specifications
 
 **Files Referenced for Analysis**:

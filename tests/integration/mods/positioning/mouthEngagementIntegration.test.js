@@ -17,7 +17,7 @@ import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluatio
 import JsonLogicCustomOperators from '../../../../src/logic/jsonLogicCustomOperators.js';
 
 // Import the actual action definitions
-import kneelBeforeAction from '../../../../data/mods/positioning/actions/kneel_before.action.json';
+import kneelBeforeAction from '../../../../data/mods/deference/actions/kneel_before.action.json';
 import placeYourselfBehindAction from '../../../../data/mods/positioning/actions/place_yourself_behind.action.json';
 import turnYourBackAction from '../../../../data/mods/positioning/actions/turn_your_back.action.json';
 import stepBackAction from '../../../../data/mods/positioning/actions/step_back.action.json';

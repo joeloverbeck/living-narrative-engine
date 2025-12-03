@@ -78,22 +78,22 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
       ]);
     });
 
-    it('should handle positioning actions correctly', () => {
+    it('should handle deference actions correctly', () => {
       const { rulePaths, conditionPaths } = ModTestFixture.getConventionalPaths(
-        'positioning',
-        'positioning:kneel_before'
+        'deference',
+        'deference:kneel_before'
       );
 
       expect(rulePaths).toEqual([
-        'data/mods/positioning/rules/kneel_before.rule.json',
-        'data/mods/positioning/rules/handle_kneel_before.rule.json',
-        'data/mods/positioning/rules/positioning_kneel_before.rule.json',
+        'data/mods/deference/rules/kneel_before.rule.json',
+        'data/mods/deference/rules/handle_kneel_before.rule.json',
+        'data/mods/deference/rules/deference_kneel_before.rule.json',
       ]);
 
       expect(conditionPaths).toEqual([
-        'data/mods/positioning/conditions/event-is-action-kneel-before.condition.json',
-        'data/mods/positioning/conditions/kneel-before.condition.json',
-        'data/mods/positioning/conditions/event-is-action-positioning-kneel-before.condition.json',
+        'data/mods/deference/conditions/event-is-action-kneel-before.condition.json',
+        'data/mods/deference/conditions/kneel-before.condition.json',
+        'data/mods/deference/conditions/event-is-action-deference-kneel-before.condition.json',
       ]);
     });
 
@@ -556,20 +556,20 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
       );
     });
 
-    it('should generate correct paths for positioning actions', () => {
+    it('should generate correct paths for deference actions', () => {
       const { rulePaths, conditionPaths } = ModTestFixture.getConventionalPaths(
-        'positioning',
-        'positioning:kneel_before'
+        'deference',
+        'deference:kneel_before'
       );
 
       expect(rulePaths).toContain(
-        'data/mods/positioning/rules/kneel_before.rule.json'
+        'data/mods/deference/rules/kneel_before.rule.json'
       );
       expect(rulePaths).toContain(
-        'data/mods/positioning/rules/handle_kneel_before.rule.json'
+        'data/mods/deference/rules/handle_kneel_before.rule.json'
       );
       expect(conditionPaths).toContain(
-        'data/mods/positioning/conditions/event-is-action-kneel-before.condition.json'
+        'data/mods/deference/conditions/event-is-action-kneel-before.condition.json'
       );
     });
 

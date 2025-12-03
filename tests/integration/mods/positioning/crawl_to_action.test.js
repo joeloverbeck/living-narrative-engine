@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the positioning:crawl_to action rule execution.
+ * @file Integration tests for the deference:crawl_to action rule execution.
  * @description Tests rule execution, closeness establishment, and event dispatching.
  */
 
@@ -43,15 +43,15 @@ function setupCrawlingScenario(
   return { room, actor, target };
 }
 
-describe('positioning:crawl_to - Rule Execution', () => {
+describe('deference:crawl_to - Rule Execution', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:crawl_to',
-      'data/mods/positioning/rules/handle_crawl_to.rule.json',
-      'data/mods/positioning/conditions/event-is-action-crawl-to.condition.json'
+      'deference',
+      'deference:crawl_to',
+      'data/mods/deference/rules/handle_crawl_to.rule.json',
+      'data/mods/deference/conditions/event-is-action-crawl-to.condition.json'
     );
   });
 
@@ -224,7 +224,7 @@ describe('positioning:crawl_to - Rule Execution', () => {
   });
 
   describe('Rule Specificity', () => {
-    it('should only fire for positioning:crawl_to action', async () => {
+    it('should only fire for deference:crawl_to action', async () => {
       const { room, actor, target } = setupCrawlingScenario();
       testFixture.reset([room, actor, target]);
 
@@ -369,7 +369,7 @@ describe('positioning:crawl_to - Rule Execution', () => {
       const lastSuccess = successEvents[successEvents.length - 1];
       expect(lastSuccess.eventType).toBe('core:action_success');
       expect(lastSuccess.payload).toMatchObject({
-        actionId: 'positioning:crawl_to',
+        actionId: 'deference:crawl_to',
         actorId: 'test:actor1',
         targetId: 'test:target1',
         success: true,

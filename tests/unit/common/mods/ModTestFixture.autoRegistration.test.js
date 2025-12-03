@@ -213,7 +213,7 @@ describe('ModTestFixture - Auto-Registration', () => {
         null,
         {
           autoRegisterScopes: true,
-          supportingActions: ['positioning:stand_up'],
+          supportingActions: ['deference:stand_up'],
         }
       );
 

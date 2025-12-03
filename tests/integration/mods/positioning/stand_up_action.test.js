@@ -1,12 +1,12 @@
 /**
- * @file Integration tests for the positioning:stand_up action and rule.
+ * @file Integration tests for the deference:stand_up action and rule.
  * @description Tests the rule execution after the stand_up action is performed.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 
-describe('positioning:stand_up action integration', () => {
+describe('deference:stand_up action integration', () => {
   let testFixture;
 
   const createStandUpScenario = (options = {}) => {
@@ -31,8 +31,8 @@ describe('positioning:stand_up action integration', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:stand_up'
+      'deference',
+      'deference:stand_up'
     );
   });
 

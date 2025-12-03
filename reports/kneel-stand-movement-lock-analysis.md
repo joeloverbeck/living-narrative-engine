@@ -10,13 +10,13 @@ This report analyzes the current implementation of the `kneel_before` and `stand
 
 ### Kneel_Before Action
 
-**File**: `data/mods/positioning/actions/kneel_before.action.json`
+**File**: `data/mods/deference/actions/kneel_before.action.json`
 
 - **Purpose**: Allows an actor to kneel before another actor
 - **Components Added**: `positioning:kneeling_before` with target entity ID
 - **Movement Lock**: ❌ **NOT IMPLEMENTED**
 
-**Rule**: `data/mods/positioning/rules/kneel_before.rule.json`
+**Rule**: `data/mods/deference/rules/kneel_before.rule.json`
 
 - Adds the `positioning:kneeling_before` component
 - Dispatches perception event
@@ -25,14 +25,14 @@ This report analyzes the current implementation of the `kneel_before` and `stand
 
 ### Stand_Up Action
 
-**File**: `data/mods/positioning/actions/stand_up.action.json`
+**File**: `data/mods/deference/actions/stand_up.action.json`
 
 - **Purpose**: Allows an actor to stand up from kneeling position
 - **Required Components**: `positioning:kneeling_before`
 - **Components Removed**: `positioning:kneeling_before`
 - **Movement Unlock**: ❌ **NOT IMPLEMENTED**
 
-**Rule**: `data/mods/positioning/rules/stand_up.rule.json`
+**Rule**: `data/mods/deference/rules/stand_up.rule.json`
 
 - Removes the `positioning:kneeling_before` component
 - Dispatches perception event

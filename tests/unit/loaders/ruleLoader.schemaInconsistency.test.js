@@ -331,7 +331,7 @@ describe('RuleLoader - Schema Inconsistency Issues', () => {
       // Arrange: Create a simplified version of the actual failing rule
       const standUpRuleSimplified = {
         $schema: 'schema://living-narrative-engine/rule.schema.json',
-        rule_id: 'handle_stand_up',
+        rule_id: 'deference_handle_stand_up',
         event_type: 'core:attempt_action',
         actions: [
           {
@@ -364,12 +364,12 @@ describe('RuleLoader - Schema Inconsistency Issues', () => {
 
       mockDataFetcher.fetch.mockResolvedValue(standUpRuleSimplified);
       mockPathResolver.resolveModContentPath.mockReturnValue(
-        './data/mods/positioning/rules/stand_up.rule.json'
+        './data/mods/deference/rules/stand_up.rule.json'
       );
 
       // Act: This should fail with the same error pattern seen in the logs
       const result = await ruleLoader.loadItemsForMod(
-        'positioning',
+        'deference',
         {
           content: { rules: ['stand_up.rule.json'] },
         },

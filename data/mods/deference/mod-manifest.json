@@ -1,0 +1,46 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "deference",
+  "version": "1.0.0",
+  "name": "Deference & Submission",
+  "description": "Actions that express deference by kneeling, crawling forward, and returning to your feet while maintaining respectful posture links.",
+  "actionPurpose": "Show respect or submission by kneeling before someone, approaching them on hands and knees, or rising back to a neutral stance.",
+  "actionConsiderWhen": "Demonstrating reverence, formal respect, or submissive intent toward another actor in the scene.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "components": [],
+    "actions": [
+      "crawl_to.action.json",
+      "kneel_before.action.json",
+      "stand_up.action.json"
+    ],
+    "conditions": [
+      "event-is-action-crawl-to.condition.json",
+      "event-is-action-kneel-before.condition.json",
+      "event-is-action-stand-up.condition.json"
+    ],
+    "rules": [
+      "handle_crawl_to.rule.json",
+      "kneel_before.rule.json",
+      "stand_up.rule.json"
+    ],
+    "scopes": [],
+    "events": [],
+    "macros": [],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    }
+  }
+}

@@ -9,7 +9,7 @@ import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
 
 // Import action definitions
-import standUpAction from '../../../../data/mods/positioning/actions/stand_up.action.json';
+import standUpAction from '../../../../data/mods/deference/actions/stand_up.action.json';
 import turnYourBackAction from '../../../../data/mods/positioning/actions/turn_your_back.action.json';
 
 /**
@@ -21,8 +21,8 @@ describe('positioning actions forbidden when giving blowjob', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:stand_up'
+      'deference',
+      'deference:stand_up'
     );
   });
 
@@ -118,7 +118,7 @@ describe('positioning actions forbidden when giving blowjob', () => {
       );
       const ids = availableActions.map((action) => action.id);
 
-      expect(ids).toContain('positioning:stand_up');
+      expect(ids).toContain('deference:stand_up');
     });
 
     it('turn_your_back is available for actors in location (when prerequisites met)', () => {
@@ -215,7 +215,7 @@ describe('positioning actions forbidden when giving blowjob', () => {
       );
       const ids = availableActions.map((action) => action.id);
 
-      expect(ids).not.toContain('positioning:stand_up');
+      expect(ids).not.toContain('deference:stand_up');
     });
 
     it('turn_your_back is NOT available when actor is giving blowjob', () => {

@@ -1,9 +1,9 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "handle_kneel_before",
-  "comment": "Handles the 'positioning:kneel_before' action. Adds kneeling component, dispatches descriptive text and ends the turn.",
+  "rule_id": "deference_handle_kneel_before",
+  "comment": "Handles the 'deference:kneel_before' action. Adds kneeling component, dispatches descriptive text and ends the turn.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "positioning:event-is-action-kneel-before" },
+  "condition": { "condition_ref": "deference:event-is-action-kneel-before" },
   "actions": [
     {
       "type": "GET_NAME",

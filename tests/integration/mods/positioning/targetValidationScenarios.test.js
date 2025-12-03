@@ -11,7 +11,7 @@ describe('Positioning Target Validation Scenarios', () => {
   let fixture;
 
   beforeEach(async () => {
-    fixture = await ModTestFixture.forAction('positioning', 'positioning:kneel_before');
+    fixture = await ModTestFixture.forAction('deference', 'deference:kneel_before');
   });
 
   afterEach(() => {

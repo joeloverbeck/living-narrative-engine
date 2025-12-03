@@ -20,7 +20,7 @@ import grabCrotchDrawAttentionAction from '../../../../data/mods/seduction/actio
 import stretchSexilyAction from '../../../../data/mods/seduction/actions/stretch_sexily.action.json';
 import goAction from '../../../../data/mods/movement/actions/go.action.json';
 import getCloseAction from '../../../../data/mods/personal-space/actions/get_close.action.json';
-import kneelBeforeAction from '../../../../data/mods/positioning/actions/kneel_before.action.json';
+import kneelBeforeAction from '../../../../data/mods/deference/actions/kneel_before.action.json';
 import placeYourselfBehindAction from '../../../../data/mods/positioning/actions/place_yourself_behind.action.json';
 import sitDownAction from '../../../../data/mods/positioning/actions/sit_down.action.json';
 import turnYourBackAction from '../../../../data/mods/positioning/actions/turn_your_back.action.json';
@@ -453,7 +453,7 @@ describe('actions forbidden when doing complex performance', () => {
         const availableActions = testFixture.testEnv.getAvailableActions('actor1');
         const ids = availableActions.map((action) => action.id);
 
-        expect(ids).not.toContain('positioning:kneel_before');
+        expect(ids).not.toContain('deference:kneel_before');
       });
 
       it('place_yourself_behind is NOT available when actor is doing complex performance', () => {

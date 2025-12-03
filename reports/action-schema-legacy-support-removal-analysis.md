@@ -39,7 +39,7 @@ Actions using the new object format with `{ "primary": {...} }`:
 - `positioning:get_close` - Single target format
 - `positioning:turn_around_to_face` - Single target format
 - `physical-control:turn_around` - Single target format
-- `positioning:kneel_before` - Single target format
+- `deference:kneel_before` - Single target format
 
 **Other**
 

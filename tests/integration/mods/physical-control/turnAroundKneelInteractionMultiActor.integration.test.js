@@ -25,7 +25,7 @@ import { createMockTargetContextBuilder } from '../../../common/mocks/mockTarget
 import { createMultiTargetResolutionStage } from '../../../common/actions/multiTargetStageTestUtilities.js';
 import { ScopeContextBuilder } from '../../../../src/actions/pipeline/services/implementations/ScopeContextBuilder.js';
 import turnAroundAction from '../../../../data/mods/physical-control/actions/turn_around.action.json';
-import kneelBeforeAction from '../../../../data/mods/positioning/actions/kneel_before.action.json';
+import kneelBeforeAction from '../../../../data/mods/deference/actions/kneel_before.action.json';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import {
   createTargetResolutionServiceWithMocks,
@@ -414,7 +414,7 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
 
     // Find all kneel_before actions
     const kneelActions = availableActions.filter(
-      (a) => a.id === 'positioning:kneel_before'
+      (a) => a.id === 'deference:kneel_before'
     );
 
     // Actor2 should be able to kneel before actor3 but NOT actor1

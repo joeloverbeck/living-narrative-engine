@@ -764,7 +764,7 @@ describe('Mouth Engagement - Kissing and Positioning Conflict', () => {
 
     // Assert: Positioning actions unavailable
     const availableActions = actionSystem.getAvailableActions('actor1');
-    expect(availableActions).not.toContain('positioning:kneel_before');
+    expect(availableActions).not.toContain('deference:kneel_before');
     expect(availableActions).not.toContain('positioning:turn_your_back');
 
     // Act: End kiss
@@ -781,7 +781,7 @@ describe('Mouth Engagement - Kissing and Positioning Conflict', () => {
     expect(updatedEngagement.locked).toBe(false);
 
     const updatedActions = actionSystem.getAvailableActions('actor1');
-    expect(updatedActions).toContain('positioning:kneel_before');
+    expect(updatedActions).toContain('deference:kneel_before');
   });
 });
 ```

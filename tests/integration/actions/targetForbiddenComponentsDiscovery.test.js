@@ -13,7 +13,7 @@ describe('Action Discovery with Target Forbidden Components', () => {
   describe('Expected target validation behavior', () => {
     it('should filter out kneel_before when target is kneeling', () => {
       // EXPECTED BEHAVIOR:
-      // When action discovery runs for positioning:kneel_before:
+      // When action discovery runs for deference:kneel_before:
       // 1. Primary target scope 'positioning:close_actors' returns nearby actors
       // 2. Target validation checks each potential target for forbidden components
       // 3. Actors with 'positioning:kneeling_before' component are filtered out
@@ -22,7 +22,7 @@ describe('Action Discovery with Target Forbidden Components', () => {
       // IMPLEMENTATION LOCATION:
       // - ActionDiscoveryService.discoverActions() should call target validation
       // - Target validation should check forbidden_components from action definition
-      // - positioning:kneel_before.action.json should specify forbidden components
+      // - deference:kneel_before.action.json should specify forbidden components
       //
       // TEST SCENARIO:
       // - Actor A is close to Actor B and Actor C
@@ -160,7 +160,7 @@ describe('Action Discovery with Target Forbidden Components', () => {
     it('should work with action definition forbidden_components field', () => {
       // EXPECTED ACTION DEFINITION FORMAT:
       // {
-      //   "id": "positioning:kneel_before",
+      //   "id": "deference:kneel_before",
       //   "targets": {
       //     "primary": {
       //       "scope": "positioning:close_actors",

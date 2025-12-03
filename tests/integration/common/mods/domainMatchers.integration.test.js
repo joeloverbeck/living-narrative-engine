@@ -10,7 +10,7 @@ describe('Domain Matchers - Integration Tests', () => {
   beforeAll(async () => {
     registerDomainMatchers();
     // Create fixture once for all tests - heavy I/O operation
-    sharedFixture = await ModTestFixture.forAction('positioning', 'positioning:kneel_before');
+    sharedFixture = await ModTestFixture.forAction('deference', 'deference:kneel_before');
   });
 
   beforeEach(() => {
