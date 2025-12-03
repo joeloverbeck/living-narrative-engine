@@ -1,5 +1,20 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import InjuryNarrativeFormatterService from '../../../../src/anatomy/services/injuryNarrativeFormatterService.js';
+import {
+  getFirstPersonDescription,
+  getStateOrder,
+} from '../../../../src/anatomy/registries/healthStateRegistry.js';
+
+jest.mock('../../../../src/anatomy/registries/healthStateRegistry.js', () => {
+  const original = jest.requireActual(
+    '../../../../src/anatomy/registries/healthStateRegistry.js'
+  );
+  return {
+    ...original,
+    getFirstPersonDescription: jest.fn(original.getFirstPersonDescription),
+    getStateOrder: jest.fn(original.getStateOrder),
+  };
+});
 
 describe('InjuryNarrativeFormatterService', () => {
   let service;
@@ -124,6 +139,13 @@ describe('InjuryNarrativeFormatterService', () => {
     });
 
     describe('state-to-adjective mappings', () => {
+      it('should use registry for descriptions', () => {
+        const summary = createSummaryWithInjury('scratched');
+        service.formatFirstPerson(summary);
+        expect(getFirstPersonDescription).toHaveBeenCalledWith('scratched');
+        expect(getStateOrder).toHaveBeenCalled();
+      });
+
       it('should format scratched state correctly', () => {
         const summary = createSummaryWithInjury('scratched');
         const result = service.formatFirstPerson(summary);

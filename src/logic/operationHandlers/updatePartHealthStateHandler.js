@@ -34,6 +34,10 @@
 import BaseOperationHandler from './baseOperationHandler.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import {
+  calculateStateFromPercentage,
+  isDeterioration,
+} from '../../anatomy/registries/healthStateRegistry.js';
 
 const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
 const PART_COMPONENT_ID = 'anatomy:part';
@@ -66,42 +70,6 @@ class UpdatePartHealthStateHandler extends BaseOperationHandler {
     });
     this.#entityManager = entityManager;
     this.#dispatcher = safeEventDispatcher;
-  }
-
-  /**
-   * Calculate health state from percentage
-   *
-   * @param {number} healthPercentage - Current health as percentage of maximum (0-100)
-   * @returns {string} Health state: healthy, scratched, wounded, injured, critical, or destroyed
-   * @private
-   */
-  #calculateState(healthPercentage) {
-    if (healthPercentage >= 81) return 'healthy';
-    if (healthPercentage >= 61) return 'scratched';
-    if (healthPercentage >= 41) return 'wounded';
-    if (healthPercentage >= 21) return 'injured';
-    if (healthPercentage > 0) return 'critical';
-    return 'destroyed';
-  }
-
-  /**
-   * Determine if state change is deterioration (worse health)
-   *
-   * @param {string} previousState - Previous health state
-   * @param {string} newState - New health state
-   * @returns {boolean} True if health worsened
-   * @private
-   */
-  #isDeterioration(previousState, newState) {
-    const stateOrder = [
-      'healthy',
-      'scratched',
-      'wounded',
-      'injured',
-      'critical',
-      'destroyed',
-    ];
-    return stateOrder.indexOf(newState) > stateOrder.indexOf(previousState);
   }
 
   /**
@@ -186,7 +154,7 @@ class UpdatePartHealthStateHandler extends BaseOperationHandler {
       const healthPercentage = (currentHealth / maxHealth) * 100;
 
       // Calculate new health state
-      const newState = this.#calculateState(healthPercentage);
+      const newState = calculateStateFromPercentage(healthPercentage);
 
       // Update turnsInState: increment if same state, reset to 0 if changed
       const newTurnsInState =
@@ -227,7 +195,7 @@ class UpdatePartHealthStateHandler extends BaseOperationHandler {
           newState,
           turnsInPreviousState: turnsInState,
           healthPercentage,
-          isDeterioration: this.#isDeterioration(previousState, newState),
+          isDeterioration: isDeterioration(previousState, newState),
           timestamp: Date.now(),
         });
 

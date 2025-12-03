@@ -16,6 +16,19 @@ import {
 } from '@jest/globals';
 
 import ModifyPartHealthHandler from '../../../../src/logic/operationHandlers/modifyPartHealthHandler.js';
+import { calculateStateFromPercentage } from '../../../../src/anatomy/registries/healthStateRegistry.js';
+
+jest.mock('../../../../src/anatomy/registries/healthStateRegistry.js', () => {
+  const original = jest.requireActual(
+    '../../../../src/anatomy/registries/healthStateRegistry.js'
+  );
+  return {
+    ...original,
+    calculateStateFromPercentage: jest.fn(
+      original.calculateStateFromPercentage
+    ),
+  };
+});
 
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
@@ -127,7 +140,28 @@ describe('ModifyPartHealthHandler', () => {
       em.addComponent.mockResolvedValue(true);
     });
 
-    test('calculates healthy state when health is 76-100%', async () => {
+    test('uses registry to calculate health state', async () => {
+      const healthComponent = {
+        currentHealth: 80,
+        maxHealth: 100,
+        state: 'healthy',
+        turnsInState: 2,
+      };
+
+      em.hasComponent.mockImplementation((entityId, componentId) => {
+        return componentId === PART_HEALTH_COMPONENT_ID;
+      });
+      em.getComponentData.mockReturnValue(healthComponent);
+
+      await handler.execute(
+        { part_entity_ref: 'part1', delta: 10 },
+        executionContext
+      );
+
+      expect(calculateStateFromPercentage).toHaveBeenCalled();
+    });
+
+    test('calculates healthy state when health is 81-100%', async () => {
       const healthComponent = {
         currentHealth: 80,
         maxHealth: 100,

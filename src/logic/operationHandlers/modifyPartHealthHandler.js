@@ -29,28 +29,11 @@
 import BaseOperationHandler from './baseOperationHandler.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import { calculateStateFromPercentage } from '../../anatomy/registries/healthStateRegistry.js';
 
 const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
 const PART_COMPONENT_ID = 'anatomy:part';
 const PART_HEALTH_CHANGED_EVENT = 'anatomy:part_health_changed';
-
-/**
- * Health state thresholds (matching component definition):
- * - healthy: 81-100%
- * - scratched: 61-80%
- * - wounded: 41-60%
- * - injured: 21-40%
- * - critical: 1-20%
- * - destroyed: 0%
- */
-const HEALTH_STATE_THRESHOLDS = {
-  healthy: 81,
-  scratched: 61,
-  wounded: 41,
-  injured: 21,
-  critical: 1,
-  destroyed: 0,
-};
 
 /**
  * @typedef {object} ModifyPartHealthParams
@@ -89,21 +72,6 @@ class ModifyPartHealthHandler extends BaseOperationHandler {
     this.#jsonLogicService = jsonLogicService;
   }
 
-  /**
-   * Calculate health state from percentage
-   *
-   * @param {number} healthPercentage - Current health as percentage of maximum (0-100)
-   * @returns {string} Health state: healthy, scratched, wounded, injured, critical, or destroyed
-   * @private
-   */
-  #calculateHealthState(healthPercentage) {
-    if (healthPercentage >= HEALTH_STATE_THRESHOLDS.healthy) return 'healthy';
-    if (healthPercentage >= HEALTH_STATE_THRESHOLDS.scratched) return 'scratched';
-    if (healthPercentage >= HEALTH_STATE_THRESHOLDS.wounded) return 'wounded';
-    if (healthPercentage >= HEALTH_STATE_THRESHOLDS.injured) return 'injured';
-    if (healthPercentage >= HEALTH_STATE_THRESHOLDS.critical) return 'critical';
-    return 'destroyed';
-  }
 
   /**
    * Resolve entity reference from string or JSON Logic expression
@@ -304,7 +272,7 @@ class ModifyPartHealthHandler extends BaseOperationHandler {
 
       // Calculate new state
       const healthPercentage = (newHealth / maxHealth) * 100;
-      const newState = this.#calculateHealthState(healthPercentage);
+      const newState = calculateStateFromPercentage(healthPercentage);
 
       // Update turnsInState: increment if same state, reset to 0 if changed
       const turnsInState =

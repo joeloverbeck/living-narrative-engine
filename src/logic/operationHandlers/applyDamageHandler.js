@@ -24,6 +24,7 @@ import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { filterEligibleHitTargets } from '../../anatomy/utils/hitProbabilityWeightUtils.js';
+import { calculateStateFromPercentage } from '../../anatomy/registries/healthStateRegistry.js';
 
 const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
 const PART_COMPONENT_ID = 'anatomy:part';
@@ -46,15 +47,6 @@ const PRONOUN_MAP = Object.freeze({
 });
 const PART_HEALTH_CHANGED_EVENT = 'anatomy:part_health_changed';
 const PART_DESTROYED_EVENT = 'anatomy:part_destroyed';
-
-const HEALTH_STATE_THRESHOLDS = {
-  healthy: 81,
-  scratched: 61,
-  wounded: 41,
-  injured: 21,
-  critical: 1,
-  destroyed: 0,
-};
 
 class ApplyDamageHandler extends BaseOperationHandler {
   /** @type {import('../../entities/entityManager.js').default} */ #entityManager;
@@ -104,15 +96,6 @@ class ApplyDamageHandler extends BaseOperationHandler {
     this.#damageTypeEffectsService = damageTypeEffectsService;
     this.#damagePropagationService = damagePropagationService;
     this.#deathCheckService = deathCheckService;
-  }
-
-  #calculateHealthState(healthPercentage) {
-    if (healthPercentage >= HEALTH_STATE_THRESHOLDS.healthy) return 'healthy';
-    if (healthPercentage >= HEALTH_STATE_THRESHOLDS.scratched) return 'scratched';
-    if (healthPercentage >= HEALTH_STATE_THRESHOLDS.wounded) return 'wounded';
-    if (healthPercentage >= HEALTH_STATE_THRESHOLDS.injured) return 'injured';
-    if (healthPercentage >= HEALTH_STATE_THRESHOLDS.critical) return 'critical';
-    return 'destroyed';
   }
 
   /**
@@ -510,7 +493,7 @@ class ApplyDamageHandler extends BaseOperationHandler {
 
       // Calc new state
       const healthPercentage = (newHealth / maxHealth) * 100;
-      const newState = this.#calculateHealthState(healthPercentage);
+      const newState = calculateStateFromPercentage(healthPercentage);
       const turnsInState = newState === previousState ? previousTurnsInState + 1 : 0;
 
       // Update component

@@ -16,6 +16,19 @@ import {
 } from '@jest/globals';
 
 import ApplyDamageHandler from '../../../../src/logic/operationHandlers/applyDamageHandler.js';
+import { calculateStateFromPercentage } from '../../../../src/anatomy/registries/healthStateRegistry.js';
+
+jest.mock('../../../../src/anatomy/registries/healthStateRegistry.js', () => {
+  const original = jest.requireActual(
+    '../../../../src/anatomy/registries/healthStateRegistry.js'
+  );
+  return {
+    ...original,
+    calculateStateFromPercentage: jest.fn(
+      original.calculateStateFromPercentage
+    ),
+  };
+});
 
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
@@ -867,6 +880,31 @@ describe('ApplyDamageHandler', () => {
         em.getComponentData.mockReturnValue({ currentHealth: 10, maxHealth: 100, state: 'healthy' });
         await handler.execute({ ...params, amount: 0 }, executionContext);
         expect(em.addComponent).toHaveBeenCalledWith('p', PART_HEALTH_COMPONENT_ID, expect.objectContaining({ state: 'critical' }));
+    });
+
+    test('uses registry to calculate health state', async () => {
+      const params = {
+        entity_ref: 'entity1',
+        part_ref: 'part1',
+        amount: 20,
+        damage_type: 'blunt',
+      };
+
+      const healthComponent = {
+        currentHealth: 100,
+        maxHealth: 100,
+        state: 'healthy',
+        turnsInState: 0,
+      };
+
+      em.hasComponent.mockImplementation(
+        (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+      );
+      em.getComponentData.mockReturnValue(healthComponent);
+
+      await handler.execute(params, executionContext);
+
+      expect(calculateStateFromPercentage).toHaveBeenCalled();
     });
 
     test('handles resolveRef exceptions and null returns', async () => {
