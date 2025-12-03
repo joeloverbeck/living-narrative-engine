@@ -40,7 +40,7 @@ describe('Multi-target action formatting integration', () => {
   it('should generate separate actions with unique params for each target', async () => {
     // Setup action definition and targets
     const actionDef = {
-      id: 'positioning:get_close',
+      id: 'personal-space:get_close',
       name: 'Get Close',
       template: 'get close to {target}',
       description: 'Move closer to target',

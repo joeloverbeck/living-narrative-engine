@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the items:give_item action and rule.
+ * @file Integration tests for the item-transfer:give_item action and rule.
  * @description Tests the rule execution after the give_item action is performed.
  * Note: This test does not test action discovery or scope resolution - it assumes
  * the action is valid and dispatches it directly.
@@ -7,16 +7,16 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import giveItemRule from '../../../../data/mods/items/rules/handle_give_item.rule.json' assert { type: 'json' };
-import eventIsActionGiveItem from '../../../../data/mods/items/conditions/event-is-action-give-item.condition.json' assert { type: 'json' };
+import giveItemRule from '../../../../data/mods/item-transfer/rules/handle_give_item.rule.json' assert { type: 'json' };
+import eventIsActionGiveItem from '../../../../data/mods/item-transfer/conditions/event-is-action-give-item.condition.json' assert { type: 'json' };
 
-describe('items:give_item action integration', () => {
+describe('item-transfer:give_item action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'items',
-      'items:give_item',
+      'item-transfer',
+      'item-transfer:give_item',
       giveItemRule,
       eventIsActionGiveItem
     );

@@ -292,6 +292,9 @@
     ],
     "events": [
       "anatomy_generated.event.json",
+      "bleeding_started.event.json",
+      "damage_applied.event.json",
+      "dismembered.event.json",
       "entity_died.event.json",
       "entity_dying.event.json",
       "entity_stabilized.event.json",
@@ -302,6 +305,7 @@
       "interaction_zoom.event.json",
       "internal_damage_propagated.event.json",
       "limb_detached.event.json",
+      "part_destroyed.event.json",
       "part_health_changed.event.json",
       "part_state_changed.event.json",
       "visualizer_state_changed.event.json"

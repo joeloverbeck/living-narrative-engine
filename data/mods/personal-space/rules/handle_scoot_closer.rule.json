@@ -1,0 +1,227 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "personal_space_handle_scoot_closer",
+  "comment": "Handles personal-space:scoot_closer action - moves actor one seat to the left",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "personal-space:event-is-action-scoot-closer"
+  },
+  "actions": [
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get actor's current sitting position",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "positioning:sitting_on",
+        "result_variable": "actorSittingData"
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Validate that actor has sitting_on component",
+      "parameters": {
+        "condition": { "!!": { "var": "context.actorSittingData" } },
+        "then_actions": [
+          {
+            "type": "SET_VARIABLE",
+            "comment": "Extract current spot index",
+            "parameters": {
+              "variable_name": "currentIndex",
+              "value": "{context.actorSittingData.spot_index}"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "comment": "Calculate new spot index (current - 1)",
+            "parameters": {
+              "variable_name": "newIndex",
+              "value": { "-": [{ "var": "context.currentIndex" }, 1] }
+            }
+          },
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Get current furniture spots array",
+            "parameters": {
+              "entity_ref": "{event.payload.targetId}",
+              "component_type": "positioning:allows_sitting",
+              "result_variable": "furnitureData"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "comment": "Extract target spot occupant (should be null)",
+            "parameters": {
+              "variable_name": "targetSpotOccupant",
+              "value": {
+                "var": {
+                  "cat": [
+                    "context.furnitureData.spots.",
+                    { "var": "context.newIndex" }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "type": "IF",
+            "comment": "Validate new index is valid and spot is empty",
+            "parameters": {
+              "condition": {
+                "and": [
+                  { ">=": [{ "var": "context.newIndex" }, 0] },
+                  { "===": [{ "var": "context.targetSpotOccupant" }, null] }
+                ]
+              },
+              "then_actions": [
+                {
+                  "type": "ATOMIC_MODIFY_COMPONENT",
+                  "comment": "Free the current spot",
+                  "parameters": {
+                    "entity_ref": "target",
+                    "component_type": "positioning:allows_sitting",
+                    "field": {
+                      "cat": ["spots.", { "var": "context.currentIndex" }]
+                    },
+                    "expected_value": "{event.payload.actorId}",
+                    "new_value": null,
+                    "result_variable": "spotFreed"
+                  }
+                },
+                {
+                  "type": "IF",
+                  "comment": "Proceed only if spot was freed successfully",
+                  "parameters": {
+                    "condition": { "var": "context.spotFreed" },
+                    "then_actions": [
+                      {
+                        "type": "ATOMIC_MODIFY_COMPONENT",
+                        "comment": "Claim the new spot",
+                        "parameters": {
+                          "entity_ref": "target",
+                          "component_type": "positioning:allows_sitting",
+                          "field": {
+                            "cat": ["spots.", { "var": "context.newIndex" }]
+                          },
+                          "expected_value": null,
+                          "new_value": "{event.payload.actorId}",
+                          "result_variable": "spotClaimed"
+                        }
+                      },
+                      {
+                        "type": "IF",
+                        "comment": "Proceed only if new spot was claimed",
+                        "parameters": {
+                          "condition": { "var": "context.spotClaimed" },
+                          "then_actions": [
+                            {
+                              "type": "REMOVE_COMPONENT",
+                              "comment": "Remove old sitting_on component",
+                              "parameters": {
+                                "entity_ref": "actor",
+                                "component_type": "positioning:sitting_on"
+                              }
+                            },
+                            {
+                              "type": "ADD_COMPONENT",
+                              "comment": "Add updated sitting_on component with new index",
+                              "parameters": {
+                                "entity_ref": "actor",
+                                "component_type": "positioning:sitting_on",
+                                "value": {
+                                  "furniture_id": "{event.payload.targetId}",
+                                  "spot_index": "{context.newIndex}"
+                                }
+                              }
+                            },
+                            {
+                              "type": "ESTABLISH_SITTING_CLOSENESS",
+                              "comment": "Establish closeness with target occupant",
+                              "parameters": {
+                                "furniture_id": "{event.payload.targetId}",
+                                "actor_id": "{event.payload.actorId}",
+                                "spot_index": "{context.newIndex}",
+                                "result_variable": "closenessEstablished"
+                              }
+                            },
+                            {
+                              "type": "REGENERATE_DESCRIPTION",
+                              "parameters": { "entity_ref": "actor" }
+                            },
+                            {
+                              "type": "REGENERATE_DESCRIPTION",
+                              "parameters": { "entity_ref": "target" }
+                            },
+                            {
+                              "type": "GET_NAME",
+                              "parameters": {
+                                "entity_ref": "actor",
+                                "result_variable": "actorName"
+                              }
+                            },
+                            {
+                              "type": "GET_NAME",
+                              "parameters": {
+                                "entity_ref": "target",
+                                "result_variable": "targetName"
+                              }
+                            },
+                            {
+                              "type": "GET_NAME",
+                              "parameters": {
+                                "entity_ref": "{event.payload.secondaryId}",
+                                "result_variable": "occupantName"
+                              }
+                            },
+                            {
+                              "type": "QUERY_COMPONENT",
+                              "parameters": {
+                                "entity_ref": "actor",
+                                "component_type": "core:position",
+                                "result_variable": "actorPosition"
+                              }
+                            },
+                            {
+                              "type": "SET_VARIABLE",
+                              "parameters": {
+                                "variable_name": "logMessage",
+                                "value": "{context.actorName} scoots closer to {context.occupantName} on {context.targetName}."
+                              }
+                            },
+                            {
+                              "type": "SET_VARIABLE",
+                              "parameters": {
+                                "variable_name": "perceptionType",
+                                "value": "action_target_general"
+                              }
+                            },
+                            {
+                              "type": "SET_VARIABLE",
+                              "parameters": {
+                                "variable_name": "locationId",
+                                "value": "{context.actorPosition.locationId}"
+                              }
+                            },
+                            {
+                              "type": "SET_VARIABLE",
+                              "parameters": {
+                                "variable_name": "targetId",
+                                "value": "{event.payload.targetId}"
+                              }
+                            },
+                            {
+                              "macro": "core:logSuccessAndEndTurn"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

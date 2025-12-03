@@ -6,8 +6,8 @@ import {
   afterEach,
 } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import handleScootCloserRule from '../../../../data/mods/positioning/rules/handle_scoot_closer.rule.json' assert { type: 'json' };
-import eventIsActionScootCloser from '../../../../data/mods/positioning/conditions/event-is-action-scoot-closer.condition.json' assert { type: 'json' };
+import handleScootCloserRule from '../../../../data/mods/personal-space/rules/handle_scoot_closer.rule.json' assert { type: 'json' };
+import eventIsActionScootCloser from '../../../../data/mods/personal-space/conditions/event-is-action-scoot-closer.condition.json' assert { type: 'json' };
 
 const getComponent = (fixture, entityId, componentId) =>
   fixture.entityManager.getComponentData(entityId, componentId);
@@ -17,8 +17,8 @@ describe('Sitting scenario helpers - integration', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:scoot_closer',
+      'personal-space',
+      'personal-space:scoot_closer',
       handleScootCloserRule,
       eventIsActionScootCloser
     );

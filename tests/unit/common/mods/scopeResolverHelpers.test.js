@@ -458,7 +458,7 @@ describe('ScopeResolverHelpers - Registration Helpers', () => {
     // Verify resolvers were registered
     expect(mockTestEnv._registeredResolvers).toBeDefined();
     expect(mockTestEnv._registeredResolvers.size).toBeGreaterThan(0);
-    expect(mockTestEnv._registeredResolvers.has('positioning:furniture_actor_sitting_on')).toBe(true);
+    expect(mockTestEnv._registeredResolvers.has('personal-space:furniture_actor_sitting_on')).toBe(true);
     expect(mockTestEnv._registeredResolvers.has('positioning:sitting_actors')).toBe(true);
   });
 
@@ -584,8 +584,8 @@ describe('ScopeResolverHelpers - New Positioning Scopes (TEAOUTTHR-006)', () => 
       expect(mockTestEnv._registeredResolvers.has('positioning:entity_actor_is_kneeling_before')).toBe(true);
     });
 
-    it('should register positioning:actors_sitting_with_space_to_right', () => {
-      expect(mockTestEnv._registeredResolvers.has('positioning:actors_sitting_with_space_to_right')).toBe(true);
+    it('should register personal-space:actors_sitting_with_space_to_right', () => {
+      expect(mockTestEnv._registeredResolvers.has('personal-space:actors_sitting_with_space_to_right')).toBe(true);
     });
   });
 

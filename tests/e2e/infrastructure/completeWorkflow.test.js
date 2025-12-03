@@ -427,7 +427,7 @@ describe('Complete Workflow E2E Tests', () => {
         // Test available actions from different categories
         const categoryTests = [
           { category: 'kissing', actionId: 'kissing:kiss_cheek' },
-          { category: 'positioning', actionId: 'positioning:get_close' },
+          { category: 'positioning', actionId: 'personal-space:get_close' },
           // Note: Only testing categories that we know have working actions
         ];
 
@@ -488,7 +488,7 @@ describe('Complete Workflow E2E Tests', () => {
         // Test available actions that we know exist
         const validTests = [
           { modId: 'kissing', actionId: 'kissing:kiss_cheek' },
-          { modId: 'positioning', actionId: 'positioning:get_close' },
+          { modId: 'positioning', actionId: 'personal-space:get_close' },
         ];
 
         for (const test of validTests) {
@@ -578,7 +578,7 @@ describe('Complete Workflow E2E Tests', () => {
         // Test concurrent operations using available actions
         const testActions = [
           { modId: 'kissing', actionId: 'kissing:kiss_cheek' },
-          { modId: 'positioning', actionId: 'positioning:get_close' },
+          { modId: 'positioning', actionId: 'personal-space:get_close' },
         ];
 
         const results = [];
@@ -697,7 +697,7 @@ describe('Complete Workflow E2E Tests', () => {
       it('should handle complex multi-step integration scenarios', async () => {
         // Test multi-step scenario using available actions
         const steps = [
-          { modId: 'positioning', actionId: 'positioning:get_close' },
+          { modId: 'positioning', actionId: 'personal-space:get_close' },
           { modId: 'kissing', actionId: 'kissing:kiss_cheek' },
         ];
 

@@ -1,0 +1,39 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "personal-space:sit_down_at_distance",
+  "name": "Sit Down With Space",
+  "description": "Sit on available furniture while leaving a one-seat buffer from a selected occupant.",
+  "targets": {
+    "primary": {
+      "scope": "positioning:available_furniture",
+      "placeholder": "seat",
+      "description": "Furniture with an open seat"
+    },
+    "secondary": {
+      "scope": "personal-space:actors_sitting_with_space_to_right",
+      "placeholder": "occupant",
+      "contextFrom": "primary",
+      "description": "Occupant to keep a one-seat buffer from"
+    }
+  },
+  "required_components": {
+    "actor": []
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:sitting_on",
+      "positioning:kneeling_before",
+      "positioning:bending_over",
+      "positioning:restraining",
+      "positioning:fallen"
+    ]
+  },
+  "template": "sit down on {seat} at a distance from {occupant}",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#7c2d12",
+    "textColor": "#fef3c7",
+    "hoverBackgroundColor": "#9a3412",
+    "hoverTextColor": "#fffbeb"
+  }
+}

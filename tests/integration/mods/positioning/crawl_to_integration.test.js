@@ -19,7 +19,7 @@ describe('positioning:crawl_to - Integration Tests', () => {
       {
         supportingActions: [
           'positioning:kneel_before',
-          'positioning:get_close',
+          'personal-space:get_close',
         ],
       }
     );
@@ -117,7 +117,7 @@ describe('positioning:crawl_to - Integration Tests', () => {
       // Execute standard get_close action
       await testFixture.executeActionManual(
         'test:alice',
-        'positioning:get_close',
+        'personal-space:get_close',
         'test:bob'
       );
 

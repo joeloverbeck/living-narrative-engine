@@ -1,0 +1,39 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "personal-space:get_close",
+  "name": "Get Close",
+  "description": "Move closer to the target, entering their personal space.",
+  "targets": {
+    "primary": {
+      "scope": "personal-space:actors_in_location_not_wielding",
+      "placeholder": "target",
+      "description": "Actor to get close to"
+    }
+  },
+  "required_components": {},
+  "forbidden_components": {
+    "actor": [
+      "positioning:closeness",
+      "positioning:doing_complex_performance",
+      "positioning:wielding",
+      "positioning:being_restrained",
+      "positioning:restraining",
+      "positioning:fallen"
+    ]
+  },
+  "template": "get close to {target}",
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "positioning:actor-can-move"
+      },
+      "failure_message": "You cannot move without functioning legs."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#7c2d12",
+    "textColor": "#fef3c7",
+    "hoverBackgroundColor": "#9a3412",
+    "hoverTextColor": "#fffbeb"
+  }
+}

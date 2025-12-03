@@ -1198,8 +1198,66 @@ export class ModTestHandlerFactory {
         return rule ?? data;
       }),
     };
+    // Helper function to extract all part IDs from a body component structure
+    const getDescendantPartIds = (rootId) => {
+      const visited = new Set();
+      const stack = rootId ? [rootId] : [];
+      const descendants = new Set();
+
+      while (stack.length > 0) {
+        const currentId = stack.pop();
+        if (!currentId || visited.has(currentId)) {
+          continue;
+        }
+
+        visited.add(currentId);
+
+        // Check if entity has anatomy:part component
+        const partComponent = entityManager.getComponentData(
+          currentId,
+          'anatomy:part'
+        );
+        if (!partComponent) {
+          continue;
+        }
+
+        descendants.add(currentId);
+
+        // Check for children in the part component
+        const children = Array.isArray(partComponent.children)
+          ? partComponent.children
+          : [];
+        for (const childId of children) {
+          if (!visited.has(childId)) {
+            stack.push(childId);
+          }
+        }
+      }
+
+      return descendants;
+    };
+
     const bodyGraphService = {
-      getAllParts: jest.fn((bodyComponent) => bodyComponent?.parts || []),
+      getAllParts: jest.fn((bodyComponentOrRoot) => {
+        if (!bodyComponentOrRoot) {
+          return [];
+        }
+
+        // Extract root ID from various body component formats
+        let rootId = null;
+        if (typeof bodyComponentOrRoot === 'string') {
+          rootId = bodyComponentOrRoot;
+        } else {
+          rootId =
+            bodyComponentOrRoot.root ?? bodyComponentOrRoot.body?.root ?? null;
+        }
+
+        if (!rootId) {
+          return [];
+        }
+
+        return Array.from(getDescendantPartIds(rootId));
+      }),
     };
     const damageTypeEffectsService = {
       applyEffectsForDamage: jest.fn().mockResolvedValue(undefined),

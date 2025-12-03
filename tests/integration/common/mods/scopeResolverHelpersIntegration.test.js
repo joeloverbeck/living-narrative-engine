@@ -8,7 +8,7 @@ describe('ScopeResolverHelpers Integration - Positioning Registration', () => {
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
       'positioning',
-      'positioning:scoot_closer',
+      'personal-space:scoot_closer',
       null,
       null
     );
@@ -30,10 +30,10 @@ describe('ScopeResolverHelpers Integration - Positioning Registration', () => {
 
     // Verify all positioning scopes are registered
     const expectedScopes = [
-      'positioning:furniture_actor_sitting_on',
+      'personal-space:furniture_actor_sitting_on',
       'positioning:actors_sitting_on_same_furniture',
-      'positioning:closest_leftmost_occupant',
-      'positioning:closest_rightmost_occupant',
+      'personal-space:closest_leftmost_occupant',
+      'personal-space:closest_rightmost_occupant',
       'positioning:furniture_allowing_sitting_at_location',
       'positioning:standing_actors_at_location',
       'positioning:sitting_actors',
@@ -131,7 +131,7 @@ describe('ScopeResolverHelpers Integration - Anatomy Registration', () => {
     // Use positioning mod since anatomy mod has no actions
     testFixture = await ModTestFixture.forAction(
       'positioning',
-      'positioning:scoot_closer',
+      'personal-space:scoot_closer',
       null,
       null
     );
@@ -176,7 +176,7 @@ describe('ScopeResolverHelpers Integration - Multiple Category Registration', ()
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
       'positioning',
-      'positioning:scoot_closer',
+      'personal-space:scoot_closer',
       null,
       null
     );
@@ -245,7 +245,7 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
       'positioning:close_actors_or_entity_kneeling_before_actor',
       'positioning:actor_im_straddling',
       'positioning:entity_actor_is_kneeling_before',
-      'positioning:actors_sitting_with_space_to_right',
+      'personal-space:actors_sitting_with_space_to_right',
       'positioning:available_furniture',
       'positioning:available_lying_furniture',
       'positioning:furniture_im_lying_on',
@@ -259,12 +259,14 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
     });
   });
 
-  it('should verify total count of 26 positioning scopes registered', () => {
+  it('should verify total count of positioning scopes registered', () => {
     const positioningScopes = Array.from(testFixture.testEnv._registeredResolvers.keys()).filter(
       (key) => key.startsWith('positioning:')
     );
 
-    expect(positioningScopes.length).toBe(26);
+    // 4 scopes migrated to personal-space: furniture_actor_sitting_on, closest_leftmost_occupant,
+    // closest_rightmost_occupant, actors_sitting_with_space_to_right
+    expect(positioningScopes.length).toBe(22);
   });
 
   it('should call all new scopes without errors (smoke test)', () => {
@@ -280,7 +282,7 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
       'positioning:close_actors_or_entity_kneeling_before_actor',
       'positioning:actor_im_straddling',
       'positioning:entity_actor_is_kneeling_before',
-      'positioning:actors_sitting_with_space_to_right',
+      'personal-space:actors_sitting_with_space_to_right',
       'positioning:available_furniture',
       'positioning:available_lying_furniture',
       'positioning:furniture_im_lying_on',

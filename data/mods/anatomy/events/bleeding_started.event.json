@@ -1,0 +1,29 @@
+{
+  "$schema": "../../../schemas/event.schema.json",
+  "id": "anatomy:bleeding_started",
+  "description": "Dispatched when a bleeding effect is applied to a body part. Fires after the bleeding component is added.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "Entity ID of the character affected by bleeding"
+      },
+      "partId": {
+        "type": "string",
+        "description": "Entity ID of the body part where bleeding started"
+      },
+      "severity": {
+        "type": "string",
+        "enum": ["minor", "moderate", "severe", "critical"],
+        "description": "Severity level of the bleeding effect"
+      },
+      "timestamp": {
+        "type": "integer",
+        "description": "Unix timestamp when the bleeding started"
+      }
+    },
+    "required": ["entityId", "partId", "severity", "timestamp"],
+    "additionalProperties": false
+  }
+}

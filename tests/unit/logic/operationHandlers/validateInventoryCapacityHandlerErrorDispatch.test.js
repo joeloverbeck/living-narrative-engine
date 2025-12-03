@@ -61,7 +61,7 @@ describe('ValidateInventoryCapacityHandler - Error Dispatch Schema Validation', 
           type: 'core:attempt_action',
           payload: {
             actorId: 'actor-123',
-            actionId: 'items:give_item',
+            actionId: 'item-transfer:give_item',
           },
         },
       };
@@ -101,7 +101,7 @@ describe('ValidateInventoryCapacityHandler - Error Dispatch Schema Validation', 
           type: 'core:attempt_action',
           payload: {
             actorId: 'actor-123',
-            actionId: 'items:give_item',
+            actionId: 'item-transfer:give_item',
           },
         },
       };
@@ -135,7 +135,7 @@ describe('ValidateInventoryCapacityHandler - Error Dispatch Schema Validation', 
           type: 'core:attempt_action',
           payload: {
             actorId: 'actor-123',
-            actionId: 'items:give_item',
+            actionId: 'item-transfer:give_item',
           },
         },
       };
@@ -165,7 +165,7 @@ describe('ValidateInventoryCapacityHandler - Error Dispatch Schema Validation', 
           type: 'core:attempt_action',
           payload: {
             actorId: 'actor-123',
-            actionId: 'items:give_item',
+            actionId: 'item-transfer:give_item',
           },
         },
       };

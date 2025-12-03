@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "personal-space:event-is-action-get-close",
+  "description": "Checks if the triggering event is for the 'personal-space:get_close' action.",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "personal-space:get_close"
+    ]
+  }
+}

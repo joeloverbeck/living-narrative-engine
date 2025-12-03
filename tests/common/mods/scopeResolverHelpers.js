@@ -272,9 +272,9 @@ export class ScopeResolverHelpers {
 
     const resolvers = {
       // "furniture the actor is sitting on"
-      'positioning:furniture_actor_sitting_on':
+      'personal-space:furniture_actor_sitting_on':
         this.createComponentLookupResolver(
-          'positioning:furniture_actor_sitting_on',
+          'personal-space:furniture_actor_sitting_on',
           {
             componentType: 'positioning:sitting_on',
             sourceField: 'furniture_id',
@@ -306,8 +306,8 @@ export class ScopeResolverHelpers {
       ),
 
       // "closest leftmost occupant" (for scoot_closer action)
-      'positioning:closest_leftmost_occupant': this.createArrayFilterResolver(
-        'positioning:closest_leftmost_occupant',
+      'personal-space:closest_leftmost_occupant': this.createArrayFilterResolver(
+        'personal-space:closest_leftmost_occupant',
         {
           getArray: (actor, context, em) => {
             const sitting = em.getComponentData(
@@ -341,8 +341,8 @@ export class ScopeResolverHelpers {
       ),
 
       // "closest rightmost occupant" (for scoot_closer_right action)
-      'positioning:closest_rightmost_occupant': this.createArrayFilterResolver(
-        'positioning:closest_rightmost_occupant',
+      'personal-space:closest_rightmost_occupant': this.createArrayFilterResolver(
+        'personal-space:closest_rightmost_occupant',
         {
           getArray: (actor, context, em) => {
             const sitting = em.getComponentData(
@@ -728,9 +728,9 @@ export class ScopeResolverHelpers {
       // "actors sitting with space to right" - Seating availability check
       // Note: This scope uses a custom hasSittingSpaceToRight operation in production
       // For test purposes, we approximate with simplified logic
-      'positioning:actors_sitting_with_space_to_right':
+      'personal-space:actors_sitting_with_space_to_right':
         this.createComponentFilterResolver(
-          'positioning:actors_sitting_with_space_to_right',
+          'personal-space:actors_sitting_with_space_to_right',
           {
             componentType: 'positioning:sitting_on',
             filterFn: (entityId, context, em) => {

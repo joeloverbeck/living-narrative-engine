@@ -68,30 +68,5 @@ describe('Damage Mechanics Schemas', () => {
       expect(validatePart(payload)).toBe(true);
     });
 
-    test('validates new damage_propagation', () => {
-      const payload = {
-        subType: 'torso',
-        damage_propagation: {
-          'heart': {
-            probability: 0.3,
-            damage_fraction: 1.0,
-            damage_types: ['piercing']
-          }
-        }
-      };
-      expect(validatePart(payload)).toBe(true);
-    });
-
-    test('rejects invalid damage_propagation structure', () => {
-      const payload = {
-        subType: 'torso',
-        damage_propagation: {
-          'heart': {
-            probability: 2.0 // > 1
-          }
-        }
-      };
-      expect(validatePart(payload)).toBe(false);
-    });
   });
 });

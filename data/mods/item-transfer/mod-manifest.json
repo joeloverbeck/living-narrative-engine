@@ -1,0 +1,40 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "item-transfer",
+  "version": "1.0.0",
+  "name": "Item Transfer",
+  "description": "Actions for transferring items between characters. Separated from the Items mod to isolate combinatorial explosion of give/receive actions.",
+  "actionPurpose": "Transfer items between characters through giving and receiving.",
+  "actionConsiderWhen": "Wanting to share items with other characters, give gifts, or hand over objects.",
+  "author": "Living Narrative Engine",
+  "gameVersion": "0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "items",
+      "version": "1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "1.0.0"
+    },
+    {
+      "id": "anatomy",
+      "version": "1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "give_item.action.json"
+    ],
+    "conditions": [
+      "event-is-action-give-item.condition.json"
+    ],
+    "rules": [
+      "handle_give_item.rule.json"
+    ]
+  }
+}

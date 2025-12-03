@@ -12,7 +12,7 @@ import { ModEntityBuilder } from '../../common/mods/ModEntityBuilder.js';
 import removeOthersClothingAction from '../../../data/mods/clothing/actions/remove_others_clothing.action.json' assert { type: 'json' };
 import goAction from '../../../data/mods/movement/actions/go.action.json' assert { type: 'json' };
 import followAction from '../../../data/mods/companionship/actions/follow.action.json' assert { type: 'json' };
-import giveItemAction from '../../../data/mods/items/actions/give_item.action.json' assert { type: 'json' };
+import giveItemAction from '../../../data/mods/item-transfer/actions/give_item.action.json' assert { type: 'json' };
 import pickUpItemAction from '../../../data/mods/items/actions/pick_up_item.action.json' assert { type: 'json' };
 import placeYourselfBehindAction from '../../../data/mods/positioning/actions/place_yourself_behind.action.json' assert { type: 'json' };
 import stepBackAction from '../../../data/mods/positioning/actions/step_back.action.json' assert { type: 'json' };
@@ -165,7 +165,7 @@ describe('Bending Over - Forbidden Actions Bug', () => {
       const availableActions =
         testFixture.testEnv.getAvailableActions('test:actor');
       const giveActions = availableActions.filter(
-        (a) => a.id === 'items:give_item'
+        (a) => a.id === 'item-transfer:give_item'
       );
 
       // Currently FAILS - should be 0 but is > 0 (proving the bug)

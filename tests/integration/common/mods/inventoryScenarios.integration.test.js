@@ -61,7 +61,7 @@ describe('Inventory scenario helpers - integration', () => {
   });
 
   it('executes give_item using the inventory transfer helper', async () => {
-    const fixture = await createFixture('items:give_item');
+    const fixture = await createFixture('item-transfer:give_item');
     const scenario = fixture.createInventoryTransfer({
       giverId: 'giver',
       receiverId: 'receiver',

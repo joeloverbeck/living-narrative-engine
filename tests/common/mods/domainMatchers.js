@@ -393,7 +393,7 @@ function toHaveComponentData(received, componentType, expectedData) {
  * @param {string} actionId - Action ID to find
  * @param {object} [properties] - Optional properties to match (e.g., {primaryTargetId: 'entity1'})
  * @returns {{pass: boolean, message: Function}} Jest matcher result
- * @example expect(actions).toContainAction('items:give_item', { primaryTargetId: 'item1' })
+ * @example expect(actions).toContainAction('item-transfer:give_item', { primaryTargetId: 'item1' })
  */
 function toContainAction(received, actionId, properties = {}) {
   const { printReceived, printExpected, matcherHint } = this.utils;

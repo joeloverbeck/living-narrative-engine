@@ -1,0 +1,304 @@
+import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import examineOwnedItemRule from '../../../../data/mods/observation/rules/handle_examine_owned_item.rule.json' assert { type: 'json' };
+import eventIsActionExamineOwnedItem from '../../../../data/mods/observation/conditions/event-is-action-examine-owned-item.condition.json' assert { type: 'json' };
+
+/**
+ * Creates a standardized examine owned item scenario with actor and inventory item.
+ *
+ * @param {string} actorName - Name of the actor
+ * @param {string} locationId - ID of the location
+ * @param {object} item - Item configuration with id and description
+ * @returns {object} Scenario with room, actor, and item entities
+ */
+function setupExamineOwnedItemScenario(
+  actorName = 'Alice',
+  locationId = 'saloon1',
+  item = { id: 'letter-1', description: 'A weathered letter.' }
+) {
+  const room = new ModEntityBuilder(locationId).asRoom('Saloon').build();
+
+  const actor = new ModEntityBuilder('test:actor1')
+    .withName(actorName)
+    .atLocation(locationId)
+    .asActor()
+    .withComponent('items:inventory', {
+      items: [item.id],
+      capacity: { maxWeight: 50, maxItems: 10 },
+    })
+    .build();
+
+  const itemEntity = new ModEntityBuilder(item.id)
+    .withName(item.id)
+    .withComponent('items:item', {})
+    .withComponent('items:portable', {})
+    .withComponent('core:description', { text: item.description })
+    .build();
+
+  return { room, actor, item: itemEntity };
+}
+
+/**
+ * Asserts that the provided events include a successful turn end.
+ *
+ * @param {Array} events - Array of dispatched events
+ * @returns {object} The turn ended event
+ */
+function expectSuccessfulTurnEnd(events) {
+  const turnEndedEvent = events.find(
+    (event) => event.eventType === 'core:turn_ended'
+  );
+  expect(turnEndedEvent).toBeDefined();
+  expect(turnEndedEvent.payload.success).toBe(true);
+  return turnEndedEvent;
+}
+
+describe('observation:examine_owned_item rule execution', () => {
+  let testFixture;
+
+  beforeEach(async () => {
+    testFixture = await ModTestFixture.forAction(
+      'observation',
+      'observation:examine_owned_item',
+      examineOwnedItemRule,
+      eventIsActionExamineOwnedItem
+    );
+  });
+
+  afterEach(() => {
+    testFixture.cleanup();
+  });
+
+  describe('successful examination operations', () => {
+    it('successfully executes examine owned item action on inventory item', async () => {
+      // Arrange: Setup scenario with item in inventory
+      const scenario = setupExamineOwnedItemScenario('Alice', 'saloon1', {
+        id: 'letter-1',
+        description: 'A weathered letter.',
+      });
+      testFixture.reset([scenario.room, scenario.actor, scenario.item]);
+
+      // Act: Examine letter from inventory
+      await testFixture.executeAction('test:actor1', 'letter-1');
+
+      // Assert: Verify perceptible event with full description and possessive language
+      const perceptibleEvents = testFixture.events.filter(
+        (e) => e.eventType === 'core:perceptible_event'
+      );
+
+      expect(perceptibleEvents.length).toBeGreaterThan(0);
+      const examineEvent = perceptibleEvents.find(
+        (e) => e.payload.perceptionType === 'item_examined'
+      );
+      expect(examineEvent).toBeDefined();
+      expect(examineEvent.payload.descriptionText).toBe(
+        'Alice examines their letter-1: A weathered letter.'
+      );
+      expect(examineEvent.payload.locationId).toBe('saloon1');
+      expect(examineEvent.payload.actorId).toBe('test:actor1');
+      expect(examineEvent.payload.targetId).toBe('letter-1');
+
+      // Assert: Verify brief success message with possessive language
+      const successEvent = testFixture.events.find(
+        (e) => e.eventType === 'core:display_successful_action_result'
+      );
+      expect(successEvent).toBeDefined();
+      expect(successEvent.payload.message).toBe('Alice examines their letter-1.');
+
+      // Assert: Verify turn ended successfully
+      expectSuccessfulTurnEnd(testFixture.events);
+
+      // Assert: Verify item state unchanged (still in inventory)
+      const actor = testFixture.entityManager.getEntityInstance('test:actor1');
+      expect(actor.components['items:inventory'].items).toContain('letter-1');
+    });
+
+    it('handles examination with detailed multi-sentence description', async () => {
+      const scenario = setupExamineOwnedItemScenario('Charlie', 'library', {
+        id: 'old-book',
+        description:
+          'An ancient leather-bound tome. The pages are yellowed and brittle. Strange symbols cover the binding.',
+      });
+      testFixture.reset([scenario.room, scenario.actor, scenario.item]);
+
+      await testFixture.executeAction('test:actor1', 'old-book');
+
+      const perceptibleEvents = testFixture.events.filter(
+        (e) => e.eventType === 'core:perceptible_event'
+      );
+
+      const examineEvent = perceptibleEvents.find(
+        (e) => e.payload.perceptionType === 'item_examined'
+      );
+      expect(examineEvent).toBeDefined();
+      expect(examineEvent.payload.descriptionText).toBe(
+        'Charlie examines their old-book: An ancient leather-bound tome. The pages are yellowed and brittle. Strange symbols cover the binding.'
+      );
+
+      expectSuccessfulTurnEnd(testFixture.events);
+    });
+  });
+
+  describe('event structure validation', () => {
+    it('includes all required perceptible event fields', async () => {
+      const scenario = setupExamineOwnedItemScenario('Dave', 'workshop', {
+        id: 'tool-1',
+        description: 'A well-worn hammer.',
+      });
+      testFixture.reset([scenario.room, scenario.actor, scenario.item]);
+
+      await testFixture.executeAction('test:actor1', 'tool-1');
+
+      const perceptibleEvents = testFixture.events.filter(
+        (e) => e.eventType === 'core:perceptible_event'
+      );
+
+      const examineEvent = perceptibleEvents.find(
+        (e) => e.payload.perceptionType === 'item_examined'
+      );
+
+      // Verify all required fields
+      expect(examineEvent.payload.locationId).toBe('workshop');
+      expect(examineEvent.payload.perceptionType).toBe('item_examined');
+      expect(examineEvent.payload.actorId).toBe('test:actor1');
+      expect(examineEvent.payload.targetId).toBe('tool-1');
+      expect(examineEvent.payload.descriptionText).toContain('Dave');
+      expect(examineEvent.payload.descriptionText).toContain('their');
+      expect(examineEvent.payload.descriptionText).toContain('tool-1');
+      expect(examineEvent.payload.descriptionText).toContain('A well-worn hammer.');
+
+      expectSuccessfulTurnEnd(testFixture.events);
+    });
+
+    it('only dispatches expected events (no unexpected side effects)', async () => {
+      const scenario = setupExamineOwnedItemScenario('Eve', 'cellar', {
+        id: 'wine-bottle',
+        description: 'A dusty wine bottle.',
+      });
+      testFixture.reset([scenario.room, scenario.actor, scenario.item]);
+
+      await testFixture.executeAction('test:actor1', 'wine-bottle');
+
+      // Count event types
+      const eventTypes = testFixture.events.map((e) => e.eventType);
+
+      // Should have exactly these event types
+      expect(eventTypes).toContain('core:perceptible_event');
+      expect(eventTypes).toContain('core:display_successful_action_result');
+      expect(eventTypes).toContain('core:turn_ended');
+
+      // Should NOT have any item state change events
+      expect(eventTypes).not.toContain('items:item_picked_up');
+      expect(eventTypes).not.toContain('items:item_dropped');
+      expect(eventTypes).not.toContain('items:item_transferred');
+
+      expectSuccessfulTurnEnd(testFixture.events);
+    });
+  });
+
+  describe('no state changes', () => {
+    it('does not modify inventory for inventory items', async () => {
+      const scenario = setupExamineOwnedItemScenario('Grace', 'kitchen', {
+        id: 'key-1',
+        description: 'A brass key.',
+      });
+      testFixture.reset([scenario.room, scenario.actor, scenario.item]);
+
+      // Get initial inventory state
+      const actorBefore =
+        testFixture.entityManager.getEntityInstance('test:actor1');
+      const inventoryBefore = [
+        ...actorBefore.components['items:inventory'].items,
+      ];
+
+      await testFixture.executeAction('test:actor1', 'key-1');
+
+      // Get inventory after examination
+      const actorAfter =
+        testFixture.entityManager.getEntityInstance('test:actor1');
+
+      // Inventory should be unchanged
+      expect(actorAfter.components['items:inventory'].items).toEqual(
+        inventoryBefore
+      );
+
+      expectSuccessfulTurnEnd(testFixture.events);
+    });
+  });
+
+  describe('multiple items scenarios', () => {
+    it('can examine multiple inventory items sequentially', async () => {
+      const room = new ModEntityBuilder('study').asRoom('Study').build();
+
+      const actor = new ModEntityBuilder('test:actor1')
+        .withName('Henry')
+        .atLocation('study')
+        .asActor()
+        .withComponent('items:inventory', {
+          items: ['map-1', 'compass-1'],
+          capacity: { maxWeight: 50, maxItems: 10 },
+        })
+        .build();
+
+      const map = new ModEntityBuilder('map-1')
+        .withName('map-1')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('core:description', { text: 'A treasure map.' })
+        .build();
+
+      const compass = new ModEntityBuilder('compass-1')
+        .withName('compass-1')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('core:description', { text: 'A brass compass.' })
+        .build();
+
+      testFixture.reset([room, actor, map, compass]);
+
+      // Examine first item
+      const firstActionStart = testFixture.events.length;
+      await testFixture.executeAction('test:actor1', 'map-1');
+
+      const firstActionEvents = testFixture.events.slice(firstActionStart);
+      expectSuccessfulTurnEnd(firstActionEvents);
+
+      const firstExamineEvent = testFixture.events.find(
+        (e) =>
+          e.eventType === 'core:perceptible_event' &&
+          e.payload.targetId === 'map-1'
+      );
+      expect(firstExamineEvent).toBeDefined();
+      expect(firstExamineEvent.payload.descriptionText).toContain(
+        'A treasure map.'
+      );
+      expect(firstExamineEvent.payload.descriptionText).toContain('their');
+
+      // Examine second item
+      const secondActionStart = testFixture.events.length;
+      await testFixture.executeAction('test:actor1', 'compass-1');
+
+      const secondActionEvents = testFixture.events.slice(secondActionStart);
+      expectSuccessfulTurnEnd(secondActionEvents);
+
+      const secondExamineEvent = testFixture.events.find(
+        (e) =>
+          e.eventType === 'core:perceptible_event' &&
+          e.payload.targetId === 'compass-1'
+      );
+      expect(secondExamineEvent).toBeDefined();
+      expect(secondExamineEvent.payload.descriptionText).toContain(
+        'A brass compass.'
+      );
+      expect(secondExamineEvent.payload.descriptionText).toContain('their');
+
+      const examineEvents = testFixture.events.filter(
+        (event) =>
+          event.eventType === 'core:perceptible_event' &&
+          event.payload.perceptionType === 'item_examined'
+      );
+      expect(examineEvents).toHaveLength(2);
+    });
+  });
+});

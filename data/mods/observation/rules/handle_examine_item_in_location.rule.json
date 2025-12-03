@@ -1,0 +1,85 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_examine_item_in_location",
+  "comment": "Handles examine_item_in_location action with detailed item description in perception and brief success message",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "observation:event-is-action-examine-item-in-location"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "comment": "Get actor name",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "comment": "Get item name",
+      "parameters": {
+        "entity_ref": "target",
+        "result_variable": "itemName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get item description",
+      "parameters": {
+        "entity_ref": "target",
+        "component_type": "core:description",
+        "result_variable": "itemDescription"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get actor position for logging",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Log examination with full description for observers",
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.actorName} examines {context.itemName}: {context.itemDescription.text}",
+        "perception_type": "item_examined",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.targetId}",
+        "contextual_data": {
+          "recipientIds": ["{event.payload.actorId}"]
+        }
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Prepare brief success message",
+      "parameters": {
+        "variable_name": "successMessage",
+        "value": "{context.actorName} examines {context.itemName}."
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Display brief success message to UI",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.successMessage}"
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "comment": "End turn after examination",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
+    }
+  ]
+}

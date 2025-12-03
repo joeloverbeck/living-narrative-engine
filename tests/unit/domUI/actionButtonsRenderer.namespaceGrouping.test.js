@@ -87,7 +87,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         .fn()
         .mockReturnValue([
           'core',
-          'positioning',
+          'personal-space',
           'affection',
           'kissing',
           'caressing',
@@ -125,9 +125,9 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       expect(result1).toBe('core');
 
       const result2 = mockActionCategorizationService.extractNamespace(
-        'positioning:get_close'
+        'personal-space:get_close'
       );
-      expect(result2).toBe('positioning');
+      expect(result2).toBe('personal-space');
 
       const result3 = mockActionCategorizationService.extractNamespace(
         'sex-breastplay:fondle_breasts'
@@ -140,7 +140,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       ).toHaveBeenCalledWith('core:wait');
       expect(
         mockActionCategorizationService.extractNamespace
-      ).toHaveBeenCalledWith('positioning:get_close');
+      ).toHaveBeenCalledWith('personal-space:get_close');
       expect(
         mockActionCategorizationService.extractNamespace
       ).toHaveBeenCalledWith('sex-breastplay:fondle_breasts');
@@ -171,7 +171,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'movement:go', 'go north'),
-        createTestComposite(3, 'positioning:get_close', 'get close'),
+        createTestComposite(3, 'personal-space:get_close', 'get close'),
         createTestComposite(4, 'kissing:kiss_cheek', 'kiss cheek'),
         createTestComposite(
           5,
@@ -191,7 +191,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       // Set up expected grouped actions map
       const expectedGroupedActions = new Map([
         ['core', [actions[0], actions[1]]],
-        ['positioning', [actions[2]]],
+        ['personal-space', [actions[2]]],
         ['kissing', [actions[3]]],
         ['sex', [actions[4], actions[5]]],
       ]);
@@ -238,7 +238,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
     it('should not group when below minimum actions threshold', () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
-        createTestComposite(2, 'positioning:get_close', 'get close'),
+        createTestComposite(2, 'personal-space:get_close', 'get close'),
       ];
 
       // Configure service to return false for grouping (below threshold)
@@ -287,7 +287,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'movement:go', 'go north'),
-        createTestComposite(3, 'positioning:get_close', 'get close'),
+        createTestComposite(3, 'personal-space:get_close', 'get close'),
         createTestComposite(4, 'kissing:kiss_cheek', 'kiss cheek'),
         createTestComposite(
           5,
@@ -324,7 +324,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
             : 'unknown';
         })
       );
-      expect(namespaces.size).toBe(6); // core, movement, positioning, kissing, sex, sex-breastplay
+      expect(namespaces.size).toBe(6); // core, movement, personal-space, kissing, sex-breastplay, sex-penile-manual
       expect(actions.length).toBe(6); // All actions present
     });
   });
@@ -333,7 +333,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
     it('should use service for grouping decisions', async () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
-        createTestComposite(2, 'positioning:get_close', 'get close'),
+        createTestComposite(2, 'personal-space:get_close', 'get close'),
       ];
 
       // Configure service behavior
@@ -351,14 +351,14 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
     it('should use service to group actions when grouping is enabled', async () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
-        createTestComposite(2, 'positioning:get_close', 'get close'),
+        createTestComposite(2, 'personal-space:get_close', 'get close'),
       ];
 
       // Configure service for grouping
       mockActionCategorizationService.shouldUseGrouping.mockReturnValue(true);
       const groupedActions = new Map([
         ['core', [actions[0]]],
-        ['positioning', [actions[1]]],
+        ['personal-space', [actions[1]]],
       ]);
       mockActionCategorizationService.groupActionsByNamespace.mockReturnValue(
         groupedActions
@@ -392,7 +392,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'movement:go', 'go north'),
-        createTestComposite(3, 'positioning:get_close', 'get close'),
+        createTestComposite(3, 'personal-space:get_close', 'get close'),
         createTestComposite(4, 'kissing:kiss_cheek', 'kiss cheek'),
         createTestComposite(
           5,
@@ -410,7 +410,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       mockActionCategorizationService.shouldUseGrouping.mockReturnValue(true);
       const groupedActions = new Map([
         ['core', [actions[0], actions[1]]],
-        ['positioning', [actions[2]]],
+        ['personal-space', [actions[2]]],
         ['kissing', [actions[3]]],
         ['sex', [actions[4], actions[5]]],
       ]);
@@ -439,7 +439,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
     it('should create action groups with proper accessibility attributes', async () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
-        createTestComposite(2, 'positioning:get_close', 'get close'),
+        createTestComposite(2, 'personal-space:get_close', 'get close'),
         createTestComposite(
           3,
           'sex-breastplay:fondle_breasts',
@@ -458,7 +458,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       mockActionCategorizationService.shouldUseGrouping.mockReturnValue(true);
       const groupedActions = new Map([
         ['core', [actions[0], actions[3]]],
-        ['positioning', [actions[1]]],
+        ['personal-space', [actions[1]]],
         ['kissing', [actions[4]]],
         ['sex', [actions[2], actions[5]]],
       ]);
@@ -479,7 +479,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
             : 'unknown';
         })
       );
-      expect(namespaces.size).toBe(6); // core, movement, positioning, kissing, sex, sex-breastplay
+      expect(namespaces.size).toBe(6); // core, movement, personal-space, kissing, sex-breastplay, sex-penile-manual
 
       // Verify DOM structure with accessibility attributes was created
       const actionGroups = document.querySelectorAll('.action-group');
@@ -540,7 +540,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
     it('should fall back to ungrouped rendering when grouping is disabled', async () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
-        createTestComposite(2, 'positioning:get_close', 'get close'),
+        createTestComposite(2, 'personal-space:get_close', 'get close'),
         createTestComposite(
           3,
           'sex-breastplay:fondle_breasts',
@@ -575,7 +575,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
     it('should maintain selection behavior with grouped actions', async () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
-        createTestComposite(2, 'positioning:get_close', 'get close'),
+        createTestComposite(2, 'personal-space:get_close', 'get close'),
         createTestComposite(
           3,
           'sex-breastplay:fondle_breasts',
@@ -594,7 +594,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       mockActionCategorizationService.shouldUseGrouping.mockReturnValue(true);
       const groupedActions = new Map([
         ['core', [actions[0], actions[3]]],
-        ['positioning', [actions[1]]],
+        ['personal-space', [actions[1]]],
         ['sex', [actions[2], actions[5]]],
         ['kissing', [actions[4]]],
       ]);

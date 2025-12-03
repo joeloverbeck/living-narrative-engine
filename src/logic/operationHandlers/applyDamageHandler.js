@@ -22,12 +22,27 @@
 import BaseOperationHandler from './baseOperationHandler.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import { resolveEntityId } from '../../utils/entityRefUtils.js';
 
 const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
 const PART_COMPONENT_ID = 'anatomy:part';
 const BODY_COMPONENT_ID = 'anatomy:body';
+const NAME_COMPONENT_ID = 'core:name';
+const GENDER_COMPONENT_ID = 'core:gender';
+const DAMAGE_PROPAGATION_COMPONENT_ID = 'anatomy:damage_propagation';
 
 const DAMAGE_APPLIED_EVENT = 'anatomy:damage_applied';
+
+/**
+ * Maps gender values to pronouns for message formatting.
+ * @type {Readonly<Record<string, string>>}
+ */
+const PRONOUN_MAP = Object.freeze({
+  male: 'he',
+  female: 'she',
+  neutral: 'they',
+  unknown: 'they',
+});
 const PART_HEALTH_CHANGED_EVENT = 'anatomy:part_health_changed';
 const PART_DESTROYED_EVENT = 'anatomy:part_destroyed';
 
@@ -98,6 +113,95 @@ class ApplyDamageHandler extends BaseOperationHandler {
     return 'destroyed';
   }
 
+  /**
+   * Resolves entity name from the core:name component.
+   * @param {string} entityId - Entity ID to resolve name for
+   * @returns {string} Entity name or 'Unknown' if not found
+   * @private
+   */
+  #getEntityName(entityId) {
+    try {
+      const nameData = this.#entityManager.getComponentData(entityId, NAME_COMPONENT_ID);
+      return nameData?.text || 'Unknown';
+    } catch {
+      return 'Unknown';
+    }
+  }
+
+  /**
+   * Resolves entity pronoun from the core:gender component.
+   * @param {string} entityId - Entity ID to resolve pronoun for
+   * @returns {string} Subject pronoun ('he', 'she', 'they')
+   * @private
+   */
+  #getEntityPronoun(entityId) {
+    try {
+      const genderData = this.#entityManager.getComponentData(entityId, GENDER_COMPONENT_ID);
+      const gender = genderData?.value || 'neutral';
+      return PRONOUN_MAP[gender] || PRONOUN_MAP.neutral;
+    } catch {
+      return PRONOUN_MAP.neutral;
+    }
+  }
+
+  /**
+   * Resolves part information from the anatomy:part component.
+   * @param {string} partId - Part entity ID to resolve
+   * @returns {{partType: string, orientation: string|null}} Part type and orientation
+   * @private
+   */
+  #getPartInfo(partId) {
+    try {
+      const partData = this.#entityManager.getComponentData(partId, PART_COMPONENT_ID);
+      return {
+        partType: partData?.subType || 'body part',
+        orientation: partData?.orientation || null,
+      };
+    } catch {
+      return { partType: 'body part', orientation: null };
+    }
+  }
+
+  /**
+   * Resolves an entity reference to an entity ID.
+   * Supports placeholder names (primary, secondary, tertiary), keywords (actor, target),
+   * direct entity ID strings, and JSON Logic expressions.
+   *
+   * @param {string|object} ref - The entity reference to resolve
+   * @param {object} context - The execution context
+   * @param {object} logger - Logger instance
+   * @returns {string|null} - Resolved entity ID or null
+   */
+  #resolveEntityRef(ref, context, logger) {
+    // First try resolveEntityId for placeholder/keyword support
+    const resolvedId = resolveEntityId(ref, context);
+    if (resolvedId) return resolvedId;
+
+    // Fall back to JSON Logic evaluation for object refs
+    if (typeof ref === 'object' && ref !== null) {
+      try {
+        const resolved = this.#jsonLogicService.evaluate(ref, context);
+        if (typeof resolved === 'string' && resolved.trim()) return resolved.trim();
+        if (typeof resolved === 'object' && resolved !== null) {
+          const id = resolved.id || resolved.entityId;
+          if (typeof id === 'string' && id.trim()) return id.trim();
+        }
+      } catch (err) {
+        logger.warn('APPLY_DAMAGE: Failed to evaluate ref', { error: err.message });
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Resolves a generic reference (for parts, etc.) that may be a string or JSON Logic.
+   * Used for part_ref resolution where placeholder names don't apply.
+   *
+   * @param {string|object} ref - The reference to resolve
+   * @param {object} context - The execution context
+   * @param {object} logger - Logger instance
+   * @returns {string|null} - Resolved ID or null
+   */
   #resolveRef(ref, context, logger) {
     if (typeof ref === 'string' && ref.trim()) return ref.trim();
     if (typeof ref === 'object' && ref !== null) {
@@ -142,13 +246,15 @@ class ApplyDamageHandler extends BaseOperationHandler {
 
       for (const partId of allPartIds) {
         const partComponent = this.#entityManager.getComponentData(partId, PART_COMPONENT_ID);
-        if (partComponent && 
-            typeof partComponent.hit_probability_weight === 'number' && 
-            partComponent.hit_probability_weight > 0) {
-          candidateParts.push({
-            id: partId,
-            weight: partComponent.hit_probability_weight
-          });
+        if (partComponent) {
+          // Default hit_probability_weight to 1.0 when undefined (matches schema default)
+          const weight = partComponent.hit_probability_weight ?? 1.0;
+          if (weight > 0) {
+            candidateParts.push({
+              id: partId,
+              weight
+            });
+          }
         }
       }
 
@@ -229,11 +335,12 @@ class ApplyDamageHandler extends BaseOperationHandler {
       amount,
       damage_type,
       damage_multiplier,
+      exclude_damage_types,
       propagatedFrom = null,
     } = params;
 
-    // 1. Resolve Entity
-    const entityId = this.#resolveRef(entity_ref, executionContext, log);
+    // 1. Resolve Entity (supports placeholder names like "secondary", "primary", etc.)
+    const entityId = this.#resolveEntityRef(entity_ref, executionContext, log);
     if (!entityId) {
       safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Invalid entity_ref', { entity_ref }, log);
       return;
@@ -299,6 +406,32 @@ class ApplyDamageHandler extends BaseOperationHandler {
       return;
     }
 
+    // 3b. Check exclusion list
+    if (exclude_damage_types) {
+      let resolvedExcludeTypes = exclude_damage_types;
+
+      // Resolve JSON Logic if needed
+      if (typeof exclude_damage_types === 'object' && !Array.isArray(exclude_damage_types)) {
+        try {
+          resolvedExcludeTypes = this.#jsonLogicService.evaluate(exclude_damage_types, executionContext);
+        } catch (err) {
+          log.warn('APPLY_DAMAGE: Failed to evaluate exclude_damage_types', { error: err.message });
+          resolvedExcludeTypes = [];
+        }
+      }
+
+      // Validate and check
+      if (Array.isArray(resolvedExcludeTypes) && resolvedExcludeTypes.length > 0) {
+        const damageTypeName = resolvedDamageEntry.name;
+        if (resolvedExcludeTypes.includes(damageTypeName)) {
+          log.debug(`APPLY_DAMAGE: Skipping excluded damage type '${damageTypeName}'`, {
+            excluded: resolvedExcludeTypes
+          });
+          return; // Early return - do not apply this damage
+        }
+      }
+    }
+
     // 3a. Resolve optional damage multiplier
     const resolvedMultiplier =
       damage_multiplier !== undefined
@@ -326,9 +459,18 @@ class ApplyDamageHandler extends BaseOperationHandler {
     const damageType = resolvedDamageEntry.name;
 
     // 4. Dispatch damage applied event
+    // Resolve entity and part metadata for message rendering
+    const entityName = this.#getEntityName(entityId);
+    const entityPronoun = this.#getEntityPronoun(entityId);
+    const { partType, orientation } = this.#getPartInfo(partId);
+
     this.#dispatcher.dispatch(DAMAGE_APPLIED_EVENT, {
       entityId,
+      entityName,
+      entityPronoun,
       partId,
+      partType,
+      orientation,
       amount: damageAmount,
       damageType,
       propagatedFrom,
@@ -338,7 +480,13 @@ class ApplyDamageHandler extends BaseOperationHandler {
     const partComponent = this.#entityManager.hasComponent(partId, PART_COMPONENT_ID)
       ? this.#entityManager.getComponentData(partId, PART_COMPONENT_ID)
       : null;
-    const propagationRules = partComponent?.damage_propagation;
+
+    // Read propagation rules - try standalone component first, fallback to part component property
+    // The rules array contains objects with childSocketId, baseProbability, damageFraction, damageTypeModifiers
+    const propagationComponent = this.#entityManager.hasComponent(partId, DAMAGE_PROPAGATION_COMPONENT_ID)
+      ? this.#entityManager.getComponentData(partId, DAMAGE_PROPAGATION_COMPONENT_ID)
+      : null;
+    const propagationRules = propagationComponent?.rules ?? partComponent?.damage_propagation;
 
     // 5. Update Health
     if (!this.#entityManager.hasComponent(partId, PART_HEALTH_COMPONENT_ID)) {

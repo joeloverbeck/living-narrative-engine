@@ -1,6 +1,0 @@
-// Scope returns the actor who is the closest occupant to the left of the acting actor
-// Uses the custom isClosestLeftOccupant operator to filter actors
-// Receives furniture entity from primary target via contextFrom
-positioning:closest_leftmost_occupant := entities(core:actor)[{
-  "isClosestLeftOccupant": ["entity", "target", "actor"]
-}]

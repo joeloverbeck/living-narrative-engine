@@ -438,36 +438,42 @@ describe('InjuryNarrativeFormatterService', () => {
         };
 
         const result = service.formatDamageEvent(damageEventData);
-        expect(result).toContain('Vespera suffers slashing damage to her left arm');
+        // New format: "{entityName}'s {partName} suffers {damageType} damage"
+        expect(result).toContain("Vespera's left arm suffers slashing damage");
       });
 
-      it('should use correct possessive pronoun for male', () => {
+      it('should format damage with possessive entity name for male', () => {
         const damageEventData = createBasicDamageEvent('he');
         const result = service.formatDamageEvent(damageEventData);
-        expect(result).toContain('his');
+        // New format uses possessive entity name instead of pronouns
+        expect(result).toContain("Test Entity's");
+        expect(result).toContain('suffers slashing damage');
       });
 
-      it('should use correct possessive pronoun for female', () => {
+      it('should format damage with possessive entity name for female', () => {
         const damageEventData = createBasicDamageEvent('she');
         const result = service.formatDamageEvent(damageEventData);
-        expect(result).toContain('her');
+        expect(result).toContain("Test Entity's");
+        expect(result).toContain('suffers slashing damage');
       });
 
-      it('should use correct possessive pronoun for neutral', () => {
+      it('should format damage with possessive entity name for neutral', () => {
         const damageEventData = createBasicDamageEvent('they');
         const result = service.formatDamageEvent(damageEventData);
-        expect(result).toContain('their');
+        expect(result).toContain("Test Entity's");
+        expect(result).toContain('suffers slashing damage');
       });
 
-      it('should handle unknown pronoun with default', () => {
+      it('should format damage with possessive entity name for unknown pronoun', () => {
         const damageEventData = createBasicDamageEvent('unknown');
         const result = service.formatDamageEvent(damageEventData);
-        expect(result).toContain('their');
+        expect(result).toContain("Test Entity's");
+        expect(result).toContain('suffers slashing damage');
       });
     });
 
-    describe('state change description', () => {
-      it('should include state change when state changed', () => {
+    describe('damage formatting', () => {
+      it('should format damage without state descriptions (state is tracked separately)', () => {
         const damageEventData = {
           entityName: 'Vespera',
           entityPronoun: 'she',
@@ -481,10 +487,12 @@ describe('InjuryNarrativeFormatterService', () => {
         };
 
         const result = service.formatDamageEvent(damageEventData);
-        expect(result).toContain('is wounded');
+        // New format: "{entityName}'s {partName} suffers {damageType} damage"
+        expect(result).toContain("Vespera's torso suffers piercing damage");
+        // State changes are now tracked via separate events, not in damage narrative
       });
 
-      it('should not duplicate state description when state unchanged', () => {
+      it('should produce consistent output regardless of state change', () => {
         const damageEventData = {
           entityName: 'Vespera',
           entityPronoun: 'she',
@@ -498,12 +506,11 @@ describe('InjuryNarrativeFormatterService', () => {
         };
 
         const result = service.formatDamageEvent(damageEventData);
-        // Should only contain the primary damage description
-        const stateMatches = result.match(/is wounded/g);
-        expect(stateMatches).toBeNull();
+        // Should contain the primary damage description
+        expect(result).toContain("Vespera's torso suffers piercing damage");
       });
 
-      it('should format destroyed state correctly', () => {
+      it('should format damage for destroyed parts consistently', () => {
         const damageEventData = {
           entityName: 'Vespera',
           entityPronoun: 'she',
@@ -517,7 +524,8 @@ describe('InjuryNarrativeFormatterService', () => {
         };
 
         const result = service.formatDamageEvent(damageEventData);
-        expect(result).toContain('has been destroyed');
+        // Still uses consistent format even for destructive damage
+        expect(result).toContain("Vespera's left arm suffers slashing damage");
       });
     });
 
@@ -582,9 +590,10 @@ describe('InjuryNarrativeFormatterService', () => {
         };
 
         const result = service.formatDamageEvent(damageEventData);
-        expect(result).toContain('As a result');
-        expect(result).toContain('heart');
-        expect(result).toContain('is wounded');
+        // New format: "The damage propagates to {entityName}'s {childPartType}, that suffers {damageType} damage"
+        expect(result).toContain('The damage propagates to');
+        expect(result).toContain("Vespera's heart");
+        expect(result).toContain('suffers piercing damage');
       });
 
       it('should handle multiple propagated damages', () => {

@@ -1,0 +1,28 @@
+{
+  "$schema": "../../../schemas/event.schema.json",
+  "id": "anatomy:dismembered",
+  "description": "Dispatched when a body part is dismembered by damage exceeding the dismemberment threshold. Fires before other damage type effects (bleed, burn, poison) are applied.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "Entity ID of the character experiencing dismemberment"
+      },
+      "partId": {
+        "type": "string",
+        "description": "Entity ID of the dismembered body part"
+      },
+      "damageTypeId": {
+        "type": "string",
+        "description": "Type of damage that caused the dismemberment (e.g., 'slashing', 'crushing')"
+      },
+      "timestamp": {
+        "type": "integer",
+        "description": "Unix timestamp when dismemberment occurred"
+      }
+    },
+    "required": ["entityId", "partId", "damageTypeId", "timestamp"],
+    "additionalProperties": false
+  }
+}
