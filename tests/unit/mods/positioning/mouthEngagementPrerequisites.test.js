@@ -4,17 +4,21 @@
  */
 
 import { describe, it, expect } from '@jest/globals';
-import kneelBeforeAction from '../../../../data/mods/positioning/actions/kneel_before.action.json';
+import kneelBeforeAction from '../../../../data/mods/deference/actions/kneel_before.action.json';
 import placeYourselfBehindAction from '../../../../data/mods/positioning/actions/place_yourself_behind.action.json';
 import turnYourBackAction from '../../../../data/mods/positioning/actions/turn_your_back.action.json';
 import stepBackAction from '../../../../data/mods/positioning/actions/step_back.action.json';
 
 describe('Positioning Actions - Mouth Engagement Prerequisites', () => {
   const positioningActions = [
-    { name: 'kneel_before', action: kneelBeforeAction },
-    { name: 'place_yourself_behind', action: placeYourselfBehindAction },
-    { name: 'turn_your_back', action: turnYourBackAction },
-    { name: 'step_back', action: stepBackAction },
+    { name: 'kneel_before', action: kneelBeforeAction, expectedId: 'deference:kneel_before' },
+    {
+      name: 'place_yourself_behind',
+      action: placeYourselfBehindAction,
+      expectedId: 'positioning:place_yourself_behind',
+    },
+    { name: 'turn_your_back', action: turnYourBackAction, expectedId: 'positioning:turn_your_back' },
+    { name: 'step_back', action: stepBackAction, expectedId: 'positioning:step_back' },
   ];
 
   describe('Mouth Availability Prerequisites', () => {
@@ -70,9 +74,9 @@ describe('Positioning Actions - Mouth Engagement Prerequisites', () => {
   });
 
   describe('Action Definition Validation', () => {
-    positioningActions.forEach(({ name, action }) => {
+    positioningActions.forEach(({ name, action, expectedId }) => {
       it(`${name} action should have correct ID`, () => {
-        expect(action.id).toBe(`positioning:${name}`);
+        expect(action.id).toBe(expectedId);
       });
 
       it(`${name} action should have valid schema reference`, () => {

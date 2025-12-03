@@ -15,6 +15,12 @@ const EXPECTED_COLOR_SCHEMES = {
     hoverBackgroundColor: '#37474f',
     hoverTextColor: '#ffffff',
   },
+  deference: {
+    backgroundColor: '#1f2d3d',
+    textColor: '#f7f9ff',
+    hoverBackgroundColor: '#152133',
+    hoverTextColor: '#e8edf7',
+  },
   clothing: {
     backgroundColor: '#6d4c41',
     textColor: '#ffffff',

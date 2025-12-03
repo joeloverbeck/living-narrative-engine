@@ -146,7 +146,7 @@ npm run validate
 ## Reference Files
 
 Study these for operation syntax:
-- `data/mods/positioning/rules/kneel_before.rule.json` - ADD_COMPONENT pattern
+- `data/mods/deference/rules/kneel_before.rule.json` - ADD_COMPONENT pattern
 - `data/mods/positioning/rules/handle_sit_down.rule.json` - QUERY_COMPONENT and IF patterns
 - `data/mods/clothing/rules/handle_remove_clothing.rule.json` - MODIFY_ARRAY_FIELD pattern (if exists)
 

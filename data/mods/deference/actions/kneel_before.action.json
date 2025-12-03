@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "positioning:kneel_before",
+  "id": "deference:kneel_before",
   "name": "Kneel Before",
   "description": "Kneel before another actor as a sign of respect, submission, or reverence. Requires you to be facing the target.",
   "targets": {
@@ -44,9 +44,9 @@
     }
   ],
   "visual": {
-    "backgroundColor": "#bf360c",
-    "textColor": "#ffffff",
-    "hoverBackgroundColor": "#8d2c08",
-    "hoverTextColor": "#ffffff"
+    "backgroundColor": "#1f2d3d",
+    "textColor": "#f7f9ff",
+    "hoverBackgroundColor": "#152133",
+    "hoverTextColor": "#e8edf7"
   }
 }

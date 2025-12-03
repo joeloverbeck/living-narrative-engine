@@ -37,7 +37,7 @@ describe('Expected AI Action Validation Compliance', () => {
       // When AI character requests available actions with multiple NPCs in forbidden states:
       // 1. AI character is close to NPC1 (kneeling) and NPC2 (lying down)
       // 2. Target validation filters out forbidden targets from action discovery
-      // 3. positioning:kneel_before actions for NPC1 and NPC2 are excluded
+      // 3. deference:kneel_before actions for NPC1 and NPC2 are excluded
       // 4. AI only receives actions for valid targets
       //
       // TEST SCENARIO:
@@ -52,8 +52,8 @@ describe('Expected AI Action Validation Compliance', () => {
       // When AI character has access to both valid and invalid targets:
       // 1. AI character is close to Valid Target (standing) and Invalid Target (bending over)
       // 2. Target validation allows valid targets and filters invalid ones
-      // 3. positioning:kneel_before actions for Valid Target are included
-      // 4. positioning:kneel_before actions for Invalid Target are excluded
+      // 3. deference:kneel_before actions for Valid Target are included
+      // 4. deference:kneel_before actions for Invalid Target are excluded
       //
       // TEST SCENARIO:
       // - Valid Target has no forbidden positioning components (can be knelt before)

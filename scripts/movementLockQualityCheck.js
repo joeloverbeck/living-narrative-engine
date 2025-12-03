@@ -195,10 +195,10 @@ const checks = {
     console.log('🎮 Validating positioning mod data...');
 
     const modFiles = [
-      'data/mods/positioning/actions/kneel_before.action.json',
-      'data/mods/positioning/actions/stand_up.action.json',
-      'data/mods/positioning/rules/kneel_before.rule.json',
-      'data/mods/positioning/rules/stand_up.rule.json',
+      'data/mods/deference/actions/kneel_before.action.json',
+      'data/mods/deference/actions/stand_up.action.json',
+      'data/mods/deference/rules/kneel_before.rule.json',
+      'data/mods/deference/rules/stand_up.rule.json',
       'data/schemas/components/movement_lock_component.schema.json',
     ];
 

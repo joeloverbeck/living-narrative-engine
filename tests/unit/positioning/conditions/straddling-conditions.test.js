@@ -80,7 +80,7 @@ describe('Straddling Waist System - Condition Tests', () => {
         event: {
           type: 'core:attempt_action',
           payload: {
-            actionId: 'positioning:kneel_before',
+            actionId: 'deference:kneel_before',
             actorId: 'actor_1',
             targetId: 'actor_2'
           }

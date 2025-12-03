@@ -22,7 +22,7 @@ describe('UNLOCK_MOVEMENT Schema Regression Test', () => {
 
     const standUpRulePath = path.join(
       process.cwd(),
-      'data/mods/positioning/rules/stand_up.rule.json'
+      'data/mods/deference/rules/stand_up.rule.json'
     );
 
     // 1. Verify all required files exist

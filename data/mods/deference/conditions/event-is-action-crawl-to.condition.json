@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "deference:event-is-action-crawl-to",
+  "description": "Checks if the triggering event is for the 'deference:crawl_to' action.",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "deference:crawl_to"
+    ]
+  }
+}

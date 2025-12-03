@@ -23,7 +23,7 @@ import { createMockTargetContextBuilder } from '../../../common/mocks/mockTarget
 import { createMultiTargetResolutionStage } from '../../../common/actions/multiTargetStageTestUtilities.js';
 import { ScopeContextBuilder } from '../../../../src/actions/pipeline/services/implementations/ScopeContextBuilder.js';
 import turnAroundAction from '../../../../data/mods/physical-control/actions/turn_around.action.json';
-import kneelBeforeAction from '../../../../data/mods/positioning/actions/kneel_before.action.json';
+import kneelBeforeAction from '../../../../data/mods/deference/actions/kneel_before.action.json';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import {
   createTargetResolutionServiceWithMocks,
@@ -436,7 +436,7 @@ describe('Turn around and kneel before interaction', () => {
     // The action might exist for other targets, but actor1 should not be a valid target
     const kneelActionsForActor1 = availableActions.filter(
       (a) =>
-        a.id === 'positioning:kneel_before' &&
+        a.id === 'deference:kneel_before' &&
         a.params?.targetId === 'test:actor1'
     );
 
@@ -492,7 +492,7 @@ describe('Turn around and kneel before interaction', () => {
     // 5. Verify kneel_before IS available for actor1
     const kneelActionsForActor1 = availableActions.filter(
       (a) =>
-        a.id === 'positioning:kneel_before' &&
+        a.id === 'deference:kneel_before' &&
         a.params?.targetId === 'test:actor1'
     );
 

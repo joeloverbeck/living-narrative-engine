@@ -87,7 +87,7 @@ describe('Facing-aware action availability E2E', () => {
   it('should respect facing direction for position-dependent actions', async () => {
     // Setup mock actions for initial state
     const mockKneelAction = {
-      actionId: 'positioning:kneel_before',
+      actionId: 'deference:kneel_before',
       targets: {
         primary: ['test:player'],
       },
@@ -111,7 +111,7 @@ describe('Facing-aware action availability E2E', () => {
 
     // Find initial kneel_before action
     let kneelAction = npcActions.find(
-      (a) => a.actionId === 'positioning:kneel_before'
+      (a) => a.actionId === 'deference:kneel_before'
     );
 
     // Initially should be able to kneel before player
@@ -144,7 +144,7 @@ describe('Facing-aware action availability E2E', () => {
     // Update mocked actions to reflect NPC now facing away
     actionServiceFacade.setMockActions('test:npc', [
       {
-        actionId: 'positioning:kneel_before',
+        actionId: 'deference:kneel_before',
         targets: {
           primary: [], // Empty because NPC is facing away from player
         },
@@ -157,7 +157,7 @@ describe('Facing-aware action availability E2E', () => {
 
     // Verify positioning actions respect facing
     kneelAction = npcActions.find(
-      (a) => a.actionId === 'positioning:kneel_before'
+      (a) => a.actionId === 'deference:kneel_before'
     );
 
     // NPC should not be able to kneel before player (facing away)
@@ -187,7 +187,7 @@ describe('Facing-aware action availability E2E', () => {
     // Update mocked actions to reflect NPC now facing player again
     actionServiceFacade.setMockActions('test:npc', [
       {
-        actionId: 'positioning:kneel_before',
+        actionId: 'deference:kneel_before',
         targets: {
           primary: ['test:player'],
         },
@@ -201,7 +201,7 @@ describe('Facing-aware action availability E2E', () => {
 
     // Now kneeling should be available again
     const updatedKneelAction = updatedActions.find(
-      (a) => a.actionId === 'positioning:kneel_before'
+      (a) => a.actionId === 'deference:kneel_before'
     );
 
     if (updatedKneelAction) {
@@ -259,7 +259,7 @@ describe('Facing-aware action availability E2E', () => {
     // Mock actions with NPC facing away from both
     actionServiceFacade.setMockActions('test:npc', [
       {
-        actionId: 'positioning:kneel_before',
+        actionId: 'deference:kneel_before',
         targets: {
           primary: [], // Empty because facing away from both
         },
@@ -270,7 +270,7 @@ describe('Facing-aware action availability E2E', () => {
     // Check NPC's available actions
     const npcActions = await actionServiceFacade.discoverActions('test:npc');
     const kneelAction = npcActions.find(
-      (a) => a.actionId === 'positioning:kneel_before'
+      (a) => a.actionId === 'deference:kneel_before'
     );
 
     if (kneelAction) {
@@ -295,7 +295,7 @@ describe('Facing-aware action availability E2E', () => {
     // Update mock to show NPC can kneel before player but not guard
     actionServiceFacade.setMockActions('test:npc', [
       {
-        actionId: 'positioning:kneel_before',
+        actionId: 'deference:kneel_before',
         targets: {
           primary: ['test:player'], // Can kneel before player, not guard
         },
@@ -307,7 +307,7 @@ describe('Facing-aware action availability E2E', () => {
     const updatedActions =
       await actionServiceFacade.discoverActions('test:npc');
     const updatedKneelAction = updatedActions.find(
-      (a) => a.actionId === 'positioning:kneel_before'
+      (a) => a.actionId === 'deference:kneel_before'
     );
 
     if (updatedKneelAction) {
@@ -325,7 +325,7 @@ describe('Facing-aware action availability E2E', () => {
     // Mock initial actions for both actors
     actionServiceFacade.setMockActions('test:player', [
       {
-        actionId: 'positioning:kneel_before',
+        actionId: 'deference:kneel_before',
         targets: {
           primary: ['test:npc'],
         },
@@ -342,7 +342,7 @@ describe('Facing-aware action availability E2E', () => {
 
     actionServiceFacade.setMockActions('test:npc', [
       {
-        actionId: 'positioning:kneel_before',
+        actionId: 'deference:kneel_before',
         targets: {
           primary: ['test:player'],
         },
@@ -358,10 +358,10 @@ describe('Facing-aware action availability E2E', () => {
 
     // Both should initially have kneel_before available for each other
     const playerKneelInitial = initialPlayerActions.find(
-      (a) => a.actionId === 'positioning:kneel_before'
+      (a) => a.actionId === 'deference:kneel_before'
     );
     const npcKneelInitial = initialNpcActions.find(
-      (a) => a.actionId === 'positioning:kneel_before'
+      (a) => a.actionId === 'deference:kneel_before'
     );
 
     if (playerKneelInitial) {
@@ -392,7 +392,7 @@ describe('Facing-aware action availability E2E', () => {
     // Update mocked actions to reflect player facing away
     actionServiceFacade.setMockActions('test:player', [
       {
-        actionId: 'positioning:kneel_before',
+        actionId: 'deference:kneel_before',
         targets: {
           primary: [], // Empty because player is facing away from NPC
         },
@@ -404,7 +404,7 @@ describe('Facing-aware action availability E2E', () => {
     const playerActionsAfterTurn =
       await actionServiceFacade.discoverActions('test:player');
     const playerKneelAfterTurn = playerActionsAfterTurn.find(
-      (a) => a.actionId === 'positioning:kneel_before'
+      (a) => a.actionId === 'deference:kneel_before'
     );
 
     // Player shouldn't be able to kneel before NPC (facing away)
@@ -416,7 +416,7 @@ describe('Facing-aware action availability E2E', () => {
     const npcActionsAfterTurn =
       await actionServiceFacade.discoverActions('test:npc');
     const npcKneelAfterTurn = npcActionsAfterTurn.find(
-      (a) => a.actionId === 'positioning:kneel_before'
+      (a) => a.actionId === 'deference:kneel_before'
     );
 
     if (npcKneelAfterTurn) {

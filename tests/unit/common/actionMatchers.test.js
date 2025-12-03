@@ -45,7 +45,7 @@ describe('actionMatchers - toHaveAction', () => {
     it('should fail when action not discovered', () => {
       const actions = [
         { id: 'physical-control:turn_around', name: 'Turn Around' },
-        { id: 'positioning:kneel_before', name: 'Kneel Before' },
+        { id: 'deference:kneel_before', name: 'Kneel Before' },
       ];
 
       expect(() => {
@@ -56,7 +56,7 @@ describe('actionMatchers - toHaveAction', () => {
     it('should fail with detailed error message', () => {
       const actions = [
         { id: 'physical-control:turn_around', name: 'Turn Around' },
-        { id: 'positioning:kneel_before', name: 'Kneel Before' },
+        { id: 'deference:kneel_before', name: 'Kneel Before' },
       ];
 
       let errorMessage;
@@ -69,7 +69,7 @@ describe('actionMatchers - toHaveAction', () => {
       expect(errorMessage).toContain('❌');
       expect(errorMessage).toContain('Actions discovered: 2');
       expect(errorMessage).toContain('1. physical-control:turn_around');
-      expect(errorMessage).toContain('2. positioning:kneel_before');
+      expect(errorMessage).toContain('2. deference:kneel_before');
       expect(errorMessage).toContain('ComponentFilteringStage');
       expect(errorMessage).toContain('MultiTargetResolutionStage');
       expect(errorMessage).toContain('To debug:');
@@ -141,7 +141,7 @@ describe('actionMatchers - toDiscoverActionCount', () => {
       const actions = [
         { id: 'affection:place_hands_on_shoulders', name: 'Place Hands' },
         { id: 'physical-control:turn_around', name: 'Turn Around' },
-        { id: 'positioning:kneel_before', name: 'Kneel Before' },
+        { id: 'deference:kneel_before', name: 'Kneel Before' },
       ];
 
       expect(actions).toDiscoverActionCount(3);
@@ -178,7 +178,7 @@ describe('actionMatchers - toDiscoverActionCount', () => {
     it('should provide helpful message for fewer actions', () => {
       const actions = [
         { id: 'physical-control:turn_around', name: 'Turn Around' },
-        { id: 'positioning:kneel_before', name: 'Kneel Before' },
+        { id: 'deference:kneel_before', name: 'Kneel Before' },
       ];
 
       let errorMessage;
@@ -201,7 +201,7 @@ describe('actionMatchers - toDiscoverActionCount', () => {
     it('should fail when more actions discovered', () => {
       const actions = [
         { id: 'physical-control:turn_around', name: 'Turn Around' },
-        { id: 'positioning:kneel_before', name: 'Kneel Before' },
+        { id: 'deference:kneel_before', name: 'Kneel Before' },
         { id: 'affection:place_hands_on_shoulders', name: 'Place Hands' },
       ];
 
@@ -213,7 +213,7 @@ describe('actionMatchers - toDiscoverActionCount', () => {
     it('should provide helpful message for more actions', () => {
       const actions = [
         { id: 'physical-control:turn_around', name: 'Turn Around' },
-        { id: 'positioning:kneel_before', name: 'Kneel Before' },
+        { id: 'deference:kneel_before', name: 'Kneel Before' },
         { id: 'affection:place_hands_on_shoulders', name: 'Place Hands' },
       ];
 
@@ -239,7 +239,7 @@ describe('actionMatchers - toDiscoverActionCount', () => {
     it('should list all discovered actions in error message', () => {
       const actions = [
         { id: 'physical-control:turn_around', name: 'Turn Around' },
-        { id: 'positioning:kneel_before', name: 'Kneel Before' },
+        { id: 'deference:kneel_before', name: 'Kneel Before' },
       ];
 
       let errorMessage;
@@ -251,7 +251,7 @@ describe('actionMatchers - toDiscoverActionCount', () => {
 
       expect(errorMessage).toContain('Actions discovered:');
       expect(errorMessage).toContain('1. physical-control:turn_around');
-      expect(errorMessage).toContain('2. positioning:kneel_before');
+      expect(errorMessage).toContain('2. deference:kneel_before');
     });
 
     it('should show (none) when no actions discovered', () => {
@@ -280,7 +280,7 @@ describe('actionMatchers - toDiscoverActionCount', () => {
     it('should fail when count matches with .not', () => {
       const actions = [
         { id: 'physical-control:turn_around', name: 'Turn Around' },
-        { id: 'positioning:kneel_before', name: 'Kneel Before' },
+        { id: 'deference:kneel_before', name: 'Kneel Before' },
       ];
 
       expect(() => {

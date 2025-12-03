@@ -24,7 +24,7 @@ import {
 import { createMockTargetContextBuilder } from '../../../common/mocks/mockTargetContextBuilder.js';
 import { createMultiTargetResolutionStage } from '../../../common/actions/multiTargetStageTestUtilities.js';
 import { ScopeContextBuilder } from '../../../../src/actions/pipeline/services/implementations/ScopeContextBuilder.js';
-import kneelBeforeAction from '../../../../data/mods/positioning/actions/kneel_before.action.json';
+import kneelBeforeAction from '../../../../data/mods/deference/actions/kneel_before.action.json';
 import fondlePenisAction from '../../../../data/mods/sex-penile-manual/actions/fondle_penis.action.json';
 import fondleAssAction from '../../../../data/mods/caressing/actions/fondle_ass.action.json';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
@@ -190,7 +190,7 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
         // Handle kneel_before action
         if (
           event.type === ATTEMPT_ACTION_ID &&
-          event.payload.actionId === 'positioning:kneel_before'
+          event.payload.actionId === 'deference:kneel_before'
         ) {
           const target = entityManager.getEntityInstance(
             event.payload.targetId
@@ -441,7 +441,7 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       await eventBus.dispatch({
         type: ATTEMPT_ACTION_ID,
         payload: {
-          actionId: 'positioning:kneel_before',
+          actionId: 'deference:kneel_before',
           actorId: 'test:actor2',
           targetId: 'test:actor1',
         },
@@ -477,7 +477,7 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       await eventBus.dispatch({
         type: ATTEMPT_ACTION_ID,
         payload: {
-          actionId: 'positioning:kneel_before',
+          actionId: 'deference:kneel_before',
           actorId: 'test:actor1',
           targetId: 'test:actor2',
         },
@@ -540,7 +540,7 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       await eventBus.dispatch({
         type: ATTEMPT_ACTION_ID,
         payload: {
-          actionId: 'positioning:kneel_before',
+          actionId: 'deference:kneel_before',
           actorId: 'test:actor2',
           targetId: 'test:actor1',
         },
@@ -576,7 +576,7 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       await eventBus.dispatch({
         type: ATTEMPT_ACTION_ID,
         payload: {
-          actionId: 'positioning:kneel_before',
+          actionId: 'deference:kneel_before',
           actorId: 'test:actor1',
           targetId: 'test:actor2',
         },
@@ -700,7 +700,7 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       await eventBus.dispatch({
         type: ATTEMPT_ACTION_ID,
         payload: {
-          actionId: 'positioning:kneel_before',
+          actionId: 'deference:kneel_before',
           actorId: 'test:actor2',
           targetId: 'test:actor1',
         },

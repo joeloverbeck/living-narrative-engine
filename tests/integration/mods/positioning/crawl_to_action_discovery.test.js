@@ -1,15 +1,15 @@
 /**
- * @file Integration tests for the positioning:crawl_to action discovery and metadata.
+ * @file Integration tests for the deference:crawl_to action discovery and metadata.
  * @description Tests action metadata validation and basic discoverability requirements.
  */
 
 import { describe, it, expect } from '@jest/globals';
-import crawlToAction from '../../../../data/mods/positioning/actions/crawl_to.action.json';
+import crawlToAction from '../../../../data/mods/deference/actions/crawl_to.action.json';
 
-describe('positioning:crawl_to - Action Discovery', () => {
+describe('deference:crawl_to - Action Discovery', () => {
   describe('Action Metadata Validation', () => {
     it('should have correct action structure and properties', () => {
-      expect(crawlToAction.id).toBe('positioning:crawl_to');
+      expect(crawlToAction.id).toBe('deference:crawl_to');
       expect(crawlToAction.name).toBe('Crawl To');
       expect(crawlToAction.description).toBe(
         'Crawl submissively to the entity you are kneeling before, entering their personal space.'
@@ -61,11 +61,11 @@ describe('positioning:crawl_to - Action Discovery', () => {
         'positioning:bending_over'
       );
 
-      // Verify visual scheme matches get_close
-      expect(crawlToAction.visual.backgroundColor).toBe('#bf360c');
-      expect(crawlToAction.visual.textColor).toBe('#ffffff');
-      expect(crawlToAction.visual.hoverBackgroundColor).toBe('#8d2c08');
-      expect(crawlToAction.visual.hoverTextColor).toBe('#ffffff');
+      // Verify visual scheme matches the deference palette
+      expect(crawlToAction.visual.backgroundColor).toBe('#1f2d3d');
+      expect(crawlToAction.visual.textColor).toBe('#f7f9ff');
+      expect(crawlToAction.visual.hoverBackgroundColor).toBe('#152133');
+      expect(crawlToAction.visual.hoverTextColor).toBe('#e8edf7');
 
       // Verify prerequisites
       expect(crawlToAction.prerequisites).toHaveLength(1);

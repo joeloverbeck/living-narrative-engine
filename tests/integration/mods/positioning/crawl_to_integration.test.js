@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for positioning:crawl_to action with existing positioning features.
+ * @file Integration tests for deference:crawl_to action with existing positioning features.
  * @description Tests full workflow integration and ensures no regressions with existing actions.
  */
 
@@ -7,18 +7,18 @@ import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 
-describe('positioning:crawl_to - Integration Tests', () => {
+describe('deference:crawl_to - Integration Tests', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:crawl_to',
+      'deference',
+      'deference:crawl_to',
       null,
       null,
       {
         supportingActions: [
-          'positioning:kneel_before',
+          'deference:kneel_before',
           'personal-space:get_close',
         ],
       }
@@ -59,7 +59,7 @@ describe('positioning:crawl_to - Integration Tests', () => {
       // Step 1: Alice kneels before Bob
       await testFixture.executeActionManual(
         'test:alice',
-        'positioning:kneel_before',
+        'deference:kneel_before',
         'test:bob'
       );
 
@@ -156,7 +156,7 @@ describe('positioning:crawl_to - Integration Tests', () => {
       // Execute standard kneel_before action
       await testFixture.executeActionManual(
         'test:alice',
-        'positioning:kneel_before',
+        'deference:kneel_before',
         'test:bob'
       );
 
@@ -314,8 +314,8 @@ describe('positioning:crawl_to - Integration Tests', () => {
 
         // Reset and test
         const currentTestFixture = await ModTestFixture.forAction(
-          'positioning',
-          'positioning:crawl_to'
+          'deference',
+          'deference:crawl_to'
         );
         currentTestFixture.reset([room, alice, bob]);
 

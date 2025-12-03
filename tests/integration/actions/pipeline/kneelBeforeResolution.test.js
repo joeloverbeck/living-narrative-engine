@@ -76,7 +76,7 @@ describe('Kneel Before Action Resolution', () => {
 
     // Setup kneel_before action
     const kneelBeforeAction = {
-      id: 'positioning:kneel_before',
+      id: 'deference:kneel_before',
       name: 'Kneel Before',
       targets: {
         primary: {

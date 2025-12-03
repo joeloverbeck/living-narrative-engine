@@ -13,8 +13,8 @@ import { ModAssertionHelpers } from '../../../common/mods/ModAssertionHelpers.js
 import { ModTestHandlerFactory } from '../../../common/mods/ModTestHandlerFactory.js';
 import perceptibleEventSchema from '../../../../data/mods/core/events/perceptible_event.event.json';
 import logPerceptibleEventsRule from '../../../../data/mods/core/rules/log_perceptible_events.rule.json';
-import standUpRule from '../../../../data/mods/positioning/rules/stand_up.rule.json';
-import standUpCondition from '../../../../data/mods/positioning/conditions/event-is-action-stand-up.condition.json';
+import standUpRule from '../../../../data/mods/deference/rules/stand_up.rule.json';
+import standUpCondition from '../../../../data/mods/deference/conditions/event-is-action-stand-up.condition.json';
 import logSuccessMacro from '../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import { PERCEPTION_LOG_COMPONENT_ID } from '../../../../src/constants/componentIds.js';
 import { ATTEMPT_ACTION_ID } from '../../../../src/constants/eventIds.js';
@@ -52,7 +52,7 @@ function setupKneelingStandUpScenario() {
   return { room, actor, witness };
 }
 
-describe('positioning:stand_up perceptible event fix', () => {
+describe('deference:stand_up perceptible event fix', () => {
   let testEnv;
   let ajv;
   let validatePerceptibleEvent;
@@ -104,7 +104,7 @@ describe('positioning:stand_up perceptible event fix', () => {
       entities: [],
       rules: [expandedStandUpRule, logPerceptibleEventsRule],
       conditions: {
-        'positioning:event-is-action-stand-up': standUpCondition,
+        'deference:event-is-action-stand-up': standUpCondition,
       },
     });
   });
@@ -123,7 +123,7 @@ describe('positioning:stand_up perceptible event fix', () => {
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       eventName: 'core:attempt_action',
       actorId: 'test:actor1',
-      actionId: 'positioning:stand_up',
+      actionId: 'deference:stand_up',
       targetId: null,
       originalInput: 'stand up',
     });

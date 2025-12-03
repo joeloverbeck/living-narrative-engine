@@ -13,9 +13,9 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 ## Current Status
 
-**Total Schemes**: 43 defined color combinations
-**In Use**: 30 schemes actively implemented across mods
-**Available**: 13 schemes ready for future mods
+**Total Schemes**: 45 defined color combinations
+**In Use**: 31 schemes actively implemented across mods
+**Available**: 14 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
 
@@ -27,6 +27,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 | Clothing                 | Earth Brown        | 4.2     | `#6d4c41`        | Active   |
 | Companionship            | Deep Teal          | 3.3     | `#00695c`        | Active   |
 | Core                     | Classic Blue-Grey  | 1.1     | `#455a64`        | Active   |
+| Deference                | Ceremonial Midnight| 14.1    | `#1f2d3d`        | Active   |
 | Distress                 | Obsidian Frost     | 11.7    | `#0b132b`        | Active   |
 | Exercise                 | Orange Flame       | 2.3     | `#e65100`        | Active   |
 | Gymnastics               | Journey Cobalt     | 9.1     | `#1a237e`        | Active   |
@@ -81,6 +82,9 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 ### Additional Versatile
 - **Pathfinder Slate** (9.2) - Navigation, wayfinding
+
+### Honor/Deference
+- **Humble Bronze** (14.2) - Reverent gestures, respectful submissions
 
 ### Professional/Modern
 (No available schemes - all in use)
@@ -819,6 +823,40 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 - **Hover Contrast**: 6.2:1 ✅ AA
 - **Use Cases**: Item exchange between characters, gift giving, trade actions
 - **Theme**: Warm amber evoking commerce and exchange
+
+### 14. Honor/Deference Colors
+
+#### 14.1 Ceremonial Midnight ✅ IN USE: Deference
+
+```json
+{
+  "backgroundColor": "#1f2d3d",
+  "textColor": "#f7f9ff",
+  "hoverBackgroundColor": "#152133",
+  "hoverTextColor": "#e8edf7"
+}
+```
+
+- **Normal Contrast**: 13.29:1 🌟 AAA
+- **Hover Contrast**: 13.79:1 🌟 AAA
+- **Use Cases**: Kneeling, formal vows, visible acts of submission or respect
+- **Theme**: Deep midnight navy with cool highlights for solemn, ceremonial deference
+
+#### 14.2 Humble Bronze 🟢 AVAILABLE
+
+```json
+{
+  "backgroundColor": "#4b2f14",
+  "textColor": "#fff3e0",
+  "hoverBackgroundColor": "#3b230f",
+  "hoverTextColor": "#ffe7c2"
+}
+```
+
+- **Normal Contrast**: 11.16:1 🌟 AAA
+- **Hover Contrast**: 12.18:1 🌟 AAA
+- **Use Cases**: Quiet reverence, service oaths, humble acknowledgements of hierarchy
+- **Theme**: Warm bronze and cream palette that keeps focus on respectful intent
 
 ## Implementation Guide
 

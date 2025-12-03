@@ -99,11 +99,11 @@ describe('UNLOCK_MOVEMENT Schema Validation Integration', () => {
     // This is the rule content that was failing validation
     const standUpRule = {
       $schema: 'schema://living-narrative-engine/rule.schema.json',
-      rule_id: 'handle_stand_up',
+      rule_id: 'deference_handle_stand_up',
       comment:
-        "Handles the 'positioning:stand_up' action. Removes kneeling component, dispatches descriptive text and ends the turn.",
+        "Handles the 'deference:stand_up' action. Removes kneeling component, dispatches descriptive text and ends the turn.",
       event_type: 'core:attempt_action',
-      condition: { condition_ref: 'positioning:event-is-action-stand-up' },
+      condition: { condition_ref: 'deference:event-is-action-stand-up' },
       actions: [
         {
           type: 'GET_NAME',

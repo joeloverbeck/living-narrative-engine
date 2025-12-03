@@ -114,8 +114,8 @@ describe('Real Mod Integration Testing', () => {
     beforeEach(async () => {
       try {
         test = await ModTestFixture.forActionAutoLoad(
-          'positioning',
-          'positioning:kneel_before'
+          'deference',
+          'deference:kneel_before'
         );
       } catch (error) {
         test = null;
@@ -144,7 +144,7 @@ describe('Real Mod Integration Testing', () => {
       const hasRelevantEvent = test.events.some(
         (event) =>
           event.eventType === 'core:attempt_action' ||
-          event.payload?.actionId === 'positioning:kneel_before' ||
+          event.payload?.actionId === 'deference:kneel_before' ||
           event.eventType?.includes('positioning')
       );
       expect(hasRelevantEvent).toBeTruthy();
@@ -509,8 +509,8 @@ describe('Real Mod Integration Testing', () => {
 
       try {
         positioningTest = await ModTestFixture.forActionAutoLoad(
-          'positioning',
-          'positioning:kneel_before'
+          'deference',
+          'deference:kneel_before'
         );
       } catch (error) {
         // Skip if not available
@@ -612,7 +612,7 @@ describe('Real Mod Integration Testing', () => {
       // Test that infrastructure can handle different real file structures
       const testCases = [
         { category: 'intimacy', action: 'kissing:kiss_cheek' },
-        { category: 'positioning', action: 'positioning:kneel_before' },
+        { category: 'deference', action: 'deference:kneel_before' },
       ];
 
       for (const testCase of testCases) {

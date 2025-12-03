@@ -201,7 +201,7 @@ Scenario: Refinement with prerequisites
   Given task requires actor standing
   And actor currently sitting
   When refining task
-  Then output should include "positioning:stand_up"
+  Then output should include "deference:stand_up"
   Followed by main task actions
 
 Scenario: Max refinement steps enforced

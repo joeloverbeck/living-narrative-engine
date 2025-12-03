@@ -157,7 +157,7 @@ describe('Action Formatting with Metadata - Integration', () => {
           index: 0,
         },
         {
-          actionId: 'positioning:stand_up',
+          actionId: 'deference:stand_up',
           commandString: 'stand up',
           description: 'Rise to standing position',
           index: 1,

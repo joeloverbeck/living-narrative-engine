@@ -13,10 +13,10 @@ import {
   expect,
   jest,
 } from '@jest/globals';
-import kneelBeforeRule from '../../../data/mods/positioning/rules/kneel_before.rule.json';
-import standUpRule from '../../../data/mods/positioning/rules/stand_up.rule.json';
-import eventIsActionKneelBefore from '../../../data/mods/positioning/conditions/event-is-action-kneel-before.condition.json';
-import eventIsActionStandUp from '../../../data/mods/positioning/conditions/event-is-action-stand-up.condition.json';
+import kneelBeforeRule from '../../../data/mods/deference/rules/kneel_before.rule.json';
+import standUpRule from '../../../data/mods/deference/rules/stand_up.rule.json';
+import eventIsActionKneelBefore from '../../../data/mods/deference/conditions/event-is-action-kneel-before.condition.json';
+import eventIsActionStandUp from '../../../data/mods/deference/conditions/event-is-action-stand-up.condition.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
@@ -124,10 +124,10 @@ describe('Movement Lock - Anatomy-Based Entities', () => {
         { ...standUpRule, actions: expandedStandActions },
       ]),
       getConditionDefinition: jest.fn((id) => {
-        if (id === 'positioning:event-is-action-kneel-before') {
+        if (id === 'deference:event-is-action-kneel-before') {
           return eventIsActionKneelBefore;
         }
-        if (id === 'positioning:event-is-action-stand-up') {
+        if (id === 'deference:event-is-action-stand-up') {
           return eventIsActionStandUp;
         }
         return undefined;
@@ -218,7 +218,7 @@ describe('Movement Lock - Anatomy-Based Entities', () => {
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       eventName: 'core:attempt_action',
       actorId: actorId,
-      actionId: 'positioning:kneel_before',
+      actionId: 'deference:kneel_before',
       targetId: targetId,
       originalInput: `kneel_before ${targetId}`,
     });
@@ -307,7 +307,7 @@ describe('Movement Lock - Anatomy-Based Entities', () => {
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
         actorId: actorId,
-        actionId: 'positioning:kneel_before',
+        actionId: 'deference:kneel_before',
         targetId: targetId,
         originalInput: `kneel_before ${targetId}`,
       });
@@ -397,7 +397,7 @@ describe('Movement Lock - Anatomy-Based Entities', () => {
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
         actorId: actorId,
-        actionId: 'positioning:stand_up',
+        actionId: 'deference:stand_up',
         targetId: 'none',
         originalInput: 'stand up',
       });
@@ -427,7 +427,7 @@ describe('Movement Lock - Anatomy-Based Entities', () => {
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
         actorId: actorId,
-        actionId: 'positioning:stand_up',
+        actionId: 'deference:stand_up',
         targetId: 'none',
         originalInput: 'stand up',
       });
@@ -482,7 +482,7 @@ describe('Movement Lock - Anatomy-Based Entities', () => {
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
         actorId: actorId,
-        actionId: 'positioning:kneel_before',
+        actionId: 'deference:kneel_before',
         targetId: targetId,
         originalInput: `kneel_before ${targetId}`,
       });
@@ -537,7 +537,7 @@ describe('Movement Lock - Anatomy-Based Entities', () => {
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
         actorId: actorId,
-        actionId: 'positioning:kneel_before',
+        actionId: 'deference:kneel_before',
         targetId: targetId,
         originalInput: `kneel_before ${targetId}`,
       });
@@ -594,7 +594,7 @@ describe('Movement Lock - Anatomy-Based Entities', () => {
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
         actorId: actorId,
-        actionId: 'positioning:kneel_before',
+        actionId: 'deference:kneel_before',
         targetId: targetId,
         originalInput: `kneel_before ${targetId}`,
       });

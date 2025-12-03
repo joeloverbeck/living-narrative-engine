@@ -300,7 +300,7 @@ describe('Straddling Waist System - Edge Cases', () => {
       testFixture.reset([room, chair, actor, target, other]);
 
       const actions = testFixture.actions || [];
-      const kneelActions = actions.some(a => a.id === 'positioning:kneel_before');
+      const kneelActions = actions.some(a => a.id === 'deference:kneel_before');
 
       expect(kneelActions).toBe(false);
     });
