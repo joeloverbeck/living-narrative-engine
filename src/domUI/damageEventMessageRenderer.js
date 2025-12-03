@@ -172,8 +172,13 @@ export class DamageEventMessageRenderer extends BoundDomRendererBase {
    * @param {DamageEventPayload} event.payload - The damage event payload.
    */
   #handleInternalDamagePropagated({ payload }) {
-    this.logger.debug(`${this._logPrefix} Received internal_damage_propagated event.`);
-    this.#queueDamageEvent(payload, 'damage');
+    // NOTE: Do NOT queue this as a user-facing message.
+    // The recursive ApplyDamageHandler.execute() call dispatches
+    // anatomy:damage_applied for each child part with complete data.
+    // This event is for internal tracking/telemetry only.
+    this.logger.debug(
+      `${this._logPrefix} Internal damage propagation: ${payload?.sourcePartId} -> ${payload?.targetPartId}`
+    );
   }
 
   /**

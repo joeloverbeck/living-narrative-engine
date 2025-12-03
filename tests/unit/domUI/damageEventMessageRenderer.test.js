@@ -196,29 +196,33 @@ describe('DamageEventMessageRenderer', () => {
   });
 
   describe('internal_damage_propagated Event Handling', () => {
-    it('should create and append a damage message on internal_damage_propagated event', async () => {
+    it('should NOT create a damage message on internal_damage_propagated event', async () => {
+      // NOTE: The anatomy:internal_damage_propagated event is for internal tracking/telemetry only.
+      // The recursive ApplyDamageHandler.execute() call dispatches anatomy:damage_applied
+      // for each child part with complete data. We should NOT render this internal event.
       createRenderer();
 
-      const mockLiElement = {
-        textContent: '',
-        classList: { add: jest.fn() },
-      };
-      mockDomElementFactory.li.mockReturnValue(mockLiElement);
-      mockNarrativeFormatter.formatDamageEvent.mockReturnValue('Internal damage spreads.');
-
-      const damagePayload = {
-        entityName: 'Player',
+      const propagationPayload = {
+        sourcePartId: 'torso-1',
+        targetPartId: 'heart-1',
         damageAmount: 5,
-        partType: 'organ',
+        damageTypeId: 'piercing',
       };
 
       const handler = eventListeners['anatomy:internal_damage_propagated'];
-      handler({ payload: damagePayload });
+      handler({ payload: propagationPayload });
 
       await Promise.resolve();
 
-      expect(mockNarrativeFormatter.formatDamageEvent).toHaveBeenCalled();
-      expect(mockMessageList.appendChild).toHaveBeenCalled();
+      // Assert NO message was created - this is an internal event
+      expect(mockNarrativeFormatter.formatDamageEvent).not.toHaveBeenCalled();
+      expect(mockDomElementFactory.li).not.toHaveBeenCalled();
+      expect(mockMessageList.appendChild).not.toHaveBeenCalled();
+
+      // Assert debug logging still works for telemetry
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Internal damage propagation')
+      );
     });
   });
 

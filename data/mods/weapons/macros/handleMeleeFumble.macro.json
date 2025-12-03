@@ -1,0 +1,43 @@
+{
+  "$schema": "schema://living-narrative-engine/macro.schema.json",
+  "id": "weapons:handleMeleeFumble",
+  "description": "Handles FUMBLE outcome for melee weapon attacks - actor drops weapon. Expects context variables: actorName, weaponName, attackVerbPast, actorPosition.",
+  "actions": [
+    {
+      "type": "UNWIELD_ITEM",
+      "comment": "Fumble: release grip on weapon (idempotent)",
+      "parameters": {
+        "actorEntity": "{event.payload.actorId}",
+        "itemEntity": "{event.payload.primaryId}"
+      }
+    },
+    {
+      "type": "DROP_ITEM_AT_LOCATION",
+      "comment": "Fumble: weapon falls to the ground",
+      "parameters": {
+        "actorEntity": "{event.payload.actorId}",
+        "itemEntity": "{event.payload.primaryId}",
+        "locationId": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.actorName} {context.attackVerbPast} wildly and loses grip on their {context.weaponName}!",
+        "perception_type": "action_target_general",
+        "actor_id": "{event.payload.actorId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} {context.attackVerbPast} wildly and loses grip on their {context.weaponName}!"
+      }
+    },
+    {
+      "macro": "core:logFailureOutcomeAndEndTurn"
+    }
+  ]
+}

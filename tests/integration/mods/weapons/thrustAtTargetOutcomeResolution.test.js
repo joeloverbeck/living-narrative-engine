@@ -1,8 +1,8 @@
 /**
- * @file Integration tests for swing_at_target rule with outcome resolution
- * @description Tests the handle_swing_at_target rule structure and event handling.
+ * @file Integration tests for thrust_at_target rule with outcome resolution
+ * @description Tests the handle_thrust_at_target rule structure and event handling.
  * Note: Actual outcome determination is tested in unit tests for ResolveOutcomeHandler
- * and OutcomeDeterminerService (NONDETACTSYS-008). This test validates the rule's
+ * and OutcomeDeterminerService. This test validates the rule's
  * structure and integration with the event system.
  *
  * The rule uses a macro-based architecture where outcome handling is delegated to
@@ -16,9 +16,9 @@
 import { describe, it, expect } from '@jest/globals';
 
 // Import rule and condition JSON for structure validation
-import swingAtTargetRule from '../../../../data/mods/weapons/rules/handle_swing_at_target.rule.json' assert { type: 'json' };
-import eventIsActionSwingAtTarget from '../../../../data/mods/weapons/conditions/event-is-action-swing-at-target.condition.json' assert { type: 'json' };
-import swingAtTargetAction from '../../../../data/mods/weapons/actions/swing_at_target.action.json' assert { type: 'json' };
+import thrustAtTargetRule from '../../../../data/mods/weapons/rules/handle_thrust_at_target.rule.json' assert { type: 'json' };
+import eventIsActionThrustAtTarget from '../../../../data/mods/weapons/conditions/event-is-action-thrust-at-target.condition.json' assert { type: 'json' };
+import thrustAtTargetAction from '../../../../data/mods/weapons/actions/thrust_at_target.action.json' assert { type: 'json' };
 
 // Import macros for structure validation
 import handleMeleeCritical from '../../../../data/mods/weapons/macros/handleMeleeCritical.macro.json' assert { type: 'json' };
@@ -26,31 +26,31 @@ import handleMeleeHit from '../../../../data/mods/weapons/macros/handleMeleeHit.
 import handleMeleeFumble from '../../../../data/mods/weapons/macros/handleMeleeFumble.macro.json' assert { type: 'json' };
 import handleMeleeMiss from '../../../../data/mods/weapons/macros/handleMeleeMiss.macro.json' assert { type: 'json' };
 
-describe('swing_at_target outcome resolution rule', () => {
+describe('thrust_at_target outcome resolution rule', () => {
   describe('Rule Structure Validation', () => {
     it('should have correct rule_id', () => {
-      expect(swingAtTargetRule.rule_id).toBe('handle_swing_at_target');
+      expect(thrustAtTargetRule.rule_id).toBe('handle_thrust_at_target');
     });
 
     it('should trigger on core:attempt_action event', () => {
-      expect(swingAtTargetRule.event_type).toBe('core:attempt_action');
+      expect(thrustAtTargetRule.event_type).toBe('core:attempt_action');
     });
 
     it('should reference the correct condition', () => {
-      expect(swingAtTargetRule.condition.condition_ref).toBe(
-        'weapons:event-is-action-swing-at-target'
+      expect(thrustAtTargetRule.condition.condition_ref).toBe(
+        'weapons:event-is-action-thrust-at-target'
       );
     });
 
     it('should have actions array', () => {
-      expect(Array.isArray(swingAtTargetRule.actions)).toBe(true);
-      expect(swingAtTargetRule.actions.length).toBeGreaterThan(0);
+      expect(Array.isArray(thrustAtTargetRule.actions)).toBe(true);
+      expect(thrustAtTargetRule.actions.length).toBeGreaterThan(0);
     });
   });
 
   describe('Operations Validation', () => {
     it('should include GET_NAME operations for actor, target, and weapon', () => {
-      const getNameOps = swingAtTargetRule.actions.filter(
+      const getNameOps = thrustAtTargetRule.actions.filter(
         (op) => op.type === 'GET_NAME'
       );
 
@@ -79,7 +79,7 @@ describe('swing_at_target outcome resolution rule', () => {
     });
 
     it('should include QUERY_COMPONENT for actor position', () => {
-      const queryOp = swingAtTargetRule.actions.find(
+      const queryOp = thrustAtTargetRule.actions.find(
         (op) => op.type === 'QUERY_COMPONENT'
       );
 
@@ -90,7 +90,7 @@ describe('swing_at_target outcome resolution rule', () => {
     });
 
     it('should include RESOLVE_OUTCOME operation with correct parameters', () => {
-      const resolveOutcomeOp = swingAtTargetRule.actions.find(
+      const resolveOutcomeOp = thrustAtTargetRule.actions.find(
         (op) => op.type === 'RESOLVE_OUTCOME'
       );
 
@@ -108,7 +108,7 @@ describe('swing_at_target outcome resolution rule', () => {
     });
 
     it('should have IF operations for outcome branching', () => {
-      const ifOps = swingAtTargetRule.actions.filter((op) => op.type === 'IF');
+      const ifOps = thrustAtTargetRule.actions.filter((op) => op.type === 'IF');
 
       expect(ifOps.length).toBeGreaterThan(0);
     });
@@ -124,18 +124,18 @@ describe('swing_at_target outcome resolution rule', () => {
       );
 
     it('should have 4 independent IF operations for each outcome (flat structure)', () => {
-      const ifOps = swingAtTargetRule.actions.filter((op) => op.type === 'IF');
+      const ifOps = thrustAtTargetRule.actions.filter((op) => op.type === 'IF');
       expect(ifOps.length).toBe(4);
 
       // Verify each outcome has its own top-level IF
-      expect(findIfByOutcome(swingAtTargetRule.actions, 'CRITICAL_SUCCESS')).toBeDefined();
-      expect(findIfByOutcome(swingAtTargetRule.actions, 'SUCCESS')).toBeDefined();
-      expect(findIfByOutcome(swingAtTargetRule.actions, 'FUMBLE')).toBeDefined();
-      expect(findIfByOutcome(swingAtTargetRule.actions, 'FAILURE')).toBeDefined();
+      expect(findIfByOutcome(thrustAtTargetRule.actions, 'CRITICAL_SUCCESS')).toBeDefined();
+      expect(findIfByOutcome(thrustAtTargetRule.actions, 'SUCCESS')).toBeDefined();
+      expect(findIfByOutcome(thrustAtTargetRule.actions, 'FUMBLE')).toBeDefined();
+      expect(findIfByOutcome(thrustAtTargetRule.actions, 'FAILURE')).toBeDefined();
     });
 
     it('should delegate CRITICAL_SUCCESS to handleMeleeCritical macro', () => {
-      const criticalSuccessIf = findIfByOutcome(swingAtTargetRule.actions, 'CRITICAL_SUCCESS');
+      const criticalSuccessIf = findIfByOutcome(thrustAtTargetRule.actions, 'CRITICAL_SUCCESS');
       expect(criticalSuccessIf).toBeDefined();
 
       const condition = criticalSuccessIf.parameters.condition;
@@ -160,7 +160,7 @@ describe('swing_at_target outcome resolution rule', () => {
     });
 
     it('should delegate SUCCESS to handleMeleeHit macro', () => {
-      const successIf = findIfByOutcome(swingAtTargetRule.actions, 'SUCCESS');
+      const successIf = findIfByOutcome(thrustAtTargetRule.actions, 'SUCCESS');
       expect(successIf).toBeDefined();
 
       // Verify macro reference in rule
@@ -170,14 +170,14 @@ describe('swing_at_target outcome resolution rule', () => {
       );
       expect(hasMacro).toBe(true);
 
-      // Verify macro uses context variable for hit description (e.g., "cutting their flesh")
+      // Verify macro uses context variable for hit description (e.g., "piercing their flesh")
       const macroString = JSON.stringify(handleMeleeHit);
       expect(macroString).toContain('context.hitDescription');
       expect(macroString).toContain('core:endTurnOnly');
     });
 
     it('should delegate FUMBLE to handleMeleeFumble macro', () => {
-      const fumbleIf = findIfByOutcome(swingAtTargetRule.actions, 'FUMBLE');
+      const fumbleIf = findIfByOutcome(thrustAtTargetRule.actions, 'FUMBLE');
       expect(fumbleIf).toBeDefined();
 
       // Verify macro reference in rule
@@ -194,7 +194,7 @@ describe('swing_at_target outcome resolution rule', () => {
     });
 
     it('should delegate FAILURE to handleMeleeMiss macro', () => {
-      const failureIf = findIfByOutcome(swingAtTargetRule.actions, 'FAILURE');
+      const failureIf = findIfByOutcome(thrustAtTargetRule.actions, 'FAILURE');
       expect(failureIf).toBeDefined();
 
       // Verify macro reference in rule
@@ -213,37 +213,37 @@ describe('swing_at_target outcome resolution rule', () => {
 
   describe('Action Configuration Validation', () => {
     it('should have chanceBased config in the action definition', () => {
-      expect(swingAtTargetAction.chanceBased).toBeDefined();
-      expect(swingAtTargetAction.chanceBased.enabled).toBe(true);
+      expect(thrustAtTargetAction.chanceBased).toBeDefined();
+      expect(thrustAtTargetAction.chanceBased.enabled).toBe(true);
     });
 
     it('should have melee_skill as actor skill in action', () => {
-      expect(swingAtTargetAction.chanceBased.actorSkill).toBeDefined();
-      expect(swingAtTargetAction.chanceBased.actorSkill.component).toBe(
+      expect(thrustAtTargetAction.chanceBased.actorSkill).toBeDefined();
+      expect(thrustAtTargetAction.chanceBased.actorSkill.component).toBe(
         'skills:melee_skill'
       );
-      expect(swingAtTargetAction.chanceBased.actorSkill.default).toBe(10);
+      expect(thrustAtTargetAction.chanceBased.actorSkill.default).toBe(10);
     });
 
     it('should have defense_skill as target skill in action', () => {
-      expect(swingAtTargetAction.chanceBased.targetSkill).toBeDefined();
-      expect(swingAtTargetAction.chanceBased.targetSkill.component).toBe(
+      expect(thrustAtTargetAction.chanceBased.targetSkill).toBeDefined();
+      expect(thrustAtTargetAction.chanceBased.targetSkill.component).toBe(
         'skills:defense_skill'
       );
-      expect(swingAtTargetAction.chanceBased.targetSkill.default).toBe(0);
+      expect(thrustAtTargetAction.chanceBased.targetSkill.default).toBe(0);
     });
   });
 
   describe('Condition Validation', () => {
     it('should reference correct action ID', () => {
       // The condition uses 'logic' property with a direct equality check
-      expect(eventIsActionSwingAtTarget.logic).toBeDefined();
-      expect(eventIsActionSwingAtTarget.logic['==']).toBeDefined();
+      expect(eventIsActionThrustAtTarget.logic).toBeDefined();
+      expect(eventIsActionThrustAtTarget.logic['==']).toBeDefined();
 
       // Verify it checks event.payload.actionId
-      const eqClause = eventIsActionSwingAtTarget.logic['=='];
+      const eqClause = eventIsActionThrustAtTarget.logic['=='];
       expect(eqClause[0]?.var).toBe('event.payload.actionId');
-      expect(eqClause[1]).toBe('weapons:swing_at_target');
+      expect(eqClause[1]).toBe('weapons:thrust_at_target');
     });
   });
 
@@ -252,39 +252,39 @@ describe('swing_at_target outcome resolution rule', () => {
     // which passed with 0 violations. These tests verify structural compliance.
 
     it('should have valid $schema reference in rule', () => {
-      expect(swingAtTargetRule.$schema).toBe(
+      expect(thrustAtTargetRule.$schema).toBe(
         'schema://living-narrative-engine/rule.schema.json'
       );
     });
 
     it('should have valid $schema reference in condition', () => {
-      expect(eventIsActionSwingAtTarget.$schema).toBe(
+      expect(eventIsActionThrustAtTarget.$schema).toBe(
         'schema://living-narrative-engine/condition.schema.json'
       );
     });
 
     it('should have valid $schema reference in action', () => {
-      expect(swingAtTargetAction.$schema).toBe(
+      expect(thrustAtTargetAction.$schema).toBe(
         'schema://living-narrative-engine/action.schema.json'
       );
     });
 
     it('should have required rule fields', () => {
-      expect(swingAtTargetRule.rule_id).toBeDefined();
-      expect(swingAtTargetRule.event_type).toBeDefined();
-      expect(swingAtTargetRule.condition).toBeDefined();
-      expect(swingAtTargetRule.actions).toBeDefined();
+      expect(thrustAtTargetRule.rule_id).toBeDefined();
+      expect(thrustAtTargetRule.event_type).toBeDefined();
+      expect(thrustAtTargetRule.condition).toBeDefined();
+      expect(thrustAtTargetRule.actions).toBeDefined();
     });
 
     it('should have required condition fields', () => {
-      expect(eventIsActionSwingAtTarget.id).toBeDefined();
-      expect(eventIsActionSwingAtTarget.logic).toBeDefined();
+      expect(eventIsActionThrustAtTarget.id).toBeDefined();
+      expect(eventIsActionThrustAtTarget.logic).toBeDefined();
     });
   });
 
   describe('Variable Resolution Consistency', () => {
     it('should define all required result variables', () => {
-      const ruleString = JSON.stringify(swingAtTargetRule);
+      const ruleString = JSON.stringify(thrustAtTargetRule);
 
       // Check that all result variables are defined in rule
       const resultVariables = [
@@ -300,22 +300,22 @@ describe('swing_at_target outcome resolution rule', () => {
       }
     });
 
-    it('should set swing-specific context variables for macros', () => {
-      const ruleString = JSON.stringify(swingAtTargetRule);
+    it('should set thrust-specific context variables for macros', () => {
+      const ruleString = JSON.stringify(thrustAtTargetRule);
 
-      // Swing rule should set these context variables for use by macros
+      // Thrust rule should set these context variables for use by macros
       expect(ruleString).toContain('"variable_name":"attackVerb"');
-      expect(ruleString).toContain('"value":"blow"');
+      expect(ruleString).toContain('"value":"thrust"');
       expect(ruleString).toContain('"variable_name":"attackVerbPast"');
-      expect(ruleString).toContain('"value":"swings"');
+      expect(ruleString).toContain('"value":"thrusts"');
       expect(ruleString).toContain('"variable_name":"hitDescription"');
-      expect(ruleString).toContain('"value":"cutting their flesh"');
+      expect(ruleString).toContain('"value":"piercing their flesh"');
       expect(ruleString).toContain('"variable_name":"excludeDamageTypes"');
-      expect(ruleString).toContain('"piercing"'); // swing excludes piercing damage
+      expect(ruleString).toContain('"slashing"'); // thrust excludes slashing damage
     });
 
     it('should use context variables in rule for outcome checking', () => {
-      const ruleString = JSON.stringify(swingAtTargetRule);
+      const ruleString = JSON.stringify(thrustAtTargetRule);
 
       // Rule accesses these for outcome branching
       expect(ruleString).toContain('context.attackResult.outcome');
@@ -336,7 +336,7 @@ describe('swing_at_target outcome resolution rule', () => {
     });
 
     it('should reference correct event payload variables', () => {
-      const ruleString = JSON.stringify(swingAtTargetRule);
+      const ruleString = JSON.stringify(thrustAtTargetRule);
 
       // Rule references secondaryId for targetId variable
       expect(ruleString).toContain('event.payload.secondaryId');
@@ -350,7 +350,7 @@ describe('swing_at_target outcome resolution rule', () => {
 
   describe('Macro Usage Validation', () => {
     it('should use weapons macros for all outcome branches', () => {
-      const ruleString = JSON.stringify(swingAtTargetRule);
+      const ruleString = JSON.stringify(thrustAtTargetRule);
 
       // Rule delegates to 4 weapons macros (one per outcome)
       expect(ruleString).toContain('weapons:handleMeleeCritical');

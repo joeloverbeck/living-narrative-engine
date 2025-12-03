@@ -1,8 +1,8 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "handle_swing_at_target",
+  "rule_id": "handle_thrust_at_target",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "weapons:event-is-action-swing-at-target" },
+  "condition": { "condition_ref": "weapons:event-is-action-thrust-at-target" },
   "actions": [
     {
       "type": "GET_NAME",
@@ -67,34 +67,34 @@
     },
     {
       "type": "SET_VARIABLE",
-      "comment": "Swing-specific: verb for critical hit messages",
+      "comment": "Thrust-specific: verb for critical hit messages",
       "parameters": {
         "variable_name": "attackVerb",
-        "value": "blow"
+        "value": "thrust"
       }
     },
     {
       "type": "SET_VARIABLE",
-      "comment": "Swing-specific: past tense verb for other messages",
+      "comment": "Thrust-specific: past tense verb for other messages",
       "parameters": {
         "variable_name": "attackVerbPast",
-        "value": "swings"
+        "value": "thrusts"
       }
     },
     {
       "type": "SET_VARIABLE",
-      "comment": "Swing-specific: hit description",
+      "comment": "Thrust-specific: hit description",
       "parameters": {
         "variable_name": "hitDescription",
-        "value": "cutting their flesh"
+        "value": "piercing their flesh"
       }
     },
     {
       "type": "SET_VARIABLE",
-      "comment": "Swing-specific: exclude piercing damage (swings use slashing/blunt)",
+      "comment": "Thrust-specific: exclude slashing damage (thrusts use piercing)",
       "parameters": {
         "variable_name": "excludeDamageTypes",
-        "value": ["piercing"]
+        "value": ["slashing"]
       }
     },
     {

@@ -1,0 +1,53 @@
+{
+  "$schema": "schema://living-narrative-engine/macro.schema.json",
+  "id": "weapons:handleMeleeHit",
+  "description": "Handles SUCCESS outcome for melee weapon attacks. Expects context variables: actorName, targetName, weaponName, attackVerbPast, hitDescription, excludeDamageTypes, actorPosition, weaponDamage.",
+  "actions": [
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.actorName} {context.attackVerbPast} their {context.weaponName} at {context.targetName}, {context.hitDescription}.",
+        "perception_type": "action_target_general",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.secondaryId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Set logMessage BEFORE damage loop so success message displays first",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} {context.attackVerbPast} their {context.weaponName} at {context.targetName}, {context.hitDescription}."
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Display success message BEFORE damage details (which are deferred via queueMicrotask)",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": { "message": "{context.logMessage}" }
+      }
+    },
+    {
+      "type": "FOR_EACH",
+      "parameters": {
+        "collection": "context.weaponDamage.entries",
+        "item_variable": "dmgEntry",
+        "actions": [
+          {
+            "type": "APPLY_DAMAGE",
+            "parameters": {
+              "entity_ref": "secondary",
+              "damage_entry": { "var": "context.dmgEntry" },
+              "exclude_damage_types": { "var": "context.excludeDamageTypes" }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "macro": "core:endTurnOnly"
+    }
+  ]
+}

@@ -2,13 +2,14 @@
  * @file Integration tests for swing_at_target fumble branch weapon drop
  * @description Verifies that on a fumble outcome, the UNWIELD_ITEM and
  * DROP_ITEM_AT_LOCATION operations are present and correctly configured
- * in the handle_swing_at_target rule.
+ * in the handleMeleeFumble macro (delegated from handle_swing_at_target rule).
  */
 
 import { describe, it, expect } from '@jest/globals';
 
-// Import rule JSON for structure validation
+// Import rule and macro JSON for structure validation
 import swingAtTargetRule from '../../../../data/mods/weapons/rules/handle_swing_at_target.rule.json' assert { type: 'json' };
+import handleMeleeFumble from '../../../../data/mods/weapons/macros/handleMeleeFumble.macro.json' assert { type: 'json' };
 
 describe('swing_at_target fumble weapon drop', () => {
   /**
@@ -33,17 +34,25 @@ describe('swing_at_target fumble weapon drop', () => {
       expect(Array.isArray(fumbleIf.parameters.then_actions)).toBe(true);
     });
 
-    it('should include UNWIELD_ITEM in fumble branch', () => {
+    it('should delegate FUMBLE to handleMeleeFumble macro', () => {
       const fumbleIf = findIfByOutcome(swingAtTargetRule.actions, 'FUMBLE');
-      const hasUnwield = fumbleIf.parameters.then_actions.some(
+      const macroRef = fumbleIf.parameters.then_actions.find(
+        (op) => op.macro === 'weapons:handleMeleeFumble'
+      );
+      expect(macroRef).toBeDefined();
+    });
+  });
+
+  describe('Macro Structure Validation', () => {
+    it('should include UNWIELD_ITEM in fumble macro', () => {
+      const hasUnwield = handleMeleeFumble.actions.some(
         (op) => op.type === 'UNWIELD_ITEM'
       );
       expect(hasUnwield).toBe(true);
     });
 
-    it('should include DROP_ITEM_AT_LOCATION in fumble branch', () => {
-      const fumbleIf = findIfByOutcome(swingAtTargetRule.actions, 'FUMBLE');
-      const hasDrop = fumbleIf.parameters.then_actions.some(
+    it('should include DROP_ITEM_AT_LOCATION in fumble macro', () => {
+      const hasDrop = handleMeleeFumble.actions.some(
         (op) => op.type === 'DROP_ITEM_AT_LOCATION'
       );
       expect(hasDrop).toBe(true);
@@ -52,24 +61,21 @@ describe('swing_at_target fumble weapon drop', () => {
 
   describe('UNWIELD_ITEM Operation Validation', () => {
     it('should reference correct actorEntity variable', () => {
-      const fumbleIf = findIfByOutcome(swingAtTargetRule.actions, 'FUMBLE');
-      const unwieldOp = fumbleIf.parameters.then_actions.find(
+      const unwieldOp = handleMeleeFumble.actions.find(
         (op) => op.type === 'UNWIELD_ITEM'
       );
       expect(unwieldOp.parameters.actorEntity).toBe('{event.payload.actorId}');
     });
 
     it('should reference correct itemEntity variable (weapon is primary target)', () => {
-      const fumbleIf = findIfByOutcome(swingAtTargetRule.actions, 'FUMBLE');
-      const unwieldOp = fumbleIf.parameters.then_actions.find(
+      const unwieldOp = handleMeleeFumble.actions.find(
         (op) => op.type === 'UNWIELD_ITEM'
       );
       expect(unwieldOp.parameters.itemEntity).toBe('{event.payload.primaryId}');
     });
 
     it('should have a descriptive comment', () => {
-      const fumbleIf = findIfByOutcome(swingAtTargetRule.actions, 'FUMBLE');
-      const unwieldOp = fumbleIf.parameters.then_actions.find(
+      const unwieldOp = handleMeleeFumble.actions.find(
         (op) => op.type === 'UNWIELD_ITEM'
       );
       expect(unwieldOp.comment).toBeDefined();
@@ -79,24 +85,21 @@ describe('swing_at_target fumble weapon drop', () => {
 
   describe('DROP_ITEM_AT_LOCATION Operation Validation', () => {
     it('should reference correct actorEntity variable', () => {
-      const fumbleIf = findIfByOutcome(swingAtTargetRule.actions, 'FUMBLE');
-      const dropOp = fumbleIf.parameters.then_actions.find(
+      const dropOp = handleMeleeFumble.actions.find(
         (op) => op.type === 'DROP_ITEM_AT_LOCATION'
       );
       expect(dropOp.parameters.actorEntity).toBe('{event.payload.actorId}');
     });
 
     it('should reference correct itemEntity variable (weapon is primary target)', () => {
-      const fumbleIf = findIfByOutcome(swingAtTargetRule.actions, 'FUMBLE');
-      const dropOp = fumbleIf.parameters.then_actions.find(
+      const dropOp = handleMeleeFumble.actions.find(
         (op) => op.type === 'DROP_ITEM_AT_LOCATION'
       );
       expect(dropOp.parameters.itemEntity).toBe('{event.payload.primaryId}');
     });
 
     it('should reference correct locationId variable from actor position', () => {
-      const fumbleIf = findIfByOutcome(swingAtTargetRule.actions, 'FUMBLE');
-      const dropOp = fumbleIf.parameters.then_actions.find(
+      const dropOp = handleMeleeFumble.actions.find(
         (op) => op.type === 'DROP_ITEM_AT_LOCATION'
       );
       expect(dropOp.parameters.locationId).toBe(
@@ -105,8 +108,7 @@ describe('swing_at_target fumble weapon drop', () => {
     });
 
     it('should have a descriptive comment', () => {
-      const fumbleIf = findIfByOutcome(swingAtTargetRule.actions, 'FUMBLE');
-      const dropOp = fumbleIf.parameters.then_actions.find(
+      const dropOp = handleMeleeFumble.actions.find(
         (op) => op.type === 'DROP_ITEM_AT_LOCATION'
       );
       expect(dropOp.comment).toBeDefined();
@@ -116,8 +118,7 @@ describe('swing_at_target fumble weapon drop', () => {
 
   describe('Operation Order Validation', () => {
     it('should execute UNWIELD_ITEM before DROP_ITEM_AT_LOCATION', () => {
-      const fumbleIf = findIfByOutcome(swingAtTargetRule.actions, 'FUMBLE');
-      const actions = fumbleIf.parameters.then_actions;
+      const actions = handleMeleeFumble.actions;
       const unwieldIndex = actions.findIndex(
         (op) => op.type === 'UNWIELD_ITEM'
       );
@@ -131,8 +132,7 @@ describe('swing_at_target fumble weapon drop', () => {
     });
 
     it('should execute weapon drop operations before DISPATCH_PERCEPTIBLE_EVENT', () => {
-      const fumbleIf = findIfByOutcome(swingAtTargetRule.actions, 'FUMBLE');
-      const actions = fumbleIf.parameters.then_actions;
+      const actions = handleMeleeFumble.actions;
       const dropIndex = actions.findIndex(
         (op) => op.type === 'DROP_ITEM_AT_LOCATION'
       );
@@ -147,7 +147,7 @@ describe('swing_at_target fumble weapon drop', () => {
   });
 
   describe('Cross-Branch Consistency', () => {
-    it('should NOT include UNWIELD_ITEM in SUCCESS branch', () => {
+    it('should NOT include UNWIELD_ITEM in SUCCESS branch (rule delegates to macro)', () => {
       const successIf = findIfByOutcome(swingAtTargetRule.actions, 'SUCCESS');
       const hasUnwield = successIf.parameters.then_actions.some(
         (op) => op.type === 'UNWIELD_ITEM'
@@ -155,7 +155,7 @@ describe('swing_at_target fumble weapon drop', () => {
       expect(hasUnwield).toBe(false);
     });
 
-    it('should NOT include DROP_ITEM_AT_LOCATION in SUCCESS branch', () => {
+    it('should NOT include DROP_ITEM_AT_LOCATION in SUCCESS branch (rule delegates to macro)', () => {
       const successIf = findIfByOutcome(swingAtTargetRule.actions, 'SUCCESS');
       const hasDrop = successIf.parameters.then_actions.some(
         (op) => op.type === 'DROP_ITEM_AT_LOCATION'
@@ -163,7 +163,7 @@ describe('swing_at_target fumble weapon drop', () => {
       expect(hasDrop).toBe(false);
     });
 
-    it('should NOT include UNWIELD_ITEM in FAILURE branch', () => {
+    it('should NOT include UNWIELD_ITEM in FAILURE branch (rule delegates to macro)', () => {
       const failureIf = findIfByOutcome(swingAtTargetRule.actions, 'FAILURE');
       const hasUnwield = failureIf.parameters.then_actions.some(
         (op) => op.type === 'UNWIELD_ITEM'
@@ -171,7 +171,7 @@ describe('swing_at_target fumble weapon drop', () => {
       expect(hasUnwield).toBe(false);
     });
 
-    it('should NOT include DROP_ITEM_AT_LOCATION in FAILURE branch', () => {
+    it('should NOT include DROP_ITEM_AT_LOCATION in FAILURE branch (rule delegates to macro)', () => {
       const failureIf = findIfByOutcome(swingAtTargetRule.actions, 'FAILURE');
       const hasDrop = failureIf.parameters.then_actions.some(
         (op) => op.type === 'DROP_ITEM_AT_LOCATION'
@@ -179,7 +179,7 @@ describe('swing_at_target fumble weapon drop', () => {
       expect(hasDrop).toBe(false);
     });
 
-    it('should NOT include UNWIELD_ITEM in CRITICAL_SUCCESS branch', () => {
+    it('should NOT include UNWIELD_ITEM in CRITICAL_SUCCESS branch (rule delegates to macro)', () => {
       const critSuccessIf = findIfByOutcome(
         swingAtTargetRule.actions,
         'CRITICAL_SUCCESS'
@@ -190,7 +190,7 @@ describe('swing_at_target fumble weapon drop', () => {
       expect(hasUnwield).toBe(false);
     });
 
-    it('should NOT include DROP_ITEM_AT_LOCATION in CRITICAL_SUCCESS branch', () => {
+    it('should NOT include DROP_ITEM_AT_LOCATION in CRITICAL_SUCCESS branch (rule delegates to macro)', () => {
       const critSuccessIf = findIfByOutcome(
         swingAtTargetRule.actions,
         'CRITICAL_SUCCESS'

@@ -1,0 +1,11 @@
+// Scope: weapons:wielded_piercing_weapons
+// Description: Returns wielded weapons with piercing damage capability
+// Usage: Primary target scope for thrust_at_target action
+
+weapons:wielded_piercing_weapons := actor.components.positioning:wielding.wielded_item_ids[][{
+  "and": [
+    { "has_component": [".", "weapons:weapon"] },
+    { "has_component": [".", "damage-types:damage_capabilities"] },
+    { "has_damage_capability": [".", "piercing"] }
+  ]
+}]
