@@ -315,8 +315,8 @@ describe('swing_at_target full flow (critical e2e)', () => {
       torso.id,
       'anatomy:part_health'
     );
-    // Rapier base damage is 3 → 4.5 expected
-    expect(health.currentHealth).toBeCloseTo(95.5);
+    // Rapier base damage is 8 (slashing) → 12 expected
+    expect(health.currentHealth).toBeCloseTo(88);
   });
 
   it('drops the weapon on fumble outcomes', async () => {

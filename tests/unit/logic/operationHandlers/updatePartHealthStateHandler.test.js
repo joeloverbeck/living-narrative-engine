@@ -16,6 +16,23 @@ import {
 } from '@jest/globals';
 
 import UpdatePartHealthStateHandler from '../../../../src/logic/operationHandlers/updatePartHealthStateHandler.js';
+import {
+  calculateStateFromPercentage,
+  isDeterioration,
+} from '../../../../src/anatomy/registries/healthStateRegistry.js';
+
+jest.mock('../../../../src/anatomy/registries/healthStateRegistry.js', () => {
+  const original = jest.requireActual(
+    '../../../../src/anatomy/registries/healthStateRegistry.js'
+  );
+  return {
+    ...original,
+    calculateStateFromPercentage: jest.fn(
+      original.calculateStateFromPercentage
+    ),
+    isDeterioration: jest.fn(original.isDeterioration),
+  };
+});
 
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
@@ -106,6 +123,25 @@ describe('UpdatePartHealthStateHandler', () => {
         logger: log,
       };
       em.batchAddComponentsOptimized.mockResolvedValue(true);
+    });
+
+    test('uses registry to calculate state and check deterioration', async () => {
+      const partHealth = {
+        currentHealth: 60,
+        maxHealth: 100,
+        state: 'healthy',
+        turnsInState: 2,
+      };
+
+      em.getComponentData.mockImplementation((entityId, componentId) => {
+        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
+        return null;
+      });
+
+      await handler.execute({ part_entity_ref: 'part1' }, executionContext);
+
+      expect(calculateStateFromPercentage).toHaveBeenCalled();
+      expect(isDeterioration).toHaveBeenCalled();
     });
 
     test('calculates healthy state when health >= 81% (100%)', async () => {

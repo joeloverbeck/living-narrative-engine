@@ -10,6 +10,7 @@ import {
   BURNING_COMPONENT_ID,
   POISONED_COMPONENT_ID,
 } from './damageTypeEffectsService.js';
+import { HEALTH_STATE_REGISTRY } from '../../anatomy/registries/healthStateRegistry.js';
 
 // --- Component ID Constants ---
 const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
@@ -145,14 +146,14 @@ class InjuryAggregationService extends BaseService {
 
     // Filter parts into categories
     const injuredParts = allPartInfos.filter(
-      (part) => part.state !== 'healthy'
+      (part) => part.state !== HEALTH_STATE_REGISTRY.healthy.id
     );
     const bleedingParts = allPartInfos.filter((part) => part.isBleeding);
     const burningParts = allPartInfos.filter((part) => part.isBurning);
     const poisonedParts = allPartInfos.filter((part) => part.isPoisoned);
     const fracturedParts = allPartInfos.filter((part) => part.isFractured);
     const destroyedParts = allPartInfos.filter(
-      (part) => part.state === 'destroyed'
+      (part) => part.state === HEALTH_STATE_REGISTRY.destroyed.id
     );
 
     // Calculate weighted overall health
@@ -395,7 +396,7 @@ class InjuryAggregationService extends BaseService {
       return {
         currentHealth: data?.currentHealth ?? 0,
         maxHealth: data?.maxHealth ?? 1,
-        state: data?.state ?? 'healthy',
+        state: data?.state ?? HEALTH_STATE_REGISTRY.healthy.id,
       };
     } catch {
       return null;

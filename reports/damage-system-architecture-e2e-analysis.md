@@ -6,9 +6,9 @@ This report documents the complete damage system architecture in the Living Narr
 
 **Key Findings:**
 - 5 distinct damage workflows identified
-- 3 e2e tests now exist (throw action + swing_at_target full flow + death mechanics)
+- 4 e2e tests now exist (throw action + swing_at_target full flow + death mechanics + damage effects triggers)
 - 24+ integration tests provide component-level coverage but no end-to-end validation
-- Critical gaps remain in: damage effects, propagation
+- Burn/poison stacking and tick expiration covered in e2e; propagation remains untested
 - Known bug: message ordering (damage appears before success message)
 
 ---
@@ -447,13 +447,14 @@ Four weapon entities analyzed with damage configurations:
 
 ## Current Test Coverage
 
-### E2E Tests (3 total)
+### E2E Tests (4 total)
 
 | File | Coverage | Notes |
 |------|----------|-------|
 | `tests/e2e/actions/realRuleExecution.e2e.test.js` | Tests throw action | Does NOT test combat damage |
 | `tests/e2e/actions/swingAtTargetFullFlow.e2e.test.js` | Full swing_at_target flow | Covers damage, bleed trigger, piercing exclusion, critical multiplier, fumble drop |
 | `tests/e2e/actions/deathMechanics.e2e.test.js` | Death & dying resolution | Vital organ destruction → death, weighted overall-health <10% → dying, 3-turn countdown → bleeding_out death, `anatomy:entity_died` payload |
+| `tests/e2e/actions/damageEffectsTriggers.e2e.test.js` | Damage effects | Bleed severity/turns, fracture + stun application, dismemberment short-circuit dispatch, burn stacking + tick duration processing, poison entity-scope attachment + tick expiration |
 
 ### Integration Tests (24+ in weapons/)
 
@@ -470,11 +471,11 @@ Four weapon entities analyzed with damage configurations:
 | Area | Current | Risk |
 |------|---------|------|
 | Full swing_at_target → damage → effects e2e | ✅ Covered by swingAtTargetFullFlow.e2e.test.js | MEDIUM (variants like multi-target/propagation still untested) |
-| Bleed effect triggering | ~5% | HIGH |
-| Burn effect triggering | 0% | HIGH |
-| Poison effect triggering | 0% | HIGH |
-| Fracture effect triggering | 0% | HIGH |
-| Dismemberment triggering | 0% | HIGH |
+| Bleed effect triggering | Covered for slashing (minor/moderate) via damageEffectsTriggers.e2e.test.js | MEDIUM (stacking/tick progression untested) |
+| Burn effect triggering | Covered for burn attach, stacking, and tick expiration | LOW (multi-target propagation untested) |
+| Poison effect triggering | Covered for entity-scope attachment and tick expiration | MEDIUM (part-scope ticks untested) |
+| Fracture effect triggering | Covered for blunt with stun chance | MEDIUM (other configs untested) |
+| Dismemberment triggering | Covered for slashing threshold | LOW |
 | Damage propagation to internal parts | ~5% | HIGH |
 | Death via vital organ destruction | ✅ Covered by deathMechanics.e2e.test.js | LOW |
 | Multi-turn combat with dying state | ✅ Countdown covered in deathMechanics.e2e.test.js | MEDIUM (stabilization/turn hooks untested) |
@@ -487,19 +488,11 @@ Four weapon entities analyzed with damage configurations:
 
 ### Message Ordering Bug
 
-**Location:** `tests/integration/mods/weapons/damageMessageOrdering.integration.test.js`
+**Status:** Fixed in rule ordering (damage renderer still batches via `queueMicrotask`, but success is now dispatched and displayed before damage is applied).
 
-**Issue:** Damage messages appear BEFORE success messages due to `queueMicrotask` in `DamageEventMessageRenderer`.
+**Fix Evidence:** In `data/mods/weapons/rules/handle_swing_at_target.rule.json`, both SUCCESS and CRITICAL_SUCCESS branches dispatch the success perceptible event and the success display event *before* entering the `FOR_EACH` damage loop. This guarantees the success message renders before deferred damage messages from `DamageEventMessageRenderer`.
 
-**Expected Order:**
-1. "{Actor} swings rapier at {Target}... ✓"
-2. "Bertram's torso suffers a deep gash..."
-
-**Actual Order:**
-1. "Bertram's torso suffers a deep gash..."
-2. "{Actor} swings rapier at {Target}... ✓"
-
-**Root Cause:** `queueMicrotask()` defers damage message rendering, causing it to execute after the action success message.
+**Remaining Note:** The renderer still uses `queueMicrotask` for batching, but given the rule ordering, damage messages now follow success as desired. Integration doc test (`tests/integration/mods/weapons/damageMessageOrdering.integration.test.js`) still describes the old behavior and should be updated.
 
 ---
 
@@ -546,6 +539,13 @@ Four weapon entities analyzed with damage configurations:
 3. Dismemberment triggered on high damage threshold
 4. Effect component attachment verification
 5. Effect event dispatching
+
+**Status:** Implemented at `tests/e2e/actions/damageEffectsTriggers.e2e.test.js`. Notes:
+- Bleed attaches with severity and duration from weapon config (rapier slashing → minor, 2 turns).
+- Fracture applies to the damaged entity and can stun the owner when RNG < stunChance (practice stick 10%).
+- Dismemberment short-circuits further effects; no bleed component is added when the threshold is met.
+- Burn attaches with duration, tickDamage, and stackedCount metadata and expires after ticks when reprocessed.
+- Poison can target entity scope (not just part), ticks down duration, and expires with component removal when so configured.
 
 ### Test Suite 4: damagePropagationFlow.e2e.test.js (HIGH)
 
@@ -601,8 +601,8 @@ Four weapon entities analyzed with damage configurations:
 
 ## Recommendations
 
-1. **Immediate Priority:** Implement damageEffectsTriggers.e2e.test.js to validate effect system
-2. **High Priority:** Implement damagePropagationFlow.e2e.test.js and multiTurnCombatScenario.e2e.test.js
+1. **Immediate Priority:** Implement damagePropagationFlow.e2e.test.js and multiTurnCombatScenario.e2e.test.js to cover propagation and turn-by-turn bleed/burn/poison ticks in full sequences
+2. **High Priority:** Add part-scope poison ticking coverage and multi-target burn stacking in follow-up scenarios
 3. **Bug Fix:** Address message ordering issue in DamageEventMessageRenderer
 
 ---

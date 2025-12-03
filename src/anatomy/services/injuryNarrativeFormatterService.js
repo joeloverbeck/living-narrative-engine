@@ -4,26 +4,10 @@
  */
 
 import { BaseService } from '../../utils/serviceBase.js';
-
-// --- State-to-Adjective Mappings (First-Person) ---
-const FIRST_PERSON_STATE_MAP = {
-  healthy: 'feels fine',
-  scratched: 'stings slightly',
-  wounded: 'throbs painfully',
-  injured: 'aches deeply',
-  critical: 'screams with agony',
-  destroyed: 'is completely numb',
-};
-
-// --- State-to-Adjective Mappings (Third-Person) ---
-const THIRD_PERSON_STATE_MAP = {
-  healthy: 'is uninjured',
-  scratched: 'is scratched',
-  wounded: 'is wounded',
-  injured: 'is injured',
-  critical: 'is critically injured',
-  destroyed: 'has been destroyed',
-};
+import {
+  getFirstPersonDescription,
+  getStateOrder,
+} from '../../anatomy/registries/healthStateRegistry.js';
 
 // --- Effect-to-Description Mappings (First-Person) ---
 const FIRST_PERSON_EFFECT_MAP = {
@@ -134,49 +118,27 @@ class InjuryNarrativeFormatterService extends BaseService {
     const narrativeParts = [];
 
     // Group injuries by severity (most severe first)
-    const destroyedParts = summary.destroyedParts || [];
-    const criticalParts = summary.injuredParts.filter(
-      (p) => p.state === 'critical'
-    );
-    const injuredParts = summary.injuredParts.filter(
-      (p) => p.state === 'injured'
-    );
-    const woundedParts = summary.injuredParts.filter(
-      (p) => p.state === 'wounded'
-    );
-    const scratchedParts = summary.injuredParts.filter(
-      (p) => p.state === 'scratched'
-    );
+    const states = getStateOrder(false); // Descending severity
 
-    // Process each severity group
-    if (destroyedParts.length > 0) {
-      narrativeParts.push(
-        this.#formatPartGroupFirstPerson(destroyedParts, 'destroyed')
-      );
-    }
+    for (const state of states) {
+      if (state === 'healthy') continue;
 
-    if (criticalParts.length > 0) {
-      narrativeParts.push(
-        this.#formatPartGroupFirstPerson(criticalParts, 'critical')
-      );
-    }
+      let parts = [];
+      if (state === 'destroyed') {
+        // Include explicitly destroyed parts and any labeled destroyed in injuredParts
+        parts = [...(summary.destroyedParts || [])];
+        if (summary.injuredParts) {
+          parts.push(
+            ...summary.injuredParts.filter((p) => p.state === 'destroyed')
+          );
+        }
+      } else {
+        parts = (summary.injuredParts || []).filter((p) => p.state === state);
+      }
 
-    if (injuredParts.length > 0) {
-      narrativeParts.push(
-        this.#formatPartGroupFirstPerson(injuredParts, 'injured')
-      );
-    }
-
-    if (woundedParts.length > 0) {
-      narrativeParts.push(
-        this.#formatPartGroupFirstPerson(woundedParts, 'wounded')
-      );
-    }
-
-    if (scratchedParts.length > 0) {
-      narrativeParts.push(
-        this.#formatPartGroupFirstPerson(scratchedParts, 'scratched')
-      );
+      if (parts.length > 0) {
+        narrativeParts.push(this.#formatPartGroupFirstPerson(parts, state));
+      }
     }
 
     // Add effect descriptions
@@ -297,7 +259,7 @@ class InjuryNarrativeFormatterService extends BaseService {
     }
 
     const stateDesc =
-      FIRST_PERSON_STATE_MAP[state] || `feels ${state}`;
+      getFirstPersonDescription(state) || `feels ${state}`;
     const partNames = parts.map((p) =>
       this.#formatPartName(p.partType, p.orientation)
     );
