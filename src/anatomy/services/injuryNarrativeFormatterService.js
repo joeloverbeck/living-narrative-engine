@@ -15,6 +15,7 @@ const FIRST_PERSON_EFFECT_MAP = {
   burning: 'searing heat radiates from',
   poisoned: 'a sickening feeling spreads from',
   fractured: 'sharp pain shoots through',
+  dismembered: 'is missing',
 };
 
 // --- Effect-to-Description Mappings (Third-Person) ---
@@ -23,6 +24,7 @@ const THIRD_PERSON_EFFECT_MAP = {
   burning: 'is burning',
   poisoned: 'is poisoned',
   fractured: 'is fractured',
+  dismembered: 'flies off in an arc',
 };
 
 // --- Bleeding Severity Descriptions (First-Person) ---
@@ -281,6 +283,13 @@ class InjuryNarrativeFormatterService extends BaseService {
    */
   #formatEffectsFirstPerson(summary) {
     const effectParts = [];
+
+    // Dismembered effects (highest priority)
+    const dismemberedParts = summary.dismemberedParts || [];
+    for (const part of dismemberedParts) {
+      const partName = this.#formatPartName(part.partType, part.orientation);
+      effectParts.push(`My ${partName} ${FIRST_PERSON_EFFECT_MAP.dismembered}.`);
+    }
 
     // Bleeding effects
     const bleedingParts = summary.bleedingParts || [];

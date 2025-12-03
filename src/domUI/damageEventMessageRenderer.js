@@ -139,8 +139,13 @@ export class DamageEventMessageRenderer extends BoundDomRendererBase {
       this.#handleEntityDied.bind(this)
     );
 
+    this._subscribe(
+      'anatomy:dismembered',
+      this.#handleDismembered.bind(this)
+    );
+
     this.logger.debug(
-      `${this._logPrefix} Subscribed to 4 anatomy damage events.`
+      `${this._logPrefix} Subscribed to 5 anatomy damage events.`
     );
   }
 
@@ -189,6 +194,46 @@ export class DamageEventMessageRenderer extends BoundDomRendererBase {
   }
 
   /**
+   * Handles the 'anatomy:dismembered' event.
+   *
+   * @private
+   * @param {object} event - The event object.
+   * @param {object} event.payload - The event payload.
+   */
+  #handleDismembered({ payload }) {
+    this.logger.debug(`${this._logPrefix} Received dismembered event.`);
+    // Treat as a damage event but with specific effect
+    // We need to construct a payload compatible with formatDamageEvent
+    // The event payload has: entityId, partId, damageTypeId, timestamp
+    // But formatDamageEvent needs names (entityName, partType, etc.) which might be missing in the event payload depending on how it's dispatched.
+    // DamageTypeEffectsService dispatches it with: entityId, partId, damageTypeId.
+    // It DOES NOT include names.
+    // However, handleDamageApplied receives a RICH payload from ApplyDamageHandler (with names).
+    // DamageTypeEffectsService does NOT have access to names easily without querying.
+    // BUT wait, ApplyDamageHandler also dispatches DAMAGE_APPLIED.
+    
+    // CRITICAL: anatomy:dismembered is dispatched by DamageTypeEffectsService, which is a "service", 
+    // and services usually don't fetch names for events (handlers do).
+    // If we just pass this payload, formatDamageEvent will show "An entity's body part suffers..."
+    
+    // We might need to rely on the fact that a DAMAGE_APPLIED event likely precedes or follows this?
+    // No, we want the text "Her left arm is severed."
+    
+    // For now, let's queue it. If names are missing, the formatter has fallbacks.
+    // Ideally, DamageTypeEffectsService should include names if possible, or we fetch them here?
+    // Fetching here is hard (async/dependencies).
+    
+    // Let's assume for now we just map what we have.
+    // We set damageAmount to 0 (or irrelevant) and add effect.
+    
+    this.#queueDamageEvent({
+        ...payload,
+        damageType: payload.damageTypeId, // Map to format expected by renderer
+        effectsTriggered: ['dismembered'],
+    }, 'damage');
+  }
+
+  /**
    * Handles the 'anatomy:entity_died' event.
    *
    * @private
@@ -227,7 +272,10 @@ export class DamageEventMessageRenderer extends BoundDomRendererBase {
 
     if (!this.#batchScheduled) {
       this.#batchScheduled = true;
-      queueMicrotask(() => this.#flushBatch());
+      queueMicrotask(() => {
+        this.logger.debug(`${this._logPrefix} Microtask callback executing flushBatch.`);
+        this.#flushBatch();
+      });
     }
   }
 
@@ -245,12 +293,45 @@ export class DamageEventMessageRenderer extends BoundDomRendererBase {
       return;
     }
 
-    this.logger.debug(
-      `${this._logPrefix} Flushing batch of ${events.length} damage event(s).`
-    );
+        this.logger.debug(
+          `${this._logPrefix} Flushing batch of ${events.length} damage event(s). Raw events:`, events
+        );
+    
+        // Merging logic: Combine secondary events (like dismemberment) into primary damage events
+        const mergedEvents = [];
+        for (const event of events) {
+          // Only attempt merge for 'damage' type events
+          if (event._eventType === 'damage') {
+            // Find existing event for same entity/part/damageType that is also a damage event
+            // We assume primary event (with amount) comes first
+            const existing = mergedEvents.find(e =>
+              e.entityId === event.entityId &&
+              e.partId === event.partId &&
+              // If damageType matches (e.g. slashing), we can merge effects
+              e.damageType === event.damageType &&
+              e._eventType === 'damage'
+            );
+    
+            if (existing) {
+              this.logger.debug(`${this._logPrefix} Merging event into existing:`, event);
+              // Merge effectsTriggered
+              if (event.effectsTriggered && event.effectsTriggered.length > 0) {
+                existing.effectsTriggered = [
+                  ...(existing.effectsTriggered || []),
+                  ...event.effectsTriggered
+                ];
+              }
+              continue;
+            }
+          }
+          this.logger.debug(`${this._logPrefix} Pushing new event to merged:`, event);
+          mergedEvents.push(event);
+        }
+        this.logger.debug(`${this._logPrefix} Final merged events:`, mergedEvents);
 
-    for (const eventData of events) {
-      this.#renderDamageMessage(eventData);
+    // Render each merged event
+    for (const event of mergedEvents) {
+      this.#renderDamageMessage(event);
     }
   }
 

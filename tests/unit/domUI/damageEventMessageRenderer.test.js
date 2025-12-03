@@ -110,9 +110,9 @@ describe('DamageEventMessageRenderer', () => {
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
-    it('should subscribe to all 4 damage events on construction', () => {
+    it('should subscribe to all 5 damage events on construction', () => {
       createRenderer();
-      expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledTimes(4);
+      expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledTimes(5);
       expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledWith(
         'anatomy:damage_applied',
         expect.any(Function)
@@ -127,6 +127,10 @@ describe('DamageEventMessageRenderer', () => {
       );
       expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledWith(
         'anatomy:entity_died',
+        expect.any(Function)
+      );
+      expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledWith(
+        'anatomy:dismembered',
         expect.any(Function)
       );
     });
@@ -423,10 +427,10 @@ describe('DamageEventMessageRenderer', () => {
 
       const handler = eventListeners['anatomy:damage_applied'];
 
-      // Dispatch 3 events synchronously
-      handler({ payload: { damageAmount: 5 } });
-      handler({ payload: { damageAmount: 15 } });
-      handler({ payload: { damageAmount: 55 } });
+      // Dispatch 3 events synchronously with distinct IDs to prevent merging
+      handler({ payload: { entityId: 'e1', partId: 'p1', damageType: 'slashing', damageAmount: 5 } });
+      handler({ payload: { entityId: 'e2', partId: 'p2', damageType: 'blunt', damageAmount: 15 } });
+      handler({ payload: { entityId: 'e3', partId: 'p3', damageType: 'piercing', damageAmount: 55 } });
 
       // Before microtask flushes, nothing should be rendered
       expect(mockMessageList.appendChild).not.toHaveBeenCalled();
@@ -450,13 +454,15 @@ describe('DamageEventMessageRenderer', () => {
 
       const handler = eventListeners['anatomy:damage_applied'];
 
-      handler({ payload: { damageAmount: 10 } });
-      handler({ payload: { damageAmount: 20 } });
+      // Use distinct IDs to prevent merging
+      handler({ payload: { entityId: 'e1', partId: 'p1', damageType: 'slashing', damageAmount: 10 } });
+      handler({ payload: { entityId: 'e2', partId: 'p2', damageType: 'blunt', damageAmount: 20 } });
 
       await Promise.resolve();
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Flushing batch of 2 damage event(s)')
+        expect.stringContaining('Flushing batch of 2 damage event(s)'),
+        expect.any(Array)
       );
     });
   });
@@ -560,7 +566,7 @@ describe('DamageEventMessageRenderer', () => {
         mockValidatedEventDispatcher.subscribe.mock.calls.map((call) => call[0]);
       expect(subscribedEventNames).not.toContain('core:display_message');
       expect(subscribedEventNames).not.toContain('some:other_event');
-      expect(subscribedEventNames.length).toBe(4);
+      expect(subscribedEventNames.length).toBe(5);
     });
   });
 });

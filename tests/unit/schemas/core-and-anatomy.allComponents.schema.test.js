@@ -128,6 +128,7 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
     'anatomy:bleeding': { severity: 'minor', remainingTurns: 3, tickDamage: 5 },
     'anatomy:burning': { remainingTurns: 3, tickDamage: 5, stackedCount: 1 },
     'anatomy:fractured': { sourceDamageType: 'blunt', appliedAtHealth: 50 },
+    'anatomy:dismembered': { sourceDamageType: 'slashing' },
     'anatomy:poisoned': { remainingTurns: 3, tickDamage: 5 },
     'anatomy:stunned': { remainingTurns: 2 },
     'anatomy:vital_organ': { organType: 'heart' },
@@ -198,6 +199,7 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
     'anatomy:bleeding': { severity: 'invalid' },
     'anatomy:burning': { remainingTurns: -1 },
     'anatomy:fractured': {},
+    'anatomy:dismembered': {}, // Missing required sourceDamageType
     'anatomy:poisoned': { tickDamage: 'high' },
     'anatomy:stunned': {},
     'anatomy:vital_organ': { organType: 'kidney' }, // Invalid enum value

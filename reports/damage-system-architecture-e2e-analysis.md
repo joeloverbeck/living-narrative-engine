@@ -6,10 +6,11 @@ This report documents the complete damage system architecture in the Living Narr
 
 **Key Findings:**
 - 5 distinct damage workflows identified
-- 4 e2e tests now exist (throw action + swing_at_target full flow + death mechanics + damage effects triggers)
+- 5 e2e tests now exist (throw action + swing_at_target full flow + death mechanics + damage effects triggers + propagation flow)
 - 24+ integration tests provide component-level coverage but no end-to-end validation
-- Burn/poison stacking and tick expiration covered in e2e; propagation remains untested
+- Burn/poison stacking, tick expiration, and internal propagation are now covered in e2e
 - Known bug: message ordering (damage appears before success message)
+- Production fix: dismemberment effect handler now awaits component writes (async bug could previously surface during parsing)
 
 ---
 
@@ -552,10 +553,16 @@ Four weapon entities analyzed with damage configurations:
 **Purpose:** Validate internal damage propagation
 
 **Scenarios:**
-1. Torso damage propagates to heart (piercing high penetration)
+1. Torso damage propagates to heart (swing_at_target slashing path; action excludes piercing)
 2. Head damage propagates to brain
-3. Propagation probability verification
-4. Recursive damage application
+3. Propagation probability verification (blunt modifier)
+4. Recursive damage application (parent → child → grandchild)
+
+**Status:** Implemented at `tests/e2e/actions/damagePropagationFlow.e2e.test.js`. Notes:
+- Uses explicit entity IDs (avoids `target` placeholder) so propagated APPLY_DAMAGE calls resolve correctly.
+- Validates emitted `anatomy:internal_damage_propagated` events and resulting health deltas for heart/brain.
+- Confirms propagation short-circuits when probability rolls fail and that recursive propagation applies child rules.
+- Action path blocks `piercing` damage via `exclude_damage_types`; scenarios exercise `slashing` to reach APPLY_DAMAGE.
 
 ### Test Suite 5: multiTurnCombatScenario.e2e.test.js (HIGH)
 
@@ -601,7 +608,7 @@ Four weapon entities analyzed with damage configurations:
 
 ## Recommendations
 
-1. **Immediate Priority:** Implement damagePropagationFlow.e2e.test.js and multiTurnCombatScenario.e2e.test.js to cover propagation and turn-by-turn bleed/burn/poison ticks in full sequences
+1. **Immediate Priority:** Implement multiTurnCombatScenario.e2e.test.js to cover turn-by-turn bleed/burn/poison ticks in full sequences
 2. **High Priority:** Add part-scope poison ticking coverage and multi-target burn stacking in follow-up scenarios
 3. **Bug Fix:** Address message ordering issue in DamageEventMessageRenderer
 

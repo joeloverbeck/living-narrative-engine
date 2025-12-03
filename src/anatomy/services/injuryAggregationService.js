@@ -9,6 +9,7 @@ import {
   BLEEDING_COMPONENT_ID,
   BURNING_COMPONENT_ID,
   POISONED_COMPONENT_ID,
+  DISMEMBERED_COMPONENT_ID,
 } from './damageTypeEffectsService.js';
 import { HEALTH_STATE_REGISTRY } from '../../anatomy/registries/healthStateRegistry.js';
 
@@ -63,6 +64,7 @@ const PRONOUN_MAP = {
  * @property {boolean} isBurning - Has anatomy:burning component
  * @property {boolean} isPoisoned - Has anatomy:poisoned component
  * @property {boolean} isFractured - Has anatomy:fractured component
+ * @property {boolean} isDismembered - Has anatomy:dismembered component
  * @property {boolean} isStunned - Has anatomy:stunned component
  */
 
@@ -76,6 +78,7 @@ const PRONOUN_MAP = {
  * @property {InjuredPartInfo[]} burningParts - Parts with active burning
  * @property {InjuredPartInfo[]} poisonedParts - Parts with poison
  * @property {InjuredPartInfo[]} fracturedParts - Parts with fractures
+ * @property {InjuredPartInfo[]} dismemberedParts - Parts that are dismembered
  * @property {InjuredPartInfo[]} destroyedParts - Parts that are destroyed
  * @property {number} overallHealthPercentage - Weighted average health (0-100)
  * @property {boolean} isDying - Has anatomy:dying component
@@ -152,6 +155,7 @@ class InjuryAggregationService extends BaseService {
     const burningParts = allPartInfos.filter((part) => part.isBurning);
     const poisonedParts = allPartInfos.filter((part) => part.isPoisoned);
     const fracturedParts = allPartInfos.filter((part) => part.isFractured);
+    const dismemberedParts = allPartInfos.filter((part) => part.isDismembered);
     const destroyedParts = allPartInfos.filter(
       (part) => part.state === HEALTH_STATE_REGISTRY.destroyed.id
     );
@@ -170,6 +174,7 @@ class InjuryAggregationService extends BaseService {
       burningParts,
       poisonedParts,
       fracturedParts,
+      dismemberedParts,
       destroyedParts,
       overallHealthPercentage,
       isDying: dyingData.isDying,
@@ -367,6 +372,10 @@ class InjuryAggregationService extends BaseService {
       isFractured: this.#entityManager.hasComponent(
         partEntityId,
         FRACTURED_COMPONENT_ID
+      ),
+      isDismembered: this.#entityManager.hasComponent(
+        partEntityId,
+        DISMEMBERED_COMPONENT_ID
       ),
       isStunned: this.#entityManager.hasComponent(
         partEntityId,
