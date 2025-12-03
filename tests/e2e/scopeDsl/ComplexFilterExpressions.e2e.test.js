@@ -14,13 +14,19 @@
  * Coverage: Workflow 5a (Filter Resolution) - Complex scenarios not covered elsewhere
  */
 
-import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
+import {
+  describe,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  test,
+  expect,
+} from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
 import { ScopeTestUtilities } from '../../common/scopeDsl/scopeTestUtilities.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
-import { performance } from 'perf_hooks';
 
 /**
  * E2E test suite for complex filter expressions in ScopeDSL
@@ -36,9 +42,11 @@ describe('Complex Filter Expressions E2E', () => {
   let jsonLogicService;
   let spatialIndexManager;
   let registry;
+  let baseScopes; // Store base scopes for re-initialization after tests that modify registry
 
-  beforeEach(async () => {
-    // Create real container for comprehensive E2E testing
+  // PERFORMANCE OPTIMIZATION: Move expensive setup to beforeAll
+  beforeAll(async () => {
+    // Create real container for comprehensive E2E testing (ONCE)
     container = new AppContainer();
     await configureContainer(container, {
       outputDiv: document.createElement('div'),
@@ -47,7 +55,7 @@ describe('Complex Filter Expressions E2E', () => {
       document,
     });
 
-    // Get real services from container
+    // Get real services from container (ONCE)
     entityManager = container.resolve(tokens.IEntityManager);
     scopeRegistry = container.resolve(tokens.IScopeRegistry);
     scopeEngine = container.resolve(tokens.IScopeEngine);
@@ -57,7 +65,7 @@ describe('Complex Filter Expressions E2E', () => {
     spatialIndexManager = container.resolve(tokens.ISpatialIndexManager);
     registry = container.resolve(tokens.IDataRegistry);
 
-    // Set up comprehensive test conditions for complex filtering
+    // Set up comprehensive test conditions for complex filtering (ONCE)
     ScopeTestUtilities.setupScopeTestConditions(registry, [
       {
         id: 'test:complex-multilevel-condition',
@@ -136,8 +144,8 @@ describe('Complex Filter Expressions E2E', () => {
       },
     ]);
 
-    // Create complex test scopes for filter expressions
-    const complexScopes = ScopeTestUtilities.createTestScopes(
+    // Create complex test scopes for filter expressions (ONCE)
+    baseScopes = ScopeTestUtilities.createTestScopes(
       { dslParser, logger },
       [
         {
@@ -178,15 +186,23 @@ describe('Complex Filter Expressions E2E', () => {
       ]
     );
 
-    // Initialize scope registry with complex test scopes
-    scopeRegistry.initialize(complexScopes);
+    // Initialize scope registry with complex test scopes (ONCE)
+    scopeRegistry.initialize(baseScopes);
   });
 
-  afterEach(() => {
-    // Clean up resources
+  // PERFORMANCE OPTIMIZATION: Clean up container after all tests
+  afterAll(() => {
     if (container && typeof container.cleanup === 'function') {
       container.cleanup();
     }
+  });
+
+  // Clear entity state between tests for isolation
+  beforeEach(() => {
+    // Clear all entities from previous test
+    entityManager.clearAll();
+    // Re-initialize scope registry with base scopes (in case a test modified it)
+    scopeRegistry.initialize(baseScopes);
   });
 
   /**

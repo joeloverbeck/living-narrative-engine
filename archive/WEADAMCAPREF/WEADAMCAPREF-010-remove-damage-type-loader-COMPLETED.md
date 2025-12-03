@@ -1,5 +1,7 @@
 # WEADAMCAPREF-010: Remove DamageTypeLoader and damage-type definitions
 
+**Status: COMPLETED**
+
 ## Summary
 
 Remove the `DamageTypeLoader` infrastructure and global damage type definition files. This cleanup is safe because damage type data now lives inline on weapon entities via the `damage_capabilities` component.
@@ -19,8 +21,10 @@ Remove the `DamageTypeLoader` infrastructure and global damage type definition f
 | `data/mods/anatomy/damage-types/blunt.json` | DELETE | Data now on weapons |
 | `src/dependencyInjection/registrations/loadersRegistrations.js` | UPDATE | Remove DamageTypeLoader registration |
 | `src/dependencyInjection/tokens/tokens-core.js` | UPDATE | Remove DamageTypeLoader token |
+| `src/loaders/loaderMeta.js` | UPDATE | Remove damageTypes metadata entry |
+| `src/loaders/defaultLoaderConfig.js` | UPDATE | Remove damageTypeLoader parameter and mapping |
 | `data/mods/anatomy/mod-manifest.json` | UPDATE | Remove damageTypes content reference |
-| `tests/unit/loaders/damageTypeLoader.test.js` | DELETE | If exists |
+| `tests/unit/loaders/damageTypeLoader.test.js` | DELETE | If exists (verified: does not exist) |
 
 ## Out of Scope
 
@@ -62,6 +66,26 @@ In `src/dependencyInjection/tokens/tokens-core.js`, remove:
 DamageTypeLoader: 'DamageTypeLoader',
 ```
 
+### Update Loader Meta
+
+In `src/loaders/loaderMeta.js`, remove the damageTypes entry:
+```javascript
+// Remove this entry
+damageTypes: {
+  contentKey: 'damageTypes',
+  diskFolder: 'damage-types',
+  phase: 'definitions',
+  registryKey: 'damageTypes',
+},
+```
+
+### Update Default Loader Config
+
+In `src/loaders/defaultLoaderConfig.js`, remove:
+1. JSDoc parameter: `@param {BaseManifestItemLoaderInterface} deps.damageTypeLoader`
+2. Function parameter: `damageTypeLoader,`
+3. Config mapping: `damageTypes: damageTypeLoader,`
+
 ### Update Mod Manifest
 
 In `data/mods/anatomy/mod-manifest.json`, remove the `damageTypes` content section:
@@ -75,7 +99,7 @@ In `data/mods/anatomy/mod-manifest.json`, remove the `damageTypes` content secti
 
 ### Delete Tests
 
-If `tests/unit/loaders/damageTypeLoader.test.js` exists, delete it.
+No test file exists for DamageTypeLoader (verified).
 
 ## Acceptance Criteria
 
@@ -114,3 +138,43 @@ If `tests/unit/loaders/damageTypeLoader.test.js` exists, delete it.
 - 2 registration files updated (~5 lines each)
 - 1 manifest file updated (~3 lines)
 - 1 test file deleted (if exists, ~100 lines)
+
+## Outcome
+
+### What Was Actually Changed
+
+All planned changes were implemented as specified:
+
+**Files Deleted:**
+- `src/loaders/damageTypeLoader.js` (59 lines)
+- `data/mods/anatomy/damage-types/blunt.json`
+- `data/mods/anatomy/damage-types/piercing.json`
+- `data/mods/anatomy/damage-types/slashing.json`
+- `data/mods/anatomy/damage-types/` directory
+
+**Files Updated:**
+- `src/dependencyInjection/tokens/tokens-core.js` - Removed `DamageTypeLoader` token
+- `src/dependencyInjection/registrations/loadersRegistrations.js` - Removed import, registration, and ContentLoadManager config
+- `src/loaders/loaderMeta.js` - Removed `damageTypes` metadata entry
+- `src/loaders/defaultLoaderConfig.js` - Removed JSDoc param, function param, and config mapping
+- `data/mods/anatomy/mod-manifest.json` - Removed `damageTypes` content section
+
+**Tests Updated:**
+- `tests/unit/config/registrations/loadersRegistrations.additionalCoverage.test.js` - Removed DamageTypeLoader from stub values
+- `tests/unit/loaders/defaultLoaderConfig.test.js` - Removed damageTypeLoader from test deps and expectations
+- `tests/unit/anatomy/damage-types.schema.test.js` - Updated to use inline test data instead of importing deleted JSON files
+
+### Verification Results
+
+- `npm run validate` - PASSED (0 cross-reference violations)
+- All 794 loader tests pass
+- No references to `DamageTypeLoader` remain in src/ or tests/
+- damage-type.schema.json retained (still used for inline weapon damage capabilities)
+
+### Differences From Original Plan
+
+The original ticket was missing two files that required updates:
+1. `src/loaders/loaderMeta.js` - Had damageTypes metadata entry
+2. `src/loaders/defaultLoaderConfig.js` - Had damageTypeLoader parameter
+
+These were added to the ticket during implementation before code changes began.

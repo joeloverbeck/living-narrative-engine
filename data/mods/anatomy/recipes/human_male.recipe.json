@@ -20,7 +20,7 @@
     },
     "head": {
       "partType": "head",
-      "preferId": "anatomy:human_male_head_bearded"
+      "preferId": "anatomy:humanoid_head_bearded"
     }
   },
   "patterns": [

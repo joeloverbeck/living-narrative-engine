@@ -1,8 +1,12 @@
 # WEADAMCAPREF-009: Migrate weapon entities to damage_capabilities
 
+## Status
+
+Completed.
+
 ## Summary
 
-Add the `damage-types:damage_capabilities` component to all existing weapon entities with appropriate damage configurations. The old `damage-types:can_cut` component is kept temporarily for backward compatibility (removed in WEADAMCAPREF-011).
+Add the `damage-types:damage_capabilities` component to the fantasy weapon entities that currently lack it. Action/scopes/rules are already migrated to the new component (see WEADAMCAPREF-006/007/008), so only the entity data is lagging. Keep existing `damage-types:can_cut` markers on slashing weapons (rapier, longsword) for backward compatibility; piercing/blunt weapons should continue to omit `can_cut`.
 
 ## Dependencies
 
@@ -129,8 +133,8 @@ Add the `damage-types:damage_capabilities` component to all existing weapon enti
 
 ### Tests That Must Pass
 
-1. `npm run validate` - All mod validation passes
-2. `npm run validate:mod:fantasy` - Specific mod validation (if exists)
+1. `npm run validate` (mod validation)
+2. `npm run test:integration -- --runTestsByPath tests/integration/mods/weapons/weaponCanCutComponentValidation.test.js --runInBand`
 
 ### Integration Tests
 
@@ -155,7 +159,7 @@ describe('Weapon damage capability migration', () => {
 
 ### Invariants That Must Remain True
 
-1. Each weapon entity keeps `damage-types:can_cut` component (until WEADAMCAPREF-011)
+1. Slashing weapons that already have `damage-types:can_cut` keep it; piercing/blunt weapons continue to omit it (until WEADAMCAPREF-011)
 2. Each weapon entity keeps `weapons:weapon` component
 3. Entity IDs remain unchanged
 4. Other components on entities remain unchanged
@@ -165,3 +169,9 @@ describe('Weapon damage capability migration', () => {
 ## Estimated Size
 
 - 4 entity files (~10-15 lines added each)
+
+## Outcome
+
+- Added `damage-types:damage_capabilities` entries for the four fantasy weapons using spec values (slashing rapier/longsword, piercing main-gauche, blunt practice stick).
+- Retained `damage-types:can_cut` only on slashing weapons to match existing compatibility tests; piercing/blunt weapons remain without it.
+- Strengthened `weaponCanCutComponentValidation` integration test to cover the new damage capability data alongside legacy marker expectations.

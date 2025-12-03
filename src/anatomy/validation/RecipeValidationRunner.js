@@ -16,6 +16,7 @@ import { SocketNameTplValidator } from './validators/SocketNameTplValidator.js';
 import { PartAvailabilityValidator } from './validators/PartAvailabilityValidator.js';
 import { GeneratedSlotPartsValidator } from './validators/GeneratedSlotPartsValidator.js';
 import { PatternMatchingValidator } from './validators/PatternMatchingValidator.js';
+import { PreferredPartSocketValidator } from './validators/PreferredPartSocketValidator.js';
 import { DescriptorCoverageValidator } from './validators/DescriptorCoverageValidator.js';
 import { LoadFailureValidator } from './validators/LoadFailureValidator.js';
 import { RecipeUsageValidator } from './validators/RecipeUsageValidator.js';
@@ -242,6 +243,13 @@ export class RecipeValidationRunner {
         new SocketSlotCompatibilityValidator({
           logger: this.#logger,
           dataRegistry,
+          anatomyBlueprintRepository,
+        }),
+      validators.preferredPartSockets ??
+        new PreferredPartSocketValidator({
+          logger: this.#logger,
+          dataRegistry,
+          slotGenerator,
           anatomyBlueprintRepository,
         }),
       validators.socketNameTpl ??

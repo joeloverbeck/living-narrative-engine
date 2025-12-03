@@ -45,12 +45,34 @@
         "components": ["anatomy:part"]
       }
     },
+    "heart": {
+      "socket": "heart_socket",
+      "requirements": {
+        "partType": "chicken_heart",
+        "components": ["anatomy:part", "anatomy:vital_organ"]
+      }
+    },
+    "spine": {
+      "socket": "spine_socket",
+      "requirements": {
+        "partType": "chicken_spine",
+        "components": ["anatomy:part", "anatomy:vital_organ"]
+      }
+    },
     "beak": {
       "parent": "head",
       "socket": "beak_mount",
       "requirements": {
         "partType": "chicken_beak",
         "components": ["anatomy:part"]
+      }
+    },
+    "brain": {
+      "parent": "head",
+      "socket": "brain_socket",
+      "requirements": {
+        "partType": "chicken_brain",
+        "components": ["anatomy:part", "anatomy:vital_organ"]
       }
     },
     "left_eye": {

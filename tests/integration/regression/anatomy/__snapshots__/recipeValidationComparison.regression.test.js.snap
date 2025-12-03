@@ -57,6 +57,10 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
       "message": "All 0 generated slot(s) from patterns have matching entity definitions",
     },
     {
+      "check": "preferred_part_sockets",
+      "message": "No preferred parts with child socket requirements to validate",
+    },
+    {
       "check": "property_schemas",
       "message": "All 0 property objects valid",
     },
@@ -483,6 +487,10 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
       "message": "All 3 pattern(s) have matching slots",
     },
     {
+      "check": "preferred_part_sockets",
+      "message": "No preferred parts with child socket requirements to validate",
+    },
+    {
       "check": "property_schemas",
       "message": "All 5 property objects valid",
     },
@@ -520,6 +528,9 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
   "metadata": undefined,
   "passed": [
     {
+      "message": "All slots have descriptor components",
+    },
+    {
       "blueprint": {
         "id": "human_male",
         "root": "anatomy:human_male_torso",
@@ -548,6 +559,10 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
       "message": "All 2 pattern(s) have matching slots",
     },
     {
+      "check": "preferred_part_sockets",
+      "message": "All 5 preferred part override(s) expose required child sockets",
+    },
+    {
       "check": "property_schemas",
       "message": "All 1 property objects valid",
     },
@@ -572,19 +587,7 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
   ],
   "recipeId": "anatomy:human_male",
   "recipePath": "data/mods/anatomy/recipes/human_male.recipe.json",
-  "suggestions": [
-    {
-      "impact": "Part will be excluded from anatomy description",
-      "location": {
-        "name": "head",
-        "type": "slot",
-      },
-      "message": "Slot 'head' may not appear in descriptions",
-      "reason": "No descriptor components in slot properties, and preferred entity 'anatomy:human_male_head_bearded' has no descriptors",
-      "suggestion": "Add descriptor components (descriptors:size_category, descriptors:texture, etc.)",
-      "type": "MISSING_DESCRIPTORS",
-    },
-  ],
+  "suggestions": [],
   "timestamp": "<redacted>",
   "warnings": [],
 }
@@ -623,6 +626,10 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
     {
       "check": "pattern_matching",
       "message": "All 2 pattern(s) have matching slots",
+    },
+    {
+      "check": "preferred_part_sockets",
+      "message": "All 5 preferred part override(s) expose required child sockets",
     },
     {
       "check": "property_schemas",
@@ -718,6 +725,9 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
   "metadata": undefined,
   "passed": [
     {
+      "message": "All slots have descriptor components",
+    },
+    {
       "blueprint": {
         "id": "human_male",
         "root": "anatomy:human_male_torso",
@@ -746,6 +756,10 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
       "message": "All 2 pattern(s) have matching slots",
     },
     {
+      "check": "preferred_part_sockets",
+      "message": "All 5 preferred part override(s) expose required child sockets",
+    },
+    {
       "check": "property_schemas",
       "message": "All 1 property objects valid",
     },
@@ -770,19 +784,7 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
   ],
   "recipeId": "anatomy:human_male",
   "recipePath": "data/mods/anatomy/recipes/human_male.recipe.json",
-  "suggestions": [
-    {
-      "impact": "Part will be excluded from anatomy description",
-      "location": {
-        "name": "head",
-        "type": "slot",
-      },
-      "message": "Slot 'head' may not appear in descriptions",
-      "reason": "No descriptor components in slot properties, and preferred entity 'anatomy:human_male_head_bearded' has no descriptors",
-      "suggestion": "Add descriptor components (descriptors:size_category, descriptors:texture, etc.)",
-      "type": "MISSING_DESCRIPTORS",
-    },
-  ],
+  "suggestions": [],
   "timestamp": "<redacted>",
   "warnings": [],
 }

@@ -52,6 +52,7 @@ describe('Recipe Validation Comparison Regression Suite', () => {
           'generated_slot_part_availability',
           'part_availability',
           'pattern_matching',
+          'preferred_part_sockets',
           'property_schemas',
           'recipe_usage',
           'SLOT_KEY_UNIQUENESS_SKIP',

@@ -47,6 +47,7 @@
         "centaur_torso.entity.json",
         "centaur_upper_torso.entity.json",
         "chicken_beak.entity.json",
+        "chicken_brain.entity.json",
         "chicken_comb.entity.json",
         "chicken_comb_bantam.entity.json",
         "chicken_comb_large_coarse.entity.json",
@@ -55,7 +56,9 @@
         "chicken_head_chalky_white.entity.json",
         "chicken_head_rust_red.entity.json",
         "chicken_head_twisted_joints.entity.json",
+        "chicken_heart.entity.json",
         "chicken_leg.entity.json",
+        "chicken_spine.entity.json",
         "chicken_spur.entity.json",
         "chicken_tail.entity.json",
         "chicken_tail_large_long.entity.json",
@@ -315,11 +318,6 @@
       "actor-has-free-grabbing-appendage.condition.json",
       "actor-has-two-free-grabbing-appendages.condition.json"
     ],
-    "lookups": [],
-    "damageTypes": [
-      "blunt.json",
-      "piercing.json",
-      "slashing.json"
-    ]
+    "lookups": []
   }
 }

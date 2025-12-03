@@ -29,8 +29,10 @@ class RadialLayoutStrategy {
       baseRadius: 220, // Increased from 150 for better spacing
       minAngle: Math.PI / 5.5, // ~33 degrees minimum (increased from 18)
       crowdingFactor: 6, // Node count threshold for spacing adjustment (lowered from 8)
-      highDegreeThreshold: 7, // Nodes with more than this many children use special layout (lowered from 10)
-      highDegreeRadiusMultiplier: 2.2, // Extra radius multiplier for high-degree nodes (increased from 1.8)
+      highDegreeThreshold: 5, // Nodes with more than this many children use special layout (lowered from 10)
+      highDegreeRadiusMultiplier: 2.0, // Extra radius multiplier for high-degree nodes (increased from 1.8)
+      rootChildRadiusScale: 0.4, // Pull immediate children closer to the root to avoid excessive gaps
+      grandchildRadiusMultiplier: 1, // Push depth>=2 nodes farther out so siblings have more breathing room
     };
     this.#requiredSpace = { width: 1200, height: 800 };
   }
@@ -119,6 +121,8 @@ class RadialLayoutStrategy {
    * @param {number} [options.crowdingFactor] - Node count threshold for spacing
    * @param {number} [options.highDegreeThreshold] - Number of children to trigger high-degree layout
    * @param {number} [options.highDegreeRadiusMultiplier] - Radius multiplier for high-degree nodes
+   * @param {number} [options.rootChildRadiusScale] - Multiplier for depth-1 nodes to keep them closer together
+   * @param {number} [options.grandchildRadiusMultiplier] - Multiplier for depth>=2 nodes to increase separation
    */
   configure(options) {
     Object.assign(this.#options, options);
@@ -331,7 +335,17 @@ class RadialLayoutStrategy {
       1,
       nodeCount / this.#options.crowdingFactor
     );
-    return this.#options.baseRadius * depth * crowdingFactor;
+
+    let radius = this.#options.baseRadius * depth * crowdingFactor;
+
+    // Depth-aware scaling: pull immediate children closer, push grandchildren out
+    if (depth === 1) {
+      radius *= this.#options.rootChildRadiusScale;
+    } else if (depth >= 2) {
+      radius *= this.#options.grandchildRadiusMultiplier;
+    }
+
+    return radius;
   }
 
   /**

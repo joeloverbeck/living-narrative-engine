@@ -94,6 +94,7 @@ describe('AnatomyVisualizerUI', () => {
 
     const mockGraphContainer = {
       innerHTML: '',
+      querySelector: jest.fn(() => null),
     };
 
     mockDocument = {

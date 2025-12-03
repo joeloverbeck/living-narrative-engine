@@ -39,6 +39,25 @@
           "id": "wattle_mount",
           "allowedTypes": ["chicken_wattle"],
           "nameTpl": "{{type}}"
+        },
+        {
+          "id": "brain_socket",
+          "allowedTypes": ["chicken_brain"],
+          "nameTpl": "{{type}}"
+        }
+      ]
+    },
+    "anatomy:damage_propagation": {
+      "rules": [
+        {
+          "childSocketId": "brain_socket",
+          "baseProbability": 0.35,
+          "damageFraction": 0.6,
+          "damageTypeModifiers": {
+            "piercing": 1.3,
+            "blunt": 0.6,
+            "slashing": 0.7
+          }
         }
       ]
     },

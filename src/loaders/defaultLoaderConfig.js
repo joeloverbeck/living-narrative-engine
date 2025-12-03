@@ -65,7 +65,6 @@ export function createContentLoadersConfig(loaderMap) {
  * @param {BaseManifestItemLoaderInterface} deps.anatomyRecipeLoader - Anatomy recipe loader.
  * @param {BaseManifestItemLoaderInterface} deps.anatomyFormattingLoader - Anatomy formatting loader.
  * @param {BaseManifestItemLoaderInterface} deps.anatomyStructureTemplateLoader - Anatomy structure template loader.
- * @param {BaseManifestItemLoaderInterface} deps.damageTypeLoader - Damage type loader.
  * @returns {LoaderConfigEntry[]} Array describing loader configuration.
  */
 export function createDefaultContentLoadersConfig({
@@ -88,7 +87,6 @@ export function createDefaultContentLoadersConfig({
   anatomyRecipeLoader,
   anatomyFormattingLoader,
   anatomyStructureTemplateLoader,
-  damageTypeLoader,
 }) {
   return createContentLoadersConfig({
     components: componentLoader,
@@ -110,7 +108,6 @@ export function createDefaultContentLoadersConfig({
     anatomyRecipes: anatomyRecipeLoader,
     anatomyFormatting: anatomyFormattingLoader,
     anatomyStructureTemplates: anatomyStructureTemplateLoader,
-    damageTypes: damageTypeLoader,
   });
 }
 

@@ -126,12 +126,6 @@ export const meta = {
     phase: 'definitions',
     registryKey: 'anatomyStructureTemplates',
   },
-  damageTypes: {
-    contentKey: 'damageTypes',
-    diskFolder: 'damage-types',
-    phase: 'definitions',
-    registryKey: 'damageTypes',
-  },
 };
 
 export default meta;

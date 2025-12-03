@@ -23,6 +23,18 @@
       "partType": "head",
       "preferId": "anatomy:humanoid_head"
     },
+    "heart": {
+      "partType": "heart",
+      "preferId": "anatomy:human_heart"
+    },
+    "spine": {
+      "partType": "spine",
+      "preferId": "anatomy:human_spine"
+    },
+    "brain": {
+      "partType": "brain",
+      "preferId": "anatomy:human_brain"
+    },
     "left_ear": {
       "partType": "ear",
       "preferId": "anatomy:cat_ear",

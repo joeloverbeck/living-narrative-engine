@@ -1,18 +1,19 @@
 /**
- * @file Integration test for weapon entity can_cut component classification
- * Validates that cutting weapons have damage-types:can_cut and piercing weapons do not
- * Related ticket: NONDETACTSYS-015
+ * @file Integration test for weapon damage capabilities component validation
+ * Validates that weapons use damage-types:damage_capabilities with correct entries
+ * Related tickets: NONDETACTSYS-015, WEADAMCAPREF-011
  */
 
 import { describe, it, expect, beforeAll } from '@jest/globals';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 
-describe('Weapon can_cut Component Validation - Integration', () => {
+describe('Weapon Damage Capabilities Validation - Integration', () => {
   const FANTASY_MOD_PATH = 'data/mods/fantasy';
   let rapierData;
   let mainGaucheData;
   let longswordData;
+  let practiceStickData;
 
   beforeAll(async () => {
     const rapierPath = join(
@@ -32,66 +33,181 @@ describe('Weapon can_cut Component Validation - Integration', () => {
       'entities/definitions/threadscar_melissa_longsword.entity.json'
     );
     longswordData = JSON.parse(await readFile(longswordPath, 'utf-8'));
+
+    const practiceStickPath = join(
+      FANTASY_MOD_PATH,
+      'entities/definitions/rill_practice_stick.entity.json'
+    );
+    practiceStickData = JSON.parse(await readFile(practiceStickPath, 'utf-8'));
   });
 
-  describe('Cutting Weapons - should have damage-types:can_cut', () => {
-    describe('Threadscar Melissa Longsword', () => {
-      it('should have weapons:weapon component', () => {
-        expect(longswordData.components['weapons:weapon']).toBeDefined();
-      });
-
-      it('should have damage-types:can_cut component', () => {
-        expect(longswordData.components['damage-types:can_cut']).toBeDefined();
-      });
-
-      it('should have can_cut as empty marker object', () => {
-        expect(longswordData.components['damage-types:can_cut']).toEqual({});
-      });
+  describe('All weapons should have weapons:weapon component', () => {
+    it('longsword should have weapons:weapon', () => {
+      expect(longswordData.components['weapons:weapon']).toBeDefined();
     });
 
-    describe('Vespera Rapier', () => {
-      it('should have weapons:weapon component', () => {
-        expect(rapierData.components['weapons:weapon']).toBeDefined();
-      });
+    it('rapier should have weapons:weapon', () => {
+      expect(rapierData.components['weapons:weapon']).toBeDefined();
+    });
 
-      it('should have damage-types:can_cut component', () => {
-        expect(rapierData.components['damage-types:can_cut']).toBeDefined();
-      });
+    it('main-gauche should have weapons:weapon', () => {
+      expect(mainGaucheData.components['weapons:weapon']).toBeDefined();
+    });
 
-      it('should have can_cut as empty marker object', () => {
-        expect(rapierData.components['damage-types:can_cut']).toEqual({});
-      });
+    it('practice stick should have weapons:weapon', () => {
+      expect(practiceStickData.components['weapons:weapon']).toBeDefined();
     });
   });
 
-  describe('Piercing Weapons - should NOT have damage-types:can_cut', () => {
-    describe('Vespera Main-Gauche (piercing dagger)', () => {
-      it('should have weapons:weapon component', () => {
-        expect(mainGaucheData.components['weapons:weapon']).toBeDefined();
+  describe('Weapon type classification via damage_capabilities', () => {
+    describe('Slashing weapons (longsword, rapier)', () => {
+      it('longsword should have slashing damage capability', () => {
+        const entries = longswordData.components['damage-types:damage_capabilities']?.entries;
+        expect(entries).toBeDefined();
+        expect(entries.some(e => e.name === 'slashing')).toBe(true);
       });
 
-      it('should NOT have damage-types:can_cut component', () => {
+      it('rapier should have slashing damage capability', () => {
+        const entries = rapierData.components['damage-types:damage_capabilities']?.entries;
+        expect(entries).toBeDefined();
+        expect(entries.some(e => e.name === 'slashing')).toBe(true);
+      });
+    });
+
+    describe('Piercing weapons (main-gauche)', () => {
+      it('main-gauche should have piercing damage capability', () => {
+        const entries = mainGaucheData.components['damage-types:damage_capabilities']?.entries;
+        expect(entries).toBeDefined();
+        expect(entries.some(e => e.name === 'piercing')).toBe(true);
+      });
+
+      it('main-gauche should NOT have slashing damage capability', () => {
+        const entries = mainGaucheData.components['damage-types:damage_capabilities']?.entries;
+        expect(entries.some(e => e.name === 'slashing')).toBe(false);
+      });
+    });
+
+    describe('Blunt weapons (practice stick)', () => {
+      it('practice stick should have blunt damage capability', () => {
+        const entries = practiceStickData.components['damage-types:damage_capabilities']?.entries;
+        expect(entries).toBeDefined();
+        expect(entries.some(e => e.name === 'blunt')).toBe(true);
+      });
+
+      it('practice stick should NOT have slashing damage capability', () => {
+        const entries = practiceStickData.components['damage-types:damage_capabilities']?.entries;
+        expect(entries.some(e => e.name === 'slashing')).toBe(false);
+      });
+    });
+  });
+
+  describe('Damage capabilities component', () => {
+    it('should exist on all four weapons', () => {
+      for (const weapon of [rapierData, mainGaucheData, longswordData, practiceStickData]) {
+        expect(weapon.components['damage-types:damage_capabilities']).toBeDefined();
         expect(
-          mainGaucheData.components['damage-types:can_cut']
-        ).toBeUndefined();
-      });
-    });
-  });
-
-  describe('Weapon Classification Consistency', () => {
-    it('cutting weapons should be identifiable by both weapon and can_cut markers', () => {
-      const cuttingWeapons = [longswordData, rapierData];
-      for (const weapon of cuttingWeapons) {
-        // Must have both components to be discovered by wielded_cutting_weapons scope
-        expect(weapon.components['weapons:weapon']).toBeDefined();
-        expect(weapon.components['damage-types:can_cut']).toBeDefined();
+          weapon.components['damage-types:damage_capabilities']?.entries?.length
+        ).toBeGreaterThan(0);
       }
     });
 
-    it('piercing-only weapons should have weapon marker but not can_cut', () => {
+    it('should define rapier slashing profile with bleed and dismember', () => {
+      const entries = rapierData.components['damage-types:damage_capabilities'].entries;
+      expect(entries).toHaveLength(1);
+      expect(entries[0]).toMatchObject({
+        name: 'slashing',
+        amount: 3,
+        penetration: 0.3,
+        bleed: {
+          enabled: true,
+          severity: 'moderate',
+          baseDurationTurns: 3,
+        },
+        dismember: {
+          enabled: true,
+          thresholdFraction: 0.8,
+        },
+      });
+    });
+
+    it('should define main-gauche piercing profile with minor bleed', () => {
+      const entries = mainGaucheData.components['damage-types:damage_capabilities'].entries;
+      expect(entries).toHaveLength(1);
+      expect(entries[0]).toMatchObject({
+        name: 'piercing',
+        amount: 2,
+        penetration: 0.8,
+        bleed: {
+          enabled: true,
+          severity: 'minor',
+          baseDurationTurns: 2,
+        },
+      });
+      expect(entries[0].dismember).toBeUndefined();
+    });
+
+    it('should define practice stick blunt profile with fracture', () => {
+      const entries =
+        practiceStickData.components['damage-types:damage_capabilities'].entries;
+      expect(entries).toHaveLength(1);
+      expect(entries[0]).toEqual({
+        name: 'blunt',
+        amount: 1,
+        fracture: {
+          enabled: true,
+          thresholdFraction: 0.7,
+          stunChance: 0.1,
+        },
+      });
+    });
+
+    it('should define longsword slashing profile with bleed and dismember', () => {
+      const entries = longswordData.components['damage-types:damage_capabilities'].entries;
+      expect(entries).toHaveLength(1);
+      expect(entries[0]).toMatchObject({
+        name: 'slashing',
+        amount: 4,
+        penetration: 0.3,
+        bleed: {
+          enabled: true,
+          severity: 'moderate',
+          baseDurationTurns: 3,
+        },
+        dismember: {
+          enabled: true,
+          thresholdFraction: 0.7,
+        },
+      });
+    });
+  });
+
+  describe('Weapon Classification via damage_capabilities (post WEADAMCAPREF-011)', () => {
+    it('slashing weapons should have damage_capabilities with slashing entry', () => {
+      const slashingWeapons = [longswordData, rapierData];
+      for (const weapon of slashingWeapons) {
+        // Must have damage_capabilities with slashing entry to be discovered by wielded_cutting_weapons scope
+        expect(weapon.components['weapons:weapon']).toBeDefined();
+        expect(weapon.components['damage-types:damage_capabilities']).toBeDefined();
+        const entries = weapon.components['damage-types:damage_capabilities'].entries;
+        expect(entries.some(e => e.name === 'slashing')).toBe(true);
+      }
+    });
+
+    it('piercing-only weapons should have weapon marker but no slashing capability', () => {
       // Main-gauche is described as "needle-thin, purpose-built for finding gaps"
       expect(mainGaucheData.components['weapons:weapon']).toBeDefined();
-      expect(mainGaucheData.components['damage-types:can_cut']).toBeUndefined();
+      expect(mainGaucheData.components['damage-types:damage_capabilities']).toBeDefined();
+      const entries = mainGaucheData.components['damage-types:damage_capabilities'].entries;
+      expect(entries.some(e => e.name === 'slashing')).toBe(false);
+      expect(entries.some(e => e.name === 'piercing')).toBe(true);
+    });
+
+    it('blunt weapons should have weapon marker but no slashing capability', () => {
+      expect(practiceStickData.components['weapons:weapon']).toBeDefined();
+      expect(practiceStickData.components['damage-types:damage_capabilities']).toBeDefined();
+      const entries = practiceStickData.components['damage-types:damage_capabilities'].entries;
+      expect(entries.some(e => e.name === 'slashing')).toBe(false);
+      expect(entries.some(e => e.name === 'blunt')).toBe(true);
     });
   });
 
@@ -110,8 +226,8 @@ describe('Weapon can_cut Component Validation - Integration', () => {
   });
 
   describe('Component Structure Integrity', () => {
-    it('should not modify other weapon components when adding can_cut', () => {
-      // Ensure adding can_cut didn't accidentally remove or modify other baseline components
+    it('should not modify other weapon components when adding damage components', () => {
+      // Ensure adding can_cut/damage_capabilities didn't remove or modify other baseline components
       const requiredComponents = [
         'core:name',
         'core:description',
@@ -125,7 +241,7 @@ describe('Weapon can_cut Component Validation - Integration', () => {
         'anatomy:requires_grabbing',
       ];
 
-      for (const weapon of [longswordData, rapierData, mainGaucheData]) {
+      for (const weapon of [longswordData, rapierData, mainGaucheData, practiceStickData]) {
         for (const component of requiredComponents) {
           expect(weapon.components[component]).toBeDefined();
         }

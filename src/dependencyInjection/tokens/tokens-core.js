@@ -77,7 +77,6 @@ export const coreTokens = freeze({
   AnatomySlotLibraryLoader: 'AnatomySlotLibraryLoader',
   AnatomyFormattingLoader: 'AnatomyFormattingLoader',
   AnatomyStructureTemplateLoader: 'AnatomyStructureTemplateLoader',
-  DamageTypeLoader: 'DamageTypeLoader',
   DamageTypeEffectsService: 'DamageTypeEffectsService',
   DamagePropagationService: 'DamagePropagationService',
   DeathCheckService: 'DeathCheckService',

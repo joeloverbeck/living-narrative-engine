@@ -221,7 +221,6 @@ describe('registerLoaders additional coverage', () => {
         actualTokens.AnatomyStructureTemplateLoader,
         { id: 'structureTemplate' },
       ],
-      [actualTokens.DamageTypeLoader, { id: 'damageType' }],
       [actualTokens.IValidatedEventDispatcher, { dispatch: jest.fn() }],
       [actualTokens.ILogger, logger],
     ]);

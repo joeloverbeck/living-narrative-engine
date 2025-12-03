@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:chicken_brain",
+  "description": "A small chicken brain handling basic instincts and reflexes",
+  "components": {
+    "anatomy:part": {
+      "subType": "chicken_brain"
+    },
+    "anatomy:part_health": {
+      "currentHealth": 6,
+      "maxHealth": 6,
+      "state": "healthy"
+    },
+    "anatomy:vital_organ": {
+      "organType": "brain"
+    },
+    "core:name": {
+      "text": "chicken brain"
+    }
+  }
+}
