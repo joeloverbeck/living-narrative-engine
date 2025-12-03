@@ -215,11 +215,16 @@ describe('AjvSchemaValidator schema loader integration', () => {
       validator.addSchemas([{ $id: baseSchema.$id, type: 'object' }])
     ).resolves.toBeUndefined();
 
+    // The validateSchemaRefs() call logs an ERROR (not warning) about unresolved $refs
+    // The async schema loader's warning "Could not resolve schema reference" is only
+    // triggered during compileAsync(), which is not used in this test flow.
     expect(
-      logger.warnMessages.some((args) =>
-        String(args[0]).includes('resolve reference')
+      logger.errorMessages.some((args) =>
+        String(args[0]).includes('has unresolved $refs or other issues')
       )
     ).toBe(true);
+
+    // The validate() call for a non-existent schema logs this warning
     expect(
       logger.warnMessages.some((args) => String(args[0]).includes('validate called for schemaId'))
     ).toBe(true);

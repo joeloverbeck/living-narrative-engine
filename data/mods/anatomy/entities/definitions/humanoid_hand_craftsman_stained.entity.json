@@ -4,12 +4,13 @@
   "description": "Broad, capable hands of a master leatherworker, showing permanent dye staining, distinctive callus patterns, and decades of skilled craft work",
   "components": {
     "anatomy:can_grab": {
-      "gripStrength": 1.0,
+      "gripStrength": 1,
       "heldItemId": null,
       "locked": false
     },
     "anatomy:part": {
-      "subType": "hand"
+      "subType": "hand",
+      "hit_probability_weight": 3
     },
     "anatomy:part_health": {
       "currentHealth": 15,
@@ -28,11 +29,19 @@
       "length": "short"
     },
     "descriptors:professional_markers": {
-      "markers": ["tannery-staining", "tool-calluses", "chemical-staining"],
+      "markers": [
+        "tannery-staining",
+        "tool-calluses",
+        "chemical-staining"
+      ],
       "profession": "leatherworker"
     },
     "descriptors:skin_condition": {
-      "conditions": ["weathered", "chemically-stained", "callused"]
+      "conditions": [
+        "weathered",
+        "chemically-stained",
+        "callused"
+      ]
     },
     "descriptors:texture": {
       "texture": "rough"

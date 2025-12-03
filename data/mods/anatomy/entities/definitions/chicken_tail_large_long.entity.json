@@ -4,7 +4,8 @@
   "description": "Large, very long feathered tail of a rooster",
   "components": {
     "anatomy:part": {
-      "subType": "chicken_tail"
+      "subType": "chicken_tail",
+      "hit_probability_weight": 3
     },
     "anatomy:part_health": {
       "currentHealth": 5,

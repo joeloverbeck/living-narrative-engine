@@ -4,7 +4,8 @@
   "description": "A humanoid mouth with engagement tracking capabilities for preventing conflicting oral actions",
   "components": {
     "anatomy:part": {
-      "subType": "mouth"
+      "subType": "mouth",
+      "hit_probability_weight": 0.6
     },
     "anatomy:part_health": {
       "currentHealth": 8,
@@ -15,7 +16,9 @@
       "sockets": [
         {
           "id": "teeth",
-          "allowedTypes": ["teeth"],
+          "allowedTypes": [
+            "teeth"
+          ],
           "nameTpl": "{{type}}"
         }
       ]

@@ -83,7 +83,19 @@ function formatEnumError(error, data) {
   const fieldPath = error.instancePath || '';
   const field = fieldPath.split('/').pop() || 'field';
   const allowedValues = error.params?.allowedValues || [];
-  const invalidValue = error.data;
+
+  // Extract invalid value from root data using instancePath
+  // Note: AJV does NOT populate error.data - we must navigate the data ourselves
+  let invalidValue;
+  if (fieldPath && data) {
+    const pathParts = fieldPath.split('/').filter((p) => p !== '');
+    let current = data;
+    for (const part of pathParts) {
+      if (current === null || current === undefined) break;
+      current = current[part];
+    }
+    invalidValue = current;
+  }
 
   // Infer schema file from operation type
   const operationType = data?.type || 'UNKNOWN';

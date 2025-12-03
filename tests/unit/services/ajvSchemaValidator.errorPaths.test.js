@@ -96,35 +96,9 @@ describe('AjvSchemaValidator error paths', () => {
     );
   });
 
-  it('logs and returns false when Ajv.getSchema throws in isSchemaLoaded', () => {
-    const getSchema = jest.fn(() => {
-      throw new Error('boom');
-    });
-    const schemasMap = { 'my-schema': {} };
-    jest.doMock('ajv', () =>
-      jest.fn(() => ({
-        addSchema: jest.fn(),
-        getSchema,
-        removeSchema: jest.fn(),
-        schemas: schemasMap,
-      }))
-    );
-    jest.doMock('ajv-formats', () => jest.fn());
-    const AjvSchemaValidator =
-      require('../../../src/validation/ajvSchemaValidator.js').default;
-    const logger = createMockLogger();
-    const validator = new AjvSchemaValidator({ logger: logger });
-
-    const result = validator.isSchemaLoaded('my-schema');
-    expect(result).toBe(false);
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('cannot be compiled'),
-      expect.objectContaining({
-        schemaId: 'my-schema',
-        error: expect.any(Error),
-      })
-    );
-  });
+  // Note: Test "logs and returns false when Ajv.getSchema throws in isSchemaLoaded" was removed.
+  // The production code no longer uses getSchema() in isSchemaLoaded() for performance reasons.
+  // It now checks the internal ajv.schemas map directly, which never throws exceptions.
 
   it('logs error when schema persists after removeSchema', () => {
     const getSchema = jest

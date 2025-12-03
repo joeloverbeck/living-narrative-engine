@@ -9,7 +9,8 @@
       "locked": false
     },
     "anatomy:part": {
-      "subType": "tortoise_hand"
+      "subType": "tortoise_hand",
+      "hit_probability_weight": 3
     },
     "anatomy:part_health": {
       "currentHealth": 15,

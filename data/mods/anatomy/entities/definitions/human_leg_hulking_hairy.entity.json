@@ -1,39 +1,40 @@
 {
-    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-    "id": "anatomy:human_leg_hulking_hairy",
-    "description": "A hulking, hairy human leg",
-    "components": {
-        "anatomy:part": {
-            "subType": "leg"
-        },
-        "anatomy:part_health": {
-            "currentHealth": 30,
-            "maxHealth": 30,
-            "state": "healthy"
-        },
-        "anatomy:sockets": {
-            "sockets": [
-                {
-                    "id": "ankle",
-                    "allowedTypes": [
-                        "foot"
-                    ],
-                    "nameTpl": "{{effective_orientation}} {{type}}"
-                }
-            ]
-        },
-        "descriptors:build": {
-            "build": "hulking"
-        },
-        "descriptors:body_hair": {
-            "hairDensity": "hairy"
-        },
-        "core:name": {
-            "text": "hulking, hairy leg"
-        },
-        "core:movement": {
-            "locked": false,
-            "forcedOverride": false
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_leg_hulking_hairy",
+  "description": "A hulking, hairy human leg",
+  "components": {
+    "anatomy:part": {
+      "subType": "leg",
+      "hit_probability_weight": 12
+    },
+    "anatomy:part_health": {
+      "currentHealth": 30,
+      "maxHealth": 30,
+      "state": "healthy"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "ankle",
+          "allowedTypes": [
+            "foot"
+          ],
+          "nameTpl": "{{effective_orientation}} {{type}}"
         }
+      ]
+    },
+    "descriptors:build": {
+      "build": "hulking"
+    },
+    "descriptors:body_hair": {
+      "hairDensity": "hairy"
+    },
+    "core:name": {
+      "text": "hulking, hairy leg"
+    },
+    "core:movement": {
+      "locked": false,
+      "forcedOverride": false
     }
+  }
 }

@@ -4,7 +4,8 @@
   "description": "A human male torso with male-specific anatomy",
   "components": {
     "anatomy:part": {
-      "subType": "torso"
+      "subType": "torso",
+      "hit_probability_weight": 45
     },
     "anatomy:part_health": {
       "currentHealth": 50,

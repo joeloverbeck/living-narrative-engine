@@ -4,7 +4,8 @@
   "description": "A G-cup breast with impressive fullness",
   "components": {
     "anatomy:part": {
-      "subType": "breast"
+      "subType": "breast",
+      "hit_probability_weight": 3
     },
     "anatomy:part_health": {
       "currentHealth": 20,

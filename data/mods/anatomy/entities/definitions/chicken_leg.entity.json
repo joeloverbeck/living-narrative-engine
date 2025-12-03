@@ -4,7 +4,8 @@
   "description": "Scaly leg of a chicken",
   "components": {
     "anatomy:part": {
-      "subType": "chicken_leg"
+      "subType": "chicken_leg",
+      "hit_probability_weight": 6
     },
     "anatomy:part_health": {
       "currentHealth": 8,
@@ -15,12 +16,16 @@
       "sockets": [
         {
           "id": "foot",
-          "allowedTypes": ["chicken_foot"],
+          "allowedTypes": [
+            "chicken_foot"
+          ],
           "nameTpl": "{{effective_orientation}} {{type}}"
         },
         {
           "id": "spur",
-          "allowedTypes": ["chicken_spur"],
+          "allowedTypes": [
+            "chicken_spur"
+          ],
           "nameTpl": "{{effective_orientation}} {{type}}"
         }
       ]

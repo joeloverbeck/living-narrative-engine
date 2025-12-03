@@ -4,7 +4,8 @@
   "description": "A human eye with hazel iris and hooded eyelid shape",
   "components": {
     "anatomy:part": {
-      "subType": "eye"
+      "subType": "eye",
+      "hit_probability_weight": 0.5
     },
     "anatomy:part_health": {
       "currentHealth": 10,
@@ -18,7 +19,9 @@
       "shape": "hooded"
     },
     "descriptors:skin_condition": {
-      "conditions": ["sleep-hollowed"]
+      "conditions": [
+        "sleep-hollowed"
+      ]
     },
     "core:name": {
       "text": "eye"

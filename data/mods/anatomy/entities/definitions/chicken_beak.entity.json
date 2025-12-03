@@ -4,7 +4,8 @@
   "description": "Small conical beak of a chicken, used for pecking",
   "components": {
     "anatomy:part": {
-      "subType": "chicken_beak"
+      "subType": "chicken_beak",
+      "hit_probability_weight": 1.5
     },
     "anatomy:part_health": {
       "currentHealth": 5,

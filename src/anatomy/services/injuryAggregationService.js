@@ -53,7 +53,7 @@ const PRONOUN_MAP = {
  * @property {string} partEntityId - Entity ID of the injured part
  * @property {string} partType - Type of part (arm, leg, torso, head, etc.)
  * @property {string|null} orientation - left, right, or null
- * @property {string} state - Current health state (bruised, wounded, badly_damaged, destroyed)
+ * @property {string} state - Current health state (scratched, wounded, injured, critical, destroyed)
  * @property {number} healthPercentage - 0-100
  * @property {number} currentHealth - Current health points
  * @property {number} maxHealth - Maximum health points

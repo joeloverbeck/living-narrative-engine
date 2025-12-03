@@ -4,7 +4,8 @@
   "description": "A draconic head with jaws and horns",
   "components": {
     "anatomy:part": {
-      "subType": "dragon_head"
+      "subType": "dragon_head",
+      "hit_probability_weight": 12
     },
     "anatomy:part_health": {
       "currentHealth": 60,

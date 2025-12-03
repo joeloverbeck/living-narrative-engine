@@ -194,8 +194,10 @@ describe('Schema Reference Validation', () => {
     });
   });
 
+  // NOTE: addSchema no longer verifies compilation after add (performance optimization)
+  // Schema compilation errors are detected during validate() or getValidator() calls
   describe('Schema Loading Error Detection', () => {
-    it('should detect and report unresolved schema references', async () => {
+    it('should detect and report unresolved schema references during getValidator', async () => {
       // Create a schema with an invalid reference
       const schemaWithBadRef = {
         $id: 'schema://living-narrative-engine/test-bad-ref.schema.json',
@@ -207,19 +209,24 @@ describe('Schema Reference Validation', () => {
         },
       };
 
+      // addSchema succeeds without verification (performance optimization)
       await expect(
         validator.addSchema(schemaWithBadRef, schemaWithBadRef.$id)
       ).resolves.toBeUndefined();
 
-      expect(validator.isSchemaLoaded(schemaWithBadRef.$id)).toBe(false);
+      // Schema is registered (compilation status unknown until used)
+      expect(validator.isSchemaLoaded(schemaWithBadRef.$id)).toBe(true);
 
-      expect(logger.warn).toHaveBeenCalledWith(
+      // No warning during addSchema (verification step removed)
+      expect(logger.warn).not.toHaveBeenCalledWith(
         expect.stringContaining('was added but cannot be compiled')
       );
 
+      // getValidator will fail for unresolved refs
       const validateFn = validator.getValidator(schemaWithBadRef.$id);
       expect(validateFn).toBeUndefined();
 
+      // Warning is logged during getValidator, not addSchema
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Error accessing schema'),
         expect.objectContaining({

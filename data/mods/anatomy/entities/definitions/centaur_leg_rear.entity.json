@@ -4,7 +4,8 @@
   "description": "Centaur rear horse leg with hoof",
   "components": {
     "anatomy:part": {
-      "subType": "centaur_leg_rear"
+      "subType": "centaur_leg_rear",
+      "hit_probability_weight": 12
     },
     "anatomy:part_health": {
       "currentHealth": 35,
@@ -15,7 +16,10 @@
       "sockets": [
         {
           "id": "hoof",
-          "allowedTypes": ["hoof", "horse_hoof"],
+          "allowedTypes": [
+            "hoof",
+            "horse_hoof"
+          ],
           "nameTpl": "hoof"
         }
       ]

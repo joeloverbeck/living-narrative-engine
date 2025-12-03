@@ -3,6 +3,7 @@ import { writeContextVariable } from '../../utils/contextVariableUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
+import { filterEligibleHitTargets } from '../../anatomy/utils/hitProbabilityWeightUtils.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
@@ -102,22 +103,14 @@ class ResolveHitLocationHandler extends ComponentOperationHandler {
         entityId
       );
 
-      for (const partId of allPartIds) {
-        const partComponent = this.#entityManager.getComponentData(
-          partId,
-          'anatomy:part'
-        );
-        if (
-          partComponent &&
-          typeof partComponent.hit_probability_weight === 'number' &&
-          partComponent.hit_probability_weight > 0
-        ) {
-          candidateParts.push({
-            id: partId,
-            weight: partComponent.hit_probability_weight,
-          });
-        }
-      }
+      // Build array of parts with components for filtering
+      const partsWithComponents = allPartIds.map((partId) => ({
+        id: partId,
+        component: this.#entityManager.getComponentData(partId, 'anatomy:part'),
+      }));
+
+      // Use shared helper for consistent weight resolution and filtering
+      candidateParts = filterEligibleHitTargets(partsWithComponents);
     } catch (error) {
       logger.error(
         `ResolveHitLocationHandler: Error retrieving parts for entity '${entityId}': ${error.message}`

@@ -4,7 +4,8 @@
   "description": "A human ass cheek with firm texture characteristics",
   "components": {
     "anatomy:part": {
-      "subType": "ass_cheek"
+      "subType": "ass_cheek",
+      "hit_probability_weight": 4
     },
     "anatomy:part_health": {
       "currentHealth": 20,

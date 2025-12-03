@@ -901,7 +901,7 @@ describe('CharacterDataXmlBuilder', () => {
         // Verify injuries list
         expect(result).toContain('<injuries>');
         expect(result).toContain('<injury part="left arm" state="wounded">bleeding_moderate</injury>');
-        expect(result).toContain('<injury part="torso" state="bruised"></injury>');
+        expect(result).toContain('<injury part="torso" state="wounded"></injury>');
         expect(result).toContain('</injuries>');
 
         // Verify active effects

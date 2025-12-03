@@ -4,7 +4,8 @@
   "description": "A segmented spider leg",
   "components": {
     "anatomy:part": {
-      "subType": "spider_leg"
+      "subType": "spider_leg",
+      "hit_probability_weight": 5
     },
     "anatomy:part_health": {
       "currentHealth": 25,

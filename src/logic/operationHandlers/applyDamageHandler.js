@@ -23,6 +23,7 @@ import BaseOperationHandler from './baseOperationHandler.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
+import { filterEligibleHitTargets } from '../../anatomy/utils/hitProbabilityWeightUtils.js';
 
 const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
 const PART_COMPONENT_ID = 'anatomy:part';
@@ -47,10 +48,11 @@ const PART_HEALTH_CHANGED_EVENT = 'anatomy:part_health_changed';
 const PART_DESTROYED_EVENT = 'anatomy:part_destroyed';
 
 const HEALTH_STATE_THRESHOLDS = {
-  healthy: 76,
-  bruised: 51,
-  wounded: 26,
-  badly_damaged: 1,
+  healthy: 81,
+  scratched: 61,
+  wounded: 41,
+  injured: 21,
+  critical: 1,
   destroyed: 0,
 };
 
@@ -106,10 +108,10 @@ class ApplyDamageHandler extends BaseOperationHandler {
 
   #calculateHealthState(healthPercentage) {
     if (healthPercentage >= HEALTH_STATE_THRESHOLDS.healthy) return 'healthy';
-    if (healthPercentage >= HEALTH_STATE_THRESHOLDS.bruised) return 'bruised';
+    if (healthPercentage >= HEALTH_STATE_THRESHOLDS.scratched) return 'scratched';
     if (healthPercentage >= HEALTH_STATE_THRESHOLDS.wounded) return 'wounded';
-    if (healthPercentage >= HEALTH_STATE_THRESHOLDS.badly_damaged)
-      return 'badly_damaged';
+    if (healthPercentage >= HEALTH_STATE_THRESHOLDS.injured) return 'injured';
+    if (healthPercentage >= HEALTH_STATE_THRESHOLDS.critical) return 'critical';
     return 'destroyed';
   }
 
@@ -239,24 +241,18 @@ class ApplyDamageHandler extends BaseOperationHandler {
     }
 
     const bodyComponent = this.#entityManager.getComponentData(entityId, BODY_COMPONENT_ID);
-    
+
     try {
       const allPartIds = this.#bodyGraphService.getAllParts(bodyComponent, entityId);
-      const candidateParts = [];
 
-      for (const partId of allPartIds) {
-        const partComponent = this.#entityManager.getComponentData(partId, PART_COMPONENT_ID);
-        if (partComponent) {
-          // Default hit_probability_weight to 1.0 when undefined (matches schema default)
-          const weight = partComponent.hit_probability_weight ?? 1.0;
-          if (weight > 0) {
-            candidateParts.push({
-              id: partId,
-              weight
-            });
-          }
-        }
-      }
+      // Build array of parts with components for filtering
+      const partsWithComponents = allPartIds.map((partId) => ({
+        id: partId,
+        component: this.#entityManager.getComponentData(partId, PART_COMPONENT_ID),
+      }));
+
+      // Use shared helper for consistent weight resolution and filtering
+      const candidateParts = filterEligibleHitTargets(partsWithComponents);
 
       if (candidateParts.length === 0) return null;
 
@@ -269,7 +265,6 @@ class ApplyDamageHandler extends BaseOperationHandler {
         if (randomValue <= 0) return part.id;
       }
       return candidateParts[candidateParts.length - 1].id;
-
     } catch (error) {
       logger.error(`APPLY_DAMAGE: Error resolving hit location for ${entityId}`, error);
       return null;

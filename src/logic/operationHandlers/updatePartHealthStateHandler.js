@@ -14,10 +14,11 @@
  * 8. Dispatches anatomy:part_state_changed event if state changed
  *
  * State thresholds:
- * - healthy: >75%
- * - bruised: 51-75%
- * - wounded: 26-50%
- * - badly_damaged: 1-25%
+ * - healthy: 81-100%
+ * - scratched: 61-80%
+ * - wounded: 41-60%
+ * - injured: 21-40%
+ * - critical: 1-20%
  * - destroyed: 0%
  *
  * Related files:
@@ -71,14 +72,15 @@ class UpdatePartHealthStateHandler extends BaseOperationHandler {
    * Calculate health state from percentage
    *
    * @param {number} healthPercentage - Current health as percentage of maximum (0-100)
-   * @returns {string} Health state: healthy, bruised, wounded, badly_damaged, or destroyed
+   * @returns {string} Health state: healthy, scratched, wounded, injured, critical, or destroyed
    * @private
    */
   #calculateState(healthPercentage) {
-    if (healthPercentage > 75) return 'healthy';
-    if (healthPercentage > 50) return 'bruised';
-    if (healthPercentage > 25) return 'wounded';
-    if (healthPercentage > 0) return 'badly_damaged';
+    if (healthPercentage >= 81) return 'healthy';
+    if (healthPercentage >= 61) return 'scratched';
+    if (healthPercentage >= 41) return 'wounded';
+    if (healthPercentage >= 21) return 'injured';
+    if (healthPercentage > 0) return 'critical';
     return 'destroyed';
   }
 
@@ -93,9 +95,10 @@ class UpdatePartHealthStateHandler extends BaseOperationHandler {
   #isDeterioration(previousState, newState) {
     const stateOrder = [
       'healthy',
-      'bruised',
+      'scratched',
       'wounded',
-      'badly_damaged',
+      'injured',
+      'critical',
       'destroyed',
     ];
     return stateOrder.indexOf(newState) > stateOrder.indexOf(previousState);

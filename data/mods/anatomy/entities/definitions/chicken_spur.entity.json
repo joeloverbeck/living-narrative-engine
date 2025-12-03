@@ -4,7 +4,8 @@
   "description": "Sharp keratinous spur on a chicken's leg, primarily found on roosters",
   "components": {
     "anatomy:part": {
-      "subType": "chicken_spur"
+      "subType": "chicken_spur",
+      "hit_probability_weight": 1
     },
     "anatomy:part_health": {
       "currentHealth": 4,

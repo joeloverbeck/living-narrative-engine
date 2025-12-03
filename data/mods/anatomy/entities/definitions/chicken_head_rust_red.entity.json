@@ -4,7 +4,8 @@
   "description": "Small feathered head of a chicken with rust-red coloring",
   "components": {
     "anatomy:part": {
-      "subType": "chicken_head"
+      "subType": "chicken_head",
+      "hit_probability_weight": 8
     },
     "anatomy:part_health": {
       "currentHealth": 8,
@@ -15,34 +16,46 @@
       "sockets": [
         {
           "id": "beak_mount",
-          "allowedTypes": ["chicken_beak"],
+          "allowedTypes": [
+            "chicken_beak"
+          ],
           "nameTpl": "{{type}}"
         },
         {
           "id": "left_eye",
           "orientation": "left",
-          "allowedTypes": ["eye"],
+          "allowedTypes": [
+            "eye"
+          ],
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "right_eye",
           "orientation": "right",
-          "allowedTypes": ["eye"],
+          "allowedTypes": [
+            "eye"
+          ],
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "comb_mount",
-          "allowedTypes": ["chicken_comb"],
+          "allowedTypes": [
+            "chicken_comb"
+          ],
           "nameTpl": "{{type}}"
         },
         {
           "id": "wattle_mount",
-          "allowedTypes": ["chicken_wattle"],
+          "allowedTypes": [
+            "chicken_wattle"
+          ],
           "nameTpl": "{{type}}"
         },
         {
           "id": "brain_socket",
-          "allowedTypes": ["chicken_brain"],
+          "allowedTypes": [
+            "chicken_brain"
+          ],
           "nameTpl": "{{type}}"
         }
       ]

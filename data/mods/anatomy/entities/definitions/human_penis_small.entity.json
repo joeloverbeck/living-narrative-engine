@@ -4,7 +4,8 @@
   "description": "A small human male genital organ",
   "components": {
     "anatomy:part": {
-      "subType": "penis"
+      "subType": "penis",
+      "hit_probability_weight": 1.8
     },
     "anatomy:part_health": {
       "currentHealth": 6,

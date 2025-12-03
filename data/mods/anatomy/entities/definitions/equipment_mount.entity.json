@@ -4,7 +4,8 @@
   "description": "Equipment attachment point for carrying gear like quivers",
   "components": {
     "anatomy:part": {
-      "subType": "equipment_mount"
+      "subType": "equipment_mount",
+      "hit_probability_weight": 0
     },
     "core:name": {
       "text": "equipment mount"

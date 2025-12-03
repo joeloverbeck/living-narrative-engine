@@ -4,7 +4,8 @@
   "description": "A small, bubbly human ass cheek",
   "components": {
     "anatomy:part": {
-      "subType": "ass_cheek"
+      "subType": "ass_cheek",
+      "hit_probability_weight": 3.6
     },
     "anatomy:part_health": {
       "currentHealth": 20,

@@ -4,7 +4,8 @@
   "description": "Short, wavy human hair with a dirty-blonde hue",
   "components": {
     "anatomy:part": {
-      "subType": "hair"
+      "subType": "hair",
+      "hit_probability_weight": 0.25
     },
     "anatomy:part_health": {
       "currentHealth": 3,

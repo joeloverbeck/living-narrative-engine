@@ -4,7 +4,8 @@
   "description": "A thick, huge human male genital organ",
   "components": {
     "anatomy:part": {
-      "subType": "penis"
+      "subType": "penis",
+      "hit_probability_weight": 2.2
     },
     "anatomy:part_health": {
       "currentHealth": 6,

@@ -157,15 +157,15 @@ describe('Part Health State Transitions - Integration Tests', () => {
   }
 
   describe('Deterioration (damage)', () => {
-    test('should transition healthy -> bruised', async () => {
+    test('should transition healthy -> scratched', async () => {
       createPartWithHealth(PART_ENTITY_ID, {
-        currentHealth: 80,
+        currentHealth: 85,
         maxHealth: 100,
         state: 'healthy',
         turnsInState: 5,
       });
 
-      // Damage from 80% to 70% (crosses 75% threshold)
+      // Damage from 85% to 75% (crosses 81% threshold)
       await modifyHandler.execute(
         { part_entity_ref: PART_ENTITY_ID, delta: -10 },
         executionContext
@@ -175,7 +175,7 @@ describe('Part Health State Transitions - Integration Tests', () => {
         PART_ENTITY_ID,
         PART_HEALTH_COMPONENT
       );
-      expect(healthData.state).toBe('bruised');
+      expect(healthData.state).toBe('scratched');
       expect(healthData.turnsInState).toBe(0);
 
       // MODIFY_PART_HEALTH includes state info in health_changed event
@@ -183,19 +183,19 @@ describe('Part Health State Transitions - Integration Tests', () => {
       expect(healthEvents).toHaveLength(1);
       expect(healthEvents[0]).toMatchObject({
         previousState: 'healthy',
-        newState: 'bruised',
+        newState: 'scratched',
       });
     });
 
-    test('should transition healthy -> wounded (skipping bruised)', async () => {
+    test('should transition healthy -> wounded (skipping scratched)', async () => {
       createPartWithHealth(PART_ENTITY_ID, {
-        currentHealth: 80,
+        currentHealth: 85,
         maxHealth: 100,
         state: 'healthy',
         turnsInState: 3,
       });
 
-      // Massive damage from 80% to 40% (skips bruised)
+      // Massive damage from 85% to 45% (skips scratched)
       await modifyHandler.execute(
         { part_entity_ref: PART_ENTITY_ID, delta: -40 },
         executionContext
@@ -225,10 +225,11 @@ describe('Part Health State Transitions - Integration Tests', () => {
       });
 
       const transitions = [
-        { delta: -30, expectedState: 'bruised', from: 'healthy' }, // 100 -> 70
-        { delta: -20, expectedState: 'wounded', from: 'bruised' }, // 70 -> 50
-        { delta: -25, expectedState: 'badly_damaged', from: 'wounded' }, // 50 -> 25
-        { delta: -25, expectedState: 'destroyed', from: 'badly_damaged' }, // 25 -> 0
+        { delta: -20, expectedState: 'scratched', from: 'healthy' }, // 100 -> 80
+        { delta: -20, expectedState: 'wounded', from: 'scratched' }, // 80 -> 60
+        { delta: -20, expectedState: 'injured', from: 'wounded' }, // 60 -> 40
+        { delta: -20, expectedState: 'critical', from: 'injured' }, // 40 -> 20
+        { delta: -20, expectedState: 'destroyed', from: 'critical' }, // 20 -> 0
       ];
 
       for (const transition of transitions) {
@@ -257,15 +258,15 @@ describe('Part Health State Transitions - Integration Tests', () => {
   });
 
   describe('Recovery (healing)', () => {
-    test('should transition bruised -> healthy', async () => {
+    test('should transition scratched -> healthy', async () => {
       createPartWithHealth(PART_ENTITY_ID, {
-        currentHealth: 70,
+        currentHealth: 75,
         maxHealth: 100,
-        state: 'bruised',
+        state: 'scratched',
         turnsInState: 2,
       });
 
-      // Heal from 70% to 80%
+      // Heal from 75% to 85% (crosses 81% threshold)
       await modifyHandler.execute(
         { part_entity_ref: PART_ENTITY_ID, delta: +10 },
         executionContext
@@ -282,12 +283,12 @@ describe('Part Health State Transitions - Integration Tests', () => {
       const healthEvents = getHealthChangedEvents();
       expect(healthEvents).toHaveLength(1);
       expect(healthEvents[0]).toMatchObject({
-        previousState: 'bruised',
+        previousState: 'scratched',
         newState: 'healthy',
       });
     });
 
-    test('should transition destroyed -> badly_damaged', async () => {
+    test('should transition destroyed -> critical', async () => {
       createPartWithHealth(PART_ENTITY_ID, {
         currentHealth: 0,
         maxHealth: 100,
@@ -295,7 +296,7 @@ describe('Part Health State Transitions - Integration Tests', () => {
         turnsInState: 5,
       });
 
-      // Heal from 0% to 10%
+      // Heal from 0% to 10% (crosses into critical: 1-20%)
       await modifyHandler.execute(
         { part_entity_ref: PART_ENTITY_ID, delta: +10 },
         executionContext
@@ -305,14 +306,14 @@ describe('Part Health State Transitions - Integration Tests', () => {
         PART_ENTITY_ID,
         PART_HEALTH_COMPONENT
       );
-      expect(healthData.state).toBe('badly_damaged');
+      expect(healthData.state).toBe('critical');
 
       // MODIFY_PART_HEALTH includes state info in health_changed event
       const healthEvents = getHealthChangedEvents();
       expect(healthEvents).toHaveLength(1);
       expect(healthEvents[0]).toMatchObject({
         previousState: 'destroyed',
-        newState: 'badly_damaged',
+        newState: 'critical',
       });
     });
 
@@ -380,12 +381,12 @@ describe('Part Health State Transitions - Integration Tests', () => {
     });
 
     test('should include all required fields in part_state_changed event', async () => {
-      // Part has health that indicates bruised state (70%) but is labeled healthy
+      // Part has health that indicates scratched state (70%) but is labeled healthy
       // UPDATE_PART_HEALTH_STATE will recalculate and dispatch state_changed
       createPartWithHealth(PART_ENTITY_ID, {
         currentHealth: 70,
         maxHealth: 100,
-        state: 'healthy', // Wrong state, should be bruised
+        state: 'healthy', // Wrong state, should be scratched
         turnsInState: 3,
       });
 
@@ -404,7 +405,7 @@ describe('Part Health State Transitions - Integration Tests', () => {
       expect(event).toHaveProperty('ownerEntityId', OWNER_ENTITY_ID);
       expect(event).toHaveProperty('partType', 'arm');
       expect(event).toHaveProperty('previousState', 'healthy');
-      expect(event).toHaveProperty('newState', 'bruised');
+      expect(event).toHaveProperty('newState', 'scratched');
       expect(event).toHaveProperty('turnsInPreviousState', 3);
       expect(event).toHaveProperty('healthPercentage');
       expect(event.healthPercentage).toBe(70);
@@ -445,11 +446,11 @@ describe('Part Health State Transitions - Integration Tests', () => {
   });
 
   describe('Boundary precision', () => {
-    test('health at 76% should be healthy', async () => {
+    test('health at 81% should be healthy', async () => {
       createPartWithHealth(PART_ENTITY_ID, {
-        currentHealth: 76,
+        currentHealth: 81,
         maxHealth: 100,
-        state: 'bruised', // Start with wrong state
+        state: 'scratched', // Start with wrong state
         turnsInState: 0,
       });
 
@@ -465,9 +466,9 @@ describe('Part Health State Transitions - Integration Tests', () => {
       expect(healthData.state).toBe('healthy');
     });
 
-    test('health at 75% should be bruised', async () => {
+    test('health at 80% should be scratched', async () => {
       createPartWithHealth(PART_ENTITY_ID, {
-        currentHealth: 75,
+        currentHealth: 80,
         maxHealth: 100,
         state: 'healthy', // Start with wrong state
         turnsInState: 0,
@@ -482,12 +483,12 @@ describe('Part Health State Transitions - Integration Tests', () => {
         PART_ENTITY_ID,
         PART_HEALTH_COMPONENT
       );
-      expect(healthData.state).toBe('bruised');
+      expect(healthData.state).toBe('scratched');
     });
 
-    test('health at 51% should be bruised', async () => {
+    test('health at 61% should be scratched', async () => {
       createPartWithHealth(PART_ENTITY_ID, {
-        currentHealth: 51,
+        currentHealth: 61,
         maxHealth: 100,
         state: 'wounded', // Start with wrong state
         turnsInState: 0,
@@ -502,14 +503,14 @@ describe('Part Health State Transitions - Integration Tests', () => {
         PART_ENTITY_ID,
         PART_HEALTH_COMPONENT
       );
-      expect(healthData.state).toBe('bruised');
+      expect(healthData.state).toBe('scratched');
     });
 
-    test('health at 50% should be wounded', async () => {
+    test('health at 60% should be wounded', async () => {
       createPartWithHealth(PART_ENTITY_ID, {
-        currentHealth: 50,
+        currentHealth: 60,
         maxHealth: 100,
-        state: 'bruised', // Start with wrong state
+        state: 'scratched', // Start with wrong state
         turnsInState: 0,
       });
 
@@ -525,11 +526,11 @@ describe('Part Health State Transitions - Integration Tests', () => {
       expect(healthData.state).toBe('wounded');
     });
 
-    test('health at 26% should be wounded', async () => {
+    test('health at 41% should be wounded', async () => {
       createPartWithHealth(PART_ENTITY_ID, {
-        currentHealth: 26,
+        currentHealth: 41,
         maxHealth: 100,
-        state: 'badly_damaged', // Start with wrong state
+        state: 'injured', // Start with wrong state
         turnsInState: 0,
       });
 
@@ -545,9 +546,9 @@ describe('Part Health State Transitions - Integration Tests', () => {
       expect(healthData.state).toBe('wounded');
     });
 
-    test('health at 25% should be badly_damaged', async () => {
+    test('health at 40% should be injured', async () => {
       createPartWithHealth(PART_ENTITY_ID, {
-        currentHealth: 25,
+        currentHealth: 40,
         maxHealth: 100,
         state: 'wounded', // Start with wrong state
         turnsInState: 0,
@@ -562,10 +563,50 @@ describe('Part Health State Transitions - Integration Tests', () => {
         PART_ENTITY_ID,
         PART_HEALTH_COMPONENT
       );
-      expect(healthData.state).toBe('badly_damaged');
+      expect(healthData.state).toBe('injured');
     });
 
-    test('health at 1% should be badly_damaged', async () => {
+    test('health at 21% should be injured', async () => {
+      createPartWithHealth(PART_ENTITY_ID, {
+        currentHealth: 21,
+        maxHealth: 100,
+        state: 'critical', // Start with wrong state
+        turnsInState: 0,
+      });
+
+      await updateHandler.execute(
+        { part_entity_ref: PART_ENTITY_ID },
+        executionContext
+      );
+
+      const healthData = entityManager.getComponentData(
+        PART_ENTITY_ID,
+        PART_HEALTH_COMPONENT
+      );
+      expect(healthData.state).toBe('injured');
+    });
+
+    test('health at 20% should be critical', async () => {
+      createPartWithHealth(PART_ENTITY_ID, {
+        currentHealth: 20,
+        maxHealth: 100,
+        state: 'injured', // Start with wrong state
+        turnsInState: 0,
+      });
+
+      await updateHandler.execute(
+        { part_entity_ref: PART_ENTITY_ID },
+        executionContext
+      );
+
+      const healthData = entityManager.getComponentData(
+        PART_ENTITY_ID,
+        PART_HEALTH_COMPONENT
+      );
+      expect(healthData.state).toBe('critical');
+    });
+
+    test('health at 1% should be critical', async () => {
       createPartWithHealth(PART_ENTITY_ID, {
         currentHealth: 1,
         maxHealth: 100,
@@ -582,14 +623,14 @@ describe('Part Health State Transitions - Integration Tests', () => {
         PART_ENTITY_ID,
         PART_HEALTH_COMPONENT
       );
-      expect(healthData.state).toBe('badly_damaged');
+      expect(healthData.state).toBe('critical');
     });
 
     test('health at 0% should be destroyed', async () => {
       createPartWithHealth(PART_ENTITY_ID, {
         currentHealth: 0,
         maxHealth: 100,
-        state: 'badly_damaged', // Start with wrong state
+        state: 'critical', // Start with wrong state
         turnsInState: 0,
       });
 

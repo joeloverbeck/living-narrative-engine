@@ -4,7 +4,8 @@
   "description": "Pulsating translucent chamber emitting subsonic frequencies",
   "components": {
     "anatomy:part": {
-      "subType": "eldritch_vocal_sac"
+      "subType": "eldritch_vocal_sac",
+      "hit_probability_weight": 2
     },
     "anatomy:part_health": {
       "currentHealth": 20,

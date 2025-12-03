@@ -4,7 +4,8 @@
   "description": "Compact feathered torso of a chicken",
   "components": {
     "anatomy:part": {
-      "subType": "chicken_torso"
+      "subType": "chicken_torso",
+      "hit_probability_weight": 25
     },
     "anatomy:part_health": {
       "currentHealth": 15,
@@ -15,46 +16,62 @@
       "sockets": [
         {
           "id": "neck",
-          "allowedTypes": ["chicken_head"],
+          "allowedTypes": [
+            "chicken_head"
+          ],
           "nameTpl": "{{type}}"
         },
         {
           "id": "left_wing_root",
           "orientation": "left",
-          "allowedTypes": ["chicken_wing"],
+          "allowedTypes": [
+            "chicken_wing"
+          ],
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "right_wing_root",
           "orientation": "right",
-          "allowedTypes": ["chicken_wing"],
+          "allowedTypes": [
+            "chicken_wing"
+          ],
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "left_hip",
           "orientation": "left",
-          "allowedTypes": ["chicken_leg"],
+          "allowedTypes": [
+            "chicken_leg"
+          ],
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "right_hip",
           "orientation": "right",
-          "allowedTypes": ["chicken_leg"],
+          "allowedTypes": [
+            "chicken_leg"
+          ],
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "tail_root",
-          "allowedTypes": ["chicken_tail"],
+          "allowedTypes": [
+            "chicken_tail"
+          ],
           "nameTpl": "{{type}}"
         },
         {
           "id": "heart_socket",
-          "allowedTypes": ["chicken_heart"],
+          "allowedTypes": [
+            "chicken_heart"
+          ],
           "nameTpl": "{{type}}"
         },
         {
           "id": "spine_socket",
-          "allowedTypes": ["chicken_spine"],
+          "allowedTypes": [
+            "chicken_spine"
+          ],
           "nameTpl": "{{type}}"
         }
       ]

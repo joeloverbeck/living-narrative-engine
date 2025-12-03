@@ -4,7 +4,8 @@
   "description": "Spider silk-producing organ located on the abdomen",
   "components": {
     "anatomy:part": {
-      "subType": "spinneret"
+      "subType": "spinneret",
+      "hit_probability_weight": 2
     },
     "anatomy:part_health": {
       "currentHealth": 10,

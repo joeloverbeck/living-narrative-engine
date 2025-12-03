@@ -4,7 +4,8 @@
   "description": "Scaly clawed foot of a chicken",
   "components": {
     "anatomy:part": {
-      "subType": "chicken_foot"
+      "subType": "chicken_foot",
+      "hit_probability_weight": 3
     },
     "anatomy:part_health": {
       "currentHealth": 5,

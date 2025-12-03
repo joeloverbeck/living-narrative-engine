@@ -4,7 +4,8 @@
   "description": "A human foot",
   "components": {
     "anatomy:part": {
-      "subType": "foot"
+      "subType": "foot",
+      "hit_probability_weight": 3
     },
     "anatomy:part_health": {
       "currentHealth": 15,

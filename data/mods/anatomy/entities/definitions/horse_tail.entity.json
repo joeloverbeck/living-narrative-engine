@@ -4,7 +4,8 @@
   "description": "Equine tail with long flowing hair",
   "components": {
     "anatomy:part": {
-      "subType": "horse_tail"
+      "subType": "horse_tail",
+      "hit_probability_weight": 4
     },
     "anatomy:part_health": {
       "currentHealth": 20,

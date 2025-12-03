@@ -4,7 +4,8 @@
   "description": "A slim leg",
   "components": {
     "anatomy:part": {
-      "subType": "leg"
+      "subType": "leg",
+      "hit_probability_weight": 9
     },
     "anatomy:part_health": {
       "currentHealth": 30,
@@ -15,7 +16,9 @@
       "sockets": [
         {
           "id": "ankle",
-          "allowedTypes": ["foot"],
+          "allowedTypes": [
+            "foot"
+          ],
           "nameTpl": "{{effective_orientation}} {{type}}"
         }
       ]

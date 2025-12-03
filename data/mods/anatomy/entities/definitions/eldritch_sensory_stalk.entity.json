@@ -4,7 +4,8 @@
   "description": "Retractable stalk with cluster of compound eyes providing omnidirectional vision",
   "components": {
     "anatomy:part": {
-      "subType": "eldritch_sensory_stalk"
+      "subType": "eldritch_sensory_stalk",
+      "hit_probability_weight": 2
     },
     "anatomy:part_health": {
       "currentHealth": 15,

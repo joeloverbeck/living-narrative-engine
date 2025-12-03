@@ -422,9 +422,10 @@ describe('ApplyDamageHandler', () => {
             damageType: 'blunt'
         }));
 
+        // 80% health is 'scratched' (61-80% threshold)
         expect(em.addComponent).toHaveBeenCalledWith('part1', PART_HEALTH_COMPONENT_ID, expect.objectContaining({
             currentHealth: 80,
-            state: 'healthy'
+            state: 'scratched'
         }));
 
         expect(dispatcher.dispatch).toHaveBeenCalledWith(PART_HEALTH_CHANGED_EVENT, expect.objectContaining({
@@ -433,7 +434,7 @@ describe('ApplyDamageHandler', () => {
         }));
     });
 
-    test('updates status correctly when crossing thresholds (e.g., Wounded)', async () => {
+    test('updates status correctly when crossing thresholds (e.g., Injured)', async () => {
         const params = {
             entity_ref: 'entity1',
             part_ref: 'part1',
@@ -453,9 +454,10 @@ describe('ApplyDamageHandler', () => {
 
         await handler.execute(params, executionContext);
 
+        // 40% health is 'injured' (21-40% threshold)
         expect(em.addComponent).toHaveBeenCalledWith('part1', PART_HEALTH_COMPONENT_ID, expect.objectContaining({
             currentHealth: 40,
-            state: 'wounded',
+            state: 'injured',
             turnsInState: 0 // State changed, so reset
         }));
     });
@@ -847,25 +849,24 @@ describe('ApplyDamageHandler', () => {
         }));
     });
 
-    test('calculates bruised and badly_damaged states correctly', async () => {
+    test('calculates wounded and critical states correctly', async () => {
         const params = { entity_ref: 'e', part_ref: 'p', amount: 0, damage_type: 'd' };
         em.hasComponent.mockImplementation((id, comp) => comp === PART_HEALTH_COMPONENT_ID);
-        
-        // Test Bruised (51-75%)
+
+        // Test Wounded (41-60%)
         // Max 100, current 60 -> 60%
         em.getComponentData.mockReturnValue({ currentHealth: 60, maxHealth: 100, state: 'healthy' });
-        await handler.execute({ ...params, amount: 0 }, executionContext); // 0 damage to just trigger update check? 
-        // Wait, 0 damage might be optimized out? No, code calculates newHealth = current - amount.
-        // Actually, if I apply 0 damage, health stays 60. 60 is bruised.
-        expect(em.addComponent).toHaveBeenCalledWith('p', PART_HEALTH_COMPONENT_ID, expect.objectContaining({ state: 'bruised' }));
+        await handler.execute({ ...params, amount: 0 }, executionContext);
+        // 60% health is in the wounded range (41-60%)
+        expect(em.addComponent).toHaveBeenCalledWith('p', PART_HEALTH_COMPONENT_ID, expect.objectContaining({ state: 'wounded' }));
 
         em.addComponent.mockClear();
 
-        // Test Badly Damaged (1-25%)
+        // Test Critical (1-20%)
         // Max 100, current 10 -> 10%
         em.getComponentData.mockReturnValue({ currentHealth: 10, maxHealth: 100, state: 'healthy' });
         await handler.execute({ ...params, amount: 0 }, executionContext);
-        expect(em.addComponent).toHaveBeenCalledWith('p', PART_HEALTH_COMPONENT_ID, expect.objectContaining({ state: 'badly_damaged' }));
+        expect(em.addComponent).toHaveBeenCalledWith('p', PART_HEALTH_COMPONENT_ID, expect.objectContaining({ state: 'critical' }));
     });
 
     test('handles resolveRef exceptions and null returns', async () => {

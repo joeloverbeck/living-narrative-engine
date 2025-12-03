@@ -108,11 +108,11 @@ describe('UpdatePartHealthStateHandler', () => {
       em.batchAddComponentsOptimized.mockResolvedValue(true);
     });
 
-    test('calculates healthy state when health > 75% (100%)', async () => {
+    test('calculates healthy state when health >= 81% (100%)', async () => {
       const partHealth = {
         currentHealth: 100,
         maxHealth: 100,
-        state: 'bruised',
+        state: 'scratched',
         turnsInState: 2,
       };
 
@@ -140,17 +140,17 @@ describe('UpdatePartHealthStateHandler', () => {
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         PART_STATE_CHANGED_EVENT,
         expect.objectContaining({
-          previousState: 'bruised',
+          previousState: 'scratched',
           newState: 'healthy',
         })
       );
     });
 
-    test('calculates healthy state when health > 75% (76%)', async () => {
+    test('calculates healthy state when health >= 81% (81%)', async () => {
       const partHealth = {
-        currentHealth: 76,
+        currentHealth: 81,
         maxHealth: 100,
-        state: 'bruised',
+        state: 'scratched',
         turnsInState: 3,
       };
 
@@ -168,7 +168,7 @@ describe('UpdatePartHealthStateHandler', () => {
           expect.objectContaining({
             componentData: expect.objectContaining({
               state: 'healthy',
-              currentHealth: 76,
+              currentHealth: 81,
               maxHealth: 100,
             }),
           }),
@@ -177,9 +177,9 @@ describe('UpdatePartHealthStateHandler', () => {
       );
     });
 
-    test('calculates bruised state when health is 51-75% (75%)', async () => {
+    test('calculates scratched state when health is 61-80% (80%)', async () => {
       const partHealth = {
-        currentHealth: 75,
+        currentHealth: 80,
         maxHealth: 100,
         state: 'healthy',
         turnsInState: 5,
@@ -198,7 +198,7 @@ describe('UpdatePartHealthStateHandler', () => {
         expect.arrayContaining([
           expect.objectContaining({
             componentData: expect.objectContaining({
-              state: 'bruised',
+              state: 'scratched',
               turnsInState: 0,
             }),
           }),
@@ -207,9 +207,9 @@ describe('UpdatePartHealthStateHandler', () => {
       );
     });
 
-    test('calculates bruised state when health is 51-75% (51%)', async () => {
+    test('calculates scratched state when health is 61-80% (61%)', async () => {
       const partHealth = {
-        currentHealth: 51,
+        currentHealth: 61,
         maxHealth: 100,
         state: 'wounded',
         turnsInState: 2,
@@ -228,7 +228,7 @@ describe('UpdatePartHealthStateHandler', () => {
         expect.arrayContaining([
           expect.objectContaining({
             componentData: expect.objectContaining({
-              state: 'bruised',
+              state: 'scratched',
             }),
           }),
         ]),
@@ -236,11 +236,11 @@ describe('UpdatePartHealthStateHandler', () => {
       );
     });
 
-    test('calculates wounded state when health is 26-50% (50%)', async () => {
+    test('calculates wounded state when health is 41-60% (60%)', async () => {
       const partHealth = {
-        currentHealth: 50,
+        currentHealth: 60,
         maxHealth: 100,
-        state: 'bruised',
+        state: 'scratched',
         turnsInState: 1,
       };
 
@@ -265,11 +265,11 @@ describe('UpdatePartHealthStateHandler', () => {
       );
     });
 
-    test('calculates wounded state when health is 26-50% (26%)', async () => {
+    test('calculates wounded state when health is 41-60% (41%)', async () => {
       const partHealth = {
-        currentHealth: 26,
+        currentHealth: 41,
         maxHealth: 100,
-        state: 'badly_damaged',
+        state: 'injured',
         turnsInState: 4,
       };
 
@@ -294,9 +294,9 @@ describe('UpdatePartHealthStateHandler', () => {
       );
     });
 
-    test('calculates badly_damaged state when health is 1-25% (25%)', async () => {
+    test('calculates injured state when health is 21-40% (40%)', async () => {
       const partHealth = {
-        currentHealth: 25,
+        currentHealth: 40,
         maxHealth: 100,
         state: 'wounded',
         turnsInState: 3,
@@ -315,7 +315,7 @@ describe('UpdatePartHealthStateHandler', () => {
         expect.arrayContaining([
           expect.objectContaining({
             componentData: expect.objectContaining({
-              state: 'badly_damaged',
+              state: 'injured',
             }),
           }),
         ]),
@@ -323,11 +323,69 @@ describe('UpdatePartHealthStateHandler', () => {
       );
     });
 
-    test('calculates badly_damaged state when health is 1-25% (1%)', async () => {
+    test('calculates injured state when health is 21-40% (21%)', async () => {
+      const partHealth = {
+        currentHealth: 21,
+        maxHealth: 100,
+        state: 'critical',
+        turnsInState: 2,
+      };
+
+      em.getComponentData.mockImplementation((entityId, componentId) => {
+        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === PART_COMPONENT_ID)
+          return { subType: 'hand', ownerEntityId: 'char1' };
+        return null;
+      });
+
+      await handler.execute({ part_entity_ref: 'part1' }, executionContext);
+
+      expect(em.batchAddComponentsOptimized).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            componentData: expect.objectContaining({
+              state: 'injured',
+            }),
+          }),
+        ]),
+        true
+      );
+    });
+
+    test('calculates critical state when health is 1-20% (20%)', async () => {
+      const partHealth = {
+        currentHealth: 20,
+        maxHealth: 100,
+        state: 'injured',
+        turnsInState: 4,
+      };
+
+      em.getComponentData.mockImplementation((entityId, componentId) => {
+        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === PART_COMPONENT_ID)
+          return { subType: 'leg', ownerEntityId: 'char1' };
+        return null;
+      });
+
+      await handler.execute({ part_entity_ref: 'part1' }, executionContext);
+
+      expect(em.batchAddComponentsOptimized).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            componentData: expect.objectContaining({
+              state: 'critical',
+            }),
+          }),
+        ]),
+        true
+      );
+    });
+
+    test('calculates critical state when health is 1-20% (1%)', async () => {
       const partHealth = {
         currentHealth: 1,
         maxHealth: 100,
-        state: 'wounded',
+        state: 'injured',
         turnsInState: 6,
       };
 
@@ -344,7 +402,7 @@ describe('UpdatePartHealthStateHandler', () => {
         expect.arrayContaining([
           expect.objectContaining({
             componentData: expect.objectContaining({
-              state: 'badly_damaged',
+              state: 'critical',
             }),
           }),
         ]),
@@ -356,7 +414,7 @@ describe('UpdatePartHealthStateHandler', () => {
       const partHealth = {
         currentHealth: 0,
         maxHealth: 100,
-        state: 'badly_damaged',
+        state: 'critical',
         turnsInState: 10,
       };
 
@@ -405,7 +463,7 @@ describe('UpdatePartHealthStateHandler', () => {
       const partHealth = {
         currentHealth: 80,
         maxHealth: 100,
-        state: 'healthy',
+        state: 'scratched',
         turnsInState: 3,
       };
 
@@ -422,7 +480,7 @@ describe('UpdatePartHealthStateHandler', () => {
         expect.arrayContaining([
           expect.objectContaining({
             componentData: expect.objectContaining({
-              state: 'healthy',
+              state: 'scratched',
               turnsInState: 4, // incremented from 3
             }),
           }),
@@ -458,7 +516,7 @@ describe('UpdatePartHealthStateHandler', () => {
         expect.arrayContaining([
           expect.objectContaining({
             componentData: expect.objectContaining({
-              state: 'bruised',
+              state: 'wounded',
               turnsInState: 0, // reset to 0
             }),
           }),
@@ -471,7 +529,7 @@ describe('UpdatePartHealthStateHandler', () => {
         PART_STATE_CHANGED_EVENT,
         expect.objectContaining({
           previousState: 'healthy',
-          newState: 'bruised',
+          newState: 'wounded',
           turnsInPreviousState: 10,
         })
       );
@@ -481,7 +539,7 @@ describe('UpdatePartHealthStateHandler', () => {
       const partHealth = {
         currentHealth: 80,
         maxHealth: 100,
-        state: 'healthy',
+        state: 'scratched',
         // turnsInState intentionally missing
       };
 
@@ -510,7 +568,7 @@ describe('UpdatePartHealthStateHandler', () => {
       const partHealth = {
         currentHealth: 20,
         maxHealth: 100,
-        state: 'wounded',
+        state: 'injured',
         turnsInState: 5,
       };
 
@@ -526,8 +584,8 @@ describe('UpdatePartHealthStateHandler', () => {
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         PART_STATE_CHANGED_EVENT,
         expect.objectContaining({
-          previousState: 'wounded',
-          newState: 'badly_damaged',
+          previousState: 'injured',
+          newState: 'critical',
           isDeterioration: true,
         })
       );
@@ -535,9 +593,9 @@ describe('UpdatePartHealthStateHandler', () => {
 
     test('dispatches event with correct isDeterioration for improving health', async () => {
       const partHealth = {
-        currentHealth: 80,
+        currentHealth: 81,
         maxHealth: 100,
-        state: 'bruised',
+        state: 'scratched',
         turnsInState: 3,
       };
 
@@ -553,7 +611,7 @@ describe('UpdatePartHealthStateHandler', () => {
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         PART_STATE_CHANGED_EVENT,
         expect.objectContaining({
-          previousState: 'bruised',
+          previousState: 'scratched',
           newState: 'healthy',
           isDeterioration: false,
         })
@@ -564,7 +622,7 @@ describe('UpdatePartHealthStateHandler', () => {
       const partHealth = {
         currentHealth: 40,
         maxHealth: 100,
-        state: 'bruised',
+        state: 'scratched',
         turnsInState: 7,
       };
 
@@ -583,8 +641,8 @@ describe('UpdatePartHealthStateHandler', () => {
           partEntityId: 'part1',
           ownerEntityId: 'char1',
           partType: 'arm',
-          previousState: 'bruised',
-          newState: 'wounded',
+          previousState: 'scratched',
+          newState: 'injured',
           turnsInPreviousState: 7,
           healthPercentage: 40,
           isDeterioration: true,

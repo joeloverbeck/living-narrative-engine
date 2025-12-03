@@ -300,7 +300,7 @@ export const CHARACTER_WITH_INJURIES = {
       {
         partName: 'torso',
         partType: 'torso',
-        state: 'bruised',
+        state: 'wounded',
         healthPercent: 60,
         effects: [],
       },

@@ -4,7 +4,8 @@
   "description": "Feline eye with amber-gold iris and vertical slit pupil",
   "components": {
     "anatomy:part": {
-      "subType": "eye"
+      "subType": "eye",
+      "hit_probability_weight": 0.5
     },
     "anatomy:part_health": {
       "currentHealth": 10,

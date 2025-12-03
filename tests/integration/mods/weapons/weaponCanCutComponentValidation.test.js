@@ -113,19 +113,15 @@ describe('Weapon Damage Capabilities Validation - Integration', () => {
 
     it('should define rapier slashing profile with bleed and dismember', () => {
       const entries = rapierData.components['damage-types:damage_capabilities'].entries;
-      expect(entries).toHaveLength(1);
-      expect(entries[0]).toMatchObject({
+      expect(entries).toHaveLength(2);
+      expect(entries[1]).toMatchObject({
         name: 'slashing',
-        amount: 3,
-        penetration: 0.3,
+        amount: 8,
+        penetration: 0.1,
         bleed: {
           enabled: true,
-          severity: 'moderate',
-          baseDurationTurns: 3,
-        },
-        dismember: {
-          enabled: true,
-          thresholdFraction: 0.8,
+          severity: 'minor',
+          baseDurationTurns: 2,
         },
       });
     });
@@ -135,7 +131,7 @@ describe('Weapon Damage Capabilities Validation - Integration', () => {
       expect(entries).toHaveLength(1);
       expect(entries[0]).toMatchObject({
         name: 'piercing',
-        amount: 2,
+        amount: 10,
         penetration: 0.8,
         bleed: {
           enabled: true,
@@ -152,7 +148,7 @@ describe('Weapon Damage Capabilities Validation - Integration', () => {
       expect(entries).toHaveLength(1);
       expect(entries[0]).toEqual({
         name: 'blunt',
-        amount: 1,
+        amount: 5,
         fracture: {
           enabled: true,
           thresholdFraction: 0.7,
@@ -166,7 +162,7 @@ describe('Weapon Damage Capabilities Validation - Integration', () => {
       expect(entries).toHaveLength(1);
       expect(entries[0]).toMatchObject({
         name: 'slashing',
-        amount: 4,
+        amount: 22,
         penetration: 0.3,
         bleed: {
           enabled: true,

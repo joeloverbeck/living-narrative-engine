@@ -4,7 +4,8 @@
   "description": "Centaur humanoid head with braided hair style",
   "components": {
     "anatomy:part": {
-      "subType": "centaur_head"
+      "subType": "centaur_head",
+      "hit_probability_weight": 10
     },
     "anatomy:part_health": {
       "currentHealth": 40,

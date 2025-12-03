@@ -26,6 +26,12 @@ class EventBus extends IEventBus {
   #chainHistoryLimit = 10; // Maximum chain history entries per event type
   #lastDispatchTime = 0; // Track last dispatch time for auto-reset
 
+  // PERFORMANCE: Incremental counters for category-specific recursion totals
+  // These avoid O(n) iteration over #recursionDepth on every dispatch
+  #totalWorkflowRecursion = 0;
+  #totalComponentRecursion = 0;
+  #totalGeneralRecursion = 0;
+
   /**
    * Creates an EventBus instance.
    *
@@ -141,6 +147,10 @@ class EventBus extends IEventBus {
   resetRecursionCounters() {
     this.#recursionDepth.clear();
     this.#handlerExecutionDepth.clear();
+    // PERFORMANCE: Reset incremental counters too
+    this.#totalWorkflowRecursion = 0;
+    this.#totalComponentRecursion = 0;
+    this.#totalGeneralRecursion = 0;
     this.#logger.debug('EventBus: Recursion depth counters manually reset');
   }
 
@@ -410,6 +420,10 @@ class EventBus extends IEventBus {
         );
         this.#recursionDepth.clear();
         this.#handlerExecutionDepth.clear();
+        // PERFORMANCE: Reset incremental counters too
+        this.#totalWorkflowRecursion = 0;
+        this.#totalComponentRecursion = 0;
+        this.#totalGeneralRecursion = 0;
       }
     }
     this.#lastDispatchTime = now;
@@ -443,24 +457,11 @@ class EventBus extends IEventBus {
 
     const isWorkflowEvent = workflowEvents.has(eventName);
 
-    // Calculate global recursion with separate tracking for different event types
-    let totalGlobalRecursion = 0;
-    let workflowEventRecursion = 0;
-    let componentEventRecursion = 0;
-
-    for (const [event, depth] of this.#recursionDepth.entries()) {
-      if (workflowEvents.has(event)) {
-        workflowEventRecursion += depth;
-      } else if (
-        event === 'core:component_added' ||
-        event === 'core:component_removed' ||
-        event === 'core:entity_created'
-      ) {
-        componentEventRecursion += depth;
-      } else {
-        totalGlobalRecursion += depth;
-      }
-    }
+    // PERFORMANCE: Use cached incremental counters instead of O(n) iteration
+    // These counters are maintained when recursion depth is incremented/decremented
+    const totalGlobalRecursion = this.#totalGeneralRecursion;
+    const workflowEventRecursion = this.#totalWorkflowRecursion;
+    const componentEventRecursion = this.#totalComponentRecursion;
 
     // Determine recursion limits based on batch mode and event type
     let MAX_RECURSION_DEPTH;
@@ -608,10 +609,19 @@ class EventBus extends IEventBus {
     try {
       const specificListeners = this.#listeners.get(eventName) || new Set();
       const wildcardListeners = this.#listeners.get('*') || new Set();
-      const listenersToNotify = new Set([
-        ...specificListeners,
-        ...wildcardListeners,
-      ]);
+
+      // PERFORMANCE: Avoid creating union Set when not needed
+      // If no wildcard listeners, use specific listeners directly
+      // If no specific listeners, use wildcard listeners directly
+      let listenersToNotify;
+      if (wildcardListeners.size === 0) {
+        listenersToNotify = specificListeners;
+      } else if (specificListeners.size === 0) {
+        listenersToNotify = wildcardListeners;
+      } else {
+        // Only create union when both have listeners
+        listenersToNotify = new Set([...specificListeners, ...wildcardListeners]);
+      }
 
       if (listenersToNotify.size > 0) {
         // Construct the full event object expected by listeners like #handleEvent
@@ -625,6 +635,15 @@ class EventBus extends IEventBus {
         // NOW increment recursion depth since we're about to execute handlers
         // This is where actual recursion could occur
         this.#recursionDepth.set(eventName, currentDepth + 1);
+
+        // PERFORMANCE: Update incremental counters when recursion increases
+        if (isWorkflowEvent) {
+          this.#totalWorkflowRecursion++;
+        } else if (isComponentLifecycleEvent) {
+          this.#totalComponentRecursion++;
+        } else {
+          this.#totalGeneralRecursion++;
+        }
 
         // Increment handler execution depth to track true recursion
         // This is crucial for detecting actual recursion vs concurrent dispatches
@@ -677,6 +696,15 @@ class EventBus extends IEventBus {
             this.#recursionDepth.delete(eventName);
           } else {
             this.#recursionDepth.set(eventName, currentDepth);
+          }
+
+          // PERFORMANCE: Decrement incremental counters when recursion decreases
+          if (isWorkflowEvent) {
+            this.#totalWorkflowRecursion--;
+          } else if (isComponentLifecycleEvent) {
+            this.#totalComponentRecursion--;
+          } else {
+            this.#totalGeneralRecursion--;
           }
         }
       }

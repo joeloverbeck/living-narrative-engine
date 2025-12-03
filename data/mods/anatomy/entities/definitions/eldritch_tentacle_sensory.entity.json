@@ -9,7 +9,8 @@
       "locked": false
     },
     "anatomy:part": {
-      "subType": "eldritch_tentacle"
+      "subType": "eldritch_tentacle",
+      "hit_probability_weight": 6
     },
     "anatomy:part_health": {
       "currentHealth": 35,

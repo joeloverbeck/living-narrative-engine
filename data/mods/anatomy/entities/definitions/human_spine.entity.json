@@ -4,7 +4,8 @@
   "description": "A human spine - vital organ for structural support and neural transmission",
   "components": {
     "anatomy:part": {
-      "subType": "spine"
+      "subType": "spine",
+      "hit_probability_weight": 0
     },
     "anatomy:part_health": {
       "currentHealth": 60,

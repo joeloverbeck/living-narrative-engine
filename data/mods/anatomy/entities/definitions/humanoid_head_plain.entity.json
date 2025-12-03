@@ -1,84 +1,100 @@
 {
-    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-    "id": "anatomy:humanoid_head_plain",
-    "description": "A plain humanoid head",
-    "components": {
-      "anatomy:part": {
-        "subType": "head"
-      },
-      "anatomy:part_health": {
-        "currentHealth": 40,
-        "maxHealth": 40,
-        "state": "healthy"
-      },
-      "anatomy:sockets": {
-        "sockets": [
-          {
-            "id": "left_eye",
-            "orientation": "left",
-            "allowedTypes": ["eye"],
-            "nameTpl": "{{orientation}} {{type}}"
-          },
-          {
-            "id": "right_eye",
-            "orientation": "right",
-            "allowedTypes": ["eye"],
-            "nameTpl": "{{orientation}} {{type}}"
-          },
-          {
-            "id": "left_ear",
-            "orientation": "left",
-            "allowedTypes": ["ear"],
-            "nameTpl": "{{orientation}} {{type}}"
-          },
-          {
-            "id": "right_ear",
-            "orientation": "right",
-            "allowedTypes": ["ear"],
-            "nameTpl": "{{orientation}} {{type}}"
-          },
-          {
-            "id": "scalp",
-            "allowedTypes": ["hair"],
-            "nameTpl": "{{type}}"
-          },
-          {
-            "id": "nose",
-            "allowedTypes": ["nose"],
-            "nameTpl": "{{type}}"
-          },
-          {
-            "id": "mouth",
-            "allowedTypes": ["mouth"],
-            "nameTpl": "{{type}}"
-          },
-          {
-            "id": "brain_socket",
-            "allowedTypes": ["brain"],
-            "nameTpl": "{{type}}"
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:humanoid_head_plain",
+  "description": "A plain humanoid head",
+  "components": {
+    "anatomy:part": {
+      "subType": "head",
+      "hit_probability_weight": 18
+    },
+    "anatomy:part_health": {
+      "currentHealth": 40,
+      "maxHealth": 40,
+      "state": "healthy"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "left_eye",
+          "orientation": "left",
+          "allowedTypes": [
+            "eye"
+          ],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_eye",
+          "orientation": "right",
+          "allowedTypes": [
+            "eye"
+          ],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "left_ear",
+          "orientation": "left",
+          "allowedTypes": [
+            "ear"
+          ],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_ear",
+          "orientation": "right",
+          "allowedTypes": [
+            "ear"
+          ],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "scalp",
+          "allowedTypes": [
+            "hair"
+          ],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "nose",
+          "allowedTypes": [
+            "nose"
+          ],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "mouth",
+          "allowedTypes": [
+            "mouth"
+          ],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "brain_socket",
+          "allowedTypes": [
+            "brain"
+          ],
+          "nameTpl": "{{type}}"
+        }
+      ]
+    },
+    "anatomy:damage_propagation": {
+      "rules": [
+        {
+          "childSocketId": "brain_socket",
+          "baseProbability": 0.4,
+          "damageFraction": 0.6,
+          "damageTypeModifiers": {
+            "piercing": 1.3,
+            "blunt": 0.6,
+            "slashing": 0.7
           }
-        ]
-      },
-      "anatomy:damage_propagation": {
-        "rules": [
-          {
-            "childSocketId": "brain_socket",
-            "baseProbability": 0.4,
-            "damageFraction": 0.6,
-            "damageTypeModifiers": {
-              "piercing": 1.3,
-              "blunt": 0.6,
-              "slashing": 0.7
-            }
-          }
-        ]
-      },
-      "descriptors:facial_aesthetic": {
-        "value": "plain"
-      },
-      "core:name": {
-        "text": "head"
-      }
+        }
+      ]
+    },
+    "descriptors:facial_aesthetic": {
+      "value": "plain"
+    },
+    "core:name": {
+      "text": "head"
     }
   }
-  
+}

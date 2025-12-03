@@ -363,7 +363,7 @@ describe('Damage Application Mechanics', () => {
       executionContext
     );
     expect(entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID).state).toBe(
-      'bruised'
+      'scratched'
     );
 
     await handler.execute(
@@ -374,16 +374,18 @@ describe('Damage Application Mechanics', () => {
       'wounded'
     );
 
+    // 45% - 24% = 21% → injured (21-40% threshold)
     await handler.execute(
-      { entity_ref: ids.actor, part_ref: ids.head, amount: 25, damage_type: 'blunt' },
+      { entity_ref: ids.actor, part_ref: ids.head, amount: 24, damage_type: 'blunt' },
       executionContext
     );
     expect(entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID).state).toBe(
-      'badly_damaged'
+      'injured'
     );
 
+    // 21% - 21% = 0% → destroyed (0% threshold)
     await handler.execute(
-      { entity_ref: ids.actor, part_ref: ids.head, amount: 30, damage_type: 'blunt' },
+      { entity_ref: ids.actor, part_ref: ids.head, amount: 21, damage_type: 'blunt' },
       executionContext
     );
     expect(entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID).state).toBe(

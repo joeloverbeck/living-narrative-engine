@@ -4,7 +4,8 @@
   "description": "Feline tail - long, flexible, covered in fur",
   "components": {
     "anatomy:part": {
-      "subType": "tail"
+      "subType": "tail",
+      "hit_probability_weight": 3
     },
     "anatomy:part_health": {
       "currentHealth": 12,

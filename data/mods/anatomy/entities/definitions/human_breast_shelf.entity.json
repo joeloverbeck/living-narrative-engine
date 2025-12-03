@@ -4,7 +4,8 @@
   "description": "A breast with shelf projection and soft firmness",
   "components": {
     "anatomy:part": {
-      "subType": "breast"
+      "subType": "breast",
+      "hit_probability_weight": 3
     },
     "anatomy:part_health": {
       "currentHealth": 20,

@@ -9,7 +9,8 @@
       "locked": false
     },
     "anatomy:part": {
-      "subType": "tentacle"
+      "subType": "tentacle",
+      "hit_probability_weight": 6
     },
     "anatomy:part_health": {
       "currentHealth": 60,

@@ -4,7 +4,8 @@
   "description": "Small bantam-sized fleshy red wattle hanging below a chicken's beak",
   "components": {
     "anatomy:part": {
-      "subType": "chicken_wattle"
+      "subType": "chicken_wattle",
+      "hit_probability_weight": 0.5
     },
     "anatomy:part_health": {
       "currentHealth": 3,

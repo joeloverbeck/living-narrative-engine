@@ -4,7 +4,8 @@
   "description": "A human anal opening",
   "components": {
     "anatomy:part": {
-      "subType": "asshole"
+      "subType": "asshole",
+      "hit_probability_weight": 1
     },
     "anatomy:part_health": {
       "currentHealth": 10,

@@ -79,7 +79,7 @@ describe('APPLY_DAMAGE message rendering - entity resolution', () => {
         damageType: 'blunt',
         damageAmount: 10,
         previousState: 'healthy',
-        newState: 'bruised',
+        newState: 'scratched',
         effectsTriggered: [],
         propagatedDamage: [],
       };
@@ -134,7 +134,7 @@ describe('APPLY_DAMAGE message rendering - entity resolution', () => {
             childPartType: 'spine',
             orientation: null,
             damageApplied: 10,
-            newState: 'bruised',
+            newState: 'scratched',
             effectsTriggered: [],
           },
         ],
@@ -224,7 +224,7 @@ describe('APPLY_DAMAGE message rendering - entity resolution', () => {
         damageType: 'slashing',
         damageAmount: 10,
         previousState: 'healthy',
-        newState: 'bruised',
+        newState: 'scratched',
         effectsTriggered: [],
       };
 
@@ -272,7 +272,7 @@ describe('APPLY_DAMAGE message rendering - expected format', () => {
           childPartType: 'spine',
           orientation: null,
           damageApplied: 10,
-          newState: 'bruised',
+          newState: 'scratched',
           effectsTriggered: [],
         },
       ],

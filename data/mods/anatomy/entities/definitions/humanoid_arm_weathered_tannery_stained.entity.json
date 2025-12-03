@@ -4,7 +4,8 @@
   "description": "Strong working arms bearing permanent tan-brown chemical staining from decades of tannery work, with weathered skin texture and solid forearms from leathercraft labor",
   "components": {
     "anatomy:part": {
-      "subType": "arm"
+      "subType": "arm",
+      "hit_probability_weight": 8
     },
     "anatomy:part_health": {
       "currentHealth": 25,
@@ -15,7 +16,9 @@
       "sockets": [
         {
           "id": "wrist",
-          "allowedTypes": ["hand"],
+          "allowedTypes": [
+            "hand"
+          ],
           "nameTpl": "{{effective_orientation}} {{type}}"
         }
       ]
@@ -30,11 +33,17 @@
       "build": "working-strength"
     },
     "descriptors:skin_condition": {
-      "conditions": ["weathered", "chemically-stained"]
+      "conditions": [
+        "weathered",
+        "chemically-stained"
+      ]
     },
     "descriptors:professional_markers": {
       "profession": "leatherworker",
-      "markers": ["tannery-staining", "chemical-staining"]
+      "markers": [
+        "tannery-staining",
+        "chemical-staining"
+      ]
     },
     "core:name": {
       "text": "arm"

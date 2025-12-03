@@ -23,12 +23,24 @@ import { createTestBed } from '../../../common/testBed.js';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 /**
- *
+ * Load the trace-config.schema.json schema
  */
 async function loadTraceConfigSchema() {
   const schemaPath = path.resolve(
     __dirname,
     '../../../../data/schemas/trace-config.schema.json'
+  );
+  const schemaContent = await fs.readFile(schemaPath, 'utf-8');
+  return JSON.parse(schemaContent);
+}
+
+/**
+ * Load the actionTraceConfig.schema.json schema (required for $ref resolution)
+ */
+async function loadActionTraceConfigSchema() {
+  const schemaPath = path.resolve(
+    __dirname,
+    '../../../../data/schemas/actionTraceConfig.schema.json'
   );
   const schemaContent = await fs.readFile(schemaPath, 'utf-8');
   return JSON.parse(schemaContent);
@@ -70,6 +82,11 @@ async function createRealConfigLoader({
   delayMs = 0,
 }) {
   const schemaValidator = new AjvSchemaValidator({ logger });
+
+  // Load both schemas - actionTraceConfig must be loaded first for $ref resolution
+  const actionTraceConfigSchema = await loadActionTraceConfigSchema();
+  await schemaValidator.addSchema(actionTraceConfigSchema, actionTraceConfigSchema.$id);
+
   const schema = await loadTraceConfigSchema();
   await schemaValidator.addSchema(schema, schema.$id);
 
@@ -342,6 +359,11 @@ describe('TracingConfigurationInitializer - Integration', () => {
     });
 
     const schemaValidator = new AjvSchemaValidator({ logger: testBed.mockLogger });
+
+    // Load both schemas - actionTraceConfig must be loaded first for $ref resolution
+    const actionTraceConfigSchema = await loadActionTraceConfigSchema();
+    await schemaValidator.addSchema(actionTraceConfigSchema, actionTraceConfigSchema.$id);
+
     const schema = await loadTraceConfigSchema();
     await schemaValidator.addSchema(schema, schema.$id);
 

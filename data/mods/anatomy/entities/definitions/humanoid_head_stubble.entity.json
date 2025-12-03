@@ -1,99 +1,100 @@
 {
-    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-    "id": "anatomy:humanoid_head_stubble",
-    "description": "A humanoid head with stubble",
-    "components": {
-        "anatomy:part": {
-            "subType": "head"
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:humanoid_head_stubble",
+  "description": "A humanoid head with stubble",
+  "components": {
+    "anatomy:part": {
+      "subType": "head",
+      "hit_probability_weight": 18
+    },
+    "anatomy:part_health": {
+      "currentHealth": 40,
+      "maxHealth": 40,
+      "state": "healthy"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "left_eye",
+          "orientation": "left",
+          "allowedTypes": [
+            "eye"
+          ],
+          "nameTpl": "{{orientation}} {{type}}"
         },
-        "anatomy:part_health": {
-            "currentHealth": 40,
-            "maxHealth": 40,
-            "state": "healthy"
+        {
+          "id": "right_eye",
+          "orientation": "right",
+          "allowedTypes": [
+            "eye"
+          ],
+          "nameTpl": "{{orientation}} {{type}}"
         },
-        "anatomy:sockets": {
-            "sockets": [
-                {
-                    "id": "left_eye",
-                    "orientation": "left",
-                    "allowedTypes": [
-                        "eye"
-                    ],
-                    "nameTpl": "{{orientation}} {{type}}"
-                },
-                {
-                    "id": "right_eye",
-                    "orientation": "right",
-                    "allowedTypes": [
-                        "eye"
-                    ],
-                    "nameTpl": "{{orientation}} {{type}}"
-                },
-                {
-                    "id": "left_ear",
-                    "orientation": "left",
-                    "allowedTypes": [
-                        "ear"
-                    ],
-                    "nameTpl": "{{orientation}} {{type}}"
-                },
-                {
-                    "id": "right_ear",
-                    "orientation": "right",
-                    "allowedTypes": [
-                        "ear"
-                    ],
-                    "nameTpl": "{{orientation}} {{type}}"
-                },
-                {
-                    "id": "scalp",
-                    "allowedTypes": [
-                        "hair"
-                    ],
-                    "nameTpl": "{{type}}"
-                },
-                {
-                    "id": "nose",
-                    "allowedTypes": [
-                        "nose"
-                    ],
-                    "nameTpl": "{{type}}"
-                },
-                {
-                    "id": "mouth",
-                    "allowedTypes": [
-                        "mouth"
-                    ],
-                    "nameTpl": "{{type}}"
-                },
-                {
-                    "id": "brain_socket",
-                    "allowedTypes": [
-                        "brain"
-                    ],
-                    "nameTpl": "{{type}}"
-                }
-            ]
+        {
+          "id": "left_ear",
+          "orientation": "left",
+          "allowedTypes": [
+            "ear"
+          ],
+          "nameTpl": "{{orientation}} {{type}}"
         },
-        "anatomy:damage_propagation": {
-            "rules": [
-                {
-                    "childSocketId": "brain_socket",
-                    "baseProbability": 0.4,
-                    "damageFraction": 0.6,
-                    "damageTypeModifiers": {
-                        "piercing": 1.3,
-                        "blunt": 0.6,
-                        "slashing": 0.7
-                    }
-                }
-            ]
+        {
+          "id": "right_ear",
+          "orientation": "right",
+          "allowedTypes": [
+            "ear"
+          ],
+          "nameTpl": "{{orientation}} {{type}}"
         },
-        "descriptors:facial_hair": {
-            "style": "stubble"
+        {
+          "id": "scalp",
+          "allowedTypes": [
+            "hair"
+          ],
+          "nameTpl": "{{type}}"
         },
-        "core:name": {
-            "text": "head"
+        {
+          "id": "nose",
+          "allowedTypes": [
+            "nose"
+          ],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "mouth",
+          "allowedTypes": [
+            "mouth"
+          ],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "brain_socket",
+          "allowedTypes": [
+            "brain"
+          ],
+          "nameTpl": "{{type}}"
         }
+      ]
+    },
+    "anatomy:damage_propagation": {
+      "rules": [
+        {
+          "childSocketId": "brain_socket",
+          "baseProbability": 0.4,
+          "damageFraction": 0.6,
+          "damageTypeModifiers": {
+            "piercing": 1.3,
+            "blunt": 0.6,
+            "slashing": 0.7
+          }
+        }
+      ]
+    },
+    "descriptors:facial_hair": {
+      "style": "stubble"
+    },
+    "core:name": {
+      "text": "head"
     }
+  }
 }

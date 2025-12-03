@@ -4,7 +4,8 @@
   "description": "A long, balanced dragon tail",
   "components": {
     "anatomy:part": {
-      "subType": "dragon_tail"
+      "subType": "dragon_tail",
+      "hit_probability_weight": 10
     },
     "anatomy:part_health": {
       "currentHealth": 35,

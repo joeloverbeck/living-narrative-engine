@@ -4,7 +4,8 @@
   "description": "A muscular dragon leg ending in talons",
   "components": {
     "anatomy:part": {
-      "subType": "dragon_leg"
+      "subType": "dragon_leg",
+      "hit_probability_weight": 12
     },
     "anatomy:part_health": {
       "currentHealth": 50,
