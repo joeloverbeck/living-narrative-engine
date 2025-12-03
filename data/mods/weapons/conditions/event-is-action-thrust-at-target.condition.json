@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "weapons:event-is-action-thrust-at-target",
+  "description": "Checks if the event is a thrust_at_target action attempt",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "weapons:thrust_at_target"
+    ]
+  }
+}

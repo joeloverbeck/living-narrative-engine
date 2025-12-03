@@ -1,24 +1,24 @@
 /**
- * @file Integration tests to verify handle_swing_at_target applies weapon damage
+ * @file Integration tests to verify handle_thrust_at_target applies weapon damage
  * Updated to test macro-based architecture where damage application logic is in shared macros.
  */
 
 import { describe, expect, it } from '@jest/globals';
-import swingAtTargetRule from '../../../../data/mods/weapons/rules/handle_swing_at_target.rule.json' assert { type: 'json' };
+import thrustAtTargetRule from '../../../../data/mods/weapons/rules/handle_thrust_at_target.rule.json' assert { type: 'json' };
 import handleMeleeHit from '../../../../data/mods/weapons/macros/handleMeleeHit.macro.json' assert { type: 'json' };
 import handleMeleeCritical from '../../../../data/mods/weapons/macros/handleMeleeCritical.macro.json' assert { type: 'json' };
 import handleMeleeMiss from '../../../../data/mods/weapons/macros/handleMeleeMiss.macro.json' assert { type: 'json' };
 import handleMeleeFumble from '../../../../data/mods/weapons/macros/handleMeleeFumble.macro.json' assert { type: 'json' };
 
 const findOutcomeBranch = (outcome) =>
-  swingAtTargetRule.actions.find(
+  thrustAtTargetRule.actions.find(
     (op) => op.type === 'IF' && op.parameters?.condition?.['==']?.[1] === outcome
   );
 
-describe('handle_swing_at_target damage application', () => {
+describe('handle_thrust_at_target damage application', () => {
   describe('Rule Setup', () => {
     it('queries weapon damage capabilities before branching', () => {
-      const actions = swingAtTargetRule.actions;
+      const actions = thrustAtTargetRule.actions;
       const damageQueryIndex = actions.findIndex(
         (op) =>
           op.type === 'QUERY_COMPONENT' &&
@@ -33,15 +33,15 @@ describe('handle_swing_at_target damage application', () => {
       expect(firstIfIndex).toBeGreaterThan(damageQueryIndex);
     });
 
-    it('sets excludeDamageTypes context variable for swing (piercing excluded)', () => {
-      const setExcludeOp = swingAtTargetRule.actions.find(
+    it('sets excludeDamageTypes context variable for thrust (slashing excluded)', () => {
+      const setExcludeOp = thrustAtTargetRule.actions.find(
         (op) =>
           op.type === 'SET_VARIABLE' &&
           op.parameters?.variable_name === 'excludeDamageTypes'
       );
 
       expect(setExcludeOp).toBeDefined();
-      expect(setExcludeOp.parameters.value).toEqual(['piercing']);
+      expect(setExcludeOp.parameters.value).toEqual(['slashing']);
     });
   });
 

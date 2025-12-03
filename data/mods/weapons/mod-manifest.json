@@ -42,21 +42,31 @@
       "magazine.component.json",
       "weapon.component.json"
     ],
+    "macros": [
+      "handleMeleeCritical.macro.json",
+      "handleMeleeFumble.macro.json",
+      "handleMeleeHit.macro.json",
+      "handleMeleeMiss.macro.json"
+    ],
     "scopes": [
       "grabbable_weapons_in_inventory.scope",
       "weapons_in_inventory.scope",
-      "wielded_cutting_weapons.scope"
+      "wielded_cutting_weapons.scope",
+      "wielded_piercing_weapons.scope"
     ],
     "conditions": [
       "event-is-action-swing-at-target.condition.json",
+      "event-is-action-thrust-at-target.condition.json",
       "event-is-action-wield-threateningly.condition.json"
     ],
     "actions": [
       "swing_at_target.action.json",
+      "thrust_at_target.action.json",
       "wield_threateningly.action.json"
     ],
     "rules": [
       "handle_swing_at_target.rule.json",
+      "handle_thrust_at_target.rule.json",
       "handle_wield_threateningly.rule.json"
     ],
     "entities": {

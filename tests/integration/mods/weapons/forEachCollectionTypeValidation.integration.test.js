@@ -1,17 +1,22 @@
 /**
  * @file Integration tests to verify FOR_EACH collection parameter type
- *
- * This test validates that the FOR_EACH operation in handle_swing_at_target.rule.json
- * uses string paths for the collection parameter, as required by the schema and handler.
+ * @description This test validates that the FOR_EACH operations in the weapons melee macros
+ * use string paths for the collection parameter, as required by the schema and handler.
  *
  * Background:
  * - The FOR_EACH handler at forEachHandler.js:48 calls path?.trim() on the collection parameter
  * - This requires the collection parameter to be a string, not an object
  * - The schema at forEach.schema.json specifies "collection": { "type": "string" }
  * - Using JSON Logic objects like { "var": "..." } causes TypeError: path?.trim is not a function
+ *
+ * Architecture:
+ * - handle_swing_at_target.rule.json delegates to shared macros for each outcome
+ * - FOR_EACH operations are now in handleMeleeHit.macro.json and handleMeleeCritical.macro.json
+ * - Rules set context variables, macros contain the damage iteration logic
  * @see src/logic/flowHandlers/forEachHandler.js - Handler that requires string path
  * @see data/schemas/operations/forEach.schema.json - Schema requiring string type
- * @see data/mods/weapons/rules/handle_swing_at_target.rule.json - Rule being tested
+ * @see data/mods/weapons/macros/handleMeleeHit.macro.json - Macro with FOR_EACH for SUCCESS
+ * @see data/mods/weapons/macros/handleMeleeCritical.macro.json - Macro with FOR_EACH for CRITICAL_SUCCESS
  */
 
 import { describe, expect, it, beforeEach, afterEach } from '@jest/globals';
@@ -291,17 +296,32 @@ describe('FOR_EACH collection parameter type validation', () => {
   });
 });
 
-describe('handle_swing_at_target.rule.json FOR_EACH validation', () => {
-  // Import the actual rule file to verify it uses correct format
+describe('Weapons melee macros FOR_EACH validation', () => {
+  // Import the macro files that now contain the FOR_EACH operations
+  // With macro-based architecture, damage iteration is in shared macros, not rules
+  let handleMeleeHit;
+  let handleMeleeCritical;
   let swingAtTargetRule;
 
   beforeEach(async () => {
-    // Dynamic import to get fresh copy
-    const module = await import(
+    // Dynamic imports to get fresh copies
+    const hitModule = await import(
+      '../../../../data/mods/weapons/macros/handleMeleeHit.macro.json',
+      { assert: { type: 'json' } }
+    );
+    handleMeleeHit = hitModule.default;
+
+    const critModule = await import(
+      '../../../../data/mods/weapons/macros/handleMeleeCritical.macro.json',
+      { assert: { type: 'json' } }
+    );
+    handleMeleeCritical = critModule.default;
+
+    const ruleModule = await import(
       '../../../../data/mods/weapons/rules/handle_swing_at_target.rule.json',
       { assert: { type: 'json' } }
     );
-    swingAtTargetRule = module.default;
+    swingAtTargetRule = ruleModule.default;
   });
 
   const findOutcomeBranch = (outcome) =>
@@ -311,33 +331,71 @@ describe('handle_swing_at_target.rule.json FOR_EACH validation', () => {
         op.parameters?.condition?.['==']?.[1] === outcome
     );
 
-  it('should use string path for collection in SUCCESS branch', () => {
-    const successBranch = findOutcomeBranch('SUCCESS');
-    expect(successBranch).toBeDefined();
+  describe('Rule delegates to macros', () => {
+    it('should delegate SUCCESS to handleMeleeHit macro', () => {
+      const successBranch = findOutcomeBranch('SUCCESS');
+      expect(successBranch).toBeDefined();
 
-    const forEachOp = successBranch.parameters.then_actions.find(
-      (op) => op.type === 'FOR_EACH'
-    );
+      const macroRef = successBranch.parameters.then_actions.find(
+        (op) => op.macro === 'weapons:handleMeleeHit'
+      );
+      expect(macroRef).toBeDefined();
+    });
 
-    expect(forEachOp).toBeDefined();
+    it('should delegate CRITICAL_SUCCESS to handleMeleeCritical macro', () => {
+      const critBranch = findOutcomeBranch('CRITICAL_SUCCESS');
+      expect(critBranch).toBeDefined();
 
-    // The collection MUST be a string, not an object
-    expect(typeof forEachOp.parameters.collection).toBe('string');
-    expect(forEachOp.parameters.collection).toBe('context.weaponDamage.entries');
+      const macroRef = critBranch.parameters.then_actions.find(
+        (op) => op.macro === 'weapons:handleMeleeCritical'
+      );
+      expect(macroRef).toBeDefined();
+    });
   });
 
-  it('should use string path for collection in CRITICAL_SUCCESS branch', () => {
-    const critBranch = findOutcomeBranch('CRITICAL_SUCCESS');
-    expect(critBranch).toBeDefined();
+  describe('Macro FOR_EACH collection validation', () => {
+    it('should use string path for collection in handleMeleeHit macro (SUCCESS)', () => {
+      const forEachOp = handleMeleeHit.actions.find(
+        (op) => op.type === 'FOR_EACH'
+      );
 
-    const forEachOp = critBranch.parameters.then_actions.find(
-      (op) => op.type === 'FOR_EACH'
-    );
+      expect(forEachOp).toBeDefined();
 
-    expect(forEachOp).toBeDefined();
+      // The collection MUST be a string, not an object
+      expect(typeof forEachOp.parameters.collection).toBe('string');
+      expect(forEachOp.parameters.collection).toBe(
+        'context.weaponDamage.entries'
+      );
+    });
 
-    // The collection MUST be a string, not an object
-    expect(typeof forEachOp.parameters.collection).toBe('string');
-    expect(forEachOp.parameters.collection).toBe('context.weaponDamage.entries');
+    it('should use string path for collection in handleMeleeCritical macro (CRITICAL_SUCCESS)', () => {
+      const forEachOp = handleMeleeCritical.actions.find(
+        (op) => op.type === 'FOR_EACH'
+      );
+
+      expect(forEachOp).toBeDefined();
+
+      // The collection MUST be a string, not an object
+      expect(typeof forEachOp.parameters.collection).toBe('string');
+      expect(forEachOp.parameters.collection).toBe(
+        'context.weaponDamage.entries'
+      );
+    });
+
+    it('should use correct item_variable in handleMeleeHit macro', () => {
+      const forEachOp = handleMeleeHit.actions.find(
+        (op) => op.type === 'FOR_EACH'
+      );
+
+      expect(forEachOp.parameters.item_variable).toBe('dmgEntry');
+    });
+
+    it('should use correct item_variable in handleMeleeCritical macro', () => {
+      const forEachOp = handleMeleeCritical.actions.find(
+        (op) => op.type === 'FOR_EACH'
+      );
+
+      expect(forEachOp.parameters.item_variable).toBe('dmgEntry');
+    });
   });
 });

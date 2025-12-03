@@ -1,11 +1,13 @@
 /**
  * @file Integration tests for APPLY_DAMAGE exclude_damage_types functionality
  * @description Tests that damage type exclusions work correctly in the
- * handle_swing_at_target rule and the ApplyDamageHandler.
+ * handle_swing_at_target rule (via macro delegation) and the ApplyDamageHandler.
  */
 
 import { describe, it, expect } from '@jest/globals';
 import swingAtTargetRule from '../../../../data/mods/weapons/rules/handle_swing_at_target.rule.json' assert { type: 'json' };
+import handleMeleeHit from '../../../../data/mods/weapons/macros/handleMeleeHit.macro.json' assert { type: 'json' };
+import handleMeleeCritical from '../../../../data/mods/weapons/macros/handleMeleeCritical.macro.json' assert { type: 'json' };
 
 /**
  * Helper to find an IF operation by outcome value
@@ -19,57 +21,70 @@ const findOutcomeBranch = (outcome) =>
   );
 
 /**
- * Helper to extract APPLY_DAMAGE operations from a branch's FOR_EACH
+ * Helper to extract APPLY_DAMAGE operations from a macro's FOR_EACH
  *
- * @param {object} branch - The IF branch to search
+ * @param {object} macro - The macro to search
  * @returns {object|undefined} The APPLY_DAMAGE operation
  */
-const getApplyDamageFromBranch = (branch) => {
-  const forEachOp = branch?.parameters?.then_actions?.find(
-    (op) => op.type === 'FOR_EACH'
-  );
+const getApplyDamageFromMacro = (macro) => {
+  const forEachOp = macro?.actions?.find((op) => op.type === 'FOR_EACH');
   return forEachOp?.parameters?.actions?.find(
     (action) => action.type === 'APPLY_DAMAGE'
   );
 };
 
 describe('APPLY_DAMAGE exclude_damage_types integration', () => {
-  describe('swing_at_target rule exclusion configuration', () => {
-    it('should have exclude_damage_types parameter in SUCCESS branch APPLY_DAMAGE', () => {
-      const successBranch = findOutcomeBranch('SUCCESS');
-      expect(successBranch).toBeDefined();
+  describe('Rule Context Setup', () => {
+    it('should set excludeDamageTypes context variable for swing (piercing excluded)', () => {
+      const setExcludeOp = swingAtTargetRule.actions.find(
+        (op) =>
+          op.type === 'SET_VARIABLE' &&
+          op.parameters?.variable_name === 'excludeDamageTypes'
+      );
 
-      const applyDamage = getApplyDamageFromBranch(successBranch);
+      expect(setExcludeOp).toBeDefined();
+      expect(setExcludeOp.parameters.value).toEqual(['piercing']);
+    });
+  });
+
+  describe('swing_at_target rule exclusion configuration', () => {
+    it('should have exclude_damage_types parameter in handleMeleeHit macro APPLY_DAMAGE', () => {
+      const applyDamage = getApplyDamageFromMacro(handleMeleeHit);
       expect(applyDamage).toBeDefined();
       expect(applyDamage.parameters.exclude_damage_types).toBeDefined();
-      expect(applyDamage.parameters.exclude_damage_types).toEqual(['piercing']);
+      // Macro uses context variable for flexibility
+      expect(applyDamage.parameters.exclude_damage_types).toEqual({
+        var: 'context.excludeDamageTypes',
+      });
     });
 
-    it('should have exclude_damage_types parameter in CRITICAL_SUCCESS branch APPLY_DAMAGE', () => {
-      const critBranch = findOutcomeBranch('CRITICAL_SUCCESS');
-      expect(critBranch).toBeDefined();
-
-      const applyDamage = getApplyDamageFromBranch(critBranch);
+    it('should have exclude_damage_types parameter in handleMeleeCritical macro APPLY_DAMAGE', () => {
+      const applyDamage = getApplyDamageFromMacro(handleMeleeCritical);
       expect(applyDamage).toBeDefined();
       expect(applyDamage.parameters.exclude_damage_types).toBeDefined();
-      expect(applyDamage.parameters.exclude_damage_types).toEqual(['piercing']);
+      // Macro uses context variable for flexibility
+      expect(applyDamage.parameters.exclude_damage_types).toEqual({
+        var: 'context.excludeDamageTypes',
+      });
     });
 
     it('should maintain damage_multiplier alongside exclude_damage_types in CRITICAL_SUCCESS', () => {
-      const critBranch = findOutcomeBranch('CRITICAL_SUCCESS');
-      const applyDamage = getApplyDamageFromBranch(critBranch);
+      const applyDamage = getApplyDamageFromMacro(handleMeleeCritical);
 
       expect(applyDamage.parameters.damage_multiplier).toBe(1.5);
-      expect(applyDamage.parameters.exclude_damage_types).toEqual(['piercing']);
+      expect(applyDamage.parameters.exclude_damage_types).toBeDefined();
     });
 
-    it('should exclude only piercing damage type for swing action', () => {
-      // Swing action should exclude piercing since it's a slashing motion
-      // but should still allow slashing, fire, corruption, etc.
-      const successBranch = findOutcomeBranch('SUCCESS');
-      const applyDamage = getApplyDamageFromBranch(successBranch);
+    it('should exclude only piercing damage type for swing action via context variable', () => {
+      // Swing action sets excludeDamageTypes to ['piercing'] in the rule
+      // The macros reference this via { var: 'context.excludeDamageTypes' }
+      const setExcludeOp = swingAtTargetRule.actions.find(
+        (op) =>
+          op.type === 'SET_VARIABLE' &&
+          op.parameters?.variable_name === 'excludeDamageTypes'
+      );
 
-      const excludedTypes = applyDamage.parameters.exclude_damage_types;
+      const excludedTypes = setExcludeOp.parameters.value;
       expect(excludedTypes).toContain('piercing');
       expect(excludedTypes).not.toContain('slashing');
       expect(excludedTypes).not.toContain('fire');
@@ -79,19 +94,16 @@ describe('APPLY_DAMAGE exclude_damage_types integration', () => {
   });
 
   describe('exclusion consistency across outcome branches', () => {
-    it('should have identical exclusion lists in SUCCESS and CRITICAL_SUCCESS', () => {
-      const successBranch = findOutcomeBranch('SUCCESS');
-      const critBranch = findOutcomeBranch('CRITICAL_SUCCESS');
-
-      const successApplyDamage = getApplyDamageFromBranch(successBranch);
-      const critApplyDamage = getApplyDamageFromBranch(critBranch);
+    it('should have identical exclusion reference in SUCCESS and CRITICAL_SUCCESS macros', () => {
+      const successApplyDamage = getApplyDamageFromMacro(handleMeleeHit);
+      const critApplyDamage = getApplyDamageFromMacro(handleMeleeCritical);
 
       expect(successApplyDamage.parameters.exclude_damage_types).toEqual(
         critApplyDamage.parameters.exclude_damage_types
       );
     });
 
-    it('should not have APPLY_DAMAGE in FAILURE branch', () => {
+    it('should not have APPLY_DAMAGE in FAILURE branch (rule delegates to macro without damage)', () => {
       const failureBranch = findOutcomeBranch('FAILURE');
       expect(failureBranch).toBeDefined();
 
@@ -102,7 +114,7 @@ describe('APPLY_DAMAGE exclude_damage_types integration', () => {
       expect(applyDamageOps.length).toBe(0);
     });
 
-    it('should not have APPLY_DAMAGE in FUMBLE branch', () => {
+    it('should not have APPLY_DAMAGE in FUMBLE branch (rule delegates to macro without damage)', () => {
       const fumbleBranch = findOutcomeBranch('FUMBLE');
       expect(fumbleBranch).toBeDefined();
 
@@ -121,9 +133,8 @@ describe('APPLY_DAMAGE exclude_damage_types integration', () => {
       );
     });
 
-    it('should still iterate through all damage entries in FOR_EACH', () => {
-      const successBranch = findOutcomeBranch('SUCCESS');
-      const forEachOp = successBranch.parameters.then_actions.find(
+    it('should still iterate through all damage entries in FOR_EACH (via macro)', () => {
+      const forEachOp = handleMeleeHit.actions.find(
         (op) => op.type === 'FOR_EACH'
       );
 
@@ -132,9 +143,8 @@ describe('APPLY_DAMAGE exclude_damage_types integration', () => {
       expect(forEachOp.parameters.item_variable).toBe('dmgEntry');
     });
 
-    it('should preserve entity_ref and damage_entry parameters', () => {
-      const successBranch = findOutcomeBranch('SUCCESS');
-      const applyDamage = getApplyDamageFromBranch(successBranch);
+    it('should preserve entity_ref and damage_entry parameters in macro', () => {
+      const applyDamage = getApplyDamageFromMacro(handleMeleeHit);
 
       expect(applyDamage.parameters.entity_ref).toBe('secondary');
       expect(applyDamage.parameters.damage_entry).toEqual({ var: 'context.dmgEntry' });
@@ -143,15 +153,13 @@ describe('APPLY_DAMAGE exclude_damage_types integration', () => {
 
   describe('backward compatibility', () => {
     it('should not have deprecated amount parameter', () => {
-      const successBranch = findOutcomeBranch('SUCCESS');
-      const applyDamage = getApplyDamageFromBranch(successBranch);
+      const applyDamage = getApplyDamageFromMacro(handleMeleeHit);
 
       expect(applyDamage.parameters.amount).toBeUndefined();
     });
 
     it('should not have deprecated damage_type parameter', () => {
-      const successBranch = findOutcomeBranch('SUCCESS');
-      const applyDamage = getApplyDamageFromBranch(successBranch);
+      const applyDamage = getApplyDamageFromMacro(handleMeleeHit);
 
       expect(applyDamage.parameters.damage_type).toBeUndefined();
     });

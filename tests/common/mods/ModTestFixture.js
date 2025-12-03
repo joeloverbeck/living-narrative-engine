@@ -15,6 +15,11 @@ import logFailureMacro from '../../../data/mods/core/macros/logFailureAndEndTurn
 import logSuccessOutcomeMacro from '../../../data/mods/core/macros/logSuccessOutcomeAndEndTurn.macro.json';
 import logFailureOutcomeMacro from '../../../data/mods/core/macros/logFailureOutcomeAndEndTurn.macro.json';
 import endTurnOnlyMacro from '../../../data/mods/core/macros/endTurnOnly.macro.json';
+// Weapons macros for melee combat
+import handleMeleeCriticalMacro from '../../../data/mods/weapons/macros/handleMeleeCritical.macro.json';
+import handleMeleeHitMacro from '../../../data/mods/weapons/macros/handleMeleeHit.macro.json';
+import handleMeleeFumbleMacro from '../../../data/mods/weapons/macros/handleMeleeFumble.macro.json';
+import handleMeleeMissMacro from '../../../data/mods/weapons/macros/handleMeleeMiss.macro.json';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 import { promises as fs } from 'fs';
 import { resolve } from 'path';
@@ -1034,6 +1039,11 @@ class BaseModTestFixture {
       'core:logSuccessOutcomeAndEndTurn': logSuccessOutcomeMacro,
       'core:logFailureOutcomeAndEndTurn': logFailureOutcomeMacro,
       'core:endTurnOnly': endTurnOnlyMacro,
+      // Weapons macros for melee combat
+      'weapons:handleMeleeCritical': handleMeleeCriticalMacro,
+      'weapons:handleMeleeHit': handleMeleeHitMacro,
+      'weapons:handleMeleeFumble': handleMeleeFumbleMacro,
+      'weapons:handleMeleeMiss': handleMeleeMissMacro,
     };
 
     // Load action definitions for the mod to enable action discovery
