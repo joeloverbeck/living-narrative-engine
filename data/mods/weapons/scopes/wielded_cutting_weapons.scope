@@ -1,10 +1,11 @@
 // Scope: weapons:wielded_cutting_weapons
-// Description: Returns weapons the actor is wielding that can deal cutting damage
+// Description: Returns wielded weapons with slashing damage capability
 // Usage: Primary target scope for swing_at_target action
 
 weapons:wielded_cutting_weapons := actor.components.positioning:wielding.wielded_item_ids[][{
   "and": [
     { "has_component": [".", "weapons:weapon"] },
-    { "has_component": [".", "damage-types:can_cut"] }
+    { "has_component": [".", "damage-types:damage_capabilities"] },
+    { "has_damage_capability": [".", "slashing"] }
   ]
 }]

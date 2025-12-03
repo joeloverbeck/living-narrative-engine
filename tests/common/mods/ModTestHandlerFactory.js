@@ -27,6 +27,7 @@ import TransferItemHandler from '../../../src/logic/operationHandlers/transferIt
 import ValidateInventoryCapacityHandler from '../../../src/logic/operationHandlers/validateInventoryCapacityHandler.js';
 import DropItemAtLocationHandler from '../../../src/logic/operationHandlers/dropItemAtLocationHandler.js';
 import PickUpItemFromLocationHandler from '../../../src/logic/operationHandlers/pickUpItemFromLocationHandler.js';
+import ApplyDamageHandler from '../../../src/logic/operationHandlers/applyDamageHandler.js';
 import OpenContainerHandler from '../../../src/logic/operationHandlers/openContainerHandler.js';
 import TakeFromContainerHandler from '../../../src/logic/operationHandlers/takeFromContainerHandler.js';
 import PutInContainerHandler from '../../../src/logic/operationHandlers/putInContainerHandler.js';
@@ -1182,7 +1183,32 @@ export class ModTestHandlerFactory {
     };
     const operationInterpreter = () => ({ execute: jest.fn() });
     const jsonLogicEvaluationService = {
-      evaluate: jest.fn((rule, data) => data),
+      evaluate: jest.fn((rule, data) => {
+        if (
+          rule &&
+          typeof rule === 'object' &&
+          Object.prototype.hasOwnProperty.call(rule, 'var')
+        ) {
+          const path = String(rule.var || '')
+            .split('.')
+            .filter(Boolean);
+          return path.reduce((acc, key) => (acc ? acc[key] : undefined), data);
+        }
+
+        return rule ?? data;
+      }),
+    };
+    const bodyGraphService = {
+      getAllParts: jest.fn((bodyComponent) => bodyComponent?.parts || []),
+    };
+    const damageTypeEffectsService = {
+      applyEffectsForDamage: jest.fn().mockResolvedValue(undefined),
+    };
+    const damagePropagationService = {
+      propagateDamage: jest.fn().mockReturnValue([]),
+    };
+    const deathCheckService = {
+      checkDeathConditions: jest.fn(() => ({ isDead: false, isDying: false })),
     };
     const systemMoveEntityHandler = new SystemMoveEntityHandler({
       entityManager,
@@ -1349,6 +1375,16 @@ export class ModTestHandlerFactory {
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
+      }),
+      APPLY_DAMAGE: new ApplyDamageHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+        jsonLogicService: jsonLogicEvaluationService,
+        bodyGraphService,
+        damageTypeEffectsService,
+        damagePropagationService,
+        deathCheckService,
       }),
       DISPATCH_SPEECH: new DispatchSpeechHandler({
         dispatcher: eventBus,

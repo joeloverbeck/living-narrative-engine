@@ -6,6 +6,7 @@ import { describe, it, expect, jest } from '@jest/globals';
 import {
   extractSocketsFromEntity,
   resolveEntityId,
+  setSocketExtractorLogger,
 } from '../../../../src/anatomy/validation/socketExtractor.js';
 
 describe('socketExtractor', () => {
@@ -455,6 +456,60 @@ describe('socketExtractor', () => {
       };
       const result = await resolveEntityId('head', mockRegistry);
       expect(result).toBeNull();
+    });
+
+    describe('logging', () => {
+      afterEach(() => {
+        setSocketExtractorLogger(null);
+      });
+
+      it('logs when multiple candidates are present', async () => {
+        const debug = jest.fn();
+        setSocketExtractorLogger({ debug });
+
+        const mockRegistry = {
+          getAll: jest.fn().mockReturnValue([
+            {
+              id: 'anatomy:humanoid_head_variant',
+              components: { 'anatomy:part': { subType: 'head' } },
+            },
+            {
+              id: 'anatomy:humanoid_head',
+              components: { 'anatomy:part': { subType: 'head' } },
+            },
+          ]),
+        };
+
+        const result = await resolveEntityId('head', mockRegistry);
+
+        expect(result).toBe('anatomy:humanoid_head');
+        expect(debug).toHaveBeenCalledTimes(1);
+
+        const message = debug.mock.calls[0][0];
+        expect(message).toContain('subType "head"');
+        expect(message).toContain('anatomy:humanoid_head_variant');
+        expect(message).toContain('anatomy:humanoid_head');
+        expect(message).toContain('priority: fewest underscores, alphabetical, shortest ID');
+      });
+
+      it('does not log when only a single candidate exists', async () => {
+        const debug = jest.fn();
+        setSocketExtractorLogger({ debug });
+
+        const mockRegistry = {
+          getAll: jest.fn().mockReturnValue([
+            {
+              id: 'anatomy:humanoid_head',
+              components: { 'anatomy:part': { subType: 'head' } },
+            },
+          ]),
+        };
+
+        const result = await resolveEntityId('head', mockRegistry);
+
+        expect(result).toBe('anatomy:humanoid_head');
+        expect(debug).not.toHaveBeenCalled();
+      });
     });
   });
 });

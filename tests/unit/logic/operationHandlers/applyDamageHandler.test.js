@@ -1146,6 +1146,48 @@ describe('ApplyDamageHandler', () => {
         });
       });
 
+      test('should apply damage multiplier when provided (damage_entry path)', async () => {
+        const baseDamageEntry = {
+          name: 'slashing',
+          amount: 20,
+          bleed: { enabled: true }
+        };
+
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          damage_entry: baseDamageEntry,
+          damage_multiplier: 1.5
+        };
+
+        const healthComponent = {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => comp === PART_HEALTH_COMPONENT_ID);
+        em.getComponentData.mockReturnValue(healthComponent);
+
+        await handler.execute(params, executionContext);
+
+        expect(em.addComponent).toHaveBeenCalledWith(
+          'part1',
+          PART_HEALTH_COMPONENT_ID,
+          expect.objectContaining({ currentHealth: 70 })
+        );
+
+        expect(damageTypeEffectsService.applyEffectsForDamage).toHaveBeenCalledWith(
+          expect.objectContaining({
+            damageEntry: expect.objectContaining({ amount: 30, name: 'slashing' })
+          })
+        );
+
+        // Ensure original object not mutated
+        expect(baseDamageEntry.amount).toBe(20);
+      });
+
       test('should work with legacy damage_type + amount parameters (backward compatibility)', async () => {
         const params = {
           entity_ref: 'entity1',
@@ -1173,6 +1215,40 @@ describe('ApplyDamageHandler', () => {
 
         // Should emit deprecation warning
         expect(log.warn).toHaveBeenCalledWith(expect.stringContaining('DEPRECATED'));
+      });
+
+      test('should apply damage multiplier with legacy parameters', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          amount: 10,
+          damage_type: 'blunt',
+          damage_multiplier: 2
+        };
+
+        const healthComponent = {
+          currentHealth: 50,
+          maxHealth: 50,
+          state: 'healthy',
+          turnsInState: 0
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => comp === PART_HEALTH_COMPONENT_ID);
+        em.getComponentData.mockReturnValue(healthComponent);
+
+        await handler.execute(params, executionContext);
+
+        expect(em.addComponent).toHaveBeenCalledWith(
+          'part1',
+          PART_HEALTH_COMPONENT_ID,
+          expect.objectContaining({ currentHealth: 30 })
+        );
+
+        expect(damageTypeEffectsService.applyEffectsForDamage).toHaveBeenCalledWith(
+          expect.objectContaining({
+            damageEntry: expect.objectContaining({ amount: 20, name: 'blunt' })
+          })
+        );
       });
 
       test('should emit deprecation warning for legacy mode', async () => {
