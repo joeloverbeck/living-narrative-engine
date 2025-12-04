@@ -64,6 +64,8 @@ const simpleFactories = {
   createMockAIPromptContentProvider: ['getPromptData'],
   createMockPromptBuilder: ['build'],
   createMockAIPromptPipeline: ['generatePrompt'],
+  createMockTurnActionChoicePipeline: ['buildChoices'],
+  createMockEntityDisplayDataProvider: ['getEntityName'],
   createMockLLMConfigurationManager: {
     methods: [
       'loadConfiguration',
@@ -315,6 +317,8 @@ export const {
   createMockAIGameStateProvider,
   createMockAIPromptContentProvider,
   createMockPromptBuilder,
+  createMockTurnActionChoicePipeline,
+  createMockEntityDisplayDataProvider,
   createMockLLMConfigurationManager,
   createMockLLMRequestExecutor,
   createMockLLMErrorMapper,

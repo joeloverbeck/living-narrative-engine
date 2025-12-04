@@ -18,6 +18,7 @@ import {
   REQUEST_SHOW_SAVE_GAME_UI,
   REQUEST_SHOW_LOAD_GAME_UI,
   CANNOT_SAVE_GAME_INFO,
+  UI_SHOW_LLM_PROMPT_PREVIEW,
 } from '../../../src/constants/eventIds.js'; // Adjusted path
 
 // Mock ILogger
@@ -147,6 +148,7 @@ describe('EngineUIManager', () => {
         REQUEST_SHOW_SAVE_GAME_UI,
         REQUEST_SHOW_LOAD_GAME_UI,
         CANNOT_SAVE_GAME_INFO,
+        UI_SHOW_LLM_PROMPT_PREVIEW,
       ];
 
       expectedEventIds.forEach((eventId) => {

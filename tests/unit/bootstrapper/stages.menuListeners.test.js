@@ -57,8 +57,8 @@ describe('setupMenuButtonListenersStage', () => {
 
     const result = await setupMenuButtonListenersStage(null, logger, document);
 
-    // four warnings: two for missing buttons, two for missing gameEngine
-    expect(logger.warn).toHaveBeenCalledTimes(4);
+    // six warnings: three missing buttons, three missing gameEngine handlers
+    expect(logger.warn).toHaveBeenCalledTimes(6);
     expect(result.success).toBe(true);
   });
 

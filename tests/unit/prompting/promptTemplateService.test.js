@@ -20,7 +20,7 @@ describe('PromptTemplateService - Conditional Section Template Processing', () =
   });
 
   describe('processTemplate with conditional sections', () => {
-    test('processes template with empty section placeholders correctly', () => {
+    test('processes template with empty thoughts markup preserved', () => {
       const template = `<character_persona>
 {characterPersonaContent}
 </character_persona>
@@ -37,7 +37,7 @@ describe('PromptTemplateService - Conditional Section Template Processing', () =
 
       const data = {
         characterPersonaContent: 'Test character persona',
-        thoughtsSection: '', // Empty section - should not appear
+        thoughtsSection: '<thoughts>\n</thoughts>', // Empty section now preserved
         notesSection: '<notes>\n- Important note\n</notes>', // Non-empty section
         goalsSection: '', // Empty section - should not appear
         finalInstructionsContent: 'Test instructions',
@@ -53,16 +53,12 @@ describe('PromptTemplateService - Conditional Section Template Processing', () =
         '<final_instructions>\nTest instructions\n</final_instructions>'
       );
 
-      // Should contain the notes section
+      // Should contain the thoughts and notes sections
+      expect(result).toContain('<thoughts>');
       expect(result).toContain('<notes>\n- Important note\n</notes>');
 
-      // Should NOT contain empty thoughts or goals sections
-      expect(result).not.toContain('<thoughts>');
+      // Should NOT contain empty goals section
       expect(result).not.toContain('<goals>');
-
-      // Empty sections should result in just newlines where placeholders were
-      expect(result).toMatch(/\n\n\n\n<notes>/); // thoughtsSection is empty, so 4 newlines before notes
-      expect(result).toMatch(/<\/notes>\n\n\n\n<final_instructions>/); // goalsSection is empty, resulting in 4 newlines between notes and final
     });
 
     test('processes template with all sections filled', () => {
@@ -89,7 +85,7 @@ describe('PromptTemplateService - Conditional Section Template Processing', () =
       expect(result).toContain('<goals>\n- Complete quest\n</goals>');
     });
 
-    test('processes template with all sections empty', () => {
+    test('processes template with empty sections and preserved thoughts tag', () => {
       const template = `<start>
 {thoughtsSection}
 
@@ -99,26 +95,23 @@ describe('PromptTemplateService - Conditional Section Template Processing', () =
 <end>`;
 
       const data = {
-        thoughtsSection: '',
+        thoughtsSection: '<thoughts>\n</thoughts>',
         notesSection: '',
         goalsSection: '',
       };
 
       const result = service.processTemplate(template, data);
 
-      // Should not contain any XML section tags
-      expect(result).not.toContain('<thoughts>');
+      // Should contain thoughts wrapper even when empty
+      expect(result).toContain('<thoughts>');
+      expect(result).toContain('</thoughts>');
+      // Other empty sections should be omitted
       expect(result).not.toContain('<notes>');
       expect(result).not.toContain('<goals>');
 
-      // Should only contain the start and end markers with empty lines where sections would be
+      // Should still contain the start and end markers
       expect(result).toContain('<start>');
       expect(result).toContain('<end>');
-
-      // Verify the structure is clean without empty XML blocks
-      const lines = result.split('\n');
-      const nonEmptyLines = lines.filter((line) => line.trim() !== '');
-      expect(nonEmptyLines).toEqual(['<start>', '<end>']);
     });
   });
 
@@ -168,7 +161,7 @@ describe('PromptTemplateService - Conditional Section Template Processing', () =
         contentPolicyContent: '',
         worldContextContent: '',
         perceptionLogContent: '',
-        thoughtsSection: '', // Empty
+        thoughtsSection: '<thoughts>\n</thoughts>', // Empty but preserved
         notesSection: '', // Empty
         goalsSection: '', // Empty
         availableActionsInfoContent: '',
@@ -180,8 +173,8 @@ describe('PromptTemplateService - Conditional Section Template Processing', () =
 
       const result = service.processCharacterPrompt(promptData);
 
-      // Should NOT contain any conditional section XML tags
-      expect(result).not.toContain('<thoughts>');
+      // Should contain empty thoughts wrapper and omit other sections
+      expect(result).toContain('<thoughts>');
       expect(result).not.toContain('<notes>');
       expect(result).not.toContain('<goals>');
 
@@ -196,7 +189,7 @@ describe('PromptTemplateService - Conditional Section Template Processing', () =
       const templateWithEmptySections = `{thoughtsSection}\n{notesSection}\n{goalsSection}`;
 
       const emptyData = {
-        thoughtsSection: '',
+        thoughtsSection: '<thoughts>\n</thoughts>',
         notesSection: '',
         goalsSection: '',
       };
@@ -216,18 +209,18 @@ describe('PromptTemplateService - Conditional Section Template Processing', () =
         filledData
       );
 
-      // Empty result should be much shorter (just newlines)
-      expect(emptyResult.trim()).toBe('');
+      // Empty result should still include the thoughts wrapper while omitting others
+      expect(emptyResult).toContain('<thoughts>');
+      expect(emptyResult).not.toContain('<notes>');
+      expect(emptyResult).not.toContain('<goals>');
 
       // Filled result should contain all the XML structure
       expect(filledResult).toContain('<thoughts>');
       expect(filledResult).toContain('<notes>');
       expect(filledResult).toContain('<goals>');
 
-      // Token counting approximation: empty should save ~18-24 tokens
-      // (3 sections × 6-8 tokens each for XML tags + content)
-      const tokenSavingsApprox = filledResult.length - emptyResult.length;
-      expect(tokenSavingsApprox).toBeGreaterThan(50); // Significant savings
+      // Token counting approximation: empty should still be significantly shorter
+      expect(filledResult.length).toBeGreaterThan(emptyResult.length + 50);
     });
   });
 

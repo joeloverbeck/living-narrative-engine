@@ -53,4 +53,5 @@ export const uiTokens = freeze({
   TurnOrderTickerRenderer: 'TurnOrderTickerRenderer',
   InjuryStatusPanel: 'InjuryStatusPanel',
   DamageEventMessageRenderer: 'DamageEventMessageRenderer',
+  PromptPreviewModal: 'PromptPreviewModal',
 });

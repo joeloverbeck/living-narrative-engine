@@ -2,7 +2,13 @@ import { jest } from '@jest/globals';
 import { createSimpleMock } from './coreServices.js';
 
 export const createMockTurnManager = () =>
-  createSimpleMock(['start', 'stop', 'nextTurn']);
+  createSimpleMock([
+    'start',
+    'stop',
+    'nextTurn',
+    'getActiveTurnHandler',
+    'getCurrentActor',
+  ]);
 
 export const createMockTurnOrderService = () =>
   createSimpleMock([

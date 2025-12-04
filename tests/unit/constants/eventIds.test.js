@@ -34,6 +34,7 @@ const EXPECTED_EVENT_IDS = Object.freeze({
   REQUEST_SHOW_SAVE_GAME_UI: 'core:ui_request_show_save_game',
   REQUEST_SHOW_LOAD_GAME_UI: 'core:ui_request_show_load_game',
   CANNOT_SAVE_GAME_INFO: 'core:ui_cannot_save_game_info',
+  UI_SHOW_LLM_PROMPT_PREVIEW: 'core:ui_show_llm_prompt_preview',
   INITIALIZATION_SERVICE_FAILED_ID: 'initialization:initialization_service:failed',
   UI_SHOW_FATAL_ERROR_ID: 'ui:show_fatal_error',
   ENTITY_CREATED_ID: 'core:entity_created',

@@ -7,6 +7,7 @@ import {
   REQUEST_SHOW_SAVE_GAME_UI,
   REQUEST_SHOW_LOAD_GAME_UI,
   CANNOT_SAVE_GAME_INFO,
+  UI_SHOW_LLM_PROMPT_PREVIEW,
 } from '../constants/eventIds.js';
 import {
   processOperationFailure,
@@ -31,6 +32,10 @@ import createSafeErrorLogger from '../utils/safeErrorLogger.js';
 /** @typedef {import('../interfaces/IInitializationService.js').IInitializationService} IInitializationService */
 /** @typedef {import('../interfaces/IInitializationService.js').InitializationResult} InitializationResult */
 /** @typedef {import('../interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
+/** @typedef {import('../turns/pipeline/turnActionChoicePipeline.js').TurnActionChoicePipeline} TurnActionChoicePipeline */
+/** @typedef {import('../prompting/interfaces/IAIPromptPipeline.js').IAIPromptPipeline} IAIPromptPipeline */
+/** @typedef {import('../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
+/** @typedef {import('../entities/entityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider */
 
 class GameEngine {
   /** @type {ILogger} */
@@ -47,6 +52,14 @@ class GameEngine {
   #safeEventDispatcher;
   /** @type {IInitializationService} */
   #initializationService;
+  /** @type {TurnActionChoicePipeline} */
+  #turnActionChoicePipeline;
+  /** @type {IAIPromptPipeline} */
+  #aiPromptPipeline;
+  /** @type {ILLMAdapter} */
+  #llmAdapter;
+  /** @type {EntityDisplayDataProvider} */
+  #entityDisplayDataProvider;
 
   /** @type {EngineState} */
   #engineState;
@@ -89,6 +102,18 @@ class GameEngine {
       );
       this.#initializationService = /** @type {IInitializationService} */ (
         container.resolve(tokens.IInitializationService)
+      );
+      this.#turnActionChoicePipeline = container.resolve(
+        tokens.TurnActionChoicePipeline
+      );
+      this.#aiPromptPipeline = /** @type {IAIPromptPipeline} */ (
+        container.resolve(tokens.IAIPromptPipeline)
+      );
+      this.#llmAdapter = /** @type {ILLMAdapter} */ (
+        container.resolve(tokens.LLMAdapter)
+      );
+      this.#entityDisplayDataProvider = container.resolve(
+        tokens.EntityDisplayDataProvider
       );
     } catch (e) {
       this.#logger.error(
@@ -727,6 +752,109 @@ class GameEngine {
         timeoutMs: 60000,
       }
     );
+  }
+
+  /**
+   * Builds and dispatches an LLM prompt preview event for the current actor.
+   * Does not trigger turn advancement or LLM network calls.
+   *
+   * @returns {Promise<void>}
+   */
+  async previewLlmPromptForCurrentActor() {
+    const errors = [];
+    const handler = this.#turnManager?.getActiveTurnHandler?.();
+    const turnContext = handler?.getTurnContext?.() ?? null;
+    const actor = this.#turnManager?.getCurrentActor?.() ?? null;
+
+    const timestamp = new Date().toISOString();
+
+    if (!turnContext || !actor) {
+      await this.#dispatchPromptPreview({
+        prompt: null,
+        actorId: null,
+        actorName: null,
+        llmId: null,
+        actionCount: 0,
+        timestamp,
+        errors: ['No active turn context'],
+      });
+      return;
+    }
+
+    const actorId = actor.id;
+    const actorName =
+      this.#entityDisplayDataProvider?.getEntityName?.(actorId, actorId) ||
+      actorId;
+
+    /** @type {import('../turns/dtos/actionComposite.js').ActionComposite[]} */
+    let availableActions = [];
+    let prompt = null;
+    let llmId = null;
+
+    try {
+      availableActions = await this.#turnActionChoicePipeline.buildChoices(
+        actor,
+        turnContext
+      );
+      llmId = await this.#llmAdapter.getCurrentActiveLlmId();
+      prompt = await this.#aiPromptPipeline.generatePrompt(
+        actor,
+        turnContext,
+        availableActions
+      );
+    } catch (error) {
+      const normalizedError =
+        error instanceof Error ? error : new Error(String(error));
+      errors.push(normalizedError.message || String(normalizedError));
+
+      if (!llmId && this.#llmAdapter?.getCurrentActiveLlmId) {
+        try {
+          llmId = await this.#llmAdapter.getCurrentActiveLlmId();
+        } catch (llmIdError) {
+          const normalizedLlmIdError =
+            llmIdError instanceof Error
+              ? llmIdError
+              : new Error(String(llmIdError));
+          errors.push(
+            normalizedLlmIdError.message || String(normalizedLlmIdError)
+          );
+        }
+      }
+    }
+
+    await this.#dispatchPromptPreview({
+      prompt,
+      actorId,
+      actorName,
+      llmId,
+      actionCount: Array.isArray(availableActions)
+        ? availableActions.length
+        : 0,
+      timestamp,
+      errors,
+    });
+  }
+
+  async #dispatchPromptPreview(payload) {
+    try {
+      const dispatched = await this.#safeEventDispatcher.dispatch(
+        UI_SHOW_LLM_PROMPT_PREVIEW,
+        payload,
+        { allowSchemaNotFound: true }
+      );
+      if (dispatched === false) {
+        this.#logger.warn(
+          'GameEngine.previewLlmPromptForCurrentActor: SafeEventDispatcher reported failure when dispatching UI_SHOW_LLM_PROMPT_PREVIEW.'
+        );
+      }
+    } catch (error) {
+      const normalizedError =
+        error instanceof Error ? error : new Error(String(error));
+      this.#logger.error(
+        'GameEngine.previewLlmPromptForCurrentActor: SafeEventDispatcher threw while dispatching UI_SHOW_LLM_PROMPT_PREVIEW.',
+        normalizedError
+      );
+    }
   }
 
   /**

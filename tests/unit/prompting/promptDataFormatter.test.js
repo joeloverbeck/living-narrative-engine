@@ -11,6 +11,25 @@ const makeNotesGuidance = (name = 'your character', hasExistingNotes = false) =>
     hasExistingNotes ? ' Keep any new notes distinct from the existing entries listed below.' : ''
   }`;
 
+const THOUGHTS_GUIDANCE_TEXT = `INNER VOICE GUIDANCE: Generate thoughts in your character's authentic mental voice (their habits of mind, personality patterns, and inner speech style). Build on your current mental state with a fresh thought that does not repeat or barely rephrase the "Recent thoughts" above.
+
+TIMING: The thought must occur in the instant IMMEDIATELY BEFORE you perform your chosen action.
+
+ANTICIPATION (ALLOWED): You may anticipate likely outcomes, risks, fears, hopes, and contingencies as possibilities (this is normal human/character planning).
+
+EPISTEMIC RULE (CRITICAL): You do NOT yet know the result of your action. Do not describe outcomes, reactions, success/failure, or consequences as facts or as already happened.
+
+STYLE RULE: Use intent- and possibility-language ("I'm going to...", "I want to...", "maybe...", "might...", "if...", "hopefully..."). Avoid past-tense or certainty about effects ("That hurt them." "They fall." "It worked.").`;
+
+const buildThoughtsSection = (thoughtsContent = '') => {
+  const list = thoughtsContent ? `${thoughtsContent}\n\n` : '\n';
+  return `<thoughts>
+Recent thoughts (avoid repeating or barely rephrasing these):
+${list}-----
+${THOUGHTS_GUIDANCE_TEXT}
+</thoughts>`;
+};
+
 describe('PromptDataFormatter - Conditional Section Rendering', () => {
   let formatter;
   let mockLogger;
@@ -25,14 +44,16 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
   });
 
   describe('formatThoughtsSection', () => {
-    test('returns empty string when thoughts array is empty', () => {
+    test('returns empty thoughts wrapper when thoughts array is empty', () => {
       const result = formatter.formatThoughtsSection([]);
-      expect(result).toBe('');
+      expect(result).toBe(buildThoughtsSection());
     });
 
-    test('returns empty string when thoughts array is null/undefined', () => {
-      expect(formatter.formatThoughtsSection(null)).toBe('');
-      expect(formatter.formatThoughtsSection(undefined)).toBe('');
+    test('returns empty thoughts wrapper when thoughts array is null/undefined', () => {
+      expect(formatter.formatThoughtsSection(null)).toBe(buildThoughtsSection());
+      expect(formatter.formatThoughtsSection(undefined)).toBe(
+        buildThoughtsSection()
+      );
     });
 
     test('returns complete XML section when thoughts exist', () => {
@@ -44,14 +65,7 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
       const result = formatter.formatThoughtsSection(thoughts);
 
       expect(result).toBe(
-        `<thoughts>
-Recent thoughts (avoid repeating or barely rephrasing these):
-- First thought
-- Second thought
-
------
-Generate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.
-</thoughts>`
+        buildThoughtsSection('- First thought\n- Second thought')
       );
     });
 
@@ -66,18 +80,11 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
       const result = formatter.formatThoughtsSection(thoughts);
 
       expect(result).toBe(
-        `<thoughts>
-Recent thoughts (avoid repeating or barely rephrasing these):
-- Valid thought
-- Another valid thought
-
------
-Generate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.
-</thoughts>`
+        buildThoughtsSection('- Valid thought\n- Another valid thought')
       );
     });
 
-    test('returns empty string when all thoughts are invalid', () => {
+    test('returns empty wrapper when all thoughts are invalid', () => {
       const thoughts = [
         null,
         { text: '', timestamp: '2024-01-01' },
@@ -86,38 +93,30 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
 
       const result = formatter.formatThoughtsSection(thoughts);
 
-      expect(result).toBe('');
+      expect(result).toBe(buildThoughtsSection());
     });
   });
 
   describe('formatThoughtsVoiceGuidance', () => {
-    test('returns basic guidance when thoughts array is empty', () => {
+    test('returns empty string when thoughts array is empty', () => {
       const result = formatter.formatThoughtsVoiceGuidance([]);
-      expect(result).toBe(
-        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects."
-      );
+      expect(result).toBe('');
     });
 
-    test('returns basic guidance when thoughts array is null/undefined', () => {
-      expect(formatter.formatThoughtsVoiceGuidance(null)).toBe(
-        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects."
-      );
-      expect(formatter.formatThoughtsVoiceGuidance(undefined)).toBe(
-        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects."
-      );
+    test('returns empty string when thoughts array is null/undefined', () => {
+      expect(formatter.formatThoughtsVoiceGuidance(null)).toBe('');
+      expect(formatter.formatThoughtsVoiceGuidance(undefined)).toBe('');
     });
 
-    test('returns enhanced anti-repetition guidance when thoughts exist', () => {
+    test('returns empty string when thoughts exist (guidance lives in section)', () => {
       const thoughts = [{ text: 'First thought', timestamp: '2024-01-01' }];
 
       const result = formatter.formatThoughtsVoiceGuidance(thoughts);
 
-      expect(result).toBe(
-        "INNER VOICE GUIDANCE: Your thoughts must be fresh and unique - do not repeat or barely rephrase the previous thoughts shown above. Build upon your existing mental state with new insights, reactions, or perspectives that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects."
-      );
+      expect(result).toBe('');
     });
 
-    test('returns same enhanced guidance regardless of number of thoughts', () => {
+    test('returns same empty guidance regardless of number of thoughts', () => {
       const singleThought = [{ text: 'One thought', timestamp: '2024-01-01' }];
       const multipleThoughts = [
         { text: 'First thought', timestamp: '2024-01-01' },
@@ -128,47 +127,8 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
       const result1 = formatter.formatThoughtsVoiceGuidance(singleThought);
       const result2 = formatter.formatThoughtsVoiceGuidance(multipleThoughts);
 
-      const expectedGuidance =
-        "INNER VOICE GUIDANCE: Your thoughts must be fresh and unique - do not repeat or barely rephrase the previous thoughts shown above. Build upon your existing mental state with new insights, reactions, or perspectives that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects.";
-
-      expect(result1).toBe(expectedGuidance);
-      expect(result2).toBe(expectedGuidance);
-    });
-  });
-
-  describe('formatThoughtsVoiceGuidance - Enhanced Functionality', () => {
-    test('basic guidance contains key authenticity phrases', () => {
-      const result = formatter.formatThoughtsVoiceGuidance([]);
-
-      expect(result).toContain('INNER VOICE GUIDANCE');
-      expect(result).toContain('authentically reflect');
-      expect(result).toContain('unique mental voice');
-      expect(result).toContain('personality patterns');
-      expect(result).toContain('internal speech style');
-    });
-
-    test('enhanced guidance contains key anti-repetition phrases', () => {
-      const thoughts = [{ text: 'Test thought', timestamp: '2024-01-01' }];
-      const result = formatter.formatThoughtsVoiceGuidance(thoughts);
-
-      expect(result).toContain('INNER VOICE GUIDANCE');
-      expect(result).toContain('fresh and unique');
-      expect(result).toContain('do not repeat');
-      expect(result).toContain('barely rephrase');
-      expect(result).toContain('previous thoughts shown above');
-      expect(result).toContain('Build upon your existing mental state');
-      expect(result).toContain('new insights, reactions, or perspectives');
-    });
-
-    test('different behavior for empty vs populated thoughts arrays', () => {
-      const emptyResult = formatter.formatThoughtsVoiceGuidance([]);
-      const populatedResult = formatter.formatThoughtsVoiceGuidance([
-        { text: 'Test', timestamp: '2024-01-01' },
-      ]);
-
-      expect(emptyResult).not.toBe(populatedResult);
-      expect(emptyResult).toContain('Generate thoughts');
-      expect(populatedResult).toContain('do not repeat');
+      expect(result1).toBe('');
+      expect(result2).toBe('');
     });
   });
 
@@ -181,11 +141,13 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
         'Recent thoughts (avoid repeating or barely rephrasing these):'
       );
       expect(result).toContain(
-        'Generate a fresh, unique thought that builds upon your mental state.'
+        "INNER VOICE GUIDANCE: Generate thoughts in your character's authentic mental voice"
       );
+      expect(result).toContain('TIMING: The thought must occur in the instant');
       expect(result).toContain(
-        "Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action"
+        'EPISTEMIC RULE (CRITICAL): You do NOT yet know the result of your action'
       );
+      expect(result).toContain('STYLE RULE: Use intent- and possibility-language');
       expect(result).toContain('- Test thought');
     });
 
@@ -194,7 +156,7 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
       const result = formatter.formatThoughtsSection(thoughts);
 
       expect(result).toMatch(/^<thoughts>.*<\/thoughts>$/s);
-      expect(result.split('\n')).toHaveLength(7); // Expected number of lines in new format
+      expect(result.split('\n')).toHaveLength(15); // Updated line count for expanded guidance
     });
   });
 
@@ -255,20 +217,14 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
 
       // New section fields
       expect(result.thoughtsSection).toBe(
-        `<thoughts>
-Recent thoughts (avoid repeating or barely rephrasing these):
-- Test thought
-
------
-Generate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.
-</thoughts>`
+        buildThoughtsSection('- Test thought')
       );
       expect(result.notesVoiceGuidance).toBe(makeNotesGuidance());
       expect(result.notesSection).toBe('');
       expect(result.goalsSection).toBe('<goals>\n- Test goal\n</goals>');
     });
 
-    test('includes thoughtsVoiceGuidance field based on thoughts array', () => {
+    test('leaves thoughtsVoiceGuidance empty (guidance is embedded in thoughtsSection)', () => {
       // Test with thoughts present
       const promptDataWithThoughts = {
         thoughtsArray: [{ text: 'Test thought', timestamp: '2024-01-01' }],
@@ -277,8 +233,9 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
       const resultWithThoughts = formatter.formatPromptData(
         promptDataWithThoughts
       );
-      expect(resultWithThoughts.thoughtsVoiceGuidance).toBe(
-        "INNER VOICE GUIDANCE: Your thoughts must be fresh and unique - do not repeat or barely rephrase the previous thoughts shown above. Build upon your existing mental state with new insights, reactions, or perspectives that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects."
+      expect(resultWithThoughts.thoughtsVoiceGuidance).toBe('');
+      expect(resultWithThoughts.thoughtsSection).toBe(
+        buildThoughtsSection('- Test thought')
       );
 
       // Test with empty thoughts array
@@ -287,17 +244,15 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
       };
 
       const resultEmpty = formatter.formatPromptData(promptDataEmpty);
-      expect(resultEmpty.thoughtsVoiceGuidance).toBe(
-        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects."
-      );
+      expect(resultEmpty.thoughtsVoiceGuidance).toBe('');
+      expect(resultEmpty.thoughtsSection).toBe(buildThoughtsSection());
 
       // Test with no thoughts array
       const promptDataMissing = {};
 
       const resultMissing = formatter.formatPromptData(promptDataMissing);
-      expect(resultMissing.thoughtsVoiceGuidance).toBe(
-        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects."
-      );
+      expect(resultMissing.thoughtsVoiceGuidance).toBe('');
+      expect(resultMissing.thoughtsSection).toBe(buildThoughtsSection());
     });
 
     test('formatNotes maintains backward compatibility with default options', () => {
@@ -374,13 +329,12 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
       expect(result.notesContent).toBe('');
       expect(result.goalsContent).toBe('');
 
-      // All section fields should be empty (no XML tags)
-      expect(result.thoughtsSection).toBe('');
+      // Thoughts section should still render even when empty
+      expect(result.thoughtsSection).toBe(buildThoughtsSection());
+      // Other section fields remain conditional
       expect(result.notesSection).toBe('');
       expect(result.goalsSection).toBe('');
-      expect(result.thoughtsVoiceGuidance).toBe(
-        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects."
-      );
+      expect(result.thoughtsVoiceGuidance).toBe('');
       expect(result.notesVoiceGuidance).toBe(makeNotesGuidance());
     });
 
@@ -395,13 +349,7 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
 
       // Should have thoughts and goals sections, but no notes section
       expect(result.thoughtsSection).toBe(
-        `<thoughts>
-Recent thoughts (avoid repeating or barely rephrasing these):
-- I have a thought
-
------
-Generate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.
-</thoughts>`
+        buildThoughtsSection('- I have a thought')
       );
       expect(result.notesSection).toBe('');
       expect(result.goalsSection).toBe(
@@ -436,18 +384,16 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
   });
 
   describe('Token Efficiency Validation', () => {
-    test('empty sections generate no tokens (empty strings)', () => {
+    test('empty sections generate minimal tokens (thoughts always present)', () => {
       const formatter = new PromptDataFormatter({ logger: mockLogger });
 
-      // Empty sections should return empty strings, not XML tags
-      expect(formatter.formatThoughtsSection([])).toBe('');
+      // Thoughts section should still render wrapper when empty
+      expect(formatter.formatThoughtsSection([])).toBe(
+        buildThoughtsSection()
+      );
+      // Other sections remain suppressed when empty
       expect(formatter.formatNotesSection([])).toBe('');
       expect(formatter.formatGoalsSection([])).toBe('');
-
-      // This saves approximately 6-8 tokens per empty section
-      // <thoughts></thoughts> = ~4 tokens
-      // newlines = ~2 tokens
-      // Total saved per section: ~6 tokens
     });
 
     test('non-empty sections generate properly formatted XML', () => {
@@ -476,7 +422,7 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
       const result = formatter.formatPromptData(promptData);
 
       // Should not crash and should provide empty sections
-      expect(result.thoughtsSection).toBe('');
+      expect(result.thoughtsSection).toBe(buildThoughtsSection());
       expect(result.notesSection).toBe('');
       expect(result.goalsSection).toBe('');
     });

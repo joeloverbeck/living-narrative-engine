@@ -19,7 +19,7 @@
       "minItems": 1,
       "description": "Ordered list of Operation objects to expand when the macro is used.",
       "items": {
-        "$ref": "operation.schema.json#/$defs/Operation"
+        "$ref": "./operation.schema.json#/$defs/Action"
       }
     },
     "comment": {

@@ -208,15 +208,30 @@ function createLoadAdapterEnvironment() {
   const initializationService = new SimpleInitializationService();
   const anatomyInitializationService = new PassiveAnatomyInitializationService();
   const persistenceService = new ConfigurablePersistenceService();
+  const turnActionChoicePipeline = { buildChoices: jest.fn() };
+  const aiPromptPipeline = { generatePrompt: jest.fn() };
+  const llmAdapter = { getCurrentActiveLlmId: jest.fn() };
+  const entityDisplayDataProvider = { getEntityName: jest.fn() };
 
-  container.register(tokens.ILogger, logger);
-  container.register(tokens.ISafeEventDispatcher, safeEventDispatcher);
-  container.register(tokens.IEntityManager, entityManager);
-  container.register(tokens.ITurnManager, turnManager);
-  container.register(tokens.PlaytimeTracker, playtimeTracker);
-  container.register(tokens.IInitializationService, initializationService);
-  container.register(tokens.AnatomyInitializationService, anatomyInitializationService);
-  container.register(tokens.GamePersistenceService, persistenceService);
+  const ensureRegistered = (token, value) => {
+    if (typeof container.isRegistered === 'function' && container.isRegistered(token)) {
+      return;
+    }
+    container.register(token, value);
+  };
+
+  ensureRegistered(tokens.ILogger, logger);
+  ensureRegistered(tokens.ISafeEventDispatcher, safeEventDispatcher);
+  ensureRegistered(tokens.IEntityManager, entityManager);
+  ensureRegistered(tokens.ITurnManager, turnManager);
+  ensureRegistered(tokens.PlaytimeTracker, playtimeTracker);
+  ensureRegistered(tokens.IInitializationService, initializationService);
+  ensureRegistered(tokens.AnatomyInitializationService, anatomyInitializationService);
+  ensureRegistered(tokens.GamePersistenceService, persistenceService);
+  ensureRegistered(tokens.TurnActionChoicePipeline, turnActionChoicePipeline);
+  ensureRegistered(tokens.IAIPromptPipeline, aiPromptPipeline);
+  ensureRegistered(tokens.LLMAdapter, llmAdapter);
+  ensureRegistered(tokens.EntityDisplayDataProvider, entityDisplayDataProvider);
 
   const engine = new GameEngine({ container, logger });
   const adapter = new GameEngineLoadAdapter(engine);

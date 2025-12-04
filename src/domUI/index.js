@@ -30,6 +30,7 @@ export { default as SaveGameUI } from './saveGameUI.js';
 export { default as SaveGameService } from './saveGameService.js';
 export { default as LoadGameUI } from './loadGameUI.js';
 export { LlmSelectionModal } from './llmSelectionModal.js';
+export { PromptPreviewModal } from './PromptPreviewModal.js';
 export { default as WindowUserPrompt } from './windowUserPrompt.js';
 
 // Engine UI Management

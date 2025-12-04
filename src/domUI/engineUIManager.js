@@ -9,6 +9,7 @@ import {
   REQUEST_SHOW_SAVE_GAME_UI,
   REQUEST_SHOW_LOAD_GAME_UI,
   CANNOT_SAVE_GAME_INFO,
+  UI_SHOW_LLM_PROMPT_PREVIEW,
 } from '../constants/eventIds.js';
 
 /**
@@ -162,6 +163,10 @@ export class EngineUIManager {
     this.#eventDispatcher.subscribe(
       CANNOT_SAVE_GAME_INFO,
       this.#handleCannotSaveGameInfo.bind(this)
+    );
+    this.#eventDispatcher.subscribe(
+      UI_SHOW_LLM_PROMPT_PREVIEW,
+      this.#handleShowLlmPromptPreview.bind(this)
     );
 
     this.#logger.debug(
@@ -382,6 +387,34 @@ export class EngineUIManager {
     const message =
       'Cannot save at this moment (e.g. game not fully initialized or in a critical state).';
     this.#logger.info(`EngineUIManager: ${message}`);
+  }
+
+  /**
+   * Handles the UI_SHOW_LLM_PROMPT_PREVIEW event.
+   * Shows the Prompt Preview Modal with the provided payload.
+   *
+   * @private
+   * @param {object} event - The event object.
+   * @param {import('./PromptPreviewModal.js').PromptPreviewPayload} event.payload - The payload.
+   */
+  #handleShowLlmPromptPreview(event) {
+    this.#logger.debug(
+      `EngineUIManager: Received ${UI_SHOW_LLM_PROMPT_PREVIEW}`,
+      event.payload
+    );
+    if (
+      this.#domUiFacade.promptPreviewModal &&
+      typeof this.#domUiFacade.promptPreviewModal.show === 'function'
+    ) {
+      this.#domUiFacade.promptPreviewModal.show(event.payload);
+      this.#logger.debug(
+        `EngineUIManager: Handled ${UI_SHOW_LLM_PROMPT_PREVIEW}. Modal shown.`
+      );
+    } else {
+      this.#logger.warn(
+        `EngineUIManager: PromptPreviewModal component not available or 'show' method missing on DomUiFacade.`
+      );
+    }
   }
 
   /**

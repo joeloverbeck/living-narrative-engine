@@ -16,6 +16,7 @@ const createDependencies = (overrides = {}) => ({
   saveGameUI: createRenderer({ show: jest.fn() }),
   loadGameUI: createRenderer({ show: jest.fn() }),
   llmSelectionModal: createRenderer({ show: jest.fn() }),
+  promptPreviewModal: createRenderer({ show: jest.fn() }),
   turnOrderTickerRenderer: createRenderer({ render: jest.fn() }),
   injuryStatusPanel: createRenderer({ updateForActor: jest.fn() }),
   entityLifecycleMonitor: createRenderer({ clearEvents: jest.fn() }),
@@ -36,6 +37,7 @@ describe('DomUiFacade', () => {
     expect(facade.saveGame).toBe(deps.saveGameUI);
     expect(facade.loadGame).toBe(deps.loadGameUI);
     expect(facade.llmSelectionModal).toBe(deps.llmSelectionModal);
+    expect(facade.promptPreviewModal).toBe(deps.promptPreviewModal);
     expect(facade.turnOrderTicker).toBe(deps.turnOrderTickerRenderer);
     expect(facade.injuryStatus).toBe(deps.injuryStatusPanel);
     expect(facade.entityLifecycleMonitor).toBe(deps.entityLifecycleMonitor);
@@ -102,6 +104,11 @@ describe('DomUiFacade', () => {
         'DomUiFacade: Missing or invalid llmSelectionModal dependency.',
       ],
       [
+        'promptPreviewModal',
+        { promptPreviewModal: createRenderer({}) },
+        'DomUiFacade: Missing or invalid promptPreviewModal dependency.',
+      ],
+      [
         'turnOrderTickerRenderer',
         { turnOrderTickerRenderer: createRenderer({}) },
         'DomUiFacade: Missing or invalid turnOrderTickerRenderer dependency.',
@@ -138,6 +145,7 @@ describe('DomUiFacade', () => {
     expect(deps.saveGameUI.dispose).toHaveBeenCalledTimes(1);
     expect(deps.loadGameUI.dispose).toHaveBeenCalledTimes(1);
     expect(deps.llmSelectionModal.dispose).toHaveBeenCalledTimes(1);
+    expect(deps.promptPreviewModal.dispose).toHaveBeenCalledTimes(1);
     expect(deps.turnOrderTickerRenderer.dispose).toHaveBeenCalledTimes(1);
     expect(deps.injuryStatusPanel.dispose).toHaveBeenCalledTimes(1);
     expect(deps.entityLifecycleMonitor.dispose).toHaveBeenCalledTimes(1);
@@ -154,6 +162,7 @@ describe('DomUiFacade', () => {
       saveGameUI: { show: jest.fn() },
       loadGameUI: { show: jest.fn() },
       llmSelectionModal: { show: jest.fn() },
+      promptPreviewModal: { show: jest.fn() },
       turnOrderTickerRenderer: { render: jest.fn() },
       injuryStatusPanel: { updateForActor: jest.fn() },
       entityLifecycleMonitor: null,

@@ -87,6 +87,16 @@ export async function setupMenuButtonListenersStage(
       logger.warn(
         `${stageName}: GameEngine not available for #open-load-game-button listener.`
       );
+      setupButtonListener(
+        documentRef,
+        'llm-prompt-debug-button',
+        () => {},
+        logger,
+        stageName
+      );
+      logger.warn(
+        `${stageName}: GameEngine not available for #llm-prompt-debug-button listener.`
+      );
       logger.debug(`Bootstrap Stage: ${stageName} completed successfully.`);
       return stageSuccess();
     }
@@ -108,6 +118,25 @@ export async function setupMenuButtonListenersStage(
       async () => {
         logger.debug(`${stageName}: "Open Load Game UI" button clicked.`);
         await gameEngine.showLoadGameUI();
+      },
+      logger,
+      stageName
+    );
+
+    setupButtonListener(
+      documentRef,
+      'llm-prompt-debug-button',
+      async () => {
+        logger.debug(`${stageName}: "LLM Prompt Debug" button clicked.`);
+        try {
+          await gameEngine.previewLlmPromptForCurrentActor();
+        } catch (error) {
+          logger.error(
+            `${stageName}: Error requesting LLM prompt preview.`,
+            error
+          );
+          // Optionally alert user if not handled by the engine's internal error handling/dispatch
+        }
       },
       logger,
       stageName

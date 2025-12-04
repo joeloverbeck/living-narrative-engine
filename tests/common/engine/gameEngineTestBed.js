@@ -39,6 +39,10 @@ export class GameEngineTestBed extends EngineStartHelpersMixin(
    *   playtimeTracker: ReturnType<import('../mockFactories').createMockPlaytimeTracker>,
    *   safeEventDispatcher: ReturnType<import('../mockFactories').createMockSafeEventDispatcher>,
    *   initializationService: ReturnType<import('../mockFactories').createMockInitializationService>,
+   *   turnActionChoicePipeline: ReturnType<import('../mockFactories').createMockTurnActionChoicePipeline>,
+   *   aiPromptPipeline: ReturnType<import('../mockFactories').createMockAIPromptPipeline>,
+   *   llmAdapter: ReturnType<import('../mockFactories').createMockLLMAdapter>,
+   *   entityDisplayDataProvider: ReturnType<import('../mockFactories').createMockEntityDisplayDataProvider>,
    * }}
    */
 
@@ -56,6 +60,10 @@ export class GameEngineTestBed extends EngineStartHelpersMixin(
       playtimeTracker: env.playtimeTracker,
       safeEventDispatcher: env.safeEventDispatcher,
       initializationService: env.initializationService,
+      turnActionChoicePipeline: env.turnActionChoicePipeline,
+      aiPromptPipeline: env.aiPromptPipeline,
+      llmAdapter: env.llmAdapter,
+      entityDisplayDataProvider: env.entityDisplayDataProvider,
     });
     // Use the already created gameEngine instance if available to avoid double instantiation
     const engine = env.instance || env.createInstance();
@@ -124,6 +132,22 @@ export class GameEngineTestBed extends EngineStartHelpersMixin(
    */
   getInitializationService() {
     return this.initializationService;
+  }
+
+  getTurnActionChoicePipeline() {
+    return this.turnActionChoicePipeline;
+  }
+
+  getAiPromptPipeline() {
+    return this.aiPromptPipeline;
+  }
+
+  getLlmAdapter() {
+    return this.llmAdapter;
+  }
+
+  getEntityDisplayDataProvider() {
+    return this.entityDisplayDataProvider;
   }
 }
 const engineSuiteHooks = (() => {

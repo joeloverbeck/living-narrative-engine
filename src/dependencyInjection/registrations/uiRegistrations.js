@@ -34,6 +34,7 @@ import {
   EntityLifecycleMonitor,
   InjuryStatusPanel,
   DamageEventMessageRenderer,
+  PromptPreviewModal,
 } from '../../domUI/index.js';
 import { VisualizerState } from '../../domUI/visualizer/VisualizerState.js';
 import { AnatomyLoadingDetector } from '../../domUI/visualizer/AnatomyLoadingDetector.js';
@@ -411,6 +412,20 @@ export function registerRenderers(registrar, logger) {
     { lifecycle: 'singletonFactory' },
     logger
   );
+
+  registerWithLog(
+    registrar,
+    tokens.PromptPreviewModal,
+    (c) =>
+      new PromptPreviewModal({
+        logger: c.resolve(tokens.ILogger),
+        documentContext: c.resolve(tokens.IDocumentContext),
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        domElementFactory: c.resolve(tokens.DomElementFactory),
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
+  );
 }
 
 /**
@@ -542,6 +557,7 @@ export function registerFacadeAndManager(registrar, logger) {
         tokens.LlmSelectionModal,
         tokens.TurnOrderTickerRenderer,
         tokens.InjuryStatusPanel,
+        tokens.PromptPreviewModal,
         // tokens.EntityLifecycleMonitor, // DISABLED FOR PERFORMANCE
       ],
     },

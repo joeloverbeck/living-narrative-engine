@@ -270,6 +270,19 @@
           ></div>
         </div>
 
+        <!-- LLM PROMPT DEBUG widget -->
+        <div
+          id="llm-prompt-debug-widget"
+          class="widget"
+          role="region"
+          aria-labelledby="llm-prompt-debug-heading"
+        >
+          <h3 id="llm-prompt-debug-heading">LLM Prompt Debug</h3>
+          <button type="button" id="llm-prompt-debug-button" class="menu-button">
+            Prompt to LLM
+          </button>
+        </div>
+
         <!-- GAME-ACTIONS widget (unchanged) -->
         <div
           id="game-actions-widget"
@@ -469,6 +482,65 @@
             class="button-secondary"
           >
             Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LLM Prompt Debug Modal -->
+    <div
+      id="llm-prompt-debug-modal"
+      class="modal-overlay"
+      role="dialog"
+      aria-labelledby="llm-prompt-debug-title"
+      aria-modal="true"
+      style="display: none"
+    >
+      <div class="modal-content">
+        <h2 id="llm-prompt-debug-title" class="modal-title">
+          LLM Prompt Preview
+        </h2>
+
+        <div
+          id="llm-prompt-debug-status"
+          class="status-message-area"
+          role="status"
+          aria-live="polite"
+        ></div>
+
+        <div id="llm-prompt-debug-metadata" class="prompt-metadata">
+          <div class="prompt-meta-item">
+            <span class="prompt-meta-label">Actor:</span>
+            <span id="llm-prompt-meta-actor" class="prompt-meta-value">-</span>
+          </div>
+          <div class="prompt-meta-item">
+            <span class="prompt-meta-label">LLM:</span>
+            <span id="llm-prompt-meta-llm" class="prompt-meta-value">-</span>
+          </div>
+          <div class="prompt-meta-item">
+            <span class="prompt-meta-label">Actions:</span>
+            <span id="llm-prompt-meta-actions" class="prompt-meta-value">-</span>
+          </div>
+        </div>
+
+        <div id="llm-prompt-debug-content-container">
+          <pre id="llm-prompt-debug-content" tabindex="0"></pre>
+        </div>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            id="llm-prompt-copy-button"
+            class="button-primary"
+          >
+            Copy to Clipboard
+          </button>
+          <button
+            type="button"
+            id="llm-prompt-debug-close-button"
+            class="button-secondary"
+          >
+            Close
           </button>
         </div>
       </div>

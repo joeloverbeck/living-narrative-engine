@@ -32,7 +32,7 @@
           "type": "array",
           "minItems": 1,
           "items": {
-            "$ref": "../operation.schema.json#/$defs/Action"
+            "$ref": "../nested-operation.schema.json#/$defs/NestedAction"
           }
         }
       },

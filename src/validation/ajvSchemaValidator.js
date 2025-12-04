@@ -167,8 +167,38 @@ class AjvSchemaValidator {
         `AjvSchemaValidator: Attempting to load schema from URI: ${uri}`
       );
 
+      // Helper to detect if a URI is a bare filename reference (not prefixed with ./ or protocol)
+      // Examples: "operation.schema.json", "operation.schema.json#/$defs/Action"
+      const isBareFilenameReference = (ref) => {
+        // Split off fragment first
+        const { basePath: refBasePath } = splitPathAndFragment(ref);
+        // Not a bare filename if it starts with a protocol
+        if (
+          refBasePath.startsWith('http://') ||
+          refBasePath.startsWith('https://') ||
+          refBasePath.startsWith('schema://')
+        ) {
+          return false;
+        }
+        // Not a bare filename if it starts with relative path indicators (handled separately)
+        if (refBasePath.startsWith('./') || refBasePath.startsWith('../')) {
+          return false;
+        }
+        // Likely a bare filename if it contains .json extension or looks like a path segment
+        return (
+          refBasePath.includes('.json') ||
+          refBasePath.includes('.schema') ||
+          /^[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+/.test(refBasePath)
+        );
+      };
+
       // Handle relative schema references by converting to absolute IDs
-      if (uri.startsWith('./') || uri.startsWith('../')) {
+      // This includes both prefixed (./path) and bare filename references (filename.json)
+      if (
+        uri.startsWith('./') ||
+        uri.startsWith('../') ||
+        isBareFilenameReference(uri)
+      ) {
         const normalisedReference = normaliseRelativeReference(uri);
         const { basePath: relativeBasePath, fragment } =
           splitPathAndFragment(normalisedReference);
