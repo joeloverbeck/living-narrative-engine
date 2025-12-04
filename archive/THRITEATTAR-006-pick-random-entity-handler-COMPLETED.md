@@ -41,7 +41,7 @@ class PickRandomEntityHandler extends BaseOperationHandler {
   constructor({ entityManager, logger }) {
     super();
     validateDependency(entityManager, 'IEntityManager', logger, {
-      requiredMethods: ['getEntitiesInLocation', 'hasComponent'],
+      requiredMethods: ['getEntitiesWithComponent', 'getComponentData', 'hasComponent'],
     });
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
@@ -89,8 +89,18 @@ class PickRandomEntityHandler extends BaseOperationHandler {
     );
 
     // Get all entities at location
-    const entitiesAtLocation =
-      this.#entityManager.getEntitiesInLocation(locationId);
+    // Note: IEntityManager.getEntitiesInLocation is not implemented in the facade,
+    // so we manually filter entities with core:position component.
+    const entitiesAtLocation = this.#entityManager
+      .getEntitiesWithComponent('core:position')
+      .filter((entity) => {
+        const pos = this.#entityManager.getComponentData(
+          entity.id,
+          'core:position'
+        );
+        return pos?.locationId === locationId;
+      })
+      .map((entity) => entity.id);
 
     // Filter candidates
     const candidates = entitiesAtLocation.filter((entityId) => {
@@ -238,3 +248,12 @@ For understanding handler patterns:
 
 - THRITEATTAR-007 (DI registration needs this handler)
 - THRITEATTAR-011 (unit tests test this handler)
+
+## Outcome
+
+- Implemented `PickRandomEntityHandler` in `src/logic/operationHandlers/pickRandomEntityHandler.js`.
+- Adjusted implementation to handle missing `getEntitiesInLocation` method on `IEntityManager` by manually filtering entities with `core:position` component.
+- Updated dependency validation to check for `getEntitiesWithComponent` and `getComponentData` instead.
+- Added comprehensive unit tests in `tests/unit/logic/operationHandlers/pickRandomEntityHandler.test.js` covering all scenarios including context reference resolution.
+- Verified with `npm run typecheck` and `npx eslint`.
+

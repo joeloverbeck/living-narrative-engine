@@ -114,6 +114,7 @@ class DamageTypeEffectsService extends BaseService {
    * @param {object} [params.damageEntry.dismember] - Dismember effect configuration
    * @param {number} params.maxHealth - Part's max health
    * @param {number} params.currentHealth - Part's health AFTER damage was applied
+   * @param {object} [params.damageSession] - Optional damage accumulation session
    * @returns {Promise<void>}
    */
   async applyEffectsForDamage({
@@ -126,6 +127,7 @@ class DamageTypeEffectsService extends BaseService {
     damageEntry,
     maxHealth,
     currentHealth,
+    damageSession,
   }) {
     // Validate damageEntry is provided
     if (!damageEntry) {
@@ -150,6 +152,7 @@ class DamageTypeEffectsService extends BaseService {
       amount,
       maxHealth,
       damageEntry,
+      damageSession,
     });
     // Note: We continue execution so that secondary effects (especially bleed) are applied.
     // A dismembered part should definitely bleed!
@@ -162,6 +165,7 @@ class DamageTypeEffectsService extends BaseService {
       maxHealth,
       currentHealth,
       damageEntry,
+      damageSession,
     });
 
     // Skip ongoing effects if part is destroyed
@@ -170,13 +174,13 @@ class DamageTypeEffectsService extends BaseService {
     }
 
     // 3. Bleed attach
-    await this.#applyBleedEffect({ entityId, partId, damageEntry });
+    await this.#applyBleedEffect({ entityId, partId, damageEntry, damageSession });
 
     // 4. Burn attach
-    await this.#applyBurnEffect({ entityId, partId, damageEntry });
+    await this.#applyBurnEffect({ entityId, partId, damageEntry, damageSession });
 
     // 5. Poison attach
-    await this.#applyPoisonEffect({ entityId, partId, damageEntry });
+    await this.#applyPoisonEffect({ entityId, partId, damageEntry, damageSession });
   }
 
   /**
@@ -192,6 +196,7 @@ class DamageTypeEffectsService extends BaseService {
    * @param {number} params.amount
    * @param {number} params.maxHealth
    * @param {object} params.damageEntry
+   * @param {object} [params.damageSession] - Optional damage accumulation session
    * @returns {Promise<boolean>} True if dismemberment was triggered
    * @private
    */
@@ -205,6 +210,7 @@ class DamageTypeEffectsService extends BaseService {
     amount,
     maxHealth,
     damageEntry,
+    damageSession,
   }) {
     const dismemberConfig = damageEntry.dismember;
     if (!dismemberConfig?.enabled) {
@@ -228,7 +234,7 @@ class DamageTypeEffectsService extends BaseService {
         sourceDamageType: damageEntry.name,
       });
 
-      this.#dispatcher.dispatch(DISMEMBERED_EVENT, {
+      const eventPayload = {
         entityId,
         entityName,
         entityPronoun,
@@ -237,7 +243,33 @@ class DamageTypeEffectsService extends BaseService {
         orientation,
         damageTypeId: damageEntry.name,
         timestamp: Date.now(),
-      });
+      };
+
+      // Record effect to session if available, queue event for later dispatch
+      if (damageSession) {
+        damageSession.entries
+          .find((e) => e.partId === partId)
+          ?.effectsTriggered?.push('dismembered');
+        // Also check parent entry if this is propagated damage
+        if (!damageSession.entries.find((e) => e.partId === partId)) {
+          // Effect applies to a propagated part - find it by iterating all entries
+          for (const entry of damageSession.entries) {
+            if (entry.partId === partId) {
+              entry.effectsTriggered = entry.effectsTriggered || [];
+              entry.effectsTriggered.push('dismembered');
+              break;
+            }
+          }
+        }
+        // Queue event for backwards compatibility dispatch
+        damageSession.pendingEvents.push({
+          eventType: DISMEMBERED_EVENT,
+          payload: eventPayload,
+        });
+      } else {
+        // No session - dispatch immediately (backwards compatibility)
+        this.#dispatcher.dispatch(DISMEMBERED_EVENT, eventPayload);
+      }
 
       this.#logger.info(
         `DamageTypeEffectsService: Part ${partId} dismembered by ${damageEntry.name} damage.`
@@ -259,10 +291,11 @@ class DamageTypeEffectsService extends BaseService {
    * @param {number} params.maxHealth
    * @param {number} params.currentHealth
    * @param {object} params.damageEntry
+   * @param {object} [params.damageSession] - Optional damage accumulation session
    * @returns {Promise<void>}
    * @private
    */
-  async #checkAndApplyFracture({ entityId, partId, amount, maxHealth, currentHealth, damageEntry }) {
+  async #checkAndApplyFracture({ entityId, partId, amount, maxHealth, currentHealth, damageEntry, damageSession }) {
     const fractureConfig = damageEntry.fracture;
     if (!fractureConfig?.enabled) {
       return;
@@ -292,13 +325,30 @@ class DamageTypeEffectsService extends BaseService {
       });
     }
 
-    this.#dispatcher.dispatch(FRACTURED_EVENT, {
+    const eventPayload = {
       entityId,
       partId,
       damageTypeId: damageEntry.name,
       stunApplied,
       timestamp: Date.now(),
-    });
+    };
+
+    // Record effect to session if available, queue event for later dispatch
+    if (damageSession) {
+      const entry = damageSession.entries.find((e) => e.partId === partId);
+      if (entry) {
+        entry.effectsTriggered = entry.effectsTriggered || [];
+        entry.effectsTriggered.push('fractured');
+      }
+      // Queue event for backwards compatibility dispatch
+      damageSession.pendingEvents.push({
+        eventType: FRACTURED_EVENT,
+        payload: eventPayload,
+      });
+    } else {
+      // No session - dispatch immediately (backwards compatibility)
+      this.#dispatcher.dispatch(FRACTURED_EVENT, eventPayload);
+    }
 
     this.#logger.debug(
       `DamageTypeEffectsService: Part ${partId} fractured by ${damageEntry.name}. Stun: ${stunApplied}`
@@ -312,10 +362,11 @@ class DamageTypeEffectsService extends BaseService {
    * @param {string} params.entityId
    * @param {string} params.partId
    * @param {object} params.damageEntry
+   * @param {object} [params.damageSession] - Optional damage accumulation session
    * @returns {Promise<void>}
    * @private
    */
-  async #applyBleedEffect({ entityId, partId, damageEntry }) {
+  async #applyBleedEffect({ entityId, partId, damageEntry, damageSession }) {
     const bleedConfig = damageEntry.bleed;
     if (!bleedConfig?.enabled) {
       return;
@@ -332,12 +383,29 @@ class DamageTypeEffectsService extends BaseService {
       tickDamage: severityData.tickDamage,
     });
 
-    this.#dispatcher.dispatch(BLEEDING_STARTED_EVENT, {
+    const eventPayload = {
       entityId,
       partId,
       severity,
       timestamp: Date.now(),
-    });
+    };
+
+    // Record effect to session if available, queue event for later dispatch
+    if (damageSession) {
+      const entry = damageSession.entries.find((e) => e.partId === partId);
+      if (entry) {
+        entry.effectsTriggered = entry.effectsTriggered || [];
+        entry.effectsTriggered.push('bleeding');
+      }
+      // Queue event for backwards compatibility dispatch
+      damageSession.pendingEvents.push({
+        eventType: BLEEDING_STARTED_EVENT,
+        payload: eventPayload,
+      });
+    } else {
+      // No session - dispatch immediately (backwards compatibility)
+      this.#dispatcher.dispatch(BLEEDING_STARTED_EVENT, eventPayload);
+    }
 
     this.#logger.debug(
       `DamageTypeEffectsService: Bleeding (${severity}) applied to part ${partId}.`
@@ -352,10 +420,11 @@ class DamageTypeEffectsService extends BaseService {
    * @param {string} params.entityId
    * @param {string} params.partId
    * @param {object} params.damageEntry
+   * @param {object} [params.damageSession] - Optional damage accumulation session
    * @returns {Promise<void>}
    * @private
    */
-  async #applyBurnEffect({ entityId, partId, damageEntry }) {
+  async #applyBurnEffect({ entityId, partId, damageEntry, damageSession }) {
     const burnConfig = damageEntry.burn;
     if (!burnConfig?.enabled) {
       return;
@@ -389,12 +458,29 @@ class DamageTypeEffectsService extends BaseService {
       stackedCount: newStackedCount,
     });
 
-    this.#dispatcher.dispatch(BURNING_STARTED_EVENT, {
+    const eventPayload = {
       entityId,
       partId,
       stackedCount: newStackedCount,
       timestamp: Date.now(),
-    });
+    };
+
+    // Record effect to session if available, queue event for later dispatch
+    if (damageSession) {
+      const entry = damageSession.entries.find((e) => e.partId === partId);
+      if (entry) {
+        entry.effectsTriggered = entry.effectsTriggered || [];
+        entry.effectsTriggered.push('burning');
+      }
+      // Queue event for backwards compatibility dispatch
+      damageSession.pendingEvents.push({
+        eventType: BURNING_STARTED_EVENT,
+        payload: eventPayload,
+      });
+    } else {
+      // No session - dispatch immediately (backwards compatibility)
+      this.#dispatcher.dispatch(BURNING_STARTED_EVENT, eventPayload);
+    }
 
     this.#logger.debug(
       `DamageTypeEffectsService: Burning applied to part ${partId}. Stack: ${newStackedCount}`
@@ -409,10 +495,11 @@ class DamageTypeEffectsService extends BaseService {
    * @param {string} params.entityId
    * @param {string} params.partId
    * @param {object} params.damageEntry
+   * @param {object} [params.damageSession] - Optional damage accumulation session
    * @returns {Promise<void>}
    * @private
    */
-  async #applyPoisonEffect({ entityId, partId, damageEntry }) {
+  async #applyPoisonEffect({ entityId, partId, damageEntry, damageSession }) {
     const poisonConfig = damageEntry.poison;
     if (!poisonConfig?.enabled) {
       return;
@@ -430,12 +517,29 @@ class DamageTypeEffectsService extends BaseService {
       tickDamage: tick,
     });
 
-    this.#dispatcher.dispatch(POISONED_STARTED_EVENT, {
+    const eventPayload = {
       entityId,
       partId: scope === 'part' ? partId : undefined,
       scope,
       timestamp: Date.now(),
-    });
+    };
+
+    // Record effect to session if available, queue event for later dispatch
+    if (damageSession) {
+      const entry = damageSession.entries.find((e) => e.partId === partId);
+      if (entry) {
+        entry.effectsTriggered = entry.effectsTriggered || [];
+        entry.effectsTriggered.push('poisoned');
+      }
+      // Queue event for backwards compatibility dispatch
+      damageSession.pendingEvents.push({
+        eventType: POISONED_STARTED_EVENT,
+        payload: eventPayload,
+      });
+    } else {
+      // No session - dispatch immediately (backwards compatibility)
+      this.#dispatcher.dispatch(POISONED_STARTED_EVENT, eventPayload);
+    }
 
     this.#logger.debug(
       `DamageTypeEffectsService: Poison applied to ${scope === 'entity' ? 'entity' : 'part'} ${targetId}.`

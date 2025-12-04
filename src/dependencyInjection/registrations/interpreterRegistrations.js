@@ -241,6 +241,7 @@ export function registerInterpreters(container) {
       'DROP_ITEM_AT_LOCATION',
       bind(tokens.DropItemAtLocationHandler)
     );
+    registry.register('PICK_RANDOM_ENTITY', bind(tokens.PickRandomEntityHandler));
     registry.register(
       'PICK_UP_ITEM_FROM_LOCATION',
       bind(tokens.PickUpItemFromLocationHandler)

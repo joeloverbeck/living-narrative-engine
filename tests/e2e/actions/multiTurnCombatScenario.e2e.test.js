@@ -19,6 +19,8 @@ import DamageTypeEffectsService from '../../../src/anatomy/services/damageTypeEf
 import DamagePropagationService from '../../../src/anatomy/services/damagePropagationService.js';
 import InjuryAggregationService from '../../../src/anatomy/services/injuryAggregationService.js';
 import DeathCheckService from '../../../src/anatomy/services/deathCheckService.js';
+import DamageAccumulator from '../../../src/anatomy/services/damageAccumulator.js';
+import DamageNarrativeComposer from '../../../src/anatomy/services/damageNarrativeComposer.js';
 import BleedingTickSystem from '../../../src/anatomy/services/bleedingTickSystem.js';
 import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../common/mods/ModEntityBuilder.js';
@@ -149,6 +151,14 @@ const installRealHandlers = ({ testEnv, safeDispatcher, forcedOutcome }) => {
     bodyGraphService,
   });
 
+  const damageAccumulator = new DamageAccumulator({
+    logger,
+  });
+
+  const damageNarrativeComposer = new DamageNarrativeComposer({
+    logger,
+  });
+
   const applyDamageHandler = new ApplyDamageHandler({
     entityManager,
     logger,
@@ -158,6 +168,8 @@ const installRealHandlers = ({ testEnv, safeDispatcher, forcedOutcome }) => {
     damageTypeEffectsService,
     damagePropagationService,
     deathCheckService,
+    damageAccumulator,
+    damageNarrativeComposer,
   });
 
   const chanceCalculationService = {

@@ -20,6 +20,8 @@ import {
 
 import ApplyDamageHandler from '../../../src/logic/operationHandlers/applyDamageHandler.js';
 import DeathCheckService from '../../../src/anatomy/services/deathCheckService.js';
+import DamageAccumulator from '../../../src/anatomy/services/damageAccumulator.js';
+import DamageNarrativeComposer from '../../../src/anatomy/services/damageNarrativeComposer.js';
 
 const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
 const PART_COMPONENT_ID = 'anatomy:part';
@@ -81,6 +83,14 @@ describe('Death Check Integration', () => {
       bodyGraphService,
     });
 
+    const damageAccumulator = new DamageAccumulator({
+      logger: log,
+    });
+
+    const damageNarrativeComposer = new DamageNarrativeComposer({
+      logger: log,
+    });
+
     handler = new ApplyDamageHandler({
       logger: log,
       entityManager,
@@ -90,6 +100,8 @@ describe('Death Check Integration', () => {
       damageTypeEffectsService,
       damagePropagationService,
       deathCheckService,
+      damageAccumulator,
+      damageNarrativeComposer,
     });
   });
 

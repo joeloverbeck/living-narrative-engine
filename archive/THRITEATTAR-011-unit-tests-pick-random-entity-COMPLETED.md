@@ -1,14 +1,29 @@
 # THRITEATTAR-011: Create Unit Tests for PICK_RANDOM_ENTITY Handler
 
+**Status**: ✅ COMPLETED
+
 ## Summary
 
 Create comprehensive unit tests for the `PickRandomEntityHandler` to verify all functionality including entity selection, filtering, exclusions, and edge cases.
 
-## Files to Create
+## Files to Modify
 
 | File | Purpose |
 |------|---------|
-| `tests/unit/logic/operationHandlers/pickRandomEntityHandler.test.js` | Unit test suite |
+| `tests/unit/logic/operationHandlers/pickRandomEntityHandler.test.js` | Unit test suite (already exists, needs additional tests) |
+
+## Existing Tests (Already Implemented)
+
+The test file already contains 9 basic tests:
+1. ✅ Constructor initialization
+2. ✅ Store null if location_id is missing/invalid
+3. ✅ Pick random entity from location
+4. ✅ Filter entities not in location
+5. ✅ Exclude specified entities
+6. ✅ Filter by required components
+7. ✅ Filter by excluded components
+8. ✅ Return null if no candidates match
+9. ✅ Resolve context references
 
 ## Test Cases to Implement
 
@@ -104,6 +119,8 @@ describe('context resolution', () => {
 
 ## Test Implementation Pattern
 
+**IMPORTANT**: The handler uses `getEntitiesWithComponent` + `getComponentData` for location filtering (NOT `getEntitiesInLocation`).
+
 ```javascript
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import PickRandomEntityHandler from '../../../../src/logic/operationHandlers/pickRandomEntityHandler.js';
@@ -114,8 +131,10 @@ describe('PickRandomEntityHandler', () => {
   let mockLogger;
 
   beforeEach(() => {
+    // NOTE: The handler requires these three methods per constructor validation
     mockEntityManager = {
-      getEntitiesInLocation: jest.fn(),
+      getEntitiesWithComponent: jest.fn(),  // NOT getEntitiesInLocation
+      getComponentData: jest.fn(),
       hasComponent: jest.fn(),
     };
 
@@ -187,3 +206,66 @@ For understanding test patterns:
 ## Blocks
 
 - None (tests can run independently)
+
+## Outcome
+
+### Implementation Summary
+
+Expanded the existing test file from 9 to 26 tests, organized into logical describe blocks:
+
+1. **Constructor Validation** (3 tests)
+   - Missing entityManager throws
+   - Missing logger throws
+   - EntityManager lacking required methods throws
+
+2. **Entity Exclusion** (1 test)
+   - Multiple entities excluded simultaneously
+
+3. **Required Components** (2 tests)
+   - AND logic for multiple components
+   - Returns null when no entity has required component
+
+4. **Excluded Components** (2 tests)
+   - OR logic for multiple components
+   - Returns null when all entities have excluded components
+
+5. **Combined Filtering** (3 tests)
+   - Exclusions AND component filters together
+   - Complex fumble scenario (actor/target exclusion + component filtering)
+   - Returns null when combined filters exclude all
+
+6. **Edge Cases** (6 tests)
+   - Empty location
+   - Empty exclude_entities array
+   - Empty require_components array
+   - Empty exclude_components array
+   - Single entity location
+   - Custom result_variable storage
+
+### Coverage Results
+
+| Metric | Coverage |
+|--------|----------|
+| Statements | 95.65% ✅ |
+| Branches | 83.33% ✅ |
+| Functions | 100% ✅ |
+| Lines | 95.65% ✅ |
+
+All metrics exceed the 80% requirement.
+
+### Ticket Discrepancy Fixed
+
+Corrected the mock pattern in the ticket documentation. The original ticket incorrectly specified `getEntitiesInLocation` but the handler uses `getEntitiesWithComponent` + `getComponentData` for location filtering. The ticket has been updated to show the correct mock pattern.
+
+### Files Modified
+
+- `tests/unit/logic/operationHandlers/pickRandomEntityHandler.test.js` - Added 17 new tests
+
+### Validation
+
+```
+✅ All 26 tests pass
+✅ Coverage ≥80% achieved (95.65% statements, 83.33% branches)
+✅ No flaky tests (Math.random mocked where needed)
+✅ Follows project test patterns
+```

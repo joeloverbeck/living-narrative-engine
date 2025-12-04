@@ -29,10 +29,6 @@ const mockDomElementFactory = {
   li: jest.fn(),
 };
 
-const mockNarrativeFormatter = {
-  formatDamageEvent: jest.fn(),
-};
-
 // This will store the event listeners subscribed by the renderer
 let eventListeners;
 
@@ -98,7 +94,6 @@ describe('DamageEventMessageRenderer', () => {
       documentContext: mockDocumentContext,
       safeEventDispatcher: mockValidatedEventDispatcher,
       domElementFactory: mockDomElementFactory,
-      narrativeFormatter: mockNarrativeFormatter,
     });
   };
 
@@ -110,15 +105,11 @@ describe('DamageEventMessageRenderer', () => {
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
-    it('should subscribe to all 5 damage events on construction', () => {
+    it('should subscribe to all 3 damage events on construction', () => {
       createRenderer();
-      expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledTimes(5);
+      expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledTimes(3);
       expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledWith(
-        'anatomy:damage_applied',
-        expect.any(Function)
-      );
-      expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledWith(
-        'anatomy:internal_damage_propagated',
+        'core:perceptible_event',
         expect.any(Function)
       );
       expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledWith(
@@ -129,39 +120,11 @@ describe('DamageEventMessageRenderer', () => {
         'anatomy:entity_died',
         expect.any(Function)
       );
-      expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledWith(
-        'anatomy:dismembered',
-        expect.any(Function)
-      );
-    });
-
-    it('should throw if narrativeFormatter is missing', () => {
-      expect(() => {
-        new DamageEventMessageRenderer({
-          logger: mockLogger,
-          documentContext: mockDocumentContext,
-          safeEventDispatcher: mockValidatedEventDispatcher,
-          domElementFactory: mockDomElementFactory,
-          narrativeFormatter: null,
-        });
-      }).toThrow('narrativeFormatter dependency must have formatDamageEvent method');
-    });
-
-    it('should throw if narrativeFormatter lacks formatDamageEvent method', () => {
-      expect(() => {
-        new DamageEventMessageRenderer({
-          logger: mockLogger,
-          documentContext: mockDocumentContext,
-          safeEventDispatcher: mockValidatedEventDispatcher,
-          domElementFactory: mockDomElementFactory,
-          narrativeFormatter: { someOtherMethod: jest.fn() },
-        });
-      }).toThrow('narrativeFormatter dependency must have formatDamageEvent method');
     });
   });
 
-  describe('damage_applied Event Handling', () => {
-    it('should create and append a damage message on damage_applied event', async () => {
+  describe('core:perceptible_event (damage_received) Handling', () => {
+    it('should create and append a damage message on perceptible_event with damage_received type', async () => {
       createRenderer();
 
       const mockLiElement = {
@@ -169,60 +132,61 @@ describe('DamageEventMessageRenderer', () => {
         classList: { add: jest.fn() },
       };
       mockDomElementFactory.li.mockReturnValue(mockLiElement);
-      mockNarrativeFormatter.formatDamageEvent.mockReturnValue('You take 15 damage to your arm.');
 
-      const damagePayload = {
-        entityName: 'Player',
-        damageAmount: 15,
-        partType: 'arm',
-        damageType: 'slashing',
+      const perceptiblePayload = {
+        perceptionType: 'damage_received',
+        descriptionText: 'You take 15 damage to your arm.',
+        totalDamage: 15,
       };
 
-      const handler = eventListeners['anatomy:damage_applied'];
-      handler({ payload: damagePayload });
+      const handler = eventListeners['core:perceptible_event'];
+      handler({ payload: perceptiblePayload });
 
       // Allow microtask to flush
       await Promise.resolve();
 
-      expect(mockNarrativeFormatter.formatDamageEvent).toHaveBeenCalledWith(
-        expect.objectContaining(damagePayload)
-      );
       expect(mockDomElementFactory.li).toHaveBeenCalled();
       expect(mockLiElement.textContent).toBe('You take 15 damage to your arm.');
       expect(mockLiElement.classList.add).toHaveBeenCalledWith('damage-message');
       expect(mockLiElement.classList.add).toHaveBeenCalledWith('damage-message--moderate');
       expect(mockMessageList.appendChild).toHaveBeenCalledWith(mockLiElement);
     });
-  });
 
-  describe('internal_damage_propagated Event Handling', () => {
-    it('should NOT create a damage message on internal_damage_propagated event', async () => {
-      // NOTE: The anatomy:internal_damage_propagated event is for internal tracking/telemetry only.
-      // The recursive ApplyDamageHandler.execute() call dispatches anatomy:damage_applied
-      // for each child part with complete data. We should NOT render this internal event.
+    it('should ignore perceptible_event with non-damage perceptionType', async () => {
       createRenderer();
 
-      const propagationPayload = {
-        sourcePartId: 'torso-1',
-        targetPartId: 'heart-1',
-        damageAmount: 5,
-        damageTypeId: 'piercing',
+      const perceptiblePayload = {
+        perceptionType: 'speech',
+        descriptionText: 'Someone says hello.',
       };
 
-      const handler = eventListeners['anatomy:internal_damage_propagated'];
-      handler({ payload: propagationPayload });
+      const handler = eventListeners['core:perceptible_event'];
+      handler({ payload: perceptiblePayload });
 
       await Promise.resolve();
 
-      // Assert NO message was created - this is an internal event
-      expect(mockNarrativeFormatter.formatDamageEvent).not.toHaveBeenCalled();
       expect(mockDomElementFactory.li).not.toHaveBeenCalled();
       expect(mockMessageList.appendChild).not.toHaveBeenCalled();
+    });
 
-      // Assert debug logging still works for telemetry
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Internal damage propagation')
+    it('should skip render when descriptionText is empty', async () => {
+      createRenderer();
+
+      const perceptiblePayload = {
+        perceptionType: 'damage_received',
+        descriptionText: '',
+        totalDamage: 10,
+      };
+
+      const handler = eventListeners['core:perceptible_event'];
+      handler({ payload: perceptiblePayload });
+
+      await Promise.resolve();
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Empty descriptionText')
       );
+      expect(mockDomElementFactory.li).not.toHaveBeenCalled();
     });
   });
 
@@ -246,8 +210,6 @@ describe('DamageEventMessageRenderer', () => {
 
       await Promise.resolve();
 
-      // Should NOT call narrative formatter for dying events
-      expect(mockNarrativeFormatter.formatDamageEvent).not.toHaveBeenCalled();
       expect(mockLiElement.textContent).toBe('Goblin is dying!');
       expect(mockLiElement.classList.add).toHaveBeenCalledWith('damage-message');
       expect(mockLiElement.classList.add).toHaveBeenCalledWith('damage-message--dying');
@@ -296,12 +258,33 @@ describe('DamageEventMessageRenderer', () => {
 
       await Promise.resolve();
 
-      // Should NOT call narrative formatter for death events
-      expect(mockNarrativeFormatter.formatDamageEvent).not.toHaveBeenCalled();
       expect(mockLiElement.textContent).toBe('Orc falls dead from their injuries.');
       expect(mockLiElement.classList.add).toHaveBeenCalledWith('damage-message');
       expect(mockLiElement.classList.add).toHaveBeenCalledWith('damage-message--death');
       expect(mockMessageList.appendChild).toHaveBeenCalled();
+    });
+
+    it('should use finalMessage when provided', async () => {
+      createRenderer();
+
+      const mockLiElement = {
+        textContent: '',
+        classList: { add: jest.fn() },
+      };
+      mockDomElementFactory.li.mockReturnValue(mockLiElement);
+
+      const deathPayload = {
+        entityId: 'entity-1',
+        entityName: 'Orc',
+        finalMessage: 'Orc dies from massive head trauma.',
+      };
+
+      const handler = eventListeners['anatomy:entity_died'];
+      handler({ payload: deathPayload });
+
+      await Promise.resolve();
+
+      expect(mockLiElement.textContent).toBe('Orc dies from massive head trauma.');
     });
 
     it('should use fallback text when entityName is missing', async () => {
@@ -335,10 +318,15 @@ describe('DamageEventMessageRenderer', () => {
         classList: { add: jest.fn() },
       };
       mockDomElementFactory.li.mockReturnValue(mockLiElement);
-      mockNarrativeFormatter.formatDamageEvent.mockReturnValue('Minor scratch.');
 
-      const handler = eventListeners['anatomy:damage_applied'];
-      handler({ payload: { damageAmount: 5 } });
+      const handler = eventListeners['core:perceptible_event'];
+      handler({
+        payload: {
+          perceptionType: 'damage_received',
+          descriptionText: 'Minor scratch.',
+          totalDamage: 5,
+        },
+      });
 
       await Promise.resolve();
 
@@ -353,10 +341,15 @@ describe('DamageEventMessageRenderer', () => {
         classList: { add: jest.fn() },
       };
       mockDomElementFactory.li.mockReturnValue(mockLiElement);
-      mockNarrativeFormatter.formatDamageEvent.mockReturnValue('Moderate wound.');
 
-      const handler = eventListeners['anatomy:damage_applied'];
-      handler({ payload: { damageAmount: 20 } });
+      const handler = eventListeners['core:perceptible_event'];
+      handler({
+        payload: {
+          perceptionType: 'damage_received',
+          descriptionText: 'Moderate wound.',
+          totalDamage: 20,
+        },
+      });
 
       await Promise.resolve();
 
@@ -371,10 +364,15 @@ describe('DamageEventMessageRenderer', () => {
         classList: { add: jest.fn() },
       };
       mockDomElementFactory.li.mockReturnValue(mockLiElement);
-      mockNarrativeFormatter.formatDamageEvent.mockReturnValue('Severe injury.');
 
-      const handler = eventListeners['anatomy:damage_applied'];
-      handler({ payload: { damageAmount: 40 } });
+      const handler = eventListeners['core:perceptible_event'];
+      handler({
+        payload: {
+          perceptionType: 'damage_received',
+          descriptionText: 'Severe injury.',
+          totalDamage: 40,
+        },
+      });
 
       await Promise.resolve();
 
@@ -389,17 +387,22 @@ describe('DamageEventMessageRenderer', () => {
         classList: { add: jest.fn() },
       };
       mockDomElementFactory.li.mockReturnValue(mockLiElement);
-      mockNarrativeFormatter.formatDamageEvent.mockReturnValue('Critical hit!');
 
-      const handler = eventListeners['anatomy:damage_applied'];
-      handler({ payload: { damageAmount: 75 } });
+      const handler = eventListeners['core:perceptible_event'];
+      handler({
+        payload: {
+          perceptionType: 'damage_received',
+          descriptionText: 'Critical hit!',
+          totalDamage: 75,
+        },
+      });
 
       await Promise.resolve();
 
       expect(mockLiElement.classList.add).toHaveBeenCalledWith('damage-message--critical');
     });
 
-    it('should default to minor class when damageAmount is undefined', async () => {
+    it('should default to minor class when totalDamage is undefined', async () => {
       createRenderer();
 
       const mockLiElement = {
@@ -407,106 +410,18 @@ describe('DamageEventMessageRenderer', () => {
         classList: { add: jest.fn() },
       };
       mockDomElementFactory.li.mockReturnValue(mockLiElement);
-      mockNarrativeFormatter.formatDamageEvent.mockReturnValue('Some damage.');
 
-      const handler = eventListeners['anatomy:damage_applied'];
-      handler({ payload: {} });
+      const handler = eventListeners['core:perceptible_event'];
+      handler({
+        payload: {
+          perceptionType: 'damage_received',
+          descriptionText: 'Some damage.',
+        },
+      });
 
       await Promise.resolve();
 
       expect(mockLiElement.classList.add).toHaveBeenCalledWith('damage-message--minor');
-    });
-  });
-
-  describe('Batching Behavior', () => {
-    it('should batch multiple events in the same microtask', async () => {
-      createRenderer();
-
-      const mockLiElement = {
-        textContent: '',
-        classList: { add: jest.fn() },
-      };
-      mockDomElementFactory.li.mockReturnValue(mockLiElement);
-      mockNarrativeFormatter.formatDamageEvent.mockReturnValue('Damage message.');
-
-      const handler = eventListeners['anatomy:damage_applied'];
-
-      // Dispatch 3 events synchronously with distinct IDs to prevent merging
-      handler({ payload: { entityId: 'e1', partId: 'p1', damageType: 'slashing', damageAmount: 5 } });
-      handler({ payload: { entityId: 'e2', partId: 'p2', damageType: 'blunt', damageAmount: 15 } });
-      handler({ payload: { entityId: 'e3', partId: 'p3', damageType: 'piercing', damageAmount: 55 } });
-
-      // Before microtask flushes, nothing should be rendered
-      expect(mockMessageList.appendChild).not.toHaveBeenCalled();
-
-      // Allow microtask to flush
-      await Promise.resolve();
-
-      // All 3 should be rendered
-      expect(mockMessageList.appendChild).toHaveBeenCalledTimes(3);
-    });
-
-    it('should log batch flush with correct count', async () => {
-      createRenderer();
-
-      const mockLiElement = {
-        textContent: '',
-        classList: { add: jest.fn() },
-      };
-      mockDomElementFactory.li.mockReturnValue(mockLiElement);
-      mockNarrativeFormatter.formatDamageEvent.mockReturnValue('Damage.');
-
-      const handler = eventListeners['anatomy:damage_applied'];
-
-      // Use distinct IDs to prevent merging
-      handler({ payload: { entityId: 'e1', partId: 'p1', damageType: 'slashing', damageAmount: 10 } });
-      handler({ payload: { entityId: 'e2', partId: 'p2', damageType: 'blunt', damageAmount: 20 } });
-
-      await Promise.resolve();
-
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Flushing batch of 2 damage event(s)'),
-        expect.any(Array)
-      );
-    });
-  });
-
-  describe('Malformed Payloads', () => {
-    it('should log a warning and skip render for null event data', async () => {
-      createRenderer();
-
-      const handler = eventListeners['anatomy:damage_applied'];
-      handler({ payload: null });
-
-      await Promise.resolve();
-
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Received null/undefined event data')
-      );
-      expect(mockDomElementFactory.li).not.toHaveBeenCalled();
-    });
-
-    it('should log a warning and skip render when formatter returns empty string', async () => {
-      createRenderer();
-
-      const mockLiElement = {
-        textContent: '',
-        classList: { add: jest.fn() },
-      };
-      mockDomElementFactory.li.mockReturnValue(mockLiElement);
-      mockNarrativeFormatter.formatDamageEvent.mockReturnValue('');
-
-      const handler = eventListeners['anatomy:damage_applied'];
-      handler({ payload: { damageAmount: 10 } });
-
-      await Promise.resolve();
-
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Empty message generated for damage event'),
-        expect.any(Object)
-      );
-      // li is not called because we check message before rendering
-      expect(mockMessageList.appendChild).not.toHaveBeenCalled();
     });
   });
 
@@ -528,10 +443,15 @@ describe('DamageEventMessageRenderer', () => {
         classList: { add: jest.fn() },
       };
       mockDomElementFactory.li.mockReturnValue(mockLiElement);
-      mockNarrativeFormatter.formatDamageEvent.mockReturnValue('Damage!');
 
-      const handler = eventListeners['anatomy:damage_applied'];
-      handler({ payload: { damageAmount: 10 } });
+      const handler = eventListeners['core:perceptible_event'];
+      handler({
+        payload: {
+          perceptionType: 'damage_received',
+          descriptionText: 'Damage!',
+          totalDamage: 10,
+        },
+      });
 
       await Promise.resolve();
 
@@ -547,10 +467,15 @@ describe('DamageEventMessageRenderer', () => {
     it('dispatches system_error when DomElementFactory.li returns null', async () => {
       createRenderer();
       mockDomElementFactory.li.mockReturnValue(null);
-      mockNarrativeFormatter.formatDamageEvent.mockReturnValue('Damage!');
 
-      const handler = eventListeners['anatomy:damage_applied'];
-      handler({ payload: { damageAmount: 10 } });
+      const handler = eventListeners['core:perceptible_event'];
+      handler({
+        payload: {
+          perceptionType: 'damage_received',
+          descriptionText: 'Damage!',
+          totalDamage: 10,
+        },
+      });
 
       await Promise.resolve();
 
@@ -570,7 +495,7 @@ describe('DamageEventMessageRenderer', () => {
         mockValidatedEventDispatcher.subscribe.mock.calls.map((call) => call[0]);
       expect(subscribedEventNames).not.toContain('core:display_message');
       expect(subscribedEventNames).not.toContain('some:other_event');
-      expect(subscribedEventNames.length).toBe(5);
+      expect(subscribedEventNames.length).toBe(3);
     });
   });
 });

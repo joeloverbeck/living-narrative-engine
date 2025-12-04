@@ -48,7 +48,8 @@
     "vampirism",
     "violence",
     "warding",
-    "weapons"
+    "weapons",
+    "ranged"
   ],
   "startWorld": "fantasy:vespera"
 }

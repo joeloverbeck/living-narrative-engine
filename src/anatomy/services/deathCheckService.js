@@ -469,6 +469,24 @@ class DeathCheckService extends BaseService {
    * @private
    */
   #buildDeathMessage(entityName, causeOfDeath, vitalOrganDestroyed) {
+    if (causeOfDeath === 'vital_organ_destroyed' && vitalOrganDestroyed) {
+      switch (vitalOrganDestroyed) {
+        case 'brain':
+          return `${entityName} dies from massive head trauma.`;
+        case 'heart':
+          return `${entityName}'s heart has stopped - they are dead.`;
+        case 'spine':
+          return `${entityName} collapses as their spine is destroyed.`;
+        default:
+          return `${entityName} dies from catastrophic organ failure.`;
+      }
+    }
+
+    if (causeOfDeath === 'bleeding_out') {
+      return `${entityName} succumbs to blood loss.`;
+    }
+
+    // Fallback for any other cause
     return `${entityName} falls dead from their injuries.`;
   }
 }

@@ -8,6 +8,8 @@ import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globa
 import ApplyDamageHandler from '../../../src/logic/operationHandlers/applyDamageHandler.js';
 import BodyGraphService from '../../../src/anatomy/bodyGraphService.js';
 import DamagePropagationService from '../../../src/anatomy/services/damagePropagationService.js';
+import DamageAccumulator from '../../../src/anatomy/services/damageAccumulator.js';
+import DamageNarrativeComposer from '../../../src/anatomy/services/damageNarrativeComposer.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';
@@ -76,6 +78,12 @@ describe('Damage Application Mechanics', () => {
     const deathCheckService = {
       checkDeathConditions: jest.fn().mockResolvedValue(undefined),
     };
+    const damageAccumulator = new DamageAccumulator({
+      logger,
+    });
+    const damageNarrativeComposer = new DamageNarrativeComposer({
+      logger,
+    });
     handler = new ApplyDamageHandler({
       logger,
       entityManager,
@@ -85,6 +93,8 @@ describe('Damage Application Mechanics', () => {
       damageTypeEffectsService,
       damagePropagationService,
       deathCheckService,
+      damageAccumulator,
+      damageNarrativeComposer,
     });
     executionContext = {
       evaluationContext: { context: {} },

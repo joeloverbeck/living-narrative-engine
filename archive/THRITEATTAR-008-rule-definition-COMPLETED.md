@@ -190,3 +190,10 @@ For understanding rule patterns:
 ## Note on Macro References
 
 The rule references four macros that will be created in THRITEATTAR-009. The rule can be created first, but the game will not fully function until the macros exist.
+
+## Outcome
+
+- Created `data/mods/ranged/rules/handle_throw_item_at_target.rule.json` exactly as specified.
+- Added `ranged` to `data/game.json` to ensure the mod is recognized by the engine and validation tools.
+- Verified JSON validity and schema compliance using `npm run validate:strict`.
+- Verified that reference macros and operations are allowed (though macros do not exist yet, validation passes as they are string references).
