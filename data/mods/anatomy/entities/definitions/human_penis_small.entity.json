@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "penis",
-      "hit_probability_weight": 1.8
+      "hit_probability_weight": 1.8,
+      "health_calculation_weight": 0.5
     },
     "anatomy:part_health": {
       "currentHealth": 6,

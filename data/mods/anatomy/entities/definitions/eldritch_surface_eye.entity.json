@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "eldritch_surface_eye",
-      "hit_probability_weight": 1
+      "hit_probability_weight": 1,
+      "health_calculation_weight": 2
     },
     "anatomy:part_health": {
       "currentHealth": 8,

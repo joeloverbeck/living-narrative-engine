@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "eye",
-      "hit_probability_weight": 0.5
+      "hit_probability_weight": 0.5,
+      "health_calculation_weight": 2
     },
     "anatomy:part_health": {
       "currentHealth": 10,

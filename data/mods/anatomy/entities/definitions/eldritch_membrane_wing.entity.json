@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "eldritch_membrane_wing",
-      "hit_probability_weight": 8
+      "hit_probability_weight": 8,
+      "health_calculation_weight": 2
     },
     "anatomy:part_health": {
       "currentHealth": 25,

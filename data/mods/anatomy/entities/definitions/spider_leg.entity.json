@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "spider_leg",
-      "hit_probability_weight": 5
+      "hit_probability_weight": 5,
+      "health_calculation_weight": 3
     },
     "anatomy:part_health": {
       "currentHealth": 25,

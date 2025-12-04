@@ -57,6 +57,7 @@
         "dimensional_arrival",
         "dimensional_departure",
         "drink_consumed",
+        "entity_died",
         "error",
         "food_consumed",
         "item_drop",

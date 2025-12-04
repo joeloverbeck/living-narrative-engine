@@ -7,7 +7,7 @@
       "type": "DISPATCH_PERCEPTIBLE_EVENT",
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
-        "description_text": "{context.actorName} {context.attackVerbPast} {context.targetName} with their {context.weaponName}, {context.hitDescription}.",
+        "description_text": "{context.successMessage}",
         "perception_type": "action_target_general",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.secondaryId}"
@@ -18,7 +18,7 @@
       "comment": "Set logMessage BEFORE damage loop so success message displays first",
       "parameters": {
         "variable_name": "logMessage",
-        "value": "{context.actorName} {context.attackVerbPast} {context.targetName} with their {context.weaponName}, {context.hitDescription}."
+        "value": "{context.successMessage}"
       }
     },
     {

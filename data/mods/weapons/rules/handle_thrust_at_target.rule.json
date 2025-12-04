@@ -98,6 +98,22 @@
       }
     },
     {
+      "type": "SET_VARIABLE",
+      "comment": "Thrust-specific: success message template",
+      "parameters": {
+        "variable_name": "successMessage",
+        "value": "{context.actorName} thrusts their {context.weaponName} at {context.targetName}, {context.hitDescription}."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Thrust-specific: failure message template",
+      "parameters": {
+        "variable_name": "failureMessage",
+        "value": "{context.actorName} thrusts their {context.weaponName} at {context.targetName}, but the thrust fails to connect."
+      }
+    },
+    {
       "type": "IF",
       "comment": "Handle CRITICAL_SUCCESS outcome",
       "parameters": {

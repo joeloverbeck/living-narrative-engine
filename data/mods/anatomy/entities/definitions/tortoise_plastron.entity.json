@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "shell_plastron",
-      "hit_probability_weight": 26
+      "hit_probability_weight": 26,
+      "health_calculation_weight": 8
     },
     "anatomy:part_health": {
       "currentHealth": 100,

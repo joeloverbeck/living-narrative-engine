@@ -134,6 +134,7 @@ const installRealHandlers = ({
     logger,
     eventBus: safeDispatcher,
     injuryAggregationService,
+    bodyGraphService,
   });
 
   const applyDamageHandler = new ApplyDamageHandler({
@@ -260,7 +261,7 @@ describe('swing_at_target full flow (critical e2e)', () => {
     expect(damageEvents.length).toBeGreaterThan(0);
     expect(healthEvents.length).toBeGreaterThan(0);
     expect(successMessages.length).toBe(1);
-    expect(successMessages[0].payload.message).toContain('swings their');
+    expect(successMessages[0].payload.message).toContain('swings');
 
     const health = testEnv.entityManager.getComponentData(
       torso.id,

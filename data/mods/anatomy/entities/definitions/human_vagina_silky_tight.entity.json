@@ -6,7 +6,8 @@
     "anatomy:embedded": {},
     "anatomy:part": {
       "subType": "vagina",
-      "hit_probability_weight": 2
+      "hit_probability_weight": 2,
+      "health_calculation_weight": 0.5
     },
     "anatomy:part_health": {
       "currentHealth": 6,

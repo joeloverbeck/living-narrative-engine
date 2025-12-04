@@ -1,0 +1,65 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "ranged:throw_item_at_target",
+  "name": "Throw at Target",
+  "description": "Throw a portable item at a target",
+  "template": "throw {throwable} at {target} ({chance}% chance)",
+  "generateCombinations": true,
+  "visual": {
+    "backgroundColor": "#2a4a3f",
+    "textColor": "#e8f5f0",
+    "hoverBackgroundColor": "#3a5f52",
+    "hoverTextColor": "#ffffff"
+  },
+  "required_components": {
+    "actor": [],
+    "primary": ["items:portable"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:hugging",
+      "positioning:giving_blowjob",
+      "positioning:doing_complex_performance",
+      "positioning:bending_over",
+      "positioning:being_restrained",
+      "positioning:restraining",
+      "positioning:fallen"
+    ]
+  },
+  "targets": {
+    "primary": {
+      "scope": "ranged:throwable_items",
+      "placeholder": "throwable",
+      "description": "Item to throw"
+    },
+    "secondary": {
+      "scope": "core:actors_in_location",
+      "placeholder": "target",
+      "description": "Target to throw at"
+    }
+  },
+  "chanceBased": {
+    "enabled": true,
+    "contestType": "opposed",
+    "actorSkill": {
+      "component": "skills:ranged_skill",
+      "property": "value",
+      "default": 10
+    },
+    "targetSkill": {
+      "component": "skills:defense_skill",
+      "property": "value",
+      "default": 0,
+      "targetRole": "secondary"
+    },
+    "formula": "ratio",
+    "bounds": {
+      "min": 5,
+      "max": 95
+    },
+    "outcomes": {
+      "criticalSuccessThreshold": 5,
+      "criticalFailureThreshold": 95
+    }
+  }
+}
