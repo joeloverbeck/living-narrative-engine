@@ -1247,7 +1247,11 @@ describe('ApplyDamageHandler', () => {
 
         expect(damageTypeEffectsService.applyEffectsForDamage).toHaveBeenCalledWith({
           entityId: 'victim-entity',
+          entityName: 'Unknown',
+          entityPronoun: 'they',
           partId: 'part1',
+          partType: 'arm',
+          orientation: null,
           damageEntry: damageEntry,
           maxHealth: 100,
           currentHealth: 70
@@ -1522,7 +1526,11 @@ describe('ApplyDamageHandler', () => {
         // Full damage entry should be passed to effects service
         expect(damageTypeEffectsService.applyEffectsForDamage).toHaveBeenCalledWith({
           entityId: 'victim-entity',
+          entityName: 'Unknown',
+          entityPronoun: 'they',
           partId: 'part1',
+          partType: 'torso',
+          orientation: null,
           damageEntry: fullDamageEntry,
           maxHealth: 100,
           currentHealth: 50

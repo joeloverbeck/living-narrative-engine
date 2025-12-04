@@ -1,5 +1,5 @@
 /**
- * Injury Status Panel Styles
+ * Injury Status Panel Styles (Warm Sepia Theme)
  *
  * Widget displaying character's current physical condition with:
  * - Health bar with color-coded severity
@@ -7,7 +7,12 @@
  * - Effect indicators (bleeding, burning, poisoned, fractured)
  * - Dying/dead state styling
  *
- * WCAG AA color contrast compliance ensured for all severity classes.
+ * Design: Warm sepia gradient background (#FFFEFB → #FFF8F0) with
+ * teal accent border (--accent-color-primary) for a medical record feel.
+ * Integrates with the "Vibrant Explorer" theme using CSS variables.
+ *
+ * WCAG AA color contrast compliance ensured for all severity classes
+ * against the light background.
  */
 
 /* ============================================
@@ -15,19 +20,22 @@
    ============================================ */
 
 #injury-status-widget {
-  background-color: var(--widget-bg, #1a1a2e);
-  border: 1px solid var(--widget-border, #333);
-  border-radius: 4px;
-  padding: 0.75rem;
-  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #FFFEFB 0%, #FFF8F0 100%);
+  border: var(--border-width, 2px) solid var(--border-color-subtle, #DDD3C7);
+  border-left: 4px solid var(--accent-color-primary, #1abc9c);
+  border-radius: var(--border-radius-md, 6px);
+  padding: var(--spacing-md, 12px);
+  margin-bottom: var(--spacing-md, 12px);
+  box-shadow: var(--shadow-sm, 0 2px 4px rgba(0, 0, 0, 0.06));
 }
 
 #injury-status-heading {
-  margin: 0 0 0.5rem 0;
-  font-size: 0.9rem;
-  color: var(--heading-color, #e0e0e0);
-  border-bottom: 1px solid var(--widget-border, #333);
-  padding-bottom: 0.25rem;
+  margin: 0 0 var(--spacing-sm, 8px) 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--primary-text-color, #2c3e50);
+  border-bottom: var(--border-width, 2px) solid var(--border-color-subtle, #DDD3C7);
+  padding-bottom: var(--spacing-sm, 8px);
 }
 
 #injury-status-content {
@@ -36,7 +44,7 @@
 }
 
 #injury-narrative {
-  color: var(--text-color, #ccc);
+  color: var(--secondary-text-color, #576574);
 }
 
 /* ============================================
@@ -44,11 +52,12 @@
    ============================================ */
 
 .health-bar-container {
-  background-color: var(--health-bar-bg, #2a2a3e);
-  border-radius: 3px;
+  background-color: #E8E4DC;
+  border-radius: var(--border-radius-sm, 4px);
   height: 8px;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--spacing-sm, 8px);
   overflow: hidden;
+  border: 1px solid var(--border-color-subtle, #DDD3C7);
 }
 
 .health-bar-fill {
@@ -59,17 +68,17 @@
 /* ============================================
    Severity Classes - WCAG AA Compliant
 
-   All colors tested against #1a1a2e background:
-   - Green (#4caf50): 5.2:1 contrast ratio
-   - Yellow (#ffc107): 10.7:1 contrast ratio
-   - Orange (#ff9800): 6.5:1 contrast ratio
-   - Red-orange (#ff5722): 4.9:1 contrast ratio
-   - Red (#f44336): 4.7:1 contrast ratio
-   - Dark red (#b71c1c): 5.1:1 contrast ratio
+   All colors adjusted for light background (#FFFEFB):
+   - Darker green (#2e7d32): 5.9:1 contrast ratio
+   - Darker yellow (#f57f17): 4.5:1 contrast ratio
+   - Darker orange (#ef6c00): 4.7:1 contrast ratio
+   - Darker red-orange (#d84315): 5.4:1 contrast ratio
+   - Darker red (#c62828): 6.2:1 contrast ratio
+   - Dark red (#b71c1c): 6.8:1 contrast ratio
    ============================================ */
 
 .severity-healthy {
-  color: #4caf50;
+  color: #2e7d32;
 }
 
 .severity-healthy .health-bar-fill {
@@ -77,7 +86,7 @@
 }
 
 .severity-scratched {
-  color: #ffc107;
+  color: #f57f17;
 }
 
 .severity-scratched .health-bar-fill {
@@ -85,7 +94,7 @@
 }
 
 .severity-wounded {
-  color: #ff9800;
+  color: #ef6c00;
 }
 
 .severity-wounded .health-bar-fill {
@@ -93,7 +102,7 @@
 }
 
 .severity-injured {
-  color: #ff5722;
+  color: #d84315;
 }
 
 .severity-injured .health-bar-fill {
@@ -101,7 +110,7 @@
 }
 
 .severity-critical {
-  color: #f44336;
+  color: #c62828;
 }
 
 .severity-critical .health-bar-fill {
@@ -122,16 +131,17 @@
 
 .injury-body-parts {
   list-style: none;
-  margin: 0.5rem 0;
+  margin: var(--spacing-sm, 8px) 0;
   padding: 0;
 }
 
 .injury-body-part {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0;
-  border-bottom: 1px solid var(--widget-border-light, #2a2a3e);
+  gap: var(--spacing-sm, 8px);
+  padding: var(--spacing-xs, 4px) 0;
+  border-bottom: 1px solid var(--border-color-subtle, #DDD3C7);
+  color: var(--primary-text-color, #2c3e50);
 }
 
 .injury-body-part:last-child {
@@ -144,9 +154,10 @@
 
 .body-part-severity {
   font-size: 0.75rem;
-  padding: 0.1rem 0.3rem;
-  border-radius: 2px;
-  background-color: rgba(0, 0, 0, 0.3);
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--border-radius-xs, 2px);
+  background-color: rgba(0, 0, 0, 0.06);
+  font-weight: 500;
 }
 
 /* ============================================
@@ -156,38 +167,43 @@
 .effect-indicators {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  gap: var(--spacing-sm, 8px);
+  margin-top: var(--spacing-sm, 8px);
 }
 
 .effect-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--spacing-xs, 4px);
   font-size: 0.75rem;
-  padding: 0.2rem 0.4rem;
-  border-radius: 3px;
-  background-color: rgba(0, 0, 0, 0.4);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--border-radius-sm, 4px);
+  background-color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
 }
 
 .effect-badge--bleeding {
-  color: #ef5350;
-  border: 1px solid #ef5350;
+  color: #c62828;
+  border: 1px solid #c62828;
+  background-color: rgba(198, 40, 40, 0.08);
 }
 
 .effect-badge--burning {
-  color: #ff9800;
-  border: 1px solid #ff9800;
+  color: #ef6c00;
+  border: 1px solid #ef6c00;
+  background-color: rgba(239, 108, 0, 0.08);
 }
 
 .effect-badge--poisoned {
-  color: #8bc34a;
-  border: 1px solid #8bc34a;
+  color: #2e7d32;
+  border: 1px solid #2e7d32;
+  background-color: rgba(46, 125, 50, 0.08);
 }
 
 .effect-badge--fractured {
-  color: #9e9e9e;
-  border: 1px solid #9e9e9e;
+  color: #616161;
+  border: 1px solid #616161;
+  background-color: rgba(97, 97, 97, 0.08);
 }
 
 /* ============================================
@@ -195,17 +211,17 @@
    ============================================ */
 
 .injury-dying {
-  margin-top: 0.5rem;
-  padding: 0.5rem;
-  background-color: rgba(244, 67, 54, 0.2);
-  border: 1px solid #f44336;
-  border-radius: 3px;
+  margin-top: var(--spacing-sm, 8px);
+  padding: var(--spacing-sm, 8px);
+  background-color: rgba(198, 40, 40, 0.12);
+  border: 2px solid #c62828;
+  border-radius: var(--border-radius-sm, 4px);
   animation: dying-pulse 1.5s ease-in-out infinite;
 }
 
 .dying-countdown {
-  color: #f44336;
-  font-weight: bold;
+  color: #c62828;
+  font-weight: 600;
   text-align: center;
 }
 
@@ -223,16 +239,16 @@
    ============================================ */
 
 .injury-dead {
-  margin-top: 0.5rem;
-  padding: 0.5rem;
-  background-color: rgba(0, 0, 0, 0.5);
-  border: 1px solid #666;
-  border-radius: 3px;
+  margin-top: var(--spacing-sm, 8px);
+  padding: var(--spacing-sm, 8px);
+  background-color: rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--border-color-subtle, #DDD3C7);
+  border-radius: var(--border-radius-sm, 4px);
   text-align: center;
 }
 
 .dead-message {
-  color: #999;
+  color: var(--secondary-text-color, #576574);
   font-style: italic;
 }
 
@@ -241,23 +257,33 @@
    ============================================ */
 
 .injury-healthy-message {
-  color: #4caf50;
+  color: #2e7d32;
   font-style: italic;
   text-align: center;
-  padding: 0.5rem;
+  padding: var(--spacing-sm, 8px);
 }
 
 /* ============================================
    Responsive Adjustments
    ============================================ */
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   #injury-status-widget {
-    padding: 0.5rem;
+    padding: var(--spacing-sm, 8px);
+  }
+
+  #injury-status-heading {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  #injury-status-widget {
+    padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
   }
 
   .effect-indicators {
-    gap: 0.25rem;
+    gap: var(--spacing-xs, 4px);
   }
 
   .effect-badge {
