@@ -27,14 +27,14 @@
     "core:name": {
       "text": "rear leg"
     },
+    "core:weight": {
+      "weight": 30
+    },
     "descriptors:build": {
       "build": "muscular"
     },
     "descriptors:texture": {
       "texture": "smooth"
-    },
-    "items:weight": {
-      "weight": 30
     }
   }
 }

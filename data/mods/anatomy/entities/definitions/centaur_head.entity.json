@@ -15,11 +15,11 @@
     "core:name": {
       "text": "head"
     },
+    "core:weight": {
+      "weight": 5
+    },
     "descriptors:hair_style": {
       "style": "braided"
-    },
-    "items:weight": {
-      "weight": 5
     }
   }
 }

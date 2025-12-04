@@ -22,7 +22,7 @@
     "core:name": {
       "text": "testicle"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 0.025
     }
   }

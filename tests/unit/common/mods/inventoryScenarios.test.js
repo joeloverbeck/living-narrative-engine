@@ -22,7 +22,7 @@ describe('ModEntityScenarios inventory helpers', () => {
     const firstItem = scenario.items[0];
     expect(getComponent(firstItem, 'items:item')).toEqual({});
     expect(getComponent(firstItem, 'items:portable')).toEqual({});
-    expect(getComponent(firstItem, 'items:weight')).toEqual({ weight: 1 });
+    expect(getComponent(firstItem, 'core:weight')).toEqual({ weight: 1 });
   });
 
   it('creates items on the ground with optional actor inventory', () => {

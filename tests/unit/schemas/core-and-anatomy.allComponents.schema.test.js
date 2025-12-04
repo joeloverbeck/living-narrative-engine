@@ -94,6 +94,7 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
     'core:strengths': { text: 'I am good at problem solving' },
     'core:visible': { isVisible: true },
     'core:weaknesses': { text: 'I tend to be impatient' },
+    'core:weight': { weight: 5.5 },
     "movement:exits": [],
     'anatomy:part': { subType: 'leg' },
     'anatomy:sockets': {
@@ -174,6 +175,7 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
     'core:strengths': {},
     'core:visible': {},
     'core:weaknesses': {},
+    'core:weight': { weight: -1 }, // Invalid: negative weight not allowed
     "movement:exits": {},
     'anatomy:part': {},
     'anatomy:sockets': {},
@@ -251,6 +253,171 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
       // This test explicitly documents backward compatibility
       const payload = { subType: 'head' };
       const ok = validators['anatomy:part'](payload);
+      expect(ok).toBe(true);
+    });
+  });
+
+  // HEACALOVE-001: anatomy:part health_calculation_weight field
+  describe('anatomy:part - health_calculation_weight field (HEACALOVE-001)', () => {
+    test('✓ valid with health_calculation_weight', () => {
+      const payload = { subType: 'torso', health_calculation_weight: 5.0 };
+      const ok = validators['anatomy:part'](payload);
+      if (!ok) console.error(validators['anatomy:part'].errors);
+      expect(ok).toBe(true);
+    });
+
+    test('✓ valid with health_calculation_weight at minimum (0)', () => {
+      const payload = { subType: 'cosmetic', health_calculation_weight: 0 };
+      const ok = validators['anatomy:part'](payload);
+      if (!ok) console.error(validators['anatomy:part'].errors);
+      expect(ok).toBe(true);
+    });
+
+    test('✓ valid with health_calculation_weight as decimal', () => {
+      const payload = { subType: 'finger', health_calculation_weight: 0.5 };
+      const ok = validators['anatomy:part'](payload);
+      if (!ok) console.error(validators['anatomy:part'].errors);
+      expect(ok).toBe(true);
+    });
+
+    test('✓ valid with all optional fields including health_calculation_weight', () => {
+      const payload = {
+        subType: 'heart',
+        orientation: 'mid',
+        hit_probability_weight: 2.0,
+        definitionId: 'anatomy:human_heart',
+        health_calculation_weight: 10.0,
+      };
+      const ok = validators['anatomy:part'](payload);
+      if (!ok) console.error(validators['anatomy:part'].errors);
+      expect(ok).toBe(true);
+    });
+
+    test('✗ invalid - health_calculation_weight must be number', () => {
+      const payload = { subType: 'leg', health_calculation_weight: 'high' };
+      expect(validators['anatomy:part'](payload)).toBe(false);
+    });
+
+    test('✗ invalid - health_calculation_weight cannot be negative', () => {
+      const payload = { subType: 'arm', health_calculation_weight: -1.0 };
+      expect(validators['anatomy:part'](payload)).toBe(false);
+    });
+
+    test('✓ backward compatibility - valid without health_calculation_weight', () => {
+      // This test explicitly documents backward compatibility
+      const payload = { subType: 'leg', hit_probability_weight: 1.5 };
+      const ok = validators['anatomy:part'](payload);
+      expect(ok).toBe(true);
+    });
+  });
+
+  // HEACALOVE-002: anatomy:vital_organ healthCapThreshold and healthCapValue fields
+  describe('anatomy:vital_organ - health cap properties (HEACALOVE-002)', () => {
+    test('✓ valid with healthCapThreshold', () => {
+      const payload = { organType: 'heart', healthCapThreshold: 25 };
+      const ok = validators['anatomy:vital_organ'](payload);
+      if (!ok) console.error(validators['anatomy:vital_organ'].errors);
+      expect(ok).toBe(true);
+    });
+
+    test('✓ valid with healthCapValue', () => {
+      const payload = { organType: 'brain', healthCapValue: 35 };
+      const ok = validators['anatomy:vital_organ'](payload);
+      if (!ok) console.error(validators['anatomy:vital_organ'].errors);
+      expect(ok).toBe(true);
+    });
+
+    test('✓ valid with both health cap properties', () => {
+      const payload = {
+        organType: 'spine',
+        healthCapThreshold: 15,
+        healthCapValue: 40,
+      };
+      const ok = validators['anatomy:vital_organ'](payload);
+      if (!ok) console.error(validators['anatomy:vital_organ'].errors);
+      expect(ok).toBe(true);
+    });
+
+    test('✓ valid with all properties including deathMessage', () => {
+      const payload = {
+        organType: 'heart',
+        deathMessage: 'The heart gives out.',
+        healthCapThreshold: 20,
+        healthCapValue: 30,
+      };
+      const ok = validators['anatomy:vital_organ'](payload);
+      if (!ok) console.error(validators['anatomy:vital_organ'].errors);
+      expect(ok).toBe(true);
+    });
+
+    test('✓ valid with healthCapThreshold at minimum (0)', () => {
+      const payload = { organType: 'heart', healthCapThreshold: 0 };
+      const ok = validators['anatomy:vital_organ'](payload);
+      if (!ok) console.error(validators['anatomy:vital_organ'].errors);
+      expect(ok).toBe(true);
+    });
+
+    test('✓ valid with healthCapThreshold at maximum (100)', () => {
+      const payload = { organType: 'brain', healthCapThreshold: 100 };
+      const ok = validators['anatomy:vital_organ'](payload);
+      if (!ok) console.error(validators['anatomy:vital_organ'].errors);
+      expect(ok).toBe(true);
+    });
+
+    test('✓ valid with healthCapValue at minimum (0)', () => {
+      const payload = { organType: 'spine', healthCapValue: 0 };
+      const ok = validators['anatomy:vital_organ'](payload);
+      if (!ok) console.error(validators['anatomy:vital_organ'].errors);
+      expect(ok).toBe(true);
+    });
+
+    test('✓ valid with healthCapValue at maximum (100)', () => {
+      const payload = { organType: 'heart', healthCapValue: 100 };
+      const ok = validators['anatomy:vital_organ'](payload);
+      if (!ok) console.error(validators['anatomy:vital_organ'].errors);
+      expect(ok).toBe(true);
+    });
+
+    test('✗ invalid - healthCapThreshold must be number', () => {
+      const payload = { organType: 'heart', healthCapThreshold: 'low' };
+      expect(validators['anatomy:vital_organ'](payload)).toBe(false);
+    });
+
+    test('✗ invalid - healthCapValue must be number', () => {
+      const payload = { organType: 'brain', healthCapValue: 'critical' };
+      expect(validators['anatomy:vital_organ'](payload)).toBe(false);
+    });
+
+    test('✗ invalid - healthCapThreshold below minimum', () => {
+      const payload = { organType: 'spine', healthCapThreshold: -5 };
+      expect(validators['anatomy:vital_organ'](payload)).toBe(false);
+    });
+
+    test('✗ invalid - healthCapThreshold above maximum', () => {
+      const payload = { organType: 'heart', healthCapThreshold: 101 };
+      expect(validators['anatomy:vital_organ'](payload)).toBe(false);
+    });
+
+    test('✗ invalid - healthCapValue below minimum', () => {
+      const payload = { organType: 'brain', healthCapValue: -10 };
+      expect(validators['anatomy:vital_organ'](payload)).toBe(false);
+    });
+
+    test('✗ invalid - healthCapValue above maximum', () => {
+      const payload = { organType: 'spine', healthCapValue: 150 };
+      expect(validators['anatomy:vital_organ'](payload)).toBe(false);
+    });
+
+    test('✓ backward compatibility - valid without health cap properties', () => {
+      // This test explicitly documents backward compatibility
+      const payload = { organType: 'heart' };
+      const ok = validators['anatomy:vital_organ'](payload);
+      expect(ok).toBe(true);
+    });
+
+    test('✓ backward compatibility - valid with only deathMessage (no health cap)', () => {
+      const payload = { organType: 'brain', deathMessage: 'Brain death.' };
+      const ok = validators['anatomy:vital_organ'](payload);
       expect(ok).toBe(true);
     });
   });

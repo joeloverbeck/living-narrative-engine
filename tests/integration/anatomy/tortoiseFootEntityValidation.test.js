@@ -58,7 +58,7 @@ describe('Tortoise Foot Entity Validation', () => {
       expect(footEntity.components['anatomy:sockets']).toBeUndefined();
     });
 
-    it('should have exactly 8 components (no sockets, includes items:weight)', () => {
+    it('should have exactly 8 components (no sockets, includes core:weight)', () => {
       const componentKeys = Object.keys(footEntity.components);
       expect(componentKeys.length).toBe(8);
     });
@@ -84,7 +84,7 @@ describe('Tortoise Foot Entity Validation', () => {
         'descriptors:digit_count',
         'descriptors:projection',
         'descriptors:texture',
-        'items:weight',
+        'core:weight',
       ];
       const actualKeys = Object.keys(footEntity.components);
       expect(actualKeys.sort()).toEqual(expectedKeys.sort());

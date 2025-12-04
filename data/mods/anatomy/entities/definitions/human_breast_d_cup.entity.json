@@ -12,20 +12,20 @@
       "maxHealth": 20,
       "state": "healthy"
     },
+    "core:name": {
+      "text": "breast"
+    },
+    "core:weight": {
+      "weight": 0.75
+    },
+    "descriptors:firmness": {
+      "firmness": "soft"
+    },
     "descriptors:size_specific": {
       "size": "D-cup"
     },
     "descriptors:weight_feel": {
       "weight": "meaty"
-    },
-    "descriptors:firmness": {
-      "firmness": "soft"
-    },
-    "core:name": {
-      "text": "breast"
-    },
-    "items:weight": {
-      "weight": 0.75
     }
   }
 }

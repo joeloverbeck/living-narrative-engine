@@ -15,14 +15,14 @@
     "core:name": {
       "text": "chicken spur"
     },
-    "descriptors:size_category": {
-      "size": "small"
+    "core:weight": {
+      "weight": 0.005
     },
     "descriptors:shape_general": {
       "shape": "conical"
     },
-    "items:weight": {
-      "weight": 0.005
+    "descriptors:size_category": {
+      "size": "small"
     }
   }
 }

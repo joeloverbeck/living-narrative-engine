@@ -15,20 +15,20 @@
     "core:name": {
       "text": "sensory stalk"
     },
-    "descriptors:length_category": {
-      "length": "average"
+    "core:weight": {
+      "weight": 0.5
     },
     "descriptors:flexibility": {
       "flexibility": "retractable"
+    },
+    "descriptors:length_category": {
+      "length": "average"
     },
     "descriptors:texture": {
       "texture": "smooth-segmented"
     },
     "descriptors:visual_capability": {
       "capability": "360-degree-vision"
-    },
-    "items:weight": {
-      "weight": 0.5
     }
   }
 }

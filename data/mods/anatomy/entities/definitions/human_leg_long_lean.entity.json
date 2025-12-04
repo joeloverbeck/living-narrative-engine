@@ -23,21 +23,21 @@
         }
       ]
     },
-    "descriptors:length_category": {
-      "length": "long"
-    },
-    "descriptors:body_composition": {
-      "composition": "lean"
-    },
-    "core:name": {
-      "text": "leg"
-    },
     "core:movement": {
       "locked": false,
       "forcedOverride": false
     },
-    "items:weight": {
-      "weight": 11.0
+    "core:name": {
+      "text": "leg"
+    },
+    "core:weight": {
+      "weight": 11
+    },
+    "descriptors:body_composition": {
+      "composition": "lean"
+    },
+    "descriptors:length_category": {
+      "length": "long"
     }
   }
 }

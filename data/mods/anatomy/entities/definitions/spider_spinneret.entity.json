@@ -15,14 +15,14 @@
     "core:name": {
       "text": "spinneret"
     },
-    "descriptors:texture": {
-      "texture": "chitinous"
+    "core:weight": {
+      "weight": 0.005
     },
     "descriptors:body_hair": {
       "hairDensity": "hairy"
     },
-    "items:weight": {
-      "weight": 0.005
+    "descriptors:texture": {
+      "texture": "chitinous"
     }
   }
 }

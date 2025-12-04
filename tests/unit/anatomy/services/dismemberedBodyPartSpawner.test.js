@@ -301,7 +301,7 @@ describe('DismemberedBodyPartSpawner', () => {
           'anatomy:human_leg',
           expect.objectContaining({
             componentOverrides: expect.objectContaining({
-              'items:weight': { weight: 8.5 },
+              'core:weight': { weight: 8.5 },
             }),
           })
         );
@@ -481,7 +481,7 @@ describe('DismemberedBodyPartSpawner', () => {
           expect.any(String),
           expect.objectContaining({
             componentOverrides: expect.objectContaining({
-              'items:weight': { weight: 1.0 },
+              'core:weight': { weight: 1.0 },
             }),
           })
         );

@@ -526,7 +526,7 @@ describe('InjuryAggregationService', () => {
         expect(result.overallHealthPercentage).toBe(100);
       });
 
-      it('should apply correct weights (torso=3, head=2, limbs=1)', () => {
+      it('should apply data-driven weights from health_calculation_weight', () => {
         // Torso: 50% health, weight 3, weighted = 150
         // Head: 100% health, weight 2, weighted = 200
         // Arm: 0% health, weight 1, weighted = 0
@@ -547,11 +547,23 @@ describe('InjuryAggregationService', () => {
             }
             if (componentId === 'anatomy:part') {
               if (id === 'part:torso')
-                return { subType: 'torso', orientation: null };
+                return {
+                  subType: 'torso',
+                  orientation: null,
+                  health_calculation_weight: 3,
+                };
               if (id === 'part:head')
-                return { subType: 'head', orientation: null };
+                return {
+                  subType: 'head',
+                  orientation: null,
+                  health_calculation_weight: 2,
+                };
               if (id === 'part:arm')
-                return { subType: 'arm', orientation: 'left' };
+                return {
+                  subType: 'arm',
+                  orientation: 'left',
+                  health_calculation_weight: 1,
+                };
             }
             return null;
           }
@@ -566,7 +578,7 @@ describe('InjuryAggregationService', () => {
         expect(result.overallHealthPercentage).toBe(58);
       });
 
-      it('should apply 0.5 weight to internal organs', () => {
+      it('should apply fractional weight from component data', () => {
         // Heart: 100% health, weight 0.5, weighted = 50
         // Total: 50, weights = 0.5
         // Average: 50 / 0.5 = 100
@@ -578,7 +590,11 @@ describe('InjuryAggregationService', () => {
               return { currentHealth: 100, maxHealth: 100, state: 'healthy' };
             }
             if (id === 'part:heart' && componentId === 'anatomy:part') {
-              return { subType: 'heart', orientation: null };
+              return {
+                subType: 'heart',
+                orientation: null,
+                health_calculation_weight: 0.5,
+              };
             }
             return null;
           }
@@ -620,7 +636,8 @@ describe('InjuryAggregationService', () => {
         expect(result.overallHealthPercentage).toBe(0);
       });
 
-      it('should use default weight of 1 for unknown part types', () => {
+      it('should use default weight of 1 when health_calculation_weight is missing', () => {
+        // Part without health_calculation_weight should default to 1
         const partIds = ['part:unknown'];
         mockEntityManager.getComponentData.mockImplementation(
           (id, componentId) => {
@@ -632,6 +649,7 @@ describe('InjuryAggregationService', () => {
               return { currentHealth: 50, maxHealth: 100, state: 'wounded' };
             }
             if (id === 'part:unknown' && componentId === 'anatomy:part') {
+              // No health_calculation_weight provided - should default to 1
               return { subType: 'unknown_type', orientation: null };
             }
             return null;
@@ -645,6 +663,343 @@ describe('InjuryAggregationService', () => {
         const result = service.aggregateInjuries(entityId);
 
         expect(result.overallHealthPercentage).toBe(50);
+      });
+
+      it('should skip parts with health_calculation_weight of 0 in weighted average', () => {
+        // Part with weight 0 should not contribute to average
+        // Torso: 50% health, weight 0 (should be ignored)
+        // Arm: 100% health, weight 1
+        // Only arm contributes: 100 / 1 = 100
+        const partIds = ['part:torso', 'part:arm'];
+        mockEntityManager.getComponentData.mockImplementation(
+          (id, componentId) => {
+            if (componentId === 'anatomy:body') return { partIds };
+            if (id === 'part:torso' && componentId === 'anatomy:part_health') {
+              return { currentHealth: 50, maxHealth: 100, state: 'wounded' };
+            }
+            if (id === 'part:arm' && componentId === 'anatomy:part_health') {
+              return { currentHealth: 100, maxHealth: 100, state: 'healthy' };
+            }
+            if (componentId === 'anatomy:part') {
+              if (id === 'part:torso')
+                return {
+                  subType: 'torso',
+                  orientation: null,
+                  health_calculation_weight: 0,
+                };
+              if (id === 'part:arm')
+                return {
+                  subType: 'arm',
+                  orientation: 'left',
+                  health_calculation_weight: 1,
+                };
+            }
+            return null;
+          }
+        );
+        mockEntityManager.hasComponent.mockImplementation(
+          (id, componentId) => componentId === 'anatomy:part_health'
+        );
+        mockBodyGraphService.getAllParts.mockReturnValue(partIds);
+
+        const result = service.aggregateInjuries(entityId);
+
+        expect(result.overallHealthPercentage).toBe(100);
+      });
+
+      it('should use default weight of 1 for negative health_calculation_weight', () => {
+        // Part with negative weight should default to 1
+        const partIds = ['part:arm'];
+        mockEntityManager.getComponentData.mockImplementation(
+          (id, componentId) => {
+            if (componentId === 'anatomy:body') return { partIds };
+            if (id === 'part:arm' && componentId === 'anatomy:part_health') {
+              return { currentHealth: 50, maxHealth: 100, state: 'wounded' };
+            }
+            if (id === 'part:arm' && componentId === 'anatomy:part') {
+              return {
+                subType: 'arm',
+                orientation: 'left',
+                health_calculation_weight: -5, // Invalid negative weight
+              };
+            }
+            return null;
+          }
+        );
+        mockEntityManager.hasComponent.mockImplementation(
+          (id, componentId) => componentId === 'anatomy:part_health'
+        );
+        mockBodyGraphService.getAllParts.mockReturnValue(partIds);
+
+        const result = service.aggregateInjuries(entityId);
+
+        // Should default to weight 1, so result is 50%
+        expect(result.overallHealthPercentage).toBe(50);
+      });
+
+      it('should return 100% when all parts have weight 0', () => {
+        // Edge case: all parts have zero weight (totalWeight = 0)
+        const partIds = ['part:torso', 'part:arm'];
+        mockEntityManager.getComponentData.mockImplementation(
+          (id, componentId) => {
+            if (componentId === 'anatomy:body') return { partIds };
+            if (componentId === 'anatomy:part_health') {
+              return { currentHealth: 50, maxHealth: 100, state: 'wounded' };
+            }
+            if (componentId === 'anatomy:part') {
+              return {
+                subType: 'arm',
+                orientation: null,
+                health_calculation_weight: 0, // All parts have weight 0
+              };
+            }
+            return null;
+          }
+        );
+        mockEntityManager.hasComponent.mockImplementation(
+          (id, componentId) => componentId === 'anatomy:part_health'
+        );
+        mockBodyGraphService.getAllParts.mockReturnValue(partIds);
+
+        const result = service.aggregateInjuries(entityId);
+
+        // When totalWeight is 0, should return 100% as fallback
+        expect(result.overallHealthPercentage).toBe(100);
+      });
+    });
+
+    describe('vital organ health caps', () => {
+      it('should apply vital organ cap when health falls below threshold', () => {
+        // Brain at 15% health (below 20% threshold) should cap overall health at 30%
+        // Arm at 100% health, weight 1
+        // Without cap: (15*2 + 100*1) / 3 = 43.33 = 43
+        // With cap: min(43, 30) = 30
+        const partIds = ['part:brain', 'part:arm'];
+        mockEntityManager.getComponentData.mockImplementation(
+          (id, componentId) => {
+            if (componentId === 'anatomy:body') return { partIds };
+            if (id === 'part:brain' && componentId === 'anatomy:part_health') {
+              return { currentHealth: 15, maxHealth: 100, state: 'critical' };
+            }
+            if (id === 'part:arm' && componentId === 'anatomy:part_health') {
+              return { currentHealth: 100, maxHealth: 100, state: 'healthy' };
+            }
+            if (componentId === 'anatomy:part') {
+              if (id === 'part:brain')
+                return {
+                  subType: 'brain',
+                  orientation: null,
+                  health_calculation_weight: 2,
+                };
+              if (id === 'part:arm')
+                return {
+                  subType: 'arm',
+                  orientation: 'left',
+                  health_calculation_weight: 1,
+                };
+            }
+            if (componentId === 'anatomy:vital_organ' && id === 'part:brain') {
+              return {
+                organType: 'brain',
+                healthCapThreshold: 20,
+                healthCapValue: 30,
+              };
+            }
+            return null;
+          }
+        );
+        mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
+          if (componentId === 'anatomy:part_health') return true;
+          if (componentId === 'anatomy:vital_organ' && id === 'part:brain')
+            return true;
+          return false;
+        });
+        mockBodyGraphService.getAllParts.mockReturnValue(partIds);
+
+        const result = service.aggregateInjuries(entityId);
+
+        expect(result.overallHealthPercentage).toBe(30);
+      });
+
+      it('should not apply vital organ cap when health is above threshold', () => {
+        // Brain at 50% health (above 20% threshold) should NOT cap
+        // Arm at 100% health, weight 1
+        // Result: (50*2 + 100*1) / 3 = 66.67 = 67
+        const partIds = ['part:brain', 'part:arm'];
+        mockEntityManager.getComponentData.mockImplementation(
+          (id, componentId) => {
+            if (componentId === 'anatomy:body') return { partIds };
+            if (id === 'part:brain' && componentId === 'anatomy:part_health') {
+              return { currentHealth: 50, maxHealth: 100, state: 'wounded' };
+            }
+            if (id === 'part:arm' && componentId === 'anatomy:part_health') {
+              return { currentHealth: 100, maxHealth: 100, state: 'healthy' };
+            }
+            if (componentId === 'anatomy:part') {
+              if (id === 'part:brain')
+                return {
+                  subType: 'brain',
+                  orientation: null,
+                  health_calculation_weight: 2,
+                };
+              if (id === 'part:arm')
+                return {
+                  subType: 'arm',
+                  orientation: 'left',
+                  health_calculation_weight: 1,
+                };
+            }
+            if (componentId === 'anatomy:vital_organ' && id === 'part:brain') {
+              return {
+                organType: 'brain',
+                healthCapThreshold: 20,
+                healthCapValue: 30,
+              };
+            }
+            return null;
+          }
+        );
+        mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
+          if (componentId === 'anatomy:part_health') return true;
+          if (componentId === 'anatomy:vital_organ' && id === 'part:brain')
+            return true;
+          return false;
+        });
+        mockBodyGraphService.getAllParts.mockReturnValue(partIds);
+
+        const result = service.aggregateInjuries(entityId);
+
+        expect(result.overallHealthPercentage).toBe(67);
+      });
+
+      it('should use default cap values when not specified in component', () => {
+        // Heart at 10% health (below default 20% threshold)
+        // Default cap is 30
+        const partIds = ['part:heart'];
+        mockEntityManager.getComponentData.mockImplementation(
+          (id, componentId) => {
+            if (componentId === 'anatomy:body') return { partIds };
+            if (id === 'part:heart' && componentId === 'anatomy:part_health') {
+              return { currentHealth: 10, maxHealth: 100, state: 'critical' };
+            }
+            if (componentId === 'anatomy:part') {
+              if (id === 'part:heart')
+                return {
+                  subType: 'heart',
+                  orientation: null,
+                  health_calculation_weight: 1,
+                };
+            }
+            if (componentId === 'anatomy:vital_organ' && id === 'part:heart') {
+              // Only organType provided, defaults should be used
+              return { organType: 'heart' };
+            }
+            return null;
+          }
+        );
+        mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
+          if (componentId === 'anatomy:part_health') return true;
+          if (componentId === 'anatomy:vital_organ' && id === 'part:heart')
+            return true;
+          return false;
+        });
+        mockBodyGraphService.getAllParts.mockReturnValue(partIds);
+
+        const result = service.aggregateInjuries(entityId);
+
+        // Without cap: 10, With default cap (threshold 20, cap 30): min(10, 30) = 10
+        // Since calculated health (10) < cap (30), result is 10
+        expect(result.overallHealthPercentage).toBe(10);
+      });
+
+      it('should handle parts without vital_organ component', () => {
+        // Regular arm at 50% health - no vital organ cap should apply
+        const partIds = ['part:arm'];
+        mockEntityManager.getComponentData.mockImplementation(
+          (id, componentId) => {
+            if (componentId === 'anatomy:body') return { partIds };
+            if (id === 'part:arm' && componentId === 'anatomy:part_health') {
+              return { currentHealth: 50, maxHealth: 100, state: 'wounded' };
+            }
+            if (componentId === 'anatomy:part') {
+              if (id === 'part:arm')
+                return {
+                  subType: 'arm',
+                  orientation: 'left',
+                  health_calculation_weight: 1,
+                };
+            }
+            return null;
+          }
+        );
+        mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
+          if (componentId === 'anatomy:part_health') return true;
+          return false;
+        });
+        mockBodyGraphService.getAllParts.mockReturnValue(partIds);
+
+        const result = service.aggregateInjuries(entityId);
+
+        expect(result.overallHealthPercentage).toBe(50);
+      });
+
+      it('should apply most restrictive cap when multiple vital organs are critical', () => {
+        // Brain at 15% (cap 30), Heart at 10% (cap 25)
+        // Both below their thresholds, most restrictive cap (25) should apply
+        const partIds = ['part:brain', 'part:heart'];
+        mockEntityManager.getComponentData.mockImplementation(
+          (id, componentId) => {
+            if (componentId === 'anatomy:body') return { partIds };
+            if (id === 'part:brain' && componentId === 'anatomy:part_health') {
+              return { currentHealth: 15, maxHealth: 100, state: 'critical' };
+            }
+            if (id === 'part:heart' && componentId === 'anatomy:part_health') {
+              return { currentHealth: 10, maxHealth: 100, state: 'critical' };
+            }
+            if (componentId === 'anatomy:part') {
+              if (id === 'part:brain')
+                return {
+                  subType: 'brain',
+                  orientation: null,
+                  health_calculation_weight: 2,
+                };
+              if (id === 'part:heart')
+                return {
+                  subType: 'heart',
+                  orientation: null,
+                  health_calculation_weight: 2,
+                };
+            }
+            if (componentId === 'anatomy:vital_organ') {
+              if (id === 'part:brain')
+                return {
+                  organType: 'brain',
+                  healthCapThreshold: 20,
+                  healthCapValue: 30,
+                };
+              if (id === 'part:heart')
+                return {
+                  organType: 'heart',
+                  healthCapThreshold: 20,
+                  healthCapValue: 25,
+                };
+            }
+            return null;
+          }
+        );
+        mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
+          if (componentId === 'anatomy:part_health') return true;
+          if (componentId === 'anatomy:vital_organ') return true;
+          return false;
+        });
+        mockBodyGraphService.getAllParts.mockReturnValue(partIds);
+
+        const result = service.aggregateInjuries(entityId);
+
+        // Weighted average: (15*2 + 10*2) / 4 = 12.5 = 13
+        // Both organs critical, caps: min(30, 25) = 25
+        // Final: min(13, 25) = 13 (calculated already below cap)
+        expect(result.overallHealthPercentage).toBe(13);
       });
     });
 
@@ -842,6 +1197,42 @@ describe('InjuryAggregationService', () => {
         expect(result.injuredParts[0].bleedingSeverity).toBeNull();
       });
 
+      it('should handle getComponentData throwing for vital_organ data', () => {
+        const partId = 'part:error_vital';
+        mockEntityManager.getComponentData.mockImplementation(
+          (id, componentId) => {
+            if (componentId === 'anatomy:body') return { partIds: [partId] };
+            if (id === partId && componentId === 'anatomy:part_health') {
+              return { currentHealth: 50, maxHealth: 100, state: 'wounded' };
+            }
+            if (id === partId && componentId === 'anatomy:part') {
+              return {
+                subType: 'heart',
+                orientation: null,
+                health_calculation_weight: 1,
+              };
+            }
+            if (id === partId && componentId === 'anatomy:vital_organ') {
+              throw new Error('Vital organ data error');
+            }
+            return null;
+          }
+        );
+        mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
+          if (componentId === 'anatomy:part_health') return true;
+          if (id === partId && componentId === 'anatomy:vital_organ') return true;
+          return false;
+        });
+        mockBodyGraphService.getAllParts.mockReturnValue([partId]);
+
+        const result = service.aggregateInjuries(entityId);
+
+        // Vital organ cap should be null due to error handling
+        expect(result.injuredParts[0].vitalOrganCap).toBeNull();
+        // Health should calculate normally without cap
+        expect(result.overallHealthPercentage).toBe(50);
+      });
+
       it('should handle totalWeight of 0 in health calculation', () => {
         // This edge case happens when parts have null/undefined subType
         // and the weight lookup fails
@@ -946,7 +1337,7 @@ describe('InjuryAggregationService', () => {
 
     describe('logging', () => {
       it('should log debug messages during aggregation', () => {
-        const result = service.aggregateInjuries(entityId);
+        service.aggregateInjuries(entityId);
 
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining('Aggregating injuries for entity')

@@ -15,8 +15,11 @@
     "core:name": {
       "text": "tail"
     },
-    "descriptors:texture": {
-      "texture": "scaled"
+    "core:weight": {
+      "weight": 0.2
+    },
+    "descriptors:color_extended": {
+      "color": "dark-olive"
     },
     "descriptors:length_category": {
       "length": "short"
@@ -24,11 +27,8 @@
     "descriptors:shape_general": {
       "shape": "conical"
     },
-    "descriptors:color_extended": {
-      "color": "dark-olive"
-    },
-    "items:weight": {
-      "weight": 0.2
+    "descriptors:texture": {
+      "texture": "scaled"
     }
   }
 }

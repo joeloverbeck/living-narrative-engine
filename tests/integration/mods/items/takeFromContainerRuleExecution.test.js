@@ -63,7 +63,7 @@ function setupTakeFromContainerScenario(
       .withName(itemId)
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 0.5 })
+      .withComponent('core:weight', { weight: 0.5 })
       .build()
   );
 
@@ -474,14 +474,14 @@ describe('items:take_from_container action integration', () => {
         .withName('Apple')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.5 })
+        .withComponent('core:weight', { weight: 0.5 })
         .build();
 
       const bread = new ModEntityBuilder('bread-1')
         .withName('Bread')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.5 })
+        .withComponent('core:weight', { weight: 0.5 })
         .build();
 
       testFixture.reset([room, actor1, actor2, sharedContainer, apple, bread]);

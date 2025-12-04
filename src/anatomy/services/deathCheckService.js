@@ -56,6 +56,9 @@ class DeathCheckService extends BaseService {
   /** @type {import('./injuryAggregationService.js').default} */
   #injuryAggregationService;
 
+  /** @type {import('../bodyGraphService.js').default} */
+  #bodyGraphService;
+
   /**
    * Creates a new DeathCheckService instance.
    *
@@ -64,8 +67,15 @@ class DeathCheckService extends BaseService {
    * @param {import('../../entities/entityManager.js').default} dependencies.entityManager - Entity manager for component access
    * @param {import('../../events/safeEventDispatcher.js').default} dependencies.eventBus - Event bus for dispatching death events
    * @param {import('./injuryAggregationService.js').default} dependencies.injuryAggregationService - Service for aggregating injury data
+   * @param {import('../bodyGraphService.js').default} dependencies.bodyGraphService - Service for traversing body part hierarchy
    */
-  constructor({ logger, entityManager, eventBus, injuryAggregationService }) {
+  constructor({
+    logger,
+    entityManager,
+    eventBus,
+    injuryAggregationService,
+    bodyGraphService,
+  }) {
     super();
     this.#logger = this._init('DeathCheckService', logger, {
       entityManager: {
@@ -80,10 +90,15 @@ class DeathCheckService extends BaseService {
         value: injuryAggregationService,
         requiredMethods: ['aggregateInjuries'],
       },
+      bodyGraphService: {
+        value: bodyGraphService,
+        requiredMethods: ['getAllDescendants'],
+      },
     });
     this.#entityManager = entityManager;
     this.#eventBus = eventBus;
     this.#injuryAggregationService = injuryAggregationService;
+    this.#bodyGraphService = bodyGraphService;
   }
 
   /**
@@ -214,7 +229,9 @@ class DeathCheckService extends BaseService {
   }
 
   /**
-   * Checks if any vital organs are destroyed.
+   * Checks if any vital organs are destroyed, including organs nested inside destroyed parts.
+   * When a body part is destroyed/dismembered, all its descendants (children, grandchildren, etc.)
+   * are effectively destroyed as well.
    *
    * @param {string} entityId - Entity to check
    * @returns {VitalOrganDestructionInfo|null} Info about destroyed vital organ, or null if none
@@ -231,24 +248,24 @@ class DeathCheckService extends BaseService {
 
       // Check each destroyed part for vital organ component
       for (const partInfo of summary.destroyedParts) {
-        if (
-          this.#entityManager.hasComponent(
-            partInfo.partEntityId,
-            VITAL_ORGAN_COMPONENT_ID
-          )
-        ) {
-          const vitalOrganData = this.#entityManager.getComponentData(
-            partInfo.partEntityId,
-            VITAL_ORGAN_COMPONENT_ID
-          );
-          if (
-            vitalOrganData &&
-            IMMEDIATE_DEATH_ORGANS.includes(vitalOrganData.organType)
-          ) {
-            return {
-              organType: vitalOrganData.organType,
-              partEntityId: partInfo.partEntityId,
-            };
+        // Check the destroyed part itself
+        const directResult = this.#checkPartForVitalOrgan(partInfo.partEntityId);
+        if (directResult) {
+          return directResult;
+        }
+
+        // Check all descendants of the destroyed part (e.g., brain inside dismembered head)
+        const descendants = this.#bodyGraphService.getAllDescendants(
+          partInfo.partEntityId
+        );
+        for (const descendantId of descendants) {
+          const descendantResult = this.#checkPartForVitalOrgan(descendantId);
+          if (descendantResult) {
+            this.#logger.debug(
+              `Found vital organ '${descendantResult.organType}' in descendant '${descendantId}' ` +
+                `of destroyed part '${partInfo.partEntityId}'`
+            );
+            return descendantResult;
           }
         }
       }
@@ -260,6 +277,33 @@ class DeathCheckService extends BaseService {
       );
       return null;
     }
+  }
+
+  /**
+   * Checks if a specific body part entity has a vital organ component that causes immediate death.
+   *
+   * @param {string} partEntityId - The body part entity ID to check
+   * @returns {VitalOrganDestructionInfo|null} Info about vital organ, or null if not a vital organ
+   * @private
+   */
+  #checkPartForVitalOrgan(partEntityId) {
+    if (!this.#entityManager.hasComponent(partEntityId, VITAL_ORGAN_COMPONENT_ID)) {
+      return null;
+    }
+
+    const vitalOrganData = this.#entityManager.getComponentData(
+      partEntityId,
+      VITAL_ORGAN_COMPONENT_ID
+    );
+
+    if (vitalOrganData && IMMEDIATE_DEATH_ORGANS.includes(vitalOrganData.organType)) {
+      return {
+        organType: vitalOrganData.organType,
+        partEntityId,
+      };
+    }
+
+    return null;
   }
 
   /**

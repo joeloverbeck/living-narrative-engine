@@ -44,6 +44,10 @@ const handlerModuleDefinitions = [
   ['GetTimestampHandler', `${handlerBasePath}/getTimestampHandler.js`],
   ['GetNameHandler', `${handlerBasePath}/getNameHandler.js`],
   [
+    'GetDamageCapabilitiesHandler',
+    `${handlerBasePath}/getDamageCapabilitiesHandler.js`,
+  ],
+  [
     'RebuildLeaderListCacheHandler',
     `${handlerBasePath}/rebuildLeaderListCacheHandler.js`,
   ],
@@ -462,6 +466,19 @@ beforeAll(async () => {
         { property: 'entityManager', token: IEntityManager },
         { property: 'logger', token: ILogger },
         { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.GetDamageCapabilitiesHandler,
+      handlerName: 'GetDamageCapabilitiesHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+        {
+          property: 'jsonLogicService',
+          token: JsonLogicEvaluationServiceToken,
+        },
       ],
     },
     {

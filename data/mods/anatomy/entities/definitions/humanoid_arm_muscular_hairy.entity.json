@@ -23,17 +23,17 @@
         }
       ]
     },
-    "descriptors:build": {
-      "build": "muscular"
+    "core:name": {
+      "text": "muscular, hairy arm"
+    },
+    "core:weight": {
+      "weight": 4
     },
     "descriptors:body_hair": {
       "hairDensity": "hairy"
     },
-    "core:name": {
-      "text": "muscular, hairy arm"
-    },
-    "items:weight": {
-      "weight": 4
+    "descriptors:build": {
+      "build": "muscular"
     }
   }
 }

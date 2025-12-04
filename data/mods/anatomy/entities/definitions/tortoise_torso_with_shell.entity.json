@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "tortoise_torso",
-      "hit_probability_weight": 6
+      "hit_probability_weight": 6,
+      "health_calculation_weight": 10
     },
     "anatomy:part_health": {
       "currentHealth": 80,
@@ -40,14 +41,14 @@
     "core:name": {
       "text": "tortoise torso"
     },
-    "descriptors:texture": {
-      "texture": "leathery"
+    "core:weight": {
+      "weight": 15
     },
     "descriptors:color_extended": {
       "color": "dark-olive"
     },
-    "items:weight": {
-      "weight": 15
+    "descriptors:texture": {
+      "texture": "leathery"
     }
   }
 }

@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "brain",
-      "hit_probability_weight": 0
+      "hit_probability_weight": 0,
+      "health_calculation_weight": 15
     },
     "anatomy:part_health": {
       "currentHealth": 40,
@@ -13,12 +14,14 @@
       "state": "healthy"
     },
     "anatomy:vital_organ": {
-      "organType": "brain"
+      "organType": "brain",
+      "healthCapThreshold": 20,
+      "healthCapValue": 30
     },
     "core:name": {
       "text": "brain"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 1.4
     }
   }

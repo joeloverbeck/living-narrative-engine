@@ -23,18 +23,18 @@
         }
       ]
     },
-    "descriptors:build": {
-      "build": "slim"
-    },
-    "core:name": {
-      "text": "leg"
-    },
     "core:movement": {
       "locked": false,
       "forcedOverride": false
     },
-    "items:weight": {
-      "weight": 10.0
+    "core:name": {
+      "text": "leg"
+    },
+    "core:weight": {
+      "weight": 10
+    },
+    "descriptors:build": {
+      "build": "slim"
     }
   }
 }

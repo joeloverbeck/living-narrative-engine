@@ -87,7 +87,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .withName('Letter')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 0.05 })
+      .withComponent('core:weight', { weight: 0.05 })
       .build();
 
     testFixture.reset([room, actor, item, handEntity]);
@@ -138,7 +138,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .withName('Letter')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 0.05 })
+      .withComponent('core:weight', { weight: 0.05 })
       .build();
 
     testFixture.reset([room, actor, item, handEntity]);
@@ -210,7 +210,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .withName('Letter')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 0.05 })
+      .withComponent('core:weight', { weight: 0.05 })
       .build();
 
     testFixture.reset([room, actor, item, handEntity]);
@@ -227,7 +227,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
     expect(droppedItem.components['core:position'].locationId).toBe('saloon1');
     expect(droppedItem.components['items:item']).toBeDefined();
     expect(droppedItem.components['items:portable']).toBeDefined();
-    expect(droppedItem.components['items:weight']).toBeDefined();
+    expect(droppedItem.components['core:weight']).toBeDefined();
 
     // Action discovery succeeds because cache was automatically invalidated
     const actions = await testFixture.discoverActions('test:actor1');
@@ -266,7 +266,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .withName('Letter')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 0.05 })
+      .withComponent('core:weight', { weight: 0.05 })
       .build();
 
     testFixture.reset([room, actor, item, handEntity]);
@@ -319,13 +319,13 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .withName('Letter')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 0.05 })
+      .withComponent('core:weight', { weight: 0.05 })
       .build();
     const gun = new ModEntityBuilder('gun-1')
       .withName('Gun')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 1.2 })
+      .withComponent('core:weight', { weight: 1.2 })
       .build();
 
     testFixture.reset([room, actor, letter, gun, handEntity]);

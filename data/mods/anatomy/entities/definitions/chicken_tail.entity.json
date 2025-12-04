@@ -15,11 +15,11 @@
     "core:name": {
       "text": "chicken tail"
     },
+    "core:weight": {
+      "weight": 0.05
+    },
     "descriptors:texture": {
       "texture": "feathered"
-    },
-    "items:weight": {
-      "weight": 0.05
     }
   }
 }

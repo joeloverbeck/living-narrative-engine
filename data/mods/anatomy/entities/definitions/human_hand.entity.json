@@ -20,7 +20,7 @@
     "core:name": {
       "text": "hand"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 0.45
     }
   }

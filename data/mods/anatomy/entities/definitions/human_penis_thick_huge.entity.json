@@ -19,6 +19,12 @@
         "accessories"
       ]
     },
+    "core:name": {
+      "text": "thick, huge penis"
+    },
+    "core:weight": {
+      "weight": 0.2
+    },
     "descriptors:build": {
       "build": "thick"
     },
@@ -27,12 +33,6 @@
     },
     "descriptors:weight_feel": {
       "weight": "meaty"
-    },
-    "core:name": {
-      "text": "thick, huge penis"
-    },
-    "items:weight": {
-      "weight": 0.2
     }
   }
 }

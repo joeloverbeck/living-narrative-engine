@@ -71,7 +71,7 @@ function buildItemEntity(definition, locationId) {
     .withName(definition.name)
     .withComponent('items:item', definition.itemData)
     .withComponent('items:portable', definition.portableData)
-    .withComponent('items:weight', {
+    .withComponent('core:weight', {
       weight:
         definition.weightData && typeof definition.weightData.weight === 'number'
           ? definition.weightData.weight
@@ -1677,7 +1677,7 @@ export class ModEntityScenarios {
       containerOptions.weightData &&
       typeof containerOptions.weightData.weight === 'number';
     if (hasWeightOverride || typeof weightValue === 'number') {
-      containerBuilder.withComponent('items:weight', {
+      containerBuilder.withComponent('core:weight', {
         weight: hasWeightOverride
           ? containerOptions.weightData.weight
           : weightValue ?? 5,

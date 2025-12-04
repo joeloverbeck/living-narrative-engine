@@ -16,12 +16,12 @@ describe('Items - Data Components', () => {
     testBed.cleanup();
   });
 
-  describe('items:weight', () => {
+  describe('core:weight', () => {
     it('should validate valid weight data', () => {
       const data = {
         weight: 0.5,
       };
-      const result = testBed.validateAgainstSchema(data, 'items:weight');
+      const result = testBed.validateAgainstSchema(data, 'core:weight');
       expect(result.isValid).toBe(true);
     });
 
@@ -29,13 +29,13 @@ describe('Items - Data Components', () => {
       const data = {
         weight: -1,
       };
-      const result = testBed.validateAgainstSchema(data, 'items:weight');
+      const result = testBed.validateAgainstSchema(data, 'core:weight');
       expect(result.isValid).toBe(false);
     });
 
     it('should require weight property', () => {
       const data = {};
-      const result = testBed.validateAgainstSchema(data, 'items:weight');
+      const result = testBed.validateAgainstSchema(data, 'core:weight');
       expect(result.isValid).toBe(false);
     });
 
@@ -43,7 +43,7 @@ describe('Items - Data Components', () => {
       const data = {
         weight: 0,
       };
-      const result = testBed.validateAgainstSchema(data, 'items:weight');
+      const result = testBed.validateAgainstSchema(data, 'core:weight');
       expect(result.isValid).toBe(true);
     });
 
@@ -52,7 +52,7 @@ describe('Items - Data Components', () => {
         weight: 1.5,
         extraProperty: 'not allowed',
       };
-      const result = testBed.validateAgainstSchema(data, 'items:weight');
+      const result = testBed.validateAgainstSchema(data, 'core:weight');
       expect(result.isValid).toBe(false);
     });
   });

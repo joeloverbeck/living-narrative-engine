@@ -46,7 +46,7 @@ function setupPickUpItemScenario(
       .atLocation(locationId)
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: item.weight })
+      .withComponent('core:weight', { weight: item.weight })
       .build()
   );
 
@@ -275,7 +275,7 @@ describe('items:pick_up_item action integration', () => {
         .withName('letter-1')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.05 })
+        .withComponent('core:weight', { weight: 0.05 })
         .build();
 
       testFixture.reset([scenario.room, scenario.actor, letterItem]);
@@ -291,7 +291,7 @@ describe('items:pick_up_item action integration', () => {
         .atLocation('cabin')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.05 })
+        .withComponent('core:weight', { weight: 0.05 })
         .build();
 
       const actorAfterDrop = new ModEntityBuilder('test:actor1')
@@ -335,7 +335,7 @@ describe('items:pick_up_item action integration', () => {
         .atLocation('saloon1') // This adds core:position component
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.05 })
+        .withComponent('core:weight', { weight: 0.05 })
         .build();
 
       testFixture.reset([room, actor, item]);
@@ -364,7 +364,7 @@ describe('items:pick_up_item action integration', () => {
         .atLocation('saloon1')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 12.0 }) // Too heavy
+        .withComponent('core:weight', { weight: 12.0 }) // Too heavy
         .build();
 
       testFixture.reset([room, actor, heavyItem]);
@@ -400,7 +400,7 @@ describe('items:pick_up_item action integration', () => {
         .atLocation('tavern')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.1 })
+        .withComponent('core:weight', { weight: 0.1 })
         .build();
 
       testFixture.reset([room, actor, newItem]);

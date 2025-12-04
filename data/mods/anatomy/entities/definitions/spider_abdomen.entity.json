@@ -15,11 +15,11 @@
     "core:name": {
       "text": "spider abdomen"
     },
+    "core:weight": {
+      "weight": 0.02
+    },
     "descriptors:texture": {
       "texture": "ridged"
-    },
-    "items:weight": {
-      "weight": 0.02
     }
   }
 }

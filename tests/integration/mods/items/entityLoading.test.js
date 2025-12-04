@@ -28,10 +28,10 @@ describe('Items - Entity Loading', () => {
     expect(entityDef.components['core:description']).toBeDefined();
     expect(entityDef.components['items:item']).toBeDefined();
     expect(entityDef.components['items:portable']).toBeDefined();
-    expect(entityDef.components['items:weight']).toBeDefined();
+    expect(entityDef.components['core:weight']).toBeDefined();
 
     // Verify component data
-    const weight = entityDef.components['items:weight'];
+    const weight = entityDef.components['core:weight'];
     expect(weight.weight).toBe(0.05);
   });
 
@@ -43,7 +43,7 @@ describe('Items - Entity Loading', () => {
     const entityDef = JSON.parse(fs.readFileSync(entityPath, 'utf8'));
 
     expect(entityDef.id).toBe('items:revolver');
-    const weight = entityDef.components['items:weight'];
+    const weight = entityDef.components['core:weight'];
     expect(weight.weight).toBe(1.2);
   });
 
@@ -55,7 +55,7 @@ describe('Items - Entity Loading', () => {
     const entityDef = JSON.parse(fs.readFileSync(entityPath, 'utf8'));
 
     expect(entityDef.id).toBe('items:gold_bar');
-    const weight = entityDef.components['items:weight'];
+    const weight = entityDef.components['core:weight'];
     expect(weight.weight).toBe(12.4);
     expect(weight.weight).toBeGreaterThan(10); // Heavy item threshold
   });

@@ -102,6 +102,30 @@ describe('InjuryStatusPanel', () => {
     };
   });
 
+  /**
+   * Helper to get the dynamically created narrative element from contentElement
+   */
+  const getNarrativeElement = () =>
+    contentElement.querySelector('#injury-narrative');
+
+  /**
+   * Helper to get the health bar wrapper from contentElement
+   */
+  const getHealthBarWrapper = () =>
+    contentElement.querySelector('.health-bar-wrapper');
+
+  /**
+   * Helper to get the health bar fill from contentElement
+   */
+  const getHealthBarFill = () =>
+    contentElement.querySelector('.health-bar-fill');
+
+  /**
+   * Helper to get the health percentage text from contentElement
+   */
+  const getHealthPercentageText = () =>
+    contentElement.querySelector('.health-percentage-text');
+
   describe('constructor', () => {
     it('constructs and subscribes to TURN_STARTED_ID event', () => {
       const panel = new InjuryStatusPanel(deps);
@@ -113,10 +137,18 @@ describe('InjuryStatusPanel', () => {
       expect(panel.elements.contentElement).toBe(contentElement);
     });
 
-    it('initializes with healthy state by default', () => {
+    it('initializes with healthy state by default including 100% health bar', () => {
       new InjuryStatusPanel(deps);
-      expect(narrativeElement.textContent).toBe('I feel fine.');
-      expect(narrativeElement.className).toBe('injury-healthy-message');
+      const narrativeEl = getNarrativeElement();
+      expect(narrativeEl.textContent).toBe('I feel fine.');
+      expect(narrativeEl.className).toBe('injury-healthy-message');
+
+      // Verify health bar shows 100%
+      const healthBar = getHealthBarWrapper();
+      expect(healthBar).not.toBeNull();
+      expect(healthBar.classList.contains('severity-healthy')).toBe(true);
+      expect(getHealthBarFill().style.width).toBe('100%');
+      expect(getHealthPercentageText().textContent).toBe('100%');
     });
 
     it('throws when injuryAggregationService is null', () => {
@@ -225,7 +257,7 @@ describe('InjuryStatusPanel', () => {
       expect(deps.injuryNarrativeFormatterService.formatFirstPerson).toHaveBeenCalledWith(
         summary
       );
-      expect(narrativeElement.textContent).toBe('My arm hurts.');
+      expect(getNarrativeElement().textContent).toBe('My arm hurts.');
     });
 
     it('renders healthy state when payload is null', () => {
@@ -244,7 +276,7 @@ describe('InjuryStatusPanel', () => {
         ),
         expect.objectContaining({ receivedData: { payload: null } })
       );
-      expect(narrativeElement.textContent).toBe('I feel fine.');
+      expect(getNarrativeElement().textContent).toBe('I feel fine.');
     });
 
     it('renders healthy state when payload is empty object', () => {
@@ -258,7 +290,7 @@ describe('InjuryStatusPanel', () => {
       handler({ payload: {} });
 
       expect(deps.logger.warn).toHaveBeenCalled();
-      expect(narrativeElement.textContent).toBe('I feel fine.');
+      expect(getNarrativeElement().textContent).toBe('I feel fine.');
     });
 
     it('renders healthy state when entityId is empty string', () => {
@@ -290,7 +322,7 @@ describe('InjuryStatusPanel', () => {
       handler({ payload: { entityId: 123 } });
 
       expect(deps.logger.warn).toHaveBeenCalled();
-      expect(narrativeElement.textContent).toBe('I feel fine.');
+      expect(getNarrativeElement().textContent).toBe('I feel fine.');
     });
   });
 
@@ -308,7 +340,7 @@ describe('InjuryStatusPanel', () => {
       expect(deps.injuryAggregationService.aggregateInjuries).toHaveBeenCalledWith(
         'hero-123'
       );
-      expect(narrativeElement.textContent).toBe('My arm is wounded.');
+      expect(getNarrativeElement().textContent).toBe('My arm is wounded.');
     });
 
     it('renders healthy state when entityId is null', () => {
@@ -319,7 +351,7 @@ describe('InjuryStatusPanel', () => {
         expect.stringContaining('updateForActor called with invalid entityId'),
         expect.objectContaining({ entityId: null })
       );
-      expect(narrativeElement.textContent).toBe('I feel fine.');
+      expect(getNarrativeElement().textContent).toBe('I feel fine.');
     });
 
     it('renders healthy state when entityId is undefined', () => {
@@ -327,7 +359,7 @@ describe('InjuryStatusPanel', () => {
       panel.updateForActor(undefined);
 
       expect(deps.logger.warn).toHaveBeenCalled();
-      expect(narrativeElement.textContent).toBe('I feel fine.');
+      expect(getNarrativeElement().textContent).toBe('I feel fine.');
     });
 
     it('renders healthy state when entityId is not a string', () => {
@@ -335,7 +367,7 @@ describe('InjuryStatusPanel', () => {
       panel.updateForActor(42);
 
       expect(deps.logger.warn).toHaveBeenCalled();
-      expect(narrativeElement.textContent).toBe('I feel fine.');
+      expect(getNarrativeElement().textContent).toBe('I feel fine.');
     });
 
     it('renders healthy state when aggregation throws error', () => {
@@ -352,7 +384,7 @@ describe('InjuryStatusPanel', () => {
         ),
         expect.any(Error)
       );
-      expect(narrativeElement.textContent).toBe('I feel fine.');
+      expect(getNarrativeElement().textContent).toBe('I feel fine.');
     });
   });
 
@@ -364,8 +396,9 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('healthy-entity');
 
-      expect(narrativeElement.textContent).toBe('I feel fine.');
-      expect(narrativeElement.className).toBe('injury-healthy-message');
+      const narrativeEl = getNarrativeElement();
+      expect(narrativeEl.textContent).toBe('I feel fine.');
+      expect(narrativeEl.className).toBe('injury-healthy-message');
     });
 
     it('renders dead state when isDead is true', () => {
@@ -378,9 +411,13 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('dead-entity');
 
-      expect(narrativeElement.className).toBe('injury-dead');
-      expect(narrativeElement.innerHTML).toContain('I am dead');
-      expect(narrativeElement.innerHTML).toContain('(massive trauma)');
+      const narrativeEl = getNarrativeElement();
+      expect(narrativeEl.className).toBe('injury-dead');
+      expect(narrativeEl.innerHTML).toContain('I am dead');
+      expect(narrativeEl.innerHTML).toContain('(massive trauma)');
+      // Verify 0% health bar for dead state
+      expect(getHealthBarFill().style.width).toBe('0%');
+      expect(getHealthPercentageText().textContent).toBe('0%');
     });
 
     it('renders dead state without cause when causeOfDeath is null', () => {
@@ -393,14 +430,16 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('dead-entity');
 
-      expect(narrativeElement.innerHTML).toContain('I am dead');
-      expect(narrativeElement.innerHTML).not.toContain('(');
+      const narrativeEl = getNarrativeElement();
+      expect(narrativeEl.innerHTML).toContain('I am dead');
+      expect(narrativeEl.innerHTML).not.toContain('(');
     });
 
     it('renders dying state with countdown', () => {
       const summary = createInjuredSummary({
         isDying: true,
         dyingTurnsRemaining: 3,
+        overallHealthPercentage: 15,
       });
       deps.injuryAggregationService.aggregateInjuries.mockReturnValue(summary);
       deps.injuryNarrativeFormatterService.formatFirstPerson.mockReturnValue(
@@ -410,10 +449,14 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('dying-entity');
 
-      expect(narrativeElement.className).toBe('injury-dying');
-      expect(narrativeElement.innerHTML).toContain("I'm dying!");
-      expect(narrativeElement.innerHTML).toContain('3 turns remaining');
-      expect(narrativeElement.innerHTML).toContain('I am bleeding out.');
+      const narrativeEl = getNarrativeElement();
+      expect(narrativeEl.className).toBe('injury-dying');
+      expect(narrativeEl.innerHTML).toContain("I'm dying!");
+      expect(narrativeEl.innerHTML).toContain('3 turns remaining');
+      expect(narrativeEl.innerHTML).toContain('I am bleeding out.');
+      // Verify health bar shows 15%
+      expect(getHealthBarFill().style.width).toBe('15%');
+      expect(getHealthPercentageText().textContent).toBe('15%');
     });
 
     it('renders dying state with singular turn text when 1 turn remaining', () => {
@@ -427,8 +470,9 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('dying-entity');
 
-      expect(narrativeElement.innerHTML).toContain('1 turn remaining');
-      expect(narrativeElement.innerHTML).not.toContain('turns remaining');
+      const narrativeEl = getNarrativeElement();
+      expect(narrativeEl.innerHTML).toContain('1 turn remaining');
+      expect(narrativeEl.innerHTML).not.toContain('turns remaining');
     });
 
     it('renders dying state without narrative when formatFirstPerson returns empty', () => {
@@ -442,7 +486,8 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('dying-entity');
 
-      expect(narrativeElement.innerHTML).toContain("I'm dying! 2 turns remaining.");
+      const narrativeEl = getNarrativeElement();
+      expect(narrativeEl.innerHTML).toContain("I'm dying! 2 turns remaining.");
     });
 
     it('renders with severity-destroyed class when destroyedParts exist', () => {
@@ -458,7 +503,8 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('maimed-entity');
 
-      expect(narrativeElement.classList.contains('severity-destroyed')).toBe(true);
+      const narrativeEl = getNarrativeElement();
+      expect(narrativeEl.classList.contains('severity-destroyed')).toBe(true);
     });
 
     it('renders with severity-healthy class when health >= 90%', () => {
@@ -474,7 +520,8 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('minor-wound');
 
-      expect(narrativeElement.classList.contains('severity-healthy')).toBe(true);
+      const narrativeEl = getNarrativeElement();
+      expect(narrativeEl.classList.contains('severity-healthy')).toBe(true);
     });
 
     it('renders with severity-scratched class when health 75-89%', () => {
@@ -489,7 +536,8 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('scratched-entity');
 
-      expect(narrativeElement.classList.contains('severity-scratched')).toBe(true);
+      const narrativeEl = getNarrativeElement();
+      expect(narrativeEl.classList.contains('severity-scratched')).toBe(true);
     });
 
     it('renders with severity-wounded class when health 50-74%', () => {
@@ -504,7 +552,8 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('wounded-entity');
 
-      expect(narrativeElement.classList.contains('severity-wounded')).toBe(true);
+      const narrativeEl = getNarrativeElement();
+      expect(narrativeEl.classList.contains('severity-wounded')).toBe(true);
     });
 
     it('renders with severity-injured class when health 25-49%', () => {
@@ -519,7 +568,8 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('injured-entity');
 
-      expect(narrativeElement.classList.contains('severity-injured')).toBe(true);
+      const narrativeEl = getNarrativeElement();
+      expect(narrativeEl.classList.contains('severity-injured')).toBe(true);
     });
 
     it('renders with severity-critical class when health < 25%', () => {
@@ -534,7 +584,8 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('critical-entity');
 
-      expect(narrativeElement.classList.contains('severity-critical')).toBe(true);
+      const narrativeEl = getNarrativeElement();
+      expect(narrativeEl.classList.contains('severity-critical')).toBe(true);
     });
 
     it('renders healthy when only bleeding parts exist', () => {
@@ -548,7 +599,7 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('bleeding-entity');
 
-      expect(narrativeElement.textContent).toBe('I am bleeding from my arm.');
+      expect(getNarrativeElement().textContent).toBe('I am bleeding from my arm.');
     });
 
     it('renders healthy when only burning parts exist', () => {
@@ -562,7 +613,7 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('burning-entity');
 
-      expect(narrativeElement.textContent).toBe('My leg is on fire!');
+      expect(getNarrativeElement().textContent).toBe('My leg is on fire!');
     });
 
     it('renders healthy when only poisoned parts exist', () => {
@@ -576,7 +627,7 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('poisoned-entity');
 
-      expect(narrativeElement.textContent).toBe('I feel sick.');
+      expect(getNarrativeElement().textContent).toBe('I feel sick.');
     });
 
     it('renders healthy when only fractured parts exist', () => {
@@ -590,7 +641,7 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('fractured-entity');
 
-      expect(narrativeElement.textContent).toBe('My rib is broken.');
+      expect(getNarrativeElement().textContent).toBe('My rib is broken.');
     });
 
     it('logs warning and returns early when narrative element is missing during render', () => {
@@ -619,14 +670,16 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('entity-1');
 
-      expect(narrativeElement.classList.contains('severity-wounded')).toBe(true);
+      let narrativeEl = getNarrativeElement();
+      expect(narrativeEl.classList.contains('severity-wounded')).toBe(true);
 
       // Now update with healthy state
       deps.injuryAggregationService.aggregateInjuries.mockReturnValue(createHealthySummary());
       panel.updateForActor('entity-2');
 
-      expect(narrativeElement.className).toBe('injury-healthy-message');
-      expect(narrativeElement.classList.contains('severity-wounded')).toBe(false);
+      narrativeEl = getNarrativeElement();
+      expect(narrativeEl.className).toBe('injury-healthy-message');
+      expect(narrativeEl.classList.contains('severity-wounded')).toBe(false);
     });
 
     it('handles empty severity class gracefully', () => {
@@ -638,7 +691,8 @@ describe('InjuryStatusPanel', () => {
       panel.updateForActor('entity');
 
       // Should have severity-healthy class
-      expect(narrativeElement.classList.contains('severity-healthy')).toBe(true);
+      const narrativeEl = getNarrativeElement();
+      expect(narrativeEl.classList.contains('severity-healthy')).toBe(true);
     });
   });
 
@@ -704,7 +758,9 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('entity');
 
-      expect(narrativeElement.classList.contains('severity-healthy')).toBe(true);
+      expect(getNarrativeElement().classList.contains('severity-healthy')).toBe(
+        true
+      );
     });
 
     it('returns severity-scratched at exactly 75%', () => {
@@ -715,7 +771,9 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('entity');
 
-      expect(narrativeElement.classList.contains('severity-scratched')).toBe(true);
+      expect(
+        getNarrativeElement().classList.contains('severity-scratched')
+      ).toBe(true);
     });
 
     it('returns severity-wounded at exactly 50%', () => {
@@ -726,7 +784,9 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('entity');
 
-      expect(narrativeElement.classList.contains('severity-wounded')).toBe(true);
+      expect(getNarrativeElement().classList.contains('severity-wounded')).toBe(
+        true
+      );
     });
 
     it('returns severity-injured at exactly 25%', () => {
@@ -737,7 +797,9 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('entity');
 
-      expect(narrativeElement.classList.contains('severity-injured')).toBe(true);
+      expect(getNarrativeElement().classList.contains('severity-injured')).toBe(
+        true
+      );
     });
 
     it('returns severity-critical at exactly 24%', () => {
@@ -748,7 +810,9 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('entity');
 
-      expect(narrativeElement.classList.contains('severity-critical')).toBe(true);
+      expect(
+        getNarrativeElement().classList.contains('severity-critical')
+      ).toBe(true);
     });
 
     it('returns severity-critical at 0%', () => {
@@ -759,7 +823,9 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('entity');
 
-      expect(narrativeElement.classList.contains('severity-critical')).toBe(true);
+      expect(
+        getNarrativeElement().classList.contains('severity-critical')
+      ).toBe(true);
     });
   });
 });

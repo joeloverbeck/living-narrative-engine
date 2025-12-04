@@ -36,8 +36,7 @@
       "liquid_container.component.json",
       "openable.component.json",
       "portable.component.json",
-      "readable.component.json",
-      "weight.component.json"
+      "readable.component.json"
     ],
     "actions": [
       "aim_item.action.json",

@@ -13,6 +13,20 @@
       "deathMessage": {
         "type": "string",
         "description": "Custom death message when this organ is destroyed (optional)"
+      },
+      "healthCapThreshold": {
+        "type": "number",
+        "description": "When organ health percentage falls below this threshold, apply overall health cap",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 20
+      },
+      "healthCapValue": {
+        "type": "number",
+        "description": "Maximum overall health percentage when organ is critically damaged",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 30
       }
     },
     "required": ["organType"],

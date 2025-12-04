@@ -1,10 +1,10 @@
 /**
  * @file humanHairWeightValidation.test.js
  * @description Validates that human hair entity definitions have
- * appropriate items:weight components for the dismemberment spawning feature.
+ * appropriate core:weight components for the dismemberment spawning feature.
  *
  * This test ensures the invariants from DISBODPARSPA-012 are maintained:
- * - All human hair entities have items:weight
+ * - All human hair entities have core:weight
  * - Weights are positive numbers within realistic ranges based on hair length
  *
  * @see tickets/DISBODPARSPA-012-weight-human-hair-extremities.md
@@ -36,7 +36,7 @@ function loadEntityFile(filename) {
  * @returns {number|undefined} Weight value or undefined
  */
 function getWeight(entity) {
-  return entity?.components?.['items:weight']?.weight;
+  return entity?.components?.['core:weight']?.weight;
 }
 
 describe('DISBODPARSPA-012: Human Hair Weight Validation', () => {
@@ -198,10 +198,10 @@ describe('DISBODPARSPA-012: Human Hair Weight Validation', () => {
     });
 
     it.each(ALL_FILES)(
-      'should have properly structured items:weight component in %s',
+      'should have properly structured core:weight component in %s',
       (file) => {
         const entity = loadEntityFile(file);
-        const weightComponent = entity?.components?.['items:weight'];
+        const weightComponent = entity?.components?.['core:weight'];
 
         expect(weightComponent).toBeDefined();
         expect(weightComponent).toHaveProperty('weight');

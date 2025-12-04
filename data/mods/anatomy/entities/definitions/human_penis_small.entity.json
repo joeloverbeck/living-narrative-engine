@@ -19,14 +19,14 @@
         "accessories"
       ]
     },
-    "descriptors:size_category": {
-      "size": "small"
-    },
     "core:name": {
       "text": "small penis"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 0.08
+    },
+    "descriptors:size_category": {
+      "size": "small"
     }
   }
 }

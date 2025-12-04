@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "chicken_spine",
-      "hit_probability_weight": 0
+      "hit_probability_weight": 0,
+      "health_calculation_weight": 15
     },
     "anatomy:part_health": {
       "currentHealth": 12,
@@ -13,12 +14,14 @@
       "state": "healthy"
     },
     "anatomy:vital_organ": {
-      "organType": "spine"
+      "organType": "spine",
+      "healthCapThreshold": 20,
+      "healthCapValue": 30
     },
     "core:name": {
       "text": "chicken spine"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 0.05
     }
   }

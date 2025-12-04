@@ -1,11 +1,11 @@
 /**
  * @file utilityEntityWeightValidation.test.js
  * @description Validates that utility/generic entity definitions (humanoid_*, cephalopods,
- * spiders, tortoises, and utility parts) have appropriate items:weight components for the
+ * spiders, tortoises, and utility parts) have appropriate core:weight components for the
  * dismemberment spawning feature.
  *
  * This test ensures the invariants from DISBODPARSPA-015 are maintained:
- * - All utility entities with anatomy:part have items:weight
+ * - All utility entities with anatomy:part have core:weight
  * - Weights are positive numbers within realistic ranges for each part type
  * - blueprint_slot.entity.json is correctly excluded (no anatomy:part)
  * @see tickets/DISBODPARSPA-015-weight-utility.md
@@ -39,7 +39,7 @@ function loadEntityFile(filename) {
  * @returns {number|undefined} Weight value or undefined
  */
 function getWeight(entity) {
-  return entity?.components?.['items:weight']?.weight;
+  return entity?.components?.['core:weight']?.weight;
 }
 
 /**

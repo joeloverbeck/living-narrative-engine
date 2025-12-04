@@ -15,7 +15,7 @@
     "core:name": {
       "text": "ear"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 0.01
     }
   }

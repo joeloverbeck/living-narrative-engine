@@ -59,7 +59,7 @@ describe('DEBUG: take_from_container rule matching', () => {
       .withName('Item')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 0.5 })
+      .withComponent('core:weight', { weight: 0.5 })
       .build();
 
     testFixture.reset([room, actor, container, item]);

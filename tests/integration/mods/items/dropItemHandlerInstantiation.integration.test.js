@@ -34,7 +34,7 @@ function createCompleteScenario() {
     .withName('Wooden Crate')
     .withComponent('items:item', {})
     .withComponent('items:portable', {})
-    .withComponent('items:weight', { weight: 5.0 })
+    .withComponent('core:weight', { weight: 5.0 })
     .build();
 
   return { room, actor, crate, handEntities };

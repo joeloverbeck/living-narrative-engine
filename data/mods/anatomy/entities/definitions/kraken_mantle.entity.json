@@ -35,20 +35,20 @@
     "core:name": {
       "text": "mantle"
     },
-    "descriptors:size_category": {
-      "size": "massive"
+    "core:weight": {
+      "weight": 200
     },
     "descriptors:color_extended": {
       "color": "abyssal-black"
     },
-    "descriptors:texture": {
-      "texture": "smooth"
-    },
     "descriptors:shape_general": {
       "shape": "oval"
     },
-    "items:weight": {
-      "weight": 200
+    "descriptors:size_category": {
+      "size": "massive"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
     }
   }
 }

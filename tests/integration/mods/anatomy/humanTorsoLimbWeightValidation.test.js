@@ -1,10 +1,10 @@
 /**
  * @file humanTorsoLimbWeightValidation.test.js
  * @description Validates that human torso and limb entity definitions have
- * appropriate items:weight components for the dismemberment spawning feature.
+ * appropriate core:weight components for the dismemberment spawning feature.
  *
  * This test ensures the invariants from DISBODPARSPA-010 are maintained:
- * - All human torso/limb entities have items:weight
+ * - All human torso/limb entities have core:weight
  * - Weights are positive numbers within realistic ranges
  *
  * @see tickets/DISBODPARSPA-010-weight-human-torso-limbs.md
@@ -36,7 +36,7 @@ function loadEntityFile(filename) {
  * @returns {number|undefined} Weight value or undefined
  */
 function getWeight(entity) {
-  return entity?.components?.['items:weight']?.weight;
+  return entity?.components?.['core:weight']?.weight;
 }
 
 describe('DISBODPARSPA-010: Human Torso/Limb Weight Validation', () => {
@@ -264,10 +264,10 @@ describe('DISBODPARSPA-010: Human Torso/Limb Weight Validation', () => {
     });
 
     it.each(ALL_FILES)(
-      'should have properly structured items:weight component in %s',
+      'should have properly structured core:weight component in %s',
       (file) => {
         const entity = loadEntityFile(file);
-        const weightComponent = entity?.components?.['items:weight'];
+        const weightComponent = entity?.components?.['core:weight'];
 
         expect(weightComponent).toBeDefined();
         expect(weightComponent).toHaveProperty('weight');

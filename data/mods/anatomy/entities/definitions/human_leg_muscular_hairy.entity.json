@@ -23,21 +23,21 @@
         }
       ]
     },
-    "descriptors:build": {
-      "build": "muscular"
-    },
-    "descriptors:body_hair": {
-      "hairDensity": "hairy"
-    },
-    "core:name": {
-      "text": "muscular, hairy leg"
-    },
     "core:movement": {
       "locked": false,
       "forcedOverride": false
     },
-    "items:weight": {
-      "weight": 14.0
+    "core:name": {
+      "text": "muscular, hairy leg"
+    },
+    "core:weight": {
+      "weight": 14
+    },
+    "descriptors:body_hair": {
+      "hairDensity": "hairy"
+    },
+    "descriptors:build": {
+      "build": "muscular"
     }
   }
 }

@@ -14,7 +14,7 @@ import {
 const ANATOMY_PART_COMPONENT_ID = 'anatomy:part';
 const ITEMS_ITEM_COMPONENT_ID = 'items:item';
 const ITEMS_PORTABLE_COMPONENT_ID = 'items:portable';
-const ITEMS_WEIGHT_COMPONENT_ID = 'items:weight';
+const WEIGHT_COMPONENT_ID = 'core:weight';
 
 // --- Event ID Constants ---
 const DISMEMBERED_EVENT_ID = 'anatomy:dismembered';
@@ -166,7 +166,7 @@ class DismemberedBodyPartSpawner extends BaseService {
         [NAME_COMPONENT_ID]: { text: spawnedEntityName },
         [ITEMS_ITEM_COMPONENT_ID]: {},
         [ITEMS_PORTABLE_COMPONENT_ID]: {},
-        [ITEMS_WEIGHT_COMPONENT_ID]: { weight },
+        [WEIGHT_COMPONENT_ID]: { weight },
         [POSITION_COMPONENT_ID]: { locationId },
       };
 

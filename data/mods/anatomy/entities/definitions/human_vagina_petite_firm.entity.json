@@ -3,6 +3,7 @@
   "id": "anatomy:human_vagina_petite_firm",
   "description": "A human female genital organ with tiny size, firm muscle tone, and smooth texture",
   "components": {
+    "anatomy:embedded": {},
     "anatomy:part": {
       "subType": "vagina",
       "hit_probability_weight": 1.8
@@ -19,21 +20,20 @@
         "accessories"
       ]
     },
-    "descriptors:size_category": {
-      "size": "tiny"
+    "core:name": {
+      "text": "vagina"
+    },
+    "core:weight": {
+      "weight": 0.04
     },
     "descriptors:firmness": {
       "firmness": "firm"
     },
+    "descriptors:size_category": {
+      "size": "tiny"
+    },
     "descriptors:texture": {
       "texture": "smooth"
-    },
-    "core:name": {
-      "text": "vagina"
-    },
-    "items:weight": {
-      "weight": 0.04
-    },
-    "anatomy:embedded": {}
+    }
   }
 }

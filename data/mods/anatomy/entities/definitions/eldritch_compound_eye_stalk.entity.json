@@ -15,23 +15,23 @@
     "core:name": {
       "text": "compound eye stalk"
     },
-    "descriptors:texture": {
-      "texture": "faceted"
+    "core:weight": {
+      "weight": 1.5
     },
     "descriptors:color_extended": {
       "color": "iridescent-green"
     },
-    "descriptors:length_category": {
-      "length": "medium"
-    },
     "descriptors:flexibility": {
       "flexibility": "highly-flexible"
     },
+    "descriptors:length_category": {
+      "length": "medium"
+    },
+    "descriptors:texture": {
+      "texture": "faceted"
+    },
     "descriptors:visual_capability": {
       "capability": "compound-multidirectional"
-    },
-    "items:weight": {
-      "weight": 1.5
     }
   }
 }

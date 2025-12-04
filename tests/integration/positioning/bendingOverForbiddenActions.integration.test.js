@@ -135,7 +135,7 @@ describe('Bending Over - Forbidden Actions Bug', () => {
         .withName('Letter')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.05 })
+        .withComponent('core:weight', { weight: 0.05 })
         .build();
 
       const actor = new ModEntityBuilder('test:actor')
@@ -187,7 +187,7 @@ describe('Bending Over - Forbidden Actions Bug', () => {
         .atLocation('test:room')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.01 })
+        .withComponent('core:weight', { weight: 0.01 })
         .build();
 
       const actor = new ModEntityBuilder('test:actor')

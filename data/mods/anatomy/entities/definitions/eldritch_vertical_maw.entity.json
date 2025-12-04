@@ -15,20 +15,20 @@
     "core:name": {
       "text": "vertical maw"
     },
-    "descriptors:texture": {
-      "texture": "serrated-edges"
-    },
-    "descriptors:size_category": {
-      "size": "enormous"
-    },
-    "descriptors:secretion": {
-      "secretion": "viscous-digestive-fluid"
+    "core:weight": {
+      "weight": 15
     },
     "descriptors:animation": {
       "animation": "slowly-gaping"
     },
-    "items:weight": {
-      "weight": 15
+    "descriptors:secretion": {
+      "secretion": "viscous-digestive-fluid"
+    },
+    "descriptors:size_category": {
+      "size": "enormous"
+    },
+    "descriptors:texture": {
+      "texture": "serrated-edges"
     }
   }
 }

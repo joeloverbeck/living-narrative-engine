@@ -12,8 +12,11 @@
       "maxHealth": 20,
       "state": "healthy"
     },
-    "descriptors:size_specific": {
-      "size": "B-cup"
+    "core:name": {
+      "text": "breast"
+    },
+    "core:weight": {
+      "weight": 0.5
     },
     "descriptors:firmness": {
       "firmness": "soft"
@@ -21,11 +24,8 @@
     "descriptors:shape_general": {
       "shape": "round"
     },
-    "core:name": {
-      "text": "breast"
-    },
-    "items:weight": {
-      "weight": 0.5
+    "descriptors:size_specific": {
+      "size": "B-cup"
     }
   }
 }

@@ -15,8 +15,11 @@
     "core:name": {
       "text": "vocal sac"
     },
-    "descriptors:texture": {
-      "texture": "translucent"
+    "core:weight": {
+      "weight": 1
+    },
+    "descriptors:acoustic_property": {
+      "property": "subsonic-emission"
     },
     "descriptors:animation": {
       "animation": "pulsating"
@@ -24,14 +27,11 @@
     "descriptors:color_extended": {
       "color": "pale-pink-internal-organs-visible"
     },
-    "descriptors:acoustic_property": {
-      "property": "subsonic-emission"
-    },
     "descriptors:effect": {
       "effect": "disorientation-nausea"
     },
-    "items:weight": {
-      "weight": 1
+    "descriptors:texture": {
+      "texture": "translucent"
     }
   }
 }

@@ -1,0 +1,139 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_quickly_wield_weapon",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "weapons:event-is-action-quickly-wield-weapon"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "target",
+        "result_variable": "targetName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get target's grabbing requirements to know how many appendages to lock",
+      "parameters": {
+        "entity_ref": "target",
+        "component_type": "anatomy:requires_grabbing",
+        "result_variable": "targetGrabbingReqs",
+        "missing_value": { "handsRequired": 1 }
+      }
+    },
+    {
+      "type": "LOCK_GRABBING",
+      "comment": "Lock the required number of grabbing appendages for this weapon",
+      "parameters": {
+        "actor_id": "{event.payload.actorId}",
+        "count": "{context.targetGrabbingReqs.handsRequired}",
+        "item_id": "{event.payload.targetId}"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} quickly grabs {context.targetName} from the location and wields it."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.targetId}"
+      }
+    },
+    {
+      "type": "REMOVE_COMPONENT",
+      "comment": "Remove weapon from world position (it's now being held)",
+      "parameters": {
+        "entity_ref": "target",
+        "component_type": "core:position"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Check if actor already has wielding component",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "positioning:wielding",
+        "result_variable": "existingWielding",
+        "missing_value": null
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Add to existing array or create new component",
+      "parameters": {
+        "condition": { "var": "context.existingWielding" },
+        "then_actions": [
+          {
+            "type": "MODIFY_ARRAY_FIELD",
+            "comment": "Append weapon to existing wielded_item_ids array",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "positioning:wielding",
+              "field": "wielded_item_ids",
+              "mode": "push_unique",
+              "value": "{event.payload.targetId}"
+            }
+          }
+        ],
+        "else_actions": [
+          {
+            "type": "ADD_COMPONENT",
+            "comment": "Create new wielding component with weapon in array",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "positioning:wielding",
+              "value": {
+                "wielded_item_ids": ["{event.payload.targetId}"]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "REGENERATE_DESCRIPTION",
+      "comment": "Update actor description to include wielding activity",
+      "parameters": { "entity_ref": "actor" }
+    },
+    {
+      "comment": "Log success and end turn",
+      "macro": "core:logSuccessAndEndTurn"
+    }
+  ]
+}

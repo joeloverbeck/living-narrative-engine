@@ -23,18 +23,18 @@
         }
       ]
     },
-    "descriptors:build": {
-      "build": "muscular"
-    },
-    "core:name": {
-      "text": "muscular leg"
-    },
     "core:movement": {
       "locked": false,
       "forcedOverride": false
     },
-    "items:weight": {
-      "weight": 14.0
+    "core:name": {
+      "text": "muscular leg"
+    },
+    "core:weight": {
+      "weight": 14
+    },
+    "descriptors:build": {
+      "build": "muscular"
     }
   }
 }

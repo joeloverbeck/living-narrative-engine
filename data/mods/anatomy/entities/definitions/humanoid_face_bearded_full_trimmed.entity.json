@@ -3,6 +3,20 @@
   "id": "anatomy:humanoid_face_bearded_full_trimmed",
   "description": "A warm, unremarkable face with a neatly trimmed full beard transitioning from brown to grey, featuring kind eyes with smile-lines",
   "components": {
+    "anatomy:damage_propagation": {
+      "rules": [
+        {
+          "childSocketId": "brain_socket",
+          "baseProbability": 0.4,
+          "damageFraction": 0.6,
+          "damageTypeModifiers": {
+            "piercing": 1.3,
+            "blunt": 0.6,
+            "slashing": 0.7
+          }
+        }
+      ]
+    },
     "anatomy:part": {
       "subType": "head",
       "hit_probability_weight": 18
@@ -76,25 +90,11 @@
         }
       ]
     },
-    "anatomy:damage_propagation": {
-      "rules": [
-        {
-          "childSocketId": "brain_socket",
-          "baseProbability": 0.4,
-          "damageFraction": 0.6,
-          "damageTypeModifiers": {
-            "piercing": 1.3,
-            "blunt": 0.6,
-            "slashing": 0.7
-          }
-        }
-      ]
+    "core:name": {
+      "text": "head"
     },
-    "descriptors:facial_hair": {
-      "style": "full-beard"
-    },
-    "descriptors:facial_aesthetic": {
-      "value": "unremarkable"
+    "core:weight": {
+      "weight": 0.3
     },
     "descriptors:age_markers": {
       "markers": [
@@ -105,11 +105,11 @@
     "descriptors:expression": {
       "demeanor": "content"
     },
-    "core:name": {
-      "text": "head"
+    "descriptors:facial_aesthetic": {
+      "value": "unremarkable"
     },
-    "items:weight": {
-      "weight": 0.3
+    "descriptors:facial_hair": {
+      "style": "full-beard"
     }
   }
 }

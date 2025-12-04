@@ -9,7 +9,7 @@
       "text": "A hastily scrawled note on cheap parchment, with several crossed-out attempts visible beneath the final version."
     },
     "items:item": {},
-    "items:weight": {
+    "core:weight": {
       "weight": 0.01
     },
     "items:readable": {

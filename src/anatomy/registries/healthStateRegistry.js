@@ -12,7 +12,8 @@
  * @property {string} id - The state identifier (matches schema enum)
  * @property {number} thresholdMin - Minimum health percentage (inclusive) to be in this state
  * @property {number} order - Numeric priority for severity ordering (higher = worse)
- * @property {string} firstPerson - First-person narrative description
+ * @property {string} firstPerson - First-person narrative description (singular)
+ * @property {string} firstPersonPlural - First-person narrative description (plural)
  * @property {string} thirdPerson - Third-person narrative description
  * @property {string} cssClass - CSS class for UI styling
  */
@@ -31,6 +32,7 @@ export const HEALTH_STATE_REGISTRY = Object.freeze({
     thresholdMin: 81,
     order: 0,
     firstPerson: 'feels fine',
+    firstPersonPlural: 'feel fine',
     thirdPerson: 'is uninjured',
     cssClass: 'severity-healthy',
   },
@@ -39,6 +41,7 @@ export const HEALTH_STATE_REGISTRY = Object.freeze({
     thresholdMin: 61,
     order: 1,
     firstPerson: 'stings slightly',
+    firstPersonPlural: 'sting slightly',
     thirdPerson: 'is scratched',
     cssClass: 'severity-scratched',
   },
@@ -47,6 +50,7 @@ export const HEALTH_STATE_REGISTRY = Object.freeze({
     thresholdMin: 41,
     order: 2,
     firstPerson: 'throbs painfully',
+    firstPersonPlural: 'throb painfully',
     thirdPerson: 'is wounded',
     cssClass: 'severity-wounded',
   },
@@ -55,6 +59,7 @@ export const HEALTH_STATE_REGISTRY = Object.freeze({
     thresholdMin: 21,
     order: 3,
     firstPerson: 'aches deeply',
+    firstPersonPlural: 'ache deeply',
     thirdPerson: 'is injured',
     cssClass: 'severity-injured',
   },
@@ -63,6 +68,7 @@ export const HEALTH_STATE_REGISTRY = Object.freeze({
     thresholdMin: 1,
     order: 4,
     firstPerson: 'screams with agony',
+    firstPersonPlural: 'scream with agony',
     thirdPerson: 'is critically injured',
     cssClass: 'severity-critical',
   },
@@ -71,6 +77,7 @@ export const HEALTH_STATE_REGISTRY = Object.freeze({
     thresholdMin: 0,
     order: 5,
     firstPerson: 'is completely numb',
+    firstPersonPlural: 'are completely numb',
     thirdPerson: 'has been destroyed',
     cssClass: 'severity-destroyed',
   },
@@ -150,13 +157,24 @@ export function getStateOrder(ascending = true) {
 }
 
 /**
- * Get first-person description for a state.
+ * Get first-person description for a state (singular form).
  *
  * @param {string} stateId - The state ID
  * @returns {string} The first-person description or empty string if invalid
  */
 export function getFirstPersonDescription(stateId) {
   return HEALTH_STATE_REGISTRY[stateId]?.firstPerson || '';
+}
+
+/**
+ * Get first-person description for a state (plural form).
+ * Use this when multiple body parts share the same state.
+ *
+ * @param {string} stateId - The state ID
+ * @returns {string} The first-person plural description or empty string if invalid
+ */
+export function getFirstPersonDescriptionPlural(stateId) {
+  return HEALTH_STATE_REGISTRY[stateId]?.firstPersonPlural || '';
 }
 
 /**

@@ -3,6 +3,20 @@
   "id": "anatomy:chicken_head_rust_red",
   "description": "Small feathered head of a chicken with rust-red coloring",
   "components": {
+    "anatomy:damage_propagation": {
+      "rules": [
+        {
+          "childSocketId": "brain_socket",
+          "baseProbability": 0.35,
+          "damageFraction": 0.6,
+          "damageTypeModifiers": {
+            "piercing": 1.3,
+            "blunt": 0.6,
+            "slashing": 0.7
+          }
+        }
+      ]
+    },
     "anatomy:part": {
       "subType": "chicken_head",
       "hit_probability_weight": 8
@@ -60,34 +74,20 @@
         }
       ]
     },
-    "anatomy:damage_propagation": {
-      "rules": [
-        {
-          "childSocketId": "brain_socket",
-          "baseProbability": 0.35,
-          "damageFraction": 0.6,
-          "damageTypeModifiers": {
-            "piercing": 1.3,
-            "blunt": 0.6,
-            "slashing": 0.7
-          }
-        }
-      ]
-    },
     "core:name": {
       "text": "rust-red chicken head"
+    },
+    "core:weight": {
+      "weight": 0.08
+    },
+    "descriptors:color_extended": {
+      "color": "rust-red"
     },
     "descriptors:size_category": {
       "size": "small"
     },
     "descriptors:texture": {
       "texture": "feathered"
-    },
-    "descriptors:color_extended": {
-      "color": "rust-red"
-    },
-    "items:weight": {
-      "weight": 0.08
     }
   }
 }

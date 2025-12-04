@@ -15,7 +15,7 @@
     "core:name": {
       "text": "nose"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 0.03
     }
   }

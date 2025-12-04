@@ -56,7 +56,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       .withName('gold coin')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 0.01 })
+      .withComponent('core:weight', { weight: 0.01 })
       .withComponent('core:description', {
         text: 'A shiny gold coin',
       })
@@ -67,7 +67,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       .withName('sealed letter')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 0.02 })
+      .withComponent('core:weight', { weight: 0.02 })
       .withComponent('core:description', {
         text: 'A letter sealed with wax',
       })
@@ -109,7 +109,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       .withName('ruby gem')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 0.1 })
+      .withComponent('core:weight', { weight: 0.1 })
       .withComponent('core:description', {
         text: 'A deep red ruby gem',
       })
@@ -120,7 +120,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       .withName('ancient scroll')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 0.05 })
+      .withComponent('core:weight', { weight: 0.05 })
       .withComponent('core:description', {
         text: 'An ancient scroll with mystical writing',
       })
@@ -148,7 +148,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       .withComponent('core:description', {
         text: 'A weathered leather-bound journal',
       })
-      .withComponent('items:weight', { weight: 0.5 })
+      .withComponent('core:weight', { weight: 0.5 })
       .build();
 
     const lampId = 'test:lamp';
@@ -160,7 +160,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       .withComponent('core:description', {
         text: 'An ornate brass oil lamp',
       })
-      .withComponent('items:weight', { weight: 1.2 })
+      .withComponent('core:weight', { weight: 1.2 })
       .build();
 
     // Load all entities into the test fixture

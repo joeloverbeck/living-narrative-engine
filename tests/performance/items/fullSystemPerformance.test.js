@@ -54,7 +54,7 @@ describe('Items System - Performance', () => {
             .withName(`Item ${i}-${j}`)
             .withComponent('items:item', {})
             .withComponent('items:portable', {})
-            .withComponent('items:weight', { weight: 0.5 })
+            .withComponent('core:weight', { weight: 0.5 })
             .build();
           entities.push(item);
 
@@ -85,7 +85,7 @@ describe('Items System - Performance', () => {
             .withName(`Container Item ${i}-${j}`)
             .withComponent('items:item', {})
             .withComponent('items:portable', {})
-            .withComponent('items:weight', { weight: 0.3 })
+            .withComponent('core:weight', { weight: 0.3 })
             .build();
           entities.push(item);
 
@@ -153,7 +153,7 @@ describe('Items System - Performance', () => {
               .withName(`Item ${i}-${j}`)
               .withComponent('items:item', {})
               .withComponent('items:portable', {})
-              .withComponent('items:weight', { weight: 0.5 })
+              .withComponent('core:weight', { weight: 0.5 })
               .build();
             entities.push(item);
             actor.components['items:inventory'].items.push(itemId);
@@ -221,14 +221,14 @@ describe('Items System - Performance', () => {
         .withName('Worker Item 1')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 1.0 })
+        .withComponent('core:weight', { weight: 1.0 })
         .build();
 
       const workerItem2 = new ModEntityBuilder('worker-item-2')
         .withName('Worker Item 2')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 1.0 })
+        .withComponent('core:weight', { weight: 1.0 })
         .build();
 
       const entities = [location, actor, recipient, workerItem1, workerItem2, ...workerHands];
@@ -254,7 +254,7 @@ describe('Items System - Performance', () => {
             .withName(`Box ${i}-${j}`)
             .withComponent('items:item', {})
             .withComponent('items:portable', {})
-            .withComponent('items:weight', { weight: 1.0 })
+            .withComponent('core:weight', { weight: 1.0 })
             .build();
           entities.push(item);
           container.components['items:container'].contents.push(itemId);
@@ -305,7 +305,7 @@ describe('Items System - Performance', () => {
           .atLocation('storage-room')
           .withComponent('items:item', {})
           .withComponent('items:portable', {})
-          .withComponent('items:weight', { weight: 2.0 })
+          .withComponent('core:weight', { weight: 2.0 })
           .build();
         entities.push(item);
       }
@@ -360,7 +360,7 @@ describe('Items System - Performance', () => {
             .withName(`Goods ${i}-${j}`)
             .withComponent('items:item', {})
             .withComponent('items:portable', {})
-            .withComponent('items:weight', { weight: 0.8 })
+            .withComponent('core:weight', { weight: 0.8 })
             .build();
           entities.push(item);
           actor.components['items:inventory'].items.push(itemId);
@@ -387,7 +387,7 @@ describe('Items System - Performance', () => {
             .withName(`Display Item ${i}-${j}`)
             .withComponent('items:item', {})
             .withComponent('items:portable', {})
-            .withComponent('items:weight', { weight: 0.5 })
+            .withComponent('core:weight', { weight: 0.5 })
             .build();
           entities.push(item);
           container.components['items:container'].contents.push(itemId);

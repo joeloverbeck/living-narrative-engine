@@ -48,7 +48,8 @@
       "speech_patterns.component.json",
       "strengths.component.json",
       "visible.component.json",
-      "weaknesses.component.json"
+      "weaknesses.component.json",
+      "weight.component.json"
     ],
     "conditions": [
       "actor-is-not-null.condition.json",

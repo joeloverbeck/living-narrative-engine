@@ -6,6 +6,7 @@
 import { BaseService } from '../../utils/serviceBase.js';
 import {
   getFirstPersonDescription,
+  getFirstPersonDescriptionPlural,
   getStateOrder,
 } from '../../anatomy/registries/healthStateRegistry.js';
 
@@ -262,18 +263,20 @@ class InjuryNarrativeFormatterService extends BaseService {
       return '';
     }
 
-    const stateDesc =
-      getFirstPersonDescription(state) || `feels ${state}`;
     const partNames = parts.map((p) =>
       this.#formatPartName(p.partType, p.orientation)
     );
 
     if (partNames.length === 1) {
+      const stateDesc = getFirstPersonDescription(state) || `feels ${state}`;
       return `My ${partNames[0]} ${stateDesc}.`;
     }
 
+    // Use plural form for multiple parts
+    const stateDescPlural =
+      getFirstPersonDescriptionPlural(state) || `feel ${state}`;
     const lastPart = partNames.pop();
-    return `My ${partNames.join(', ')} and ${lastPart} ${stateDesc}.`;
+    return `My ${partNames.join(', ')} and ${lastPart} ${stateDescPlural}.`;
   }
 
   /**

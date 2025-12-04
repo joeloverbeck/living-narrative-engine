@@ -1,0 +1,42 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "weapons:quickly_wield_weapon",
+  "name": "Quickly Wield Weapon",
+  "description": "Quickly grab a weapon from the ground and wield it",
+  "generateCombinations": true,
+  "required_components": {
+    "actor": [
+      "items:inventory"
+    ]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:closeness",
+      "positioning:fallen",
+      "positioning:being_restrained",
+      "positioning:restraining"
+    ]
+  },
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
+      },
+      "failure_message": "You need at least one free hand or appendage to wield a weapon."
+    }
+  ],
+  "targets": {
+    "primary": {
+      "scope": "weapons:grabbable_weapons_at_location",
+      "placeholder": "target",
+      "description": "Weapon to quickly wield"
+    }
+  },
+  "template": "quickly wield {target}",
+  "visual": {
+    "backgroundColor": "#112a46",
+    "textColor": "#e6f1ff",
+    "hoverBackgroundColor": "#0b3954",
+    "hoverTextColor": "#f0f4f8"
+  }
+}

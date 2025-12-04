@@ -3,6 +3,7 @@
   "id": "anatomy:human_vagina_soft_pliant",
   "description": "A human female genital organ with medium size, pliant muscle tone, and velvety texture",
   "components": {
+    "anatomy:embedded": {},
     "anatomy:part": {
       "subType": "vagina",
       "hit_probability_weight": 2
@@ -19,21 +20,20 @@
         "accessories"
       ]
     },
-    "descriptors:size_category": {
-      "size": "medium"
+    "core:name": {
+      "text": "vagina"
+    },
+    "core:weight": {
+      "weight": 0.05
     },
     "descriptors:firmness": {
       "firmness": "pliant"
     },
+    "descriptors:size_category": {
+      "size": "medium"
+    },
     "descriptors:texture": {
       "texture": "velvety"
-    },
-    "core:name": {
-      "text": "vagina"
-    },
-    "items:weight": {
-      "weight": 0.05
-    },
-    "anatomy:embedded": {}
+    }
   }
 }

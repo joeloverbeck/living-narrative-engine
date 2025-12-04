@@ -62,7 +62,7 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
       .withName('letter')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 0.05 })
+      .withComponent('core:weight', { weight: 0.05 })
       .build();
 
     testFixture.reset([room, actor, target, letter]);
@@ -122,7 +122,7 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
       .withName('test item')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 0.1 })
+      .withComponent('core:weight', { weight: 0.1 })
       .build();
 
     testFixture.reset([room, actor, target, item]);
@@ -178,7 +178,7 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
       .withName('heavy item')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 10.0 }) // Exceeds target capacity
+      .withComponent('core:weight', { weight: 10.0 }) // Exceeds target capacity
       .build();
 
     testFixture.reset([room, actor, target, heavyItem]);
@@ -236,7 +236,7 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
         .withName('Test Item')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 1.0 })
+        .withComponent('core:weight', { weight: 1.0 })
         .build();
 
       testFixture.reset([room, actor, target, item]);
@@ -292,7 +292,7 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
         .withName('Letter')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.1 })
+        .withComponent('core:weight', { weight: 0.1 })
         .build();
 
       testFixture.reset([room, actor, target, letter]);

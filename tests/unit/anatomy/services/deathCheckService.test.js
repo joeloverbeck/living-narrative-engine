@@ -7,6 +7,7 @@ describe('DeathCheckService', () => {
   let mockEntityManager;
   let mockEventBus;
   let mockInjuryAggregationService;
+  let mockBodyGraphService;
 
   beforeEach(() => {
     mockLogger = {
@@ -37,11 +38,16 @@ describe('DeathCheckService', () => {
       }),
     };
 
+    mockBodyGraphService = {
+      getAllDescendants: jest.fn().mockReturnValue([]),
+    };
+
     service = new DeathCheckService({
       logger: mockLogger,
       entityManager: mockEntityManager,
       eventBus: mockEventBus,
       injuryAggregationService: mockInjuryAggregationService,
+      bodyGraphService: mockBodyGraphService,
     });
   });
 
@@ -57,6 +63,7 @@ describe('DeathCheckService', () => {
             entityManager: mockEntityManager,
             eventBus: mockEventBus,
             injuryAggregationService: mockInjuryAggregationService,
+            bodyGraphService: mockBodyGraphService,
           })
       ).toThrow();
     });
@@ -68,6 +75,7 @@ describe('DeathCheckService', () => {
             logger: mockLogger,
             eventBus: mockEventBus,
             injuryAggregationService: mockInjuryAggregationService,
+            bodyGraphService: mockBodyGraphService,
           })
       ).toThrow();
     });
@@ -79,6 +87,7 @@ describe('DeathCheckService', () => {
             logger: mockLogger,
             entityManager: mockEntityManager,
             injuryAggregationService: mockInjuryAggregationService,
+            bodyGraphService: mockBodyGraphService,
           })
       ).toThrow();
     });
@@ -90,6 +99,19 @@ describe('DeathCheckService', () => {
             logger: mockLogger,
             entityManager: mockEntityManager,
             eventBus: mockEventBus,
+            bodyGraphService: mockBodyGraphService,
+          })
+      ).toThrow();
+    });
+
+    it('should throw if bodyGraphService is missing', () => {
+      expect(
+        () =>
+          new DeathCheckService({
+            logger: mockLogger,
+            entityManager: mockEntityManager,
+            eventBus: mockEventBus,
+            injuryAggregationService: mockInjuryAggregationService,
           })
       ).toThrow();
     });
@@ -106,6 +128,7 @@ describe('DeathCheckService', () => {
             entityManager: invalidEntityManager,
             eventBus: mockEventBus,
             injuryAggregationService: mockInjuryAggregationService,
+            bodyGraphService: mockBodyGraphService,
           })
       ).toThrow();
     });
@@ -122,6 +145,7 @@ describe('DeathCheckService', () => {
             entityManager: invalidEntityManager,
             eventBus: mockEventBus,
             injuryAggregationService: mockInjuryAggregationService,
+            bodyGraphService: mockBodyGraphService,
           })
       ).toThrow();
     });
@@ -138,6 +162,7 @@ describe('DeathCheckService', () => {
             entityManager: invalidEntityManager,
             eventBus: mockEventBus,
             injuryAggregationService: mockInjuryAggregationService,
+            bodyGraphService: mockBodyGraphService,
           })
       ).toThrow();
     });
@@ -151,6 +176,7 @@ describe('DeathCheckService', () => {
             entityManager: mockEntityManager,
             eventBus: invalidEventBus,
             injuryAggregationService: mockInjuryAggregationService,
+            bodyGraphService: mockBodyGraphService,
           })
       ).toThrow();
     });
@@ -164,6 +190,21 @@ describe('DeathCheckService', () => {
             entityManager: mockEntityManager,
             eventBus: mockEventBus,
             injuryAggregationService: invalidService,
+            bodyGraphService: mockBodyGraphService,
+          })
+      ).toThrow();
+    });
+
+    it('should throw if bodyGraphService missing getAllDescendants method', () => {
+      const invalidBodyGraphService = {};
+      expect(
+        () =>
+          new DeathCheckService({
+            logger: mockLogger,
+            entityManager: mockEntityManager,
+            eventBus: mockEventBus,
+            injuryAggregationService: mockInjuryAggregationService,
+            bodyGraphService: invalidBodyGraphService,
           })
       ).toThrow();
     });
@@ -335,6 +376,267 @@ describe('DeathCheckService', () => {
         const result = service.checkDeathConditions('entity-1');
 
         expect(result.isDead).toBe(false);
+      });
+    });
+
+    describe('descendant vital organ detection', () => {
+      it('should trigger death when vital organ is in descendant of destroyed part (e.g., brain inside dismembered head)', () => {
+        // Scenario: Head is destroyed, brain is a descendant of head
+        // Head itself does NOT have vital_organ, but brain does
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            // Brain has vital_organ, head does not
+            if (entityId === 'brain-1' && componentId === 'anatomy:vital_organ') {
+              return true;
+            }
+            return false;
+          }
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'brain-1' && componentId === 'anatomy:vital_organ') {
+              return { organType: 'brain' };
+            }
+            if (entityId === 'entity-1' && componentId === 'core:name') {
+              return { text: 'Test Entity' };
+            }
+            return null;
+          }
+        );
+
+        // Head is in destroyedParts
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 50,
+          destroyedParts: [{ partEntityId: 'head-1', state: 'destroyed' }],
+          isDying: false,
+          isDead: false,
+        });
+
+        // Brain is a descendant of head
+        mockBodyGraphService.getAllDescendants.mockReturnValue(['brain-1', 'eye-1', 'eye-2']);
+
+        const result = service.checkDeathConditions('entity-1', 'killer-1');
+
+        expect(result.isDead).toBe(true);
+        expect(result.deathInfo.causeOfDeath).toBe('vital_organ_destroyed');
+        expect(result.deathInfo.vitalOrganDestroyed).toBe('brain');
+        expect(result.deathInfo.killedBy).toBe('killer-1');
+        expect(mockBodyGraphService.getAllDescendants).toHaveBeenCalledWith('head-1');
+      });
+
+      it('should call getAllDescendants for each destroyed part', () => {
+        mockEntityManager.hasComponent.mockReturnValue(false);
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 50,
+          destroyedParts: [
+            { partEntityId: 'part-1', state: 'destroyed' },
+            { partEntityId: 'part-2', state: 'destroyed' },
+          ],
+          isDying: false,
+          isDead: false,
+        });
+        mockBodyGraphService.getAllDescendants.mockReturnValue([]);
+
+        service.checkDeathConditions('entity-1');
+
+        expect(mockBodyGraphService.getAllDescendants).toHaveBeenCalledWith('part-1');
+        expect(mockBodyGraphService.getAllDescendants).toHaveBeenCalledWith('part-2');
+      });
+
+      it('should trigger death when vital organ is deeply nested in destroyed part hierarchy', () => {
+        // Scenario: Torso destroyed → contains chest → contains heart
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (entityId === 'heart-1' && componentId === 'anatomy:vital_organ') {
+              return true;
+            }
+            return false;
+          }
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'heart-1' && componentId === 'anatomy:vital_organ') {
+              return { organType: 'heart' };
+            }
+            if (entityId === 'entity-1' && componentId === 'core:name') {
+              return { text: 'Test Entity' };
+            }
+            return null;
+          }
+        );
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 50,
+          destroyedParts: [{ partEntityId: 'torso-1', state: 'destroyed' }],
+          isDying: false,
+          isDead: false,
+        });
+
+        // Heart is somewhere in the torso's descendant tree
+        mockBodyGraphService.getAllDescendants.mockReturnValue(['chest-1', 'abdomen-1', 'heart-1', 'lung-1', 'lung-2']);
+
+        const result = service.checkDeathConditions('entity-1');
+
+        expect(result.isDead).toBe(true);
+        expect(result.deathInfo.vitalOrganDestroyed).toBe('heart');
+      });
+
+      it('should check direct part before descendants', () => {
+        // Scenario: Part itself has vital organ - should find it without checking descendants
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (entityId === 'heart-1' && componentId === 'anatomy:vital_organ') {
+              return true;
+            }
+            return false;
+          }
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'heart-1' && componentId === 'anatomy:vital_organ') {
+              return { organType: 'heart' };
+            }
+            if (entityId === 'entity-1' && componentId === 'core:name') {
+              return { text: 'Test Entity' };
+            }
+            return null;
+          }
+        );
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 50,
+          destroyedParts: [{ partEntityId: 'heart-1', state: 'destroyed' }],
+          isDying: false,
+          isDead: false,
+        });
+
+        const result = service.checkDeathConditions('entity-1');
+
+        expect(result.isDead).toBe(true);
+        expect(result.deathInfo.vitalOrganDestroyed).toBe('heart');
+        // getAllDescendants should not be called if direct part has vital organ
+        expect(mockBodyGraphService.getAllDescendants).not.toHaveBeenCalled();
+      });
+
+      it('should return first vital organ found in descendants', () => {
+        // Scenario: Multiple vital organs in descendants - should return first found
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (entityId === 'brain-1' && componentId === 'anatomy:vital_organ') {
+              return true;
+            }
+            if (entityId === 'spine-1' && componentId === 'anatomy:vital_organ') {
+              return true;
+            }
+            return false;
+          }
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'brain-1' && componentId === 'anatomy:vital_organ') {
+              return { organType: 'brain' };
+            }
+            if (entityId === 'spine-1' && componentId === 'anatomy:vital_organ') {
+              return { organType: 'spine' };
+            }
+            if (entityId === 'entity-1' && componentId === 'core:name') {
+              return { text: 'Test Entity' };
+            }
+            return null;
+          }
+        );
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 50,
+          destroyedParts: [{ partEntityId: 'head-1', state: 'destroyed' }],
+          isDying: false,
+          isDead: false,
+        });
+
+        // Brain comes first in descendants list
+        mockBodyGraphService.getAllDescendants.mockReturnValue(['brain-1', 'spine-1']);
+
+        const result = service.checkDeathConditions('entity-1');
+
+        expect(result.isDead).toBe(true);
+        expect(result.deathInfo.vitalOrganDestroyed).toBe('brain');
+      });
+
+      it('should handle empty descendants list gracefully', () => {
+        mockEntityManager.hasComponent.mockReturnValue(false);
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 50,
+          destroyedParts: [{ partEntityId: 'part-1', state: 'destroyed' }],
+          isDying: false,
+          isDead: false,
+        });
+        mockBodyGraphService.getAllDescendants.mockReturnValue([]);
+
+        const result = service.checkDeathConditions('entity-1');
+
+        expect(result.isDead).toBe(false);
+        expect(result.isDying).toBe(false);
+      });
+
+      it('should log debug message when vital organ found in descendant', () => {
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (entityId === 'brain-1' && componentId === 'anatomy:vital_organ') {
+              return true;
+            }
+            return false;
+          }
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'brain-1' && componentId === 'anatomy:vital_organ') {
+              return { organType: 'brain' };
+            }
+            if (entityId === 'entity-1' && componentId === 'core:name') {
+              return { text: 'Test Entity' };
+            }
+            return null;
+          }
+        );
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 50,
+          destroyedParts: [{ partEntityId: 'head-1', state: 'destroyed' }],
+          isDying: false,
+          isDead: false,
+        });
+
+        mockBodyGraphService.getAllDescendants.mockReturnValue(['brain-1']);
+
+        service.checkDeathConditions('entity-1');
+
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining("Found vital organ 'brain' in descendant 'brain-1'")
+        );
       });
     });
 

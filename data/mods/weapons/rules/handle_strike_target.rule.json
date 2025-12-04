@@ -1,0 +1,133 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_strike_target",
+  "event_type": "core:attempt_action",
+  "condition": { "condition_ref": "weapons:event-is-action-strike-target" },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "secondary", "result_variable": "targetName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "primary", "result_variable": "weaponName" }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "primary",
+        "component_type": "damage-types:damage_capabilities",
+        "result_variable": "weaponDamage"
+      }
+    },
+    {
+      "type": "RESOLVE_OUTCOME",
+      "parameters": {
+        "actor_skill_component": "skills:melee_skill",
+        "target_skill_component": "skills:defense_skill",
+        "actor_skill_default": 10,
+        "target_skill_default": 0,
+        "formula": "ratio",
+        "result_variable": "attackResult"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Set common variables needed by macros and the end-turn macro",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.secondaryId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Strike-specific: verb for critical hit messages",
+      "parameters": {
+        "variable_name": "attackVerb",
+        "value": "strike"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Strike-specific: past tense verb for other messages",
+      "parameters": {
+        "variable_name": "attackVerbPast",
+        "value": "strikes"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Strike-specific: hit description for blunt trauma",
+      "parameters": {
+        "variable_name": "hitDescription",
+        "value": "crushing their flesh"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Strike-specific: empty - allow all damage types (spiked maces deal blunt+piercing)",
+      "parameters": {
+        "variable_name": "excludeDamageTypes",
+        "value": []
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle CRITICAL_SUCCESS outcome",
+      "parameters": {
+        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "CRITICAL_SUCCESS"] },
+        "then_actions": [{ "macro": "weapons:handleMeleeCritical" }]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle SUCCESS outcome",
+      "parameters": {
+        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"] },
+        "then_actions": [{ "macro": "weapons:handleMeleeHit" }]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FUMBLE outcome",
+      "parameters": {
+        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "FUMBLE"] },
+        "then_actions": [{ "macro": "weapons:handleMeleeFumble" }]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FAILURE outcome",
+      "parameters": {
+        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "FAILURE"] },
+        "then_actions": [{ "macro": "weapons:handleMeleeMiss" }]
+      }
+    }
+  ]
+}

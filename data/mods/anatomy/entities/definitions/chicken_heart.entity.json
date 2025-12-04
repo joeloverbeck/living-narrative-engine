@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "chicken_heart",
-      "hit_probability_weight": 0
+      "hit_probability_weight": 0,
+      "health_calculation_weight": 15
     },
     "anatomy:part_health": {
       "currentHealth": 10,
@@ -13,12 +14,14 @@
       "state": "healthy"
     },
     "anatomy:vital_organ": {
-      "organType": "heart"
+      "organType": "heart",
+      "healthCapThreshold": 20,
+      "healthCapValue": 30
     },
     "core:name": {
       "text": "chicken heart"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 0.008
     }
   }

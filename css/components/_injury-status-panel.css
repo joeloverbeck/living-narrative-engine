@@ -65,6 +65,26 @@
   transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
 }
 
+/* Health bar wrapper with percentage text */
+.health-bar-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm, 8px);
+  margin-bottom: var(--spacing-sm, 8px);
+}
+
+.health-bar-wrapper .health-bar-container {
+  flex: 1;
+}
+
+.health-percentage-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  min-width: 40px;
+  text-align: right;
+  color: var(--primary-text-color, #333);
+}
+
 /* ============================================
    Severity Classes - WCAG AA Compliant
 

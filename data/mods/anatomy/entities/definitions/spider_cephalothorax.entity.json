@@ -105,14 +105,14 @@
     "core:name": {
       "text": "spider cephalothorax"
     },
-    "descriptors:texture": {
-      "texture": "chitinous"
+    "core:weight": {
+      "weight": 0.015
     },
     "descriptors:body_hair": {
       "hairDensity": "hairy"
     },
-    "items:weight": {
-      "weight": 0.015
+    "descriptors:texture": {
+      "texture": "chitinous"
     }
   }
 }

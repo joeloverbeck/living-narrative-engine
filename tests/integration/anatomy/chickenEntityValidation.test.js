@@ -364,22 +364,22 @@ describe('Chicken Entity Validation', () => {
       expect(ALL_CHICKEN_ENTITIES.length).toBe(26);
     });
 
-    it.each(ALL_CHICKEN_ENTITIES)('%s should have items:weight component', (filename) => {
+    it.each(ALL_CHICKEN_ENTITIES)('%s should have core:weight component', (filename) => {
       const entity = loadEntity(filename);
-      expect(entity.components['items:weight']).toBeDefined();
-      expect(entity.components['items:weight'].weight).toBeDefined();
+      expect(entity.components['core:weight']).toBeDefined();
+      expect(entity.components['core:weight'].weight).toBeDefined();
     });
 
     it.each(ALL_CHICKEN_ENTITIES)('%s should have weight > 0', (filename) => {
       const entity = loadEntity(filename);
-      expect(entity.components['items:weight'].weight).toBeGreaterThan(0);
+      expect(entity.components['core:weight'].weight).toBeGreaterThan(0);
     });
 
     describe('Weight realism checks', () => {
       it('chicken_torso should be the heaviest part (1-2 kg range)', () => {
         const torso = loadEntity('chicken_torso.entity.json');
-        expect(torso.components['items:weight'].weight).toBeGreaterThanOrEqual(1.0);
-        expect(torso.components['items:weight'].weight).toBeLessThanOrEqual(2.0);
+        expect(torso.components['core:weight'].weight).toBeGreaterThanOrEqual(1.0);
+        expect(torso.components['core:weight'].weight).toBeLessThanOrEqual(2.0);
       });
 
       it('chicken head variants should weigh approximately the same', () => {
@@ -388,7 +388,7 @@ describe('Chicken Entity Validation', () => {
           'chicken_head_chalky_white.entity.json',
           'chicken_head_rust_red.entity.json',
           'chicken_head_twisted_joints.entity.json',
-        ].map((f) => loadEntity(f).components['items:weight'].weight);
+        ].map((f) => loadEntity(f).components['core:weight'].weight);
 
         // All head variants should have identical weights
         const uniqueWeights = [...new Set(heads)];
@@ -403,7 +403,7 @@ describe('Chicken Entity Validation', () => {
           'chicken_wing_glossy_black_iridescent.entity.json',
           'chicken_wing_slate_blue.entity.json',
           'chicken_wing_speckled.entity.json',
-        ].map((f) => loadEntity(f).components['items:weight'].weight);
+        ].map((f) => loadEntity(f).components['core:weight'].weight);
 
         // All wing variants should have identical weights
         const uniqueWeights = [...new Set(wings)];
@@ -421,28 +421,28 @@ describe('Chicken Entity Validation', () => {
         const brain = loadEntity('chicken_brain.entity.json');
 
         // Torso heaviest
-        expect(torso.components['items:weight'].weight).toBeGreaterThan(
-          head.components['items:weight'].weight
+        expect(torso.components['core:weight'].weight).toBeGreaterThan(
+          head.components['core:weight'].weight
         );
-        expect(torso.components['items:weight'].weight).toBeGreaterThan(
-          wing.components['items:weight'].weight
+        expect(torso.components['core:weight'].weight).toBeGreaterThan(
+          wing.components['core:weight'].weight
         );
 
         // Leg heavier than foot
-        expect(leg.components['items:weight'].weight).toBeGreaterThan(
-          foot.components['items:weight'].weight
+        expect(leg.components['core:weight'].weight).toBeGreaterThan(
+          foot.components['core:weight'].weight
         );
 
         // Head heavier than small facial features
-        expect(head.components['items:weight'].weight).toBeGreaterThan(
-          beak.components['items:weight'].weight
+        expect(head.components['core:weight'].weight).toBeGreaterThan(
+          beak.components['core:weight'].weight
         );
-        expect(head.components['items:weight'].weight).toBeGreaterThan(
-          comb.components['items:weight'].weight
+        expect(head.components['core:weight'].weight).toBeGreaterThan(
+          comb.components['core:weight'].weight
         );
 
         // Brain should be very light
-        expect(brain.components['items:weight'].weight).toBeLessThan(0.01);
+        expect(brain.components['core:weight'].weight).toBeLessThan(0.01);
       });
 
       it('size variants should have appropriate weight differences', () => {
@@ -450,29 +450,29 @@ describe('Chicken Entity Validation', () => {
         const combBantam = loadEntity('chicken_comb_bantam.entity.json');
         const combLarge = loadEntity('chicken_comb_large_coarse.entity.json');
 
-        expect(combBantam.components['items:weight'].weight).toBeLessThan(
-          combBase.components['items:weight'].weight
+        expect(combBantam.components['core:weight'].weight).toBeLessThan(
+          combBase.components['core:weight'].weight
         );
-        expect(combLarge.components['items:weight'].weight).toBeGreaterThan(
-          combBase.components['items:weight'].weight
+        expect(combLarge.components['core:weight'].weight).toBeGreaterThan(
+          combBase.components['core:weight'].weight
         );
 
         const wattleBase = loadEntity('chicken_wattle.entity.json');
         const wattleBantam = loadEntity('chicken_wattle_bantam.entity.json');
         const wattleLarge = loadEntity('chicken_wattle_large.entity.json');
 
-        expect(wattleBantam.components['items:weight'].weight).toBeLessThan(
-          wattleBase.components['items:weight'].weight
+        expect(wattleBantam.components['core:weight'].weight).toBeLessThan(
+          wattleBase.components['core:weight'].weight
         );
-        expect(wattleLarge.components['items:weight'].weight).toBeGreaterThan(
-          wattleBase.components['items:weight'].weight
+        expect(wattleLarge.components['core:weight'].weight).toBeGreaterThan(
+          wattleBase.components['core:weight'].weight
         );
 
         const tailBase = loadEntity('chicken_tail.entity.json');
         const tailLarge = loadEntity('chicken_tail_large_long.entity.json');
 
-        expect(tailLarge.components['items:weight'].weight).toBeGreaterThan(
-          tailBase.components['items:weight'].weight
+        expect(tailLarge.components['core:weight'].weight).toBeGreaterThan(
+          tailBase.components['core:weight'].weight
         );
       });
     });

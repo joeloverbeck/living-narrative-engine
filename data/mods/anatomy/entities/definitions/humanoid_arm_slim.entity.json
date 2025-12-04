@@ -23,14 +23,14 @@
         }
       ]
     },
-    "descriptors:build": {
-      "build": "slim"
-    },
     "core:name": {
       "text": "slim arm"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 4
+    },
+    "descriptors:build": {
+      "build": "slim"
     }
   }
 }

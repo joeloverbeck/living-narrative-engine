@@ -20,6 +20,9 @@
     "core:name": {
       "text": "tentacle"
     },
+    "core:weight": {
+      "weight": 2
+    },
     "descriptors:color_extended": {
       "color": "translucent-white"
     },
@@ -34,9 +37,6 @@
     },
     "descriptors:texture": {
       "texture": "suckered"
-    },
-    "items:weight": {
-      "weight": 2
     }
   }
 }

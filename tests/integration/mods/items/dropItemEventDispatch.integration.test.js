@@ -57,7 +57,7 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
       .withName('TestItem')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 1.0 })
+      .withComponent('core:weight', { weight: 1.0 })
       .build();
 
     testFixture.reset([room, actor, ...handEntities, item]);
@@ -117,7 +117,7 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
       .withName('TestItem')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 1.0 })
+      .withComponent('core:weight', { weight: 1.0 })
       .build();
 
     testFixture.reset([room, actor, ...handEntities, item]);
@@ -157,7 +157,7 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
       .withName('TestItem')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 1.0 })
+      .withComponent('core:weight', { weight: 1.0 })
       .build();
 
     testFixture.reset([room, actor, ...handEntities, item]);

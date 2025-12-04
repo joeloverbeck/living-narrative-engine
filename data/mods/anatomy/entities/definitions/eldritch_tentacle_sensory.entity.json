@@ -20,6 +20,9 @@
     "core:name": {
       "text": "sensory tentacle"
     },
+    "core:weight": {
+      "weight": 5
+    },
     "descriptors:color_extended": {
       "color": "pale-translucent"
     },
@@ -37,9 +40,6 @@
     },
     "descriptors:texture": {
       "texture": "nodular-receptors"
-    },
-    "items:weight": {
-      "weight": 5
     }
   }
 }

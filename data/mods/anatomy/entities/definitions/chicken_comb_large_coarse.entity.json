@@ -15,8 +15,8 @@
     "core:name": {
       "text": "large coarse chicken comb"
     },
-    "descriptors:texture": {
-      "texture": "coarse"
+    "core:weight": {
+      "weight": 0.015
     },
     "descriptors:color_basic": {
       "color": "red"
@@ -24,8 +24,8 @@
     "descriptors:size_category": {
       "size": "large"
     },
-    "items:weight": {
-      "weight": 0.015
+    "descriptors:texture": {
+      "texture": "coarse"
     }
   }
 }

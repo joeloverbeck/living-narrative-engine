@@ -12,20 +12,20 @@
       "maxHealth": 20,
       "state": "healthy"
     },
+    "core:name": {
+      "text": "breast"
+    },
+    "core:weight": {
+      "weight": 0.5
+    },
+    "descriptors:firmness": {
+      "firmness": "soft"
+    },
     "descriptors:size_specific": {
       "size": "C-cup"
     },
     "descriptors:weight_feel": {
       "weight": "moderate"
-    },
-    "descriptors:firmness": {
-      "firmness": "soft"
-    },
-    "core:name": {
-      "text": "breast"
-    },
-    "items:weight": {
-      "weight": 0.5
     }
   }
 }

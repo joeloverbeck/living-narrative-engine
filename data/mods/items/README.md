@@ -37,10 +37,10 @@ The items mod provides a modular ECS-based system for item management with:
 
 ### Data Components
 
-**items:weight** - Physical weight attribute
+**core:weight** - Physical weight attribute
 ```json
 {
-  "items:weight": {
+  "core:weight": {
     "weight": 0.5
   }
 }
@@ -98,7 +98,7 @@ The items mod provides a modular ECS-based system for item management with:
     },
     "items:item": {},
     "items:portable": {},
-    "items:weight": {
+    "core:weight": {
       "weight": 1.5
     }
   }
@@ -120,7 +120,7 @@ The items mod provides a modular ECS-based system for item management with:
     "items:readable": {
       "content": "The letter reads: 'Meet me at the old mill at midnight. Come alone. -J'"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 0.1
     }
   }

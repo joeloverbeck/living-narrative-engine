@@ -123,7 +123,7 @@ describe('Tortoise Shell Entity Validation', () => {
   });
 
   describe('Structural consistency', () => {
-    it('carapace should have 8 components while plastron has 7 (including items:weight)', () => {
+    it('carapace should have 8 components while plastron has 7 (including core:weight)', () => {
       const carapaceKeys = Object.keys(carapaceEntity.components);
       const plastronKeys = Object.keys(plastronEntity.components);
 

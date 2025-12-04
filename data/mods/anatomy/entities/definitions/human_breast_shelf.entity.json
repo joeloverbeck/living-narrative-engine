@@ -12,20 +12,20 @@
       "maxHealth": 20,
       "state": "healthy"
     },
-    "descriptors:size_category": {
-      "size": "large"
+    "core:name": {
+      "text": "breast"
     },
-    "descriptors:projection": {
-      "projection": "shelf"
+    "core:weight": {
+      "weight": 0.6
     },
     "descriptors:firmness": {
       "firmness": "soft"
     },
-    "core:name": {
-      "text": "breast"
+    "descriptors:projection": {
+      "projection": "shelf"
     },
-    "items:weight": {
-      "weight": 0.6
+    "descriptors:size_category": {
+      "size": "large"
     }
   }
 }

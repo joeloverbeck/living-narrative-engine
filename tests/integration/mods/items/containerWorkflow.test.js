@@ -86,14 +86,14 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
         .withName('Diamond')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.5 })
+        .withComponent('core:weight', { weight: 0.5 })
         .build();
 
       const goldBar = new ModEntityBuilder('gold-bar-1')
         .withName('Gold Bar')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 2.0 })
+        .withComponent('core:weight', { weight: 2.0 })
         .build();
 
       // Step 1: Open the locked container with key
@@ -218,7 +218,7 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
         .withName('Treasure')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 1.0 })
+        .withComponent('core:weight', { weight: 1.0 })
         .build();
 
       // Try to take from closed container (should fail)
@@ -265,21 +265,21 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
         .withName('Health Potion')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.3 })
+        .withComponent('core:weight', { weight: 0.3 })
         .build();
 
       const potion2 = new ModEntityBuilder('potion-2')
         .withName('Mana Potion')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.3 })
+        .withComponent('core:weight', { weight: 0.3 })
         .build();
 
       const potion3 = new ModEntityBuilder('potion-3')
         .withName('Stamina Potion')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.3 })
+        .withComponent('core:weight', { weight: 0.3 })
         .build();
 
       // Step 1: Open the crate
@@ -362,7 +362,7 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
         .withName('Secret Letter')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.05 })
+        .withComponent('core:weight', { weight: 0.05 })
         .build();
 
       // Open drawer
@@ -433,7 +433,7 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
         .withName('Apple')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.2 })
+        .withComponent('core:weight', { weight: 0.2 })
         .build();
 
       takeFixture.reset([room, actor, closedBox, apple]);

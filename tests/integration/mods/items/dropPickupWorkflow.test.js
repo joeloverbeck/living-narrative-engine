@@ -73,7 +73,7 @@ describe('Items - Drop and Pick Up Workflow', () => {
       .withName('Letter')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 0.05 })
+      .withComponent('core:weight', { weight: 0.05 })
       .build();
 
     dropFixture.reset([room, actor1, ...actor1Hands, actor2, ...actor2Hands, item]);
@@ -122,19 +122,19 @@ describe('Items - Drop and Pick Up Workflow', () => {
       .withName('Letter')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 0.05 })
+      .withComponent('core:weight', { weight: 0.05 })
       .build();
     const gun = new ModEntityBuilder('gun-1')
       .withName('Gun')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 1.2 })
+      .withComponent('core:weight', { weight: 1.2 })
       .build();
     const key = new ModEntityBuilder('key-1')
       .withName('Key')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 0.02 })
+      .withComponent('core:weight', { weight: 0.02 })
       .build();
 
     dropFixture.reset([room, actor, ...handEntities, letter, gun, key]);
@@ -172,7 +172,7 @@ describe('Items - Drop and Pick Up Workflow', () => {
       .withName('Letter')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 0.05 })
+      .withComponent('core:weight', { weight: 0.05 })
       .build();
 
     dropFixture.reset([room, actor, ...handEntities, item]);

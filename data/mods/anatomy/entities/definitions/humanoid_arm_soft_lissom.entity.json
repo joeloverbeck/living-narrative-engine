@@ -23,20 +23,20 @@
         }
       ]
     },
-    "descriptors:build": {
-      "build": "lissom"
+    "core:name": {
+      "text": "soft, lissom arm"
+    },
+    "core:weight": {
+      "weight": 4
     },
     "descriptors:body_hair": {
       "hairDensity": "hairless"
     },
+    "descriptors:build": {
+      "build": "lissom"
+    },
     "descriptors:firmness": {
       "firmness": "soft"
-    },
-    "core:name": {
-      "text": "soft, lissom arm"
-    },
-    "items:weight": {
-      "weight": 4
     }
   }
 }

@@ -23,18 +23,18 @@
         }
       ]
     },
-    "descriptors:build": {
-      "build": "athletic"
-    },
-    "core:name": {
-      "text": "athletic leg"
-    },
     "core:movement": {
       "locked": false,
       "forcedOverride": false
     },
-    "items:weight": {
-      "weight": 13.0
+    "core:name": {
+      "text": "athletic leg"
+    },
+    "core:weight": {
+      "weight": 13
+    },
+    "descriptors:build": {
+      "build": "athletic"
     }
   }
 }

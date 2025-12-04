@@ -1,10 +1,10 @@
 /**
  * @file humanHeadFaceWeightValidation.test.js
  * @description Validates that human head and face entity definitions have
- * appropriate items:weight components for the dismemberment spawning feature.
+ * appropriate core:weight components for the dismemberment spawning feature.
  *
  * This test ensures the invariants from DISBODPARSPA-011 are maintained:
- * - All human head/face entities (brain, eye variants) have items:weight
+ * - All human head/face entities (brain, eye variants) have core:weight
  * - Weights are positive numbers within realistic ranges
  *
  * @see tickets/DISBODPARSPA-011-weight-human-head-face.md
@@ -36,7 +36,7 @@ function loadEntityFile(filename) {
  * @returns {number|undefined} Weight value or undefined
  */
 function getWeight(entity) {
-  return entity?.components?.['items:weight']?.weight;
+  return entity?.components?.['core:weight']?.weight;
 }
 
 describe('DISBODPARSPA-011: Human Head/Face Weight Validation', () => {
@@ -53,9 +53,9 @@ describe('DISBODPARSPA-011: Human Head/Face Weight Validation', () => {
       expect(weight).toBeLessThanOrEqual(1.5);
     });
 
-    it('should have properly structured items:weight component in human_brain.entity.json', () => {
+    it('should have properly structured core:weight component in human_brain.entity.json', () => {
       const entity = loadEntityFile('human_brain.entity.json');
-      const weightComponent = entity?.components?.['items:weight'];
+      const weightComponent = entity?.components?.['core:weight'];
 
       expect(weightComponent).toBeDefined();
       expect(weightComponent).toHaveProperty('weight');
@@ -168,10 +168,10 @@ describe('DISBODPARSPA-011: Human Head/Face Weight Validation', () => {
     });
 
     it.each(ALL_FILES)(
-      'should have properly structured items:weight component in %s',
+      'should have properly structured core:weight component in %s',
       (file) => {
         const entity = loadEntityFile(file);
-        const weightComponent = entity?.components?.['items:weight'];
+        const weightComponent = entity?.components?.['core:weight'];
 
         expect(weightComponent).toBeDefined();
         expect(weightComponent).toHaveProperty('weight');

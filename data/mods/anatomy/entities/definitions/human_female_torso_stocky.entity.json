@@ -3,21 +3,39 @@
   "id": "anatomy:human_female_torso_stocky",
   "description": "A stocky human female torso with female-specific anatomy",
   "components": {
+    "anatomy:damage_propagation": {
+      "rules": [
+        {
+          "childSocketId": "heart_socket",
+          "baseProbability": 0.3,
+          "damageFraction": 0.5,
+          "damageTypeModifiers": {
+            "piercing": 1.5,
+            "blunt": 0.3,
+            "slashing": 0.8
+          }
+        },
+        {
+          "childSocketId": "spine_socket",
+          "baseProbability": 0.2,
+          "damageFraction": 0.5,
+          "damageTypeModifiers": {
+            "piercing": 1.2,
+            "blunt": 0.5,
+            "slashing": 0.6
+          }
+        }
+      ]
+    },
     "anatomy:part": {
       "subType": "torso",
-      "hit_probability_weight": 45
+      "hit_probability_weight": 45,
+      "health_calculation_weight": 10
     },
     "anatomy:part_health": {
       "currentHealth": 50,
       "maxHealth": 50,
       "state": "healthy"
-    },
-    "anatomy:visibility_rules": {
-      "clothingSlotId": "torso_upper",
-      "nonBlockingLayers": [
-        "underwear",
-        "accessories"
-      ]
     },
     "anatomy:sockets": {
       "sockets": [
@@ -130,38 +148,21 @@
         }
       ]
     },
-    "anatomy:damage_propagation": {
-      "rules": [
-        {
-          "childSocketId": "heart_socket",
-          "baseProbability": 0.3,
-          "damageFraction": 0.5,
-          "damageTypeModifiers": {
-            "piercing": 1.5,
-            "blunt": 0.3,
-            "slashing": 0.8
-          }
-        },
-        {
-          "childSocketId": "spine_socket",
-          "baseProbability": 0.2,
-          "damageFraction": 0.5,
-          "damageTypeModifiers": {
-            "piercing": 1.2,
-            "blunt": 0.5,
-            "slashing": 0.6
-          }
-        }
+    "anatomy:visibility_rules": {
+      "clothingSlotId": "torso_upper",
+      "nonBlockingLayers": [
+        "underwear",
+        "accessories"
       ]
-    },
-    "descriptors:build": {
-      "build": "stocky"
     },
     "core:name": {
       "text": "torso"
     },
-    "items:weight": {
-      "weight": 32.0
+    "core:weight": {
+      "weight": 32
+    },
+    "descriptors:build": {
+      "build": "stocky"
     }
   }
 }

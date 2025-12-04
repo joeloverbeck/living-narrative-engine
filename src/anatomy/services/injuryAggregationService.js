@@ -23,24 +23,8 @@ const DEAD_COMPONENT_ID = 'anatomy:dead';
 const BODY_COMPONENT_ID = 'anatomy:body';
 const GENDER_COMPONENT_ID = 'core:gender';
 
-// --- Weight Constants for Overall Health Calculation ---
-const PART_WEIGHTS = {
-  torso: 3,
-  head: 2,
-  arm: 1,
-  leg: 1,
-  hand: 1,
-  foot: 1,
-  // Internal organs get 0.5 weight - matched by subType
-  heart: 0.5,
-  brain: 0.5,
-  lung: 0.5,
-  liver: 0.5,
-  kidney: 0.5,
-  stomach: 0.5,
-  intestine: 0.5,
-};
-const DEFAULT_WEIGHT = 1;
+// --- Vital Organ Component ID ---
+const VITAL_ORGAN_COMPONENT_ID = 'anatomy:vital_organ';
 
 // --- Pronoun Mapping ---
 const PRONOUN_MAP = {
@@ -342,8 +326,11 @@ class InjuryAggregationService extends BaseService {
       return null;
     }
 
-    // Get part metadata (subType, orientation)
+    // Get part metadata (subType, orientation, healthCalculationWeight)
     const partData = this.#getPartMetadata(partEntityId);
+
+    // Get vital organ data if present
+    const vitalOrganData = this.#getVitalOrganData(partEntityId);
 
     // Get status effect states
     const bleedingData = this.#getBleedingData(partEntityId);
@@ -359,6 +346,13 @@ class InjuryAggregationService extends BaseService {
       ),
       currentHealth: healthData.currentHealth,
       maxHealth: healthData.maxHealth,
+      healthCalculationWeight: partData.healthCalculationWeight,
+      vitalOrganCap: vitalOrganData
+        ? {
+            threshold: vitalOrganData.healthCapThreshold,
+            capValue: vitalOrganData.healthCapValue,
+          }
+        : null,
       isBleeding: bleedingData.isBleeding,
       bleedingSeverity: bleedingData.severity,
       isBurning: this.#entityManager.hasComponent(
@@ -413,10 +407,10 @@ class InjuryAggregationService extends BaseService {
   }
 
   /**
-   * Gets part metadata (subType, orientation) from anatomy:part component.
+   * Gets part metadata (subType, orientation, healthCalculationWeight) from anatomy:part component.
    *
    * @param {string} partEntityId - Part entity ID
-   * @returns {{subType: string, orientation: string|null}} Part metadata
+   * @returns {{subType: string, orientation: string|null, healthCalculationWeight: number}} Part metadata
    * @private
    */
   #getPartMetadata(partEntityId) {
@@ -428,9 +422,36 @@ class InjuryAggregationService extends BaseService {
       return {
         subType: partData?.subType ?? 'unknown',
         orientation: partData?.orientation ?? null,
+        healthCalculationWeight: partData?.health_calculation_weight ?? 1,
       };
     } catch {
-      return { subType: 'unknown', orientation: null };
+      return { subType: 'unknown', orientation: null, healthCalculationWeight: 1 };
+    }
+  }
+
+  /**
+   * Gets vital organ component data if present.
+   *
+   * @param {string} partEntityId - Part entity ID
+   * @returns {{organType: string, healthCapThreshold: number, healthCapValue: number}|null}
+   * @private
+   */
+  #getVitalOrganData(partEntityId) {
+    try {
+      if (!this.#entityManager.hasComponent(partEntityId, VITAL_ORGAN_COMPONENT_ID)) {
+        return null;
+      }
+      const data = this.#entityManager.getComponentData(
+        partEntityId,
+        VITAL_ORGAN_COMPONENT_ID
+      );
+      return {
+        organType: data?.organType ?? null,
+        healthCapThreshold: data?.healthCapThreshold ?? 20,
+        healthCapValue: data?.healthCapValue ?? 30,
+      };
+    } catch {
+      return null;
     }
   }
 
@@ -478,23 +499,22 @@ class InjuryAggregationService extends BaseService {
   }
 
   /**
-   * Calculates weighted overall health percentage based on part weights.
-   * Weights: Torso (3), Head (2), Limbs (1), Internal organs (0.5)
+   * Calculates overall health percentage from weighted part health.
    *
-   * @param {InjuredPartInfo[]} partInfos - All part info objects
-   * @returns {number} Weighted average health percentage (0-100)
+   * @param {InjuredPartInfo[]} partInfos - Array of part info objects
+   * @returns {number} Overall health percentage (0-100)
    * @private
    */
   #calculateOverallHealth(partInfos) {
     if (partInfos.length === 0) {
-      return 100; // No parts = assume fully healthy
+      return 100;
     }
 
     let totalWeightedHealth = 0;
     let totalWeight = 0;
 
     for (const part of partInfos) {
-      const weight = this.#getPartWeight(part.partType);
+      const weight = this.#getPartWeight(part);
       totalWeightedHealth += part.healthPercentage * weight;
       totalWeight += weight;
     }
@@ -503,19 +523,31 @@ class InjuryAggregationService extends BaseService {
       return 100;
     }
 
-    return Math.round(totalWeightedHealth / totalWeight);
+    let calculatedHealth = Math.round(totalWeightedHealth / totalWeight);
+
+    // Apply data-driven vital organ caps
+    for (const part of partInfos) {
+      if (part.vitalOrganCap) {
+        const { threshold, capValue } = part.vitalOrganCap;
+        if (part.healthPercentage <= threshold) {
+          calculatedHealth = Math.min(calculatedHealth, capValue);
+        }
+      }
+    }
+
+    return calculatedHealth;
   }
 
   /**
-   * Gets the weight for a body part type.
+   * Gets weight for health calculation from part info.
    *
-   * @param {string} partType - Part type (e.g., 'torso', 'arm', 'heart')
-   * @returns {number} Weight value
+   * @param {Object} partInfo - Part info object with healthCalculationWeight
+   * @returns {number} Weight value (defaults to 1 if not specified)
    * @private
    */
-  #getPartWeight(partType) {
-    const normalizedType = partType?.toLowerCase() ?? '';
-    return PART_WEIGHTS[normalizedType] ?? DEFAULT_WEIGHT;
+  #getPartWeight(partInfo) {
+    const weight = partInfo.healthCalculationWeight;
+    return typeof weight === 'number' && weight >= 0 ? weight : 1;
   }
 }
 

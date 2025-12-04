@@ -15,11 +15,8 @@
     "core:name": {
       "text": "beak"
     },
-    "descriptors:size_category": {
-      "size": "large"
-    },
-    "descriptors:texture": {
-      "texture": "ridged"
+    "core:weight": {
+      "weight": 5
     },
     "descriptors:color_extended": {
       "color": "charcoal-gray"
@@ -27,8 +24,11 @@
     "descriptors:shape_general": {
       "shape": "conical"
     },
-    "items:weight": {
-      "weight": 5
+    "descriptors:size_category": {
+      "size": "large"
+    },
+    "descriptors:texture": {
+      "texture": "ridged"
     }
   }
 }

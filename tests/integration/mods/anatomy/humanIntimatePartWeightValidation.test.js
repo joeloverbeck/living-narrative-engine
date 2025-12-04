@@ -1,7 +1,7 @@
 /**
  * @file humanIntimatePartWeightValidation.test.js
  * @description Validates that human intimate anatomy entity definitions have appropriate
- * items:weight components with biologically realistic values.
+ * core:weight components with biologically realistic values.
  *
  * This test ensures weight coverage for:
  * - Ass cheeks (11 variants)
@@ -43,7 +43,7 @@ function loadEntityFile(filename) {
  * @returns {number|undefined} Weight value or undefined
  */
 function getWeight(entity) {
-  return entity?.components?.['items:weight']?.weight;
+  return entity?.components?.['core:weight']?.weight;
 }
 
 /**

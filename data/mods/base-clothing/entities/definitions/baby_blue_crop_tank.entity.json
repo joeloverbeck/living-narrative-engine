@@ -29,7 +29,7 @@
     },
     "items:item": {},
     "items:portable": {},
-    "items:weight": {
+    "core:weight": {
       "weight": 0.20
     },
     "core:name": {

@@ -20,6 +20,9 @@
     "core:name": {
       "text": "malformed hand"
     },
+    "core:weight": {
+      "weight": 2
+    },
     "descriptors:color_extended": {
       "color": "mottled-gray"
     },
@@ -31,9 +34,6 @@
     },
     "descriptors:texture": {
       "texture": "webbed-clawed"
-    },
-    "items:weight": {
-      "weight": 2
     }
   }
 }

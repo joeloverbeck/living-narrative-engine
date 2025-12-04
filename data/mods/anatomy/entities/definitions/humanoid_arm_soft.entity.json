@@ -23,14 +23,14 @@
         }
       ]
     },
-    "descriptors:firmness": {
-      "firmness": "soft"
-    },
     "core:name": {
       "text": "soft arm"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 4
+    },
+    "descriptors:firmness": {
+      "firmness": "soft"
     }
   }
 }

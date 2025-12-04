@@ -15,14 +15,14 @@
     "core:name": {
       "text": "chicken foot"
     },
-    "descriptors:texture": {
-      "texture": "scaled"
+    "core:weight": {
+      "weight": 0.03
     },
     "descriptors:color_basic": {
       "color": "yellow"
     },
-    "items:weight": {
-      "weight": 0.03
+    "descriptors:texture": {
+      "texture": "scaled"
     }
   }
 }

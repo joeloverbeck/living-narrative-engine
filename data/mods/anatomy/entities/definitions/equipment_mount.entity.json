@@ -10,7 +10,7 @@
     "core:name": {
       "text": "equipment mount"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 0.5
     }
   }

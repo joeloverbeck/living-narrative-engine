@@ -23,17 +23,17 @@
         }
       ]
     },
-    "descriptors:build": {
-      "build": "hulking"
+    "core:name": {
+      "text": "hulking, hairy arm"
+    },
+    "core:weight": {
+      "weight": 4
     },
     "descriptors:body_hair": {
       "hairDensity": "hairy"
     },
-    "core:name": {
-      "text": "hulking, hairy arm"
-    },
-    "items:weight": {
-      "weight": 4
+    "descriptors:build": {
+      "build": "hulking"
     }
   }
 }

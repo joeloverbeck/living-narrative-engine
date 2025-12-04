@@ -3,6 +3,7 @@
   "id": "anatomy:human_vagina_large_soft",
   "description": "A human female genital organ with large size, soft muscle tone, and smooth texture",
   "components": {
+    "anatomy:embedded": {},
     "anatomy:part": {
       "subType": "vagina",
       "hit_probability_weight": 2
@@ -19,21 +20,20 @@
         "accessories"
       ]
     },
-    "descriptors:size_category": {
-      "size": "large"
+    "core:name": {
+      "text": "vagina"
+    },
+    "core:weight": {
+      "weight": 0.06
     },
     "descriptors:firmness": {
       "firmness": "soft"
     },
+    "descriptors:size_category": {
+      "size": "large"
+    },
     "descriptors:texture": {
       "texture": "smooth"
-    },
-    "core:name": {
-      "text": "vagina"
-    },
-    "items:weight": {
-      "weight": 0.06
-    },
-    "anatomy:embedded": {}
+    }
   }
 }

@@ -230,7 +230,7 @@ describe('Weapon Damage Capabilities Validation - Integration', () => {
         'items:item',
         'items:portable',
         'weapons:weapon',
-        'items:weight',
+        'core:weight',
         'descriptors:color_basic',
         'descriptors:texture',
         'core:material',

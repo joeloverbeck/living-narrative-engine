@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "centaur_torso",
-      "hit_probability_weight": 40
+      "hit_probability_weight": 40,
+      "health_calculation_weight": 10
     },
     "anatomy:part_health": {
       "currentHealth": 80,
@@ -113,14 +114,14 @@
     "core:name": {
       "text": "centaur body"
     },
-    "descriptors:build": {
-      "build": "athletic"
+    "core:weight": {
+      "weight": 150
     },
     "descriptors:body_composition": {
       "composition": "lean"
     },
-    "items:weight": {
-      "weight": 150
+    "descriptors:build": {
+      "build": "athletic"
     }
   }
 }

@@ -15,14 +15,14 @@
     "core:name": {
       "text": "dragon leg"
     },
+    "core:weight": {
+      "weight": 60
+    },
     "descriptors:size_category": {
       "size": "large"
     },
     "descriptors:texture": {
       "texture": "scaled"
-    },
-    "items:weight": {
-      "weight": 60
     }
   }
 }

@@ -84,7 +84,7 @@ describe('Items - Phase 1 and 2 Integration', () => {
       .withName('Letter')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 0.05 })
+      .withComponent('core:weight', { weight: 0.05 })
       .build();
 
     giveFixture.reset([room, actor1, actor2, ...actor2Hands, item]);
@@ -166,13 +166,13 @@ describe('Items - Phase 1 and 2 Integration', () => {
       .withName('Gold Coin')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 0.02 })
+      .withComponent('core:weight', { weight: 0.02 })
       .build();
     const silver = new ModEntityBuilder('silver-1')
       .withName('Silver Coin')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 0.015 })
+      .withComponent('core:weight', { weight: 0.015 })
       .build();
 
     dropFixture.reset([room, actor1, ...actor1Hands, actor2, actor3, gold, silver]);

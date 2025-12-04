@@ -340,9 +340,58 @@ describe('InjuryNarrativeFormatterService', () => {
         const result = service.formatFirstPerson(summary);
         // Should NOT produce "My right ear and right ear is completely numb"
         expect(result).not.toMatch(/right ear and right ear/);
-        // Should produce single part reference
+        // Should produce single part reference with singular verb
         expect(result).toContain('right ear');
         expect(result).toContain('is completely numb');
+        expect(result).not.toContain('are completely numb');
+      });
+
+      it('should produce correct plural grammar for multiple destroyed parts', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'ear',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+          ],
+          destroyedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'ear',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+          ],
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          dismemberedParts: [],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        // Should use plural verb form for multiple destroyed parts
+        expect(result).toContain('left arm');
+        expect(result).toContain('right ear');
+        expect(result).toContain('are completely numb');
+        expect(result).not.toContain('is completely numb');
       });
     });
 
@@ -377,6 +426,9 @@ describe('InjuryNarrativeFormatterService', () => {
         expect(result).toContain('left arm');
         expect(result).toContain('right arm');
         expect(result).toContain('and');
+        // Should use plural verb form for multiple parts
+        expect(result).toContain('throb painfully');
+        expect(result).not.toContain('throbs painfully');
       });
 
       it('should group injuries by severity', () => {

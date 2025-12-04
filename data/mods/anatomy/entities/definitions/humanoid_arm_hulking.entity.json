@@ -23,14 +23,14 @@
         }
       ]
     },
-    "descriptors:build": {
-      "build": "hulking"
-    },
     "core:name": {
       "text": "hulking arm"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 4
+    },
+    "descriptors:build": {
+      "build": "hulking"
     }
   }
 }

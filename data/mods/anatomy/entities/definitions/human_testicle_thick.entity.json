@@ -19,14 +19,14 @@
         "accessories"
       ]
     },
-    "descriptors:build": {
-      "build": "thick"
-    },
     "core:name": {
       "text": "thick testicle"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 0.035
+    },
+    "descriptors:build": {
+      "build": "thick"
     }
   }
 }
