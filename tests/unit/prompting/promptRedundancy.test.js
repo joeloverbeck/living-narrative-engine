@@ -17,7 +17,7 @@ describe('Prompt Redundancy Tests (LLMROLPROARCANA-004)', () => {
   });
 
   describe('INNER VOICE GUIDANCE deduplication', () => {
-    it('should appear in thoughtsVoiceGuidance but not duplicated in finalInstructions', () => {
+    it('should appear only in thoughtsSection and not in finalInstructions', () => {
       // Arrange
       const promptData = {
         actionTagRulesContent: 'Action tag rules',
@@ -33,8 +33,9 @@ describe('Prompt Redundancy Tests (LLMROLPROARCANA-004)', () => {
       // Act
       const formattedData = formatter.formatPromptData(promptData);
 
-      // Assert - Should appear in thoughtsVoiceGuidance
-      expect(formattedData.thoughtsVoiceGuidance).toContain('INNER VOICE GUIDANCE');
+      // Assert - Guidance should live inside the thoughtsSection
+      expect(formattedData.thoughtsVoiceGuidance).toBe('');
+      expect(formattedData.thoughtsSection).toContain('INNER VOICE GUIDANCE');
 
       // finalInstructionsContent should pass through unchanged (no INNER VOICE GUIDANCE)
       expect(formattedData.finalInstructionsContent).toBe(
@@ -42,7 +43,7 @@ describe('Prompt Redundancy Tests (LLMROLPROARCANA-004)', () => {
       );
     });
 
-    it('should include INNER VOICE GUIDANCE in thoughtsVoiceGuidance when thoughts exist', () => {
+    it('should include INNER VOICE GUIDANCE in thoughtsSection when thoughts exist', () => {
       // Arrange
       const promptData = {
         thoughtsArray: [{ text: 'Previous thought' }],
@@ -52,15 +53,11 @@ describe('Prompt Redundancy Tests (LLMROLPROARCANA-004)', () => {
       const formattedData = formatter.formatPromptData(promptData);
 
       // Assert
-      expect(formattedData.thoughtsVoiceGuidance).toContain(
-        'INNER VOICE GUIDANCE'
-      );
-      expect(formattedData.thoughtsVoiceGuidance).toContain(
-        'do not repeat or barely rephrase'
-      );
+      expect(formattedData.thoughtsVoiceGuidance).toBe('');
+      expect(formattedData.thoughtsSection).toContain('INNER VOICE GUIDANCE');
     });
 
-    it('should include INNER VOICE GUIDANCE in thoughtsVoiceGuidance when no thoughts exist', () => {
+    it('should include INNER VOICE GUIDANCE in thoughtsSection when no thoughts exist', () => {
       // Arrange
       const promptData = {
         thoughtsArray: [],
@@ -70,12 +67,8 @@ describe('Prompt Redundancy Tests (LLMROLPROARCANA-004)', () => {
       const formattedData = formatter.formatPromptData(promptData);
 
       // Assert
-      expect(formattedData.thoughtsVoiceGuidance).toContain(
-        'INNER VOICE GUIDANCE'
-      );
-      expect(formattedData.thoughtsVoiceGuidance).toContain(
-        'authentically reflect your character'
-      );
+      expect(formattedData.thoughtsVoiceGuidance).toBe('');
+      expect(formattedData.thoughtsSection).toContain('INNER VOICE GUIDANCE');
     });
 
     it('should NOT include INNER VOICE GUIDANCE in static finalInstructionsContent', async () => {
@@ -108,7 +101,7 @@ describe('Prompt Redundancy Tests (LLMROLPROARCANA-004)', () => {
   });
 
   describe('Contextual placement verification', () => {
-    it('should place INNER VOICE GUIDANCE contextually before thoughts section', () => {
+    it('should place INNER VOICE GUIDANCE inside the thoughts section', () => {
       // Arrange
       const promptData = {
         thoughtsArray: [{ text: 'Test thought' }],
@@ -117,49 +110,25 @@ describe('Prompt Redundancy Tests (LLMROLPROARCANA-004)', () => {
       // Act
       const formattedData = formatter.formatPromptData(promptData);
 
-      // Assert - Guidance should be in thoughtsVoiceGuidance (placed before thoughts)
-      expect(formattedData.thoughtsVoiceGuidance).toBeTruthy();
-      expect(formattedData.thoughtsVoiceGuidance).toContain(
-        'INNER VOICE GUIDANCE'
-      );
+      // Assert - Guidance should be embedded inside the thoughts section
+      expect(formattedData.thoughtsVoiceGuidance).toBe('');
+      expect(formattedData.thoughtsSection).toContain('INNER VOICE GUIDANCE');
 
       // And thoughts section should exist
       expect(formattedData.thoughtsSection).toBeTruthy();
       expect(formattedData.thoughtsSection).toContain('Test thought');
     });
 
-    it('should adapt guidance based on presence of previous thoughts', () => {
-      // Arrange - No previous thoughts
-      const noThoughtsData = { thoughtsArray: [] };
-
-      // Act
-      const noThoughtsFormatted =
-        formatter.formatPromptData(noThoughtsData);
-
-      // Assert - Should have base guidance without anti-repetition
-      expect(noThoughtsFormatted.thoughtsVoiceGuidance).toContain(
-        'INNER VOICE GUIDANCE'
-      );
-      expect(noThoughtsFormatted.thoughtsVoiceGuidance).not.toContain(
-        'do not repeat or barely rephrase'
-      );
-
-      // Arrange - With previous thoughts
-      const withThoughtsData = {
+    it('should include the same guidance regardless of previous thoughts', () => {
+      const noThoughtsFormatted = formatter.formatPromptData({ thoughtsArray: [] });
+      const withThoughtsFormatted = formatter.formatPromptData({
         thoughtsArray: [{ text: 'Previous thought' }],
-      };
+      });
 
-      // Act
-      const withThoughtsFormatted =
-        formatter.formatPromptData(withThoughtsData);
-
-      // Assert - Should emphasize anti-repetition
-      expect(withThoughtsFormatted.thoughtsVoiceGuidance).toContain(
-        'INNER VOICE GUIDANCE'
-      );
-      expect(withThoughtsFormatted.thoughtsVoiceGuidance).toContain(
-        'do not repeat or barely rephrase'
-      );
+      expect(noThoughtsFormatted.thoughtsVoiceGuidance).toBe('');
+      expect(withThoughtsFormatted.thoughtsVoiceGuidance).toBe('');
+      expect(noThoughtsFormatted.thoughtsSection).toContain('INNER VOICE GUIDANCE');
+      expect(withThoughtsFormatted.thoughtsSection).toContain('INNER VOICE GUIDANCE');
     });
   });
 });

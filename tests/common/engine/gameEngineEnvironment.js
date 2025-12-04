@@ -14,6 +14,10 @@ import {
   createMockPlaytimeTracker,
   createMockSafeEventDispatcher,
   createMockInitializationService,
+  createMockTurnActionChoicePipeline,
+  createMockAIPromptPipeline,
+  createMockLLMAdapter,
+  createMockEntityDisplayDataProvider,
 } from '../mockFactories';
 import { buildServiceEnvironment } from '../mockEnvironment.js';
 
@@ -25,6 +29,10 @@ const factoryMap = {
   playtimeTracker: createMockPlaytimeTracker,
   safeEventDispatcher: createMockSafeEventDispatcher,
   initializationService: createMockInitializationService,
+  turnActionChoicePipeline: createMockTurnActionChoicePipeline,
+  aiPromptPipeline: createMockAIPromptPipeline,
+  llmAdapter: createMockLLMAdapter,
+  entityDisplayDataProvider: createMockEntityDisplayDataProvider,
 };
 
 const tokenMap = {
@@ -35,6 +43,10 @@ const tokenMap = {
   [tokens.PlaytimeTracker]: 'playtimeTracker',
   [tokens.ISafeEventDispatcher]: 'safeEventDispatcher',
   [tokens.IInitializationService]: 'initializationService',
+  [tokens.TurnActionChoicePipeline]: 'turnActionChoicePipeline',
+  [tokens.IAIPromptPipeline]: 'aiPromptPipeline',
+  [tokens.LLMAdapter]: 'llmAdapter',
+  [tokens.EntityDisplayDataProvider]: 'entityDisplayDataProvider',
 };
 
 /**

@@ -580,6 +580,76 @@ export function validateRuleStructure(ruleData, _filePath = 'unknown') {
   return validateAllOperations(ruleData, 'root');
 }
 
+
+/**
+ * Validates macro-specific structure
+ *
+ * @param {any} macroData - The macro data to validate
+ * @param {string} _filePath - File path for error context (unused but kept for API compatibility)
+ * @returns {PreValidationResult} Validation result
+ */
+export function validateMacroStructure(macroData, _filePath = 'unknown') {
+  if (!macroData || typeof macroData !== 'object') {
+    return {
+      isValid: false,
+      error: 'Macro data must be an object',
+      path: 'root',
+      suggestions: ['Ensure the macro file contains a valid JSON object'],
+    };
+  }
+
+  // Check for required macro fields
+  if (!macroData.id) {
+    return {
+      isValid: false,
+      error: 'Missing required "id" field in macro',
+      path: 'root',
+      suggestions: [
+        'Add an "id" field with a namespaced identifier like "modId:macroName"',
+      ],
+    };
+  }
+
+  if (!macroData.description) {
+    return {
+      isValid: false,
+      error: 'Missing required "description" field in macro',
+      path: 'root',
+      suggestions: ['Add a "description" field explaining what the macro does'],
+    };
+  }
+
+  if (!macroData.actions) {
+    return {
+      isValid: false,
+      error: 'Missing required "actions" field in macro',
+      path: 'root',
+      suggestions: ['Add an "actions" array with at least one operation'],
+    };
+  }
+
+  if (!Array.isArray(macroData.actions)) {
+    return {
+      isValid: false,
+      error: 'Macro "actions" field must be an array',
+      path: 'actions',
+      suggestions: ['Change the actions field to an array of operations'],
+    };
+  }
+
+  if (macroData.actions.length === 0) {
+    return {
+      isValid: false,
+      error: 'Macro "actions" array cannot be empty',
+      path: 'actions',
+      suggestions: ['Add at least one operation to the actions array'],
+    };
+  }
+
+  // Validate all operations in the macro
+  return validateAllOperations(macroData, 'root');
+}
+
 /**
  * Performs comprehensive pre-validation based on expected schema type
  *
@@ -592,6 +662,11 @@ export function performPreValidation(data, schemaId, filePath = 'unknown') {
   // Check for rule-specific validation
   if (schemaId === 'schema://living-narrative-engine/rule.schema.json') {
     return validateRuleStructure(data, filePath);
+  }
+
+  // Check for macro-specific validation (fail-fast before AJV circular ref issues)
+  if (schemaId === 'schema://living-narrative-engine/macro.schema.json') {
+    return validateMacroStructure(data, filePath);
   }
 
   // For other schemas, skip pre-validation to avoid conflicts

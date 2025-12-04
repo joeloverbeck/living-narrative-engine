@@ -474,6 +474,29 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       expect(result.errors).toBeNull();
     });
 
+    it('should accept valid dismembered payload with all optional fields', async () => {
+      const payloadSchemaId = `${dismemberedEvent.id}#payload`;
+
+      // Register the payload schema
+      await schemaValidator.addSchema(dismemberedEvent.payloadSchema, payloadSchemaId);
+
+      // This is the full payload that damageTypeEffectsService.js dispatches
+      const validPayload = {
+        entityId: 'entity-123',
+        entityName: 'Player Character',
+        entityPronoun: 'they',
+        partId: 'part-456',
+        partType: 'arm',
+        orientation: 'left',
+        damageTypeId: 'slashing',
+        timestamp: Date.now(),
+      };
+
+      const result = schemaValidator.validate(payloadSchemaId, validPayload);
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toBeNull();
+    });
+
     it('should reject dismembered payload missing required damageTypeId', async () => {
       const payloadSchemaId = `${dismemberedEvent.id}#payload`;
 
@@ -516,12 +539,14 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       ).toBe(true);
     });
 
-    it('should reject dismembered payload with additional properties', async () => {
+    it('should reject dismembered payload with unknown additional properties', async () => {
       const payloadSchemaId = `${dismemberedEvent.id}#payload`;
 
       // Register the payload schema
       await schemaValidator.addSchema(dismemberedEvent.payloadSchema, payloadSchemaId);
 
+      // Use a truly unknown field that is NOT part of the schema
+      // (entityName, entityPronoun, partType, orientation are now allowed)
       const invalidPayload = {
         entityId: 'entity-123',
         partId: 'part-456',
@@ -624,23 +649,40 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const props = eventDef.payloadSchema.properties;
       const required = eventDef.payloadSchema.required;
 
-      // Verify all fields dispatched by damageTypeEffectsService.js:180-185 are defined
+      // Verify all fields dispatched by damageTypeEffectsService.js:223-232 are defined
+      // Required fields
       expect(props.entityId).toBeDefined();
       expect(props.partId).toBeDefined();
       expect(props.damageTypeId).toBeDefined();
       expect(props.timestamp).toBeDefined();
 
-      // Verify all fields are required
+      // Optional fields for UI rendering (also dispatched by damageTypeEffectsService)
+      expect(props.entityName).toBeDefined();
+      expect(props.entityPronoun).toBeDefined();
+      expect(props.partType).toBeDefined();
+      expect(props.orientation).toBeDefined();
+
+      // Verify required fields (only the core 4)
       expect(required).toContain('entityId');
       expect(required).toContain('partId');
       expect(required).toContain('damageTypeId');
       expect(required).toContain('timestamp');
+
+      // Verify optional fields are NOT required
+      expect(required).not.toContain('entityName');
+      expect(required).not.toContain('entityPronoun');
+      expect(required).not.toContain('partType');
+      expect(required).not.toContain('orientation');
 
       // Verify field types
       expect(props.entityId.type).toBe('string');
       expect(props.partId.type).toBe('string');
       expect(props.damageTypeId.type).toBe('string');
       expect(props.timestamp.type).toBe('integer');
+      expect(props.entityName.type).toBe('string');
+      expect(props.entityPronoun.type).toBe('string');
+      expect(props.partType.type).toBe('string');
+      expect(props.orientation.type).toBe('string');
     });
   });
 });

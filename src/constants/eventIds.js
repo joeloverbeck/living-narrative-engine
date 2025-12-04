@@ -197,6 +197,12 @@ export const REQUEST_SHOW_LOAD_GAME_UI = 'core:ui_request_show_load_game';
  */
 export const CANNOT_SAVE_GAME_INFO = 'core:ui_cannot_save_game_info';
 
+/**
+ * Signals the UI should display an LLM prompt preview for the current actor.
+ * Payload is provided by GameEngine.previewLlmPromptForCurrentActor.
+ */
+export const UI_SHOW_LLM_PROMPT_PREVIEW = 'core:ui_show_llm_prompt_preview';
+
 // --- Initialization & Error UI Event IDs ---
 export const INITIALIZATION_SERVICE_FAILED_ID =
   'initialization:initialization_service:failed';

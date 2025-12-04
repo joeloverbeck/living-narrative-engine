@@ -120,18 +120,24 @@ describe('Prompt Assembly with template-based system', () => {
     },
   });
 
+  const THOUGHTS_GUIDANCE_TEXT = `INNER VOICE GUIDANCE: Generate thoughts in your character's authentic mental voice (their habits of mind, personality patterns, and inner speech style). Build on your current mental state with a fresh thought that does not repeat or barely rephrase the "Recent thoughts" above.\n\nTIMING: The thought must occur in the instant IMMEDIATELY BEFORE you perform your chosen action.\n\nANTICIPATION (ALLOWED): You may anticipate likely outcomes, risks, fears, hopes, and contingencies as possibilities (this is normal human/character planning).\n\nEPISTEMIC RULE (CRITICAL): You do NOT yet know the result of your action. Do not describe outcomes, reactions, success/failure, or consequences as facts or as already happened.\n\nSTYLE RULE: Use intent- and possibility-language ("I'm going to...", "I want to...", "maybe...", "might...", "if...", "hopefully..."). Avoid past-tense or certainty about effects ("That hurt them." "They fall." "It worked.").`;
+
+  const buildThoughtsSection = (content = '') => {
+    const list = content ? `${content}\n\n` : '\n';
+    return `<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n${list}-----\n${THOUGHTS_GUIDANCE_TEXT}\n</thoughts>`;
+  };
+
   const buildPrompt = async (thoughts = []) => {
     const testDto = createTestDto(thoughts);
     const promptData = await provider.getPromptData(testDto, logger);
     return await promptBuilder.build('test-llm', promptData);
   };
 
-  test('Entity with zero thoughts does NOT include empty thoughts section', async () => {
+  test('Entity with zero thoughts still includes empty thoughts section', async () => {
     const prompt = await buildPrompt([]);
 
-    // Should NOT include the thoughts section when empty (smart template engine)
-    expect(prompt).not.toContain('<thoughts>');
-    expect(prompt).not.toContain('Your most recent thoughts');
+    // Should include the empty thoughts section placeholder for visibility
+    expect(prompt).toContain(buildThoughtsSection());
   });
 
   test('Entity with one thought includes the formatted section', async () => {
@@ -139,7 +145,7 @@ describe('Prompt Assembly with template-based system', () => {
 
     // Should include the thoughts section with the thought and enhanced guidance text
     expect(prompt).toContain(
-      "<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n- OnlyThought\n\n-----\nGenerate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.\n</thoughts>"
+      buildThoughtsSection('- OnlyThought')
     );
     expect(prompt).toContain('OnlyThought');
   });
@@ -149,7 +155,7 @@ describe('Prompt Assembly with template-based system', () => {
 
     // Should include both thoughts formatted correctly with enhanced formatting
     expect(prompt).toContain(
-      "<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n- First thought\n- Second thought\n\n-----\nGenerate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.\n</thoughts>"
+      buildThoughtsSection('- First thought\n- Second thought')
     );
     expect(prompt).toContain('First thought');
     expect(prompt).toContain('Second thought');

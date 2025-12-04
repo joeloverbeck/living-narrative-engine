@@ -125,6 +125,24 @@ export function validateAgainstSchema(
   const validationResult = validator.validate(schemaId, data);
 
   if (!validationResult.isValid) {
+    // Detect possible circular schema reference cascade - helps debug schema issues
+    const errors = validationResult.errors ?? [];
+    if (errors.length > 100) {
+      const anyOfErrors = errors.filter((e) => e.keyword === 'anyOf');
+      if (anyOfErrors.length > 50) {
+        logger.warn(
+          `Possible circular schema reference detected - ${errors.length} errors with ${anyOfErrors.length} anyOf failures. ` +
+            `Check nested actions/operations for circular $refs in schema '${schemaId}'.`,
+          {
+            schemaId,
+            filePath,
+            totalErrors: errors.length,
+            anyOfErrors: anyOfErrors.length,
+          }
+        );
+      }
+    }
+
     const computedFailureMsg =
       typeof failureMessage === 'function'
         ? failureMessage(validationResult.errors ?? [])

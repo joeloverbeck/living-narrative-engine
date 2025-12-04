@@ -9,9 +9,25 @@
         "type": "string",
         "description": "Entity ID of the character experiencing dismemberment"
       },
+      "entityName": {
+        "type": "string",
+        "description": "Display name of the entity (for UI rendering)"
+      },
+      "entityPronoun": {
+        "type": "string",
+        "description": "Pronoun for the entity (for narrative text)"
+      },
       "partId": {
         "type": "string",
         "description": "Entity ID of the dismembered body part"
+      },
+      "partType": {
+        "type": "string",
+        "description": "Type of body part (e.g., 'arm', 'leg')"
+      },
+      "orientation": {
+        "type": "string",
+        "description": "Orientation of the part (e.g., 'left', 'right')"
       },
       "damageTypeId": {
         "type": "string",

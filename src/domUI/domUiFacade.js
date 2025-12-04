@@ -16,6 +16,7 @@
 /** @typedef {import('./turnOrderTickerRenderer.js').TurnOrderTickerRenderer} TurnOrderTickerRenderer */
 /** @typedef {import('./injuryStatusPanel.js').InjuryStatusPanel} InjuryStatusPanel */
 /** @typedef {import('./damageEventMessageRenderer.js').DamageEventMessageRenderer} DamageEventMessageRenderer */
+/** @typedef {import('./PromptPreviewModal.js').PromptPreviewModal} PromptPreviewModal */
 
 /**
  * Provides a single point of access to the various UI rendering/controller components.
@@ -37,6 +38,7 @@ export class DomUiFacade {
   #turnOrderTickerRenderer;
   #injuryStatusPanel;
   #damageEventMessageRenderer;
+  #promptPreviewModal;
 
   /**
    * Creates an instance of DomUiFacade.
@@ -53,6 +55,7 @@ export class DomUiFacade {
    * @param {LlmSelectionModal} deps.llmSelectionModal - The LLM Selection Modal component.
    * @param {TurnOrderTickerRenderer} deps.turnOrderTickerRenderer - Renderer for turn order ticker.
    * @param {InjuryStatusPanel} deps.injuryStatusPanel - The Injury Status Panel widget.
+   * @param {PromptPreviewModal} deps.promptPreviewModal - The LLM Prompt Preview Modal.
    * @param {EntityLifecycleMonitor} [deps.entityLifecycleMonitor] - The Entity Lifecycle Monitor component (optional, disabled for performance).
    * @param {DamageEventMessageRenderer} [deps.damageEventMessageRenderer] - The Damage Event Message Renderer (optional, event-driven).
    * @throws {Error} If any required dependency is missing or invalid.
@@ -69,6 +72,7 @@ export class DomUiFacade {
     llmSelectionModal,
     turnOrderTickerRenderer,
     injuryStatusPanel,
+    promptPreviewModal,
     entityLifecycleMonitor = null, // OPTIONAL - disabled for performance
     damageEventMessageRenderer = null, // OPTIONAL - event-driven, no external access needed
   }) {
@@ -131,6 +135,10 @@ export class DomUiFacade {
       throw new Error(
         'DomUiFacade: Missing or invalid injuryStatusPanel dependency.'
       );
+    if (!promptPreviewModal || typeof promptPreviewModal.show !== 'function')
+      throw new Error(
+        'DomUiFacade: Missing or invalid promptPreviewModal dependency.'
+      );
     // EntityLifecycleMonitor is now optional (disabled for performance)
     if (
       entityLifecycleMonitor &&
@@ -159,6 +167,7 @@ export class DomUiFacade {
     this.#llmSelectionModal = llmSelectionModal;
     this.#turnOrderTickerRenderer = turnOrderTickerRenderer;
     this.#injuryStatusPanel = injuryStatusPanel;
+    this.#promptPreviewModal = promptPreviewModal;
     this.#entityLifecycleMonitor = entityLifecycleMonitor;
     this.#damageEventMessageRenderer = damageEventMessageRenderer;
   }
@@ -281,6 +290,15 @@ export class DomUiFacade {
   }
 
   /**
+   * Provides the PromptPreviewModal instance.
+   *
+   * @returns {PromptPreviewModal} The LLM Prompt Preview Modal.
+   */
+  get promptPreviewModal() {
+    return this.#promptPreviewModal;
+  }
+
+  /**
    * Optional: Dispose method to potentially call dispose on all managed renderers.
    * Useful if the facade's lifecycle manages the renderers' lifecycle.
    */
@@ -296,6 +314,7 @@ export class DomUiFacade {
     this.#llmSelectionModal?.dispose?.();
     this.#turnOrderTickerRenderer?.dispose?.();
     this.#injuryStatusPanel?.dispose?.();
+    this.#promptPreviewModal?.dispose?.();
     this.#entityLifecycleMonitor?.dispose?.();
     this.#damageEventMessageRenderer?.dispose?.();
   }

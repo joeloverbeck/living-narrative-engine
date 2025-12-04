@@ -22,12 +22,19 @@ function createLogger() {
  * @param root0.isRegistered
  */
 function createContainer(resolutionMap, { isRegistered = () => false } = {}) {
+  const defaults = {
+    [tokens.TurnActionChoicePipeline]: { buildChoices: jest.fn() },
+    [tokens.IAIPromptPipeline]: { generatePrompt: jest.fn() },
+    [tokens.LLMAdapter]: { getCurrentActiveLlmId: jest.fn() },
+    [tokens.EntityDisplayDataProvider]: { getEntityName: jest.fn() },
+  };
+  const map = { ...defaults, ...resolutionMap };
   return {
     resolve: jest.fn((token) => {
-      if (!Object.prototype.hasOwnProperty.call(resolutionMap, token)) {
+      if (!Object.prototype.hasOwnProperty.call(map, token)) {
         throw new Error(`Unexpected token resolution request: ${String(token)}`);
       }
-      return resolutionMap[token];
+      return map[token];
     }),
     isRegistered: jest.fn(isRegistered),
   };

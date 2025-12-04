@@ -377,19 +377,23 @@ export class PromptDataFormatter {
    * Format thoughts section with conditional XML wrapper
    *
    * @param {Array<{text: string, timestamp: string}>} thoughtsArray - Array of thoughts
-   * @returns {string} Complete thoughts section with XML tags or empty string
+   * @returns {string} Complete thoughts section with XML tags
    */
   formatThoughtsSection(thoughtsArray) {
     const content = this.formatThoughts(thoughtsArray);
-    if (!content) {
-      return '';
-    }
+    const thoughtsList = content ? `${content}\n\n` : '\n';
     return `<thoughts>
 Recent thoughts (avoid repeating or barely rephrasing these):
-${content}
+${thoughtsList}-----
+INNER VOICE GUIDANCE: Generate thoughts in your character's authentic mental voice (their habits of mind, personality patterns, and inner speech style). Build on your current mental state with a fresh thought that does not repeat or barely rephrase the "Recent thoughts" above.
 
------
-Generate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.
+TIMING: The thought must occur in the instant IMMEDIATELY BEFORE you perform your chosen action.
+
+ANTICIPATION (ALLOWED): You may anticipate likely outcomes, risks, fears, hopes, and contingencies as possibilities (this is normal human/character planning).
+
+EPISTEMIC RULE (CRITICAL): You do NOT yet know the result of your action. Do not describe outcomes, reactions, success/failure, or consequences as facts or as already happened.
+
+STYLE RULE: Use intent- and possibility-language ("I'm going to...", "I want to...", "maybe...", "might...", "if...", "hopefully..."). Avoid past-tense or certainty about effects ("That hurt them." "They fall." "It worked.").
 </thoughts>`;
   }
 
@@ -399,12 +403,9 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
    * @param {Array} thoughtsArray - Array of thought objects
    * @returns {string} Voice guidance or empty string if no thoughts
    */
-  formatThoughtsVoiceGuidance(thoughtsArray) {
-    if (!thoughtsArray || thoughtsArray.length === 0) {
-      return "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects.";
-    }
-
-    return "INNER VOICE GUIDANCE: Your thoughts must be fresh and unique - do not repeat or barely rephrase the previous thoughts shown above. Build upon your existing mental state with new insights, reactions, or perspectives that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects.";
+  formatThoughtsVoiceGuidance(_thoughtsArray) {
+    // Guidance now lives inside the <thoughts> section to avoid duplication.
+    return '';
   }
 
   /**

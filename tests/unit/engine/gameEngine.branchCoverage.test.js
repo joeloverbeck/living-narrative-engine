@@ -19,11 +19,18 @@ function createLogger() {
  * @param resolutionMap
  */
 function createContainer(resolutionMap) {
+  const defaults = {
+    [tokens.TurnActionChoicePipeline]: { buildChoices: jest.fn() },
+    [tokens.IAIPromptPipeline]: { generatePrompt: jest.fn() },
+    [tokens.LLMAdapter]: { getCurrentActiveLlmId: jest.fn() },
+    [tokens.EntityDisplayDataProvider]: { getEntityName: jest.fn() },
+  };
+  const map = { ...defaults, ...resolutionMap };
   const resolve = jest.fn((token) => {
-    if (!Object.prototype.hasOwnProperty.call(resolutionMap, token)) {
+    if (!Object.prototype.hasOwnProperty.call(map, token)) {
       throw new Error(`Unexpected token resolution request: ${String(token)}`);
     }
-    return resolutionMap[token];
+    return map[token];
   });
   return {
     resolve,

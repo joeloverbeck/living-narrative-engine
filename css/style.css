@@ -35,6 +35,7 @@
 @import url('components/_entity-lifecycle-monitor.css');
 @import url('components/_critical-log-notifier.css');
 @import url('components/_actor-participation-panel.css');
+@import url('components/_llm-prompt-debug.css');
 @import url('components/_turn-order-ticker.css');
 @import url('components/_injury-status-panel.css');
 

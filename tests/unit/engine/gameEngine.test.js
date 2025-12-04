@@ -10,6 +10,7 @@ import {
   REQUEST_SHOW_SAVE_GAME_UI,
   REQUEST_SHOW_LOAD_GAME_UI,
   CANNOT_SAVE_GAME_INFO,
+  UI_SHOW_LLM_PROMPT_PREVIEW,
 } from '../../../src/constants/eventIds.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import { generateServiceUnavailableTests } from '../../common/engine/gameEngineHelpers.js';
@@ -680,6 +681,113 @@ describeEngineSuite('GameEngine', (context) => {
         expect.objectContaining({ context: 'game-load' })
       );
       expect(dispatcher.setBatchMode).toHaveBeenLastCalledWith(false);
+    });
+  });
+
+  describe('previewLlmPromptForCurrentActor', () => {
+    const actorId = 'actor-1';
+    const llmId = 'llm-core';
+
+    it('should dispatch an error payload when no turn is active', async () => {
+      const dispatcher = context.bed.getSafeEventDispatcher();
+      dispatcher.dispatch.mockClear();
+      context.bed.getTurnManager().getActiveTurnHandler.mockReturnValue(null);
+      context.bed.getTurnManager().getCurrentActor.mockReturnValue(null);
+
+      await expect(context.engine.previewLlmPromptForCurrentActor()).resolves
+        .toBeUndefined();
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        UI_SHOW_LLM_PROMPT_PREVIEW,
+        expect.objectContaining({
+          prompt: null,
+          actorId: null,
+          actorName: null,
+          llmId: null,
+          actionCount: 0,
+          errors: ['No active turn context'],
+          timestamp: expect.any(String),
+        }),
+        expect.objectContaining({ allowSchemaNotFound: true })
+      );
+      expect(
+        context.bed.getTurnActionChoicePipeline().buildChoices
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should build prompt preview data and dispatch it without calling getAIDecision', async () => {
+      const actor = { id: actorId };
+      const turnContext = { ctx: 'turn' };
+      const handler = { getTurnContext: jest.fn().mockReturnValue(turnContext) };
+      const availableActions = [{ id: 'a' }, { id: 'b' }];
+      const prompt = 'prompt-body';
+
+      context.bed.getTurnManager().getActiveTurnHandler.mockReturnValue(handler);
+      context.bed.getTurnManager().getCurrentActor.mockReturnValue(actor);
+      context.bed
+        .getEntityDisplayDataProvider()
+        .getEntityName.mockReturnValue('Actor Name');
+      context.bed
+        .getTurnActionChoicePipeline()
+        .buildChoices.mockResolvedValue(availableActions);
+      context.bed.getLlmAdapter().getCurrentActiveLlmId.mockResolvedValue(llmId);
+      context.bed.getAiPromptPipeline().generatePrompt.mockResolvedValue(prompt);
+
+      await context.engine.previewLlmPromptForCurrentActor();
+
+      expect(
+        context.bed.getTurnActionChoicePipeline().buildChoices
+      ).toHaveBeenCalledWith(actor, turnContext);
+      expect(context.bed.getAiPromptPipeline().generatePrompt).toHaveBeenCalledWith(
+        actor,
+        turnContext,
+        availableActions
+      );
+      expect(context.bed.getLlmAdapter().getAIDecision).not.toHaveBeenCalled();
+      expect(context.bed.getSafeEventDispatcher().dispatch).toHaveBeenCalledWith(
+        UI_SHOW_LLM_PROMPT_PREVIEW,
+        expect.objectContaining({
+          prompt,
+          actorId,
+          actorName: 'Actor Name',
+          llmId,
+          actionCount: availableActions.length,
+          timestamp: expect.any(String),
+          errors: [],
+        }),
+        expect.objectContaining({ allowSchemaNotFound: true })
+      );
+    });
+
+    it('should surface errors and dispatch prompt: null when pipelines throw', async () => {
+      const actor = { id: actorId };
+      const turnContext = { ctx: 'turn' };
+      const handler = { getTurnContext: jest.fn().mockReturnValue(turnContext) };
+      const failure = new Error('Pipeline failure');
+
+      context.bed.getTurnManager().getActiveTurnHandler.mockReturnValue(handler);
+      context.bed.getTurnManager().getCurrentActor.mockReturnValue(actor);
+      context.bed
+        .getTurnActionChoicePipeline()
+        .buildChoices.mockRejectedValue(failure);
+      context.bed.getLlmAdapter().getCurrentActiveLlmId.mockResolvedValue(llmId);
+
+      await context.engine.previewLlmPromptForCurrentActor();
+
+      expect(context.bed.getAiPromptPipeline().generatePrompt).not.toHaveBeenCalled();
+      expect(context.bed.getSafeEventDispatcher().dispatch).toHaveBeenCalledWith(
+        UI_SHOW_LLM_PROMPT_PREVIEW,
+        expect.objectContaining({
+          prompt: null,
+          actorId,
+          actorName: actorId,
+          llmId,
+          actionCount: 0,
+          errors: ['Pipeline failure'],
+          timestamp: expect.any(String),
+        }),
+        expect.objectContaining({ allowSchemaNotFound: true })
+      );
     });
   });
 

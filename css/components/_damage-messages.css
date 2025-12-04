@@ -3,8 +3,13 @@
 
 /* Base damage message styling */
 .damage-message {
+  /* Layout - match action result bubbles width behavior */
+  display: block;
+  max-width: 90%;
+  margin: 0.5rem auto;
+
+  /* Original styling */
   padding: var(--spacing-sm);
-  margin: var(--spacing-xs) 0;
   border-left: 3px solid var(--color-warning);
   background-color: rgba(var(--color-warning-rgb, 255, 193, 7), 0.1);
   border-radius: var(--border-radius-sm);

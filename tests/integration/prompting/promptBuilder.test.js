@@ -51,6 +51,13 @@ const SAMPLE_PROMPT_DATA = {
   ],
 };
 
+const THOUGHTS_GUIDANCE_TEXT = `INNER VOICE GUIDANCE: Generate thoughts in your character's authentic mental voice (their habits of mind, personality patterns, and inner speech style). Build on your current mental state with a fresh thought that does not repeat or barely rephrase the "Recent thoughts" above.\n\nTIMING: The thought must occur in the instant IMMEDIATELY BEFORE you perform your chosen action.\n\nANTICIPATION (ALLOWED): You may anticipate likely outcomes, risks, fears, hopes, and contingencies as possibilities (this is normal human/character planning).\n\nEPISTEMIC RULE (CRITICAL): You do NOT yet know the result of your action. Do not describe outcomes, reactions, success/failure, or consequences as facts or as already happened.\n\nSTYLE RULE: Use intent- and possibility-language ("I'm going to...", "I want to...", "maybe...", "might...", "if...", "hopefully..."). Avoid past-tense or certainty about effects ("That hurt them." "They fall." "It worked.").`;
+
+const buildThoughtsSection = (content = '') => {
+  const list = content ? `${content}\n\n` : '\n';
+  return `<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n${list}-----\n${THOUGHTS_GUIDANCE_TEXT}\n</thoughts>`;
+};
+
 /* ------------------------------------------------------------------------- */
 /* Test suite                                                                */
 /* ------------------------------------------------------------------------- */
@@ -129,7 +136,7 @@ describe('PromptBuilder (template-based)', () => {
       '<perception_log>\nTest perception 1\nTest perception 2\n</perception_log>'
     );
     expect(prompt).toContain(
-      "<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n- Test thought 1\n- Test thought 2\n\n-----\nGenerate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.\n</thoughts>"
+      buildThoughtsSection('- Test thought 1\n- Test thought 2')
     );
     expect(prompt).toContain(
       "NOTES WRITING GUIDANCE: The notes must be concise, but written in Test Character's own voice. Focus each note on critical facts while preserving Test Character's perspective. Avoid generic or neutral phrasing. Keep any new notes distinct from the existing entries listed below."
@@ -158,8 +165,9 @@ describe('PromptBuilder (template-based)', () => {
 
     const prompt = await builder.build(TEST_LLM_ID, dataWithEmptyArrays);
 
-    // Empty conditional sections should NOT have wrapper tags (smart template engine)
-    expect(prompt).not.toContain('<thoughts>');
+    // Thoughts section should still be present even when empty
+    expect(prompt).toContain(buildThoughtsSection());
+    // Other conditional sections without content should be suppressed
     expect(prompt).not.toContain('<notes>');
     expect(prompt).not.toContain('<goals>');
 
@@ -179,7 +187,7 @@ describe('PromptBuilder (template-based)', () => {
 
     // Should contain sections with content
     expect(prompt).toContain(
-      "<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n- I have a thought\n\n-----\nGenerate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.\n</thoughts>"
+      buildThoughtsSection('- I have a thought')
     );
     expect(prompt).toContain(
       "NOTES WRITING GUIDANCE: The notes must be concise, but written in Test Character's own voice. Focus each note on critical facts while preserving Test Character's perspective. Avoid generic or neutral phrasing."
