@@ -31,6 +31,9 @@
     },
     "core:name": {
       "text": "hulking, scarred arm"
+    },
+    "items:weight": {
+      "weight": 4
     }
   }
 }

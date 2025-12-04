@@ -1,0 +1,52 @@
+{
+  "$schema": "../../../schemas/event.schema.json",
+  "id": "anatomy:body_part_spawned",
+  "description": "Fired when a dismembered body part is spawned as a pickable entity in the world",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "ID of the character who lost the body part"
+      },
+      "entityName": {
+        "type": "string",
+        "description": "Display name of the character"
+      },
+      "spawnedEntityId": {
+        "type": "string",
+        "description": "ID of the newly spawned body part entity"
+      },
+      "spawnedEntityName": {
+        "type": "string",
+        "description": "Display name of the spawned entity (e.g., \"Sarah's left leg\")"
+      },
+      "partType": {
+        "type": "string",
+        "description": "Type of body part (e.g., 'leg', 'arm', 'head')"
+      },
+      "orientation": {
+        "type": ["string", "null"],
+        "description": "Orientation of the part (left, right, mid, or null for parts without orientation)"
+      },
+      "definitionId": {
+        "type": "string",
+        "description": "Entity definition ID used to spawn the body part (e.g., 'anatomy:human_leg')"
+      },
+      "timestamp": {
+        "type": "integer",
+        "description": "Unix timestamp when the body part was spawned"
+      }
+    },
+    "required": [
+      "entityId",
+      "entityName",
+      "spawnedEntityId",
+      "spawnedEntityName",
+      "partType",
+      "definitionId",
+      "timestamp"
+    ],
+    "additionalProperties": false
+  }
+}

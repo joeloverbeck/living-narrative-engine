@@ -23,6 +23,9 @@
     },
     "descriptors:plumage_sheen": {
       "sheen": "iridescent"
+    },
+    "items:weight": {
+      "weight": 0.15
     }
   }
 }

@@ -228,6 +228,124 @@ describe('InjuryNarrativeFormatterService', () => {
       });
     });
 
+    describe('duplicate part deduplication', () => {
+      it('should not duplicate destroyed parts in output', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+          ],
+          destroyedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+          ],
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          dismemberedParts: [],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        const armCount = (result.match(/left arm/g) || []).length;
+        expect(armCount).toBe(1);
+      });
+
+      it('should handle multiple destroyed parts without duplication', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'ear',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+          ],
+          destroyedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'ear',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+          ],
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          dismemberedParts: [],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        const armCount = (result.match(/left arm/g) || []).length;
+        const earCount = (result.match(/right ear/g) || []).length;
+        expect(armCount).toBe(1);
+        expect(earCount).toBe(1);
+      });
+
+      it('should produce correct grammar for single destroyed part', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'ear',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+          ],
+          destroyedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'ear',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+          ],
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          dismemberedParts: [],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        // Should NOT produce "My right ear and right ear is completely numb"
+        expect(result).not.toMatch(/right ear and right ear/);
+        // Should produce single part reference
+        expect(result).toContain('right ear');
+        expect(result).toContain('is completely numb');
+      });
+    });
+
     describe('multiple injuries', () => {
       it('should format multiple parts with same state', () => {
         const summary = {
@@ -427,6 +545,1047 @@ describe('InjuryNarrativeFormatterService', () => {
 
         const result = service.formatFirstPerson(summary);
         expect(result).toContain('Sharp pain shoots through');
+      });
+    });
+
+    describe('dismembered parts filtering', () => {
+      it('should not show health state for dismembered parts', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'ear',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+          ],
+          destroyedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'ear',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+          ],
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          dismemberedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'ear',
+              orientation: 'right',
+              isDismembered: true,
+            },
+          ],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        expect(result).toContain('is missing');
+        expect(result).not.toContain('is completely numb');
+      });
+
+      it('should show health state for destroyed but non-dismembered parts', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'torso',
+              orientation: null,
+              state: 'destroyed',
+            },
+          ],
+          destroyedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'torso',
+              orientation: null,
+              state: 'destroyed',
+            },
+          ],
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          dismemberedParts: [],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        expect(result).toContain('is completely numb');
+        expect(result).not.toContain('is missing');
+      });
+
+      it('should not show bleeding for dismembered parts', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+          ],
+          destroyedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+          ],
+          bleedingParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              bleedingSeverity: 'severe',
+            },
+          ],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          dismemberedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              isDismembered: true,
+            },
+          ],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        expect(result).toContain('is missing');
+        expect(result).not.toContain('Blood');
+        expect(result).not.toContain('blood');
+      });
+
+      it('should handle multiple dismembered parts', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'ear',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+          ],
+          destroyedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'ear',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+          ],
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          dismemberedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'ear',
+              orientation: 'right',
+              isDismembered: true,
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'arm',
+              orientation: 'left',
+              isDismembered: true,
+            },
+          ],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        // Should show grouped "are missing" for multiple dismembered parts
+        expect(result).toContain('right ear');
+        expect(result).toContain('left arm');
+        expect(result).toContain('are missing');
+        // Should NOT show health state descriptions
+        expect(result).not.toContain('is completely numb');
+      });
+
+      it('should not exclude non-dismembered parts when some are dismembered', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'ear',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'torso',
+              orientation: null,
+              state: 'critical',
+            },
+          ],
+          destroyedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'ear',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+          ],
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          dismemberedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'ear',
+              orientation: 'right',
+              isDismembered: true,
+            },
+          ],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        // Ear should show "is missing" (dismembered)
+        expect(result).toContain('right ear');
+        expect(result).toContain('is missing');
+        // Torso should show health state (not dismembered)
+        expect(result).toContain('torso');
+        expect(result).toContain('screams with agony');
+      });
+
+      it('should not show burning effect for dismembered parts', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+          ],
+          destroyedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+          ],
+          bleedingParts: [],
+          burningParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+            },
+          ],
+          poisonedParts: [],
+          fracturedParts: [],
+          dismemberedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              isDismembered: true,
+            },
+          ],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        expect(result).toContain('is missing');
+        expect(result).not.toContain('Searing heat');
+        expect(result).not.toContain('searing heat');
+      });
+
+      it('should not show poisoned effect for dismembered parts', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+          ],
+          destroyedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+          ],
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+            },
+          ],
+          fracturedParts: [],
+          dismemberedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              isDismembered: true,
+            },
+          ],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        expect(result).toContain('is missing');
+        expect(result).not.toContain('sickening feeling');
+        expect(result).not.toContain('Sickening feeling');
+      });
+
+      it('should not show fractured effect for dismembered parts', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+          ],
+          destroyedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+          ],
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+            },
+          ],
+          dismemberedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              isDismembered: true,
+            },
+          ],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        expect(result).toContain('is missing');
+        expect(result).not.toContain('Sharp pain');
+        expect(result).not.toContain('sharp pain');
+      });
+
+      it('should filter dismembered from non-destroyed health states', () => {
+        // Edge case: a part that is marked as dismembered but has a non-destroyed state
+        // (shouldn't normally happen, but ensure filtering works)
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'critical',
+            },
+          ],
+          destroyedParts: [],
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          dismemberedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              isDismembered: true,
+            },
+          ],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        expect(result).toContain('is missing');
+        // Should NOT show the critical state for the dismembered part
+        expect(result).not.toContain('screams with agony');
+      });
+    });
+
+    describe('grouped dismemberment formatting', () => {
+      it('should use "is missing" for single dismembered part', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+          ],
+          destroyedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+          ],
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          dismemberedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              isDismembered: true,
+            },
+          ],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        expect(result).toBe('My left arm is missing.');
+      });
+
+      it('should use "are missing" for two dismembered parts with "and"', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'leg',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+          ],
+          destroyedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'leg',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+          ],
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          dismemberedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              isDismembered: true,
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'leg',
+              orientation: 'right',
+              isDismembered: true,
+            },
+          ],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        expect(result).toBe('My left arm and right leg are missing.');
+      });
+
+      it('should use "are missing" with Oxford comma for three+ dismembered parts', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            { partEntityId: 'part-1', partType: 'ass cheek', orientation: 'left', state: 'destroyed' },
+            { partEntityId: 'part-2', partType: 'leg', orientation: 'right', state: 'destroyed' },
+            { partEntityId: 'part-3', partType: 'arm', orientation: 'right', state: 'destroyed' },
+            { partEntityId: 'part-4', partType: 'ear', orientation: 'right', state: 'destroyed' },
+            { partEntityId: 'part-5', partType: 'vagina', orientation: null, state: 'destroyed' },
+            { partEntityId: 'part-6', partType: 'breast', orientation: 'left', state: 'destroyed' },
+          ],
+          destroyedParts: [
+            { partEntityId: 'part-1', partType: 'ass cheek', orientation: 'left', state: 'destroyed' },
+            { partEntityId: 'part-2', partType: 'leg', orientation: 'right', state: 'destroyed' },
+            { partEntityId: 'part-3', partType: 'arm', orientation: 'right', state: 'destroyed' },
+            { partEntityId: 'part-4', partType: 'ear', orientation: 'right', state: 'destroyed' },
+            { partEntityId: 'part-5', partType: 'vagina', orientation: null, state: 'destroyed' },
+            { partEntityId: 'part-6', partType: 'breast', orientation: 'left', state: 'destroyed' },
+          ],
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          dismemberedParts: [
+            { partEntityId: 'part-1', partType: 'ass cheek', orientation: 'left', isDismembered: true },
+            { partEntityId: 'part-2', partType: 'leg', orientation: 'right', isDismembered: true },
+            { partEntityId: 'part-3', partType: 'arm', orientation: 'right', isDismembered: true },
+            { partEntityId: 'part-4', partType: 'ear', orientation: 'right', isDismembered: true },
+            { partEntityId: 'part-5', partType: 'vagina', orientation: null, isDismembered: true },
+            { partEntityId: 'part-6', partType: 'breast', orientation: 'left', isDismembered: true },
+          ],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        expect(result).toBe(
+          'My left ass cheek, right leg, right arm, right ear, vagina, and left breast are missing.'
+        );
+      });
+
+      it('should only have "My" prefix on first part in grouped list', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'arm',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+          ],
+          destroyedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'arm',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+          ],
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          dismemberedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              isDismembered: true,
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'arm',
+              orientation: 'right',
+              isDismembered: true,
+            },
+          ],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        // Should have exactly one "My" and should NOT have "my right arm" or "My right arm"
+        expect(result).toBe('My left arm and right arm are missing.');
+        // Verify no redundant "my" in middle of sentence
+        expect(result).not.toMatch(/and [Mm]y /);
+      });
+    });
+
+    describe('dismemberment priority ordering', () => {
+      it('should show dismemberment before health states', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'ear',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'torso',
+              orientation: null,
+              state: 'critical',
+            },
+          ],
+          destroyedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'ear',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+          ],
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          dismemberedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'ear',
+              orientation: 'right',
+              isDismembered: true,
+            },
+          ],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        const missingPos = result.indexOf('is missing');
+        const agonyPos = result.indexOf('screams with agony');
+
+        expect(missingPos).toBeGreaterThan(-1);
+        expect(agonyPos).toBeGreaterThan(-1);
+        expect(missingPos).toBeLessThan(agonyPos);
+      });
+
+      it('should show dismemberment before bleeding', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'torso',
+              orientation: null,
+              state: 'wounded',
+            },
+          ],
+          destroyedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+          ],
+          bleedingParts: [
+            {
+              partEntityId: 'part-2',
+              partType: 'torso',
+              orientation: null,
+              bleedingSeverity: 'moderate',
+            },
+          ],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          dismemberedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'arm',
+              orientation: 'left',
+              isDismembered: true,
+            },
+          ],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        const missingPos = result.indexOf('is missing');
+        const bloodPos = result.indexOf('Blood');
+
+        expect(missingPos).toBeGreaterThan(-1);
+        expect(bloodPos).toBeGreaterThan(-1);
+        expect(missingPos).toBeLessThan(bloodPos);
+      });
+
+      it('should maintain health state order after dismemberment', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'ear',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-3',
+              partType: 'torso',
+              orientation: null,
+              state: 'critical',
+            },
+            {
+              partEntityId: 'part-4',
+              partType: 'leg',
+              orientation: 'right',
+              state: 'wounded',
+            },
+          ],
+          destroyedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'ear',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+          ],
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          dismemberedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'ear',
+              orientation: 'right',
+              isDismembered: true,
+            },
+          ],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        const missingPos = result.indexOf('is missing');
+        const numbPos = result.indexOf('is completely numb'); // destroyed (non-dismembered arm)
+        const agonyPos = result.indexOf('screams with agony'); // critical
+        const throbsPos = result.indexOf('throbs painfully'); // wounded
+
+        // Dismemberment first
+        expect(missingPos).toBeGreaterThan(-1);
+        expect(missingPos).toBeLessThan(numbPos);
+        // Then health states in severity order
+        expect(numbPos).toBeGreaterThan(-1);
+        expect(numbPos).toBeLessThan(agonyPos);
+        expect(agonyPos).toBeGreaterThan(-1);
+        expect(agonyPos).toBeLessThan(throbsPos);
+        expect(throbsPos).toBeGreaterThan(-1);
+      });
+
+      it('should handle only dismemberment without other injuries', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'ear',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+          ],
+          destroyedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'ear',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+          ],
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          dismemberedParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'ear',
+              orientation: 'right',
+              isDismembered: true,
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'arm',
+              orientation: 'left',
+              isDismembered: true,
+            },
+          ],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        // Should contain grouped "are missing" sentence for multiple parts
+        expect(result).toContain('right ear');
+        expect(result).toContain('left arm');
+        expect(result).toContain('are missing');
+        // Should NOT contain any health state descriptions
+        expect(result).not.toContain('is completely numb');
+        expect(result).not.toContain('screams with agony');
+        expect(result).not.toContain('aches deeply');
+        expect(result).not.toContain('throbs painfully');
+        expect(result).not.toContain('stings slightly');
+        // Should NOT contain any other effects
+        expect(result).not.toContain('Blood');
+        expect(result).not.toContain('Searing heat');
+      });
+
+      it('should handle no dismemberment with health states only', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [
+            {
+              partEntityId: 'part-1',
+              partType: 'torso',
+              orientation: null,
+              state: 'critical',
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'arm',
+              orientation: 'left',
+              state: 'wounded',
+            },
+          ],
+          destroyedParts: [],
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          dismemberedParts: [],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        // Should NOT contain "is missing"
+        expect(result).not.toContain('is missing');
+        // Should start with the most severe health state
+        expect(result).toContain('screams with agony');
+        expect(result).toContain('throbs painfully');
+        // Verify ordering: critical before wounded
+        const agonyPos = result.indexOf('screams with agony');
+        const throbsPos = result.indexOf('throbs painfully');
+        expect(agonyPos).toBeLessThan(throbsPos);
+      });
+    });
+
+    describe('bleeding grouping', () => {
+      // Helper function for creating bleeding-focused summaries
+      function createSummaryWithBleedingParts(bleedingConfigs) {
+        const bleedingParts = bleedingConfigs.map((config, index) => ({
+          partEntityId: `part-${index}`,
+          partType: config.partType,
+          orientation: config.orientation || null,
+          bleedingSeverity: config.bleedingSeverity,
+        }));
+
+        const injuredParts = bleedingConfigs.map((config, index) => ({
+          partEntityId: `part-${index}`,
+          partType: config.partType,
+          orientation: config.orientation || null,
+          state: 'wounded',
+        }));
+
+        return {
+          entityId: 'entity-1',
+          injuredParts,
+          bleedingParts,
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          destroyedParts: [],
+          dismemberedParts: [],
+          isDying: false,
+          isDead: false,
+        };
+      }
+
+      it('should format single bleeding part correctly', () => {
+        const summary = createSummaryWithBleedingParts([
+          { partType: 'torso', bleedingSeverity: 'moderate' },
+        ]);
+
+        const result = service.formatFirstPerson(summary);
+        expect(result).toContain('Blood flows steadily from my torso.');
+      });
+
+      it('should format two bleeding parts with same severity using "and"', () => {
+        const summary = createSummaryWithBleedingParts([
+          { partType: 'torso', bleedingSeverity: 'moderate' },
+          { partType: 'head', orientation: 'upper', bleedingSeverity: 'moderate' },
+        ]);
+
+        const result = service.formatFirstPerson(summary);
+        expect(result).toMatch(
+          /Blood flows steadily from my torso and upper head\./
+        );
+      });
+
+      it('should format three+ bleeding parts with Oxford comma', () => {
+        const summary = createSummaryWithBleedingParts([
+          { partType: 'torso', bleedingSeverity: 'moderate' },
+          { partType: 'head', orientation: 'upper', bleedingSeverity: 'moderate' },
+          { partType: 'leg', orientation: 'right', bleedingSeverity: 'moderate' },
+        ]);
+
+        const result = service.formatFirstPerson(summary);
+        expect(result).toMatch(
+          /Blood flows steadily from my torso, upper head, and right leg\./
+        );
+      });
+
+      it('should create separate sentences for different severities', () => {
+        const summary = createSummaryWithBleedingParts([
+          { partType: 'torso', bleedingSeverity: 'moderate' },
+          { partType: 'arm', orientation: 'left', bleedingSeverity: 'severe' },
+        ]);
+
+        const result = service.formatFirstPerson(summary);
+        expect(result).toContain('Blood pours freely from my left arm.');
+        expect(result).toContain('Blood flows steadily from my torso.');
+      });
+
+      it('should process severe before moderate before minor', () => {
+        const summary = createSummaryWithBleedingParts([
+          { partType: 'leg', orientation: 'right', bleedingSeverity: 'minor' },
+          { partType: 'arm', orientation: 'left', bleedingSeverity: 'severe' },
+          { partType: 'torso', bleedingSeverity: 'moderate' },
+        ]);
+
+        const result = service.formatFirstPerson(summary);
+        const severePos = result.indexOf('pours freely');
+        const moderatePos = result.indexOf('flows steadily');
+        const minorPos = result.indexOf('seeps from');
+
+        expect(severePos).toBeGreaterThan(-1);
+        expect(moderatePos).toBeGreaterThan(-1);
+        expect(minorPos).toBeGreaterThan(-1);
+        expect(severePos).toBeLessThan(moderatePos);
+        expect(moderatePos).toBeLessThan(minorPos);
+      });
+
+      it('should handle empty bleeding parts array', () => {
+        const summary = {
+          entityId: 'entity-1',
+          injuredParts: [],
+          bleedingParts: [],
+          burningParts: [],
+          poisonedParts: [],
+          fracturedParts: [],
+          destroyedParts: [],
+          dismemberedParts: [],
+          isDying: false,
+          isDead: false,
+        };
+
+        const result = service.formatFirstPerson(summary);
+        expect(result).toBe('I feel fine.');
+      });
+
+      it('should group multiple parts by severity with mixed severities', () => {
+        const summary = createSummaryWithBleedingParts([
+          { partType: 'arm', orientation: 'left', bleedingSeverity: 'severe' },
+          { partType: 'arm', orientation: 'right', bleedingSeverity: 'severe' },
+          { partType: 'torso', bleedingSeverity: 'moderate' },
+          { partType: 'head', orientation: 'upper', bleedingSeverity: 'moderate' },
+          { partType: 'leg', orientation: 'right', bleedingSeverity: 'minor' },
+        ]);
+
+        const result = service.formatFirstPerson(summary);
+
+        // Severe parts grouped together (only first gets "my")
+        expect(result).toMatch(
+          /Blood pours freely from my left arm and right arm\./
+        );
+        // Moderate parts grouped together (only first gets "my")
+        expect(result).toMatch(
+          /Blood flows steadily from my torso and upper head\./
+        );
+        // Minor part alone
+        expect(result).toContain('Blood seeps from my right leg.');
       });
     });
   });

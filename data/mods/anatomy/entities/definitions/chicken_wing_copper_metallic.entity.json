@@ -23,6 +23,9 @@
     },
     "descriptors:plumage_sheen": {
       "sheen": "metallic"
+    },
+    "items:weight": {
+      "weight": 0.15
     }
   }
 }

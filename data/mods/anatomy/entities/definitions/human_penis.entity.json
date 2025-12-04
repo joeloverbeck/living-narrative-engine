@@ -24,6 +24,9 @@
     },
     "core:name": {
       "text": "penis"
+    },
+    "items:weight": {
+      "weight": 0.1
     }
   }
 }

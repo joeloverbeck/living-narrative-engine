@@ -20,6 +20,9 @@
     },
     "descriptors:color_basic": {
       "color": "red"
+    },
+    "items:weight": {
+      "weight": 0.005
     }
   }
 }

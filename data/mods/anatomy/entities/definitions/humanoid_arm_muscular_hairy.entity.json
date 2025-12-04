@@ -31,6 +31,9 @@
     },
     "core:name": {
       "text": "muscular, hairy arm"
+    },
+    "items:weight": {
+      "weight": 4
     }
   }
 }

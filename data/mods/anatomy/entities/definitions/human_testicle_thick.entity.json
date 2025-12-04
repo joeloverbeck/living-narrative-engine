@@ -24,6 +24,9 @@
     },
     "core:name": {
       "text": "thick testicle"
+    },
+    "items:weight": {
+      "weight": 0.035
     }
   }
 }

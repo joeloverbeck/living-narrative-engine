@@ -1,9 +1,11 @@
 /**
- * @file Integration tests for missing event definitions fix
+ * @file Integration tests for anatomy event definitions
  * Verifies that anatomy event definitions exist and are properly loaded by the event system.
- * Tests: damage_applied, bleeding_started, part_destroyed, dismembered
+ * Tests: damage_applied, bleeding_started, part_destroyed, dismembered, body_part_spawned
  * @see specs/damage-types-and-special-effects.md
+ * @see specs/dismembered-body-part-spawning.md
  * @see tickets/DAMTYPANDSPEEFF-004-event-and-propagation-integration.md
+ * @see tickets/DISBODPARSPA-002-body-part-spawned-event.md
  */
 
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
@@ -56,6 +58,11 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
 
     it('should have dismembered.event.json file in anatomy events', () => {
       const filePath = path.resolve(EVENTS_DIR, 'dismembered.event.json');
+      expect(fs.existsSync(filePath)).toBe(true);
+    });
+
+    it('should have body_part_spawned.event.json file in anatomy events', () => {
+      const filePath = path.resolve(EVENTS_DIR, 'body_part_spawned.event.json');
       expect(fs.existsSync(filePath)).toBe(true);
     });
   });
@@ -126,6 +133,24 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
 
       // Verify required fields per event.schema.json
       expect(parsed.id).toBe('anatomy:dismembered');
+      expect(parsed.description).toBeDefined();
+      expect(parsed.payloadSchema).toBeDefined();
+      expect(parsed.payloadSchema.type).toBe('object');
+      expect(parsed.payloadSchema.properties).toBeDefined();
+      expect(parsed.payloadSchema.required).toBeDefined();
+    });
+
+    it('body_part_spawned.event.json should have valid JSON structure', () => {
+      const filePath = path.resolve(EVENTS_DIR, 'body_part_spawned.event.json');
+      const content = fs.readFileSync(filePath, 'utf8');
+
+      let parsed;
+      expect(() => {
+        parsed = JSON.parse(content);
+      }).not.toThrow();
+
+      // Verify required fields per event.schema.json
+      expect(parsed.id).toBe('anatomy:body_part_spawned');
       expect(parsed.description).toBeDefined();
       expect(parsed.payloadSchema).toBeDefined();
       expect(parsed.payloadSchema.type).toBe('object');
@@ -679,10 +704,169 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       expect(props.partId.type).toBe('string');
       expect(props.damageTypeId.type).toBe('string');
       expect(props.timestamp.type).toBe('integer');
+      // Nullable fields should allow both string and null
+      expect(props.entityName.type).toEqual(['string', 'null']);
+      expect(props.entityPronoun.type).toEqual(['string', 'null']);
+      expect(props.partType.type).toEqual(['string', 'null']);
+      expect(props.orientation.type).toEqual(['string', 'null']);
+    });
+  });
+
+  describe('anatomy:body_part_spawned Payload Schema Validation', () => {
+    let bodyPartSpawnedEvent;
+
+    beforeEach(() => {
+      const filePath = path.resolve(EVENTS_DIR, 'body_part_spawned.event.json');
+      bodyPartSpawnedEvent = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    });
+
+    it('should accept valid body_part_spawned payload with all required fields', async () => {
+      const payloadSchemaId = `${bodyPartSpawnedEvent.id}#payload`;
+
+      // Register the payload schema
+      await schemaValidator.addSchema(bodyPartSpawnedEvent.payloadSchema, payloadSchemaId);
+
+      const validPayload = {
+        entityId: 'entity-sarah-123',
+        entityName: 'Sarah',
+        spawnedEntityId: 'entity-spawned-leg-456',
+        spawnedEntityName: "Sarah's left leg",
+        partType: 'leg',
+        definitionId: 'anatomy:human_leg',
+        timestamp: Date.now(),
+      };
+
+      const result = schemaValidator.validate(payloadSchemaId, validPayload);
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toBeNull();
+    });
+
+    it('should accept valid body_part_spawned payload with optional orientation field', async () => {
+      const payloadSchemaId = `${bodyPartSpawnedEvent.id}#payload`;
+
+      // Register the payload schema
+      await schemaValidator.addSchema(bodyPartSpawnedEvent.payloadSchema, payloadSchemaId);
+
+      const validPayload = {
+        entityId: 'entity-123',
+        entityName: 'John',
+        spawnedEntityId: 'entity-arm-456',
+        spawnedEntityName: "John's left arm",
+        partType: 'arm',
+        orientation: 'left',
+        definitionId: 'anatomy:human_arm',
+        timestamp: Date.now(),
+      };
+
+      const result = schemaValidator.validate(payloadSchemaId, validPayload);
+      expect(result.isValid).toBe(true);
+    });
+
+    it('should reject body_part_spawned payload missing required entityId', async () => {
+      const payloadSchemaId = `${bodyPartSpawnedEvent.id}#payload`;
+
+      // Register the payload schema
+      await schemaValidator.addSchema(bodyPartSpawnedEvent.payloadSchema, payloadSchemaId);
+
+      const invalidPayload = {
+        // missing entityId
+        entityName: 'Sarah',
+        spawnedEntityId: 'entity-spawned-leg-456',
+        spawnedEntityName: "Sarah's left leg",
+        partType: 'leg',
+        definitionId: 'anatomy:human_leg',
+        timestamp: Date.now(),
+      };
+
+      const result = schemaValidator.validate(payloadSchemaId, invalidPayload);
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toBeDefined();
+      expect(
+        result.errors.some((err) => err.params?.missingProperty === 'entityId')
+      ).toBe(true);
+    });
+
+    it('should reject body_part_spawned payload missing required spawnedEntityId', async () => {
+      const payloadSchemaId = `${bodyPartSpawnedEvent.id}#payload`;
+
+      // Register the payload schema
+      await schemaValidator.addSchema(bodyPartSpawnedEvent.payloadSchema, payloadSchemaId);
+
+      const invalidPayload = {
+        entityId: 'entity-123',
+        entityName: 'Sarah',
+        // missing spawnedEntityId
+        spawnedEntityName: "Sarah's left leg",
+        partType: 'leg',
+        definitionId: 'anatomy:human_leg',
+        timestamp: Date.now(),
+      };
+
+      const result = schemaValidator.validate(payloadSchemaId, invalidPayload);
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toBeDefined();
+      expect(
+        result.errors.some((err) => err.params?.missingProperty === 'spawnedEntityId')
+      ).toBe(true);
+    });
+
+    it('should reject body_part_spawned payload with additional properties', async () => {
+      const payloadSchemaId = `${bodyPartSpawnedEvent.id}#payload`;
+
+      // Register the payload schema
+      await schemaValidator.addSchema(bodyPartSpawnedEvent.payloadSchema, payloadSchemaId);
+
+      const invalidPayload = {
+        entityId: 'entity-123',
+        entityName: 'Sarah',
+        spawnedEntityId: 'entity-spawned-leg-456',
+        spawnedEntityName: "Sarah's left leg",
+        partType: 'leg',
+        definitionId: 'anatomy:human_leg',
+        timestamp: Date.now(),
+        unknownField: 'should not be allowed',
+      };
+
+      const result = schemaValidator.validate(payloadSchemaId, invalidPayload);
+      expect(result.isValid).toBe(false);
+    });
+
+    it('body_part_spawned event schema should have correct field definitions for spawner service', () => {
+      const filePath = path.resolve(EVENTS_DIR, 'body_part_spawned.event.json');
+      const eventDef = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      const props = eventDef.payloadSchema.properties;
+      const required = eventDef.payloadSchema.required;
+
+      // Verify all fields that DismemberedBodyPartSpawner will dispatch are defined
+      expect(props.entityId).toBeDefined();
+      expect(props.entityName).toBeDefined();
+      expect(props.spawnedEntityId).toBeDefined();
+      expect(props.spawnedEntityName).toBeDefined();
+      expect(props.partType).toBeDefined();
+      expect(props.orientation).toBeDefined();
+      expect(props.definitionId).toBeDefined();
+      expect(props.timestamp).toBeDefined();
+
+      // Verify required fields (orientation is optional for parts like head/torso)
+      expect(required).toContain('entityId');
+      expect(required).toContain('entityName');
+      expect(required).toContain('spawnedEntityId');
+      expect(required).toContain('spawnedEntityName');
+      expect(required).toContain('partType');
+      expect(required).toContain('definitionId');
+      expect(required).toContain('timestamp');
+      expect(required).not.toContain('orientation');
+
+      // Verify field types
+      expect(props.entityId.type).toBe('string');
       expect(props.entityName.type).toBe('string');
-      expect(props.entityPronoun.type).toBe('string');
+      expect(props.spawnedEntityId.type).toBe('string');
+      expect(props.spawnedEntityName.type).toBe('string');
       expect(props.partType.type).toBe('string');
-      expect(props.orientation.type).toBe('string');
+      // orientation is nullable (can be "left", "right", "mid", or null for parts without orientation)
+      expect(props.orientation.type).toEqual(['string', 'null']);
+      expect(props.definitionId.type).toBe('string');
+      expect(props.timestamp.type).toBe('integer');
     });
   });
 });

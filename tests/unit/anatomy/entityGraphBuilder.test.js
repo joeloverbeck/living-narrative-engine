@@ -380,6 +380,92 @@ describe('EntityGraphBuilder', () => {
       );
       expect(id).toBe('preferred-entity-123');
     });
+
+    it('stores definitionId in anatomy:part for root entity', async () => {
+      mocks.entityManager.createEntityInstance.mockResolvedValue({
+        id: 'root-entity-123',
+      });
+      mocks.entityManager.getComponentData.mockImplementation((id, comp) => {
+        if (id === 'root-entity-123' && comp === 'anatomy:part') {
+          return { subType: 'torso' };
+        }
+        return null;
+      });
+
+      const id = await builder.createRootEntity('anatomy:human_torso', {});
+
+      // Should store definitionId in anatomy:part component
+      expect(mocks.entityManager.addComponent).toHaveBeenCalledWith(
+        'root-entity-123',
+        'anatomy:part',
+        {
+          subType: 'torso',
+          definitionId: 'anatomy:human_torso',
+        }
+      );
+      expect(mocks.logger.debug).toHaveBeenCalledWith(
+        "EntityGraphBuilder: Updated anatomy:part with definitionId 'anatomy:human_torso' for root entity 'root-entity-123'"
+      );
+      expect(id).toBe('root-entity-123');
+    });
+
+    it('stores actualRootDefinitionId in anatomy:part when torso override used', async () => {
+      // Mock valid preferId override
+      mocks.dataRegistry.get.mockReturnValue({
+        components: { 'anatomy:part': { subType: 'torso' } },
+      });
+      mocks.entityManager.createEntityInstance.mockResolvedValue({
+        id: 'override-entity-123',
+      });
+      mocks.entityManager.getComponentData.mockImplementation((id, comp) => {
+        if (id === 'override-entity-123' && comp === 'anatomy:part') {
+          return { subType: 'torso' };
+        }
+        return null;
+      });
+
+      const recipe = {
+        slots: {
+          torso: {
+            preferId: 'anatomy:custom_torso',
+          },
+        },
+      };
+
+      const id = await builder.createRootEntity(
+        'anatomy:default_torso',
+        recipe
+      );
+
+      // Should store the ACTUAL used definitionId (the override), not the original
+      expect(mocks.entityManager.addComponent).toHaveBeenCalledWith(
+        'override-entity-123',
+        'anatomy:part',
+        {
+          subType: 'torso',
+          definitionId: 'anatomy:custom_torso',
+        }
+      );
+      expect(id).toBe('override-entity-123');
+    });
+
+    it('does not update anatomy:part when root entity has no anatomy:part component', async () => {
+      // This covers the branch at line 179 in createRootEntity where anatomyPart is null
+      mocks.entityManager.createEntityInstance.mockResolvedValue({
+        id: 'root-without-part',
+      });
+      mocks.entityManager.getComponentData.mockReturnValue(null);
+
+      const id = await builder.createRootEntity('anatomy:generic_root', {});
+
+      // Should NOT call addComponent for anatomy:part when the component doesn't exist
+      expect(mocks.entityManager.addComponent).not.toHaveBeenCalledWith(
+        'root-without-part',
+        'anatomy:part',
+        expect.any(Object)
+      );
+      expect(id).toBe('root-without-part');
+    });
   });
 
   describe('createAndAttachPart', () => {
@@ -404,7 +490,7 @@ describe('EntityGraphBuilder', () => {
       expect(id).toBe('armDef');
     });
 
-    it('propagates orientation from socket to child anatomy:part', async () => {
+    it('propagates definitionId and orientation from socket to child anatomy:part', async () => {
       mocks.entityManager.getComponentData.mockImplementation((id, comp) => {
         if (id === 'armDef' && comp === 'anatomy:part') {
           return { subType: 'arm', someOtherField: 'value' };
@@ -420,7 +506,7 @@ describe('EntityGraphBuilder', () => {
         'left'
       );
 
-      // Verify anatomy:part component is updated with orientation only (no parentEntity)
+      // Verify anatomy:part component is updated with definitionId and orientation
       // Parent relationship is stored in anatomy:joint component instead
       expect(mocks.entityManager.addComponent).toHaveBeenCalledWith(
         'armDef',
@@ -428,16 +514,47 @@ describe('EntityGraphBuilder', () => {
         {
           subType: 'arm',
           someOtherField: 'value',
+          definitionId: 'armDef',
           orientation: 'left',
         }
       );
       expect(mocks.logger.debug).toHaveBeenCalledWith(
-        "EntityGraphBuilder: Propagated orientation 'left' to child entity 'armDef'"
+        "EntityGraphBuilder: Updated anatomy:part with definitionId 'armDef' and orientation 'left' for child entity 'armDef'"
       );
       expect(id).toBe('armDef');
     });
 
-    it('creates part without orientation when not provided', async () => {
+    it('stores definitionId in anatomy:part even without orientation', async () => {
+      mocks.entityManager.getComponentData.mockImplementation((id, comp) => {
+        if (id === 'armDef' && comp === 'anatomy:part') {
+          return { subType: 'arm' };
+        }
+        return null;
+      });
+
+      const id = await builder.createAndAttachPart(
+        'torso',
+        'shoulder',
+        'armDef',
+        'owner123'
+      );
+
+      // Should store definitionId in anatomy:part component
+      expect(mocks.entityManager.addComponent).toHaveBeenCalledWith(
+        'armDef',
+        'anatomy:part',
+        {
+          subType: 'arm',
+          definitionId: 'armDef',
+        }
+      );
+      expect(mocks.logger.debug).toHaveBeenCalledWith(
+        "EntityGraphBuilder: Updated anatomy:part with definitionId 'armDef' for child entity 'armDef'"
+      );
+      expect(id).toBe('armDef');
+    });
+
+    it('does not update anatomy:part when component is missing', async () => {
       mocks.entityManager.getComponentData.mockReturnValue(null);
 
       const id = await builder.createAndAttachPart(
@@ -447,7 +564,7 @@ describe('EntityGraphBuilder', () => {
         'owner123'
       );
 
-      // Should not call addComponent for anatomy:part when no orientation provided
+      // Should not call addComponent for anatomy:part when the component doesn't exist
       expect(mocks.entityManager.addComponent).not.toHaveBeenCalledWith(
         'armDef',
         'anatomy:part',

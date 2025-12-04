@@ -171,6 +171,28 @@ export class EntityGraphBuilder {
       });
     }
 
+    // Update anatomy:part component with definitionId for spawning purposes
+    const anatomyPart = this.#entityManager.getComponentData(
+      rootEntity.id,
+      'anatomy:part'
+    );
+    if (anatomyPart) {
+      const updatedPart = {
+        ...anatomyPart,
+        definitionId: actualRootDefinitionId,
+      };
+
+      await this.#entityManager.addComponent(
+        rootEntity.id,
+        'anatomy:part',
+        updatedPart
+      );
+
+      this.#logger.debug(
+        `EntityGraphBuilder: Updated anatomy:part with definitionId '${actualRootDefinitionId}' for root entity '${rootEntity.id}'`
+      );
+    }
+
     this.#logger.info(
       `EntityGraphBuilder: Created root entity '${rootEntity.id}' from definition '${actualRootDefinitionId}'`
     );
@@ -249,30 +271,32 @@ export class EntityGraphBuilder {
         socketId: socketId,
       });
 
-      // Update anatomy:part component with orientation if provided
-      if (socketOrientation) {
-        const anatomyPart = this.#entityManager.getComponentData(
-          childEntity.id,
-          'anatomy:part'
-        );
-        if (anatomyPart) {
-          // Update the anatomy:part component with orientation
-          // Note: Parent relationship is stored in anatomy:joint, not anatomy:part
-          const updatedPart = {
-            ...anatomyPart,
-            orientation: socketOrientation,
-          };
+      // Update anatomy:part component with definitionId and orientation if provided
+      const anatomyPart = this.#entityManager.getComponentData(
+        childEntity.id,
+        'anatomy:part'
+      );
+      if (anatomyPart) {
+        // Update the anatomy:part component with definitionId and orientation
+        // Note: Parent relationship is stored in anatomy:joint, not anatomy:part
+        const updatedPart = {
+          ...anatomyPart,
+          definitionId: partDefinitionId,
+        };
 
-          await this.#entityManager.addComponent(
-            childEntity.id,
-            'anatomy:part',
-            updatedPart
-          );
-
-          this.#logger.debug(
-            `EntityGraphBuilder: Propagated orientation '${socketOrientation}' to child entity '${childEntity.id}'`
-          );
+        if (socketOrientation) {
+          updatedPart.orientation = socketOrientation;
         }
+
+        await this.#entityManager.addComponent(
+          childEntity.id,
+          'anatomy:part',
+          updatedPart
+        );
+
+        this.#logger.debug(
+          `EntityGraphBuilder: Updated anatomy:part with definitionId '${partDefinitionId}'${socketOrientation ? ` and orientation '${socketOrientation}'` : ''} for child entity '${childEntity.id}'`
+        );
       }
 
       this.#logger.debug(

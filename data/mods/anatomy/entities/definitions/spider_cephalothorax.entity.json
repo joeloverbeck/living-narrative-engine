@@ -110,6 +110,9 @@
     },
     "descriptors:body_hair": {
       "hairDensity": "hairy"
+    },
+    "items:weight": {
+      "weight": 0.015
     }
   }
 }

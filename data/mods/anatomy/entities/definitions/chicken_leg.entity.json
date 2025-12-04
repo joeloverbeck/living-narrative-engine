@@ -38,6 +38,9 @@
     },
     "descriptors:color_basic": {
       "color": "yellow"
+    },
+    "items:weight": {
+      "weight": 0.2
     }
   }
 }

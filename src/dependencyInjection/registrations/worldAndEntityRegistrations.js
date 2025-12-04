@@ -86,6 +86,7 @@ import PoisonTickSystem from '../../anatomy/services/poisonTickSystem.js';
 import InjuryAggregationService from '../../anatomy/services/injuryAggregationService.js';
 import InjuryNarrativeFormatterService from '../../anatomy/services/injuryNarrativeFormatterService.js';
 import DeathCheckService from '../../anatomy/services/deathCheckService.js';
+import DismemberedBodyPartSpawner from '../../anatomy/services/dismemberedBodyPartSpawner.js';
 import EntityMatcherService from '../../anatomy/services/entityMatcherService.js';
 import BlueprintProcessorService from '../../anatomy/services/blueprintProcessorService.js';
 import SlotResolver from '../../anatomy/integration/SlotResolver.js';
@@ -940,6 +941,24 @@ export function registerWorldAndEntity(container) {
     `World and Entity Registration: Registered ${String(
       tokens.DeathCheckService
     )}.`
+  );
+
+  // Register DismemberedBodyPartSpawner
+  // Note: entityLifecycleManager uses IEntityManager which has createEntityInstance method
+  registrar
+    .tagged(INITIALIZABLE)
+    .singletonFactory(tokens.DismemberedBodyPartSpawner, (c) => {
+      return new DismemberedBodyPartSpawner({
+        logger: c.resolve(tokens.ILogger),
+        entityManager: c.resolve(tokens.IEntityManager),
+        eventBus: c.resolve(tokens.ISafeEventDispatcher),
+        entityLifecycleManager: c.resolve(tokens.IEntityManager),
+      });
+    });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.DismemberedBodyPartSpawner
+    )} tagged ${INITIALIZABLE.join(', ')}.`
   );
 
   // Register BlueprintProcessorService

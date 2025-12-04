@@ -17,6 +17,9 @@
     },
     "descriptors:hair_style": {
       "style": "braided"
+    },
+    "items:weight": {
+      "weight": 5
     }
   }
 }

@@ -29,6 +29,9 @@
     },
     "descriptors:effect": {
       "effect": "disorientation-nausea"
+    },
+    "items:weight": {
+      "weight": 1
     }
   }
 }

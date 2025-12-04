@@ -29,6 +29,9 @@
     "core:mouth_engagement": {
       "locked": false,
       "forcedOverride": false
+    },
+    "items:weight": {
+      "weight": 0.05
     }
   }
 }

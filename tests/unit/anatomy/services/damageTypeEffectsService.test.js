@@ -231,6 +231,63 @@ describe('DamageTypeEffectsService', () => {
           expect.anything()
         );
       });
+
+      it('should NOT trigger dismemberment when part has anatomy:embedded component', async () => {
+        mockEntityManager.hasComponent.mockImplementation((partId, componentId) => {
+          return componentId === 'anatomy:embedded';
+        });
+
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'slashing',
+            amount: 95, // Above threshold
+            dismember: { enabled: true, thresholdFraction: 0.8 },
+          },
+        });
+
+        expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
+          'part:arm',
+          'anatomy:embedded'
+        );
+        expect(mockDispatcher.dispatch).not.toHaveBeenCalledWith(
+          'anatomy:dismembered',
+          expect.anything()
+        );
+        expect(mockEntityManager.addComponent).not.toHaveBeenCalledWith(
+          'part:arm',
+          'anatomy:dismembered',
+          expect.anything()
+        );
+      });
+
+      it('should still apply other effects (bleed) to embedded parts that cannot be dismembered', async () => {
+        mockEntityManager.hasComponent.mockImplementation((partId, componentId) => {
+          return componentId === 'anatomy:embedded';
+        });
+
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'slashing',
+            amount: 95, // Above dismemberment threshold
+            dismember: { enabled: true, thresholdFraction: 0.8 },
+            bleed: { enabled: true, severity: 'moderate' },
+          },
+        });
+
+        // Dismemberment should NOT occur due to embedded component
+        expect(mockDispatcher.dispatch).not.toHaveBeenCalledWith(
+          'anatomy:dismembered',
+          expect.anything()
+        );
+
+        // But bleeding SHOULD still be applied
+        expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+          'anatomy:bleeding_started',
+          expect.anything()
+        );
+      });
     });
 
     describe('fracture', () => {

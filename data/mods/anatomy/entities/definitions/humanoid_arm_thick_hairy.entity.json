@@ -31,6 +31,9 @@
     },
     "core:name": {
       "text": "thick, hairy arm"
+    },
+    "items:weight": {
+      "weight": 4
     }
   }
 }

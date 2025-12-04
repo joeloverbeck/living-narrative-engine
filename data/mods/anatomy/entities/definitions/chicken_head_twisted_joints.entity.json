@@ -85,6 +85,9 @@
     },
     "descriptors:deformity": {
       "deformity": "twisted-joints"
+    },
+    "items:weight": {
+      "weight": 0.08
     }
   }
 }

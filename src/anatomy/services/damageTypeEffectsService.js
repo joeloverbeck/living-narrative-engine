@@ -211,6 +211,14 @@ class DamageTypeEffectsService extends BaseService {
       return false;
     }
 
+    // Check if part is marked as embedded (non-dismemberable)
+    if (this.#entityManager.hasComponent(partId, 'anatomy:embedded')) {
+      this.#logger.debug(
+        `DamageTypeEffectsService: Part ${partId} is embedded, skipping dismemberment.`
+      );
+      return false;
+    }
+
     const thresholdFraction = dismemberConfig.thresholdFraction ?? 0.8;
     const threshold = thresholdFraction * maxHealth;
 

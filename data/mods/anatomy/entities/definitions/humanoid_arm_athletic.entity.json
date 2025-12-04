@@ -28,6 +28,9 @@
     },
     "core:name": {
       "text": "athletic arm"
+    },
+    "items:weight": {
+      "weight": 4
     }
   }
 }

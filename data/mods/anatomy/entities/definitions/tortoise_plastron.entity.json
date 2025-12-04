@@ -23,6 +23,9 @@
     },
     "descriptors:shape_general": {
       "shape": "flat"
+    },
+    "items:weight": {
+      "weight": 3
     }
   }
 }

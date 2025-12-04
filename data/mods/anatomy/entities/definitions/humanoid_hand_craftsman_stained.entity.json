@@ -45,6 +45,9 @@
     },
     "descriptors:texture": {
       "texture": "rough"
+    },
+    "items:weight": {
+      "weight": 0.4
     }
   }
 }

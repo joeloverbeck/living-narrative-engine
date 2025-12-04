@@ -53,6 +53,9 @@
     },
     "descriptors:build": {
       "build": "muscular"
+    },
+    "items:weight": {
+      "weight": 35
     }
   }
 }

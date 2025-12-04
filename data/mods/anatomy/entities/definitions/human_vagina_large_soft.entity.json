@@ -30,6 +30,10 @@
     },
     "core:name": {
       "text": "vagina"
-    }
+    },
+    "items:weight": {
+      "weight": 0.06
+    },
+    "anatomy:embedded": {}
   }
 }

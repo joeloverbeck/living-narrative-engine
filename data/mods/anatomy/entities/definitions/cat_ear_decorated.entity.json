@@ -20,6 +20,9 @@
     },
     "descriptors:embellishment": {
       "embellishment": "silver-hoops"
+    },
+    "items:weight": {
+      "weight": 0.02
     }
   }
 }

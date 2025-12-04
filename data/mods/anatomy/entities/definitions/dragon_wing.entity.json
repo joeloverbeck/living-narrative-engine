@@ -17,6 +17,9 @@
     },
     "descriptors:length_category": {
       "length": "immense"
+    },
+    "items:weight": {
+      "weight": 40
     }
   }
 }

@@ -20,6 +20,9 @@
     },
     "descriptors:texture": {
       "texture": "scaled"
+    },
+    "items:weight": {
+      "weight": 60
     }
   }
 }

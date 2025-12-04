@@ -28,6 +28,9 @@
     },
     "core:name": {
       "text": "lean arm"
+    },
+    "items:weight": {
+      "weight": 4
     }
   }
 }

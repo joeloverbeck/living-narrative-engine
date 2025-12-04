@@ -26,6 +26,9 @@
     },
     "descriptors:shape_general": {
       "shape": "domed"
+    },
+    "items:weight": {
+      "weight": 5
     }
   }
 }

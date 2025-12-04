@@ -40,6 +40,9 @@
     },
     "descriptors:animation": {
       "animation": "involuntary-twitching"
+    },
+    "items:weight": {
+      "weight": 3
     }
   }
 }

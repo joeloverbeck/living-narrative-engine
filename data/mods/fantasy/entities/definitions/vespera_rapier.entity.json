@@ -23,10 +23,6 @@
             "enabled": true,
             "severity": "moderate",
             "baseDurationTurns": 3
-          },
-          "dismember": {
-            "enabled": true,
-            "thresholdFraction": 0.8
           }
         },
         {
@@ -37,6 +33,10 @@
             "enabled": true,
             "severity": "minor",
             "baseDurationTurns": 2
+          },
+          "dismember": {
+            "enabled": true,
+            "thresholdFraction": 0.9
           }
         }
       ]

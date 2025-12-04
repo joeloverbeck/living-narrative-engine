@@ -17,6 +17,9 @@
     },
     "core:name": {
       "text": "ass cheek"
+    },
+    "items:weight": {
+      "weight": 1.6
     }
   }
 }

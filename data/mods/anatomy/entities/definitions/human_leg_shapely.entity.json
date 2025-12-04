@@ -35,6 +35,9 @@
     "core:movement": {
       "locked": false,
       "forcedOverride": false
+    },
+    "items:weight": {
+      "weight": 12.0
     }
   }
 }

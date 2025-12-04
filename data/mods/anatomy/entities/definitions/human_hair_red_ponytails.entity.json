@@ -23,6 +23,9 @@
     },
     "core:name": {
       "text": "hair"
+    },
+    "items:weight": {
+      "weight": 0.1
     }
   }
 }

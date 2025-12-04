@@ -102,11 +102,7 @@ class InjuryNarrativeFormatterService extends BaseService {
 
     // Check if entity is dying
     if (summary.isDying) {
-      const turnsText =
-        summary.dyingTurnsRemaining === 1
-          ? 'moment'
-          : `${summary.dyingTurnsRemaining} moments`;
-      return `I am dying. Without help, I have only ${turnsText} left...`;
+      return this.#formatDyingMessage(summary.dyingTurnsRemaining);
     }
 
     // Check if healthy
@@ -117,9 +113,14 @@ class InjuryNarrativeFormatterService extends BaseService {
       return 'I feel fine.';
     }
 
-    const narrativeParts = [];
+    // Build exclusion set for dismembered parts ONCE at start
+    // A dismembered part should only show "is missing", not health state or other effects
+    const dismemberedPartIds = this.#buildDismemberedPartIdSet(summary);
 
-    // Group injuries by severity (most severe first)
+    // 1. FIRST: Dismemberment (highest priority - body part loss)
+    const narrativeParts = this.#formatDismembermentFirstPerson(summary);
+
+    // 2. Group injuries by severity (most severe first)
     const states = getStateOrder(false); // Descending severity
 
     for (const state of states) {
@@ -127,15 +128,16 @@ class InjuryNarrativeFormatterService extends BaseService {
 
       let parts = [];
       if (state === 'destroyed') {
-        // Include explicitly destroyed parts and any labeled destroyed in injuredParts
-        parts = [...(summary.destroyedParts || [])];
-        if (summary.injuredParts) {
-          parts.push(
-            ...summary.injuredParts.filter((p) => p.state === 'destroyed')
-          );
-        }
+        // Use destroyedParts array as authoritative source (no duplicate merging)
+        // Filter out dismembered parts - they should only show "is missing"
+        parts = (summary.destroyedParts || []).filter(
+          (p) => !dismemberedPartIds.has(p.partEntityId)
+        );
       } else {
-        parts = (summary.injuredParts || []).filter((p) => p.state === state);
+        // Filter out dismembered parts from other health states too
+        parts = (summary.injuredParts || []).filter(
+          (p) => p.state === state && !dismemberedPartIds.has(p.partEntityId)
+        );
       }
 
       if (parts.length > 0) {
@@ -143,8 +145,8 @@ class InjuryNarrativeFormatterService extends BaseService {
       }
     }
 
-    // Add effect descriptions
-    const effectDescriptions = this.#formatEffectsFirstPerson(summary);
+    // 3. Add other effect descriptions (bleeding, burning, etc. - dismemberment already handled above)
+    const effectDescriptions = this.#formatEffectsFirstPerson(summary, dismemberedPartIds);
     if (effectDescriptions) {
       narrativeParts.push(effectDescriptions);
     }
@@ -169,7 +171,7 @@ class InjuryNarrativeFormatterService extends BaseService {
 
     const {
       entityName,
-      entityPronoun,
+      entityPronoun: _entityPronoun, // Reserved for future third-person narrative
       partType,
       orientation,
       damageType,
@@ -278,32 +280,29 @@ class InjuryNarrativeFormatterService extends BaseService {
    * Formats effect descriptions for first-person voice.
    *
    * @param {InjurySummaryDTO} summary - The injury summary
+   * @param {Set<string>} [dismemberedPartIds] - Set of part IDs that are dismembered (to exclude from other effects)
    * @returns {string} Effect descriptions or empty string
    * @private
    */
-  #formatEffectsFirstPerson(summary) {
+  #formatEffectsFirstPerson(summary, dismemberedPartIds = new Set()) {
     const effectParts = [];
 
-    // Dismembered effects (highest priority)
-    const dismemberedParts = summary.dismemberedParts || [];
-    for (const part of dismemberedParts) {
-      const partName = this.#formatPartName(part.partType, part.orientation);
-      effectParts.push(`My ${partName} ${FIRST_PERSON_EFFECT_MAP.dismembered}.`);
+    // Note: Dismemberment is now processed FIRST in formatFirstPerson() before health states
+    // This method only handles other effects (bleeding, burning, poisoned, fractured)
+
+    // Bleeding effects - grouped by severity, exclude dismembered parts
+    const bleedingParts = (summary.bleedingParts || []).filter(
+      (p) => !dismemberedPartIds.has(p.partEntityId)
+    );
+    const bleedingNarrative = this.#formatBleedingEffectsFirstPerson(bleedingParts);
+    if (bleedingNarrative) {
+      effectParts.push(bleedingNarrative);
     }
 
-    // Bleeding effects
-    const bleedingParts = summary.bleedingParts || [];
-    for (const part of bleedingParts) {
-      const partName = this.#formatPartName(part.partType, part.orientation);
-      const severity = part.bleedingSeverity || 'moderate';
-      const bleedingDesc =
-        BLEEDING_SEVERITY_FIRST_PERSON[severity] ||
-        FIRST_PERSON_EFFECT_MAP.bleeding;
-      effectParts.push(`${this.#capitalizeFirst(bleedingDesc)} my ${partName}.`);
-    }
-
-    // Burning effects
-    const burningParts = summary.burningParts || [];
+    // Burning effects - exclude dismembered parts (can't burn a missing part)
+    const burningParts = (summary.burningParts || []).filter(
+      (p) => !dismemberedPartIds.has(p.partEntityId)
+    );
     for (const part of burningParts) {
       const partName = this.#formatPartName(part.partType, part.orientation);
       effectParts.push(
@@ -311,8 +310,10 @@ class InjuryNarrativeFormatterService extends BaseService {
       );
     }
 
-    // Poisoned effects
-    const poisonedParts = summary.poisonedParts || [];
+    // Poisoned effects - exclude dismembered parts (can't be poisoned in missing part)
+    const poisonedParts = (summary.poisonedParts || []).filter(
+      (p) => !dismemberedPartIds.has(p.partEntityId)
+    );
     for (const part of poisonedParts) {
       const partName = this.#formatPartName(part.partType, part.orientation);
       effectParts.push(
@@ -320,8 +321,10 @@ class InjuryNarrativeFormatterService extends BaseService {
       );
     }
 
-    // Fractured effects
-    const fracturedParts = summary.fracturedParts || [];
+    // Fractured effects - exclude dismembered parts (can't have fracture in missing part)
+    const fracturedParts = (summary.fracturedParts || []).filter(
+      (p) => !dismemberedPartIds.has(p.partEntityId)
+    );
     for (const part of fracturedParts) {
       const partName = this.#formatPartName(part.partType, part.orientation);
       effectParts.push(
@@ -330,6 +333,112 @@ class InjuryNarrativeFormatterService extends BaseService {
     }
 
     return effectParts.join(' ');
+  }
+
+  /**
+   * Formats bleeding effects grouped by severity level.
+   * Parts with the same severity are combined into a single sentence with Oxford comma.
+   *
+   * @param {Array<object>} bleedingParts - Array of bleeding part objects
+   * @returns {string} Formatted bleeding narrative or empty string
+   * @private
+   */
+  #formatBleedingEffectsFirstPerson(bleedingParts) {
+    if (!bleedingParts || bleedingParts.length === 0) return '';
+
+    // Group by severity
+    const bySeverity = {};
+    for (const part of bleedingParts) {
+      const severity = part.bleedingSeverity || 'moderate';
+      if (!bySeverity[severity]) bySeverity[severity] = [];
+      bySeverity[severity].push(part);
+    }
+
+    const sentences = [];
+    const severityOrder = ['severe', 'moderate', 'minor'];
+
+    for (const severity of severityOrder) {
+      const parts = bySeverity[severity];
+      if (!parts || parts.length === 0) continue;
+
+      const bleedingDesc =
+        BLEEDING_SEVERITY_FIRST_PERSON[severity] ||
+        FIRST_PERSON_EFFECT_MAP.bleeding;
+      const partNames = parts.map((p) =>
+        this.#formatPartName(p.partType, p.orientation)
+      );
+      const combined = this.#formatListWithLeadingPossessive(partNames, 'my');
+      sentences.push(`${this.#capitalizeFirst(bleedingDesc)} ${combined}.`);
+    }
+
+    return sentences.join(' ');
+  }
+
+  /**
+   * Formats a list with a possessive prefix on the first item only.
+   *
+   * @param {string[]} items - List of items to format
+   * @param {string} possessive - The possessive prefix (e.g., "My", "my")
+   * @returns {string} Formatted list (e.g., "My left arm, right leg, and torso")
+   * @private
+   */
+  #formatListWithLeadingPossessive(items, possessive) {
+    if (items.length === 0) return '';
+    if (items.length === 1) return `${possessive} ${items[0]}`;
+    if (items.length === 2) return `${possessive} ${items[0]} and ${items[1]}`;
+
+    const allButLast = items.slice(0, -1);
+    const lastItem = items[items.length - 1];
+    return `${possessive} ${allButLast.join(', ')}, and ${lastItem}`;
+  }
+
+  /**
+   * Creates a Set of part entity IDs for dismembered parts.
+   * Used to filter dismembered parts from other descriptions.
+   *
+   * @param {InjurySummaryDTO} summary - The injury summary
+   * @returns {Set<string>} Set of dismembered part entity IDs
+   * @private
+   */
+  #buildDismemberedPartIdSet(summary) {
+    return new Set(
+      (summary.dismemberedParts || []).map((p) => p.partEntityId)
+    );
+  }
+
+  /**
+   * Formats the dying state message with turn count.
+   *
+   * @param {number} turnsRemaining - Turns until death
+   * @returns {string} Dying message
+   * @private
+   */
+  #formatDyingMessage(turnsRemaining) {
+    const turnsText = turnsRemaining === 1 ? 'moment' : `${turnsRemaining} moments`;
+    return `I am dying. Without help, I have only ${turnsText} left...`;
+  }
+
+  /**
+   * Formats dismemberment descriptions for first-person narrative.
+   *
+   * @param {InjurySummaryDTO} summary - The injury summary
+   * @returns {string[]} Array of dismemberment sentences
+   * @private
+   */
+  #formatDismembermentFirstPerson(summary) {
+    const dismemberedParts = summary.dismemberedParts || [];
+    if (dismemberedParts.length === 0) {
+      return [];
+    }
+
+    const partNames = dismemberedParts.map((part) =>
+      this.#formatPartName(part.partType, part.orientation)
+    );
+
+    const formattedList = this.#formatListWithLeadingPossessive(partNames, 'My');
+    const verb = dismemberedParts.length === 1 ? 'is' : 'are';
+
+    return [`${formattedList} ${verb} missing.`];
   }
 
   /**
@@ -348,23 +457,6 @@ class InjuryNarrativeFormatterService extends BaseService {
     }
 
     return normalizedType;
-  }
-
-  /**
-   * Gets the possessive pronoun for an entity.
-   *
-   * @param {string} pronoun - Subject pronoun (he/she/they)
-   * @returns {string} Possessive pronoun (his/her/their)
-   * @private
-   */
-  #getPossessivePronoun(pronoun) {
-    const possessiveMap = {
-      he: 'his',
-      she: 'her',
-      they: 'their',
-      it: 'its',
-    };
-    return possessiveMap[pronoun?.toLowerCase()] || 'their';
   }
 
   /**

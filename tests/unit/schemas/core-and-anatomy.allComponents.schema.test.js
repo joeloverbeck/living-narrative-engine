@@ -139,6 +139,7 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
         { childSocketId: 'heart_socket', baseProbability: 0.3 },
       ],
     },
+    'anatomy:embedded': {},
   };
 
   /** @type {Record<string, unknown>} */
@@ -206,7 +207,53 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
     'anatomy:dying': { turnsRemaining: -1 }, // Missing required causeOfDying, invalid minimum
     'anatomy:dead': { vitalOrganDestroyed: 'heart' }, // Missing required causeOfDeath and deathTimestamp
     'anatomy:damage_propagation': { rules: 'not_an_array' }, // Invalid type
+    'anatomy:embedded': { extra: true }, // additionalProperties: false
   };
+
+  // Additional test cases for DISBODPARSPA-001: anatomy:part definitionId field
+  describe('anatomy:part - definitionId field (DISBODPARSPA-001)', () => {
+    test('✓ valid with definitionId', () => {
+      const payload = { subType: 'foot', definitionId: 'anatomy:human_foot' };
+      const ok = validators['anatomy:part'](payload);
+      if (!ok) console.error(validators['anatomy:part'].errors);
+      expect(ok).toBe(true);
+    });
+
+    test('✓ valid with orientation and definitionId', () => {
+      const payload = {
+        subType: 'arm',
+        orientation: 'left',
+        definitionId: 'anatomy:human_arm',
+      };
+      const ok = validators['anatomy:part'](payload);
+      if (!ok) console.error(validators['anatomy:part'].errors);
+      expect(ok).toBe(true);
+    });
+
+    test('✓ valid with all optional fields', () => {
+      const payload = {
+        subType: 'torso',
+        orientation: 'mid',
+        hit_probability_weight: 5.0,
+        definitionId: 'anatomy:human_torso',
+      };
+      const ok = validators['anatomy:part'](payload);
+      if (!ok) console.error(validators['anatomy:part'].errors);
+      expect(ok).toBe(true);
+    });
+
+    test('✗ invalid - definitionId must be string', () => {
+      const payload = { subType: 'leg', definitionId: 123 };
+      expect(validators['anatomy:part'](payload)).toBe(false);
+    });
+
+    test('✓ backward compatibility - valid without definitionId', () => {
+      // This test explicitly documents backward compatibility
+      const payload = { subType: 'head' };
+      const ok = validators['anatomy:part'](payload);
+      expect(ok).toBe(true);
+    });
+  });
 
   Object.entries(validators).forEach(([id, validate]) => {
     // eslint-disable-next-line jest/valid-title

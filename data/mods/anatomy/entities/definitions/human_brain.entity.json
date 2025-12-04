@@ -17,6 +17,9 @@
     },
     "core:name": {
       "text": "brain"
+    },
+    "items:weight": {
+      "weight": 1.4
     }
   }
 }

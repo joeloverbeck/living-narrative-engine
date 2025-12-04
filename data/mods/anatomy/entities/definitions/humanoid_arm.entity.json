@@ -25,6 +25,9 @@
     },
     "core:name": {
       "text": "arm"
+    },
+    "items:weight": {
+      "weight": 4
     }
   }
 }

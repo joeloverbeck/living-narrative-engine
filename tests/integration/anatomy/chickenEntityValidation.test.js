@@ -328,4 +328,153 @@ describe('Chicken Entity Validation', () => {
       });
     });
   });
+
+  describe('Weight component validation (DISBODPARSPA-013)', () => {
+    // All 26 chicken entity files including variants
+    const ALL_CHICKEN_ENTITIES = [
+      'chicken_beak.entity.json',
+      'chicken_brain.entity.json',
+      'chicken_comb.entity.json',
+      'chicken_comb_bantam.entity.json',
+      'chicken_comb_large_coarse.entity.json',
+      'chicken_foot.entity.json',
+      'chicken_head.entity.json',
+      'chicken_head_chalky_white.entity.json',
+      'chicken_head_rust_red.entity.json',
+      'chicken_head_twisted_joints.entity.json',
+      'chicken_heart.entity.json',
+      'chicken_leg.entity.json',
+      'chicken_spine.entity.json',
+      'chicken_spur.entity.json',
+      'chicken_tail.entity.json',
+      'chicken_tail_large_long.entity.json',
+      'chicken_torso.entity.json',
+      'chicken_wattle.entity.json',
+      'chicken_wattle_bantam.entity.json',
+      'chicken_wattle_large.entity.json',
+      'chicken_wing.entity.json',
+      'chicken_wing_buff.entity.json',
+      'chicken_wing_copper_metallic.entity.json',
+      'chicken_wing_glossy_black_iridescent.entity.json',
+      'chicken_wing_slate_blue.entity.json',
+      'chicken_wing_speckled.entity.json',
+    ];
+
+    it('should have exactly 26 chicken entity definitions', () => {
+      expect(ALL_CHICKEN_ENTITIES.length).toBe(26);
+    });
+
+    it.each(ALL_CHICKEN_ENTITIES)('%s should have items:weight component', (filename) => {
+      const entity = loadEntity(filename);
+      expect(entity.components['items:weight']).toBeDefined();
+      expect(entity.components['items:weight'].weight).toBeDefined();
+    });
+
+    it.each(ALL_CHICKEN_ENTITIES)('%s should have weight > 0', (filename) => {
+      const entity = loadEntity(filename);
+      expect(entity.components['items:weight'].weight).toBeGreaterThan(0);
+    });
+
+    describe('Weight realism checks', () => {
+      it('chicken_torso should be the heaviest part (1-2 kg range)', () => {
+        const torso = loadEntity('chicken_torso.entity.json');
+        expect(torso.components['items:weight'].weight).toBeGreaterThanOrEqual(1.0);
+        expect(torso.components['items:weight'].weight).toBeLessThanOrEqual(2.0);
+      });
+
+      it('chicken head variants should weigh approximately the same', () => {
+        const heads = [
+          'chicken_head.entity.json',
+          'chicken_head_chalky_white.entity.json',
+          'chicken_head_rust_red.entity.json',
+          'chicken_head_twisted_joints.entity.json',
+        ].map((f) => loadEntity(f).components['items:weight'].weight);
+
+        // All head variants should have identical weights
+        const uniqueWeights = [...new Set(heads)];
+        expect(uniqueWeights.length).toBe(1);
+      });
+
+      it('chicken wing variants should weigh approximately the same', () => {
+        const wings = [
+          'chicken_wing.entity.json',
+          'chicken_wing_buff.entity.json',
+          'chicken_wing_copper_metallic.entity.json',
+          'chicken_wing_glossy_black_iridescent.entity.json',
+          'chicken_wing_slate_blue.entity.json',
+          'chicken_wing_speckled.entity.json',
+        ].map((f) => loadEntity(f).components['items:weight'].weight);
+
+        // All wing variants should have identical weights
+        const uniqueWeights = [...new Set(wings)];
+        expect(uniqueWeights.length).toBe(1);
+      });
+
+      it('smaller parts should weigh less than larger parts', () => {
+        const torso = loadEntity('chicken_torso.entity.json');
+        const head = loadEntity('chicken_head.entity.json');
+        const wing = loadEntity('chicken_wing.entity.json');
+        const leg = loadEntity('chicken_leg.entity.json');
+        const foot = loadEntity('chicken_foot.entity.json');
+        const beak = loadEntity('chicken_beak.entity.json');
+        const comb = loadEntity('chicken_comb.entity.json');
+        const brain = loadEntity('chicken_brain.entity.json');
+
+        // Torso heaviest
+        expect(torso.components['items:weight'].weight).toBeGreaterThan(
+          head.components['items:weight'].weight
+        );
+        expect(torso.components['items:weight'].weight).toBeGreaterThan(
+          wing.components['items:weight'].weight
+        );
+
+        // Leg heavier than foot
+        expect(leg.components['items:weight'].weight).toBeGreaterThan(
+          foot.components['items:weight'].weight
+        );
+
+        // Head heavier than small facial features
+        expect(head.components['items:weight'].weight).toBeGreaterThan(
+          beak.components['items:weight'].weight
+        );
+        expect(head.components['items:weight'].weight).toBeGreaterThan(
+          comb.components['items:weight'].weight
+        );
+
+        // Brain should be very light
+        expect(brain.components['items:weight'].weight).toBeLessThan(0.01);
+      });
+
+      it('size variants should have appropriate weight differences', () => {
+        const combBase = loadEntity('chicken_comb.entity.json');
+        const combBantam = loadEntity('chicken_comb_bantam.entity.json');
+        const combLarge = loadEntity('chicken_comb_large_coarse.entity.json');
+
+        expect(combBantam.components['items:weight'].weight).toBeLessThan(
+          combBase.components['items:weight'].weight
+        );
+        expect(combLarge.components['items:weight'].weight).toBeGreaterThan(
+          combBase.components['items:weight'].weight
+        );
+
+        const wattleBase = loadEntity('chicken_wattle.entity.json');
+        const wattleBantam = loadEntity('chicken_wattle_bantam.entity.json');
+        const wattleLarge = loadEntity('chicken_wattle_large.entity.json');
+
+        expect(wattleBantam.components['items:weight'].weight).toBeLessThan(
+          wattleBase.components['items:weight'].weight
+        );
+        expect(wattleLarge.components['items:weight'].weight).toBeGreaterThan(
+          wattleBase.components['items:weight'].weight
+        );
+
+        const tailBase = loadEntity('chicken_tail.entity.json');
+        const tailLarge = loadEntity('chicken_tail_large_long.entity.json');
+
+        expect(tailLarge.components['items:weight'].weight).toBeGreaterThan(
+          tailBase.components['items:weight'].weight
+        );
+      });
+    });
+  });
 });

@@ -103,6 +103,9 @@
     },
     "core:name": {
       "text": "head"
+    },
+    "items:weight": {
+      "weight": 5
     }
   }
 }

@@ -19,6 +19,9 @@
     },
     "core:name": {
       "text": "hand"
+    },
+    "items:weight": {
+      "weight": 0.45
     }
   }
 }

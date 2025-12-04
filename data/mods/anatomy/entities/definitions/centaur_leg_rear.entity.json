@@ -32,6 +32,9 @@
     },
     "descriptors:texture": {
       "texture": "smooth"
+    },
+    "items:weight": {
+      "weight": 30
     }
   }
 }

@@ -23,6 +23,9 @@
     },
     "core:name": {
       "text": "breast"
+    },
+    "items:weight": {
+      "weight": 0.75
     }
   }
 }

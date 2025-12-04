@@ -55,9 +55,9 @@ describe('Tortoise Tail Entity Validation', () => {
       expect(tailEntity.components['anatomy:sockets']).toBeUndefined();
     });
 
-    it('should have exactly 7 components (no sockets)', () => {
+    it('should have exactly 8 components (no sockets, includes items:weight)', () => {
       const componentKeys = Object.keys(tailEntity.components);
-      expect(componentKeys.length).toBe(7);
+      expect(componentKeys.length).toBe(8);
     });
   });
 
@@ -77,10 +77,11 @@ describe('Tortoise Tail Entity Validation', () => {
         'anatomy:part',
         'anatomy:part_health',
         'core:name',
-        'descriptors:texture',
+        'descriptors:color_extended',
         'descriptors:length_category',
         'descriptors:shape_general',
-        'descriptors:color_extended',
+        'descriptors:texture',
+        'items:weight',
       ];
       const actualKeys = Object.keys(tailEntity.components);
       expect(actualKeys.sort()).toEqual(expectedKeys.sort());

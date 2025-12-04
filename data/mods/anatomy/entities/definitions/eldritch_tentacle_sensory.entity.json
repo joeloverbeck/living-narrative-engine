@@ -37,6 +37,9 @@
     },
     "descriptors:texture": {
       "texture": "nodular-receptors"
+    },
+    "items:weight": {
+      "weight": 5
     }
   }
 }

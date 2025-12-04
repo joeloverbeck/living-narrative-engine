@@ -17,6 +17,9 @@
     },
     "descriptors:texture": {
       "texture": "ridged"
+    },
+    "items:weight": {
+      "weight": 0.02
     }
   }
 }

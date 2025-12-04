@@ -28,6 +28,9 @@
     },
     "core:name": {
       "text": "slim arm"
+    },
+    "items:weight": {
+      "weight": 4
     }
   }
 }

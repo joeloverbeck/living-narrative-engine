@@ -87,9 +87,9 @@ describe('Tortoise Head Entity Validation', () => {
   });
 
   describe('Component structure', () => {
-    it('should have exactly 7 components', () => {
+    it('should have exactly 8 components (includes items:weight)', () => {
       const componentKeys = Object.keys(headEntity.components);
-      expect(componentKeys.length).toBe(7);
+      expect(componentKeys.length).toBe(8);
     });
 
     it('should have all required components', () => {
