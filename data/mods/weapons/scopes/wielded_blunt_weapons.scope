@@ -1,0 +1,11 @@
+// Scope: weapons:wielded_blunt_weapons
+// Description: Returns wielded weapons with blunt damage capability
+// Usage: Primary target scope for strike_target action
+
+weapons:wielded_blunt_weapons := actor.components.positioning:wielding.wielded_item_ids[][{
+  "and": [
+    { "has_component": [".", "weapons:weapon"] },
+    { "has_component": [".", "damage-types:damage_capabilities"] },
+    { "has_damage_capability": [".", "blunt"] }
+  ]
+}]

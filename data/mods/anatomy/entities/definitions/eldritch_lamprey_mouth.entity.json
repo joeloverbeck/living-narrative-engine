@@ -15,20 +15,20 @@
     "core:name": {
       "text": "lamprey mouth"
     },
-    "descriptors:texture": {
-      "texture": "concentric-teeth"
-    },
-    "descriptors:size_category": {
-      "size": "medium"
-    },
-    "descriptors:secretion": {
-      "secretion": "corrosive-saliva"
+    "core:weight": {
+      "weight": 3
     },
     "descriptors:animation": {
       "animation": "constantly-drooling"
     },
-    "items:weight": {
-      "weight": 3
+    "descriptors:secretion": {
+      "secretion": "corrosive-saliva"
+    },
+    "descriptors:size_category": {
+      "size": "medium"
+    },
+    "descriptors:texture": {
+      "texture": "concentric-teeth"
     }
   }
 }

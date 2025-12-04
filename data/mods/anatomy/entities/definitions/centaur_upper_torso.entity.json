@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "centaur_upper_torso",
-      "hit_probability_weight": 25
+      "hit_probability_weight": 25,
+      "health_calculation_weight": 10
     },
     "anatomy:part_health": {
       "currentHealth": 80,
@@ -51,11 +52,11 @@
     "core:name": {
       "text": "upper torso"
     },
+    "core:weight": {
+      "weight": 35
+    },
     "descriptors:build": {
       "build": "muscular"
-    },
-    "items:weight": {
-      "weight": 35
     }
   }
 }

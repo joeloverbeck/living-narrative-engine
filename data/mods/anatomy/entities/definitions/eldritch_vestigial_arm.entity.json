@@ -26,11 +26,14 @@
     "core:name": {
       "text": "vestigial arm"
     },
+    "core:weight": {
+      "weight": 3
+    },
+    "descriptors:animation": {
+      "animation": "involuntary-twitching"
+    },
     "descriptors:build": {
       "build": "slim"
-    },
-    "descriptors:texture": {
-      "texture": "pale-clammy"
     },
     "descriptors:color_extended": {
       "color": "corpse-pale"
@@ -38,11 +41,8 @@
     "descriptors:deformity": {
       "deformity": "twisted-joints"
     },
-    "descriptors:animation": {
-      "animation": "involuntary-twitching"
-    },
-    "items:weight": {
-      "weight": 3
+    "descriptors:texture": {
+      "texture": "pale-clammy"
     }
   }
 }

@@ -25,7 +25,7 @@ import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
 const INVENTORY_COMPONENT_ID = 'items:inventory';
-const WEIGHT_COMPONENT_ID = 'items:weight';
+const WEIGHT_COMPONENT_ID = 'core:weight';
 
 /**
  * @typedef {object} ValidateInventoryCapacityParams

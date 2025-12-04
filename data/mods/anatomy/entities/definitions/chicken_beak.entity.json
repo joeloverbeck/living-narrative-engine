@@ -15,17 +15,17 @@
     "core:name": {
       "text": "chicken beak"
     },
-    "descriptors:size_category": {
-      "size": "small"
-    },
-    "descriptors:shape_general": {
-      "shape": "conical"
+    "core:weight": {
+      "weight": 0.005
     },
     "descriptors:color_basic": {
       "color": "yellow"
     },
-    "items:weight": {
-      "weight": 0.005
+    "descriptors:shape_general": {
+      "shape": "conical"
+    },
+    "descriptors:size_category": {
+      "size": "small"
     }
   }
 }

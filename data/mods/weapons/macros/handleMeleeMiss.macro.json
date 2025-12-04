@@ -7,7 +7,7 @@
       "type": "DISPATCH_PERCEPTIBLE_EVENT",
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
-        "description_text": "{context.actorName} {context.attackVerbPast} their {context.weaponName} at {context.targetName}, but the {context.attackVerb} fails to connect.",
+        "description_text": "{context.actorName} {context.attackVerbPast} {context.targetName} with their {context.weaponName}, but the {context.attackVerb} fails to connect.",
         "perception_type": "action_target_general",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.secondaryId}"
@@ -17,7 +17,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
-        "value": "{context.actorName} {context.attackVerbPast} their {context.weaponName} at {context.targetName}, but the {context.attackVerb} fails to connect."
+        "value": "{context.actorName} {context.attackVerbPast} {context.targetName} with their {context.weaponName}, but the {context.attackVerb} fails to connect."
       }
     },
     {

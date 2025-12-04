@@ -23,14 +23,14 @@
         }
       ]
     },
-    "core:name": {
-      "text": "mouth"
-    },
     "core:mouth_engagement": {
       "locked": false,
       "forcedOverride": false
     },
-    "items:weight": {
+    "core:name": {
+      "text": "mouth"
+    },
+    "core:weight": {
       "weight": 0.05
     }
   }

@@ -15,8 +15,11 @@
     "core:name": {
       "text": "foot"
     },
-    "descriptors:texture": {
-      "texture": "leathery"
+    "core:weight": {
+      "weight": 0.4
+    },
+    "descriptors:color_extended": {
+      "color": "sickly-gray-green"
     },
     "descriptors:digit_count": {
       "count": "3"
@@ -24,11 +27,8 @@
     "descriptors:projection": {
       "projection": "clawed"
     },
-    "descriptors:color_extended": {
-      "color": "sickly-gray-green"
-    },
-    "items:weight": {
-      "weight": 0.4
+    "descriptors:texture": {
+      "texture": "leathery"
     }
   }
 }

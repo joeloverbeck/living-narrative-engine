@@ -12,17 +12,17 @@
       "maxHealth": 8,
       "state": "healthy"
     },
-    "descriptors:texture": {
-      "texture": "scarred"
+    "core:name": {
+      "text": "nose"
+    },
+    "core:weight": {
+      "weight": 0.03
     },
     "descriptors:size_category": {
       "size": "medium"
     },
-    "core:name": {
-      "text": "nose"
-    },
-    "items:weight": {
-      "weight": 0.03
+    "descriptors:texture": {
+      "texture": "scarred"
     }
   }
 }

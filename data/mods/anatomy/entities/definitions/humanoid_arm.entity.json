@@ -26,7 +26,7 @@
     "core:name": {
       "text": "arm"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 4
     }
   }

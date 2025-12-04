@@ -27,7 +27,7 @@
         }
       ]
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 0.5
     },
     "descriptors:color_basic": {

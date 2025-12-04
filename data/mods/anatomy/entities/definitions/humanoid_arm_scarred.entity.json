@@ -23,14 +23,14 @@
         }
       ]
     },
-    "descriptors:texture": {
-      "texture": "scarred"
-    },
     "core:name": {
       "text": "arm"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 4
+    },
+    "descriptors:texture": {
+      "texture": "scarred"
     }
   }
 }

@@ -12,20 +12,20 @@
       "maxHealth": 3,
       "state": "healthy"
     },
+    "core:name": {
+      "text": "hair"
+    },
+    "core:weight": {
+      "weight": 0.1
+    },
     "descriptors:color_extended": {
       "color": "blonde"
-    },
-    "descriptors:length_hair": {
-      "length": "medium"
     },
     "descriptors:hair_style": {
       "style": "ponytail"
     },
-    "core:name": {
-      "text": "hair"
-    },
-    "items:weight": {
-      "weight": 0.1
+    "descriptors:length_hair": {
+      "length": "medium"
     }
   }
 }

@@ -15,14 +15,14 @@
     "core:name": {
       "text": "speckled chicken wing"
     },
-    "descriptors:texture": {
-      "texture": "feathered"
+    "core:weight": {
+      "weight": 0.15
     },
     "descriptors:pattern": {
       "pattern": "speckled"
     },
-    "items:weight": {
-      "weight": 0.15
+    "descriptors:texture": {
+      "texture": "feathered"
     }
   }
 }

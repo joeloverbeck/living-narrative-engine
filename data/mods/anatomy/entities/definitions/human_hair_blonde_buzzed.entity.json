@@ -12,17 +12,17 @@
       "maxHealth": 3,
       "state": "healthy"
     },
+    "core:name": {
+      "text": "hair"
+    },
+    "core:weight": {
+      "weight": 0.02
+    },
     "descriptors:color_extended": {
       "color": "blonde"
     },
     "descriptors:hair_style": {
       "style": "buzzed"
-    },
-    "core:name": {
-      "text": "hair"
-    },
-    "items:weight": {
-      "weight": 0.02
     }
   }
 }

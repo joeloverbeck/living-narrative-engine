@@ -26,14 +26,14 @@
     "core:name": {
       "text": "arm"
     },
-    "descriptors:texture": {
-      "texture": "scaled"
+    "core:weight": {
+      "weight": 1.5
     },
     "descriptors:color_extended": {
       "color": "dark-olive"
     },
-    "items:weight": {
-      "weight": 1.5
+    "descriptors:texture": {
+      "texture": "scaled"
     }
   }
 }

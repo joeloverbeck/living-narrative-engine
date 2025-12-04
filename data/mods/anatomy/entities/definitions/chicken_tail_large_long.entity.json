@@ -15,17 +15,17 @@
     "core:name": {
       "text": "large rooster tail"
     },
-    "descriptors:texture": {
-      "texture": "feathered"
-    },
-    "descriptors:size_category": {
-      "size": "large"
+    "core:weight": {
+      "weight": 0.08
     },
     "descriptors:length_category": {
       "length": "very-long"
     },
-    "items:weight": {
-      "weight": 0.08
+    "descriptors:size_category": {
+      "size": "large"
+    },
+    "descriptors:texture": {
+      "texture": "feathered"
     }
   }
 }

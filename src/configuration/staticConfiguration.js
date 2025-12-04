@@ -34,6 +34,7 @@ const OPERATION_SCHEMA_FILES = [
   'establishLyingCloseness.schema.json',
   'establishSittingCloseness.schema.json',
   'forEach.schema.json',
+  'getDamageCapabilities.schema.json',
   'getName.schema.json',
   'getTimestamp.schema.json',
   'hasComponent.schema.json',

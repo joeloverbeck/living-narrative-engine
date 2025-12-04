@@ -100,7 +100,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
         .withName('Owned Item')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 1.0 })
+        .withComponent('core:weight', { weight: 1.0 })
         .withComponent('items:readable', { content: 'Test content' })
         .withComponent('core:description', { text: 'A test item for verification.' })
         .build();
@@ -110,7 +110,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
         .atLocation('verification-room')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.5 })
+        .withComponent('core:weight', { weight: 0.5 })
         .build();
 
       const container = new ModEntityBuilder('test-chest')
@@ -129,7 +129,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
         .withName('Chest Item')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.3 })
+        .withComponent('core:weight', { weight: 0.3 })
         .build();
 
       // Test drop_item
@@ -229,7 +229,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
         .withName('Ancient Tome')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 2.0 })
+        .withComponent('core:weight', { weight: 2.0 })
         .withComponent('core:description', { text: 'An ancient tome filled with mysterious knowledge.' })
         .build();
 
@@ -253,8 +253,8 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
       currentBook = fixtures.take.entityManager.getEntityInstance('book-1');
       expect(currentBook.components['items:item']).toBeDefined();
       expect(currentBook.components['items:portable']).toBeDefined();
-      expect(currentBook.components['items:weight']).toBeDefined();
-      expect(currentBook.components['items:weight'].weight).toBe(2.0);
+      expect(currentBook.components['core:weight']).toBeDefined();
+      expect(currentBook.components['core:weight'].weight).toBe(2.0);
 
       currentDrawer = fixtures.take.entityManager.getEntityInstance('desk-drawer');
 
@@ -273,7 +273,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
       currentBook = fixtures.give.entityManager.getEntityInstance('book-1');
       expect(currentBook.components['items:item']).toBeDefined();
       expect(currentBook.components['items:portable']).toBeDefined();
-      expect(currentBook.components['items:weight'].weight).toBe(2.0);
+      expect(currentBook.components['core:weight'].weight).toBe(2.0);
 
       // Phase 4: Actor 2 returns the book to the drawer
       currentActor1 = fixtures.give.entityManager.getEntityInstance('actor-1');
@@ -316,7 +316,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
       currentBook = fixtures.put.entityManager.getEntityInstance('book-1');
       expect(currentBook.components['items:item']).toBeDefined();
       expect(currentBook.components['items:portable']).toBeDefined();
-      expect(currentBook.components['items:weight'].weight).toBe(2.0);
+      expect(currentBook.components['core:weight'].weight).toBe(2.0);
     });
   });
 
@@ -361,14 +361,14 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
         .withName('Rare Item')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 1.0 })
+        .withComponent('core:weight', { weight: 1.0 })
         .build();
 
       const key = new ModEntityBuilder('silver-key')
         .withName('Silver Key')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.1 })
+        .withComponent('core:weight', { weight: 0.1 })
         .build();
 
       // Scenario: Merchant gives key to customer, customer opens chest, takes item, gives back key

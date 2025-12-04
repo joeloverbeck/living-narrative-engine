@@ -3,6 +3,7 @@
   "id": "anatomy:human_asshole",
   "description": "A human anal opening",
   "components": {
+    "anatomy:embedded": {},
     "anatomy:part": {
       "subType": "asshole",
       "hit_probability_weight": 1
@@ -15,9 +16,8 @@
     "core:name": {
       "text": "asshole"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 0.02
-    },
-    "anatomy:embedded": {}
+    }
   }
 }

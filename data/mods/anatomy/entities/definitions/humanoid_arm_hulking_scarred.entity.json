@@ -23,17 +23,17 @@
         }
       ]
     },
+    "core:name": {
+      "text": "hulking, scarred arm"
+    },
+    "core:weight": {
+      "weight": 4
+    },
     "descriptors:build": {
       "build": "hulking"
     },
     "descriptors:texture": {
       "texture": "scarred"
-    },
-    "core:name": {
-      "text": "hulking, scarred arm"
-    },
-    "items:weight": {
-      "weight": 4
     }
   }
 }

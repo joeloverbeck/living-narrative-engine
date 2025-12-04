@@ -15,8 +15,8 @@
     "core:name": {
       "text": "bantam chicken wattle"
     },
-    "descriptors:texture": {
-      "texture": "fleshy"
+    "core:weight": {
+      "weight": 0.003
     },
     "descriptors:color_basic": {
       "color": "red"
@@ -24,8 +24,8 @@
     "descriptors:size_category": {
       "size": "bantam"
     },
-    "items:weight": {
-      "weight": 0.003
+    "descriptors:texture": {
+      "texture": "fleshy"
     }
   }
 }

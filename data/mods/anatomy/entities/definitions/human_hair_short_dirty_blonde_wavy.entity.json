@@ -12,20 +12,20 @@
       "maxHealth": 3,
       "state": "healthy"
     },
+    "core:name": {
+      "text": "hair"
+    },
+    "core:weight": {
+      "weight": 0.05
+    },
     "descriptors:color_extended": {
       "color": "dirty-blonde"
-    },
-    "descriptors:length_hair": {
-      "length": "short"
     },
     "descriptors:hair_style": {
       "style": "wavy"
     },
-    "core:name": {
-      "text": "hair"
-    },
-    "items:weight": {
-      "weight": 0.05
+    "descriptors:length_hair": {
+      "length": "short"
     }
   }
 }

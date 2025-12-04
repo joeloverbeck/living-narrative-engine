@@ -15,14 +15,14 @@
     "core:name": {
       "text": "tail"
     },
-    "descriptors:length_category": {
-      "length": "long"
+    "core:weight": {
+      "weight": 4
     },
     "descriptors:body_hair": {
       "hairDensity": "hairy"
     },
-    "items:weight": {
-      "weight": 4
+    "descriptors:length_category": {
+      "length": "long"
     }
   }
 }

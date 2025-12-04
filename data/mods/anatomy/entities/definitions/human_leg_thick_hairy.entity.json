@@ -23,21 +23,21 @@
         }
       ]
     },
-    "descriptors:build": {
-      "build": "thick"
-    },
-    "descriptors:body_hair": {
-      "hairDensity": "hairy"
-    },
-    "core:name": {
-      "text": "thick, hairy leg"
-    },
     "core:movement": {
       "locked": false,
       "forcedOverride": false
     },
-    "items:weight": {
-      "weight": 15.0
+    "core:name": {
+      "text": "thick, hairy leg"
+    },
+    "core:weight": {
+      "weight": 15
+    },
+    "descriptors:body_hair": {
+      "hairDensity": "hairy"
+    },
+    "descriptors:build": {
+      "build": "thick"
     }
   }
 }

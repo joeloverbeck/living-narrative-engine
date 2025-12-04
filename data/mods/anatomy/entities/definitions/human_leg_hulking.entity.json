@@ -23,18 +23,18 @@
         }
       ]
     },
-    "descriptors:build": {
-      "build": "hulking"
-    },
-    "core:name": {
-      "text": "hulking leg"
-    },
     "core:movement": {
       "locked": false,
       "forcedOverride": false
     },
-    "items:weight": {
-      "weight": 16.0
+    "core:name": {
+      "text": "hulking leg"
+    },
+    "core:weight": {
+      "weight": 16
+    },
+    "descriptors:build": {
+      "build": "hulking"
     }
   }
 }

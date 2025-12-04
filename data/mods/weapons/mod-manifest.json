@@ -49,22 +49,30 @@
       "handleMeleeMiss.macro.json"
     ],
     "scopes": [
+      "grabbable_weapons_at_location.scope",
       "grabbable_weapons_in_inventory.scope",
       "weapons_in_inventory.scope",
+      "wielded_blunt_weapons.scope",
       "wielded_cutting_weapons.scope",
       "wielded_piercing_weapons.scope"
     ],
     "conditions": [
+      "event-is-action-quickly-wield-weapon.condition.json",
+      "event-is-action-strike-target.condition.json",
       "event-is-action-swing-at-target.condition.json",
       "event-is-action-thrust-at-target.condition.json",
       "event-is-action-wield-threateningly.condition.json"
     ],
     "actions": [
+      "quickly_wield_weapon.action.json",
+      "strike_target.action.json",
       "swing_at_target.action.json",
       "thrust_at_target.action.json",
       "wield_threateningly.action.json"
     ],
     "rules": [
+      "handle_quickly_wield_weapon.rule.json",
+      "handle_strike_target.rule.json",
       "handle_swing_at_target.rule.json",
       "handle_thrust_at_target.rule.json",
       "handle_wield_threateningly.rule.json"

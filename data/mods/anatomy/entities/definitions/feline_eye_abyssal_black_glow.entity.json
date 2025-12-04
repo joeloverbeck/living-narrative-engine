@@ -12,23 +12,23 @@
       "maxHealth": 10,
       "state": "healthy"
     },
+    "core:name": {
+      "text": "abyssal eye"
+    },
+    "core:weight": {
+      "weight": 0.008
+    },
     "descriptors:color_extended": {
       "color": "abyssal-black"
-    },
-    "descriptors:shape_eye": {
-      "shape": "hooded"
-    },
-    "descriptors:pupil_shape": {
-      "shape": "slit-vertical"
     },
     "descriptors:luminosity": {
       "luminosity": "faint-glow"
     },
-    "core:name": {
-      "text": "abyssal eye"
+    "descriptors:pupil_shape": {
+      "shape": "slit-vertical"
     },
-    "items:weight": {
-      "weight": 0.008
+    "descriptors:shape_eye": {
+      "shape": "hooded"
     }
   }
 }

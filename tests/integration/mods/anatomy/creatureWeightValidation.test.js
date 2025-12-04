@@ -1,11 +1,11 @@
 /**
  * @file creatureWeightValidation.test.js
  * @description Validates that creature entity definitions (centaur, dragon, eldritch,
- * cat/feline, horse) have appropriate items:weight components for the dismemberment
+ * cat/feline, horse) have appropriate core:weight components for the dismemberment
  * spawning feature.
  *
  * This test ensures the invariants from DISBODPARSPA-014 are maintained:
- * - All creature entities have items:weight
+ * - All creature entities have core:weight
  * - Weights are positive numbers within realistic ranges for each creature type
  *
  * @see tickets/DISBODPARSPA-014-weight-creatures.md
@@ -37,7 +37,7 @@ function loadEntityFile(filename) {
  * @returns {number|undefined} Weight value or undefined
  */
 function getWeight(entity) {
-  return entity?.components?.['items:weight']?.weight;
+  return entity?.components?.['core:weight']?.weight;
 }
 
 describe('DISBODPARSPA-014: Creature Entity Weight Validation', () => {
@@ -480,10 +480,10 @@ describe('DISBODPARSPA-014: Creature Entity Weight Validation', () => {
     });
 
     it.each(ALL_FILES)(
-      'should have properly structured items:weight component in %s',
+      'should have properly structured core:weight component in %s',
       (file) => {
         const entity = loadEntityFile(file);
-        const weightComponent = entity?.components?.['items:weight'];
+        const weightComponent = entity?.components?.['core:weight'];
 
         expect(weightComponent).toBeDefined();
         expect(weightComponent).toHaveProperty('weight');

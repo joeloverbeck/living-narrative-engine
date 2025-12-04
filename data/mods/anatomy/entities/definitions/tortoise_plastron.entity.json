@@ -15,8 +15,8 @@
     "core:name": {
       "text": "plastron"
     },
-    "descriptors:texture": {
-      "texture": "smooth"
+    "core:weight": {
+      "weight": 3
     },
     "descriptors:color_extended": {
       "color": "cream"
@@ -24,8 +24,8 @@
     "descriptors:shape_general": {
       "shape": "flat"
     },
-    "items:weight": {
-      "weight": 3
+    "descriptors:texture": {
+      "texture": "smooth"
     }
   }
 }

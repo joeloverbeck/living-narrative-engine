@@ -192,7 +192,7 @@ describe('Locks scopes', () => {
       components: {
         'items:item': {},
         'items:portable': {},
-        'items:weight': { weight: 0.1 },
+        'core:weight': { weight: 0.1 },
       },
     };
 

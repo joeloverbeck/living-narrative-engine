@@ -15,14 +15,14 @@
     "core:name": {
       "text": "buff chicken wing"
     },
-    "descriptors:texture": {
-      "texture": "feathered"
+    "core:weight": {
+      "weight": 0.15
     },
     "descriptors:color_extended": {
       "color": "buff"
     },
-    "items:weight": {
-      "weight": 0.15
+    "descriptors:texture": {
+      "texture": "feathered"
     }
   }
 }

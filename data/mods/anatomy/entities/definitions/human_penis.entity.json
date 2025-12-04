@@ -19,14 +19,14 @@
         "accessories"
       ]
     },
-    "descriptors:size_category": {
-      "size": "medium"
-    },
     "core:name": {
       "text": "penis"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 0.1
+    },
+    "descriptors:size_category": {
+      "size": "medium"
     }
   }
 }

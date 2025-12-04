@@ -12,7 +12,7 @@
     "items:item": {},
     "items:portable": {},
     "music:is_instrument": {},
-    "items:weight": {
+    "core:weight": {
       "weight": 2.0
     }
   }

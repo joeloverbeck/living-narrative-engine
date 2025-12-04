@@ -15,17 +15,17 @@
     "core:name": {
       "text": "cat tail"
     },
-    "descriptors:texture": {
-      "texture": "fuzzy"
-    },
-    "descriptors:length_category": {
-      "length": "long"
+    "core:weight": {
+      "weight": 0.15
     },
     "descriptors:flexibility": {
       "flexibility": "highly-flexible"
     },
-    "items:weight": {
-      "weight": 0.15
+    "descriptors:length_category": {
+      "length": "long"
+    },
+    "descriptors:texture": {
+      "texture": "fuzzy"
     }
   }
 }

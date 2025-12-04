@@ -15,8 +15,8 @@
     "core:name": {
       "text": "beak"
     },
-    "descriptors:texture": {
-      "texture": "ridged"
+    "core:weight": {
+      "weight": 0.05
     },
     "descriptors:color_extended": {
       "color": "charcoal-gray"
@@ -24,8 +24,8 @@
     "descriptors:shape_general": {
       "shape": "hooked"
     },
-    "items:weight": {
-      "weight": 0.05
+    "descriptors:texture": {
+      "texture": "ridged"
     }
   }
 }

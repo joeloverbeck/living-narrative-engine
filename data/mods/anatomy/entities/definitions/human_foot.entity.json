@@ -15,7 +15,7 @@
     "core:name": {
       "text": "foot"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 1.2
     }
   }

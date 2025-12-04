@@ -395,17 +395,14 @@
     "core:name": {
       "text": "writhing core mass"
     },
-    "descriptors:size_category": {
-      "size": "massive"
-    },
-    "descriptors:texture": {
-      "texture": "translucent-slick"
-    },
-    "descriptors:color_extended": {
-      "color": "sickly-gray-green"
+    "core:weight": {
+      "weight": 200
     },
     "descriptors:animation": {
       "animation": "pulsating-morphing"
+    },
+    "descriptors:color_extended": {
+      "color": "sickly-gray-green"
     },
     "descriptors:luminosity": {
       "luminosity": "bioluminescent-veins"
@@ -413,11 +410,14 @@
     "descriptors:secretion": {
       "secretion": "viscous-slime"
     },
+    "descriptors:size_category": {
+      "size": "massive"
+    },
     "descriptors:temperature": {
       "temperature": "unnaturally-warm"
     },
-    "items:weight": {
-      "weight": 200
+    "descriptors:texture": {
+      "texture": "translucent-slick"
     }
   }
 }

@@ -25,7 +25,7 @@ import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
 const CONTAINER_COMPONENT_ID = 'items:container';
-const WEIGHT_COMPONENT_ID = 'items:weight';
+const WEIGHT_COMPONENT_ID = 'core:weight';
 
 /**
  * @typedef {object} ValidateContainerCapacityParams

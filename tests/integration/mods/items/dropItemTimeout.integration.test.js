@@ -39,7 +39,7 @@ function createDropScenario() {
     .withName('TestItem')
     .withComponent('items:item', {})
     .withComponent('items:portable', {})
-    .withComponent('items:weight', { weight: 0.5 })
+    .withComponent('core:weight', { weight: 0.5 })
     .build();
 
   return { room, actor, item, handEntities };

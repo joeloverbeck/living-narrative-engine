@@ -109,6 +109,10 @@ export function registerInterpreters(container) {
     );
     registry.register('GET_TIMESTAMP', bind(tokens.GetTimestampHandler));
     registry.register('GET_NAME', bind(tokens.GetNameHandler));
+    registry.register(
+      'GET_DAMAGE_CAPABILITIES',
+      bind(tokens.GetDamageCapabilitiesHandler)
+    );
 
     registry.register(
       'REBUILD_LEADER_LIST_CACHE',

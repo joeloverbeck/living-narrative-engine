@@ -20,6 +20,9 @@
     "core:name": {
       "text": "hand"
     },
+    "core:weight": {
+      "weight": 0.4
+    },
     "descriptors:color_extended": {
       "color": "tan-brown"
     },
@@ -43,9 +46,6 @@
     },
     "descriptors:texture": {
       "texture": "rough"
-    },
-    "items:weight": {
-      "weight": 0.4
     }
   }
 }

@@ -30,7 +30,7 @@
     },
     "items:item": {},
     "items:portable": {},
-    "items:weight": {
+    "core:weight": {
       "weight": 0.65
     },
     "core:name": {

@@ -12,14 +12,14 @@
       "maxHealth": 20,
       "state": "healthy"
     },
-    "descriptors:firmness": {
-      "firmness": "firm"
-    },
     "core:name": {
       "text": "ass cheek"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 1.5
+    },
+    "descriptors:firmness": {
+      "firmness": "firm"
     }
   }
 }

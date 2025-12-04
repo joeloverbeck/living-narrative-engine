@@ -245,56 +245,87 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
     // Format and render the injury narrative
     const narrative =
       this.#injuryNarrativeFormatterService.formatFirstPerson(summary);
-    this.#renderNarrative(narrative, this.#getSeverityClass(summary));
+    this.#renderNarrative(
+      narrative,
+      this.#getSeverityClass(summary),
+      summary.overallHealthPercentage
+    );
   }
 
   /**
-   * Renders a narrative with the given severity class.
+   * Renders a narrative with the given severity class and health bar.
    *
    * @param {string} narrative - The narrative text to display.
    * @param {string} severityClass - The CSS class for severity styling.
+   * @param {number} healthPercentage - Health value 0-100.
    * @private
    */
-  #renderNarrative(narrative, severityClass) {
-    if (!this.elements.narrativeElement) {
+  #renderNarrative(narrative, severityClass, healthPercentage) {
+    if (!this.elements.contentElement) {
       return;
     }
 
-    // Clear existing classes
-    this.elements.narrativeElement.className = '';
+    // Clear content element
+    this.elements.contentElement.innerHTML = '';
 
-    // Add severity class if provided
-    if (severityClass) {
-      this.elements.narrativeElement.classList.add(severityClass);
-    }
+    // Add health bar
+    const healthBar = this.#createHealthBar(healthPercentage, severityClass);
+    this.elements.contentElement.appendChild(healthBar);
 
-    this.elements.narrativeElement.textContent = narrative;
+    // Add narrative
+    const narrativeEl = this.documentContext.create('div');
+    narrativeEl.id = 'injury-narrative';
+    narrativeEl.className = severityClass;
+    narrativeEl.textContent = narrative;
+    this.elements.contentElement.appendChild(narrativeEl);
   }
 
   /**
-   * Renders the healthy state (no injuries).
+   * Renders the healthy state (no injuries) with 100% health bar.
    *
    * @private
    */
   #renderHealthyState() {
-    if (!this.elements.narrativeElement) {
+    if (!this.elements.contentElement) {
       return;
     }
 
-    this.elements.narrativeElement.className = 'injury-healthy-message';
-    this.elements.narrativeElement.textContent = 'I feel fine.';
+    // Clear content element
+    this.elements.contentElement.innerHTML = '';
+
+    // Add health bar at 100%
+    const healthBar = this.#createHealthBar(100, 'severity-healthy');
+    this.elements.contentElement.appendChild(healthBar);
+
+    // Add healthy message
+    const narrativeEl = this.documentContext.create('div');
+    narrativeEl.id = 'injury-narrative';
+    narrativeEl.className = 'injury-healthy-message';
+    narrativeEl.textContent = 'I feel fine.';
+    this.elements.contentElement.appendChild(narrativeEl);
   }
 
   /**
-   * Renders the dying state with countdown.
+   * Renders the dying state with countdown and health bar.
    *
    * @param {InjurySummaryDTO} summary - The injury summary.
    * @private
    */
   #renderDyingState(summary) {
-    if (!this.elements.narrativeElement) {
+    if (!this.elements.contentElement) {
       return;
     }
+
+    // Clear content element
+    this.elements.contentElement.innerHTML = '';
+
+    // Add health bar with critical severity
+    const severityClass = this.#getSeverityClass(summary);
+    const healthBar = this.#createHealthBar(
+      summary.overallHealthPercentage,
+      severityClass
+    );
+    this.elements.contentElement.appendChild(healthBar);
 
     // First, render the injury narrative
     const narrative =
@@ -308,35 +339,42 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
     const dyingMessage = `I'm dying! ${turnsText} remaining.`;
 
     // Combine narrative with dying message
-    const fullText = narrative
-      ? `${narrative} ${dyingMessage}`
-      : dyingMessage;
+    const fullText = narrative ? `${narrative} ${dyingMessage}` : dyingMessage;
 
-    this.elements.narrativeElement.className = 'injury-dying';
-    this.elements.narrativeElement.innerHTML = `
-      <span class="dying-countdown">${fullText}</span>
-    `;
+    // Add dying narrative
+    const narrativeEl = this.documentContext.create('div');
+    narrativeEl.id = 'injury-narrative';
+    narrativeEl.className = 'injury-dying';
+    narrativeEl.innerHTML = `<span class="dying-countdown">${fullText}</span>`;
+    this.elements.contentElement.appendChild(narrativeEl);
   }
 
   /**
-   * Renders the dead state.
+   * Renders the dead state with 0% health bar.
    *
    * @param {InjurySummaryDTO} summary - The injury summary.
    * @private
    */
   #renderDeadState(summary) {
-    if (!this.elements.narrativeElement) {
+    if (!this.elements.contentElement) {
       return;
     }
 
-    const causeText = summary.causeOfDeath
-      ? ` (${summary.causeOfDeath})`
-      : '';
+    // Clear content element
+    this.elements.contentElement.innerHTML = '';
 
-    this.elements.narrativeElement.className = 'injury-dead';
-    this.elements.narrativeElement.innerHTML = `
-      <span class="dead-message">I am dead${causeText}.</span>
-    `;
+    // Add health bar at 0% with destroyed severity
+    const healthBar = this.#createHealthBar(0, 'severity-destroyed');
+    this.elements.contentElement.appendChild(healthBar);
+
+    const causeText = summary.causeOfDeath ? ` (${summary.causeOfDeath})` : '';
+
+    // Add dead narrative
+    const narrativeEl = this.documentContext.create('div');
+    narrativeEl.id = 'injury-narrative';
+    narrativeEl.className = 'injury-dead';
+    narrativeEl.innerHTML = `<span class="dead-message">I am dead${causeText}.</span>`;
+    this.elements.contentElement.appendChild(narrativeEl);
   }
 
   /**
@@ -366,6 +404,37 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
     } else {
       return 'severity-critical';
     }
+  }
+
+  /**
+   * Creates the health bar element with percentage display.
+   *
+   * @param {number} healthPercentage - Health value 0-100.
+   * @param {string} severityClass - CSS class for severity styling.
+   * @returns {HTMLElement} The health bar wrapper element.
+   * @private
+   */
+  #createHealthBar(healthPercentage, severityClass) {
+    const wrapper = this.documentContext.create('div');
+    wrapper.className = `health-bar-wrapper ${severityClass}`;
+    wrapper.id = 'health-bar-wrapper';
+
+    const container = this.documentContext.create('div');
+    container.className = 'health-bar-container';
+
+    const fill = this.documentContext.create('div');
+    fill.className = 'health-bar-fill';
+    fill.style.width = `${healthPercentage}%`;
+
+    const percentText = this.documentContext.create('span');
+    percentText.className = 'health-percentage-text';
+    percentText.textContent = `${healthPercentage}%`;
+
+    container.appendChild(fill);
+    wrapper.appendChild(container);
+    wrapper.appendChild(percentText);
+
+    return wrapper;
   }
 
   // dispose() is inherited from BoundDomRendererBase and handles cleanup

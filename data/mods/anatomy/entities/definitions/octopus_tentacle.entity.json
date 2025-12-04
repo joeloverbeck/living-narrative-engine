@@ -20,6 +20,9 @@
     "core:name": {
       "text": "tentacle"
     },
+    "core:weight": {
+      "weight": 3
+    },
     "descriptors:build": {
       "build": "thick"
     },
@@ -34,9 +37,6 @@
     },
     "descriptors:texture": {
       "texture": "suckered"
-    },
-    "items:weight": {
-      "weight": 3
     }
   }
 }

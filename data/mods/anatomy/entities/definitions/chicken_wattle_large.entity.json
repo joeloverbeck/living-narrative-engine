@@ -15,8 +15,8 @@
     "core:name": {
       "text": "large chicken wattle"
     },
-    "descriptors:texture": {
-      "texture": "fleshy"
+    "core:weight": {
+      "weight": 0.008
     },
     "descriptors:color_basic": {
       "color": "red"
@@ -24,8 +24,8 @@
     "descriptors:size_category": {
       "size": "large"
     },
-    "items:weight": {
-      "weight": 0.008
+    "descriptors:texture": {
+      "texture": "fleshy"
     }
   }
 }

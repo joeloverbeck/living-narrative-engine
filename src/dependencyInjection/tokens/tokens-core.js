@@ -224,6 +224,7 @@ export const coreTokens = freeze({
   IMoveEntityHandler: 'IMoveEntityHandler',
   GetTimestampHandler: 'GetTimestampHandler',
   GetNameHandler: 'GetNameHandler',
+  GetDamageCapabilitiesHandler: 'GetDamageCapabilitiesHandler',
   RebuildLeaderListCacheHandler: 'RebuildLeaderListCacheHandler',
   CheckFollowCycleHandler: 'CheckFollowCycleHandler',
   EstablishFollowRelationHandler: 'EstablishFollowRelationHandler',

@@ -90,6 +90,9 @@
           "$ref": "./operations/forEach.schema.json"
         },
         {
+          "$ref": "./operations/getDamageCapabilities.schema.json"
+        },
+        {
           "$ref": "./operations/log.schema.json"
         },
         {

@@ -15,11 +15,11 @@
     "core:name": {
       "text": "cat ear"
     },
+    "core:weight": {
+      "weight": 0.01
+    },
     "descriptors:texture": {
       "texture": "fuzzy"
-    },
-    "items:weight": {
-      "weight": 0.01
     }
   }
 }

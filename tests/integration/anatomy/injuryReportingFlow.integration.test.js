@@ -284,6 +284,7 @@ describe('Injury Reporting Flow Integration', () => {
           [PART_COMPONENT_ID]: {
             subType: 'torso',
             ownerEntityId: entityId,
+            health_calculation_weight: 10, // Higher weight - major body part
           },
           [PART_HEALTH_COMPONENT_ID]: {
             currentHealth: 100,
@@ -296,6 +297,7 @@ describe('Injury Reporting Flow Integration', () => {
           [PART_COMPONENT_ID]: {
             subType: 'finger',
             ownerEntityId: entityId,
+            health_calculation_weight: 1, // Lower weight - minor body part
           },
           [PART_HEALTH_COMPONENT_ID]: {
             currentHealth: 0,

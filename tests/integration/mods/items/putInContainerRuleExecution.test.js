@@ -65,7 +65,7 @@ function setupPutInContainerScenario(
       .withName(itemId)
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 1 })
+      .withComponent('core:weight', { weight: 1 })
       .build()
   );
 
@@ -210,19 +210,19 @@ describe('items:put_in_container action integration', () => {
       .withName('Heavy Item')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 50 })
+      .withComponent('core:weight', { weight: 50 })
       .build();
 
     const existing1 = new ModEntityBuilder('existing1')
       .withName('Existing 1')
       .withComponent('items:item', {})
-      .withComponent('items:weight', { weight: 40 })
+      .withComponent('core:weight', { weight: 40 })
       .build();
 
     const existing2 = new ModEntityBuilder('existing2')
       .withName('Existing 2')
       .withComponent('items:item', {})
-      .withComponent('items:weight', { weight: 30 })
+      .withComponent('core:weight', { weight: 30 })
       .build();
 
     const container = new ModEntityBuilder('weak-chest')
@@ -608,14 +608,14 @@ describe('items:put_in_container action integration', () => {
         .withName('Apple')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.5 })
+        .withComponent('core:weight', { weight: 0.5 })
         .build();
 
       const bread = new ModEntityBuilder('bread-1')
         .withName('Bread')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.5 })
+        .withComponent('core:weight', { weight: 0.5 })
         .build();
 
       testFixture.reset([room, actor1, actor2, sharedContainer, apple, bread]);

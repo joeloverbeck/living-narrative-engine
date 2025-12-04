@@ -54,7 +54,7 @@ describe('Drop Item - Event Dispatching', () => {
         .withName('Test Item')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.5 })
+        .withComponent('core:weight', { weight: 0.5 })
         .build();
 
       testFixture.reset([room, actor, ...handEntities, item]);
@@ -100,7 +100,7 @@ describe('Drop Item - Event Dispatching', () => {
         .withName('Golden Watch')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.3 })
+        .withComponent('core:weight', { weight: 0.3 })
         .build();
 
       testFixture.reset([room, actor, ...handEntities, item]);
@@ -148,7 +148,7 @@ describe('Drop Item - Event Dispatching', () => {
         .withName('Letter')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.05 })
+        .withComponent('core:weight', { weight: 0.05 })
         .build();
 
       testFixture.reset([room, actor, ...handEntities, item]);
@@ -196,7 +196,7 @@ describe('Drop Item - Event Dispatching', () => {
         .withName('Spoon')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.1 })
+        .withComponent('core:weight', { weight: 0.1 })
         .build();
 
       testFixture.reset([room, actor, ...handEntities, item]);

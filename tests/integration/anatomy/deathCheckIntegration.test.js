@@ -61,7 +61,10 @@ describe('Death Check Integration', () => {
     // eventBus is used by DeathCheckService for death/dying events
     eventBus = { dispatch: jest.fn().mockResolvedValue(true) };
     jsonLogicService = { evaluate: jest.fn() };
-    bodyGraphService = { getAllParts: jest.fn() };
+    bodyGraphService = {
+      getAllParts: jest.fn(),
+      getAllDescendants: jest.fn().mockReturnValue([]),
+    };
     damageTypeEffectsService = { applyEffectsForDamage: jest.fn() };
     damagePropagationService = { propagateDamage: jest.fn().mockReturnValue([]) };
     // Default to no destroyed parts
@@ -75,6 +78,7 @@ describe('Death Check Integration', () => {
       entityManager,
       eventBus,
       injuryAggregationService,
+      bodyGraphService,
     });
 
     handler = new ApplyDamageHandler({

@@ -15,20 +15,20 @@
     "core:name": {
       "text": "speaking orifice"
     },
-    "descriptors:texture": {
-      "texture": "lipless-slit"
-    },
-    "descriptors:size_category": {
-      "size": "small"
-    },
-    "descriptors:vocal_capability": {
-      "capability": "ancient-languages"
+    "core:weight": {
+      "weight": 1
     },
     "descriptors:effect": {
       "effect": "maddening-sounds"
     },
-    "items:weight": {
-      "weight": 1
+    "descriptors:size_category": {
+      "size": "small"
+    },
+    "descriptors:texture": {
+      "texture": "lipless-slit"
+    },
+    "descriptors:vocal_capability": {
+      "capability": "ancient-languages"
     }
   }
 }

@@ -15,14 +15,14 @@
     "core:name": {
       "text": "eye"
     },
+    "core:weight": {
+      "weight": 0.02
+    },
     "descriptors:color_extended": {
       "color": "amber"
     },
     "descriptors:shape_eye": {
       "shape": "round"
-    },
-    "items:weight": {
-      "weight": 0.02
     }
   }
 }

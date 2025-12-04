@@ -23,21 +23,21 @@
         }
       ]
     },
-    "descriptors:length_category": {
-      "length": "long"
-    },
-    "descriptors:build": {
-      "build": "shapely"
-    },
-    "core:name": {
-      "text": "leg"
-    },
     "core:movement": {
       "locked": false,
       "forcedOverride": false
     },
-    "items:weight": {
-      "weight": 12.0
+    "core:name": {
+      "text": "leg"
+    },
+    "core:weight": {
+      "weight": 12
+    },
+    "descriptors:build": {
+      "build": "shapely"
+    },
+    "descriptors:length_category": {
+      "length": "long"
     }
   }
 }

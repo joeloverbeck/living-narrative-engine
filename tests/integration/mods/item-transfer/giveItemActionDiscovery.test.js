@@ -179,7 +179,7 @@ describe('item-transfer:give_item action definition', () => {
         .withName('test item')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.1 })
+        .withComponent('core:weight', { weight: 0.1 })
         .build();
 
       testFixture.reset([room, actor, recipient, item, handEntity]);
@@ -239,7 +239,7 @@ describe('item-transfer:give_item action definition', () => {
         .withName('test item')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.1 })
+        .withComponent('core:weight', { weight: 0.1 })
         .build();
 
       testFixture.reset([room, actor, recipient, item, handEntity]);

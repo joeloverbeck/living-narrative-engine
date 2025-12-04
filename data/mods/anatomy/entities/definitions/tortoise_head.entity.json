@@ -40,17 +40,17 @@
     "core:name": {
       "text": "tortoise head"
     },
-    "descriptors:texture": {
-      "texture": "scaled"
-    },
-    "descriptors:shape_general": {
-      "shape": "domed"
+    "core:weight": {
+      "weight": 0.8
     },
     "descriptors:color_extended": {
       "color": "sickly-gray-green"
     },
-    "items:weight": {
-      "weight": 0.8
+    "descriptors:shape_general": {
+      "shape": "domed"
+    },
+    "descriptors:texture": {
+      "texture": "scaled"
     }
   }
 }

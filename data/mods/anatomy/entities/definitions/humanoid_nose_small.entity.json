@@ -12,14 +12,14 @@
       "maxHealth": 8,
       "state": "healthy"
     },
-    "descriptors:size_category": {
-      "size": "small"
-    },
     "core:name": {
       "text": "nose"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 0.03
+    },
+    "descriptors:size_category": {
+      "size": "small"
     }
   }
 }

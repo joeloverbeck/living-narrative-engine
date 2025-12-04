@@ -23,7 +23,7 @@ import * as contextVariableUtils from '../../../../src/utils/contextVariableUtil
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
 
 const INVENTORY_COMPONENT_ID = 'items:inventory';
-const WEIGHT_COMPONENT_ID = 'items:weight';
+const WEIGHT_COMPONENT_ID = 'core:weight';
 
 // Test Doubles
 /** @type {jest.Mocked<ILogger>} */ let log;

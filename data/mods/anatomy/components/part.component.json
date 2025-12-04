@@ -22,6 +22,12 @@
       "definitionId": {
         "type": "string",
         "description": "The entity definition ID this body part was instantiated from (e.g., 'anatomy:human_foot'). Populated at runtime during anatomy graph building."
+      },
+      "health_calculation_weight": {
+        "type": "number",
+        "description": "Weight for overall health calculation (higher = more impact on health percentage). Default is 1.0.",
+        "minimum": 0,
+        "default": 1.0
       }
     },
     "required": ["subType"],

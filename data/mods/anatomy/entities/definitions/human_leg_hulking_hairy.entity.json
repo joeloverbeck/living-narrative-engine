@@ -23,21 +23,21 @@
         }
       ]
     },
-    "descriptors:build": {
-      "build": "hulking"
-    },
-    "descriptors:body_hair": {
-      "hairDensity": "hairy"
-    },
-    "core:name": {
-      "text": "hulking, hairy leg"
-    },
     "core:movement": {
       "locked": false,
       "forcedOverride": false
     },
-    "items:weight": {
-      "weight": 16.0
+    "core:name": {
+      "text": "hulking, hairy leg"
+    },
+    "core:weight": {
+      "weight": 16
+    },
+    "descriptors:body_hair": {
+      "hairDensity": "hairy"
+    },
+    "descriptors:build": {
+      "build": "hulking"
     }
   }
 }

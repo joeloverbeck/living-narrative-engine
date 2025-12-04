@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "items:weight",
-  "description": "Weight of an item in kilograms",
+  "id": "core:weight",
+  "description": "Weight in kilograms",
   "dataSchema": {
     "type": "object",
     "properties": {

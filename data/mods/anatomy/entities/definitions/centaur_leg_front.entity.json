@@ -27,14 +27,14 @@
     "core:name": {
       "text": "front leg"
     },
+    "core:weight": {
+      "weight": 25
+    },
     "descriptors:build": {
       "build": "muscular"
     },
     "descriptors:texture": {
       "texture": "smooth"
-    },
-    "items:weight": {
-      "weight": 25
     }
   }
 }

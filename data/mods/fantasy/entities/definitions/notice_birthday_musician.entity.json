@@ -9,7 +9,7 @@
       "text": "A notice written in flowery script with little heart decorations, though the content suggests the writer may be quietly desperate."
     },
     "items:item": {},
-    "items:weight": {
+    "core:weight": {
       "weight": 0.01
     },
     "items:readable": {

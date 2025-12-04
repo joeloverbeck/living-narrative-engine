@@ -31,6 +31,9 @@
     "core:name": {
       "text": "feeding tentacle"
     },
+    "core:weight": {
+      "weight": 12
+    },
     "descriptors:color_extended": {
       "color": "dark-purple"
     },
@@ -45,9 +48,6 @@
     },
     "descriptors:texture": {
       "texture": "smooth-muscular"
-    },
-    "items:weight": {
-      "weight": 12
     }
   }
 }

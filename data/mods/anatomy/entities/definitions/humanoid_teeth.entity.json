@@ -15,7 +15,7 @@
     "core:name": {
       "text": "teeth"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 0.05
     }
   }

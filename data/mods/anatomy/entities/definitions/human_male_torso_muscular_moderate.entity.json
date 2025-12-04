@@ -3,21 +3,39 @@
   "id": "anatomy:human_male_torso_muscular_moderate",
   "description": "A muscular human male torso with male-specific anatomy",
   "components": {
+    "anatomy:damage_propagation": {
+      "rules": [
+        {
+          "childSocketId": "heart_socket",
+          "baseProbability": 0.3,
+          "damageFraction": 0.5,
+          "damageTypeModifiers": {
+            "piercing": 1.5,
+            "blunt": 0.3,
+            "slashing": 0.8
+          }
+        },
+        {
+          "childSocketId": "spine_socket",
+          "baseProbability": 0.2,
+          "damageFraction": 0.5,
+          "damageTypeModifiers": {
+            "piercing": 1.2,
+            "blunt": 0.5,
+            "slashing": 0.6
+          }
+        }
+      ]
+    },
     "anatomy:part": {
       "subType": "torso",
-      "hit_probability_weight": 49.5
+      "hit_probability_weight": 49.5,
+      "health_calculation_weight": 10
     },
     "anatomy:part_health": {
       "currentHealth": 50,
       "maxHealth": 50,
       "state": "healthy"
-    },
-    "anatomy:visibility_rules": {
-      "clothingSlotId": "torso_upper",
-      "nonBlockingLayers": [
-        "underwear",
-        "accessories"
-      ]
     },
     "anatomy:sockets": {
       "sockets": [
@@ -146,41 +164,24 @@
         }
       ]
     },
-    "anatomy:damage_propagation": {
-      "rules": [
-        {
-          "childSocketId": "heart_socket",
-          "baseProbability": 0.3,
-          "damageFraction": 0.5,
-          "damageTypeModifiers": {
-            "piercing": 1.5,
-            "blunt": 0.3,
-            "slashing": 0.8
-          }
-        },
-        {
-          "childSocketId": "spine_socket",
-          "baseProbability": 0.2,
-          "damageFraction": 0.5,
-          "damageTypeModifiers": {
-            "piercing": 1.2,
-            "blunt": 0.5,
-            "slashing": 0.6
-          }
-        }
+    "anatomy:visibility_rules": {
+      "clothingSlotId": "torso_upper",
+      "nonBlockingLayers": [
+        "underwear",
+        "accessories"
       ]
-    },
-    "descriptors:build": {
-      "build": "muscular"
-    },
-    "descriptors:body_hair": {
-      "hairDensity": "moderate"
     },
     "core:name": {
       "text": "torso"
     },
-    "items:weight": {
-      "weight": 34.0
+    "core:weight": {
+      "weight": 34
+    },
+    "descriptors:body_hair": {
+      "hairDensity": "moderate"
+    },
+    "descriptors:build": {
+      "build": "muscular"
     }
   }
 }

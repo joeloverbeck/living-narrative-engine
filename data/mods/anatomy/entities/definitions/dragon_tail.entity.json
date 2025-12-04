@@ -15,17 +15,17 @@
     "core:name": {
       "text": "dragon tail"
     },
-    "descriptors:size_category": {
-      "size": "huge"
+    "core:weight": {
+      "weight": 100
     },
     "descriptors:length_category": {
       "length": "very-long"
     },
+    "descriptors:size_category": {
+      "size": "huge"
+    },
     "descriptors:texture": {
       "texture": "scaled"
-    },
-    "items:weight": {
-      "weight": 100
     }
   }
 }

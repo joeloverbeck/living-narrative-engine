@@ -114,7 +114,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
         .withName('yellowed goodbye letter')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.05 })
+        .withComponent('core:weight', { weight: 0.05 })
         .build();
 
       testFixture.reset([room, actor, ...handEntities, item]);
@@ -168,7 +168,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
         .withName('yellowed goodbye letter')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.05 })
+        .withComponent('core:weight', { weight: 0.05 })
         .build();
 
       testFixture.reset([room, actor, ...handEntities, item]);
@@ -215,7 +215,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
         .withName('Item')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.5 })
+        .withComponent('core:weight', { weight: 0.5 })
         .build();
 
       testFixture.reset([room, actor, ...handEntities, item]);
@@ -265,7 +265,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
         .withName('yellowed goodbye letter')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.05 })
+        .withComponent('core:weight', { weight: 0.05 })
         .build();
 
       testFixture.reset([room, actor, ...handEntities, item]);

@@ -12,17 +12,17 @@
       "maxHealth": 10,
       "state": "healthy"
     },
+    "core:name": {
+      "text": "eye"
+    },
+    "core:weight": {
+      "weight": 0.008
+    },
     "descriptors:color_basic": {
       "color": "blue"
     },
     "descriptors:shape_eye": {
       "shape": "hooded"
-    },
-    "core:name": {
-      "text": "eye"
-    },
-    "items:weight": {
-      "weight": 0.008
     }
   }
 }

@@ -23,20 +23,17 @@
         }
       ]
     },
-    "descriptors:texture": {
-      "texture": "rough"
+    "core:name": {
+      "text": "arm"
     },
-    "descriptors:color_extended": {
-      "color": "tan-brown"
+    "core:weight": {
+      "weight": 4
     },
     "descriptors:build": {
       "build": "working-strength"
     },
-    "descriptors:skin_condition": {
-      "conditions": [
-        "weathered",
-        "chemically-stained"
-      ]
+    "descriptors:color_extended": {
+      "color": "tan-brown"
     },
     "descriptors:professional_markers": {
       "profession": "leatherworker",
@@ -45,11 +42,14 @@
         "chemical-staining"
       ]
     },
-    "core:name": {
-      "text": "arm"
+    "descriptors:skin_condition": {
+      "conditions": [
+        "weathered",
+        "chemically-stained"
+      ]
     },
-    "items:weight": {
-      "weight": 4
+    "descriptors:texture": {
+      "texture": "rough"
     }
   }
 }

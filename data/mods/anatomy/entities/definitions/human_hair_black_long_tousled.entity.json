@@ -12,20 +12,20 @@
       "maxHealth": 3,
       "state": "healthy"
     },
+    "core:name": {
+      "text": "hair"
+    },
+    "core:weight": {
+      "weight": 0.15
+    },
     "descriptors:color_basic": {
       "color": "black"
-    },
-    "descriptors:length_hair": {
-      "length": "long"
     },
     "descriptors:hair_style": {
       "style": "tousled"
     },
-    "core:name": {
-      "text": "hair"
-    },
-    "items:weight": {
-      "weight": 0.15
+    "descriptors:length_hair": {
+      "length": "long"
     }
   }
 }

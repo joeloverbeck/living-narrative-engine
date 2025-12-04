@@ -51,7 +51,7 @@ function setupGiveItemScenario(
     .withName(itemName)
     .withComponent('items:item', {})
     .withComponent('items:portable', {})
-    .withComponent('items:weight', { weight: 0.05 })
+    .withComponent('core:weight', { weight: 0.05 })
     .build();
 
   return { room, actor, target, item };

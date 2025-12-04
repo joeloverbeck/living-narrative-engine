@@ -158,7 +158,7 @@ describe('ModTestFixture - Auto-Registration Integration', () => {
       .atLocation('room1')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: 2 })
+      .withComponent('core:weight', { weight: 2 })
       .build();
 
     testFixture.reset([room, actor, ...handEntities, sword]);

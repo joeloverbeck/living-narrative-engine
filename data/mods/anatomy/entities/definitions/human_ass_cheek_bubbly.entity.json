@@ -12,14 +12,14 @@
       "maxHealth": 20,
       "state": "healthy"
     },
-    "descriptors:projection": {
-      "projection": "bubbly"
-    },
     "core:name": {
       "text": "ass cheek"
     },
-    "items:weight": {
+    "core:weight": {
       "weight": 1.7
+    },
+    "descriptors:projection": {
+      "projection": "bubbly"
     }
   }
 }

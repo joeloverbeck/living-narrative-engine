@@ -15,14 +15,14 @@
     "core:name": {
       "text": "spider pedipalp"
     },
-    "descriptors:texture": {
-      "texture": "chitinous"
+    "core:weight": {
+      "weight": 0.001
     },
     "descriptors:body_hair": {
       "hairDensity": "hairy"
     },
-    "items:weight": {
-      "weight": 0.001
+    "descriptors:texture": {
+      "texture": "chitinous"
     }
   }
 }

@@ -33,14 +33,14 @@
     "core:name": {
       "text": "chicken leg"
     },
-    "descriptors:texture": {
-      "texture": "scaled"
+    "core:weight": {
+      "weight": 0.2
     },
     "descriptors:color_basic": {
       "color": "yellow"
     },
-    "items:weight": {
-      "weight": 0.2
+    "descriptors:texture": {
+      "texture": "scaled"
     }
   }
 }

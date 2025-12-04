@@ -15,23 +15,23 @@
     "core:name": {
       "text": "baleful eye"
     },
-    "descriptors:size_category": {
-      "size": "massive"
-    },
-    "descriptors:color_extended": {
-      "color": "pupil-less-amber"
-    },
-    "descriptors:luminosity": {
-      "luminosity": "phosphorescent"
+    "core:weight": {
+      "weight": 2
     },
     "descriptors:animation": {
       "animation": "unblinking"
     },
+    "descriptors:color_extended": {
+      "color": "pupil-less-amber"
+    },
     "descriptors:effect": {
       "effect": "madness-inducing"
     },
-    "items:weight": {
-      "weight": 2
+    "descriptors:luminosity": {
+      "luminosity": "phosphorescent"
+    },
+    "descriptors:size_category": {
+      "size": "massive"
     }
   }
 }

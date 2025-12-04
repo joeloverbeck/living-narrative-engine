@@ -15,14 +15,14 @@
     "core:name": {
       "text": "cat ear"
     },
-    "descriptors:texture": {
-      "texture": "fuzzy"
+    "core:weight": {
+      "weight": 0.02
     },
     "descriptors:embellishment": {
       "embellishment": "silver-hoops"
     },
-    "items:weight": {
-      "weight": 0.02
+    "descriptors:texture": {
+      "texture": "fuzzy"
     }
   }
 }

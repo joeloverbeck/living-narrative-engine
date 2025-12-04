@@ -23,11 +23,15 @@
         }
       ]
     },
+    "core:movement": {
+      "locked": false,
+      "forcedOverride": false
+    },
     "core:name": {
       "text": "leg"
     },
-    "descriptors:texture": {
-      "texture": "scaled"
+    "core:weight": {
+      "weight": 2
     },
     "descriptors:build": {
       "build": "stocky"
@@ -35,12 +39,8 @@
     "descriptors:color_extended": {
       "color": "dark-olive"
     },
-    "core:movement": {
-      "locked": false,
-      "forcedOverride": false
-    },
-    "items:weight": {
-      "weight": 2
+    "descriptors:texture": {
+      "texture": "scaled"
     }
   }
 }

@@ -20,11 +20,11 @@
     "core:name": {
       "text": "hand"
     },
+    "core:weight": {
+      "weight": 0.4
+    },
     "descriptors:texture": {
       "texture": "scarred"
-    },
-    "items:weight": {
-      "weight": 0.4
     }
   }
 }

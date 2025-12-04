@@ -1,0 +1,10 @@
+weapons:grabbable_weapons_at_location := entities(core:position)[][{"and": [
+  {"!!": {"var": "entity.components.weapons:weapon"}},
+  {"!!": {"var": "entity.components.items:portable"}},
+  {"==": [
+    {"var": "entity.components.core:position.locationId"},
+    {"var": "actor.components.core:position.locationId"}
+  ]},
+  {"canActorGrabItem": ["actor", "entity"]},
+  {"not": {"isItemBeingGrabbed": ["actor", "entity"]}}
+]}]

@@ -20,6 +20,9 @@
     "core:name": {
       "text": "large grasping tentacle"
     },
+    "core:weight": {
+      "weight": 20
+    },
     "descriptors:build": {
       "build": "muscular"
     },
@@ -40,9 +43,6 @@
     },
     "descriptors:texture": {
       "texture": "suckered"
-    },
-    "items:weight": {
-      "weight": 20
     }
   }
 }

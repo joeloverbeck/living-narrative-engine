@@ -15,8 +15,8 @@
     "core:name": {
       "text": "copper chicken wing"
     },
-    "descriptors:texture": {
-      "texture": "feathered"
+    "core:weight": {
+      "weight": 0.15
     },
     "descriptors:color_extended": {
       "color": "copper"
@@ -24,8 +24,8 @@
     "descriptors:plumage_sheen": {
       "sheen": "metallic"
     },
-    "items:weight": {
-      "weight": 0.15
+    "descriptors:texture": {
+      "texture": "feathered"
     }
   }
 }

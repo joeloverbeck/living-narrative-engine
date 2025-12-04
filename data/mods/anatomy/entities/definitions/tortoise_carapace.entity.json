@@ -15,20 +15,20 @@
     "core:name": {
       "text": "carapace"
     },
-    "descriptors:texture": {
-      "texture": "scaled"
-    },
-    "descriptors:pattern": {
-      "pattern": "hexagonal-scutes"
+    "core:weight": {
+      "weight": 5
     },
     "descriptors:color_extended": {
       "color": "bronze"
     },
+    "descriptors:pattern": {
+      "pattern": "hexagonal-scutes"
+    },
     "descriptors:shape_general": {
       "shape": "domed"
     },
-    "items:weight": {
-      "weight": 5
+    "descriptors:texture": {
+      "texture": "scaled"
     }
   }
 }

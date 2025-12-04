@@ -15,17 +15,17 @@
     "core:name": {
       "text": "kraken head"
     },
-    "descriptors:size_category": {
-      "size": "gigantic"
-    },
-    "descriptors:shape_general": {
-      "shape": "bulbous"
+    "core:weight": {
+      "weight": 50
     },
     "descriptors:color_extended": {
       "color": "murky-green"
     },
-    "items:weight": {
-      "weight": 50
+    "descriptors:shape_general": {
+      "shape": "bulbous"
+    },
+    "descriptors:size_category": {
+      "size": "gigantic"
     }
   }
 }

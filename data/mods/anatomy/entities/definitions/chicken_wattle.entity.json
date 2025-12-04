@@ -15,14 +15,14 @@
     "core:name": {
       "text": "chicken wattle"
     },
-    "descriptors:texture": {
-      "texture": "fleshy"
+    "core:weight": {
+      "weight": 0.005
     },
     "descriptors:color_basic": {
       "color": "red"
     },
-    "items:weight": {
-      "weight": 0.005
+    "descriptors:texture": {
+      "texture": "fleshy"
     }
   }
 }

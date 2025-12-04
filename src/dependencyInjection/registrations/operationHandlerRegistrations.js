@@ -52,6 +52,7 @@ import SystemMoveEntityHandler from '../../logic/operationHandlers/systemMoveEnt
 import IfHandler from '../../logic/operationHandlers/ifHandler.js';
 import GetTimestampHandler from '../../logic/operationHandlers/getTimestampHandler.js';
 import GetNameHandler from '../../logic/operationHandlers/getNameHandler.js';
+import GetDamageCapabilitiesHandler from '../../logic/operationHandlers/getDamageCapabilitiesHandler.js';
 import RebuildLeaderListCacheHandler from '../../logic/operationHandlers/rebuildLeaderListCacheHandler.js';
 import CheckFollowCycleHandler from '../../logic/operationHandlers/checkFollowCycleHandler.js';
 import EstablishFollowRelationHandler from '../../logic/operationHandlers/establishFollowRelationHandler.js';
@@ -333,6 +334,17 @@ export function registerOperationHandlers(registrar) {
           entityManager: c.resolve(tokens.IEntityManager),
           logger: c.resolve(tokens.ILogger),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.GetDamageCapabilitiesHandler,
+      GetDamageCapabilitiesHandler,
+      (c, Handler) =>
+        new Handler({
+          entityManager: c.resolve(tokens.IEntityManager),
+          logger: c.resolve(tokens.ILogger),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+          jsonLogicService: c.resolve(tokens.JsonLogicEvaluationService),
         }),
     ],
     [

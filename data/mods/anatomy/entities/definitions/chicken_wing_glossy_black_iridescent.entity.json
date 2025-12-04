@@ -15,8 +15,8 @@
     "core:name": {
       "text": "glossy black chicken wing"
     },
-    "descriptors:texture": {
-      "texture": "feathered"
+    "core:weight": {
+      "weight": 0.15
     },
     "descriptors:color_extended": {
       "color": "glossy-black"
@@ -24,8 +24,8 @@
     "descriptors:plumage_sheen": {
       "sheen": "iridescent"
     },
-    "items:weight": {
-      "weight": 0.15
+    "descriptors:texture": {
+      "texture": "feathered"
     }
   }
 }
