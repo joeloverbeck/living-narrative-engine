@@ -6,7 +6,8 @@
     "anatomy:embedded": {},
     "anatomy:part": {
       "subType": "asshole",
-      "hit_probability_weight": 1
+      "hit_probability_weight": 1,
+      "health_calculation_weight": 0.2
     },
     "anatomy:part_health": {
       "currentHealth": 10,

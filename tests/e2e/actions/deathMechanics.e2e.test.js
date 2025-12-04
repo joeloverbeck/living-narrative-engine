@@ -172,21 +172,21 @@ describe('death mechanics e2e (critical)', () => {
     await applyDamage({
       entityId: actor.id,
       partId: parts.heart.id,
-      amount: 35,
+      amount: 37,
       actorId: attacker.id,
       damageType: 'piercing',
     });
     await applyDamage({
       entityId: actor.id,
       partId: parts.brain.id,
-      amount: 35,
+      amount: 37,
       actorId: attacker.id,
       damageType: 'crushing',
     });
     await applyDamage({
       entityId: actor.id,
       partId: parts.spine.id,
-      amount: 35,
+      amount: 37,
       actorId: attacker.id,
       damageType: 'slashing',
     });
@@ -227,6 +227,7 @@ describe('death mechanics e2e (critical)', () => {
       logger: testEnv.logger,
       eventBus: safeDispatcher,
       injuryAggregationService,
+      bodyGraphService,
     });
 
     applyDamageHandler = new ApplyDamageHandler({
@@ -288,7 +289,7 @@ describe('death mechanics e2e (critical)', () => {
     expect(deathEvent).toBeDefined();
     expect(deathEvent.payload.vitalOrganDestroyed).toBe('brain');
     expect(message.length).toBeGreaterThan(0);
-    expect(message.toLowerCase()).toContain('died');
+    expect(message.toLowerCase()).toContain('dead');
   });
 
   it('enters dying state when overall health drops below 10%', async () => {
@@ -347,7 +348,7 @@ describe('death mechanics e2e (critical)', () => {
         causeOfDeath: 'vital_organ_destroyed',
         vitalOrganDestroyed: 'spine',
         killedBy: attacker.id,
-        finalMessage: expect.stringContaining('died'),
+        finalMessage: expect.stringContaining('dead'),
       })
     );
     expect(deathEvent.payload.timestamp).toBeGreaterThan(0);

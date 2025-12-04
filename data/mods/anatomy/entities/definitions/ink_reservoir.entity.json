@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "ink_reservoir",
-      "hit_probability_weight": 0
+      "hit_probability_weight": 0,
+      "health_calculation_weight": 0.5
     },
     "anatomy:part_health": {
       "currentHealth": 30,

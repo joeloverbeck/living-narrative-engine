@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "beak",
-      "hit_probability_weight": 2
+      "hit_probability_weight": 2,
+      "health_calculation_weight": 1
     },
     "anatomy:part_health": {
       "currentHealth": 35,

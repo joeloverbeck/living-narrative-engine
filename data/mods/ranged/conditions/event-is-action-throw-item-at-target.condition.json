@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "ranged:event-is-action-throw-item-at-target",
+  "description": "Checks if the current event is a throw_item_at_target action",
+  "rule": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "ranged:throw_item_at_target"
+    ]
+  }
+}

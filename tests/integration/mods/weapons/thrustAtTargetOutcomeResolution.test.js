@@ -170,9 +170,9 @@ describe('thrust_at_target outcome resolution rule', () => {
       );
       expect(hasMacro).toBe(true);
 
-      // Verify macro uses context variable for hit description (e.g., "piercing their flesh")
+      // Verify macro uses context.successMessage (pre-composed message template from rule)
       const macroString = JSON.stringify(handleMeleeHit);
-      expect(macroString).toContain('context.hitDescription');
+      expect(macroString).toContain('context.successMessage');
       expect(macroString).toContain('core:endTurnOnly');
     });
 
@@ -322,13 +322,11 @@ describe('thrust_at_target outcome resolution rule', () => {
       expect(ruleString).toContain('context.actorPosition.locationId');
     });
 
-    it('should have macros that use context variables in templates', () => {
-      // Macros use context variables set by the rule
+    it('should have macros that use pre-composed message templates from rule', () => {
+      // Macros now use context.successMessage (pre-composed by rule) instead of individual variables
       const hitMacroString = JSON.stringify(handleMeleeHit);
-      expect(hitMacroString).toContain('context.actorName');
-      expect(hitMacroString).toContain('context.targetName');
-      expect(hitMacroString).toContain('context.weaponName');
-      expect(hitMacroString).toContain('context.hitDescription');
+      expect(hitMacroString).toContain('context.successMessage');
+      // The macro still uses excludeDamageTypes for damage filtering
       expect(hitMacroString).toContain('context.excludeDamageTypes');
 
       const criticalMacroString = JSON.stringify(handleMeleeCritical);

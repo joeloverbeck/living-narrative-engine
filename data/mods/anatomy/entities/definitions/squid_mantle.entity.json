@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "mantle",
-      "hit_probability_weight": 40
+      "hit_probability_weight": 40,
+      "health_calculation_weight": 8
     },
     "anatomy:part_health": {
       "currentHealth": 80,

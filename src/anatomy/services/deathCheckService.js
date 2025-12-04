@@ -10,6 +10,8 @@ import { NAME_COMPONENT_ID } from '../../constants/componentIds.js';
 const VITAL_ORGAN_COMPONENT_ID = 'anatomy:vital_organ';
 const DYING_COMPONENT_ID = 'anatomy:dying';
 const DEAD_COMPONENT_ID = 'anatomy:dead';
+const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
+const POSITION_COMPONENT_ID = 'core:position';
 
 // --- Threshold Constants ---
 const CRITICAL_HEALTH_THRESHOLD = 10; // Below 10% triggers dying state
@@ -255,14 +257,26 @@ class DeathCheckService extends BaseService {
         }
 
         // Check all descendants of the destroyed part (e.g., brain inside dismembered head)
+        // Only trigger death if the vital organ itself is destroyed, not just its container
         const descendants = this.#bodyGraphService.getAllDescendants(
           partInfo.partEntityId
         );
         for (const descendantId of descendants) {
+          // Only consider descendants that are ALSO destroyed (health = 0)
+          const descendantHealth = this.#entityManager.getComponentData(
+            descendantId,
+            PART_HEALTH_COMPONENT_ID
+          );
+
+          // Skip if descendant has health > 0 (not destroyed)
+          if (descendantHealth && descendantHealth.currentHealth > 0) {
+            continue;
+          }
+
           const descendantResult = this.#checkPartForVitalOrgan(descendantId);
           if (descendantResult) {
             this.#logger.debug(
-              `Found vital organ '${descendantResult.organType}' in descendant '${descendantId}' ` +
+              `Found vital organ '${descendantResult.organType}' destroyed in descendant '${descendantId}' ` +
                 `of destroyed part '${partInfo.partEntityId}'`
             );
             return descendantResult;
@@ -370,6 +384,27 @@ class DeathCheckService extends BaseService {
       timestamp,
     });
 
+    // Dispatch perceptible event for observers
+    const positionData = this.#entityManager.getComponentData(
+      entityId,
+      POSITION_COMPONENT_ID
+    );
+    if (positionData && positionData.locationId) {
+      this.#eventBus.dispatch('core:perceptible_event', {
+        eventName: 'core:perceptible_event',
+        locationId: positionData.locationId,
+        descriptionText: finalMessage,
+        timestamp: new Date().toISOString(),
+        perceptionType: 'entity_died',
+        actorId: entityId,
+        targetId: null,
+        involvedEntities: [],
+        contextualData: {
+          skipRuleLogging: false,
+        },
+      });
+    }
+
     this.#logger.info(`Death event dispatched for entity ${entityId}`);
   }
 
@@ -434,23 +469,7 @@ class DeathCheckService extends BaseService {
    * @private
    */
   #buildDeathMessage(entityName, causeOfDeath, vitalOrganDestroyed) {
-    if (vitalOrganDestroyed) {
-      const organDescriptions = {
-        brain: 'massive head trauma',
-        heart: 'a mortal blow to the heart',
-        spine: 'a severed spine',
-      };
-      const description =
-        organDescriptions[vitalOrganDestroyed] || `destroyed ${vitalOrganDestroyed}`;
-      return `${entityName} has died from ${description}.`;
-    }
-
-    const causeDescriptions = {
-      bleeding_out: 'blood loss',
-      overall_health_depleted: 'accumulated injuries',
-    };
-    const description = causeDescriptions[causeOfDeath] || causeOfDeath;
-    return `${entityName} has died from ${description}.`;
+    return `${entityName} falls dead from their injuries.`;
   }
 }
 

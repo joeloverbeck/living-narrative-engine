@@ -194,6 +194,7 @@ const installRealHandlers = ({ testEnv, safeDispatcher, forcedOutcome }) => {
     logger,
     eventBus: safeDispatcher,
     injuryAggregationService,
+    bodyGraphService,
   });
 
   const applyDamageHandler = new ApplyDamageHandler({

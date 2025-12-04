@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "centaur_leg_rear",
-      "hit_probability_weight": 12
+      "hit_probability_weight": 12,
+      "health_calculation_weight": 3
     },
     "anatomy:part_health": {
       "currentHealth": 35,

@@ -298,7 +298,7 @@ describe('DamageEventMessageRenderer', () => {
 
       // Should NOT call narrative formatter for death events
       expect(mockNarrativeFormatter.formatDamageEvent).not.toHaveBeenCalled();
-      expect(mockLiElement.textContent).toBe('Orc has died.');
+      expect(mockLiElement.textContent).toBe('Orc falls dead from their injuries.');
       expect(mockLiElement.classList.add).toHaveBeenCalledWith('damage-message');
       expect(mockLiElement.classList.add).toHaveBeenCalledWith('damage-message--death');
       expect(mockMessageList.appendChild).toHaveBeenCalled();
@@ -322,7 +322,7 @@ describe('DamageEventMessageRenderer', () => {
 
       await Promise.resolve();
 
-      expect(mockLiElement.textContent).toBe('An entity has died.');
+      expect(mockLiElement.textContent).toBe('An entity falls dead from their injuries.');
     });
   });
 

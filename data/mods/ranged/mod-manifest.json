@@ -1,0 +1,42 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "ranged",
+  "version": "1.0.0",
+  "name": "Ranged Combat",
+  "description": "Ranged combat actions including throwing items at targets",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "items",
+      "version": "1.0.0"
+    },
+    {
+      "id": "skills",
+      "version": "1.0.0"
+    },
+    {
+      "id": "damage-types",
+      "version": "1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "1.0.0"
+    }
+  ],
+  "content": {
+    "scopes": [
+      "throwable_items.scope"
+    ],
+    "actions": [
+      "throw_item_at_target.action.json"
+    ],
+    "conditions": [
+      "event-is-action-throw-item-at-target.condition.json"
+    ],
+    "macros": [],
+    "rules": []
+  }
+}

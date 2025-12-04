@@ -678,6 +678,326 @@ describe('Death Check Integration', () => {
     });
   });
 
+  describe('vital organ descendant health check', () => {
+    test('should NOT trigger death when container (head) destroyed but vital organ (brain) has health > 0', () => {
+      // Scenario: Head destroyed (health = 0) but brain is only scratched (32/40 = 80% health)
+      // This is the bug fix scenario - death should NOT trigger
+      const entityId = 'entity-with-head-destroyed';
+      const headPartId = 'head-part';
+      const brainPartId = 'brain-part';
+
+      const components = {
+        [headPartId]: {
+          [PART_COMPONENT_ID]: {
+            subType: 'head',
+            ownerEntityId: entityId,
+          },
+          [PART_HEALTH_COMPONENT_ID]: {
+            currentHealth: 0, // HEAD IS DESTROYED
+            maxHealth: 100,
+            state: 'destroyed',
+            turnsInState: 0,
+          },
+        },
+        [brainPartId]: {
+          [PART_COMPONENT_ID]: {
+            subType: 'brain',
+            ownerEntityId: entityId,
+          },
+          [PART_HEALTH_COMPONENT_ID]: {
+            currentHealth: 32, // BRAIN IS SCRATCHED (80% health)
+            maxHealth: 40,
+            state: 'scratched',
+            turnsInState: 0,
+          },
+          [VITAL_ORGAN_COMPONENT_ID]: {
+            organType: 'brain',
+          },
+        },
+        [entityId]: {
+          [BODY_COMPONENT_ID]: { bodyId: 'body1' },
+        },
+      };
+
+      entityManager.hasComponent.mockImplementation((id, comp) => {
+        if (comp === DEAD_COMPONENT_ID) return false;
+        if (comp === DYING_COMPONENT_ID) return false;
+        if (comp === VITAL_ORGAN_COMPONENT_ID && id === brainPartId) return true;
+        if (comp === PART_HEALTH_COMPONENT_ID && (id === headPartId || id === brainPartId)) return true;
+        return Boolean(components[id]?.[comp]);
+      });
+
+      entityManager.getComponentData.mockImplementation((id, comp) => {
+        return components[id]?.[comp] || null;
+      });
+
+      // Head is destroyed, brain is a descendant of head
+      bodyGraphService.getAllDescendants.mockImplementation((partId) => {
+        if (partId === headPartId) return [brainPartId];
+        return [];
+      });
+
+      // Injury aggregation reports head as destroyed
+      injuryAggregationService.aggregateInjuries.mockReturnValue({
+        destroyedParts: [{ partEntityId: headPartId, partType: 'head' }],
+        overallHealthPercentage: 79, // Above critical threshold
+      });
+
+      const result = deathCheckService.checkDeathConditions(entityId);
+
+      // Should NOT be dead - brain has health remaining
+      expect(result.isDead).toBe(false);
+      expect(result.isDying).toBe(false);
+
+      // Should NOT dispatch death event
+      expect(eventBus.dispatch).not.toHaveBeenCalledWith(
+        'anatomy:entity_died',
+        expect.anything()
+      );
+    });
+
+    test('should trigger death when container (head) AND vital organ (brain) are both destroyed', () => {
+      // Scenario: Head destroyed AND brain destroyed (health = 0)
+      // Death should trigger because vital organ is also destroyed
+      const entityId = 'entity-with-brain-destroyed';
+      const headPartId = 'head-part';
+      const brainPartId = 'brain-part';
+
+      const components = {
+        [headPartId]: {
+          [PART_COMPONENT_ID]: {
+            subType: 'head',
+            ownerEntityId: entityId,
+          },
+          [PART_HEALTH_COMPONENT_ID]: {
+            currentHealth: 0, // HEAD IS DESTROYED
+            maxHealth: 100,
+            state: 'destroyed',
+            turnsInState: 0,
+          },
+        },
+        [brainPartId]: {
+          [PART_COMPONENT_ID]: {
+            subType: 'brain',
+            ownerEntityId: entityId,
+          },
+          [PART_HEALTH_COMPONENT_ID]: {
+            currentHealth: 0, // BRAIN IS ALSO DESTROYED
+            maxHealth: 40,
+            state: 'destroyed',
+            turnsInState: 0,
+          },
+          [VITAL_ORGAN_COMPONENT_ID]: {
+            organType: 'brain',
+          },
+        },
+        [entityId]: {
+          [BODY_COMPONENT_ID]: { bodyId: 'body1' },
+          'core:name': { text: 'Test Entity' },
+        },
+      };
+
+      entityManager.hasComponent.mockImplementation((id, comp) => {
+        if (comp === DEAD_COMPONENT_ID) return false;
+        if (comp === DYING_COMPONENT_ID) return false;
+        if (comp === VITAL_ORGAN_COMPONENT_ID && id === brainPartId) return true;
+        if (comp === PART_HEALTH_COMPONENT_ID && (id === headPartId || id === brainPartId)) return true;
+        return Boolean(components[id]?.[comp]);
+      });
+
+      entityManager.getComponentData.mockImplementation((id, comp) => {
+        return components[id]?.[comp] || null;
+      });
+
+      // Head is destroyed, brain is a descendant of head
+      bodyGraphService.getAllDescendants.mockImplementation((partId) => {
+        if (partId === headPartId) return [brainPartId];
+        return [];
+      });
+
+      // Injury aggregation reports head as destroyed
+      injuryAggregationService.aggregateInjuries.mockReturnValue({
+        destroyedParts: [{ partEntityId: headPartId, partType: 'head' }],
+        overallHealthPercentage: 50,
+      });
+
+      const result = deathCheckService.checkDeathConditions(entityId, 'attacker-id');
+
+      // Should be dead - brain is destroyed
+      expect(result.isDead).toBe(true);
+      expect(result.deathInfo.vitalOrganDestroyed).toBe('brain');
+      expect(result.deathInfo.killedBy).toBe('attacker-id');
+
+      // Should dispatch death event
+      expect(eventBus.dispatch).toHaveBeenCalledWith(
+        'anatomy:entity_died',
+        expect.objectContaining({
+          entityId,
+          causeOfDeath: 'vital_organ_destroyed',
+          vitalOrganDestroyed: 'brain',
+        })
+      );
+    });
+
+    test('should trigger death when deeply nested vital organ (spine) is destroyed along with containers', () => {
+      // Scenario: Torso destroyed → Spinal column destroyed → Spine destroyed (nested vital organ)
+      const entityId = 'entity-with-spine-destroyed';
+      const torsoPartId = 'torso-part';
+      const spinalColumnPartId = 'spinal-column-part';
+      const spinePartId = 'spine-part';
+
+      const components = {
+        [torsoPartId]: {
+          [PART_COMPONENT_ID]: {
+            subType: 'torso',
+            ownerEntityId: entityId,
+          },
+          [PART_HEALTH_COMPONENT_ID]: {
+            currentHealth: 0,
+            maxHealth: 200,
+            state: 'destroyed',
+            turnsInState: 0,
+          },
+        },
+        [spinalColumnPartId]: {
+          [PART_COMPONENT_ID]: {
+            subType: 'spinal_column',
+            ownerEntityId: entityId,
+          },
+          [PART_HEALTH_COMPONENT_ID]: {
+            currentHealth: 0,
+            maxHealth: 80,
+            state: 'destroyed',
+            turnsInState: 0,
+          },
+        },
+        [spinePartId]: {
+          [PART_COMPONENT_ID]: {
+            subType: 'spine',
+            ownerEntityId: entityId,
+          },
+          [PART_HEALTH_COMPONENT_ID]: {
+            currentHealth: 0, // SPINE IS DESTROYED
+            maxHealth: 50,
+            state: 'destroyed',
+            turnsInState: 0,
+          },
+          [VITAL_ORGAN_COMPONENT_ID]: {
+            organType: 'spine',
+          },
+        },
+        [entityId]: {
+          [BODY_COMPONENT_ID]: { bodyId: 'body1' },
+          'core:name': { text: 'Spine Victim' },
+        },
+      };
+
+      entityManager.hasComponent.mockImplementation((id, comp) => {
+        if (comp === DEAD_COMPONENT_ID) return false;
+        if (comp === DYING_COMPONENT_ID) return false;
+        if (comp === VITAL_ORGAN_COMPONENT_ID && id === spinePartId) return true;
+        if (comp === PART_HEALTH_COMPONENT_ID) return Boolean(components[id]?.[comp]);
+        return Boolean(components[id]?.[comp]);
+      });
+
+      entityManager.getComponentData.mockImplementation((id, comp) => {
+        return components[id]?.[comp] || null;
+      });
+
+      // Torso is destroyed, descendants include spinal column and spine
+      bodyGraphService.getAllDescendants.mockImplementation((partId) => {
+        if (partId === torsoPartId) return [spinalColumnPartId, spinePartId];
+        if (partId === spinalColumnPartId) return [spinePartId];
+        return [];
+      });
+
+      injuryAggregationService.aggregateInjuries.mockReturnValue({
+        destroyedParts: [{ partEntityId: torsoPartId, partType: 'torso' }],
+        overallHealthPercentage: 30,
+      });
+
+      const result = deathCheckService.checkDeathConditions(entityId);
+
+      // Should be dead - spine (vital organ) is destroyed
+      expect(result.isDead).toBe(true);
+      expect(result.deathInfo.vitalOrganDestroyed).toBe('spine');
+    });
+
+    test('should NOT trigger death when torso destroyed but nested heart has health remaining', () => {
+      // Scenario: Torso destroyed but heart inside is only wounded
+      const entityId = 'entity-with-wounded-heart';
+      const torsoPartId = 'torso-part';
+      const heartPartId = 'heart-part';
+
+      const components = {
+        [torsoPartId]: {
+          [PART_COMPONENT_ID]: {
+            subType: 'torso',
+            ownerEntityId: entityId,
+          },
+          [PART_HEALTH_COMPONENT_ID]: {
+            currentHealth: 0, // TORSO IS DESTROYED
+            maxHealth: 200,
+            state: 'destroyed',
+            turnsInState: 0,
+          },
+        },
+        [heartPartId]: {
+          [PART_COMPONENT_ID]: {
+            subType: 'heart',
+            ownerEntityId: entityId,
+          },
+          [PART_HEALTH_COMPONENT_ID]: {
+            currentHealth: 25, // HEART IS WOUNDED (50% health)
+            maxHealth: 50,
+            state: 'wounded',
+            turnsInState: 0,
+          },
+          [VITAL_ORGAN_COMPONENT_ID]: {
+            organType: 'heart',
+          },
+        },
+        [entityId]: {
+          [BODY_COMPONENT_ID]: { bodyId: 'body1' },
+        },
+      };
+
+      entityManager.hasComponent.mockImplementation((id, comp) => {
+        if (comp === DEAD_COMPONENT_ID) return false;
+        if (comp === DYING_COMPONENT_ID) return false;
+        if (comp === VITAL_ORGAN_COMPONENT_ID && id === heartPartId) return true;
+        if (comp === PART_HEALTH_COMPONENT_ID) return Boolean(components[id]?.[comp]);
+        return Boolean(components[id]?.[comp]);
+      });
+
+      entityManager.getComponentData.mockImplementation((id, comp) => {
+        return components[id]?.[comp] || null;
+      });
+
+      bodyGraphService.getAllDescendants.mockImplementation((partId) => {
+        if (partId === torsoPartId) return [heartPartId];
+        return [];
+      });
+
+      injuryAggregationService.aggregateInjuries.mockReturnValue({
+        destroyedParts: [{ partEntityId: torsoPartId, partType: 'torso' }],
+        overallHealthPercentage: 60, // Above critical threshold
+      });
+
+      const result = deathCheckService.checkDeathConditions(entityId);
+
+      // Should NOT be dead - heart has health remaining
+      expect(result.isDead).toBe(false);
+      expect(result.isDying).toBe(false);
+
+      // Should NOT dispatch death event
+      expect(eventBus.dispatch).not.toHaveBeenCalledWith(
+        'anatomy:entity_died',
+        expect.anything()
+      );
+    });
+  });
+
   describe('stabilization flow', () => {
     test('should prevent death when entity is stabilized before countdown expires', () => {
       const entityId = 'stabilized-entity';

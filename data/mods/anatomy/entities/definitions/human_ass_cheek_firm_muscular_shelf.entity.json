@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "ass_cheek",
-      "hit_probability_weight": 4.4
+      "hit_probability_weight": 4.4,
+      "health_calculation_weight": 0.2
     },
     "anatomy:part_health": {
       "currentHealth": 20,

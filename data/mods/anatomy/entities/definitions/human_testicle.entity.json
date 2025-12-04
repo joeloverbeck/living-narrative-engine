@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "testicle",
-      "hit_probability_weight": 1
+      "hit_probability_weight": 1,
+      "health_calculation_weight": 0.5
     },
     "anatomy:part_health": {
       "currentHealth": 6,

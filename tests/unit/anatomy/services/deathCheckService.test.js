@@ -635,8 +635,185 @@ describe('DeathCheckService', () => {
         service.checkDeathConditions('entity-1');
 
         expect(mockLogger.debug).toHaveBeenCalledWith(
-          expect.stringContaining("Found vital organ 'brain' in descendant 'brain-1'")
+          expect.stringContaining("Found vital organ 'brain' destroyed in descendant 'brain-1'")
         );
+      });
+
+      it('should NOT trigger death when vital organ descendant has health > 0 (e.g., brain scratched but head destroyed)', () => {
+        // Scenario: Head destroyed (0 health), brain scratched (32/40 = 80% health)
+        // The brain is still functional even though the head is destroyed
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (entityId === 'brain-1' && componentId === 'anatomy:vital_organ') {
+              return true;
+            }
+            return false;
+          }
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'brain-1' && componentId === 'anatomy:vital_organ') {
+              return { organType: 'brain' };
+            }
+            if (entityId === 'brain-1' && componentId === 'anatomy:part_health') {
+              return { currentHealth: 32, maxHealth: 40 }; // 80% health - NOT destroyed
+            }
+            return null;
+          }
+        );
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 79,
+          destroyedParts: [{ partEntityId: 'head-1', state: 'destroyed' }],
+          isDying: false,
+          isDead: false,
+        });
+
+        mockBodyGraphService.getAllDescendants.mockReturnValue(['brain-1', 'eye-1']);
+
+        const result = service.checkDeathConditions('entity-1');
+
+        expect(result.isDead).toBe(false);
+        expect(result.isDying).toBe(false);
+      });
+
+      it('should trigger death when vital organ descendant is also destroyed (health = 0)', () => {
+        // Scenario: Head destroyed AND brain destroyed (0 health)
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (entityId === 'brain-1' && componentId === 'anatomy:vital_organ') {
+              return true;
+            }
+            return false;
+          }
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'brain-1' && componentId === 'anatomy:vital_organ') {
+              return { organType: 'brain' };
+            }
+            if (entityId === 'brain-1' && componentId === 'anatomy:part_health') {
+              return { currentHealth: 0, maxHealth: 40 }; // DESTROYED
+            }
+            if (entityId === 'entity-1' && componentId === 'core:name') {
+              return { text: 'Test Entity' };
+            }
+            return null;
+          }
+        );
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 50,
+          destroyedParts: [{ partEntityId: 'head-1', state: 'destroyed' }],
+          isDying: false,
+          isDead: false,
+        });
+
+        mockBodyGraphService.getAllDescendants.mockReturnValue(['brain-1']);
+
+        const result = service.checkDeathConditions('entity-1', 'killer-1');
+
+        expect(result.isDead).toBe(true);
+        expect(result.deathInfo.causeOfDeath).toBe('vital_organ_destroyed');
+        expect(result.deathInfo.vitalOrganDestroyed).toBe('brain');
+        expect(result.deathInfo.killedBy).toBe('killer-1');
+      });
+
+      it('should treat vital organ descendant with no health component as destroyed (defensive)', () => {
+        // Scenario: Brain has no anatomy:part_health component - treat as destroyed
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (entityId === 'brain-1' && componentId === 'anatomy:vital_organ') {
+              return true;
+            }
+            return false;
+          }
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'brain-1' && componentId === 'anatomy:vital_organ') {
+              return { organType: 'brain' };
+            }
+            // No anatomy:part_health for brain - returns null
+            if (entityId === 'entity-1' && componentId === 'core:name') {
+              return { text: 'Test Entity' };
+            }
+            return null;
+          }
+        );
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 50,
+          destroyedParts: [{ partEntityId: 'head-1', state: 'destroyed' }],
+          isDying: false,
+          isDead: false,
+        });
+
+        mockBodyGraphService.getAllDescendants.mockReturnValue(['brain-1']);
+
+        const result = service.checkDeathConditions('entity-1', 'killer-1');
+
+        // Should die because we defensively treat missing health as destroyed
+        expect(result.isDead).toBe(true);
+        expect(result.deathInfo.vitalOrganDestroyed).toBe('brain');
+      });
+
+      it('should NOT die when deeply nested vital organ has health > 0', () => {
+        // Scenario: Torso destroyed → chest inside → heart inside with 50% health
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (entityId === 'heart-1' && componentId === 'anatomy:vital_organ') {
+              return true;
+            }
+            return false;
+          }
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'heart-1' && componentId === 'anatomy:vital_organ') {
+              return { organType: 'heart' };
+            }
+            if (entityId === 'heart-1' && componentId === 'anatomy:part_health') {
+              return { currentHealth: 20, maxHealth: 40 }; // 50% health - NOT destroyed
+            }
+            return null;
+          }
+        );
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 60,
+          destroyedParts: [{ partEntityId: 'torso-1', state: 'destroyed' }],
+          isDying: false,
+          isDead: false,
+        });
+
+        mockBodyGraphService.getAllDescendants.mockReturnValue([
+          'chest-1',
+          'abdomen-1',
+          'heart-1',
+          'lung-1',
+          'lung-2',
+        ]);
+
+        const result = service.checkDeathConditions('entity-1');
+
+        expect(result.isDead).toBe(false);
       });
     });
 

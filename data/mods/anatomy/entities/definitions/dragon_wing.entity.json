@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "dragon_wing",
-      "hit_probability_weight": 10
+      "hit_probability_weight": 10,
+      "health_calculation_weight": 2
     },
     "anatomy:part_health": {
       "currentHealth": 45,

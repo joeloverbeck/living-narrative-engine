@@ -6,7 +6,7 @@
       "text": "\"Threadscar\" Melissa"
     },
     "core:gender": {
-        "value": "female"
+      "value": "female"
     },
     "core:portrait": {
       "imagePath": "portraits/threadscar_melissa.png",
@@ -399,11 +399,14 @@
     "skills:melee_skill": {
       "value": 88
     },
+    "skills:ranged_skill": {
+      "value": 43
+    },
     "skills:defense_skill": {
       "value": 73
     },
     "skills:grappling_skill": {
-        "value": 79
+      "value": 79
     }
   }
 }

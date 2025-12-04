@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "nose",
-      "hit_probability_weight": 0.6
+      "hit_probability_weight": 0.6,
+      "health_calculation_weight": 1
     },
     "anatomy:part_health": {
       "currentHealth": 8,

@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "eldritch_core",
-      "hit_probability_weight": 35
+      "hit_probability_weight": 35,
+      "health_calculation_weight": 10
     },
     "anatomy:part_health": {
       "currentHealth": 80,

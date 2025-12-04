@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "shell_carapace",
-      "hit_probability_weight": 32
+      "hit_probability_weight": 32,
+      "health_calculation_weight": 10
     },
     "anatomy:part_health": {
       "currentHealth": 100,

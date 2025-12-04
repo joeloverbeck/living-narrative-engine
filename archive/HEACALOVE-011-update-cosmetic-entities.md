@@ -1,5 +1,7 @@
 # HEACALOVE-011: Update cosmetic entities with health calculation weights
 
+**Status: COMPLETED**
+
 ## Overview
 Add low `health_calculation_weight` values to cosmetic/aesthetic body parts that have minimal impact on overall health.
 
@@ -10,14 +12,9 @@ Add low `health_calculation_weight` values to cosmetic/aesthetic body parts that
 - Pubic hair: `health_calculation_weight: 0.1`
 - Genitals (penis, vagina, testicles): `health_calculation_weight: 0.5`
 
-## Files to Modify
+## Files Modified
 
-### Hair Entities
-```bash
-ls data/mods/anatomy/entities/definitions/*hair*.entity.json
-```
-
-Expected hair files:
+### Hair Entities (17 files, weight: 0.1)
 - `human_hair.entity.json`
 - `human_hair_black_long_tousled.entity.json`
 - `human_hair_blonde.entity.json`
@@ -35,14 +32,11 @@ Expected hair files:
 - `human_hair_short_brown_wavy.entity.json`
 - `human_hair_short_dirty_blonde_wavy.entity.json`
 - `human_hair_short_gray_wavy.entity.json`
+
+### Pubic Hair Entity (1 file, weight: 0.1)
 - `human_pubic_hair.entity.json`
 
-### Ass Cheek Entities
-```bash
-ls data/mods/anatomy/entities/definitions/*ass_cheek*.entity.json
-```
-
-Expected ass cheek files:
+### Ass Cheek Entities (10 files, weight: 0.2)
 - `human_ass_cheek.entity.json`
 - `human_ass_cheek_bubbly.entity.json`
 - `human_ass_cheek_firm.entity.json`
@@ -54,12 +48,7 @@ Expected ass cheek files:
 - `human_ass_cheek_small_bubbly.entity.json`
 - `human_ass_cheek_small_round.entity.json`
 
-### Breast Entities
-```bash
-ls data/mods/anatomy/entities/definitions/*breast*.entity.json
-```
-
-Expected breast files:
+### Breast Entities (7 files, weight: 0.3)
 - `human_breast.entity.json`
 - `human_breast_a_cup.entity.json`
 - `human_breast_c_cup_firm.entity.json`
@@ -68,14 +57,7 @@ Expected breast files:
 - `human_breast_g_cup.entity.json`
 - `human_breast_shelf.entity.json`
 
-### Genital Entities
-```bash
-ls data/mods/anatomy/entities/definitions/*penis*.entity.json
-ls data/mods/anatomy/entities/definitions/*vagina*.entity.json
-ls data/mods/anatomy/entities/definitions/*testicle*.entity.json
-```
-
-Expected genital files:
+### Genital Entities (13 files, weight: 0.5)
 - `human_penis.entity.json`
 - `human_penis_small.entity.json`
 - `human_penis_thick_huge.entity.json`
@@ -89,6 +71,8 @@ Expected genital files:
 - `human_vagina_tight_smooth.entity.json`
 - `human_testicle.entity.json`
 - `human_testicle_thick.entity.json`
+
+**Total: 48 entity files modified**
 
 ## Implementation
 
@@ -112,26 +96,6 @@ Expected genital files:
 "health_calculation_weight": 0.5
 ```
 
-## Example Change (Ass Cheek)
-Before:
-```json
-"anatomy:part": {
-  "subType": "ass_cheek",
-  "orientation": "right",
-  "hit_probability_weight": 4
-}
-```
-
-After:
-```json
-"anatomy:part": {
-  "subType": "ass_cheek",
-  "orientation": "right",
-  "hit_probability_weight": 4,
-  "health_calculation_weight": 0.2
-}
-```
-
 ## Rationale
 - **Hair (0.1)**: Purely cosmetic, no health impact
 - **Ass cheeks (0.2)**: Cosmetic/padding, minimal health impact
@@ -141,17 +105,42 @@ After:
 These low weights prevent cosmetic damage from disproportionately affecting overall health while still contributing to the calculation.
 
 ## Acceptance Criteria
-- [ ] All hair entities have `health_calculation_weight: 0.1`
-- [ ] Pubic hair entity has `health_calculation_weight: 0.1`
-- [ ] All ass cheek entities have `health_calculation_weight: 0.2`
-- [ ] All breast entities have `health_calculation_weight: 0.3`
-- [ ] All genital entities have `health_calculation_weight: 0.5`
-- [ ] All files pass schema validation: `npm run validate`
+- [x] All hair entities have `health_calculation_weight: 0.1`
+- [x] Pubic hair entity has `health_calculation_weight: 0.1`
+- [x] All ass cheek entities have `health_calculation_weight: 0.2`
+- [x] All breast entities have `health_calculation_weight: 0.3`
+- [x] All genital entities have `health_calculation_weight: 0.5`
+- [x] All files pass schema validation: `npm run validate`
 
 ## Dependencies
-- HEACALOVE-001: Schema must have `health_calculation_weight` property
+- HEACALOVE-001: Schema must have `health_calculation_weight` property (completed)
 
 ## Notes
 - These parts have high `hit_probability_weight` but low `health_calculation_weight`
 - This creates realistic scenarios where hitting these parts doesn't drastically reduce health
 - The original bug scenario had ass_cheek damage disproportionately affecting health
+
+---
+
+## Outcome
+
+### What was actually changed vs originally planned
+
+**Changes aligned with plan:**
+- All 48 cosmetic entity files were updated with the correct `health_calculation_weight` values
+- Weight values exactly as specified: hair/pubic_hair=0.1, ass_cheek=0.2, breast=0.3, genitals=0.5
+- All files pass schema validation
+
+**Ticket corrections made:**
+- The original ticket's bash command `ls *hair*.entity.json` was misleading as it also matches non-hair entities with "hairy" in their names (e.g., `human_leg_hulking_hairy.entity.json`). The actual hair entity list in the ticket was correct; only the bash example was misleading.
+- No code changes or API modifications required beyond adding the `health_calculation_weight` property to entity JSON files
+
+**Tests added:**
+- Created `tests/integration/mods/anatomy/cosmeticHealthCalculationWeightValidation.test.js`
+- 106 test cases covering:
+  - Per-entity validation of health_calculation_weight values
+  - Count verification for each category (17 hair, 1 pubic hair, 10 ass cheek, 7 breast, 13 genital)
+  - anatomy:part component structure validation
+  - Tier weight rationale verification (all cosmetic weights < 1.0)
+
+**Implementation date:** 2025-12-04

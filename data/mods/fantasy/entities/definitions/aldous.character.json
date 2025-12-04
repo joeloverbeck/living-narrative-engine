@@ -545,6 +545,9 @@
         "skills:melee_skill": {
             "value": 52
         },
+        "skills:ranged_skill": {
+            "value": 37
+        },
         "skills:defense_skill": {
             "value": 56
         },

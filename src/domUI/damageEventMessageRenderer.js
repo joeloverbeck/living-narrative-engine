@@ -336,7 +336,7 @@ export class DamageEventMessageRenderer extends BoundDomRendererBase {
       message = `${eventData.entityName || 'An entity'} is dying!`;
       cssClass = 'damage-message damage-message--dying';
     } else if (eventType === 'death') {
-      message = `${eventData.entityName || 'An entity'} has died.`;
+      message = eventData.finalMessage || `${eventData.entityName || 'An entity'} falls dead from their injuries.`;
       cssClass = 'damage-message damage-message--death';
     } else {
       // Format using the narrative formatter

@@ -98,6 +98,22 @@
       }
     },
     {
+      "type": "SET_VARIABLE",
+      "comment": "Swing-specific: success message template",
+      "parameters": {
+        "variable_name": "successMessage",
+        "value": "{context.actorName} swings their {context.weaponName} at {context.targetName}, {context.hitDescription}."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Swing-specific: failure message template",
+      "parameters": {
+        "variable_name": "failureMessage",
+        "value": "{context.actorName} swings their {context.weaponName} at {context.targetName}, but the blow fails to connect."
+      }
+    },
+    {
       "type": "IF",
       "comment": "Handle CRITICAL_SUCCESS outcome",
       "parameters": {

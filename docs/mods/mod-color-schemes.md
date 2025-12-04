@@ -13,8 +13,8 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 ## Current Status
 
-**Total Schemes**: 45 defined color combinations
-**In Use**: 31 schemes actively implemented across mods
+**Total Schemes**: 46 defined color combinations
+**In Use**: 32 schemes actively implemented across mods
 **Available**: 14 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
@@ -54,6 +54,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 | Weapons                  | Arctic Steel       | 11.8    | `#112a46`        | Active   |
 | Item-Transfer            | Trade Amber        | 13.1    | `#7d5a00`        | Active   |
 | Personal-Space           | Molten Copper      | 11.6    | `#7c2d12`        | Active   |
+| Ranged                   | Archer's Focus     | 15.1    | `#2a4a3f`        | Active   |
 
 ## Available Color Schemes by Category
 
@@ -988,8 +989,27 @@ When modifying schemes:
 - [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/)
 - Project validation script: `/scripts/validateVisualContrast.js`
 
+### 15. Ranged/Projectile Colors
+
+#### 15.1 Archer's Focus ✅ IN USE: Ranged
+
+```json
+{
+  "backgroundColor": "#2a4a3f",
+  "textColor": "#e8f5f0",
+  "hoverBackgroundColor": "#3a5f52",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 9.1:1 🌟 AAA
+- **Hover Contrast**: 7.55:1 🌟 AAA
+- **Use Cases**: Thrown projectiles, ranged attacks, aimed actions
+- **Theme**: Deep forest-olive teal evoking hunter's concentration and precise aim
+
 ## Version History
 
+- **2025-12**: Added Archer's Focus (15.1) for Ranged mod
 - **2025-11**: Consolidated from multiple sources into single reference document
 - Original spec: `specs/wcag-compliant-color-combinations.spec.md` (removed)
 - Original guide: `docs/mods/color-palettes.md` (removed)

@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "tortoise_head",
-      "hit_probability_weight": 8
+      "hit_probability_weight": 8,
+      "health_calculation_weight": 8
     },
     "anatomy:part_health": {
       "currentHealth": 40,

@@ -10,7 +10,8 @@
     },
     "anatomy:part": {
       "subType": "hand",
-      "hit_probability_weight": 3
+      "hit_probability_weight": 3,
+      "health_calculation_weight": 2
     },
     "anatomy:part_health": {
       "currentHealth": 15,

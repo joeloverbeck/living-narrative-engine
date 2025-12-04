@@ -5,7 +5,8 @@
   "components": {
     "anatomy:part": {
       "subType": "spider_cephalothorax",
-      "hit_probability_weight": 30
+      "hit_probability_weight": 30,
+      "health_calculation_weight": 8
     },
     "anatomy:part_health": {
       "currentHealth": 80,

@@ -98,6 +98,22 @@
       }
     },
     {
+      "type": "SET_VARIABLE",
+      "comment": "Strike-specific: success message template (keeps original format - 'strikes at' is awkward)",
+      "parameters": {
+        "variable_name": "successMessage",
+        "value": "{context.actorName} strikes {context.targetName} with their {context.weaponName}, {context.hitDescription}."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Strike-specific: failure message template",
+      "parameters": {
+        "variable_name": "failureMessage",
+        "value": "{context.actorName} strikes {context.targetName} with their {context.weaponName}, but the strike fails to connect."
+      }
+    },
+    {
       "type": "IF",
       "comment": "Handle CRITICAL_SUCCESS outcome",
       "parameters": {
