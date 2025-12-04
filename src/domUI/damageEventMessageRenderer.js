@@ -207,30 +207,8 @@ export class DamageEventMessageRenderer extends BoundDomRendererBase {
    */
   #handleDismembered({ payload }) {
     this.logger.debug(`${this._logPrefix} Received dismembered event.`);
-    // Treat as a damage event but with specific effect
-    // We need to construct a payload compatible with formatDamageEvent
-    // The event payload has: entityId, partId, damageTypeId, timestamp
-    // But formatDamageEvent needs names (entityName, partType, etc.) which might be missing in the event payload depending on how it's dispatched.
-    // DamageTypeEffectsService dispatches it with: entityId, partId, damageTypeId.
-    // It DOES NOT include names.
-    // However, handleDamageApplied receives a RICH payload from ApplyDamageHandler (with names).
-    // DamageTypeEffectsService does NOT have access to names easily without querying.
-    // BUT wait, ApplyDamageHandler also dispatches DAMAGE_APPLIED.
-    
-    // CRITICAL: anatomy:dismembered is dispatched by DamageTypeEffectsService, which is a "service", 
-    // and services usually don't fetch names for events (handlers do).
-    // If we just pass this payload, formatDamageEvent will show "An entity's body part suffers..."
-    
-    // We might need to rely on the fact that a DAMAGE_APPLIED event likely precedes or follows this?
-    // No, we want the text "Her left arm is severed."
-    
-    // For now, let's queue it. If names are missing, the formatter has fallbacks.
-    // Ideally, DamageTypeEffectsService should include names if possible, or we fetch them here?
-    // Fetching here is hard (async/dependencies).
-    
-    // Let's assume for now we just map what we have.
-    // We set damageAmount to 0 (or irrelevant) and add effect.
-    
+    // The dismembered event payload includes entityName, entityPronoun, partType, orientation
+    // (passed from ApplyDamageHandler via DamageTypeEffectsService)
     this.#queueDamageEvent({
         ...payload,
         damageType: payload.damageTypeId, // Map to format expected by renderer

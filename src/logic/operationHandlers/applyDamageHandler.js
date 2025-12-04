@@ -542,7 +542,11 @@ class ApplyDamageHandler extends BaseOperationHandler {
       // Apply damage type effects (bleed, burn, fracture, dismemberment, poison)
       await this.#damageTypeEffectsService.applyEffectsForDamage({
         entityId: ownerEntityId || entityId,
+        entityName,
+        entityPronoun,
         partId,
+        partType,
+        orientation,
         damageEntry: finalDamageEntry,
         maxHealth,
         currentHealth: newHealth,
