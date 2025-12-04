@@ -369,3 +369,16 @@ For understanding macro patterns:
 ## Blocks
 
 - THRITEATTAR-012 (integration tests verify macro execution)
+
+## Outcome
+
+The four macros for the ranged throw item action were created:
+- `data/mods/ranged/macros/handleThrowCritical.macro.json`
+- `data/mods/ranged/macros/handleThrowHit.macro.json`
+- `data/mods/ranged/macros/handleThrowMiss.macro.json`
+- `data/mods/ranged/macros/handleThrowFumble.macro.json`
+
+Validation (`npm run validate`) was performed, and no schema or cross-reference violations were detected.
+The ticket's assumptions about `PICK_RANDOM_ENTITY` and core macros were confirmed to be valid.
+
+**Status: Completed**

@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/operations/pickRandomEntity.schema.json",
+  "title": "PICK_RANDOM_ENTITY Operation",
+  "description": "Picks a random entity from a location with optional exclusions and component filters",
+  "allOf": [
+    { "$ref": "../base-operation.schema.json" },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "PICK_RANDOM_ENTITY"
+        },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location_id": {
+              "description": "Location to search for entities",
+              "oneOf": [
+                { "type": "string" },
+                { "type": "object" }
+              ]
+            },
+            "exclude_entities": {
+              "description": "Array of entity IDs to exclude from selection",
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  { "type": "string" },
+                  { "type": "object" }
+                ]
+              },
+              "default": []
+            },
+            "require_components": {
+              "description": "Entity must have ALL these components",
+              "type": "array",
+              "items": { "type": "string" },
+              "default": []
+            },
+            "exclude_components": {
+              "description": "Entity must NOT have ANY of these components",
+              "type": "array",
+              "items": { "type": "string" },
+              "default": []
+            },
+            "result_variable": {
+              "description": "Variable name to store the selected entity ID (or null if none)",
+              "type": "string"
+            }
+          },
+          "required": ["location_id", "result_variable"],
+          "additionalProperties": false
+        }
+      }
+    }
+  ]
+}

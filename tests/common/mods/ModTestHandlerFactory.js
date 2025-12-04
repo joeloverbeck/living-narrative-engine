@@ -1268,6 +1268,28 @@ export class ModTestHandlerFactory {
     const deathCheckService = {
       checkDeathConditions: jest.fn(() => ({ isDead: false, isDying: false })),
     };
+    const damageAccumulator = {
+      createSession: jest.fn((entityId) => ({
+        entityId,
+        sessionId: `session-${entityId}`,
+        createdAt: Date.now(),
+        entries: [],
+        effects: new Map(),
+        pendingEvents: [],
+      })),
+      recordDamage: jest.fn(),
+      recordEffect: jest.fn(),
+      queueEvent: jest.fn(),
+      finalize: jest.fn((session) => ({
+        entries: session?.entries || [],
+        pendingEvents: session?.pendingEvents || [],
+      })),
+      hasEntries: jest.fn(() => false),
+      getPrimaryEntry: jest.fn(() => null),
+    };
+    const damageNarrativeComposer = {
+      compose: jest.fn(() => ''),
+    };
     const systemMoveEntityHandler = new SystemMoveEntityHandler({
       entityManager,
       safeEventDispatcher: safeDispatcher,
@@ -1443,6 +1465,8 @@ export class ModTestHandlerFactory {
         damageTypeEffectsService,
         damagePropagationService,
         deathCheckService,
+        damageAccumulator,
+        damageNarrativeComposer,
       }),
       DISPATCH_SPEECH: new DispatchSpeechHandler({
         dispatcher: eventBus,
@@ -1490,6 +1514,14 @@ export class ModTestHandlerFactory {
       },
       // Mock handler for UNLOCK_GRABBING - satisfies fail-fast enforcement
       UNLOCK_GRABBING: {
+        execute: jest.fn().mockResolvedValue(undefined),
+      },
+      // Mock handler for GET_DAMAGE_CAPABILITIES - satisfies fail-fast enforcement
+      GET_DAMAGE_CAPABILITIES: {
+        execute: jest.fn().mockResolvedValue(undefined),
+      },
+      // Mock handler for PICK_RANDOM_ENTITY - satisfies fail-fast enforcement
+      PICK_RANDOM_ENTITY: {
         execute: jest.fn().mockResolvedValue(undefined),
       },
     };

@@ -228,6 +228,9 @@
           "$ref": "./operations/dropItemAtLocation.schema.json"
         },
         {
+          "$ref": "./operations/pickRandomEntity.schema.json"
+        },
+        {
           "$ref": "./operations/pickUpItemFromLocation.schema.json"
         },
         {

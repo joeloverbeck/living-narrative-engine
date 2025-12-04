@@ -18,6 +18,8 @@ import DamageTypeEffectsService from '../../../src/anatomy/services/damageTypeEf
 import DamagePropagationService from '../../../src/anatomy/services/damagePropagationService.js';
 import InjuryAggregationService from '../../../src/anatomy/services/injuryAggregationService.js';
 import DeathCheckService from '../../../src/anatomy/services/deathCheckService.js';
+import DamageAccumulator from '../../../src/anatomy/services/damageAccumulator.js';
+import DamageNarrativeComposer from '../../../src/anatomy/services/damageNarrativeComposer.js';
 import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../common/mods/ModEntityBuilder.js';
 
@@ -230,6 +232,14 @@ describe('death mechanics e2e (critical)', () => {
       bodyGraphService,
     });
 
+    const damageAccumulator = new DamageAccumulator({
+      logger: testEnv.logger,
+    });
+
+    const damageNarrativeComposer = new DamageNarrativeComposer({
+      logger: testEnv.logger,
+    });
+
     applyDamageHandler = new ApplyDamageHandler({
       logger: testEnv.logger,
       entityManager: testEnv.entityManager,
@@ -239,6 +249,8 @@ describe('death mechanics e2e (critical)', () => {
       damageTypeEffectsService,
       damagePropagationService,
       deathCheckService,
+      damageAccumulator,
+      damageNarrativeComposer,
     });
 
     await bodyGraphService.buildAdjacencyCache(parts.torso.id);

@@ -45,6 +45,17 @@ const PRONOUN_MAP = Object.freeze({
   neutral: 'they',
   unknown: 'they',
 });
+
+/**
+ * Maps gender values to possessive pronouns for narrative formatting.
+ * @type {Readonly<Record<string, string>>}
+ */
+const PRONOUN_POSSESSIVE_MAP = Object.freeze({
+  male: 'his',
+  female: 'her',
+  neutral: 'their',
+  unknown: 'their',
+});
 const PART_HEALTH_CHANGED_EVENT = 'anatomy:part_health_changed';
 const PART_DESTROYED_EVENT = 'anatomy:part_destroyed';
 
@@ -56,8 +67,10 @@ class ApplyDamageHandler extends BaseOperationHandler {
   /** @type {import('../../anatomy/services/damageTypeEffectsService.js').default} */ #damageTypeEffectsService;
   /** @type {import('../../anatomy/services/damagePropagationService.js').default} */ #damagePropagationService;
   /** @type {import('../../anatomy/services/deathCheckService.js').default} */ #deathCheckService;
+  /** @type {import('../../anatomy/services/damageAccumulator.js').default} */ #damageAccumulator;
+  /** @type {import('../../anatomy/services/damageNarrativeComposer.js').default} */ #damageNarrativeComposer;
 
-  constructor({ logger, entityManager, safeEventDispatcher, jsonLogicService, bodyGraphService, damageTypeEffectsService, damagePropagationService, deathCheckService }) {
+  constructor({ logger, entityManager, safeEventDispatcher, jsonLogicService, bodyGraphService, damageTypeEffectsService, damagePropagationService, deathCheckService, damageAccumulator, damageNarrativeComposer }) {
     super('ApplyDamageHandler', {
       logger: { value: logger },
       entityManager: {
@@ -88,6 +101,14 @@ class ApplyDamageHandler extends BaseOperationHandler {
         value: deathCheckService,
         requiredMethods: ['checkDeathConditions'],
       },
+      damageAccumulator: {
+        value: damageAccumulator,
+        requiredMethods: ['createSession', 'recordDamage', 'recordEffect', 'queueEvent', 'finalize'],
+      },
+      damageNarrativeComposer: {
+        value: damageNarrativeComposer,
+        requiredMethods: ['compose'],
+      },
     });
     this.#entityManager = entityManager;
     this.#dispatcher = safeEventDispatcher;
@@ -96,6 +117,8 @@ class ApplyDamageHandler extends BaseOperationHandler {
     this.#damageTypeEffectsService = damageTypeEffectsService;
     this.#damagePropagationService = damagePropagationService;
     this.#deathCheckService = deathCheckService;
+    this.#damageAccumulator = damageAccumulator;
+    this.#damageNarrativeComposer = damageNarrativeComposer;
   }
 
   /**
@@ -126,6 +149,37 @@ class ApplyDamageHandler extends BaseOperationHandler {
       return PRONOUN_MAP[gender] || PRONOUN_MAP.neutral;
     } catch {
       return PRONOUN_MAP.neutral;
+    }
+  }
+
+  /**
+   * Resolves entity possessive pronoun from the core:gender component.
+   * @param {string} entityId - Entity ID to resolve possessive for
+   * @returns {string} Possessive pronoun ('his', 'her', 'their')
+   * @private
+   */
+  #getEntityPossessive(entityId) {
+    try {
+      const genderData = this.#entityManager.getComponentData(entityId, GENDER_COMPONENT_ID);
+      const gender = genderData?.value || 'neutral';
+      return PRONOUN_POSSESSIVE_MAP[gender] || PRONOUN_POSSESSIVE_MAP.neutral;
+    } catch {
+      return PRONOUN_POSSESSIVE_MAP.neutral;
+    }
+  }
+
+  /**
+   * Resolves the entity's location from the core:location component.
+   * @param {string} entityId - Entity ID to resolve location for
+   * @returns {string|null} Location ID or null if not found
+   * @private
+   */
+  #getEntityLocation(entityId) {
+    try {
+      const locationData = this.#entityManager.getComponentData(entityId, 'core:location');
+      return locationData?.locationId || null;
+    } catch {
+      return null;
     }
   }
 
@@ -319,6 +373,16 @@ class ApplyDamageHandler extends BaseOperationHandler {
 
     // 1. Resolve Entity (supports placeholder names like "secondary", "primary", etc.)
     const entityId = this.#resolveEntityRef(entity_ref, executionContext, log);
+
+    // Session lifecycle: Create session at top-level, reuse for recursive calls
+    const isTopLevel = !propagatedFrom;
+    let session;
+    if (isTopLevel) {
+      session = this.#damageAccumulator.createSession(entityId);
+      executionContext.damageSession = session;
+    } else {
+      session = executionContext.damageSession;
+    }
     if (!entityId) {
       safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Invalid entity_ref', { entity_ref }, log);
       return;
@@ -436,13 +500,35 @@ class ApplyDamageHandler extends BaseOperationHandler {
     const damageAmount = finalDamageEntry.amount;
     const damageType = resolvedDamageEntry.name;
 
-    // 4. Dispatch damage applied event
+    // 4. Record damage to session (replaces immediate dispatch for narrative composition)
     // Resolve entity and part metadata for message rendering
     const entityName = this.#getEntityName(entityId);
     const entityPronoun = this.#getEntityPronoun(entityId);
+    const entityPossessive = this.#getEntityPossessive(entityId);
     const { partType, orientation } = this.#getPartInfo(partId);
 
-    this.#dispatcher.dispatch(DAMAGE_APPLIED_EVENT, {
+    // Create damage entry for accumulation
+    const damageEntryForSession = {
+      entityId,
+      entityName,
+      entityPronoun,
+      entityPossessive,
+      partId,
+      partType,
+      orientation,
+      amount: damageAmount,
+      damageType,
+      propagatedFrom,
+      effectsTriggered: [],
+    };
+
+    // Record damage to session for composed narrative
+    if (session) {
+      this.#damageAccumulator.recordDamage(session, damageEntryForSession);
+    }
+
+    // Queue event for backwards compatibility (dispatched after composed event)
+    const damageAppliedPayload = {
       entityId,
       entityName,
       entityPronoun,
@@ -453,7 +539,14 @@ class ApplyDamageHandler extends BaseOperationHandler {
       damageType,
       propagatedFrom,
       timestamp: Date.now()
-    });
+    };
+
+    if (session) {
+      this.#damageAccumulator.queueEvent(session, DAMAGE_APPLIED_EVENT, damageAppliedPayload);
+    } else {
+      // Fallback: dispatch immediately if no session (shouldn't happen normally)
+      this.#dispatcher.dispatch(DAMAGE_APPLIED_EVENT, damageAppliedPayload);
+    }
 
     const partComponent = this.#entityManager.hasComponent(partId, PART_COMPONENT_ID)
       ? this.#entityManager.getComponentData(partId, PART_COMPONENT_ID)
@@ -540,6 +633,7 @@ class ApplyDamageHandler extends BaseOperationHandler {
       log.debug(`APPLY_DAMAGE: Applied ${damageAmount} ${damageType} to ${partId}. Health: ${currentHealth} -> ${newHealth}. State: ${newState}.`);
 
       // Apply damage type effects (bleed, burn, fracture, dismemberment, poison)
+      // Pass session to allow effects to be recorded for composed narrative
       await this.#damageTypeEffectsService.applyEffectsForDamage({
         entityId: ownerEntityId || entityId,
         entityName,
@@ -550,6 +644,7 @@ class ApplyDamageHandler extends BaseOperationHandler {
         damageEntry: finalDamageEntry,
         maxHealth,
         currentHealth: newHealth,
+        damageSession: session,
       });
 
     } catch (error) {
@@ -569,7 +664,7 @@ class ApplyDamageHandler extends BaseOperationHandler {
 
     // Check death conditions ONLY after top-level damage (not propagated damage)
     // This ensures death is checked once after all propagation completes
-    if (!propagatedFrom) {
+    if (isTopLevel) {
       const deathCheckOwnerEntityId = partComponent?.ownerEntityId || entityId;
       const deathResult = this.#deathCheckService.checkDeathConditions(
         deathCheckOwnerEntityId,
@@ -580,6 +675,51 @@ class ApplyDamageHandler extends BaseOperationHandler {
         log.info(`APPLY_DAMAGE: Entity ${deathCheckOwnerEntityId} died from damage.`);
       } else if (deathResult.isDying) {
         log.info(`APPLY_DAMAGE: Entity ${deathCheckOwnerEntityId} is now dying.`);
+      }
+
+      // Finalize session and dispatch composed narrative + pending events
+      if (session) {
+        const { entries, pendingEvents } = this.#damageAccumulator.finalize(session);
+
+        // Compose narrative from accumulated entries
+        if (entries.length > 0) {
+          const composedNarrative = this.#damageNarrativeComposer.compose(entries);
+
+          // Calculate total damage from all entries
+          const totalDamage = entries.reduce((sum, e) => sum + (e.amount || 0), 0);
+
+          // Dispatch composed perceptible event for NPC perception
+          if (composedNarrative) {
+            const locationId = this.#getEntityLocation(deathCheckOwnerEntityId);
+
+            // Only dispatch if we have a valid location (required by schema)
+            if (locationId) {
+              this.#dispatcher.dispatch('core:perceptible_event', {
+                eventName: 'core:perceptible_event',
+                locationId,
+                descriptionText: composedNarrative,
+                timestamp: new Date().toISOString(),
+                perceptionType: 'damage_received',
+                actorId: executionContext?.actorId || entityId,
+                targetId: deathCheckOwnerEntityId,
+                involvedEntities: [deathCheckOwnerEntityId],
+                contextualData: { totalDamage },
+              });
+
+              log.debug(`APPLY_DAMAGE: Dispatched composed narrative: "${composedNarrative}"`);
+            } else {
+              log.debug(`APPLY_DAMAGE: Skipped perceptible event dispatch - no location for entity ${deathCheckOwnerEntityId}`);
+            }
+          }
+        }
+
+        // Dispatch queued individual events for backwards compatibility
+        for (const { eventType, payload } of pendingEvents) {
+          this.#dispatcher.dispatch(eventType, payload);
+        }
+
+        // Clean up session from execution context
+        delete executionContext.damageSession;
       }
     }
   }

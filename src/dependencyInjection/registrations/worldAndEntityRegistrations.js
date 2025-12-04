@@ -78,6 +78,8 @@ import AnatomyBlueprintRepository from '../../anatomy/repositories/anatomyBluepr
 import RecipeValidationRunner from '../../anatomy/validation/RecipeValidationRunner.js';
 import AnatomySocketIndex from '../../anatomy/services/anatomySocketIndex.js';
 import { AnatomyCacheCoordinator } from '../../anatomy/cache/anatomyCacheCoordinator.js';
+import DamageAccumulator from '../../anatomy/services/damageAccumulator.js';
+import DamageNarrativeComposer from '../../anatomy/services/damageNarrativeComposer.js';
 import DamageTypeEffectsService from '../../anatomy/services/damageTypeEffectsService.js';
 import DamagePropagationService from '../../anatomy/services/damagePropagationService.js';
 import BleedingTickSystem from '../../anatomy/services/bleedingTickSystem.js';
@@ -825,6 +827,30 @@ export function registerWorldAndEntity(container) {
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.IEntityMatcherService
+    )}.`
+  );
+
+  // Register DamageAccumulator
+  registrar.singletonFactory(tokens.DamageAccumulator, (c) => {
+    return new DamageAccumulator({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.DamageAccumulator
+    )}.`
+  );
+
+  // Register DamageNarrativeComposer
+  registrar.singletonFactory(tokens.DamageNarrativeComposer, (c) => {
+    return new DamageNarrativeComposer({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.DamageNarrativeComposer
     )}.`
   );
 

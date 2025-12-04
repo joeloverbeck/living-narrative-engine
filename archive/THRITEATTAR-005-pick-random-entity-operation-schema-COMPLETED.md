@@ -1,4 +1,10 @@
-# THRITEATTAR-005: Create PICK_RANDOM_ENTITY Operation Schema
+# THRITEATTAR-005: Create PICK_RANDOM_ENTITY Operation Schema (COMPLETED)
+
+## Outcome
+- Created `data/schemas/operations/pickRandomEntity.schema.json` with the specified schema structure.
+- Updated `data/schemas/operation.schema.json` to include the reference to the new schema.
+- Verified validation using `node -e ...` and `npm run validate`.
+- NOTE: `npm run validate:operations` fails as expected because the handler implementation is explicitly out of scope for this ticket.
 
 ## Summary
 

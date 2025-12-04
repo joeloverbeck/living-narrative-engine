@@ -178,6 +178,10 @@ const handlerModuleDefinitions = [
     `${handlerBasePath}/dropItemAtLocationHandler.js`,
   ],
   [
+    'PickRandomEntityHandler',
+    `${handlerBasePath}/pickRandomEntityHandler.js`,
+  ],
+  [
     'PickUpItemFromLocationHandler',
     `${handlerBasePath}/pickUpItemFromLocationHandler.js`,
   ],
@@ -278,6 +282,8 @@ beforeAll(async () => {
         { property: 'damageTypeEffectsService', token: tokens.DamageTypeEffectsService },
         { property: 'damagePropagationService', token: tokens.DamagePropagationService },
         { property: 'deathCheckService', token: tokens.DeathCheckService },
+        { property: 'damageAccumulator', token: tokens.DamageAccumulator },
+        { property: 'damageNarrativeComposer', token: tokens.DamageNarrativeComposer },
       ],
     },
     {
@@ -926,6 +932,14 @@ beforeAll(async () => {
         { property: 'logger', token: ILogger },
         { property: 'entityManager', token: IEntityManager },
         { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.PickRandomEntityHandler,
+      handlerName: 'PickRandomEntityHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
       ],
     },
     {

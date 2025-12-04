@@ -407,7 +407,6 @@ export function registerRenderers(registrar, logger) {
         documentContext: c.resolve(tokens.IDocumentContext),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         domElementFactory: c.resolve(tokens.DomElementFactory),
-        narrativeFormatter: c.resolve(tokens.InjuryNarrativeFormatterService),
       }),
     { lifecycle: 'singletonFactory' },
     logger

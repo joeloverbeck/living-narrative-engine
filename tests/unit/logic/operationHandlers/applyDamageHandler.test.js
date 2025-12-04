@@ -49,6 +49,8 @@ const PART_DESTROYED_EVENT = 'anatomy:part_destroyed';
 /** @type {{ applyEffectsForDamage: jest.Mock }} */ let damageTypeEffectsService;
 /** @type {{ propagateDamage: jest.Mock }} */ let damagePropagationService;
 /** @type {{ checkDeathConditions: jest.Mock }} */ let deathCheckService;
+/** @type {{ createSession: jest.Mock, recordDamage: jest.Mock, finalize: jest.Mock, hasEntries: jest.Mock }} */ let damageAccumulator;
+/** @type {{ compose: jest.Mock }} */ let damageNarrativeComposer;
 
 beforeEach(() => {
   log = {
@@ -76,6 +78,44 @@ beforeEach(() => {
       deathInfo: null,
     }),
   };
+  // Create a mock session that accumulates queued events
+  const mockSession = {
+    entityId: 'test-entity',
+    entries: [],
+    pendingEvents: [],
+    sessionId: 'test-session',
+    createdAt: Date.now(),
+  };
+  damageAccumulator = {
+    createSession: jest.fn().mockImplementation(() => {
+      // Reset session state for each call
+      mockSession.entries = [];
+      mockSession.pendingEvents = [];
+      return mockSession;
+    }),
+    recordDamage: jest.fn().mockImplementation((session, entry) => {
+      if (session && entry) {
+        session.entries.push({ ...entry, effectsTriggered: entry.effectsTriggered || [] });
+      }
+    }),
+    recordEffect: jest.fn(),
+    queueEvent: jest.fn().mockImplementation((session, eventType, payload) => {
+      if (session) {
+        session.pendingEvents.push({ eventType, payload });
+      }
+    }),
+    finalize: jest.fn().mockImplementation((session) => ({
+      entries: session ? [...session.entries] : [],
+      pendingEvents: session ? [...session.pendingEvents] : [],
+    })),
+    hasEntries: jest.fn().mockImplementation((session) => session && session.entries.length > 0),
+    getPrimaryEntry: jest.fn().mockImplementation((session) =>
+      session ? session.entries.find(e => !e.propagatedFrom) || null : null
+    ),
+  };
+  damageNarrativeComposer = {
+    compose: jest.fn().mockReturnValue('Test damage narrative'),
+  };
 });
 
 afterEach(() => jest.clearAllMocks());
@@ -92,7 +132,9 @@ describe('ApplyDamageHandler', () => {
         bodyGraphService,
         damageTypeEffectsService,
         damagePropagationService,
-        deathCheckService
+        deathCheckService,
+        damageAccumulator,
+        damageNarrativeComposer,
       });
       expect(handler).toBeInstanceOf(ApplyDamageHandler);
     });
@@ -107,7 +149,9 @@ describe('ApplyDamageHandler', () => {
               jsonLogicService,
               damageTypeEffectsService,
               damagePropagationService,
-              deathCheckService
+              deathCheckService,
+              damageAccumulator,
+              damageNarrativeComposer,
             })
         ).toThrow(/bodyGraphService/i);
       });
@@ -122,7 +166,9 @@ describe('ApplyDamageHandler', () => {
               jsonLogicService,
               bodyGraphService,
               damagePropagationService,
-              deathCheckService
+              deathCheckService,
+              damageAccumulator,
+              damageNarrativeComposer,
             })
         ).toThrow(/damageTypeEffectsService/i);
       });
@@ -137,7 +183,9 @@ describe('ApplyDamageHandler', () => {
               jsonLogicService,
               bodyGraphService,
               damageTypeEffectsService,
-              deathCheckService
+              deathCheckService,
+              damageAccumulator,
+              damageNarrativeComposer,
             })
         ).toThrow(/damagePropagationService/i);
       });
@@ -152,7 +200,9 @@ describe('ApplyDamageHandler', () => {
               jsonLogicService,
               bodyGraphService,
               damageTypeEffectsService,
-              damagePropagationService
+              damagePropagationService,
+              damageAccumulator,
+              damageNarrativeComposer,
             })
         ).toThrow(/deathCheckService/i);
       });
@@ -171,7 +221,9 @@ describe('ApplyDamageHandler', () => {
         bodyGraphService,
         damageTypeEffectsService,
         damagePropagationService,
-        deathCheckService
+        deathCheckService,
+        damageAccumulator,
+        damageNarrativeComposer,
       });
       executionContext = {
         evaluationContext: { context: {} },
@@ -1245,17 +1297,19 @@ describe('ApplyDamageHandler', () => {
 
         await handler.execute(params, executionContext);
 
-        expect(damageTypeEffectsService.applyEffectsForDamage).toHaveBeenCalledWith({
-          entityId: 'victim-entity',
-          entityName: 'Unknown',
-          entityPronoun: 'they',
-          partId: 'part1',
-          partType: 'arm',
-          orientation: null,
-          damageEntry: damageEntry,
-          maxHealth: 100,
-          currentHealth: 70
-        });
+        expect(damageTypeEffectsService.applyEffectsForDamage).toHaveBeenCalledWith(
+          expect.objectContaining({
+            entityId: 'victim-entity',
+            entityName: 'Unknown',
+            entityPronoun: 'they',
+            partId: 'part1',
+            partType: 'arm',
+            orientation: null,
+            damageEntry: damageEntry,
+            maxHealth: 100,
+            currentHealth: 70
+          })
+        );
       });
 
       test('should apply damage multiplier when provided (damage_entry path)', async () => {
@@ -1524,17 +1578,19 @@ describe('ApplyDamageHandler', () => {
         await handler.execute(params, executionContext);
 
         // Full damage entry should be passed to effects service
-        expect(damageTypeEffectsService.applyEffectsForDamage).toHaveBeenCalledWith({
-          entityId: 'victim-entity',
-          entityName: 'Unknown',
-          entityPronoun: 'they',
-          partId: 'part1',
-          partType: 'torso',
-          orientation: null,
-          damageEntry: fullDamageEntry,
-          maxHealth: 100,
-          currentHealth: 50
-        });
+        expect(damageTypeEffectsService.applyEffectsForDamage).toHaveBeenCalledWith(
+          expect.objectContaining({
+            entityId: 'victim-entity',
+            entityName: 'Unknown',
+            entityPronoun: 'they',
+            partId: 'part1',
+            partType: 'torso',
+            orientation: null,
+            damageEntry: fullDamageEntry,
+            maxHealth: 100,
+            currentHealth: 50
+          })
+        );
       });
 
       test('should propagate damage using damage_entry structure', async () => {
@@ -2266,6 +2322,201 @@ describe('ApplyDamageHandler', () => {
           })
         );
       });
+    });
+  });
+
+  describe('perceptible event dispatch for damage', () => {
+    let handler;
+
+    beforeEach(() => {
+      handler = new ApplyDamageHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+        jsonLogicService,
+        bodyGraphService,
+        damageTypeEffectsService,
+        damagePropagationService,
+        deathCheckService,
+        damageAccumulator,
+        damageNarrativeComposer,
+      });
+    });
+
+    const createTestScenario = ({ withLocation = true, narrative = 'Test damage narrative' } = {}) => {
+      const ownerEntityId = 'victim-entity';
+      const partId = 'part1';
+      const locationId = 'test-location';
+
+      const healthComponent = {
+        currentHealth: 100,
+        maxHealth: 100,
+        state: 'healthy',
+        turnsInState: 0,
+      };
+
+      const partComponent = {
+        subType: 'torso',
+        ownerEntityId,
+      };
+
+      em.hasComponent.mockImplementation((id, comp) => {
+        if (id === partId && comp === PART_HEALTH_COMPONENT_ID) return true;
+        if (id === partId && comp === PART_COMPONENT_ID) return true;
+        return false;
+      });
+
+      em.getComponentData.mockImplementation((id, comp) => {
+        if (id === partId && comp === PART_HEALTH_COMPONENT_ID) return healthComponent;
+        if (id === partId && comp === PART_COMPONENT_ID) return partComponent;
+        if (id === ownerEntityId && comp === 'core:location') {
+          return withLocation ? { locationId } : null;
+        }
+        return null;
+      });
+
+      damageNarrativeComposer.compose.mockReturnValue(narrative);
+
+      return {
+        params: {
+          entity_ref: ownerEntityId,
+          part_ref: partId,
+          damage_entry: { name: 'slashing', amount: 25 },
+        },
+        executionContext: {
+          evaluationContext: {},
+          logger: log,
+          actorId: 'attacker-entity',
+        },
+        ownerEntityId,
+        locationId,
+      };
+    };
+
+    test('dispatches valid core:perceptible_event payload when damage is applied with location', async () => {
+      const { params, executionContext, ownerEntityId, locationId } = createTestScenario({ withLocation: true });
+
+      await handler.execute(params, executionContext);
+
+      // Find the perceptible_event dispatch call
+      const perceptibleEventCall = dispatcher.dispatch.mock.calls.find(
+        ([eventType]) => eventType === 'core:perceptible_event'
+      );
+
+      expect(perceptibleEventCall).toBeDefined();
+      const payload = perceptibleEventCall[1];
+
+      // Validate required fields
+      expect(payload.eventName).toBe('core:perceptible_event');
+      expect(payload.locationId).toBe(locationId);
+      expect(typeof payload.locationId).toBe('string');
+      expect(payload.descriptionText).toBe('Test damage narrative');
+      expect(payload.timestamp).toBeDefined();
+      expect(payload.actorId).toBe('attacker-entity');
+      expect(payload.targetId).toBe(ownerEntityId);
+      expect(payload.involvedEntities).toContain(ownerEntityId);
+    });
+
+    test('uses valid perceptionType enum value (damage_received)', async () => {
+      const { params, executionContext } = createTestScenario({ withLocation: true });
+
+      await handler.execute(params, executionContext);
+
+      const perceptibleEventCall = dispatcher.dispatch.mock.calls.find(
+        ([eventType]) => eventType === 'core:perceptible_event'
+      );
+
+      expect(perceptibleEventCall).toBeDefined();
+      const payload = perceptibleEventCall[1];
+
+      // Must use a valid enum value from common.schema.json - damage_received for damage events
+      expect(payload.perceptionType).toBe('damage_received');
+    });
+
+    test('includes totalDamage in contextualData not at root level', async () => {
+      const { params, executionContext } = createTestScenario({ withLocation: true });
+
+      await handler.execute(params, executionContext);
+
+      const perceptibleEventCall = dispatcher.dispatch.mock.calls.find(
+        ([eventType]) => eventType === 'core:perceptible_event'
+      );
+
+      expect(perceptibleEventCall).toBeDefined();
+      const payload = perceptibleEventCall[1];
+
+      // totalDamage should NOT be at root level (additionalProperties: false)
+      expect(payload.totalDamage).toBeUndefined();
+
+      // totalDamage should be inside contextualData
+      expect(payload.contextualData).toBeDefined();
+      expect(payload.contextualData.totalDamage).toBeDefined();
+      expect(typeof payload.contextualData.totalDamage).toBe('number');
+    });
+
+    test('skips perceptible event dispatch when entity has no location', async () => {
+      const { params, executionContext } = createTestScenario({ withLocation: false });
+
+      await handler.execute(params, executionContext);
+
+      // Should NOT have dispatched core:perceptible_event
+      const perceptibleEventCall = dispatcher.dispatch.mock.calls.find(
+        ([eventType]) => eventType === 'core:perceptible_event'
+      );
+
+      expect(perceptibleEventCall).toBeUndefined();
+
+      // Should have logged a debug message about skipping
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Skipped perceptible event dispatch')
+      );
+    });
+
+    test('does not dispatch perceptible event when no composed narrative', async () => {
+      const { params, executionContext } = createTestScenario({
+        withLocation: true,
+        narrative: null, // No narrative composed
+      });
+
+      await handler.execute(params, executionContext);
+
+      // Should NOT have dispatched core:perceptible_event
+      const perceptibleEventCall = dispatcher.dispatch.mock.calls.find(
+        ([eventType]) => eventType === 'core:perceptible_event'
+      );
+
+      expect(perceptibleEventCall).toBeUndefined();
+    });
+
+    test('does not include unexpected additional properties at root level', async () => {
+      const { params, executionContext } = createTestScenario({ withLocation: true });
+
+      await handler.execute(params, executionContext);
+
+      const perceptibleEventCall = dispatcher.dispatch.mock.calls.find(
+        ([eventType]) => eventType === 'core:perceptible_event'
+      );
+
+      expect(perceptibleEventCall).toBeDefined();
+      const payload = perceptibleEventCall[1];
+
+      // Define allowed root properties from schema
+      const allowedProperties = new Set([
+        'eventName',
+        'locationId',
+        'descriptionText',
+        'timestamp',
+        'perceptionType',
+        'actorId',
+        'targetId',
+        'involvedEntities',
+        'contextualData',
+      ]);
+
+      // Verify no unexpected properties at root
+      for (const key of Object.keys(payload)) {
+        expect(allowedProperties.has(key)).toBe(true);
+      }
     });
   });
 });

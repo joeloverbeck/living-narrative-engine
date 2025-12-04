@@ -1,0 +1,67 @@
+{
+  "$schema": "schema://living-narrative-engine/macro.schema.json",
+  "id": "ranged:handleThrowHit",
+  "description": "Handles SUCCESS outcome for thrown item attacks with normal damage. Drops the thrown item.",
+  "actions": [
+    {
+      "type": "UNWIELD_ITEM",
+      "comment": "If item was wielded, unwield it first (idempotent)",
+      "parameters": {
+        "actorEntity": "{event.payload.actorId}",
+        "itemEntity": "{event.payload.primaryId}"
+      }
+    },
+    {
+      "type": "DROP_ITEM_AT_LOCATION",
+      "comment": "Thrown item lands at location",
+      "parameters": {
+        "actorEntity": "{event.payload.actorId}",
+        "itemEntity": "{event.payload.primaryId}",
+        "locationId": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.actorName} throws {context.throwableName} at {context.targetName}, and it hits the target.",
+        "perception_type": "action_target_general",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.secondaryId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} throws {context.throwableName} at {context.targetName}, and it hits the target."
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": { "message": "{context.logMessage}" }
+      }
+    },
+    {
+      "type": "FOR_EACH",
+      "parameters": {
+        "collection": "context.throwableDamage",
+        "item_variable": "dmgEntry",
+        "actions": [
+          {
+            "type": "APPLY_DAMAGE",
+            "parameters": {
+              "entity_ref": "secondary",
+              "damage_entry": { "var": "context.dmgEntry" }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "macro": "core:endTurnOnly"
+    }
+  ]
+}

@@ -1,8 +1,22 @@
-# THRITEATTAR-007: Register PICK_RANDOM_ENTITY Handler in Dependency Injection
+# THRITEATTAR-007: Register PICK_RANDOM_ENTITY Handler in Dependency Injection (COMPLETED)
 
 ## Summary
 
 Register the `PickRandomEntityHandler` in the dependency injection system by adding the token, factory registration, interpreter mapping, and pre-validation whitelist entry.
+
+## Outcome
+
+- **Status**: Completed
+- **Changes**:
+    - Added `PickRandomEntityHandler` to `src/dependencyInjection/tokens/tokens-core.js`.
+    - Added `PickRandomEntityHandler` import and factory to `src/dependencyInjection/registrations/operationHandlerRegistrations.js`.
+    - Added `PICK_RANDOM_ENTITY` mapping to `src/dependencyInjection/registrations/interpreterRegistrations.js`.
+    - Added `'PICK_RANDOM_ENTITY'` to `src/utils/preValidationUtils.js`.
+    - **Extra**: Updated `tests/unit/dependencyInjection/registrations/operationHandlerRegistrations.test.js` to include the new handler in test expectations.
+    - **Extra**: Updated `src/configuration/staticConfiguration.js` to include `pickRandomEntity.schema.json` in `OPERATION_SCHEMA_FILES` to satisfy configuration tests.
+- **Verification**:
+    - `npm run validate` passed.
+    - `npm run test:unit` passed (relevant tests).
 
 ## Files to Modify
 

@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "name": "Ranged Combat",
   "description": "Ranged combat actions including throwing items at targets",
+  "actionPurpose": "Attack targets at a distance by throwing items from inventory.",
+  "actionConsiderWhen": "Combat situations requiring ranged attacks, throwing weapons at enemies, or when melee engagement is not possible or desired.",
   "dependencies": [
     {
       "id": "core",
@@ -36,7 +38,14 @@
     "conditions": [
       "event-is-action-throw-item-at-target.condition.json"
     ],
-    "macros": [],
-    "rules": []
+    "macros": [
+      "handleThrowCritical.macro.json",
+      "handleThrowFumble.macro.json",
+      "handleThrowHit.macro.json",
+      "handleThrowMiss.macro.json"
+    ],
+    "rules": [
+      "handle_throw_item_at_target.rule.json"
+    ]
   }
 }
