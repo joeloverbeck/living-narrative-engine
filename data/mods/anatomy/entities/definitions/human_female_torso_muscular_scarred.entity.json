@@ -23,7 +23,6 @@
       "sockets": [
         {
           "id": "neck",
-          "orientation": "upper",
           "allowedTypes": [
             "head",
             "neck"
@@ -169,6 +168,9 @@
     },
     "core:description": {
       "text": "A densely muscled torso marked by years of combat. Scar tissue crisscrosses the skin, each mark a testament to survived violence. The muscle definition suggests functional strength rather than aesthetic development."
+    },
+    "items:weight": {
+      "weight": 30.0
     }
   }
 }

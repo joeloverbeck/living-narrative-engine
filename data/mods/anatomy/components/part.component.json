@@ -18,6 +18,10 @@
         "description": "Relative weight for being hit in a general attack (e.g., torso > finger)",
         "minimum": 0,
         "default": 1.0
+      },
+      "definitionId": {
+        "type": "string",
+        "description": "The entity definition ID this body part was instantiated from (e.g., 'anatomy:human_foot'). Populated at runtime during anatomy graph building."
       }
     },
     "required": ["subType"],

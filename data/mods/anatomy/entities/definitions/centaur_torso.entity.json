@@ -118,6 +118,9 @@
     },
     "descriptors:body_composition": {
       "composition": "lean"
+    },
+    "items:weight": {
+      "weight": 150
     }
   }
 }

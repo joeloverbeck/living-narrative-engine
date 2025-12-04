@@ -46,6 +46,9 @@
     },
     "descriptors:shape_general": {
       "shape": "oval"
+    },
+    "items:weight": {
+      "weight": 10
     }
   }
 }

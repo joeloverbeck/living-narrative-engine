@@ -28,6 +28,9 @@
     },
     "core:name": {
       "text": "hulking arm"
+    },
+    "items:weight": {
+      "weight": 4
     }
   }
 }

@@ -17,6 +17,9 @@
     },
     "core:name": {
       "text": "heart"
+    },
+    "items:weight": {
+      "weight": 0.3
     }
   }
 }

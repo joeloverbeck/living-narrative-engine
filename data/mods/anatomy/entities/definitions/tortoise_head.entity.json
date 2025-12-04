@@ -48,6 +48,9 @@
     },
     "descriptors:color_extended": {
       "color": "sickly-gray-green"
+    },
+    "items:weight": {
+      "weight": 0.8
     }
   }
 }

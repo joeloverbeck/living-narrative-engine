@@ -85,6 +85,9 @@
     },
     "descriptors:color_extended": {
       "color": "rust-red"
+    },
+    "items:weight": {
+      "weight": 0.08
     }
   }
 }

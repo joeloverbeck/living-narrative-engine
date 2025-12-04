@@ -34,6 +34,9 @@
     },
     "core:name": {
       "text": "soft, lissom arm"
+    },
+    "items:weight": {
+      "weight": 4
     }
   }
 }

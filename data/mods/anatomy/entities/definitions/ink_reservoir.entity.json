@@ -23,6 +23,9 @@
     },
     "descriptors:texture": {
       "texture": "slick"
+    },
+    "items:weight": {
+      "weight": 2
     }
   }
 }

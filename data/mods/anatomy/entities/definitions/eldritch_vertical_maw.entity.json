@@ -26,6 +26,9 @@
     },
     "descriptors:animation": {
       "animation": "slowly-gaping"
+    },
+    "items:weight": {
+      "weight": 15
     }
   }
 }

@@ -58,9 +58,9 @@ describe('Tortoise Hand Entity Validation', () => {
       expect(handEntity.components['anatomy:sockets']).toBeUndefined();
     });
 
-    it('should have exactly 8 components (no sockets)', () => {
+    it('should have exactly 9 components (no sockets, includes items:weight)', () => {
       const componentKeys = Object.keys(handEntity.components);
-      expect(componentKeys.length).toBe(8);
+      expect(componentKeys.length).toBe(9);
     });
   });
 
@@ -89,10 +89,11 @@ describe('Tortoise Hand Entity Validation', () => {
         'anatomy:part',
         'anatomy:part_health',
         'core:name',
-        'descriptors:texture',
+        'descriptors:color_extended',
         'descriptors:digit_count',
         'descriptors:projection',
-        'descriptors:color_extended',
+        'descriptors:texture',
+        'items:weight',
       ];
       const actualKeys = Object.keys(handEntity.components);
       expect(actualKeys.sort()).toEqual(expectedKeys.sort());

@@ -14,6 +14,10 @@
     },
     "core:name": {
       "text": "asshole"
-    }
+    },
+    "items:weight": {
+      "weight": 0.02
+    },
+    "anatomy:embedded": {}
   }
 }

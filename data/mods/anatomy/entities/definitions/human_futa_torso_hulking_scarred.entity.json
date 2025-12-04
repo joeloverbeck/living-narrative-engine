@@ -23,7 +23,6 @@
       "sockets": [
         {
           "id": "neck",
-          "orientation": "upper",
           "allowedTypes": [
             "head",
             "neck"
@@ -182,6 +181,9 @@
     },
     "descriptors:texture": {
       "texture": "scarred"
+    },
+    "items:weight": {
+      "weight": 35.0
     }
   }
 }

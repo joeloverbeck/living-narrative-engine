@@ -26,6 +26,9 @@
     },
     "descriptors:visual_capability": {
       "capability": "360-degree-vision"
+    },
+    "items:weight": {
+      "weight": 0.5
     }
   }
 }

@@ -178,6 +178,9 @@
     },
     "core:name": {
       "text": "torso"
+    },
+    "items:weight": {
+      "weight": 42.0
     }
   }
 }

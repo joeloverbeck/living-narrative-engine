@@ -108,6 +108,9 @@
     },
     "descriptors:texture": {
       "texture": "feathered"
+    },
+    "items:weight": {
+      "weight": 1.5
     }
   }
 }

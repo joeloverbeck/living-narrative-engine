@@ -21,6 +21,9 @@
     },
     "core:name": {
       "text": "testicle"
+    },
+    "items:weight": {
+      "weight": 0.025
     }
   }
 }

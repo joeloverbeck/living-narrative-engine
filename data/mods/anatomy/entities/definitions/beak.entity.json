@@ -26,6 +26,9 @@
     },
     "descriptors:shape_general": {
       "shape": "conical"
+    },
+    "items:weight": {
+      "weight": 5
     }
   }
 }

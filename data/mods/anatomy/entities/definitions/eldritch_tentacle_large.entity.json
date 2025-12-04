@@ -40,6 +40,9 @@
     },
     "descriptors:texture": {
       "texture": "suckered"
+    },
+    "items:weight": {
+      "weight": 20
     }
   }
 }

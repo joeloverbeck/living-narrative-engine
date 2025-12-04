@@ -17,6 +17,9 @@
     },
     "core:name": {
       "text": "chicken brain"
+    },
+    "items:weight": {
+      "weight": 0.004
     }
   }
 }

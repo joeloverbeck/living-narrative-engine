@@ -45,9 +45,9 @@ describe('Tortoise Eye Entity Validation', () => {
   });
 
   describe('Component structure', () => {
-    it('should have exactly 5 components', () => {
+    it('should have exactly 6 components (includes items:weight)', () => {
       const componentKeys = Object.keys(eyeEntity.components);
-      expect(componentKeys.length).toBe(5);
+      expect(componentKeys.length).toBe(6);
     });
 
     it('should have all required components', () => {

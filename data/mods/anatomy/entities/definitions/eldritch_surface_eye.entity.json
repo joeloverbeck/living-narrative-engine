@@ -26,6 +26,9 @@
     },
     "descriptors:luminosity": {
       "luminosity": "faint-glow"
+    },
+    "items:weight": {
+      "weight": 0.3
     }
   }
 }

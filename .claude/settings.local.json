@@ -638,7 +638,11 @@
       "Bash(wc:*)",
       "Bash(paste:*)",
       "Bash(sort:*)",
-      "Bash(do jq -r '.components[\"\"\"\"anatomy:part\"\"\"\"].subType // empty' $f)"
+      "Bash(do jq -r '.components[\"\"\"\"anatomy:part\"\"\"\"].subType // empty' $f)",
+      "Bash(do)",
+      "Bash(if jq empty \"$f\")",
+      "Bash(then echo \"✅ Valid JSON\")",
+      "Bash(else echo \"❌ Invalid JSON\")"
     ],
     "deny": [],
     "ask": []

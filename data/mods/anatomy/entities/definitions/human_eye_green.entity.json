@@ -20,6 +20,9 @@
     },
     "core:name": {
       "text": "eye"
+    },
+    "items:weight": {
+      "weight": 0.008
     }
   }
 }

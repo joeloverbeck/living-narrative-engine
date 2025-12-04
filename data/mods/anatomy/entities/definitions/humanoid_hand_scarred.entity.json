@@ -22,6 +22,9 @@
     },
     "descriptors:texture": {
       "texture": "scarred"
+    },
+    "items:weight": {
+      "weight": 0.4
     }
   }
 }

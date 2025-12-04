@@ -23,6 +23,9 @@
     },
     "descriptors:size_category": {
       "size": "large"
+    },
+    "items:weight": {
+      "weight": 0.015
     }
   }
 }

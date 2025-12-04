@@ -29,6 +29,9 @@
     },
     "descriptors:visual_capability": {
       "capability": "compound-multidirectional"
+    },
+    "items:weight": {
+      "weight": 1.5
     }
   }
 }

@@ -17,6 +17,9 @@
     },
     "core:name": {
       "text": "chicken heart"
+    },
+    "items:weight": {
+      "weight": 0.008
     }
   }
 }

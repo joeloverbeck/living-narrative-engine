@@ -17,6 +17,9 @@
     },
     "core:name": {
       "text": "chicken spine"
+    },
+    "items:weight": {
+      "weight": 0.05
     }
   }
 }

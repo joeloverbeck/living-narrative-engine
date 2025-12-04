@@ -20,6 +20,9 @@
     },
     "descriptors:pattern": {
       "pattern": "speckled"
+    },
+    "items:weight": {
+      "weight": 0.15
     }
   }
 }

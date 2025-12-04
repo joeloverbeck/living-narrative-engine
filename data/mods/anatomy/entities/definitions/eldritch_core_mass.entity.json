@@ -415,6 +415,9 @@
     },
     "descriptors:temperature": {
       "temperature": "unnaturally-warm"
+    },
+    "items:weight": {
+      "weight": 200
     }
   }
 }

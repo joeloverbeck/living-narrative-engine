@@ -23,6 +23,7 @@
       "dead.component.json",
       "dismembered.component.json",
       "dying.component.json",
+      "embedded.component.json",
       "fractured.component.json",
       "joint.component.json",
       "part.component.json",
@@ -294,6 +295,7 @@
     "events": [
       "anatomy_generated.event.json",
       "bleeding_started.event.json",
+      "body_part_spawned.event.json",
       "damage_applied.event.json",
       "dismembered.event.json",
       "entity_died.event.json",

@@ -26,6 +26,9 @@
     },
     "descriptors:animation": {
       "animation": "constantly-drooling"
+    },
+    "items:weight": {
+      "weight": 3
     }
   }
 }

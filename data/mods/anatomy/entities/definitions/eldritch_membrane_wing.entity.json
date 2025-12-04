@@ -29,6 +29,9 @@
     },
     "descriptors:structural_integrity": {
       "integrity": "insufficient-for-flight"
+    },
+    "items:weight": {
+      "weight": 8
     }
   }
 }

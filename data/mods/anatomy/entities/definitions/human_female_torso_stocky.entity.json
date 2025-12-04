@@ -23,7 +23,6 @@
       "sockets": [
         {
           "id": "neck",
-          "orientation": "upper",
           "allowedTypes": [
             "head",
             "neck"
@@ -160,6 +159,9 @@
     },
     "core:name": {
       "text": "torso"
+    },
+    "items:weight": {
+      "weight": 32.0
     }
   }
 }

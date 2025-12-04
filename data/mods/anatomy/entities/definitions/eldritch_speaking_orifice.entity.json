@@ -26,6 +26,9 @@
     },
     "descriptors:effect": {
       "effect": "maddening-sounds"
+    },
+    "items:weight": {
+      "weight": 1
     }
   }
 }

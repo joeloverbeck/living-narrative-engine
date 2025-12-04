@@ -45,6 +45,9 @@
     },
     "descriptors:color_extended": {
       "color": "dark-olive"
+    },
+    "items:weight": {
+      "weight": 15
     }
   }
 }

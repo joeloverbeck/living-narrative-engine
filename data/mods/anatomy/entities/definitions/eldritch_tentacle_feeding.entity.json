@@ -45,6 +45,9 @@
     },
     "descriptors:texture": {
       "texture": "smooth-muscular"
+    },
+    "items:weight": {
+      "weight": 12
     }
   }
 }

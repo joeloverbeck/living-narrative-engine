@@ -17,6 +17,9 @@
     },
     "core:name": {
       "text": "spine"
+    },
+    "items:weight": {
+      "weight": 1
     }
   }
 }

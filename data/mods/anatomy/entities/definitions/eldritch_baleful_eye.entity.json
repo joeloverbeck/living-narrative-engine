@@ -29,6 +29,9 @@
     },
     "descriptors:effect": {
       "effect": "madness-inducing"
+    },
+    "items:weight": {
+      "weight": 2
     }
   }
 }
