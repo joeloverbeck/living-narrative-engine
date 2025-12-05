@@ -1265,8 +1265,20 @@ export class ModTestHandlerFactory {
     const damagePropagationService = {
       propagateDamage: jest.fn().mockReturnValue([]),
     };
+    /**
+     * DeathCheckService mock
+     * Required methods (from src/anatomy/services/deathCheckService.js):
+     * - checkDeathConditions(entityId, attackerId) → DeathCheckResult
+     * - evaluateDeathConditions(entityId, attackerId) → DeathEvaluation
+     * - finalizeDeathFromEvaluation(entityId, evaluation) → void
+     * - processDyingTurn(entityId) → TurnResult
+     */
     const deathCheckService = {
-      checkDeathConditions: jest.fn(() => ({ isDead: false, isDying: false })),
+      checkDeathConditions: jest.fn(() => ({
+        isDead: false,
+        isDying: false,
+        deathInfo: null,
+      })),
       evaluateDeathConditions: jest.fn(() => ({
         isDead: false,
         isDying: false,
@@ -1275,6 +1287,10 @@ export class ModTestHandlerFactory {
         deathInfo: null,
       })),
       finalizeDeathFromEvaluation: jest.fn(),
+      processDyingTurn: jest.fn(() => ({
+        actionTaken: 'none',
+        stillDying: false,
+      })),
     };
     const damageAccumulator = {
       createSession: jest.fn((entityId) => ({

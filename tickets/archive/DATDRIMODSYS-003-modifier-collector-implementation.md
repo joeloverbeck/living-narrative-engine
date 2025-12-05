@@ -9,15 +9,22 @@ Implement the `#collectActionModifiers()` method in `ModifierCollectorService.js
 Files to modify:
 - `src/combat/services/ModifierCollectorService.js` (implement `#collectActionModifiers`)
 - `src/dependencyInjection/registrations/combatRegistrations.js` (add ModifierContextBuilder dependency)
+- `src/combat/services/ChanceCalculationService.js` (update call site to use new parameter names)
 
 ## Out of Scope
 
 - **DO NOT** modify `ModifierContextBuilder.js` (that's DATDRIMODSYS-002)
-- **DO NOT** modify `ChanceCalculationService.js` (that's DATDRIMODSYS-004)
 - **DO NOT** modify any schema files (that's DATDRIMODSYS-001)
 - **DO NOT** modify `MultiTargetActionFormatter.js` (that's DATDRIMODSYS-005)
 - **DO NOT** add integration tests (that's DATDRIMODSYS-007)
 - **DO NOT** modify any action JSON files
+
+## Assumptions Validated Against Codebase
+
+1. **ModifierContextBuilder exists** ✅ - Created in DATDRIMODSYS-002
+2. **ModifierContextBuilder NOT injected into ModifierCollectorService** ✅ - Needs to be added
+3. **Schema already updated** ✅ - `chanceModifier` has `tag`, `type`, `value`, `targetRole`, `stackId`
+4. **Current public API uses `targetId`** - Will be replaced with `primaryTargetId` (breaking change acceptable per user)
 
 ## Detailed Implementation
 
@@ -264,6 +271,26 @@ registrar.singletonFactory(tokens.ModifierCollectorService, (c) =>
 );
 ```
 
+### 3. Update `ChanceCalculationService.js` (call site only)
+
+Update the `collectModifiers` call to use the new parameter name:
+
+```javascript
+// In calculateForDisplay method, change:
+const modifierCollection = this.#modifierCollectorService.collectModifiers({
+  actorId,
+  targetId,  // OLD
+  actionConfig: chanceBased,
+});
+
+// To:
+const modifierCollection = this.#modifierCollectorService.collectModifiers({
+  actorId,
+  primaryTargetId: targetId,  // NEW - map targetId to primaryTargetId
+  actionConfig: chanceBased,
+});
+```
+
 ## Acceptance Criteria
 
 ### Tests That Must Pass
@@ -330,3 +357,55 @@ npx eslint src/combat/services/ModifierCollectorService.js src/dependencyInjecti
 - The `#evaluateCondition` method handles both `condition.logic` wrapper and direct JSON Logic objects
 - Future tickets may need to add condition_ref resolution via ConditionLoader
 - The `totalPercentage` calculation starts at 1 (identity) and percentage modifiers are additive
+
+---
+
+## Outcome
+
+**Status**: ✅ COMPLETED (2025-12-05)
+
+### Changes Made
+
+1. **`src/combat/services/ModifierCollectorService.js`**:
+   - Added `jsonLogic` import from `json-logic-js`
+   - Added `#modifierContextBuilder` private field
+   - Updated constructor to accept and validate `modifierContextBuilder` dependency
+   - Changed public API from `targetId` to `primaryTargetId`, `secondaryTargetId`, `tertiaryTargetId`
+   - Implemented `#collectActionModifiers()` with full JSON Logic condition evaluation
+   - Implemented `#evaluateCondition()` supporting inline JSON Logic and `condition.logic` wrapper
+   - Implemented `#buildModifierFromConfig()` supporting both new `value`+`type` format and legacy `modifier` format
+
+2. **`src/dependencyInjection/registrations/combatRegistrations.js`**:
+   - Added `modifierContextBuilder` injection to `ModifierCollectorService` factory
+
+3. **`src/combat/services/ChanceCalculationService.js`**:
+   - Updated call site to use `primaryTargetId: targetId` parameter mapping
+
+4. **`tests/unit/combat/services/ModifierCollectorService.test.js`**:
+   - Comprehensive rewrite with 40 test cases covering:
+     - Constructor validation (10 tests)
+     - Empty modifiers handling (4 tests)
+     - Logging behavior (3 tests)
+     - JSON Logic condition evaluation (6 tests)
+     - Modifier format handling (5 tests)
+     - Error handling (1 test)
+     - Context builder integration (1 test)
+     - Stacking rules (2 tests)
+     - Calculate totals (4 tests)
+     - Optional parameters (1 test)
+     - Invariants (3 tests)
+
+5. **`tests/unit/combat/services/ChanceCalculationService.test.js`**:
+   - Updated test expectations from `targetId` to `primaryTargetId`
+
+### Test Results
+
+- All 239 combat service tests pass
+- ModifierCollectorService: 40 tests passing
+- ChanceCalculationService: 45 tests passing
+- No ESLint errors in modified files
+
+### Breaking Changes
+
+- **API Change**: `collectModifiers({ targetId })` → `collectModifiers({ primaryTargetId })`
+- User confirmed this is acceptable as modifier functionality was never used (stub returned empty array)

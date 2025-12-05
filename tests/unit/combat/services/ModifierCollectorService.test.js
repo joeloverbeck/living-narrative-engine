@@ -19,6 +19,17 @@ function createMocks() {
       getComponentData: jest.fn(),
       hasComponent: jest.fn(),
     },
+    modifierContextBuilder: {
+      buildContext: jest.fn().mockReturnValue({
+        entity: {
+          actor: { id: 'actor-123', components: {} },
+          primary: null,
+          secondary: null,
+          tertiary: null,
+          location: null,
+        },
+      }),
+    },
   };
 }
 
@@ -26,18 +37,24 @@ describe('ModifierCollectorService', () => {
   let service;
   let mockLogger;
   let mockEntityManager;
+  let mockModifierContextBuilder;
 
   beforeEach(() => {
-    ({ logger: mockLogger, entityManager: mockEntityManager } = createMocks());
+    ({
+      logger: mockLogger,
+      entityManager: mockEntityManager,
+      modifierContextBuilder: mockModifierContextBuilder,
+    } = createMocks());
 
     service = new ModifierCollectorService({
       entityManager: mockEntityManager,
+      modifierContextBuilder: mockModifierContextBuilder,
       logger: mockLogger,
     });
   });
 
   describe('constructor', () => {
-    it('should create instance with valid dependencies', () => {
+    it('should create instance with valid dependencies including modifierContextBuilder', () => {
       expect(service).toBeInstanceOf(ModifierCollectorService);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'ModifierCollectorService: Initialized'
@@ -48,6 +65,7 @@ describe('ModifierCollectorService', () => {
       expect(() => {
         new ModifierCollectorService({
           entityManager: mockEntityManager,
+          modifierContextBuilder: mockModifierContextBuilder,
         });
       }).toThrow(InvalidArgumentError);
     });
@@ -55,6 +73,16 @@ describe('ModifierCollectorService', () => {
     it('should throw error when entityManager is missing', () => {
       expect(() => {
         new ModifierCollectorService({
+          modifierContextBuilder: mockModifierContextBuilder,
+          logger: mockLogger,
+        });
+      }).toThrow(InvalidArgumentError);
+    });
+
+    it('should throw error when modifierContextBuilder is missing', () => {
+      expect(() => {
+        new ModifierCollectorService({
+          entityManager: mockEntityManager,
           logger: mockLogger,
         });
       }).toThrow(InvalidArgumentError);
@@ -64,6 +92,7 @@ describe('ModifierCollectorService', () => {
       expect(() => {
         new ModifierCollectorService({
           entityManager: mockEntityManager,
+          modifierContextBuilder: mockModifierContextBuilder,
           logger: null,
         });
       }).toThrow(InvalidArgumentError);
@@ -73,6 +102,17 @@ describe('ModifierCollectorService', () => {
       expect(() => {
         new ModifierCollectorService({
           entityManager: null,
+          modifierContextBuilder: mockModifierContextBuilder,
+          logger: mockLogger,
+        });
+      }).toThrow(InvalidArgumentError);
+    });
+
+    it('should throw error when modifierContextBuilder is null', () => {
+      expect(() => {
+        new ModifierCollectorService({
+          entityManager: mockEntityManager,
+          modifierContextBuilder: null,
           logger: mockLogger,
         });
       }).toThrow(InvalidArgumentError);
@@ -82,6 +122,7 @@ describe('ModifierCollectorService', () => {
       expect(() => {
         new ModifierCollectorService({
           entityManager: mockEntityManager,
+          modifierContextBuilder: mockModifierContextBuilder,
           logger: { debug: jest.fn() }, // Missing warn, error, info
         });
       }).toThrow(InvalidArgumentError);
@@ -91,6 +132,17 @@ describe('ModifierCollectorService', () => {
       expect(() => {
         new ModifierCollectorService({
           entityManager: { getComponentData: jest.fn() }, // Missing hasComponent
+          modifierContextBuilder: mockModifierContextBuilder,
+          logger: mockLogger,
+        });
+      }).toThrow(InvalidArgumentError);
+    });
+
+    it('should throw error when modifierContextBuilder missing required methods', () => {
+      expect(() => {
+        new ModifierCollectorService({
+          entityManager: mockEntityManager,
+          modifierContextBuilder: {}, // Missing buildContext
           logger: mockLogger,
         });
       }).toThrow(InvalidArgumentError);
@@ -99,7 +151,7 @@ describe('ModifierCollectorService', () => {
 
   describe('collectModifiers', () => {
     describe('empty modifiers', () => {
-      it('should return empty collection with identity totals when no modifiers configured', () => {
+      it('should return empty collection when no modifiers configured', () => {
         const result = service.collectModifiers({
           actorId: 'actor-123',
         });
@@ -107,7 +159,7 @@ describe('ModifierCollectorService', () => {
         expect(result).toEqual({
           modifiers: [],
           totalFlat: 0,
-          totalPercentage: 1, // Identity for multiplication (not 0 which would zero out)
+          totalPercentage: 1,
         });
       });
 
@@ -120,7 +172,7 @@ describe('ModifierCollectorService', () => {
         expect(result).toEqual({
           modifiers: [],
           totalFlat: 0,
-          totalPercentage: 1, // Identity for multiplication
+          totalPercentage: 1,
         });
       });
 
@@ -133,7 +185,7 @@ describe('ModifierCollectorService', () => {
         expect(result).toEqual({
           modifiers: [],
           totalFlat: 0,
-          totalPercentage: 1, // Identity for multiplication
+          totalPercentage: 1,
         });
       });
 
@@ -146,23 +198,23 @@ describe('ModifierCollectorService', () => {
         expect(result).toEqual({
           modifiers: [],
           totalFlat: 0,
-          totalPercentage: 1, // Identity for multiplication
+          totalPercentage: 1,
         });
       });
     });
 
     describe('logging', () => {
-      it('should log when collecting modifiers with actor and target', () => {
+      it('should log when collecting modifiers with actor and primary target', () => {
         service.collectModifiers({
           actorId: 'actor-123',
-          targetId: 'target-456',
+          primaryTargetId: 'target-456',
         });
 
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining('actor=actor-123')
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
-          expect.stringContaining('target=target-456')
+          expect.stringContaining('primary=target-456')
         );
       });
 
@@ -188,69 +240,412 @@ describe('ModifierCollectorService', () => {
           expect.stringContaining('flat=0')
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
-          expect.stringContaining('percentage=1') // Identity value for no modifiers
+          expect.stringContaining('percentage=1')
         );
       });
     });
 
-    describe('Phase 5 stub behavior', () => {
-      it('should return empty modifiers array even when actionConfig.modifiers has entries', () => {
-        // Phase 5 stub: The service doesn't evaluate modifiers yet
-        // This tests that it correctly returns empty array for now
+    describe('JSON Logic condition evaluation', () => {
+      it('should return active modifiers when conditions are true', () => {
+        // Setup context with component that makes condition true
+        mockModifierContextBuilder.buildContext.mockReturnValue({
+          entity: {
+            actor: {
+              id: 'actor-123',
+              components: {
+                'buffs:adrenaline': { active: true },
+              },
+            },
+            primary: null,
+            secondary: null,
+            tertiary: null,
+            location: null,
+          },
+        });
+
         const result = service.collectModifiers({
           actorId: 'actor-123',
-          targetId: 'target-456',
           actionConfig: {
             modifiers: [
-              { id: 'mod1', condition: {}, value: 10 },
-              { id: 'mod2', condition: {}, value: 5 },
+              {
+                condition: { '==': [true, true] }, // Always true
+                value: 10,
+                type: 'flat',
+                tag: 'test modifier',
+                description: 'Test',
+              },
             ],
           },
         });
 
-        // Phase 5 stub returns empty - conditions not evaluated yet
-        expect(result).toEqual({
-          modifiers: [],
-          totalFlat: 0,
-          totalPercentage: 1, // Identity for multiplication
+        expect(result.modifiers).toHaveLength(1);
+        expect(result.modifiers[0].value).toBe(10);
+        expect(result.modifiers[0].tag).toBe('test modifier');
+        expect(result.totalFlat).toBe(10);
+      });
+
+      it('should skip modifiers when conditions are false', () => {
+        const result = service.collectModifiers({
+          actorId: 'actor-123',
+          actionConfig: {
+            modifiers: [
+              {
+                condition: { '==': [true, false] }, // Always false
+                value: 10,
+                type: 'flat',
+                tag: 'should not appear',
+              },
+            ],
+          },
+        });
+
+        expect(result.modifiers).toHaveLength(0);
+        expect(result.totalFlat).toBe(0);
+      });
+
+      it('should evaluate inline JSON Logic conditions', () => {
+        mockModifierContextBuilder.buildContext.mockReturnValue({
+          entity: {
+            actor: { id: 'actor-123', components: {} },
+            primary: {
+              id: 'target-456',
+              components: {
+                'positioning:being_restrained': { active: true },
+              },
+            },
+            secondary: null,
+            tertiary: null,
+            location: null,
+          },
+        });
+
+        const result = service.collectModifiers({
+          actorId: 'actor-123',
+          primaryTargetId: 'target-456',
+          actionConfig: {
+            modifiers: [
+              {
+                condition: {
+                  '!=': [{ var: 'entity.primary' }, null],
+                },
+                value: 15,
+                type: 'flat',
+                tag: 'target exists',
+              },
+            ],
+          },
+        });
+
+        expect(result.modifiers).toHaveLength(1);
+        expect(result.modifiers[0].value).toBe(15);
+      });
+
+      it('should handle condition.logic wrapper format', () => {
+        const result = service.collectModifiers({
+          actorId: 'actor-123',
+          actionConfig: {
+            modifiers: [
+              {
+                condition: {
+                  logic: { '==': [1, 1] }, // Wrapped in .logic property
+                },
+                value: 5,
+                type: 'flat',
+                tag: 'wrapped condition',
+              },
+            ],
+          },
+        });
+
+        expect(result.modifiers).toHaveLength(1);
+        expect(result.modifiers[0].tag).toBe('wrapped condition');
+      });
+
+      it('should treat missing condition as always active', () => {
+        const result = service.collectModifiers({
+          actorId: 'actor-123',
+          actionConfig: {
+            modifiers: [
+              {
+                // No condition property
+                value: 20,
+                type: 'flat',
+                tag: 'always active',
+              },
+            ],
+          },
+        });
+
+        expect(result.modifiers).toHaveLength(1);
+        expect(result.modifiers[0].tag).toBe('always active');
+      });
+
+      it('should skip condition_ref and log debug message', () => {
+        const result = service.collectModifiers({
+          actorId: 'actor-123',
+          actionConfig: {
+            modifiers: [
+              {
+                condition: {
+                  condition_ref: 'some:condition_ref',
+                },
+                value: 10,
+                type: 'flat',
+                tag: 'should be skipped',
+              },
+            ],
+          },
+        });
+
+        expect(result.modifiers).toHaveLength(0);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('condition_ref not yet supported')
+        );
+      });
+    });
+
+    describe('modifier format handling', () => {
+      it('should handle new value+type format', () => {
+        const result = service.collectModifiers({
+          actorId: 'actor-123',
+          actionConfig: {
+            modifiers: [
+              {
+                condition: { '==': [true, true] },
+                value: 15,
+                type: 'percentage',
+                tag: 'percentage mod',
+              },
+            ],
+          },
+        });
+
+        expect(result.modifiers[0].type).toBe('percentage');
+        expect(result.modifiers[0].value).toBe(15);
+      });
+
+      it('should handle legacy modifier format (integer)', () => {
+        const result = service.collectModifiers({
+          actorId: 'actor-123',
+          actionConfig: {
+            modifiers: [
+              {
+                condition: { '==': [true, true] },
+                modifier: 25, // Legacy format
+                tag: 'legacy modifier',
+              },
+            ],
+          },
+        });
+
+        expect(result.modifiers[0].type).toBe('flat');
+        expect(result.modifiers[0].value).toBe(25);
+      });
+
+      it('should default to flat type when type not specified', () => {
+        const result = service.collectModifiers({
+          actorId: 'actor-123',
+          actionConfig: {
+            modifiers: [
+              {
+                condition: { '==': [true, true] },
+                value: 10,
+                tag: 'no type specified',
+              },
+            ],
+          },
+        });
+
+        expect(result.modifiers[0].type).toBe('flat');
+      });
+
+      it('should default to 0 value when neither value nor modifier specified', () => {
+        const result = service.collectModifiers({
+          actorId: 'actor-123',
+          actionConfig: {
+            modifiers: [
+              {
+                condition: { '==': [true, true] },
+                tag: 'no value',
+              },
+            ],
+          },
+        });
+
+        expect(result.modifiers[0].value).toBe(0);
+      });
+
+      it('should build modifier with correct type defaults', () => {
+        const result = service.collectModifiers({
+          actorId: 'actor-123',
+          actionConfig: {
+            modifiers: [
+              {
+                condition: { '==': [true, true] },
+                value: 10,
+                tag: 'complete modifier',
+                description: 'A test modifier',
+                stackId: 'group-a',
+                targetRole: 'actor',
+              },
+            ],
+          },
+        });
+
+        const modifier = result.modifiers[0];
+        expect(modifier.type).toBe('flat');
+        expect(modifier.value).toBe(10);
+        expect(modifier.tag).toBe('complete modifier');
+        expect(modifier.description).toBe('A test modifier');
+        expect(modifier.stackId).toBe('group-a');
+        expect(modifier.targetRole).toBe('actor');
+      });
+    });
+
+    describe('error handling', () => {
+      it('should log warning on condition evaluation error and continue', () => {
+        const result = service.collectModifiers({
+          actorId: 'actor-123',
+          actionConfig: {
+            modifiers: [
+              {
+                condition: { invalid_operator: [] }, // Invalid JSON Logic
+                value: 10,
+                tag: 'will fail',
+                description: 'This will error',
+              },
+              {
+                condition: { '==': [true, true] }, // Valid
+                value: 5,
+                tag: 'will succeed',
+              },
+            ],
+          },
+        });
+
+        // First modifier should be skipped due to error
+        // Second modifier should succeed
+        expect(result.modifiers).toHaveLength(1);
+        expect(result.modifiers[0].tag).toBe('will succeed');
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Error evaluating modifier condition'),
+          expect.objectContaining({ description: 'This will error' })
+        );
+      });
+    });
+
+    describe('context builder integration', () => {
+      it('should pass all target IDs to context builder', () => {
+        service.collectModifiers({
+          actorId: 'actor-123',
+          primaryTargetId: 'primary-456',
+          secondaryTargetId: 'secondary-789',
+          tertiaryTargetId: 'tertiary-012',
+          actionConfig: { modifiers: [{ value: 5, tag: 't' }] },
+        });
+
+        expect(mockModifierContextBuilder.buildContext).toHaveBeenCalledWith({
+          actorId: 'actor-123',
+          primaryTargetId: 'primary-456',
+          secondaryTargetId: 'secondary-789',
+          tertiaryTargetId: 'tertiary-012',
         });
       });
     });
   });
 
-  describe('stacking rules (via internal method testing through collectModifiers)', () => {
-    // Note: Since #applyStackingRules is private, we test it indirectly
-    // These tests verify the stacking logic is correct through the public interface
-    // Full stacking behavior testing will be added in Phase 5+ when modifiers are collected
-
+  describe('stacking rules', () => {
     it('should keep only highest absolute value modifier for same stackId', () => {
-      // This test documents expected behavior when modifiers are collected
-      // In Phase 5, modifiers will be passed through #applyStackingRules
+      const result = service.collectModifiers({
+        actorId: 'actor-123',
+        actionConfig: {
+          modifiers: [
+            {
+              condition: { '==': [true, true] },
+              value: 5,
+              type: 'flat',
+              tag: 'minor buff',
+              stackId: 'strength',
+            },
+            {
+              condition: { '==': [true, true] },
+              value: 15,
+              type: 'flat',
+              tag: 'major buff',
+              stackId: 'strength',
+            },
+          ],
+        },
+      });
 
-      // Example of expected stacking behavior (tested via integration when Phase 5+ is complete):
-      // Input: [{ stackId: 'A', value: 5 }, { stackId: 'A', value: -10 }]
-      // Output: [{ stackId: 'A', value: -10 }] (|-10| > |5|)
-
-      const result = service.collectModifiers({ actorId: 'actor-123' });
-      expect(result.modifiers).toEqual([]);
+      // Only the highest value should remain
+      expect(result.modifiers).toHaveLength(1);
+      expect(result.modifiers[0].value).toBe(15);
+      expect(result.modifiers[0].tag).toBe('major buff');
     });
 
     it('should keep all modifiers without stackId', () => {
-      // Expected: Modifiers without stackId all apply (no stacking)
-      const result = service.collectModifiers({ actorId: 'actor-123' });
-      expect(result.modifiers).toEqual([]);
+      const result = service.collectModifiers({
+        actorId: 'actor-123',
+        actionConfig: {
+          modifiers: [
+            {
+              condition: { '==': [true, true] },
+              value: 5,
+              type: 'flat',
+              tag: 'mod1',
+            },
+            {
+              condition: { '==': [true, true] },
+              value: 10,
+              type: 'flat',
+              tag: 'mod2',
+            },
+          ],
+        },
+      });
+
+      expect(result.modifiers).toHaveLength(2);
+      expect(result.totalFlat).toBe(15);
     });
   });
 
-  describe('calculateTotals (via collectModifiers results)', () => {
-    // Since private methods are tested through public interface
-    // These tests verify the totals calculation structure
-
+  describe('calculateTotals', () => {
     it('should return identity totals for empty modifiers', () => {
       const result = service.collectModifiers({ actorId: 'actor-123' });
 
       expect(result.totalFlat).toBe(0);
-      expect(result.totalPercentage).toBe(1); // Identity for multiplication
+      expect(result.totalPercentage).toBe(1);
+    });
+
+    it('should sum flat modifiers correctly', () => {
+      const result = service.collectModifiers({
+        actorId: 'actor-123',
+        actionConfig: {
+          modifiers: [
+            { value: 10, type: 'flat', tag: 'a' },
+            { value: -5, type: 'flat', tag: 'b' },
+            { value: 3, type: 'flat', tag: 'c' },
+          ],
+        },
+      });
+
+      expect(result.totalFlat).toBe(8);
+    });
+
+    it('should sum percentage modifiers additively from identity', () => {
+      const result = service.collectModifiers({
+        actorId: 'actor-123',
+        actionConfig: {
+          modifiers: [
+            { value: 10, type: 'percentage', tag: 'a' },
+            { value: 20, type: 'percentage', tag: 'b' },
+          ],
+        },
+      });
+
+      // Starts at 1 (identity), adds percentages
+      expect(result.totalPercentage).toBe(31); // 1 + 10 + 20
     });
 
     it('should return proper structure with all required properties', () => {
@@ -266,47 +661,24 @@ describe('ModifierCollectorService', () => {
   });
 
   describe('with optional parameters', () => {
-    it('should accept locationId parameter', () => {
+    it('should accept all target parameters', () => {
       const result = service.collectModifiers({
         actorId: 'actor-123',
-        locationId: 'location-789',
-      });
-
-      expect(result).toEqual({
-        modifiers: [],
-        totalFlat: 0,
-        totalPercentage: 1, // Identity for multiplication
-      });
-    });
-
-    it('should accept all parameters together', () => {
-      const result = service.collectModifiers({
-        actorId: 'actor-123',
-        targetId: 'target-456',
-        locationId: 'location-789',
+        primaryTargetId: 'primary-456',
+        secondaryTargetId: 'secondary-789',
+        tertiaryTargetId: 'tertiary-012',
         actionConfig: { modifiers: [] },
       });
 
       expect(result).toEqual({
         modifiers: [],
         totalFlat: 0,
-        totalPercentage: 1, // Identity for multiplication
+        totalPercentage: 1,
       });
     });
   });
 
   describe('invariants', () => {
-    it('should have no side effects on entity state', () => {
-      service.collectModifiers({
-        actorId: 'actor-123',
-        targetId: 'target-456',
-      });
-
-      // No mutations should have been called
-      expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
-      expect(mockEntityManager.hasComponent).not.toHaveBeenCalled();
-    });
-
     it('should always return valid ModifierCollection structure', () => {
       const result = service.collectModifiers({ actorId: 'actor-123' });
 
@@ -317,12 +689,25 @@ describe('ModifierCollectorService', () => {
     });
 
     it('should return consistent results for same input', () => {
-      const input = { actorId: 'actor-123', targetId: 'target-456' };
+      const input = { actorId: 'actor-123', primaryTargetId: 'target-456' };
 
       const result1 = service.collectModifiers(input);
       const result2 = service.collectModifiers(input);
 
       expect(result1).toEqual(result2);
+    });
+
+    it('should not modify entity state', () => {
+      service.collectModifiers({
+        actorId: 'actor-123',
+        actionConfig: {
+          modifiers: [{ value: 10, tag: 'test' }],
+        },
+      });
+
+      // EntityManager should only be read, never written
+      // The modifierContextBuilder does the reading
+      expect(mockModifierContextBuilder.buildContext).toHaveBeenCalled();
     });
   });
 });

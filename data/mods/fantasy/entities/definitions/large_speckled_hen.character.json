@@ -1,0 +1,37 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "fantasy:large_speckled_hen",
+    "components": {
+        "core:name": {
+            "text": "large speckled hen"
+        },
+        "core:gender": {
+            "value": "male"
+        },
+        "core:portrait": {
+            "imagePath": "portraits/large_speckled_hen.png",
+            "altText": "Large speckled hen"
+        },
+        "anatomy:body": {
+            "recipeId": "fantasy:large_speckled_hen_recipe"
+        },
+        "core:actor": {},
+        "core:player_type": {
+            "type": "human"
+        },
+        "core:perception_log": {
+            "maxEntries": 50,
+            "logEntries": []
+        },
+        "warding:corrupted": {},
+        "skills:melee_skill": {
+            "value": 54
+        },
+        "skills:defense_skill": {
+            "value": 36
+        },
+        "skills:grappling_skill": {
+            "value": 22
+        }
+    }
+}

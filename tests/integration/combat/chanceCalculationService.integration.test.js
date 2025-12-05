@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import ChanceCalculationService from '../../../src/combat/services/ChanceCalculationService.js';
 import SkillResolverService from '../../../src/combat/services/SkillResolverService.js';
 import ModifierCollectorService from '../../../src/combat/services/ModifierCollectorService.js';
+import ModifierContextBuilder from '../../../src/combat/services/ModifierContextBuilder.js';
 import ProbabilityCalculatorService from '../../../src/combat/services/ProbabilityCalculatorService.js';
 import OutcomeDeterminerService from '../../../src/combat/services/OutcomeDeterminerService.js';
 
@@ -37,6 +38,15 @@ function createMockEntityManager(entityComponents = {}) {
     }),
     getComponentData: jest.fn((entityId, componentId) => {
       return entityComponents[entityId]?.[componentId] ?? null;
+    }),
+    getEntity: jest.fn((entityId) => {
+      if (!entityComponents[entityId]) {
+        return null;
+      }
+      return {
+        id: entityId,
+        components: entityComponents[entityId],
+      };
     }),
     getActiveEntitiesWithComponent: jest.fn(() => []),
   };
@@ -96,8 +106,14 @@ describe('ChanceCalculationService Integration', () => {
         logger,
       });
 
+      const modifierContextBuilder = new ModifierContextBuilder({
+        entityManager,
+        logger,
+      });
+
       const modifierCollectorService = new ModifierCollectorService({
         entityManager,
+        modifierContextBuilder,
         logger,
       });
 
@@ -179,8 +195,14 @@ describe('ChanceCalculationService Integration', () => {
           logger,
         });
 
+        const modifierContextBuilder = new ModifierContextBuilder({
+          entityManager,
+          logger,
+        });
+
         const modifierCollectorService = new ModifierCollectorService({
           entityManager,
+          modifierContextBuilder,
           logger,
         });
 
@@ -269,8 +291,14 @@ describe('ChanceCalculationService Integration', () => {
           logger,
         });
 
+        const modifierContextBuilder = new ModifierContextBuilder({
+          entityManager,
+          logger,
+        });
+
         const modifierCollectorService = new ModifierCollectorService({
           entityManager,
+          modifierContextBuilder,
           logger,
         });
 

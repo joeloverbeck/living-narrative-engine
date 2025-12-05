@@ -13,6 +13,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  * @typedef {object} DisplayResult
  * @property {number} chance - Calculated probability (0-100)
  * @property {string} displayText - Formatted for template (e.g., "55%")
+ * @property {string[]} activeTags - Tags from active modifiers for display
  * @property {object} breakdown - Detailed calculation breakdown
  * @property {number} breakdown.actorSkill - Actor's skill value used
  * @property {number} breakdown.targetSkill - Target's skill value used
@@ -29,6 +30,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  * @property {number} threshold - Success threshold (finalChance)
  * @property {number} margin - Roll - threshold (negative = success)
  * @property {Array} modifiers - Applied modifiers
+ * @property {string[]} activeTags - Tags from active modifiers for display
  * @property {boolean} isCritical - Whether outcome was critical
  */
 
@@ -113,11 +115,16 @@ class ChanceCalculationService {
    *
    * @param {object} params
    * @param {string} params.actorId - Actor entity ID
-   * @param {string} [params.targetId] - Target entity ID (for opposed checks)
+   * @param {string} [params.targetId] - Target entity ID (for opposed checks, legacy alias for primaryTargetId)
+   * @param {string} [params.primaryTargetId] - Primary target entity ID (preferred over targetId)
+   * @param {string} [params.secondaryTargetId] - Secondary target entity ID
+   * @param {string} [params.tertiaryTargetId] - Tertiary target entity ID
    * @param {object} params.actionDef - Action definition with chanceBased config
    * @returns {DisplayResult}
    */
-  calculateForDisplay({ actorId, targetId, actionDef }) {
+  calculateForDisplay({ actorId, targetId, primaryTargetId, secondaryTargetId, tertiaryTargetId, actionDef }) {
+    // Support legacy targetId parameter (backward compatibility)
+    const resolvedPrimaryTargetId = primaryTargetId ?? targetId;
     this.#logger.debug(
       `ChanceCalculationService: Calculating display chance for ${actionDef?.id ?? 'unknown'}`
     );
@@ -127,6 +134,7 @@ class ChanceCalculationService {
       return {
         chance: 100,
         displayText: '',
+        activeTags: [],
         breakdown: { reason: 'Action is not chance-based' },
       };
     }
@@ -142,20 +150,22 @@ class ChanceCalculationService {
     if (
       chanceBased.contestType === 'opposed' &&
       chanceBased.targetSkill &&
-      targetId
+      resolvedPrimaryTargetId
     ) {
       const targetSkill = this.#skillResolverService.getSkillValue(
-        targetId,
+        resolvedPrimaryTargetId,
         chanceBased.targetSkill.component,
         chanceBased.targetSkill.default ?? 0
       );
       targetSkillValue = targetSkill.baseValue;
     }
 
-    // 2. Collect modifiers
+    // 2. Collect modifiers (now with all target roles)
     const modifierCollection = this.#modifierCollectorService.collectModifiers({
       actorId,
-      targetId,
+      primaryTargetId: resolvedPrimaryTargetId,
+      secondaryTargetId,
+      tertiaryTargetId,
       actionConfig: chanceBased,
     });
 
@@ -171,9 +181,13 @@ class ChanceCalculationService {
 
     const roundedChance = Math.round(calculation.finalChance);
 
+    // Extract active tags from modifiers
+    const activeTags = this.#extractActiveTags(modifierCollection.modifiers);
+
     return {
       chance: roundedChance,
       displayText: `${roundedChance}%`,
+      activeTags,
       breakdown: {
         actorSkill: actorSkill.baseValue,
         targetSkill: targetSkillValue,
@@ -190,12 +204,15 @@ class ChanceCalculationService {
    *
    * @param {object} params
    * @param {string} params.actorId - Actor entity ID
-   * @param {string} [params.targetId] - Target entity ID (for opposed checks)
+   * @param {string} [params.targetId] - Target entity ID (for opposed checks, legacy alias for primaryTargetId)
+   * @param {string} [params.primaryTargetId] - Primary target entity ID (preferred over targetId)
+   * @param {string} [params.secondaryTargetId] - Secondary target entity ID
+   * @param {string} [params.tertiaryTargetId] - Tertiary target entity ID
    * @param {object} params.actionDef - Action definition with chanceBased config
    * @param {number} [params.forcedRoll] - For testing determinism (1-100)
    * @returns {OutcomeResult}
    */
-  resolveOutcome({ actorId, targetId, actionDef, forcedRoll }) {
+  resolveOutcome({ actorId, targetId, primaryTargetId, secondaryTargetId, tertiaryTargetId, actionDef, forcedRoll }) {
     this.#logger.debug(
       `ChanceCalculationService: Resolving outcome for ${actionDef?.id ?? 'unknown'}`
     );
@@ -209,6 +226,7 @@ class ChanceCalculationService {
         threshold: 100,
         margin: -100,
         modifiers: [],
+        activeTags: [],
         isCritical: false,
       };
     }
@@ -217,6 +235,9 @@ class ChanceCalculationService {
     const displayResult = this.calculateForDisplay({
       actorId,
       targetId,
+      primaryTargetId,
+      secondaryTargetId,
+      tertiaryTargetId,
       actionDef,
     });
 
@@ -238,8 +259,26 @@ class ChanceCalculationService {
       threshold: displayResult.chance,
       margin: outcome.margin,
       modifiers: displayResult.breakdown.modifiers ?? [],
+      activeTags: displayResult.activeTags,
       isCritical: outcome.isCritical,
     };
+  }
+
+  /**
+   * Extracts active tags from modifiers for display
+   *
+   * @private
+   * @param {Array<object>} modifiers - Active modifiers
+   * @returns {string[]} - Array of tag strings
+   */
+  #extractActiveTags(modifiers) {
+    if (!modifiers || modifiers.length === 0) {
+      return [];
+    }
+
+    return modifiers
+      .filter((mod) => mod.tag && typeof mod.tag === 'string' && mod.tag.trim().length > 0)
+      .map((mod) => mod.tag);
   }
 }
 

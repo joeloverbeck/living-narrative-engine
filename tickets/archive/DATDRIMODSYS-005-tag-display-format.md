@@ -1,5 +1,7 @@
 # DATDRIMODSYS-005: Add Modifier Tag Display to Action Templates
 
+**Status**: ✅ COMPLETED
+
 ## Summary
 
 Extend `MultiTargetActionFormatter.js` to render active modifier tags in action templates. When modifiers are active, their tags should appear after the chance percentage (e.g., `restrain target (45% chance) [target restrained] [low light]`).
@@ -21,7 +23,11 @@ Files to modify:
 
 ### 1. Update Chance Calculation Block in `#formatCombinations`
 
-In the section that handles `{chance}` placeholder replacement (around line 160-190), extend to also inject tags:
+In the section that handles `{chance}` placeholder replacement (lines 175-216 within `#formatCombinations`), extend to also inject tags.
+
+**NOTE**: The current implementation only passes `targetId` to `calculateForDisplay`. We need to pass all target role IDs (`primaryTargetId`, `secondaryTargetId`, `tertiaryTargetId`) so that `ModifierCollectorService` can evaluate modifiers that depend on any target role. The existing `calculateForDisplay` method already supports these parameters (implemented in DATDRIMODSYS-004).
+
+Updated code:
 
 ```javascript
 // Calculate chance per-combination for chance-based actions
@@ -254,3 +260,40 @@ swing at target (60% chance) [target prone] [low light] [flanking]
 - Tag order follows the order modifiers are evaluated (may be significant for display)
 - This implementation appends tags at the end; future iterations may allow custom placement
 - Consider CSS styling implications for the square bracket format
+
+---
+
+## Outcome
+
+**Completed**: 2025-12-05
+
+### Changes Made vs Originally Planned
+
+#### As Planned
+- ✅ Added `#formatModifierTags(tags)` helper method to format tags with brackets
+- ✅ Added `#appendTagsToTemplate(template, tagsString)` helper method
+- ✅ Updated `calculateForDisplay` call to pass all target role IDs (`primaryTargetId`, `secondaryTargetId`, `tertiaryTargetId`)
+- ✅ Added error resilience with try/catch block and warning logging
+- ✅ Created comprehensive test file `MultiTargetActionFormatter.tags.test.js` with 12 test cases
+
+#### Deviations from Plan
+- **Line numbers updated**: Ticket originally referenced approximate line numbers; corrected to actual ~175-216
+- **Parameter naming**: Changed from `targetId` to `primaryTargetId` for consistency with ChanceCalculationService API (this required updating 3 existing test expectations in `MultiTargetActionFormatter.fixedDifficulty.test.js`)
+
+### Test Results
+- **New tests**: 12 tests in `MultiTargetActionFormatter.tags.test.js` - all pass
+- **Existing formatter tests**: 111 tests - all pass
+- **Total coverage areas**:
+  - Single/multiple tag formatting
+  - Empty/whitespace tag filtering
+  - Null/undefined activeTags handling
+  - Tag order preservation
+  - Whitespace trimming
+  - Error resilience (exception handling)
+  - Parameter passing verification
+  - Templates without chance placeholder (no tags appended)
+
+### Files Modified
+1. `src/actions/formatters/MultiTargetActionFormatter.js` - Added tag formatting logic
+2. `tests/unit/actions/formatters/MultiTargetActionFormatter.fixedDifficulty.test.js` - Updated test expectations for new parameter names
+3. `tests/unit/actions/formatters/MultiTargetActionFormatter.tags.test.js` - NEW comprehensive test file

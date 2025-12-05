@@ -54,6 +54,7 @@ export function registerCombatServices(container) {
   registrar.singletonFactory(tokens.ModifierCollectorService, (c) =>
     new ModifierCollectorService({
       entityManager: c.resolve(tokens.IEntityManager),
+      modifierContextBuilder: c.resolve(tokens.ModifierContextBuilder),
       logger: c.resolve(tokens.ILogger),
     })
   );
