@@ -232,6 +232,7 @@ describe('ChanceCalculationService', () => {
         expect(result).toEqual({
           chance: 100,
           displayText: '',
+          activeTags: [],
           breakdown: { reason: 'Action is not chance-based' },
         });
         expect(mocks.skillResolverService.getSkillValue).not.toHaveBeenCalled();
@@ -248,6 +249,7 @@ describe('ChanceCalculationService', () => {
         expect(result).toEqual({
           chance: 100,
           displayText: '',
+          activeTags: [],
           breakdown: { reason: 'Action is not chance-based' },
         });
       });
@@ -261,6 +263,7 @@ describe('ChanceCalculationService', () => {
         expect(result).toEqual({
           chance: 100,
           displayText: '',
+          activeTags: [],
           breakdown: { reason: 'Action is not chance-based' },
         });
       });
@@ -282,7 +285,7 @@ describe('ChanceCalculationService', () => {
         );
         expect(mocks.modifierCollectorService.collectModifiers).toHaveBeenCalledWith({
           actorId: 'actor-123',
-          targetId: undefined,
+          primaryTargetId: undefined,
           actionConfig: actionDef.chanceBased,
         });
         expect(mocks.probabilityCalculatorService.calculate).toHaveBeenCalledWith({
@@ -371,7 +374,7 @@ describe('ChanceCalculationService', () => {
           .mockReturnValueOnce({ baseValue: 50, hasComponent: true }) // actor skill
           .mockReturnValueOnce({ baseValue: 30, hasComponent: true }); // target skill
 
-        const result = service.calculateForDisplay({
+        service.calculateForDisplay({
           actorId: 'actor-123',
           targetId: 'target-456',
           actionDef,
@@ -592,6 +595,7 @@ describe('ChanceCalculationService', () => {
           threshold: 100,
           margin: -100,
           modifiers: [],
+          activeTags: [],
           isCritical: false,
         });
         expect(mocks.outcomeDeterminerService.determine).not.toHaveBeenCalled();
@@ -629,6 +633,7 @@ describe('ChanceCalculationService', () => {
           threshold: 55,
           margin: -13,
           modifiers: [],
+          activeTags: [],
           isCritical: false,
         });
       });
@@ -687,7 +692,7 @@ describe('ChanceCalculationService', () => {
         });
 
         expect(mocks.modifierCollectorService.collectModifiers).toHaveBeenCalledWith(
-          expect.objectContaining({ targetId: 'target-456' })
+          expect.objectContaining({ primaryTargetId: 'target-456' })
         );
       });
     });
@@ -813,6 +818,304 @@ describe('ChanceCalculationService', () => {
           'ChanceCalculationService: Resolving outcome for test:melee_attack'
         );
       });
+    });
+  });
+
+  describe('multi-target parameter passing (DATDRIMODSYS-004)', () => {
+    it('should pass primaryTargetId to modifier collector', () => {
+      const actionDef = createChanceBasedActionDef();
+
+      service.calculateForDisplay({
+        actorId: 'actor-123',
+        primaryTargetId: 'primary-target-456',
+        actionDef,
+      });
+
+      expect(mocks.modifierCollectorService.collectModifiers).toHaveBeenCalledWith(
+        expect.objectContaining({
+          actorId: 'actor-123',
+          primaryTargetId: 'primary-target-456',
+        })
+      );
+    });
+
+    it('should pass secondaryTargetId to modifier collector', () => {
+      const actionDef = createChanceBasedActionDef();
+
+      service.calculateForDisplay({
+        actorId: 'actor-123',
+        secondaryTargetId: 'secondary-target-789',
+        actionDef,
+      });
+
+      expect(mocks.modifierCollectorService.collectModifiers).toHaveBeenCalledWith(
+        expect.objectContaining({
+          secondaryTargetId: 'secondary-target-789',
+        })
+      );
+    });
+
+    it('should pass tertiaryTargetId to modifier collector', () => {
+      const actionDef = createChanceBasedActionDef();
+
+      service.calculateForDisplay({
+        actorId: 'actor-123',
+        tertiaryTargetId: 'tertiary-target-012',
+        actionDef,
+      });
+
+      expect(mocks.modifierCollectorService.collectModifiers).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tertiaryTargetId: 'tertiary-target-012',
+        })
+      );
+    });
+
+    it('should pass all target IDs together to modifier collector', () => {
+      const actionDef = createChanceBasedActionDef();
+
+      service.calculateForDisplay({
+        actorId: 'actor-123',
+        primaryTargetId: 'primary-456',
+        secondaryTargetId: 'secondary-789',
+        tertiaryTargetId: 'tertiary-012',
+        actionDef,
+      });
+
+      expect(mocks.modifierCollectorService.collectModifiers).toHaveBeenCalledWith({
+        actorId: 'actor-123',
+        primaryTargetId: 'primary-456',
+        secondaryTargetId: 'secondary-789',
+        tertiaryTargetId: 'tertiary-012',
+        actionConfig: actionDef.chanceBased,
+      });
+    });
+
+    it('should support legacy targetId parameter (backward compatibility)', () => {
+      const actionDef = createChanceBasedActionDef({
+        contestType: 'opposed',
+        targetSkill: {
+          component: 'skills:defense_skill',
+          default: 0,
+        },
+      });
+
+      mocks.skillResolverService.getSkillValue
+        .mockReturnValueOnce({ baseValue: 50, hasComponent: true }) // actor skill
+        .mockReturnValueOnce({ baseValue: 30, hasComponent: true }); // target skill
+
+      service.calculateForDisplay({
+        actorId: 'actor-123',
+        targetId: 'legacy-target-456', // Using legacy targetId
+        actionDef,
+      });
+
+      // Should resolve to primaryTargetId internally
+      expect(mocks.modifierCollectorService.collectModifiers).toHaveBeenCalledWith(
+        expect.objectContaining({
+          primaryTargetId: 'legacy-target-456',
+        })
+      );
+      // Should also use for skill resolution
+      expect(mocks.skillResolverService.getSkillValue).toHaveBeenNthCalledWith(
+        2,
+        'legacy-target-456',
+        'skills:defense_skill',
+        0
+      );
+    });
+
+    it('should prefer primaryTargetId over targetId when both provided', () => {
+      const actionDef = createChanceBasedActionDef();
+
+      service.calculateForDisplay({
+        actorId: 'actor-123',
+        targetId: 'legacy-target',
+        primaryTargetId: 'new-primary-target',
+        actionDef,
+      });
+
+      expect(mocks.modifierCollectorService.collectModifiers).toHaveBeenCalledWith(
+        expect.objectContaining({
+          primaryTargetId: 'new-primary-target',
+        })
+      );
+    });
+
+    it('should pass multi-target IDs through resolveOutcome', () => {
+      const actionDef = createChanceBasedActionDef();
+
+      service.resolveOutcome({
+        actorId: 'actor-123',
+        primaryTargetId: 'primary-456',
+        secondaryTargetId: 'secondary-789',
+        tertiaryTargetId: 'tertiary-012',
+        actionDef,
+      });
+
+      expect(mocks.modifierCollectorService.collectModifiers).toHaveBeenCalledWith(
+        expect.objectContaining({
+          primaryTargetId: 'primary-456',
+          secondaryTargetId: 'secondary-789',
+          tertiaryTargetId: 'tertiary-012',
+        })
+      );
+    });
+  });
+
+  describe('activeTags extraction (DATDRIMODSYS-004)', () => {
+    it('should extract active tags from modifiers', () => {
+      mocks.modifierCollectorService.collectModifiers.mockReturnValue({
+        modifiers: [
+          { type: 'flat', value: 10, tag: 'Flanking' },
+          { type: 'flat', value: -5, tag: 'Injured' },
+        ],
+        totalFlat: 5,
+        totalPercentage: 1,
+      });
+
+      const result = service.calculateForDisplay({
+        actorId: 'actor-123',
+        actionDef: createChanceBasedActionDef(),
+      });
+
+      expect(result.activeTags).toEqual(['Flanking', 'Injured']);
+    });
+
+    it('should return empty activeTags when no modifiers have tags', () => {
+      mocks.modifierCollectorService.collectModifiers.mockReturnValue({
+        modifiers: [
+          { type: 'flat', value: 10 },
+          { type: 'flat', value: -5 },
+        ],
+        totalFlat: 5,
+        totalPercentage: 1,
+      });
+
+      const result = service.calculateForDisplay({
+        actorId: 'actor-123',
+        actionDef: createChanceBasedActionDef(),
+      });
+
+      expect(result.activeTags).toEqual([]);
+    });
+
+    it('should return empty activeTags when modifiers array is empty', () => {
+      mocks.modifierCollectorService.collectModifiers.mockReturnValue({
+        modifiers: [],
+        totalFlat: 0,
+        totalPercentage: 1,
+      });
+
+      const result = service.calculateForDisplay({
+        actorId: 'actor-123',
+        actionDef: createChanceBasedActionDef(),
+      });
+
+      expect(result.activeTags).toEqual([]);
+    });
+
+    it('should return empty activeTags when modifiers is undefined', () => {
+      mocks.modifierCollectorService.collectModifiers.mockReturnValue({
+        totalFlat: 0,
+        totalPercentage: 1,
+      });
+
+      const result = service.calculateForDisplay({
+        actorId: 'actor-123',
+        actionDef: createChanceBasedActionDef(),
+      });
+
+      expect(result.activeTags).toEqual([]);
+    });
+
+    it('should filter out modifiers with null tags', () => {
+      mocks.modifierCollectorService.collectModifiers.mockReturnValue({
+        modifiers: [
+          { type: 'flat', value: 10, tag: 'Flanking' },
+          { type: 'flat', value: -5, tag: null },
+          { type: 'flat', value: 5, tag: 'Blessed' },
+        ],
+        totalFlat: 10,
+        totalPercentage: 1,
+      });
+
+      const result = service.calculateForDisplay({
+        actorId: 'actor-123',
+        actionDef: createChanceBasedActionDef(),
+      });
+
+      expect(result.activeTags).toEqual(['Flanking', 'Blessed']);
+    });
+
+    it('should filter out modifiers with empty string tags', () => {
+      mocks.modifierCollectorService.collectModifiers.mockReturnValue({
+        modifiers: [
+          { type: 'flat', value: 10, tag: 'Flanking' },
+          { type: 'flat', value: -5, tag: '' },
+          { type: 'flat', value: 5, tag: '   ' }, // whitespace-only
+        ],
+        totalFlat: 10,
+        totalPercentage: 1,
+      });
+
+      const result = service.calculateForDisplay({
+        actorId: 'actor-123',
+        actionDef: createChanceBasedActionDef(),
+      });
+
+      expect(result.activeTags).toEqual(['Flanking']);
+    });
+
+    it('should filter out non-string tags', () => {
+      mocks.modifierCollectorService.collectModifiers.mockReturnValue({
+        modifiers: [
+          { type: 'flat', value: 10, tag: 'Flanking' },
+          { type: 'flat', value: -5, tag: 123 }, // number
+          { type: 'flat', value: 5, tag: { name: 'test' } }, // object
+        ],
+        totalFlat: 10,
+        totalPercentage: 1,
+      });
+
+      const result = service.calculateForDisplay({
+        actorId: 'actor-123',
+        actionDef: createChanceBasedActionDef(),
+      });
+
+      expect(result.activeTags).toEqual(['Flanking']);
+    });
+
+    it('should include activeTags in outcome result', () => {
+      mocks.modifierCollectorService.collectModifiers.mockReturnValue({
+        modifiers: [
+          { type: 'flat', value: 10, tag: 'Flanking' },
+          { type: 'flat', value: -5, tag: 'Injured' },
+        ],
+        totalFlat: 5,
+        totalPercentage: 1,
+      });
+
+      const result = service.resolveOutcome({
+        actorId: 'actor-123',
+        actionDef: createChanceBasedActionDef(),
+      });
+
+      expect(result.activeTags).toEqual(['Flanking', 'Injured']);
+    });
+
+    it('should return empty activeTags in outcome for non-chance-based actions', () => {
+      const actionDef = {
+        id: 'test:action',
+        chanceBased: { enabled: false },
+      };
+
+      const result = service.resolveOutcome({
+        actorId: 'actor-123',
+        actionDef,
+      });
+
+      expect(result.activeTags).toEqual([]);
     });
   });
 

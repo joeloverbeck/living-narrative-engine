@@ -134,9 +134,12 @@ describe('MultiTargetActionFormatter - fixed-difficulty chance-based actions', (
       expect(command).not.toContain('{chance}');
 
       // Verify the chance calculation service was called correctly
+      // Note: primaryTargetId is now passed for modifier context, even for fixed_difficulty
       expect(mockChanceCalculationService.calculateForDisplay).toHaveBeenCalledWith({
         actorId: 'ward_caster_1',
-        targetId: null, // Fixed-difficulty doesn't need target
+        primaryTargetId: 'corrupted_entity_1', // Passed for modifier context
+        secondaryTargetId: undefined,
+        tertiaryTargetId: undefined,
         actionDef,
       });
     });
@@ -268,10 +271,12 @@ describe('MultiTargetActionFormatter - fixed-difficulty chance-based actions', (
       expect(result.value).toHaveLength(1);
       expect(result.value[0].command).toBe('swing at Goblin (65% chance)');
 
-      // Should pass targetId for contested actions
+      // Should pass primaryTargetId for contested actions (with all target role IDs)
       expect(mockChanceCalculationService.calculateForDisplay).toHaveBeenCalledWith({
         actorId: 'fighter_1',
-        targetId: 'enemy_1',
+        primaryTargetId: 'enemy_1',
+        secondaryTargetId: 'enemy_1', // secondary = primary when used as context source
+        tertiaryTargetId: undefined,
         actionDef,
       });
     });
@@ -333,7 +338,9 @@ describe('MultiTargetActionFormatter - fixed-difficulty chance-based actions', (
       // Should fallback to primary target since no targetRole specified
       expect(mockChanceCalculationService.calculateForDisplay).toHaveBeenCalledWith({
         actorId: 'grappler_1',
-        targetId: 'target_1', // Falls back to primary
+        primaryTargetId: 'target_1', // Falls back to primary
+        secondaryTargetId: undefined,
+        tertiaryTargetId: undefined,
         actionDef,
       });
     });

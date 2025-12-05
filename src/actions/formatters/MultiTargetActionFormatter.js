@@ -201,17 +201,40 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
         const canCalculate = isFixedDifficulty || !!targetId;
 
         if (canCalculate) {
-          const displayResult =
-            _options.chanceCalculationService.calculateForDisplay({
-              actorId: _options.actorId,
-              targetId,
-              actionDef,
+          try {
+            // For modifier context, always pass the primary target from the combination
+            // even for fixed-difficulty actions (targetId is for skill resolution only)
+            const primaryTargetForModifiers = combination.primary?.[0]?.id ?? targetId;
+
+            const displayResult =
+              _options.chanceCalculationService.calculateForDisplay({
+                actorId: _options.actorId,
+                primaryTargetId: primaryTargetForModifiers,
+                secondaryTargetId: combination.secondary?.[0]?.id,
+                tertiaryTargetId: combination.tertiary?.[0]?.id,
+                actionDef,
+              });
+            // Remove % since template already has it
+            template = template.replace(
+              '{chance}',
+              displayResult.displayText.replace('%', '')
+            );
+
+            // Append modifier tags if present
+            const activeTags = displayResult.activeTags ?? [];
+            if (activeTags.length > 0) {
+              const tagsString = this.#formatModifierTags(activeTags);
+              if (tagsString) {
+                template = this.#appendTagsToTemplate(template, tagsString);
+              }
+            }
+          } catch (error) {
+            this.#logger.warn('Failed to calculate chance for tag display', {
+              actionId: actionDef.id,
+              error: error.message,
             });
-          // Remove % since template already has it
-          template = template.replace(
-            '{chance}',
-            displayResult.displayText.replace('%', '')
-          );
+            // Continue without tags - don't break action display
+          }
         }
       }
 
@@ -608,6 +631,42 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
    */
   #escapeRegExp(placeholderName) {
     return placeholderName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  /**
+   * Format modifier tags for display in action template
+   *
+   * @private
+   * @param {string[]} tags - Array of active modifier tags
+   * @returns {string} Formatted tags string (e.g., "[tag1] [tag2]")
+   */
+  #formatModifierTags(tags) {
+    if (!tags || tags.length === 0) {
+      return '';
+    }
+
+    // Filter empty/whitespace tags and format each with brackets
+    return tags
+      .filter((tag) => tag && tag.trim().length > 0)
+      .map((tag) => `[${tag.trim()}]`)
+      .join(' ');
+  }
+
+  /**
+   * Append modifier tags to template string
+   *
+   * @private
+   * @param {string} template - Current template string
+   * @param {string} tagsString - Formatted tags string
+   * @returns {string} Template with tags appended
+   */
+  #appendTagsToTemplate(template, tagsString) {
+    if (!tagsString) {
+      return template;
+    }
+
+    // Simply append tags at the end with a space
+    return `${template} ${tagsString}`;
   }
 
   /**

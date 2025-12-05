@@ -63,7 +63,7 @@
     {
       "matches": ["left_eye", "right_eye"],
       "partType": "eye",
-      "preferId": "anatomy:feline_eye_amber_slit"
+      "preferId": "anatomy:chicken_eye_amber_concentric"
     }
   ]
 }

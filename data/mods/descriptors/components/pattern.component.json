@@ -11,6 +11,7 @@
         "enum": [
           "baroque-scroll",
           "checked",
+          "concentric-rings",
           "floral",
           "geometric",
           "heart",
