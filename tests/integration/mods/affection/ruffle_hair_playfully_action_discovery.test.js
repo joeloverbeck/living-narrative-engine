@@ -13,6 +13,8 @@ const ACTION_ID = 'affection:ruffle_hair_playfully';
 describe('affection:ruffle_hair_playfully action discovery', () => {
   let testFixture;
   let configureActionDiscovery;
+  let addAnatomyFeatures;
+  let createCloseActorsWithHair;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
@@ -26,77 +28,161 @@ describe('affection:ruffle_hair_playfully action discovery', () => {
         return;
       }
 
-      // Ensure the action index knows about the affection action under test
       testEnv.actionIndex.buildIndex([ruffleHairAction]);
+
+      const entityManager = testEnv.entityManager;
+      const hasHair = (entityId) => {
+        const bodyComponent = entityManager.getComponent(
+          entityId,
+          'anatomy:body'
+        );
+        const rootId = bodyComponent?.body?.root ?? bodyComponent?.root ?? null;
+        if (!rootId) {
+          return false;
+        }
+
+        const toVisit = [rootId];
+        const visited = new Set();
+
+        while (toVisit.length > 0) {
+          const currentId = toVisit.pop();
+          if (!currentId || visited.has(currentId)) {
+            continue;
+          }
+          visited.add(currentId);
+
+          const part = entityManager.getComponent(
+            currentId,
+            'anatomy:part'
+          );
+          if (
+            part?.subType &&
+            part.subType.toLowerCase().includes('hair')
+          ) {
+            return true;
+          }
+
+          const children = Array.isArray(part?.children) ? part.children : [];
+          toVisit.push(...children);
+        }
+
+        return false;
+      };
 
       const scopeResolver = testEnv.unifiedScopeResolver;
       const originalResolve =
         scopeResolver.__ruffleHairOriginalResolve ||
-        scopeResolver.resolveSync.bind(scopeResolver);
+        scopeResolver.resolveSync?.bind(scopeResolver) ||
+        scopeResolver.resolve?.bind(scopeResolver);
 
-      scopeResolver.__ruffleHairOriginalResolve = originalResolve;
-      scopeResolver.resolveSync = (scopeName, context) => {
-        if (
-          scopeName ===
-          'positioning:close_actors_or_entity_kneeling_before_actor'
-        ) {
-          const actorId = context?.actor?.id;
-          if (!actorId) {
-            return { success: true, value: new Set() };
-          }
-
-          const { entityManager } = testEnv;
-          const actorEntity = entityManager.getEntityInstance(actorId);
-          if (!actorEntity) {
-            return { success: true, value: new Set() };
-          }
-
-          const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
-          if (!Array.isArray(closeness) || closeness.length === 0) {
-            return { success: true, value: new Set() };
-          }
-
-          const actorFacingAway =
-            actorEntity.components?.['positioning:facing_away']
-              ?.facing_away_from || [];
-
-          const validTargets = closeness.reduce((acc, partnerId) => {
-            const partner = entityManager.getEntityInstance(partnerId);
-            if (!partner) {
-              return acc;
+      if (originalResolve) {
+        scopeResolver.__ruffleHairOriginalResolve = originalResolve;
+        scopeResolver.resolveSync = (scopeName, context) => {
+          if (
+            scopeName ===
+            'affection:close_actors_with_hair_or_entity_kneeling_before_actor'
+          ) {
+            const actorId = context?.actor?.id;
+            if (!actorId) {
+              return { success: true, value: new Set() };
             }
 
-            const partnerFacingAway =
-              partner.components?.['positioning:facing_away']
+            const actorEntity = entityManager.getEntityInstance(actorId);
+            const closeness =
+              actorEntity.components?.['positioning:closeness']?.partners;
+            if (!Array.isArray(closeness) || closeness.length === 0) {
+              return { success: true, value: new Set() };
+            }
+
+            const actorFacingAway =
+              actorEntity.components?.['positioning:facing_away']
                 ?.facing_away_from || [];
-            const facingEachOther =
-              !actorFacingAway.includes(partnerId) &&
-              !partnerFacingAway.includes(actorId);
-            const actorBehind = partnerFacingAway.includes(actorId);
 
-            // Check kneeling states
-            const actorKneelingBefore = actorEntity.components?.['positioning:kneeling_before']?.entityId === partnerId;
-            const partnerKneelingBefore = partner.components?.['positioning:kneeling_before']?.entityId === actorId;
+            const validTargets = closeness.reduce((acc, partnerId) => {
+              const partner = entityManager.getEntityInstance(partnerId);
+              if (!partner || !hasHair(partnerId)) {
+                return acc;
+              }
 
-            // Available if:
-            // - (facing each other OR actor behind) AND neither kneeling incompatibly
-            // - OR partner is kneeling before actor
-            const normalPosition = (facingEachOther || actorBehind) && !actorKneelingBefore && !partnerKneelingBefore;
-            const partnerKneeling = partnerKneelingBefore;
+              const partnerFacingAway =
+                partner.components?.['positioning:facing_away']
+                  ?.facing_away_from || [];
+              const facingEachOther =
+                !actorFacingAway.includes(partnerId) &&
+                !partnerFacingAway.includes(actorId);
+              const actorBehind = partnerFacingAway.includes(actorId);
 
-            if (normalPosition || partnerKneeling) {
-              acc.add(partnerId);
-            }
+              const actorKneelingBefore =
+                actorEntity.components?.['positioning:kneeling_before']
+                  ?.entityId === partnerId;
+              const partnerKneelingBefore =
+                partner.components?.['positioning:kneeling_before']?.entityId ===
+                actorId;
 
-            return acc;
-          }, new Set());
+              const normalPosition =
+                (facingEachOther || actorBehind) &&
+                !actorKneelingBefore &&
+                !partnerKneelingBefore;
+              const partnerKneeling = partnerKneelingBefore;
 
-          return { success: true, value: validTargets };
-        }
+              if (normalPosition || partnerKneeling) {
+                acc.add(partnerId);
+              }
 
-        return originalResolve(scopeName, context);
-      };
+              return acc;
+            }, new Set());
+
+            return { success: true, value: validTargets };
+          }
+
+          return originalResolve(scopeName, context);
+        };
+      }
+    };
+
+    addAnatomyFeatures = (entityId, featureSubTypes = []) => {
+      const entityManager = testFixture?.testEnv?.entityManager;
+      if (!entityManager) {
+        return;
+      }
+
+      const rootId = `${entityId}_head`;
+      const childIds = featureSubTypes.map(
+        (subType, index) => `${entityId}_${subType}_${index + 1}`
+      );
+
+      entityManager.createEntity(rootId);
+      entityManager.addComponent(rootId, 'anatomy:part', {
+        parent: null,
+        children: childIds,
+        subType: 'head',
+      });
+
+      childIds.forEach((partId, index) => {
+        const subType = featureSubTypes[index];
+        entityManager.createEntity(partId);
+        entityManager.addComponent(partId, 'anatomy:part', {
+          parent: rootId,
+          children: [],
+          subType,
+        });
+        entityManager.addComponent(partId, 'anatomy:joint', {
+          parentId: rootId,
+          socketId: `${subType}_socket`,
+        });
+      });
+
+      entityManager.addComponent(entityId, 'anatomy:body', { root: rootId });
+    };
+
+    createCloseActorsWithHair = (names) => {
+      const scenario = testFixture.createAnatomyScenario(
+        names,
+        ['torso', 'head', 'hair'],
+        { includeRoom: true }
+      );
+      addAnatomyFeatures(scenario.actor.id, ['hair']);
+      return scenario;
     };
   });
 
@@ -112,7 +198,7 @@ describe('affection:ruffle_hair_playfully action discovery', () => {
       expect(ruffleHairAction.id).toBe(ACTION_ID);
       expect(ruffleHairAction.template).toBe("ruffle {target}'s hair playfully");
       expect(ruffleHairAction.targets).toBe(
-        'positioning:close_actors_or_entity_kneeling_before_actor'
+        'affection:close_actors_with_hair_or_entity_kneeling_before_actor'
       );
     });
 
@@ -131,25 +217,24 @@ describe('affection:ruffle_hair_playfully action discovery', () => {
 
   describe('Action discovery scenarios', () => {
     it('is available for close actors facing each other', () => {
-      const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
+      const scenario = createCloseActorsWithHair(['Alice', 'Bob']);
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
         scenario.actor.id
       );
       const ids = availableActions.map((action) => action.id);
-
       expect(ids).toContain(ACTION_ID);
     });
 
     it('is available when the actor stands behind the target', () => {
-      const scenario = testFixture.createCloseActors(['Maya', 'Noah']);
+      const scenario = createCloseActorsWithHair(['Maya', 'Noah']);
       scenario.target.components['positioning:facing_away'] = {
         facing_away_from: [scenario.actor.id],
       };
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
+      testFixture.reset([room, scenario.actor, scenario.target, ...scenario.bodyParts]);
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
@@ -161,12 +246,12 @@ describe('affection:ruffle_hair_playfully action discovery', () => {
     });
 
     it('is not available when actors are not in closeness', () => {
-      const scenario = testFixture.createCloseActors(['Ivy', 'Liam']);
+      const scenario = createCloseActorsWithHair(['Ivy', 'Liam']);
       delete scenario.actor.components['positioning:closeness'];
       delete scenario.target.components['positioning:closeness'];
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
+      testFixture.reset([room, scenario.actor, scenario.target, ...scenario.bodyParts]);
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
@@ -178,13 +263,27 @@ describe('affection:ruffle_hair_playfully action discovery', () => {
     });
 
     it('is not available when the actor faces away from the target', () => {
-      const scenario = testFixture.createCloseActors(['Chloe', 'Evan']);
+      const scenario = createCloseActorsWithHair(['Chloe', 'Evan']);
       scenario.actor.components['positioning:facing_away'] = {
         facing_away_from: [scenario.target.id],
       };
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
+      testFixture.reset([room, scenario.actor, scenario.target, ...scenario.bodyParts]);
+      configureActionDiscovery();
+
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).not.toContain(ACTION_ID);
+    });
+
+    it('is not available when the target lacks hair anatomy', () => {
+      const scenario = testFixture.createCloseActors(['Jamie', 'Quinn']);
+      // Only give hair anatomy to the actor to isolate the missing target requirement
+      addAnatomyFeatures(scenario.actor.id, ['hair']);
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(

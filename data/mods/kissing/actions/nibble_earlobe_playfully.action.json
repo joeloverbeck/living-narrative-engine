@@ -3,7 +3,7 @@
   "id": "kissing:nibble_earlobe_playfully",
   "name": "Nibble Earlobe Playfully",
   "description": "Playfully nibble on the target's earlobe in an intimate, teasing manner.",
-  "targets": "kissing:close_actors_facing_each_other_or_behind_target",
+  "targets": "kissing:close_actors_with_ear_subtype_facing_each_other_or_behind_target",
   "required_components": {
     "actor": ["positioning:closeness"]
   },

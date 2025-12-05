@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "hexing:event-is-action-corrupting-gaze",
+  "description": "True when the event attempts the corrupting gaze action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "hexing:corrupting_gaze"
+    ]
+  }
+}

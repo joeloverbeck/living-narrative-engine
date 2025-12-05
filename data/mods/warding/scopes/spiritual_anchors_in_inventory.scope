@@ -1,0 +1,9 @@
+// Scope for spiritual anchor items in the actor's inventory
+// Filters to anchor-tagged items the actor carries
+warding:spiritual_anchors_in_inventory := actor.components.items:inventory.items[{
+  "and": [
+    { "condition_ref": "core:entity-is-not-current-actor" },
+    { "!!": [{ "var": "entity.components.items:item" }] },
+    { "!!": [{ "var": "entity.components.warding:is_spiritual_anchor" }] }
+  ]
+}]

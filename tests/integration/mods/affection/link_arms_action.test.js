@@ -6,6 +6,7 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 import handleLinkArmsRule from '../../../../data/mods/affection/rules/handle_link_arms.rule.json';
 import eventIsActionLinkArms from '../../../../data/mods/affection/conditions/event-is-action-link-arms.condition.json';
 
@@ -21,6 +22,12 @@ describe('affection:link_arms action integration', () => {
       handleLinkArmsRule,
       eventIsActionLinkArms
     );
+
+    await ScopeResolverHelpers.registerCustomScope(
+      testFixture.testEnv,
+      'affection',
+      'actors_with_arm_subtypes_facing_each_other_or_behind_target'
+    );
   });
 
   afterEach(() => {
@@ -28,9 +35,11 @@ describe('affection:link_arms action integration', () => {
   });
 
   it('links arms successfully between close actors', async () => {
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
-      location: 'living_room',
-    });
+    const scenario = testFixture.createAnatomyScenario(
+      ['Alice', 'Bob'],
+      ['torso', 'arm', 'arm'],
+      { location: 'living_room' }
+    );
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -59,11 +68,10 @@ describe('affection:link_arms action integration', () => {
   });
 
   it('formats message correctly for different names', async () => {
-    const scenario = testFixture.createCloseActors(
+    const scenario = testFixture.createAnatomyScenario(
       ['Sir Lancelot', 'Lady Guinevere'],
-      {
-        location: 'castle_hall',
-      }
+      ['torso', 'arm', 'arm'],
+      { location: 'castle_hall' }
     );
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -77,9 +85,11 @@ describe('affection:link_arms action integration', () => {
   });
 
   it('emits perceptible event with correct perception metadata', async () => {
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
-      location: 'garden',
-    });
+    const scenario = testFixture.createAnatomyScenario(
+      ['Alice', 'Bob'],
+      ['torso', 'arm', 'arm'],
+      { location: 'garden' }
+    );
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -95,12 +105,44 @@ describe('affection:link_arms action integration', () => {
   });
 
   it('handles multiple close partners without mixing results', async () => {
-    const scenario = testFixture.createMultiActorScenario(
-      ['Alice', 'Bob', 'Charlie'],
-      {
-        location: 'room1',
-      }
+    const scenario = testFixture.createAnatomyScenario(
+      ['Alice', 'Bob'],
+      ['torso', 'arm', 'arm'],
+      { location: 'room1' }
     );
+    const observer = new ModEntityBuilder('observer1')
+      .withName('Charlie')
+      .atLocation('room1')
+      .withLocationComponent('room1')
+      .asActor()
+      .withComponent('positioning:closeness', {
+        partners: [scenario.actor.id],
+      })
+      .withBody('observer1-torso')
+      .build();
+    const observerTorso = new ModEntityBuilder('observer1-torso')
+      .asBodyPart({ parent: null, children: ['observer1-arm'], subType: 'torso' })
+      .atLocation('room1')
+      .withLocationComponent('room1')
+      .build();
+    const observerArm = new ModEntityBuilder('observer1-arm')
+      .asBodyPart({ parent: 'observer1-torso', children: [], subType: 'arm' })
+      .atLocation('room1')
+      .withLocationComponent('room1')
+      .build();
+    observer.components['positioning:closeness'] = {
+      partners: [scenario.actor.id],
+    };
+    scenario.actor.components['positioning:closeness'].partners.push(
+      observer.id
+    );
+    scenario.observers = [observer];
+    testFixture.reset([
+      ...scenario.allEntities,
+      observer,
+      observerTorso,
+      observerArm,
+    ]);
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -128,9 +170,11 @@ describe('affection:link_arms action integration', () => {
   });
 
   it('only fires when the link arms action ID matches', async () => {
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
-      location: 'room1',
-    });
+    const scenario = testFixture.createAnatomyScenario(
+      ['Alice', 'Bob'],
+      ['torso', 'arm', 'arm'],
+      { location: 'room1' }
+    );
 
     await testFixture.eventBus.dispatch('core:attempt_action', {
       eventName: 'core:attempt_action',
@@ -149,9 +193,11 @@ describe('affection:link_arms action integration', () => {
   });
 
   it('aligns success and perceptible messaging', async () => {
-    const scenario = testFixture.createCloseActors(['Diana', 'Victor'], {
-      location: 'library',
-    });
+    const scenario = testFixture.createAnatomyScenario(
+      ['Diana', 'Victor'],
+      ['torso', 'arm', 'arm'],
+      { location: 'library' }
+    );
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -175,6 +221,7 @@ describe('affection:link_arms action integration', () => {
     const actor = new ModEntityBuilder('actor1')
       .withName('Alice')
       .atLocation('room1')
+      .withLocationComponent('room1')
       .asActor()
       .withComponent('positioning:closeness', { partners: ['target1'] })
       .withComponent('positioning:hugging', {
@@ -182,20 +229,51 @@ describe('affection:link_arms action integration', () => {
         initiated: true,
         consented: true,
       })
+      .withBody('actor1-torso')
+      .build();
+    const actorTorso = new ModEntityBuilder('actor1-torso')
+      .asBodyPart({ parent: null, children: ['actor1-arm'], subType: 'torso' })
+      .atLocation('room1')
+      .withLocationComponent('room1')
+      .build();
+    const actorArm = new ModEntityBuilder('actor1-arm')
+      .asBodyPart({ parent: 'actor1-torso', children: [], subType: 'arm' })
+      .atLocation('room1')
+      .withLocationComponent('room1')
       .build();
 
     const target = new ModEntityBuilder('target1')
       .withName('Bob')
       .atLocation('room1')
+      .withLocationComponent('room1')
       .asActor()
       .withComponent('positioning:closeness', { partners: ['actor1'] })
       .withComponent('positioning:being_hugged', {
         hugging_entity_id: 'actor1',
         consented: true,
       })
+      .withBody('target1-torso')
+      .build();
+    const targetTorso = new ModEntityBuilder('target1-torso')
+      .asBodyPart({ parent: null, children: ['target1-arm'], subType: 'torso' })
+      .atLocation('room1')
+      .withLocationComponent('room1')
+      .build();
+    const targetArm = new ModEntityBuilder('target1-arm')
+      .asBodyPart({ parent: 'target1-torso', children: [], subType: 'arm' })
+      .atLocation('room1')
+      .withLocationComponent('room1')
       .build();
 
-    testFixture.reset([room, actor, target]);
+    testFixture.reset([
+      room,
+      actor,
+      target,
+      actorTorso,
+      actorArm,
+      targetTorso,
+      targetArm,
+    ]);
 
     await expect(
       testFixture.executeAction(actor.id, target.id)

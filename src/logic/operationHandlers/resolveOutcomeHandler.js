@@ -143,6 +143,7 @@ class ResolveOutcomeHandler {
       formula = 'ratio',
       difficulty_modifier = 0,
       result_variable,
+      target_role = 'secondary',
     } = params || {};
 
     // --- 1. Validate Required Parameters (FAIL-FAST) ---
@@ -175,7 +176,28 @@ class ResolveOutcomeHandler {
     // --- 2. Extract Actor/Target IDs from Event ---
     const event = executionContext?.evaluationContext?.event;
     const actorId = event?.payload?.actorId;
-    const targetId = event?.payload?.secondaryId || event?.payload?.targetId;
+    const primaryTargetId =
+      event?.payload?.primaryId ||
+      event?.payload?.targetId ||
+      event?.payload?.targets?.primary?.entityId;
+    const secondaryTargetId =
+      event?.payload?.secondaryId || event?.payload?.targets?.secondary?.entityId;
+    const tertiaryTargetId =
+      event?.payload?.tertiaryId || event?.payload?.targets?.tertiary?.entityId;
+
+    let targetId;
+    switch (target_role) {
+      case 'primary':
+        targetId = primaryTargetId || secondaryTargetId || tertiaryTargetId;
+        break;
+      case 'tertiary':
+        targetId = tertiaryTargetId || secondaryTargetId || primaryTargetId;
+        break;
+      case 'secondary':
+      default:
+        targetId = secondaryTargetId || primaryTargetId;
+        break;
+    }
 
     if (!actorId) {
       const error = new ResolveOutcomeOperationError(
@@ -209,6 +231,7 @@ class ResolveOutcomeHandler {
           ? {
               component: target_skill_component,
               default: target_skill_default,
+              targetRole: target_role,
             }
           : undefined,
         formula,
@@ -220,6 +243,9 @@ class ResolveOutcomeHandler {
     const outcomeResult = this.#chanceCalculationService.resolveOutcome({
       actorId,
       targetId,
+      primaryTargetId,
+      secondaryTargetId,
+      tertiaryTargetId,
       actionDef: pseudoActionDef,
     });
 

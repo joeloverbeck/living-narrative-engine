@@ -3,7 +3,7 @@
   "id": "affection:touch_nose_tenderly",
   "name": "Touch nose tenderly",
   "description": "Touch the tip of the target's nose in a tender gesture.",
-  "targets": "positioning:close_actors_or_entity_kneeling_before_actor",
+  "targets": "affection:close_actors_with_nose_or_entity_kneeling_before_actor",
   "required_components": {
     "actor": ["positioning:closeness"]
   },

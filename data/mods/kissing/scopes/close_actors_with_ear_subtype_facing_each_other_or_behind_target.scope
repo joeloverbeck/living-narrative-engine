@@ -1,0 +1,12 @@
+// Scope for close partners who have an ear available for playful nibbling
+kissing:close_actors_with_ear_subtype_facing_each_other_or_behind_target := actor.components.positioning:closeness.partners[][{
+  "and": [
+    {"hasPartSubTypeContaining": [".", "ear"]},
+    {
+      "or": [
+        {"condition_ref": "positioning:both-actors-facing-each-other"},
+        {"condition_ref": "positioning:actor-is-behind-entity"}
+      ]
+    }
+  ]
+}]

@@ -3,7 +3,7 @@
   "id": "affection:link_arms",
   "name": "Link Arms",
   "description": "Gently loop your arm with someone in a close, supportive gesture.",
-  "targets": "positioning:close_actors_facing_each_other_or_behind_target",
+  "targets": "affection:actors_with_arm_subtypes_facing_each_other_or_behind_target",
   "required_components": {
     "actor": ["positioning:closeness"]
   },

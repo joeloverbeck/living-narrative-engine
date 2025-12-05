@@ -13,9 +13,9 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 ## Current Status
 
-**Total Schemes**: 46 defined color combinations
-**In Use**: 32 schemes actively implemented across mods
-**Available**: 14 schemes ready for future mods
+**Total Schemes**: 48 defined color combinations
+**In Use**: 33 schemes actively implemented across mods
+**Available**: 15 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
 
@@ -32,6 +32,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 | Exercise                 | Orange Flame       | 2.3     | `#e65100`        | Active   |
 | Gymnastics               | Journey Cobalt     | 9.1     | `#1a237e`        | Active   |
 | Hugging                  | Warm Embrace       | 3.4     | `#7d2a50`        | Active   |
+| Hexing                   | Hexed Nightshade   | 16.1    | `#1f0d2a`        | Active   |
 | Items                    | Aurora Depths      | 11.1    | `#004d61`        | Active   |
 | Kissing                  | Rose Pink          | 3.2     | `#ad1457`        | Active   |
 | Movement                 | Explorer Cyan      | 9.3     | `#006064`        | Active   |
@@ -92,6 +93,9 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 ### Expansion Set
 - **Evergreen Shadow** (11.5) - Stealth exploration, healing rituals
+
+### Hex/Corruption
+- **Blighted Moss** (16.2) - Hexcraft rituals, entropic nature magic (available)
 
 ## Complete Color Scheme Definitions
 
@@ -1007,8 +1011,43 @@ When modifying schemes:
 - **Use Cases**: Thrown projectiles, ranged attacks, aimed actions
 - **Theme**: Deep forest-olive teal evoking hunter's concentration and precise aim
 
+### 16. Hex/Corruption Colors
+
+#### 16.1 Hexed Nightshade ✅ IN USE: Hexing
+
+```json
+{
+  "backgroundColor": "#1f0d2a",
+  "textColor": "#e8ffd5",
+  "hoverBackgroundColor": "#2f1837",
+  "hoverTextColor": "#f5ffe7"
+}
+```
+
+- **Normal Contrast**: 17.14:1 🌟 AAA
+- **Hover Contrast**: 15.57:1 🌟 AAA
+- **Use Cases**: Hexcraft, corrupting gazes, occult debuffs
+- **Theme**: Eldritch violet base with a toxic glow, evoking creeping corruption and hypnotic danger
+
+#### 16.2 Blighted Moss 🟢 AVAILABLE
+
+```json
+{
+  "backgroundColor": "#1a1f14",
+  "textColor": "#d8ffd6",
+  "hoverBackgroundColor": "#23301c",
+  "hoverTextColor": "#e8ffe5"
+}
+```
+
+- **Normal Contrast**: 15.36:1 🌟 AAA
+- **Hover Contrast**: 13.15:1 🌟 AAA
+- **Use Cases**: Hexcraft rituals, entropic nature magic, lingering curses
+- **Theme**: Muted bog-green palette suggesting decay, blight, and creeping vines
+
 ## Version History
 
+- **2026-02**: Added Hexed Nightshade (16.1) for Hexing mod and Blighted Moss (16.2) to the available pool
 - **2025-12**: Added Archer's Focus (15.1) for Ranged mod
 - **2025-11**: Consolidated from multiple sources into single reference document
 - Original spec: `specs/wcag-compliant-color-combinations.spec.md` (removed)

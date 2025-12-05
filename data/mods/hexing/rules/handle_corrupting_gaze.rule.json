@@ -1,0 +1,257 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_corrupting_gaze",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "hexing:event-is-action-corrupting-gaze"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "primary",
+        "result_variable": "targetName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "RESOLVE_OUTCOME",
+      "parameters": {
+        "actor_skill_component": "skills:resolve_skill",
+        "target_skill_component": "skills:resolve_skill",
+        "actor_skill_default": 10,
+        "target_skill_default": 0,
+        "formula": "ratio",
+        "result_variable": "gazeResult",
+        "target_role": "primary"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.primaryId}"
+      }
+    },
+    {
+      "type": "IF",
+      "parameters": {
+        "condition": {
+          "==": [
+            { "var": "context.gazeResult.outcome" },
+            "CRITICAL_SUCCESS"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "ADD_COMPONENT",
+            "parameters": {
+              "entity_ref": "primary",
+              "component_type": "warding:corrupted",
+              "value": {}
+            }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "primary" }
+          },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} looks deeply into {context.targetName}'s eyes, casting a corrupting gaze. {context.targetName} shudders violently as darkness floods through them.",
+              "perception_type": "action_target_general",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.primaryId}",
+              "contextual_data": {
+                "excludedActorIds": ["{event.payload.primaryId}"]
+              }
+            }
+          },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} looks deeply into my eyes, and I feel darkness flooding into me. A sickly warmth fills you, accompanied by a burning smell and a ringing noise in your ears.",
+              "perception_type": "action_target_general",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.primaryId}",
+              "contextual_data": {
+                "recipientIds": ["{event.payload.primaryId}"]
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} looks deeply into {context.targetName}'s eyes, casting a corrupting gaze. {context.targetName} shudders violently as darkness floods through them."
+            }
+          },
+          { "macro": "core:logSuccessOutcomeAndEndTurn" }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "parameters": {
+        "condition": {
+          "==": [
+            { "var": "context.gazeResult.outcome" },
+            "SUCCESS"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "ADD_COMPONENT",
+            "parameters": {
+              "entity_ref": "primary",
+              "component_type": "warding:corrupted",
+              "value": {}
+            }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "primary" }
+          },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} looks deeply into {context.targetName}'s eyes, casting a corrupting gaze. {context.targetName} shudders as darkness seeps into them.",
+              "perception_type": "action_target_general",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.primaryId}",
+              "contextual_data": {
+                "excludedActorIds": ["{event.payload.primaryId}"]
+              }
+            }
+          },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} looks deeply into my eyes, and I feel darkness seeping into me. A sickly warmth starts filling me, accompanied by a burning smell.",
+              "perception_type": "action_target_general",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.primaryId}",
+              "contextual_data": {
+                "recipientIds": ["{event.payload.primaryId}"]
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} looks deeply into {context.targetName}'s eyes, casting a corrupting gaze. {context.targetName} shudders as darkness seeps into them."
+            }
+          },
+          { "macro": "core:logSuccessOutcomeAndEndTurn" }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "parameters": {
+        "condition": {
+          "==": [
+            { "var": "context.gazeResult.outcome" },
+            "FAILURE"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} looks deeply into {context.targetName}'s eyes, casting a corrupting gaze, but {context.targetName} resists the spiritual attack.",
+              "perception_type": "action_target_general",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.primaryId}"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} looks deeply into {context.targetName}'s eyes, casting a corrupting gaze, but {context.targetName} resists the spiritual attack."
+            }
+          },
+          { "macro": "core:logFailureOutcomeAndEndTurn" }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "parameters": {
+        "condition": {
+          "==": [
+            { "var": "context.gazeResult.outcome" },
+            "FUMBLE"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "ADD_COMPONENT",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "positioning:fallen",
+              "value": {}
+            }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "actor" }
+          },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} looks deeply into {context.targetName}'s eyes, casting a corrupting gaze, but {context.targetName}'s resolve shocks through {context.actorName}, making them fall to the ground.",
+              "perception_type": "action_target_general",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.primaryId}"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} looks deeply into {context.targetName}'s eyes, casting a corrupting gaze, but {context.targetName}'s resolve shocks through {context.actorName}, making them fall to the ground."
+            }
+          },
+          { "macro": "core:logFailureOutcomeAndEndTurn" }
+        ]
+      }
+    }
+  ]
+}

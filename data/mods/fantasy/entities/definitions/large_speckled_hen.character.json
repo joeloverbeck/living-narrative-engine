@@ -24,6 +24,7 @@
             "logEntries": []
         },
         "warding:corrupted": {},
+        "hexing:is_hexer": {},
         "skills:melee_skill": {
             "value": 54
         },
@@ -32,6 +33,9 @@
         },
         "skills:grappling_skill": {
             "value": 22
+        },
+        "skills:resolve_skill": {
+            "value": 85
         }
     }
 }

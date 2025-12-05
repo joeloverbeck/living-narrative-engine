@@ -14,6 +14,7 @@
     "core:conspicuous": {},
     "core:weight": {
       "weight": 0.8
-    }
+    },
+    "warding:is_spiritual_anchor": {}
   }
 }

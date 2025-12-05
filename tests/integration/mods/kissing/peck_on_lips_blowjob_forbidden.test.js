@@ -5,10 +5,7 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import {
-  ModEntityScenarios,
-  ModEntityBuilder,
-} from '../../../common/mods/ModEntityBuilder.js';
+import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import pecOnLipsAction from '../../../../data/mods/kissing/actions/peck_on_lips.action.json';
 
 const ACTION_ID = 'kissing:peck_on_lips';
@@ -35,7 +32,10 @@ describe('kissing:peck_on_lips - giving_blowjob forbidden component', () => {
 
       scopeResolver.__pecOnLipsOriginalResolve = originalResolve;
       scopeResolver.resolveSync = (scopeName, context) => {
-        if (scopeName === 'kissing:close_actors_facing_each_other') {
+        if (
+          scopeName ===
+          'kissing:close_actors_with_mouth_facing_each_other_or_behind_target'
+        ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
             return { success: true, value: new Set() };
@@ -69,7 +69,10 @@ describe('kissing:peck_on_lips - giving_blowjob forbidden component', () => {
 
   describe('Baseline: Action available without giving_blowjob', () => {
     it('should be available when actor does NOT have giving_blowjob component', () => {
-      const scenario = testFixture.createCloseActors(['Nina', 'Oscar']);
+      const scenario = testFixture.createAnatomyScenario(
+        ['Nina', 'Oscar'],
+        ['torso', 'mouth']
+      );
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
@@ -83,7 +86,10 @@ describe('kissing:peck_on_lips - giving_blowjob forbidden component', () => {
 
   describe('Forbidden: Action not available when actor giving blowjob', () => {
     it('should NOT be available when actor has giving_blowjob component', async () => {
-      const scenario = testFixture.createCloseActors(['Pete', 'Rita']);
+      const scenario = testFixture.createAnatomyScenario(
+        ['Pete', 'Rita'],
+        ['torso', 'mouth']
+      );
 
       scenario.actor.components['positioning:giving_blowjob'] = {
         receiving_entity_id: scenario.target.id,
@@ -91,8 +97,7 @@ describe('kissing:peck_on_lips - giving_blowjob forbidden component', () => {
         consented: true,
       };
 
-      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
+      testFixture.reset(scenario.allEntities);
       configureActionDiscovery();
 
       await expect(async () => {
@@ -103,25 +108,20 @@ describe('kissing:peck_on_lips - giving_blowjob forbidden component', () => {
 
   describe('Three-actor scenario: Actor receiving blowjob can kiss others', () => {
     it('should be available to actor receiving blowjob when targeting a third actor', async () => {
-      const actor = new ModEntityBuilder('actor1')
-        .withName('Steve')
-        .atLocation('room1')
-        .asActor()
-        .build();
+      const scenario = testFixture.createAnatomyScenario(
+        ['Steve', 'Vera'],
+        ['torso', 'mouth']
+      );
 
-      const targetGiving = new ModEntityBuilder('target1')
+      const actor = scenario.actor;
+      const targetThird = scenario.target;
+
+      const targetGiving = new ModEntityBuilder('giver1')
         .withName('Tina')
         .atLocation('room1')
+        .withLocationComponent('room1')
         .asActor()
         .build();
-
-      const targetThird = new ModEntityBuilder('target2')
-        .withName('Vera')
-        .atLocation('room1')
-        .asActor()
-        .build();
-
-      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
 
       actor.components['positioning:receiving_blowjob'] = {
         giving_entity_id: targetGiving.id,
@@ -144,14 +144,14 @@ describe('kissing:peck_on_lips - giving_blowjob forbidden component', () => {
         partners: [actor.id, targetGiving.id],
       };
 
-      testFixture.reset([room, actor, targetGiving, targetThird]);
+      testFixture.reset([...scenario.allEntities, targetGiving]);
       configureActionDiscovery();
 
       await expect(
         testFixture.executeAction(actor.id, targetThird.id)
       ).resolves.not.toThrow();
 
-      testFixture.reset([room, actor, targetGiving, targetThird]);
+      testFixture.reset([...scenario.allEntities, targetGiving]);
       configureActionDiscovery();
 
       await expect(async () => {

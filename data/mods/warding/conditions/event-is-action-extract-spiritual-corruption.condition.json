@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "warding:event-is-action-extract-spiritual-corruption",
+  "description": "True when the event is an attempt to execute the extract_spiritual_corruption action",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "warding:extract_spiritual_corruption"
+    ]
+  }
+}

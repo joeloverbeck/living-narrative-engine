@@ -16,6 +16,7 @@
       "grappling_skill.component.json",
       "melee_skill.component.json",
       "ranged_skill.component.json",
+      "resolve_skill.component.json",
       "warding_skill.component.json"
     ]
   }

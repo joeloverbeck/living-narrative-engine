@@ -42,6 +42,10 @@
     },
     "descriptors:texture": {
       "texture": "scaled"
+    },
+    "core:movement": {
+      "locked": false,
+      "forcedOverride": false
     }
   }
 }

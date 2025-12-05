@@ -48,6 +48,11 @@
         "result_variable": {
           "type": "string",
           "description": "Context variable to store result object"
+        },
+        "target_role": {
+          "type": "string",
+          "enum": ["primary", "secondary", "tertiary"],
+          "description": "Target role to use for opposed checks and modifier resolution. Defaults to secondary to preserve legacy behavior."
         }
       },
       "required": ["actor_skill_component", "result_variable"],

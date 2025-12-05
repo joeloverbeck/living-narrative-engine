@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "hexing",
+  "version": "1.0.0",
+  "name": "Hexing",
+  "description": "Hexing fundamentals including corrupting gaze.",
+  "dependencies": [
+    { "id": "core", "version": ">=1.0.0" },
+    { "id": "skills", "version": ">=1.0.0" },
+    { "id": "positioning", "version": ">=1.0.0" },
+    { "id": "warding", "version": ">=1.0.0" }
+  ],
+  "content": {
+    "components": ["is_hexer.component.json"],
+    "conditions": ["event-is-action-corrupting-gaze.condition.json"],
+    "actions": ["corrupting_gaze.action.json"],
+    "rules": ["handle_corrupting_gaze.rule.json"]
+  }
+}

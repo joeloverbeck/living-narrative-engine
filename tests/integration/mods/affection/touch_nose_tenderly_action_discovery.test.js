@@ -15,6 +15,9 @@ const ACTION_ID = 'affection:touch_nose_tenderly';
 
 describe('affection:touch_nose_tenderly action discovery', () => {
   let testBed;
+  let addNoseAnatomy;
+  let createScenarioWithNoses;
+  let entityHasNose;
 
   beforeEach(() => {
     testBed = createActionDiscoveryBed();
@@ -29,6 +32,67 @@ describe('affection:touch_nose_tenderly action discovery', () => {
     testBed.mocks.actionIndex.getCandidateActions.mockImplementation(() => [
       touchNoseTenderlyAction,
     ]);
+
+    const entityManager = /** @type {SimpleEntityManager} */ (
+      testBed.mocks.entityManager
+    );
+
+    addNoseAnatomy = (entityId) => {
+      const headId = `${entityId}_head`;
+      const noseId = `${entityId}_nose`;
+
+      entityManager.createEntity(headId);
+      entityManager.addComponent(headId, 'anatomy:part', {
+        parent: null,
+        children: [noseId],
+        subType: 'head',
+      });
+
+      entityManager.createEntity(noseId);
+      entityManager.addComponent(noseId, 'anatomy:part', {
+        parent: headId,
+        children: [],
+        subType: 'nose',
+      });
+      entityManager.addComponent(noseId, 'anatomy:joint', {
+        parentId: headId,
+        socketId: 'head-nose',
+      });
+
+      entityManager.addComponent(entityId, 'anatomy:body', { root: headId });
+    };
+
+    entityHasNose = (entityId) => {
+      const body = entityManager.getComponent(entityId, 'anatomy:body');
+      const rootId = body?.body?.root ?? body?.root ?? null;
+      if (!rootId) {
+        return false;
+      }
+
+      const rootPart = entityManager.getComponent(rootId, 'anatomy:part');
+      const childIds = rootPart?.children || [];
+
+      if (
+        rootPart?.subType &&
+        rootPart.subType.toLowerCase().includes('nose')
+      ) {
+        return true;
+      }
+
+      return childIds.some((childId) => {
+        const part = entityManager.getComponent(childId, 'anatomy:part');
+        return (
+          part?.subType && part.subType.toLowerCase().includes('nose')
+        );
+      });
+    };
+
+    createScenarioWithNoses = (options = {}) => {
+      const scenario = testBed.createActorTargetScenario(options);
+      addNoseAnatomy(scenario.actor.id);
+      addNoseAnatomy(scenario.target.id);
+      return scenario;
+    };
 
     testBed.mocks.targetResolutionService.resolveTargets.mockImplementation(
       (_scopeName, actorEntity) => {
@@ -71,7 +135,7 @@ describe('affection:touch_nose_tenderly action discovery', () => {
             ((facingEachOther || actorBehind) && !actorKneeling && !partnerKneeling) ||
             partnerKneeling;
 
-          if (isValidTarget) {
+          if (isValidTarget && entityHasNose(partnerId)) {
             acc.add(partnerId);
           }
 
@@ -84,7 +148,7 @@ describe('affection:touch_nose_tenderly action discovery', () => {
 
         return ActionResult.success(contexts);
       }
-    );
+      );
   });
 
   afterEach(async () => {
@@ -101,7 +165,7 @@ describe('affection:touch_nose_tenderly action discovery', () => {
         "touch the tip of {target}'s nose tenderly"
       );
       expect(touchNoseTenderlyAction.targets).toBe(
-        'positioning:close_actors_or_entity_kneeling_before_actor'
+        'affection:close_actors_with_nose_or_entity_kneeling_before_actor'
       );
       expect(touchNoseTenderlyAction.required_components.actor).toContain(
         'positioning:closeness'
@@ -115,7 +179,7 @@ describe('affection:touch_nose_tenderly action discovery', () => {
 
   describe('Positive discovery scenarios', () => {
     it('is available for close actors facing each other', async () => {
-      const { actor } = testBed.createActorTargetScenario();
+      const { actor } = createScenarioWithNoses();
 
       const result = await testBed.discoverActionsWithDiagnostics(actor);
 
@@ -123,7 +187,7 @@ describe('affection:touch_nose_tenderly action discovery', () => {
     });
 
     it('is available when the actor stands behind the target', async () => {
-      const { actor, target } = testBed.createActorTargetScenario();
+      const { actor, target } = createScenarioWithNoses();
       await testBed.mocks.entityManager.addComponent(
         target.id,
         'positioning:facing_away',
@@ -136,7 +200,7 @@ describe('affection:touch_nose_tenderly action discovery', () => {
     });
 
     it('is available when the target is kneeling before the actor', async () => {
-      const { actor, target } = testBed.createActorTargetScenario();
+      const { actor, target } = createScenarioWithNoses();
       await testBed.mocks.entityManager.addComponent(
         target.id,
         'positioning:kneeling_before',
@@ -151,7 +215,7 @@ describe('affection:touch_nose_tenderly action discovery', () => {
 
   describe('Negative discovery scenarios', () => {
     it('is not available when actors are not in closeness', async () => {
-      const { actor } = testBed.createActorTargetScenario({
+      const { actor } = createScenarioWithNoses({
         closeProximity: false,
       });
 
@@ -161,7 +225,7 @@ describe('affection:touch_nose_tenderly action discovery', () => {
     });
 
     it('is not available when the actor faces away from the target', async () => {
-      const { actor, target } = testBed.createActorTargetScenario();
+      const { actor, target } = createScenarioWithNoses();
       await testBed.mocks.entityManager.addComponent(
         actor.id,
         'positioning:facing_away',
@@ -174,7 +238,7 @@ describe('affection:touch_nose_tenderly action discovery', () => {
     });
 
     it('is not available when the actor is kneeling before the target', async () => {
-      const { actor, target } = testBed.createActorTargetScenario();
+      const { actor, target } = createScenarioWithNoses();
       await testBed.mocks.entityManager.addComponent(
         actor.id,
         'positioning:kneeling_before',
@@ -187,9 +251,18 @@ describe('affection:touch_nose_tenderly action discovery', () => {
     });
 
     it('is not available when closeness component is missing', async () => {
-      const { actor } = testBed.createActorTargetScenario({
+      const { actor } = createScenarioWithNoses({
         closeProximity: false,
       });
+
+      const result = await testBed.discoverActionsWithDiagnostics(actor);
+
+      expect(result.actions).not.toHaveAction(ACTION_ID);
+    });
+    it('is not available when the target lacks a nose part', async () => {
+      const { actor, target } = testBed.createActorTargetScenario();
+      // Only give the actor a nose to ensure target requirement is enforced
+      addNoseAnatomy(actor.id);
 
       const result = await testBed.discoverActionsWithDiagnostics(actor);
 

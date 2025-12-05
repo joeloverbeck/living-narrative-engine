@@ -48,14 +48,48 @@ import massageShouldersAction from '../../../../data/mods/affection/actions/mass
  * @returns {object} Mock body graph service with anatomy detection methods
  */
 function createMockBodyGraphService() {
+  const rootToParts = new Map();
+  const partCache = new Map();
+
+  const registerParts = (rootId, parts = []) => {
+    rootToParts.set(
+      rootId,
+      parts.map((part) => {
+        partCache.set(part.id, { partType: part.partType });
+        return part.id;
+      })
+    );
+  };
+
   return {
-    getPartsOfType: jest.fn(() => []),
-    getBodyPart: jest.fn().mockReturnValue(null),
+    getPartsOfType: jest.fn((rootId, partType) => {
+      const parts = rootToParts.get(rootId) || [];
+      return parts
+        .map((id) => ({ id, partType: partCache.get(id)?.partType }))
+        .filter(
+          (part) =>
+            part.partType &&
+            part.partType.toLowerCase() === partType.toLowerCase()
+        );
+    }),
+    getBodyPart: jest.fn((partId) => partCache.get(partId) || null),
     hasPartWithComponentValue: jest.fn().mockReturnValue(false),
-    findPartsByType: jest.fn().mockReturnValue([]),
+    findPartsByType: jest.fn((rootId, partType) => {
+      const parts = rootToParts.get(rootId) || [];
+      return parts.filter((id) =>
+        (partCache.get(id)?.partType || '')
+          .toLowerCase()
+          .includes(partType.toLowerCase())
+      );
+    }),
     buildAdjacencyCache: jest.fn(),
     clearCache: jest.fn(),
-    getAllParts: jest.fn().mockReturnValue([]),
+    getAllParts: jest.fn((bodyComponent) => {
+      const rootId = bodyComponent?.body?.root ?? bodyComponent?.root ?? null;
+      return rootId ? rootToParts.get(rootId) || [] : [];
+    }),
+    getCacheNode: jest.fn((partId) => partCache.get(partId) || null),
+    registerParts,
   };
 }
 
@@ -100,6 +134,7 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       'data/mods/positioning/scopes/close_actors_or_entity_kneeling_before_actor.scope',
       'data/mods/positioning/scopes/close_actors.scope',
       'data/mods/positioning/scopes/close_actors_facing_each_other_or_behind_target.scope',
+      'data/mods/affection/scopes/close_actors_with_hair_or_entity_kneeling_before_actor.scope',
       'data/mods/affection/scopes/actors_with_arms_facing_each_other_or_behind_target.scope',
       'data/mods/affection/scopes/close_actors_facing_each_other.scope',
     ];
@@ -305,7 +340,38 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
     entityManager.addComponent(entityId, 'positioning:facing_away', {
       facing_away_from: [],
     });
+    addHairAnatomy(entityId);
     return actor;
+  }
+
+  function addHairAnatomy(entityId) {
+    const rootId = `${entityId}:head`;
+    const hairId = `${entityId}:hair`;
+
+    entityManager.createEntity(rootId);
+    entityManager.addComponent(rootId, 'anatomy:part', {
+      parent: null,
+      children: [hairId],
+      subType: 'head',
+    });
+
+    entityManager.createEntity(hairId);
+    entityManager.addComponent(hairId, 'anatomy:part', {
+      parent: rootId,
+      children: [],
+      subType: 'hair',
+    });
+    entityManager.addComponent(hairId, 'anatomy:joint', {
+      parentId: rootId,
+      socketId: 'head-hair',
+    });
+
+    entityManager.addComponent(entityId, 'anatomy:body', { root: rootId });
+
+    mockBodyGraphService.registerParts(rootId, [
+      { id: rootId, partType: 'head' },
+      { id: hairId, partType: 'hair' },
+    ]);
   }
 
   /**

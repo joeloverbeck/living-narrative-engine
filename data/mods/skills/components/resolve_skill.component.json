@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "skills:resolve_skill",
+  "description": "Strength of will and spiritual self-command. Governs both resisting and exerting non-physical influence—hexes, possession pressure, corrupting effects, fear/compulsion, and other mind/spirit intrusions. Determines effectiveness in spiritual dominance contests and resistance against them.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 10,
+        "description": "Skill level from 0 (untrained) to 100 (master)"
+      }
+    },
+    "required": ["value"],
+    "additionalProperties": false
+  }
+}

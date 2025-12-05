@@ -127,6 +127,9 @@
         },
         "skills:grappling_skill": {
             "value": 47
+        },
+        "skills:resolve_skill": {
+            "value": 53
         }
     }
 }

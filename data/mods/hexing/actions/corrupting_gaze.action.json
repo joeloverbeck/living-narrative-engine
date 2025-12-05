@@ -1,0 +1,78 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "hexing:corrupting_gaze",
+  "name": "Corrupting Gaze",
+  "description": "Weaponize a corrupting stare to seed corruption in a target.",
+  "template": "cast a corrupting gaze at {target} ({chance}% chance)",
+  "generateCombinations": true,
+  "required_components": {
+    "actor": ["hexing:is_hexer"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:doing_complex_performance",
+      "positioning:being_restrained"
+    ],
+    "primary": ["warding:corrupted"]
+  },
+  "targets": {
+    "primary": {
+      "scope": "core:actors_in_location",
+      "placeholder": "target",
+      "description": "Actor within line of sight to corrupt"
+    }
+  },
+  "chanceBased": {
+    "enabled": true,
+    "contestType": "opposed",
+    "actorSkill": {
+      "component": "skills:resolve_skill",
+      "property": "value",
+      "default": 10
+    },
+    "targetSkill": {
+      "component": "skills:resolve_skill",
+      "property": "value",
+      "default": 0,
+      "targetRole": "primary"
+    },
+    "formula": "ratio",
+    "bounds": { "min": 5, "max": 95 },
+    "outcomes": {
+      "criticalSuccessThreshold": 5,
+      "criticalFailureThreshold": 95
+    },
+    "modifiers": [
+      {
+        "condition": {
+          "logic": {
+            "!!": [{ "var": "entity.actor.components.positioning:fallen" }]
+          }
+        },
+        "type": "flat",
+        "value": -10,
+        "tag": "you're downed",
+        "targetRole": "actor",
+        "description": "Penalty for attempting the gaze while fallen"
+      },
+      {
+        "condition": {
+          "logic": {
+            "!!": [{ "var": "entity.primary.components.positioning:being_restrained" }]
+          }
+        },
+        "type": "flat",
+        "value": 10,
+        "tag": "target restrained",
+        "targetRole": "primary",
+        "description": "Bonus against a restrained target"
+      }
+    ]
+  },
+  "visual": {
+    "backgroundColor": "#1f0d2a",
+    "textColor": "#e8ffd5",
+    "hoverBackgroundColor": "#2f1837",
+    "hoverTextColor": "#f5ffe7"
+  }
+}

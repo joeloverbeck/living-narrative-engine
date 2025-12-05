@@ -21,23 +21,28 @@
   "content": {
     "components": [
       "corrupted.component.json",
+      "is_spiritual_anchor.component.json",
       "warded_by_salt.component.json"
     ],
     "conditions": [
       "entity-has-corrupted-component.condition.json",
       "event-is-action-cross-salt-boundary.condition.json",
-      "event-is-action-draw-salt-boundary.condition.json"
+      "event-is-action-draw-salt-boundary.condition.json",
+      "event-is-action-extract-spiritual-corruption.condition.json"
     ],
     "scopes": [
-      "corrupted_actors.scope"
+      "corrupted_actors.scope",
+      "spiritual_anchors_in_inventory.scope"
     ],
     "actions": [
       "cross_salt_boundary.action.json",
-      "draw_salt_boundary.action.json"
+      "draw_salt_boundary.action.json",
+      "extract_spiritual_corruption.action.json"
     ],
     "rules": [
       "handle_cross_salt_boundary.rule.json",
-      "handle_draw_salt_boundary.rule.json"
+      "handle_draw_salt_boundary.rule.json",
+      "handle_extract_spiritual_corruption.rule.json"
     ]
   }
 }

@@ -556,6 +556,9 @@
         },
         "skills:warding_skill": {
             "value": 85
+        },
+        "skills:resolve_skill": {
+            "value": 82
         }
     }
 }

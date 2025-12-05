@@ -22,6 +22,8 @@ describe('Warding Mod Components - Integration', () => {
   let testBed;
   let corruptedComponent;
   let wardingSkillComponent;
+  let anchorComponent;
+  let resolveSkillComponent;
   let wardingManifest;
   let skillsManifest;
 
@@ -42,6 +44,22 @@ describe('Warding Mod Components - Integration', () => {
     );
     wardingSkillComponent = JSON.parse(
       fs.readFileSync(wardingSkillPath, 'utf8')
+    );
+
+    const anchorComponentPath = path.resolve(
+      process.cwd(),
+      'data/mods/warding/components/is_spiritual_anchor.component.json'
+    );
+    anchorComponent = JSON.parse(
+      fs.readFileSync(anchorComponentPath, 'utf8')
+    );
+
+    const resolveSkillPath = path.resolve(
+      process.cwd(),
+      'data/mods/skills/components/resolve_skill.component.json'
+    );
+    resolveSkillComponent = JSON.parse(
+      fs.readFileSync(resolveSkillPath, 'utf8')
     );
 
     // Load the warding mod manifest
@@ -107,6 +125,18 @@ describe('Warding Mod Components - Integration', () => {
       expect(corruptedComponent.dataSchema.additionalProperties).toBe(
         isVampire.dataSchema.additionalProperties
       );
+    });
+  });
+
+  describe('warding:is_spiritual_anchor Marker Component', () => {
+    it('should have correct component ID', () => {
+      expect(anchorComponent.id).toBe('warding:is_spiritual_anchor');
+    });
+
+    it('should mirror other marker component patterns', () => {
+      expect(anchorComponent.dataSchema.type).toBe('object');
+      expect(anchorComponent.dataSchema.properties).toEqual({});
+      expect(anchorComponent.dataSchema.additionalProperties).toBe(false);
     });
   });
 
@@ -179,6 +209,25 @@ describe('Warding Mod Components - Integration', () => {
     });
   });
 
+  describe('skills:resolve_skill Skill Component', () => {
+    it('should have correct component ID', () => {
+      expect(resolveSkillComponent.id).toBe('skills:resolve_skill');
+    });
+
+    it('matches skill schema expectations', () => {
+      const valueProp = resolveSkillComponent.dataSchema.properties.value;
+      expect(resolveSkillComponent.$schema).toBe(
+        'schema://living-narrative-engine/component.schema.json'
+      );
+      expect(valueProp.type).toBe('integer');
+      expect(valueProp.minimum).toBe(0);
+      expect(valueProp.maximum).toBe(100);
+      expect(valueProp.default).toBe(10);
+      expect(resolveSkillComponent.dataSchema.required).toContain('value');
+      expect(resolveSkillComponent.dataSchema.additionalProperties).toBe(false);
+    });
+  });
+
   describe('Warding Mod Manifest', () => {
     it('should have correct mod ID', () => {
       expect(wardingManifest.id).toBe('warding');
@@ -209,12 +258,24 @@ describe('Warding Mod Components - Integration', () => {
         'corrupted.component.json'
       );
     });
+
+    it('should list spiritual anchor component', () => {
+      expect(wardingManifest.content.components).toContain(
+        'is_spiritual_anchor.component.json'
+      );
+    });
   });
 
   describe('Skills Mod Manifest - Warding Skill Integration', () => {
     it('should list warding_skill component', () => {
       expect(skillsManifest.content.components).toContain(
         'warding_skill.component.json'
+      );
+    });
+
+    it('should list resolve_skill component', () => {
+      expect(skillsManifest.content.components).toContain(
+        'resolve_skill.component.json'
       );
     });
 
@@ -240,6 +301,22 @@ describe('Warding Mod Components - Integration', () => {
       expect(fs.existsSync(componentPath)).toBe(true);
     });
 
+    it('should have resolve_skill component in skills mod directory', () => {
+      const componentPath = path.resolve(
+        process.cwd(),
+        'data/mods/skills/components/resolve_skill.component.json'
+      );
+      expect(fs.existsSync(componentPath)).toBe(true);
+    });
+
+    it('should have is_spiritual_anchor component in warding mod directory', () => {
+      const componentPath = path.resolve(
+        process.cwd(),
+        'data/mods/warding/components/is_spiritual_anchor.component.json'
+      );
+      expect(fs.existsSync(componentPath)).toBe(true);
+    });
+
     it('should parse corrupted component as valid JSON', () => {
       expect(() => {
         const componentPath = path.resolve(
@@ -255,6 +332,26 @@ describe('Warding Mod Components - Integration', () => {
         const componentPath = path.resolve(
           process.cwd(),
           'data/mods/skills/components/warding_skill.component.json'
+        );
+        JSON.parse(fs.readFileSync(componentPath, 'utf8'));
+      }).not.toThrow();
+    });
+
+    it('should parse resolve_skill component as valid JSON', () => {
+      expect(() => {
+        const componentPath = path.resolve(
+          process.cwd(),
+          'data/mods/skills/components/resolve_skill.component.json'
+        );
+        JSON.parse(fs.readFileSync(componentPath, 'utf8'));
+      }).not.toThrow();
+    });
+
+    it('should parse is_spiritual_anchor component as valid JSON', () => {
+      expect(() => {
+        const componentPath = path.resolve(
+          process.cwd(),
+          'data/mods/warding/components/is_spiritual_anchor.component.json'
         );
         JSON.parse(fs.readFileSync(componentPath, 'utf8'));
       }).not.toThrow();
