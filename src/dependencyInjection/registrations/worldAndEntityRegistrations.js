@@ -980,6 +980,7 @@ export function registerWorldAndEntity(container) {
         entityManager: c.resolve(tokens.IEntityManager),
         eventBus: c.resolve(tokens.ISafeEventDispatcher),
         entityLifecycleManager: c.resolve(tokens.IEntityManager),
+        gameDataRepository: c.resolve(tokens.IGameDataRepository),
       });
     });
   logger.debug(

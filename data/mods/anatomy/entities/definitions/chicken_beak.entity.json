@@ -27,6 +27,15 @@
     },
     "descriptors:size_category": {
       "size": "small"
+    },
+    "damage-types:damage_capabilities": {
+      "entries": [
+        {
+          "name": "piercing",
+          "amount": 2,
+          "penetration": 0.1
+        }
+      ]
     }
   }
 }

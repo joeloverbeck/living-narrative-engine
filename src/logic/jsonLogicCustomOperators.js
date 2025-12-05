@@ -22,6 +22,7 @@ import { CanActorGrabItemOperator } from './operators/canActorGrabItemOperator.j
 import { IsItemBeingGrabbedOperator } from './operators/isItemBeingGrabbedOperator.js';
 import { GetSkillValueOperator } from './operators/getSkillValueOperator.js';
 import { HasDamageCapabilityOperator } from './operators/hasDamageCapabilityOperator.js';
+import { HasPartSubTypeContainingOperator } from './operators/hasPartSubTypeContainingOperator.js';
 import { validateOperatorWhitelist } from './operatorRegistrationValidator.js';
 import { hasValidEntityId } from './utils/entityPathResolver.js';
 
@@ -248,6 +249,12 @@ export class JsonLogicCustomOperators extends BaseService {
 
     const hasDamageCapabilityOp = new HasDamageCapabilityOperator({
       entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
+    const hasPartSubTypeContainingOp = new HasPartSubTypeContainingOperator({
+      entityManager: this.#entityManager,
+      bodyGraphService: this.#bodyGraphService,
       logger: this.#logger,
     });
 
@@ -496,6 +503,16 @@ export class JsonLogicCustomOperators extends BaseService {
       function (entityPath, damageTypeName) {
         // 'this' is the evaluation context
         return hasDamageCapabilityOp.evaluate([entityPath, damageTypeName], this);
+      },
+      jsonLogicEvaluationService
+    );
+
+    // Register hasPartSubTypeContaining operator
+    this.#registerOperator(
+      'hasPartSubTypeContaining',
+      function (entityPath, substring) {
+        // 'this' is the evaluation context
+        return hasPartSubTypeContainingOp.evaluate([entityPath, substring], this);
       },
       jsonLogicEvaluationService
     );

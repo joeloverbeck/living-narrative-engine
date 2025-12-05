@@ -7,6 +7,7 @@ describe('DismemberedBodyPartSpawner', () => {
   let mockEntityManager;
   let mockEventBus;
   let mockEntityLifecycleManager;
+  let mockGameDataRepository;
   let mockUnsubscribe;
 
   beforeEach(() => {
@@ -31,11 +32,16 @@ describe('DismemberedBodyPartSpawner', () => {
       createEntityInstance: jest.fn().mockResolvedValue({ id: 'spawned-entity-1' }),
     };
 
+    mockGameDataRepository = {
+      getEntityDefinition: jest.fn().mockReturnValue(null),
+    };
+
     service = new DismemberedBodyPartSpawner({
       logger: mockLogger,
       entityManager: mockEntityManager,
       eventBus: mockEventBus,
       entityLifecycleManager: mockEntityLifecycleManager,
+      gameDataRepository: mockGameDataRepository,
     });
   });
 
@@ -51,6 +57,7 @@ describe('DismemberedBodyPartSpawner', () => {
             entityManager: mockEntityManager,
             eventBus: mockEventBus,
             entityLifecycleManager: mockEntityLifecycleManager,
+            gameDataRepository: mockGameDataRepository,
           })
       ).toThrow();
     });
@@ -62,6 +69,7 @@ describe('DismemberedBodyPartSpawner', () => {
             logger: mockLogger,
             eventBus: mockEventBus,
             entityLifecycleManager: mockEntityLifecycleManager,
+            gameDataRepository: mockGameDataRepository,
           })
       ).toThrow();
     });
@@ -73,6 +81,7 @@ describe('DismemberedBodyPartSpawner', () => {
             logger: mockLogger,
             entityManager: mockEntityManager,
             entityLifecycleManager: mockEntityLifecycleManager,
+            gameDataRepository: mockGameDataRepository,
           })
       ).toThrow();
     });
@@ -84,6 +93,19 @@ describe('DismemberedBodyPartSpawner', () => {
             logger: mockLogger,
             entityManager: mockEntityManager,
             eventBus: mockEventBus,
+            gameDataRepository: mockGameDataRepository,
+          })
+      ).toThrow();
+    });
+
+    it('should throw if gameDataRepository is missing', () => {
+      expect(
+        () =>
+          new DismemberedBodyPartSpawner({
+            logger: mockLogger,
+            entityManager: mockEntityManager,
+            eventBus: mockEventBus,
+            entityLifecycleManager: mockEntityLifecycleManager,
           })
       ).toThrow();
     });
@@ -97,6 +119,7 @@ describe('DismemberedBodyPartSpawner', () => {
             entityManager: invalidEntityManager,
             eventBus: mockEventBus,
             entityLifecycleManager: mockEntityLifecycleManager,
+            gameDataRepository: mockGameDataRepository,
           })
       ).toThrow();
     });
@@ -110,6 +133,7 @@ describe('DismemberedBodyPartSpawner', () => {
             entityManager: mockEntityManager,
             eventBus: invalidEventBus,
             entityLifecycleManager: mockEntityLifecycleManager,
+            gameDataRepository: mockGameDataRepository,
           })
       ).toThrow();
     });
@@ -123,6 +147,7 @@ describe('DismemberedBodyPartSpawner', () => {
             entityManager: mockEntityManager,
             eventBus: invalidEventBus,
             entityLifecycleManager: mockEntityLifecycleManager,
+            gameDataRepository: mockGameDataRepository,
           })
       ).toThrow();
     });
@@ -136,6 +161,21 @@ describe('DismemberedBodyPartSpawner', () => {
             entityManager: mockEntityManager,
             eventBus: mockEventBus,
             entityLifecycleManager: invalidManager,
+            gameDataRepository: mockGameDataRepository,
+          })
+      ).toThrow();
+    });
+
+    it('should throw if gameDataRepository missing getEntityDefinition method', () => {
+      const invalidRepository = {};
+      expect(
+        () =>
+          new DismemberedBodyPartSpawner({
+            logger: mockLogger,
+            entityManager: mockEntityManager,
+            eventBus: mockEventBus,
+            entityLifecycleManager: mockEntityLifecycleManager,
+            gameDataRepository: invalidRepository,
           })
       ).toThrow();
     });
@@ -204,7 +244,7 @@ describe('DismemberedBodyPartSpawner', () => {
         mockEntityManager.getComponentData.mockImplementation(
           (entityId, componentId) => {
             if (entityId === 'part-leg-1' && componentId === 'anatomy:part') {
-              return { definitionId: 'anatomy:human_leg', weight: 8.5 };
+              return { definitionId: 'anatomy:human_leg' };
             }
             if (entityId === 'entity-sarah' && componentId === 'core:position') {
               return { locationId: 'location-tavern' };
@@ -215,6 +255,19 @@ describe('DismemberedBodyPartSpawner', () => {
             return null;
           }
         );
+        // Weight comes from entity definition's core:weight component
+        mockGameDataRepository.getEntityDefinition.mockImplementation((defId) => {
+          if (defId === 'anatomy:human_leg') {
+            return {
+              id: 'anatomy:human_leg',
+              components: {
+                'anatomy:part': { subType: 'leg' },
+                'core:weight': { weight: 8.5 },
+              },
+            };
+          }
+          return null;
+        });
       });
 
       it('should spawn body part entity with correct name', async () => {
@@ -289,7 +342,7 @@ describe('DismemberedBodyPartSpawner', () => {
         );
       });
 
-      it('should use weight from part data', async () => {
+      it('should use weight from entity definition core:weight component', async () => {
         await handleDismemberment(createEvent({
           entityId: 'entity-sarah',
           partId: 'part-leg-1',
@@ -297,6 +350,9 @@ describe('DismemberedBodyPartSpawner', () => {
           orientation: 'left',
         }));
 
+        expect(mockGameDataRepository.getEntityDefinition).toHaveBeenCalledWith(
+          'anatomy:human_leg'
+        );
         expect(mockEntityLifecycleManager.createEntityInstance).toHaveBeenCalledWith(
           'anatomy:human_leg',
           expect.objectContaining({
@@ -360,6 +416,14 @@ describe('DismemberedBodyPartSpawner', () => {
             return null;
           }
         );
+        // Set up entity definition with weight
+        mockGameDataRepository.getEntityDefinition.mockReturnValue({
+          id: 'anatomy:human_arm',
+          components: {
+            'anatomy:part': { subType: 'arm' },
+            'core:weight': { weight: 4.0 },
+          },
+        });
       });
 
       it('should include orientation for left parts', async () => {
@@ -454,7 +518,7 @@ describe('DismemberedBodyPartSpawner', () => {
     });
 
     describe('weight handling', () => {
-      it('should use default weight when part has no weight', async () => {
+      it('should use default weight when entity definition has no core:weight', async () => {
         mockEntityManager.getComponentData.mockImplementation(
           (entityId, componentId) => {
             if (componentId === 'anatomy:part') {
@@ -469,6 +533,14 @@ describe('DismemberedBodyPartSpawner', () => {
             return null;
           }
         );
+        // Entity definition with no core:weight component
+        mockGameDataRepository.getEntityDefinition.mockReturnValue({
+          id: 'anatomy:human_finger',
+          components: {
+            'anatomy:part': { subType: 'finger' },
+            // No core:weight here
+          },
+        });
 
         await handleDismemberment(createEvent({
           entityId: 'entity-1',
@@ -490,11 +562,11 @@ describe('DismemberedBodyPartSpawner', () => {
         );
       });
 
-      it('should not log warning when weight is present', async () => {
+      it('should use default weight when entity definition is not found', async () => {
         mockEntityManager.getComponentData.mockImplementation(
           (entityId, componentId) => {
             if (componentId === 'anatomy:part') {
-              return { definitionId: 'anatomy:human_leg', weight: 10.5 };
+              return { definitionId: 'anatomy:unknown_part' };
             }
             if (componentId === 'core:position') {
               return { locationId: 'location-1' };
@@ -505,6 +577,52 @@ describe('DismemberedBodyPartSpawner', () => {
             return null;
           }
         );
+        // Entity definition not found
+        mockGameDataRepository.getEntityDefinition.mockReturnValue(null);
+
+        await handleDismemberment(createEvent({
+          entityId: 'entity-1',
+          partId: 'part-1',
+          partType: 'unknown',
+          orientation: 'left',
+        }));
+
+        expect(mockEntityLifecycleManager.createEntityInstance).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({
+            componentOverrides: expect.objectContaining({
+              'core:weight': { weight: 1.0 },
+            }),
+          })
+        );
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Missing weight')
+        );
+      });
+
+      it('should not log warning when weight is present in entity definition', async () => {
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:part') {
+              return { definitionId: 'anatomy:human_leg' };
+            }
+            if (componentId === 'core:position') {
+              return { locationId: 'location-1' };
+            }
+            if (componentId === 'core:name') {
+              return { text: 'Test' };
+            }
+            return null;
+          }
+        );
+        // Entity definition with weight
+        mockGameDataRepository.getEntityDefinition.mockReturnValue({
+          id: 'anatomy:human_leg',
+          components: {
+            'anatomy:part': { subType: 'leg' },
+            'core:weight': { weight: 10.5 },
+          },
+        });
 
         await handleDismemberment(createEvent({
           entityId: 'entity-1',
@@ -728,6 +846,14 @@ describe('DismemberedBodyPartSpawner', () => {
             return null;
           }
         );
+        // Set up entity definition with weight
+        mockGameDataRepository.getEntityDefinition.mockReturnValue({
+          id: 'anatomy:human_arm',
+          components: {
+            'anatomy:part': { subType: 'arm' },
+            'core:weight': { weight: 4.0 },
+          },
+        });
       });
 
       it('should set partType to unknown when not provided', async () => {

@@ -55,6 +55,13 @@ jest.mock('../../../src/scopeDsl/nodes/slotAccessResolver.js', () =>
     name: 'slotAccess',
   }))
 );
+jest.mock('../../../src/scopeDsl/nodes/bodyPartStepResolver.js', () =>
+  jest.fn(() => ({
+    canResolve: jest.fn(),
+    resolve: jest.fn(),
+    name: 'bodyPartStep',
+  }))
+);
 jest.mock('../../../src/scopeDsl/nodes/scopeReferenceResolver.js', () =>
   jest.fn(() => ({
     canResolve: jest.fn(),
@@ -70,6 +77,7 @@ const createUnionResolver = require('../../../src/scopeDsl/nodes/unionResolver.j
 const createArrayIterationResolver = require('../../../src/scopeDsl/nodes/arrayIterationResolver.js');
 const createClothingStepResolver = require('../../../src/scopeDsl/nodes/clothingStepResolver.js');
 const createSlotAccessResolver = require('../../../src/scopeDsl/nodes/slotAccessResolver.js');
+const createBodyPartStepResolver = require('../../../src/scopeDsl/nodes/bodyPartStepResolver.js');
 const createScopeReferenceResolver = require('../../../src/scopeDsl/nodes/scopeReferenceResolver.js');
 const createCycleDetectorModule = require('../../../src/scopeDsl/core/cycleDetector.js');
 
@@ -294,6 +302,10 @@ describe('ScopeEngine helper methods', () => {
       expect(createSlotAccessResolver).toHaveBeenCalledWith({
         entitiesGateway,
       });
+      expect(createBodyPartStepResolver).toHaveBeenCalledWith({
+        entitiesGateway,
+        errorHandler: null,
+      });
       expect(createSourceResolver).toHaveBeenCalledWith({
         entitiesGateway,
         locationProvider,
@@ -321,6 +333,11 @@ describe('ScopeEngine helper methods', () => {
           canResolve: expect.any(Function),
           resolve: expect.any(Function),
           name: 'slotAccess',
+        },
+        {
+          canResolve: expect.any(Function),
+          resolve: expect.any(Function),
+          name: 'bodyPartStep',
         },
         {
           canResolve: expect.any(Function),

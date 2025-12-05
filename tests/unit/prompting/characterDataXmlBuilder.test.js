@@ -898,19 +898,19 @@ describe('CharacterDataXmlBuilder', () => {
         expect(result).toContain('You are seriously injured (45%)');
         expect(result).toContain('</overall_status>');
 
-        // Verify injuries list
+        // Verify injuries contains first-person narrative (same text used in game.html Physical Condition panel)
+        // This replaces the old technical <injury> elements with human-readable narrative
         expect(result).toContain('<injuries>');
-        expect(result).toContain('<injury part="left arm" state="wounded">bleeding_moderate</injury>');
-        expect(result).toContain('<injury part="torso" state="wounded"></injury>');
+        expect(result).toContain('Sharp pain radiates from my left arm.');
         expect(result).toContain('</injuries>');
 
-        // Verify active effects
-        expect(result).toContain('<active_effects>bleeding</active_effects>');
+        // Verify old technical format is NOT used
+        expect(result).not.toContain('<injury part=');
+        expect(result).not.toContain('</injury>');
 
-        // Verify first-person narrative
-        expect(result).toContain('<first_person_experience>');
-        expect(result).toContain('Sharp pain radiates from my left arm.');
-        expect(result).toContain('</first_person_experience>');
+        // Verify old redundant elements are removed
+        expect(result).not.toContain('<active_effects>');
+        expect(result).not.toContain('<first_person_experience>');
       });
 
       it('should place physical_condition first in current_state section', () => {
@@ -991,29 +991,34 @@ describe('CharacterDataXmlBuilder', () => {
     });
 
     describe('Empty or Partial Health Data', () => {
-      it('should handle empty injuries array', () => {
+      it('should include injuries when firstPersonNarrative is present even with empty injuries array', () => {
         const result = builder.buildCharacterDataXml(CHARACTER_WITH_EFFECTS_ONLY);
 
         // Should have physical_condition section
         expect(result).toContain('<physical_condition>');
 
-        // Should NOT have injuries element when array is empty
-        expect(result).not.toContain('<injuries>');
-        expect(result).not.toContain('</injuries>');
+        // Should have injuries element with narrative text even when injuries array is empty
+        // (because firstPersonNarrative is present)
+        expect(result).toContain('<injuries>');
+        expect(result).toContain('The poison courses through my veins.');
+        expect(result).toContain('</injuries>');
 
-        // Should still have active effects
-        expect(result).toContain('<active_effects>poisoned, burning</active_effects>');
+        // Verify old redundant elements are NOT included
+        expect(result).not.toContain('<active_effects>');
+        expect(result).not.toContain('<first_person_experience>');
       });
 
       it('should handle missing firstPersonNarrative', () => {
         const result = builder.buildCharacterDataXml(CHARACTER_DYING);
 
-        // firstPersonNarrative is null in CHARACTER_DYING
-        expect(result).not.toContain('<first_person_experience>');
+        // firstPersonNarrative is null in CHARACTER_DYING, so no injuries element
+        expect(result).not.toContain('<injuries>');
+        // But should still have critical warning since isDying is true
+        expect(result).toContain('<critical_warning>');
       });
 
-      it('should handle empty activeEffects array', () => {
-        const noEffectsData = {
+      it('should omit injuries when no firstPersonNarrative is present', () => {
+        const noNarrativeData = {
           name: 'Test',
           healthState: {
             overallHealthPercentage: 80,
@@ -1025,34 +1030,27 @@ describe('CharacterDataXmlBuilder', () => {
             firstPersonNarrative: null,
           },
         };
-        const result = builder.buildCharacterDataXml(noEffectsData);
+        const result = builder.buildCharacterDataXml(noNarrativeData);
 
         expect(result).toContain('<physical_condition>');
+        // No injuries element without firstPersonNarrative
+        expect(result).not.toContain('<injuries>');
+        // Verify old elements are not present
         expect(result).not.toContain('<active_effects>');
       });
     });
 
     describe('XML Escaping in Health Data', () => {
-      it('should escape ampersand in partName', () => {
+      it('should escape special characters in injuries narrative', () => {
         const result = builder.buildCharacterDataXml(CHARACTER_WITH_SPECIAL_CHARS_INJURY);
 
-        // Check that ampersand is escaped
-        expect(result).toContain('&amp; shoulder');
-      });
-
-      it('should escape angle brackets in effects', () => {
-        const result = builder.buildCharacterDataXml(CHARACTER_WITH_SPECIAL_CHARS_INJURY);
-
-        // Effects should be escaped
-        expect(result).toContain('bleeding &lt;moderate&gt;');
-      });
-
-      it('should escape angle brackets and ampersand in firstPersonNarrative', () => {
-        const result = builder.buildCharacterDataXml(CHARACTER_WITH_SPECIAL_CHARS_INJURY);
+        // The injuries tag now contains firstPersonNarrative, which should be escaped
+        expect(result).toContain('<injuries>');
 
         // Narrative should have ampersand and angle brackets escaped
         expect(result).toContain('&amp; shoulder');
         expect(result).toContain('&lt;sharp&gt;');
+        expect(result).toContain('</injuries>');
       });
     });
 

@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "skills:warding_skill",
-  "description": "Proficiency in creating protective wards and barriers. Determines effectiveness in warding rituals and salt boundary creation.",
+  "description": "Proficiency in ritual boundary-work—creating and shaping wards, circles, seals, and anchors to protect, bind, contain, cleanse, or banish spiritual influences. Determines effectiveness in warding rituals including salt boundaries, protective barriers, containment/vessel anchoring, and extraction or removal of corruption.",
   "dataSchema": {
     "type": "object",
     "properties": {

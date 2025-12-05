@@ -1521,8 +1521,8 @@ describe('ScopeEngine', () => {
         logicEval: mockJsonLogicEval,
       });
 
-      // Should have 7 resolvers total (2 clothing + 5 original)
-      expect(resolvers).toHaveLength(7);
+      // Should have 8 resolvers total (2 clothing + 1 body part + 5 original)
+      expect(resolvers).toHaveLength(8);
 
       // Clothing resolvers should be first for priority
       expect(
@@ -1597,14 +1597,14 @@ describe('ScopeEngine', () => {
       ).toBe(true);
 
       // Verify that regular StepResolver handles standalone torso_upper
-      // It should be at index 3 (after ClothingStepResolver, SlotAccessResolver, SourceResolver)
+      // It should be at index 4 (after ClothingStepResolver, SlotAccessResolver, BodyPartStepResolver, SourceResolver)
       expect(
-        resolvers[3].canResolve({ type: 'Step', field: 'torso_upper' })
+        resolvers[4].canResolve({ type: 'Step', field: 'torso_upper' })
       ).toBe(true);
 
       // Verify that regular StepResolver can handle any field
       expect(
-        resolvers[3].canResolve({ type: 'Step', field: 'some_random_field' })
+        resolvers[4].canResolve({ type: 'Step', field: 'some_random_field' })
       ).toBe(true);
     });
   });

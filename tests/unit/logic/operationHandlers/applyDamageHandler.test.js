@@ -17,6 +17,7 @@ import {
 
 import ApplyDamageHandler from '../../../../src/logic/operationHandlers/applyDamageHandler.js';
 import { calculateStateFromPercentage } from '../../../../src/anatomy/registries/healthStateRegistry.js';
+import { POSITION_COMPONENT_ID } from '../../../../src/constants/componentIds.js';
 
 jest.mock('../../../../src/anatomy/registries/healthStateRegistry.js', () => {
   const original = jest.requireActual(
@@ -2369,7 +2370,7 @@ describe('ApplyDamageHandler', () => {
       em.getComponentData.mockImplementation((id, comp) => {
         if (id === partId && comp === PART_HEALTH_COMPONENT_ID) return healthComponent;
         if (id === partId && comp === PART_COMPONENT_ID) return partComponent;
-        if (id === ownerEntityId && comp === 'core:location') {
+        if (id === ownerEntityId && comp === 'core:position') {
           return withLocation ? { locationId } : null;
         }
         return null;
@@ -2454,7 +2455,7 @@ describe('ApplyDamageHandler', () => {
       expect(typeof payload.contextualData.totalDamage).toBe('number');
     });
 
-    test('skips perceptible event dispatch when entity has no location', async () => {
+    test('dispatches error when entity has no location (fail-fast pattern)', async () => {
       const { params, executionContext } = createTestScenario({ withLocation: false });
 
       await handler.execute(params, executionContext);
@@ -2466,9 +2467,85 @@ describe('ApplyDamageHandler', () => {
 
       expect(perceptibleEventCall).toBeUndefined();
 
-      // Should have logged a debug message about skipping
-      expect(log.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Skipped perceptible event dispatch')
+      // Should have logged an error (fail-fast pattern instead of silent skip)
+      expect(log.error).toHaveBeenCalledWith(
+        expect.stringContaining('Cannot dispatch perceptible event - no location found')
+      );
+
+      // Should have dispatched system error event
+      const errorEventCall = dispatcher.dispatch.mock.calls.find(
+        ([eventType]) => eventType === 'core:system_error_occurred'
+      );
+      expect(errorEventCall).toBeDefined();
+    });
+
+    test('uses actor location as fallback when target has no location (actor in nested structure)', async () => {
+      // This test reproduces the production scenario where actor ID is in
+      // executionContext.actor.id (nested structure) rather than executionContext.actorId
+      const ownerEntityId = 'victim-entity';
+      const partId = 'part1';
+      const actorWithLocationId = 'attacker-with-location';
+      const actorLocationId = 'attacker-location';
+
+      const healthComponent = {
+        currentHealth: 100,
+        maxHealth: 100,
+        state: 'healthy',
+        turnsInState: 0,
+      };
+
+      const partComponent = {
+        subType: 'torso',
+        ownerEntityId,
+      };
+
+      em.hasComponent.mockImplementation((id, comp) => {
+        if (id === partId && comp === PART_HEALTH_COMPONENT_ID) return true;
+        if (id === partId && comp === PART_COMPONENT_ID) return true;
+        return false;
+      });
+
+      em.getComponentData.mockImplementation((id, comp) => {
+        if (id === partId && comp === PART_HEALTH_COMPONENT_ID) return healthComponent;
+        if (id === partId && comp === PART_COMPONENT_ID) return partComponent;
+        // Target entity has NO location
+        if (id === ownerEntityId && comp === 'core:position') return null;
+        // Actor entity HAS location - this is the fallback
+        if (id === actorWithLocationId && comp === 'core:position') {
+          return { locationId: actorLocationId };
+        }
+        return null;
+      });
+
+      damageNarrativeComposer.compose.mockReturnValue('Test damage with actor fallback');
+
+      const params = {
+        entity_ref: ownerEntityId,
+        part_ref: partId,
+        damage_entry: { name: 'slashing', amount: 25 },
+      };
+
+      // Production structure: actor ID is in executionContext.actor.id, NOT executionContext.actorId
+      const executionContext = {
+        evaluationContext: {},
+        logger: log,
+        actor: { id: actorWithLocationId }, // This is the production structure!
+        // Note: NO actorId property at top level
+      };
+
+      await handler.execute(params, executionContext);
+
+      // Should have dispatched core:perceptible_event using actor's location as fallback
+      const perceptibleEventCall = dispatcher.dispatch.mock.calls.find(
+        ([eventType]) => eventType === 'core:perceptible_event'
+      );
+
+      expect(perceptibleEventCall).toBeDefined();
+      expect(perceptibleEventCall[1].locationId).toBe(actorLocationId);
+
+      // Should have logged a warning about using fallback
+      expect(log.warn).toHaveBeenCalledWith(
+        expect.stringContaining("using actor's location")
       );
     });
 
@@ -2517,6 +2594,28 @@ describe('ApplyDamageHandler', () => {
       for (const key of Object.keys(payload)) {
         expect(allowedProperties.has(key)).toBe(true);
       }
+    });
+  });
+
+  describe('Property Tests - actorId extraction', () => {
+    test.each([
+      [{ actor: { id: 'actor-1' } }, 'actor-1', 'modern nested structure'],
+      [{ actorId: 'actor-2' }, 'actor-2', 'legacy top-level structure'],
+      [{ actor: { id: 'actor-3' }, actorId: 'ignored' }, 'actor-3', 'both present (prefer actor.id)'],
+      [{}, null, 'neither present'],
+      [{ actor: {} }, null, 'actor object but no id'],
+      [{ actor: null }, null, 'actor is null'],
+    ])('extracts actorId from %j → %s (%s)', (contextPart, expected) => {
+      // Test the extraction logic pattern used by the handler
+      const extractActorId = (ctx) => ctx?.actor?.id || ctx?.actorId || null;
+      expect(extractActorId(contextPart)).toBe(expected);
+    });
+  });
+
+  describe('Property Tests - component ID constant', () => {
+    test('uses correct position component ID constant', () => {
+      // Property: component ID matches truth source from src/constants/componentIds.js
+      expect(POSITION_COMPONENT_ID).toBe('core:position');
     });
   });
 });
