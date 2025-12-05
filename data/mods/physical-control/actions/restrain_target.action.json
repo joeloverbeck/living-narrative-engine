@@ -56,7 +56,21 @@
     "outcomes": {
       "criticalSuccessThreshold": 5,
       "criticalFailureThreshold": 95
-    }
+    },
+    "modifiers": [
+      {
+        "condition": {
+          "logic": {
+            "!!": [{ "var": "entity.primary.components.positioning:fallen" }]
+          }
+        },
+        "type": "flat",
+        "value": 10,
+        "tag": "target downed",
+        "targetRole": "primary",
+        "description": "Bonus for restraining a fallen target"
+      }
+    ]
   },
   "visual": {
     "backgroundColor": "#2f2f2f",

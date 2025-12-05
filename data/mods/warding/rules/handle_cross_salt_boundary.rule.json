@@ -1,0 +1,64 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_cross_salt_boundary",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "warding:event-is-action-cross-salt-boundary"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "REMOVE_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "warding:warded_by_salt"
+      }
+    },
+    {
+      "type": "REGENERATE_DESCRIPTION",
+      "parameters": { "entity_ref": "actor" }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.actorName} crosses the salt boundary, breaking it.",
+        "perception_type": "action_self_general",
+        "actor_id": "{event.payload.actorId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_self_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} crosses the salt boundary, breaking it."
+      }
+    },
+    { "macro": "core:logSuccessOutcomeAndEndTurn" }
+  ]
+}

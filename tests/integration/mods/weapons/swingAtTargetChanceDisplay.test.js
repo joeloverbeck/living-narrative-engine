@@ -831,6 +831,7 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
 import ChanceCalculationService from '../../../../src/combat/services/ChanceCalculationService.js';
 import SkillResolverService from '../../../../src/combat/services/SkillResolverService.js';
 import ModifierCollectorService from '../../../../src/combat/services/ModifierCollectorService.js';
+import ModifierContextBuilder from '../../../../src/combat/services/ModifierContextBuilder.js';
 import ProbabilityCalculatorService from '../../../../src/combat/services/ProbabilityCalculatorService.js';
 import OutcomeDeterminerService from '../../../../src/combat/services/OutcomeDeterminerService.js';
 import { MultiTargetActionFormatter } from '../../../../src/actions/formatters/MultiTargetActionFormatter.js';
@@ -895,8 +896,14 @@ describe('DIAGNOSTIC: generateCombinations with REAL ChanceCalculationService', 
       logger: mockLogger,
     });
 
+    const modifierContextBuilder = new ModifierContextBuilder({
+      entityManager: mockEntityManager,
+      logger: mockLogger,
+    });
+
     const modifierCollector = new ModifierCollectorService({
       entityManager: mockEntityManager,
+      modifierContextBuilder,
       logger: mockLogger,
     });
 
@@ -934,9 +941,10 @@ describe('DIAGNOSTIC: generateCombinations with REAL ChanceCalculationService', 
   describe('Direct ChanceCalculationService verification', () => {
     it('should calculate ~68% for Vespera (melee=73) vs Bertram (defense=35)', () => {
       // Direct test of the service to verify it works correctly
+      // Note: Use secondaryTargetId to match targetRole: 'secondary' in chanceBased config
       const result = realChanceService.calculateForDisplay({
         actorId: 'vespera',
-        targetId: 'bertram',
+        secondaryTargetId: 'bertram',
         actionDef: {
           id: 'weapons:swing_at_target',
           chanceBased: {

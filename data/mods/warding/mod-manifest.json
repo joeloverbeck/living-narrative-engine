@@ -20,19 +20,23 @@
   ],
   "content": {
     "components": [
-      "corrupted.component.json"
+      "corrupted.component.json",
+      "warded_by_salt.component.json"
     ],
     "conditions": [
       "entity-has-corrupted-component.condition.json",
+      "event-is-action-cross-salt-boundary.condition.json",
       "event-is-action-draw-salt-boundary.condition.json"
     ],
     "scopes": [
       "corrupted_actors.scope"
     ],
     "actions": [
+      "cross_salt_boundary.action.json",
       "draw_salt_boundary.action.json"
     ],
     "rules": [
+      "handle_cross_salt_boundary.rule.json",
       "handle_draw_salt_boundary.rule.json"
     ]
   }

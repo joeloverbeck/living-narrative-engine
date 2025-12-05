@@ -19,6 +19,9 @@
       "positioning:being_restrained",
       "positioning:restraining",
       "positioning:fallen"
+    ],
+    "primary": [
+      "warding:warded_by_salt"
     ]
   },
   "targets": {
@@ -45,7 +48,45 @@
     "outcomes": {
       "criticalSuccessThreshold": 5,
       "criticalFailureThreshold": 95
-    }
+    },
+    "modifiers": [
+      {
+        "condition": {
+          "logic": {
+            "!": [{ "var": "entity.primary.components.positioning:being_restrained" }]
+          }
+        },
+        "type": "flat",
+        "value": -15,
+        "tag": "target unrestrained",
+        "targetRole": "primary",
+        "description": "Penalty for warding an unrestrained target"
+      },
+      {
+        "condition": {
+          "logic": {
+            "!!": [{ "var": "entity.primary.components.positioning:being_restrained" }]
+          }
+        },
+        "type": "flat",
+        "value": 15,
+        "tag": "target restrained",
+        "targetRole": "primary",
+        "description": "Bonus for warding a restrained target"
+      },
+      {
+        "condition": {
+          "logic": {
+            "!!": [{ "var": "entity.primary.components.positioning:fallen" }]
+          }
+        },
+        "type": "flat",
+        "value": 10,
+        "tag": "target downed",
+        "targetRole": "primary",
+        "description": "Bonus for warding a fallen target"
+      }
+    ]
   },
   "visual": {
     "backgroundColor": "#424242",

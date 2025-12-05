@@ -64,6 +64,14 @@
         },
         "then_actions": [
           {
+            "type": "ADD_COMPONENT",
+            "parameters": {
+              "entity_ref": "target",
+              "component_type": "warding:warded_by_salt",
+              "value": {}
+            }
+          },
+          {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
@@ -95,6 +103,14 @@
           ]
         },
         "then_actions": [
+          {
+            "type": "ADD_COMPONENT",
+            "parameters": {
+              "entity_ref": "target",
+              "component_type": "warding:warded_by_salt",
+              "value": {}
+            }
+          },
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "parameters": {

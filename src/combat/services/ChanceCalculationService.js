@@ -147,17 +147,32 @@ class ChanceCalculationService {
     );
 
     let targetSkillValue = 0;
-    if (
-      chanceBased.contestType === 'opposed' &&
-      chanceBased.targetSkill &&
-      resolvedPrimaryTargetId
-    ) {
-      const targetSkill = this.#skillResolverService.getSkillValue(
-        resolvedPrimaryTargetId,
-        chanceBased.targetSkill.component,
-        chanceBased.targetSkill.default ?? 0
-      );
-      targetSkillValue = targetSkill.baseValue;
+    if (chanceBased.contestType === 'opposed' && chanceBased.targetSkill) {
+      // Determine which target to use for skill resolution based on targetRole
+      const targetRole = chanceBased.targetSkill.targetRole ?? 'primary';
+      let targetIdForSkill;
+
+      switch (targetRole) {
+        case 'secondary':
+          targetIdForSkill = secondaryTargetId;
+          break;
+        case 'tertiary':
+          targetIdForSkill = tertiaryTargetId;
+          break;
+        case 'primary':
+        default:
+          targetIdForSkill = resolvedPrimaryTargetId;
+          break;
+      }
+
+      if (targetIdForSkill) {
+        const targetSkill = this.#skillResolverService.getSkillValue(
+          targetIdForSkill,
+          chanceBased.targetSkill.component,
+          chanceBased.targetSkill.default ?? 0
+        );
+        targetSkillValue = targetSkill.baseValue;
+      }
     }
 
     // 2. Collect modifiers (now with all target roles)

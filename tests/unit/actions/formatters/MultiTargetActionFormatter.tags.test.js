@@ -418,6 +418,184 @@ describe('MultiTargetActionFormatter - Modifier Tag Display', () => {
     });
   });
 
+  describe('defensive bracket stripping', () => {
+    it('should strip existing brackets from tags to prevent double brackets', () => {
+      const actionDef = {
+        id: 'test:action',
+        template: 'attack {target} ({chance}% chance)',
+        generateCombinations: true,
+        targets: {
+          primary: { scope: 'test:actors', placeholder: 'target' },
+        },
+        chanceBased: {
+          enabled: true,
+          contestType: 'opposed',
+          actorSkill: { component: 'skills:melee', default: 50 },
+        },
+      };
+
+      const resolvedTargets = {
+        primary: [{ id: 'target_1', displayName: 'Enemy' }],
+      };
+
+      // Simulate modder accidentally including brackets in tag definitions
+      mockChanceCalculationService.calculateForDisplay.mockReturnValue({
+        chance: 65,
+        displayText: '65%',
+        activeTags: ['[target downed]', '[target restrained]'],
+        breakdown: {},
+      });
+
+      const result = formatter.formatMultiTarget(
+        actionDef,
+        resolvedTargets,
+        null,
+        {
+          chanceCalculationService: mockChanceCalculationService,
+          actorId: 'actor_1',
+        },
+        { targetDefinitions: actionDef.targets }
+      );
+
+      expect(result.ok).toBe(true);
+      // Should NOT produce [[target downed]] - brackets should be stripped first
+      expect(result.value[0].command).toBe(
+        'attack Enemy (65% chance) [target downed] [target restrained]'
+      );
+      expect(result.value[0].command).not.toContain('[[');
+      expect(result.value[0].command).not.toContain(']]');
+    });
+
+    it('should handle multiple leading/trailing brackets', () => {
+      const actionDef = {
+        id: 'test:action',
+        template: 'attack {target} ({chance}% chance)',
+        generateCombinations: true,
+        targets: {
+          primary: { scope: 'test:actors', placeholder: 'target' },
+        },
+        chanceBased: {
+          enabled: true,
+          contestType: 'opposed',
+          actorSkill: { component: 'skills:melee', default: 50 },
+        },
+      };
+
+      const resolvedTargets = {
+        primary: [{ id: 'target_1', displayName: 'Enemy' }],
+      };
+
+      // Extreme case: multiple brackets
+      mockChanceCalculationService.calculateForDisplay.mockReturnValue({
+        chance: 65,
+        displayText: '65%',
+        activeTags: ['[[double brackets]]', '[[[triple]]]'],
+        breakdown: {},
+      });
+
+      const result = formatter.formatMultiTarget(
+        actionDef,
+        resolvedTargets,
+        null,
+        {
+          chanceCalculationService: mockChanceCalculationService,
+          actorId: 'actor_1',
+        },
+        { targetDefinitions: actionDef.targets }
+      );
+
+      expect(result.ok).toBe(true);
+      expect(result.value[0].command).toBe(
+        'attack Enemy (65% chance) [double brackets] [triple]'
+      );
+    });
+
+    it('should handle mixed bracketed and non-bracketed tags', () => {
+      const actionDef = {
+        id: 'test:action',
+        template: 'attack {target} ({chance}% chance)',
+        generateCombinations: true,
+        targets: {
+          primary: { scope: 'test:actors', placeholder: 'target' },
+        },
+        chanceBased: {
+          enabled: true,
+          contestType: 'opposed',
+          actorSkill: { component: 'skills:melee', default: 50 },
+        },
+      };
+
+      const resolvedTargets = {
+        primary: [{ id: 'target_1', displayName: 'Enemy' }],
+      };
+
+      mockChanceCalculationService.calculateForDisplay.mockReturnValue({
+        chance: 65,
+        displayText: '65%',
+        activeTags: ['[bracketed]', 'not bracketed', '[also bracketed]'],
+        breakdown: {},
+      });
+
+      const result = formatter.formatMultiTarget(
+        actionDef,
+        resolvedTargets,
+        null,
+        {
+          chanceCalculationService: mockChanceCalculationService,
+          actorId: 'actor_1',
+        },
+        { targetDefinitions: actionDef.targets }
+      );
+
+      expect(result.ok).toBe(true);
+      expect(result.value[0].command).toBe(
+        'attack Enemy (65% chance) [bracketed] [not bracketed] [also bracketed]'
+      );
+    });
+
+    it('should filter out tags that become empty after bracket stripping', () => {
+      const actionDef = {
+        id: 'test:action',
+        template: 'attack {target} ({chance}% chance)',
+        generateCombinations: true,
+        targets: {
+          primary: { scope: 'test:actors', placeholder: 'target' },
+        },
+        chanceBased: {
+          enabled: true,
+          contestType: 'opposed',
+          actorSkill: { component: 'skills:melee', default: 50 },
+        },
+      };
+
+      const resolvedTargets = {
+        primary: [{ id: 'target_1', displayName: 'Enemy' }],
+      };
+
+      // Tags that are only brackets should be filtered out
+      mockChanceCalculationService.calculateForDisplay.mockReturnValue({
+        chance: 65,
+        displayText: '65%',
+        activeTags: ['valid tag', '[]', '[[]]', '[  ]'],
+        breakdown: {},
+      });
+
+      const result = formatter.formatMultiTarget(
+        actionDef,
+        resolvedTargets,
+        null,
+        {
+          chanceCalculationService: mockChanceCalculationService,
+          actorId: 'actor_1',
+        },
+        { targetDefinitions: actionDef.targets }
+      );
+
+      expect(result.ok).toBe(true);
+      expect(result.value[0].command).toBe('attack Enemy (65% chance) [valid tag]');
+    });
+  });
+
   describe('error resilience', () => {
     it('should continue without tags when chance calculation throws', () => {
       const actionDef = {

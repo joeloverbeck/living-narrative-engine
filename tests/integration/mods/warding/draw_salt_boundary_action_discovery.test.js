@@ -267,5 +267,57 @@ describe('warding:draw_salt_boundary action discovery', () => {
       // Action should not be available since the only corrupted entity is the actor themselves
       expect(ids).not.toContain(ACTION_ID);
     });
+
+    it('is not available when target is already warded by salt', () => {
+      const { actor } = setupScenario({
+        'warding:warded_by_salt': {},
+      });
+      configureActionDiscovery();
+
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        actor.id
+      );
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).not.toContain(ACTION_ID);
+    });
+  });
+
+  describe('Action modifiers', () => {
+    it('has forbidden_components for primary target including warded_by_salt', () => {
+      expect(drawSaltBoundaryAction.forbidden_components.primary).toContain(
+        'warding:warded_by_salt'
+      );
+    });
+
+    it('has modifier for unrestrained target (-15 penalty)', () => {
+      const unrestrainedModifier = drawSaltBoundaryAction.chanceBased.modifiers.find(
+        (m) => m.tag === 'target unrestrained'
+      );
+      expect(unrestrainedModifier).toBeDefined();
+      expect(unrestrainedModifier.type).toBe('flat');
+      expect(unrestrainedModifier.value).toBe(-15);
+      expect(unrestrainedModifier.targetRole).toBe('primary');
+    });
+
+    it('has modifier for restrained target (+15 bonus)', () => {
+      const restrainedModifier = drawSaltBoundaryAction.chanceBased.modifiers.find(
+        (m) => m.tag === 'target restrained'
+      );
+      expect(restrainedModifier).toBeDefined();
+      expect(restrainedModifier.type).toBe('flat');
+      expect(restrainedModifier.value).toBe(15);
+      expect(restrainedModifier.targetRole).toBe('primary');
+    });
+
+    it('has modifier for fallen target (+10 bonus)', () => {
+      const fallenModifier = drawSaltBoundaryAction.chanceBased.modifiers.find(
+        (m) => m.tag === 'target downed'
+      );
+      expect(fallenModifier).toBeDefined();
+      expect(fallenModifier.type).toBe('flat');
+      expect(fallenModifier.value).toBe(10);
+      expect(fallenModifier.targetRole).toBe('primary');
+    });
   });
 });
