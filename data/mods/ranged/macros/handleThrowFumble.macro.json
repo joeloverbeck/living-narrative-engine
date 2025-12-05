@@ -22,12 +22,13 @@
     },
     {
       "type": "PICK_RANDOM_ENTITY",
-      "comment": "Try to find a random non-actor entity at location (excluding actor and target)",
+      "comment": "Try to find a random non-actor entity at location (excluding actor, target, and the thrown item itself)",
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
         "exclude_entities": [
           "{event.payload.actorId}",
-          "{event.payload.secondaryId}"
+          "{event.payload.secondaryId}",
+          "{event.payload.primaryId}"
         ],
         "exclude_components": ["core:actor"],
         "result_variable": "fumbleVictim"
@@ -61,6 +62,23 @@
             "parameters": {
               "variable_name": "logMessage",
               "value": "{context.actorName} throws {context.throwableName} wildly at {context.targetName}, but the {context.throwableName} flies past the target and hits {context.fumbleVictimName} instead!"
+            }
+          },
+          {
+            "type": "FOR_EACH",
+            "comment": "Apply damage to the fumble victim (the entity that was accidentally hit)",
+            "parameters": {
+              "collection": "context.throwableDamage",
+              "item_variable": "dmgEntry",
+              "actions": [
+                {
+                  "type": "APPLY_DAMAGE",
+                  "parameters": {
+                    "entity_ref": { "var": "context.fumbleVictim" },
+                    "damage_entry": { "var": "context.dmgEntry" }
+                  }
+                }
+              ]
             }
           }
         ],

@@ -1497,4 +1497,299 @@ describe('DeathCheckService', () => {
       );
     });
   });
+
+  describe('evaluateDeathConditions', () => {
+    describe('when entity is already dead', () => {
+      beforeEach(() => {
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            return componentId === 'anatomy:dead';
+          }
+        );
+      });
+
+      it('should return isDead true with shouldFinalize false', () => {
+        const result = service.evaluateDeathConditions('entity-1');
+
+        expect(result).toEqual({
+          isDead: true,
+          isDying: false,
+          shouldFinalize: false,
+          finalizationParams: null,
+          deathInfo: null,
+        });
+      });
+
+      it('should not dispatch any events', () => {
+        service.evaluateDeathConditions('entity-1');
+
+        expect(mockEventBus.dispatch).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when vital organ is destroyed', () => {
+      beforeEach(() => {
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (
+              entityId === 'destroyed-part-1' &&
+              componentId === 'anatomy:vital_organ'
+            ) {
+              return true;
+            }
+            return false;
+          }
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (
+              entityId === 'destroyed-part-1' &&
+              componentId === 'anatomy:vital_organ'
+            ) {
+              return { organType: 'brain' };
+            }
+            return null;
+          }
+        );
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 50,
+          destroyedParts: [{ partEntityId: 'destroyed-part-1', state: 'destroyed' }],
+          isDying: false,
+          isDead: false,
+        });
+      });
+
+      it('should return shouldFinalize true with finalization params', () => {
+        const result = service.evaluateDeathConditions('entity-1', 'killer-1');
+
+        expect(result.shouldFinalize).toBe(true);
+        expect(result.finalizationParams).toEqual({
+          entityId: 'entity-1',
+          causeOfDeath: 'vital_organ_destroyed',
+          damageCauserId: 'killer-1',
+          vitalOrganDestroyed: 'brain',
+        });
+      });
+
+      it('should return deathInfo for compatibility', () => {
+        const result = service.evaluateDeathConditions('entity-1', 'killer-1');
+
+        expect(result.deathInfo).toEqual({
+          causeOfDeath: 'vital_organ_destroyed',
+          vitalOrganDestroyed: 'brain',
+          killedBy: 'killer-1',
+        });
+      });
+
+      it('should NOT dispatch any events', () => {
+        service.evaluateDeathConditions('entity-1', 'killer-1');
+
+        expect(mockEventBus.dispatch).not.toHaveBeenCalled();
+      });
+
+      it('should NOT add dead component', () => {
+        service.evaluateDeathConditions('entity-1', 'killer-1');
+
+        expect(mockEntityManager.addComponent).not.toHaveBeenCalledWith(
+          'entity-1',
+          'anatomy:dead',
+          expect.anything()
+        );
+      });
+    });
+
+    describe('when critical health causes dying state', () => {
+      beforeEach(() => {
+        mockEntityManager.hasComponent.mockReturnValue(false);
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'core:name') {
+              return { text: 'Test Entity' };
+            }
+            return null;
+          }
+        );
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 5,
+          destroyedParts: [],
+          isDying: false,
+          isDead: false,
+        });
+      });
+
+      it('should return isDying true with shouldFinalize false', () => {
+        const result = service.evaluateDeathConditions('entity-1');
+
+        expect(result).toEqual({
+          isDead: false,
+          isDying: true,
+          shouldFinalize: false,
+          finalizationParams: null,
+          deathInfo: null,
+        });
+      });
+
+      it('should still add dying component', () => {
+        service.evaluateDeathConditions('entity-1');
+
+        expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+          'entity-1',
+          'anatomy:dying',
+          expect.objectContaining({
+            turnsRemaining: 3,
+            causeOfDying: 'overall_health_critical',
+          })
+        );
+      });
+
+      it('should still dispatch dying event', () => {
+        service.evaluateDeathConditions('entity-1');
+
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          'anatomy:entity_dying',
+          expect.objectContaining({
+            entityId: 'entity-1',
+            entityName: 'Test Entity',
+          })
+        );
+      });
+    });
+
+    describe('when entity is healthy', () => {
+      beforeEach(() => {
+        mockEntityManager.hasComponent.mockReturnValue(false);
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 80,
+          destroyedParts: [],
+          isDying: false,
+          isDead: false,
+        });
+      });
+
+      it('should return all false values', () => {
+        const result = service.evaluateDeathConditions('entity-1');
+
+        expect(result).toEqual({
+          isDead: false,
+          isDying: false,
+          shouldFinalize: false,
+          finalizationParams: null,
+          deathInfo: null,
+        });
+      });
+
+      it('should not dispatch any events', () => {
+        service.evaluateDeathConditions('entity-1');
+
+        expect(mockEventBus.dispatch).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('finalizeDeathFromEvaluation', () => {
+    describe('with valid evaluation', () => {
+      it('should call finalizeDeath with correct parameters', () => {
+        const evaluation = {
+          shouldFinalize: true,
+          finalizationParams: {
+            entityId: 'entity-1',
+            causeOfDeath: 'vital_organ_destroyed',
+            damageCauserId: 'killer-1',
+            vitalOrganDestroyed: 'brain',
+          },
+        };
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'core:name') {
+              return { text: 'Test Entity' };
+            }
+            return null;
+          }
+        );
+
+        service.finalizeDeathFromEvaluation(evaluation);
+
+        expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+          'entity-1',
+          'anatomy:dead',
+          expect.objectContaining({
+            causeOfDeath: 'vital_organ_destroyed',
+            vitalOrganDestroyed: 'brain',
+            killedBy: 'killer-1',
+          })
+        );
+      });
+
+      it('should dispatch death events', () => {
+        const evaluation = {
+          shouldFinalize: true,
+          finalizationParams: {
+            entityId: 'entity-1',
+            causeOfDeath: 'vital_organ_destroyed',
+            damageCauserId: 'killer-1',
+            vitalOrganDestroyed: 'brain',
+          },
+        };
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'core:name') {
+              return { text: 'Test Entity' };
+            }
+            return null;
+          }
+        );
+
+        service.finalizeDeathFromEvaluation(evaluation);
+
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          'anatomy:entity_died',
+          expect.objectContaining({
+            entityId: 'entity-1',
+            causeOfDeath: 'vital_organ_destroyed',
+            vitalOrganDestroyed: 'brain',
+          })
+        );
+      });
+    });
+
+    describe('with invalid evaluation', () => {
+      it('should do nothing when evaluation is null', () => {
+        service.finalizeDeathFromEvaluation(null);
+
+        expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
+        expect(mockEventBus.dispatch).not.toHaveBeenCalled();
+      });
+
+      it('should do nothing when shouldFinalize is false', () => {
+        const evaluation = {
+          shouldFinalize: false,
+          finalizationParams: null,
+        };
+
+        service.finalizeDeathFromEvaluation(evaluation);
+
+        expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
+        expect(mockEventBus.dispatch).not.toHaveBeenCalled();
+      });
+
+      it('should log warning when called with invalid evaluation', () => {
+        service.finalizeDeathFromEvaluation(null);
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'DeathCheckService: finalizeDeathFromEvaluation called with invalid or non-finalizable evaluation'
+        );
+      });
+    });
+  });
 });

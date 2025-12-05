@@ -401,6 +401,7 @@ export const coreTokens = freeze({
   INumericConstraintEvaluator: 'INumericConstraintEvaluator',
   // Combat Services (NONDETACTSYS)
   ChanceCalculationService: 'ChanceCalculationService',
+  ModifierContextBuilder: 'ModifierContextBuilder',
   ModifierCollectorService: 'ModifierCollectorService',
   OutcomeDeterminerService: 'OutcomeDeterminerService',
   ProbabilityCalculatorService: 'ProbabilityCalculatorService',

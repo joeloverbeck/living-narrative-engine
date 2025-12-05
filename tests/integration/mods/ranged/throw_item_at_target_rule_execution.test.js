@@ -458,6 +458,60 @@ describe('throw_item_at_target outcome resolution rule', () => {
       expect(macroString).toContain('core:actor'); // Excludes actors for fumble victim
     });
 
+    it('should exclude the thrown item from fumble victim selection', () => {
+      // Find the PICK_RANDOM_ENTITY action in the fumble macro
+      const pickRandomEntityAction = handleThrowFumble.actions.find(
+        (action) => action.type === 'PICK_RANDOM_ENTITY'
+      );
+
+      expect(pickRandomEntityAction).toBeDefined();
+      expect(pickRandomEntityAction.parameters.exclude_entities).toContain(
+        '{event.payload.primaryId}'
+      );
+      // Also verify actor and target are still excluded
+      expect(pickRandomEntityAction.parameters.exclude_entities).toContain(
+        '{event.payload.actorId}'
+      );
+      expect(pickRandomEntityAction.parameters.exclude_entities).toContain(
+        '{event.payload.secondaryId}'
+      );
+    });
+
+    it('should have fumble macro apply damage to fumble victim when one is found', () => {
+      const macroString = JSON.stringify(handleThrowFumble);
+
+      // Fumble should apply damage to the entity that was accidentally hit
+      expect(macroString).toContain('APPLY_DAMAGE');
+      expect(macroString).toContain('context.fumbleVictim');
+      expect(macroString).toContain('context.throwableDamage');
+
+      // Find the IF action that handles fumble victim
+      const ifAction = handleThrowFumble.actions.find(
+        (action) =>
+          action.type === 'IF' &&
+          action.parameters?.condition?.['!!']?.var === 'context.fumbleVictim'
+      );
+
+      expect(ifAction).toBeDefined();
+
+      // Verify FOR_EACH with APPLY_DAMAGE is in then_actions
+      const forEachAction = ifAction.parameters.then_actions.find(
+        (action) => action.type === 'FOR_EACH'
+      );
+
+      expect(forEachAction).toBeDefined();
+      expect(forEachAction.parameters.collection).toBe('context.throwableDamage');
+
+      const applyDamageAction = forEachAction.parameters.actions.find(
+        (action) => action.type === 'APPLY_DAMAGE'
+      );
+
+      expect(applyDamageAction).toBeDefined();
+      expect(applyDamageAction.parameters.entity_ref).toEqual({
+        var: 'context.fumbleVictim',
+      });
+    });
+
     it('should have fumble macro with fallback for no collateral target', () => {
       const macroString = JSON.stringify(handleThrowFumble);
 

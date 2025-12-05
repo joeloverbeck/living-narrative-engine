@@ -4,9 +4,9 @@
   "actionTracing": {
     "enabled": false,
     "tracedActions": [
-      "warding:draw_salt_boundary"
+      "violence:peck_target"
     ],
-    "outputDirectory": "./traces/warding",
+    "outputDirectory": "./traces/pecking",
     "verbosity": "verbose",
     "includeComponentData": true,
     "includePrerequisites": true,

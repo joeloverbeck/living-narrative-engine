@@ -6,6 +6,7 @@
 import { tokens } from '../tokens.js';
 import { Registrar } from '../../utils/registrarHelpers.js';
 import ChanceCalculationService from '../../combat/services/ChanceCalculationService.js';
+import ModifierContextBuilder from '../../combat/services/ModifierContextBuilder.js';
 import ModifierCollectorService from '../../combat/services/ModifierCollectorService.js';
 import OutcomeDeterminerService from '../../combat/services/OutcomeDeterminerService.js';
 import ProbabilityCalculatorService from '../../combat/services/ProbabilityCalculatorService.js';
@@ -37,6 +38,14 @@ export function registerCombatServices(container) {
   // Register OutcomeDeterminerService
   registrar.singletonFactory(tokens.OutcomeDeterminerService, (c) =>
     new OutcomeDeterminerService({
+      logger: c.resolve(tokens.ILogger),
+    })
+  );
+
+  // Register ModifierContextBuilder
+  registrar.singletonFactory(tokens.ModifierContextBuilder, (c) =>
+    new ModifierContextBuilder({
+      entityManager: c.resolve(tokens.IEntityManager),
       logger: c.resolve(tokens.ILogger),
     })
   );

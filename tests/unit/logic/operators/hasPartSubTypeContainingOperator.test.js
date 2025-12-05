@@ -13,6 +13,7 @@ describe('HasPartSubTypeContainingOperator', () => {
       bodyGraphService: {
         buildAdjacencyCache: jest.fn(),
         getAllParts: jest.fn(),
+        getCacheNode: jest.fn(),
       },
       logger: {
         debug: jest.fn(),
@@ -29,18 +30,22 @@ describe('HasPartSubTypeContainingOperator', () => {
       // subType: 'beak', substring: 'beak' → true
       const bodyComponent = { root: 'root123' };
       mockDependencies.entityManager.getComponentData.mockReturnValue(bodyComponent);
-      mockDependencies.bodyGraphService.getAllParts.mockReturnValue([
-        { subType: 'beak' }
-      ]);
+      mockDependencies.bodyGraphService.getAllParts.mockReturnValue(['part_beak']);
+      mockDependencies.bodyGraphService.getCacheNode.mockImplementation((partId) => {
+        if (partId === 'part_beak') {
+          return { entityId: partId, partType: 'beak', parentId: 'root123', children: [] };
+        }
+        return undefined;
+      });
       mockContext.actor = { id: 'actor123' };
 
       const result = operator.evaluate(['actor', 'beak'], mockContext);
 
       expect(mockDependencies.entityManager.getComponentData).toHaveBeenCalledWith('actor123', 'anatomy:body');
       expect(mockDependencies.bodyGraphService.buildAdjacencyCache).toHaveBeenCalledWith('root123');
-      expect(mockDependencies.bodyGraphService.getAllParts).toHaveBeenCalledWith('root123');
+      expect(mockDependencies.bodyGraphService.getAllParts).toHaveBeenCalledWith(bodyComponent, 'actor123');
       expect(mockDependencies.logger.debug).toHaveBeenCalledWith(
-        'hasPartSubTypeContaining(actor123, beak) = true (found 1 parts)'
+        expect.stringContaining('hasPartSubTypeContaining(actor123, beak) = true')
       );
       expect(result).toBe(true);
     });
@@ -49,9 +54,13 @@ describe('HasPartSubTypeContainingOperator', () => {
       // subType: 'chicken_beak', substring: 'beak' → true
       const bodyComponent = { root: 'root123' };
       mockDependencies.entityManager.getComponentData.mockReturnValue(bodyComponent);
-      mockDependencies.bodyGraphService.getAllParts.mockReturnValue([
-        { subType: 'chicken_beak' }
-      ]);
+      mockDependencies.bodyGraphService.getAllParts.mockReturnValue(['part_chicken_beak']);
+      mockDependencies.bodyGraphService.getCacheNode.mockImplementation((partId) => {
+        if (partId === 'part_chicken_beak') {
+          return { entityId: partId, partType: 'chicken_beak', parentId: 'root123', children: [] };
+        }
+        return undefined;
+      });
       mockContext.actor = { id: 'actor123' };
 
       const result = operator.evaluate(['actor', 'beak'], mockContext);
@@ -63,9 +72,13 @@ describe('HasPartSubTypeContainingOperator', () => {
       // subType: 'tortoise_beak', substring: 'beak' → true
       const bodyComponent = { root: 'root123' };
       mockDependencies.entityManager.getComponentData.mockReturnValue(bodyComponent);
-      mockDependencies.bodyGraphService.getAllParts.mockReturnValue([
-        { subType: 'tortoise_beak' }
-      ]);
+      mockDependencies.bodyGraphService.getAllParts.mockReturnValue(['part_tortoise_beak']);
+      mockDependencies.bodyGraphService.getCacheNode.mockImplementation((partId) => {
+        if (partId === 'part_tortoise_beak') {
+          return { entityId: partId, partType: 'tortoise_beak', parentId: 'root123', children: [] };
+        }
+        return undefined;
+      });
       mockContext.actor = { id: 'actor123' };
 
       const result = operator.evaluate(['actor', 'beak'], mockContext);
@@ -77,16 +90,22 @@ describe('HasPartSubTypeContainingOperator', () => {
       // subType: 'arm', substring: 'beak' → false
       const bodyComponent = { root: 'root123' };
       mockDependencies.entityManager.getComponentData.mockReturnValue(bodyComponent);
-      mockDependencies.bodyGraphService.getAllParts.mockReturnValue([
-        { subType: 'arm' },
-        { subType: 'leg' }
-      ]);
+      mockDependencies.bodyGraphService.getAllParts.mockReturnValue(['part_arm', 'part_leg']);
+      mockDependencies.bodyGraphService.getCacheNode.mockImplementation((partId) => {
+        const partTypes = {
+          part_arm: 'arm',
+          part_leg: 'leg',
+        };
+        return partTypes[partId]
+          ? { entityId: partId, partType: partTypes[partId], parentId: 'root123', children: [] }
+          : undefined;
+      });
       mockContext.actor = { id: 'actor123' };
 
       const result = operator.evaluate(['actor', 'beak'], mockContext);
 
       expect(mockDependencies.logger.debug).toHaveBeenCalledWith(
-        'hasPartSubTypeContaining(actor123, beak) = false (found 0 parts)'
+        expect.stringContaining('hasPartSubTypeContaining(actor123, beak) = false')
       );
       expect(result).toBe(false);
     });
@@ -96,6 +115,7 @@ describe('HasPartSubTypeContainingOperator', () => {
       const bodyComponent = { root: 'root123' };
       mockDependencies.entityManager.getComponentData.mockReturnValue(bodyComponent);
       mockDependencies.bodyGraphService.getAllParts.mockReturnValue([]);
+      mockDependencies.bodyGraphService.getCacheNode.mockReturnValue(undefined);
       mockContext.actor = { id: 'actor123' };
 
       const result = operator.evaluate(['actor', 'beak'], mockContext);
@@ -107,9 +127,13 @@ describe('HasPartSubTypeContainingOperator', () => {
       // subType: 'CHICKEN_BEAK', substring: 'beak' → true
       const bodyComponent = { root: 'root123' };
       mockDependencies.entityManager.getComponentData.mockReturnValue(bodyComponent);
-      mockDependencies.bodyGraphService.getAllParts.mockReturnValue([
-        { subType: 'CHICKEN_BEAK' }
-      ]);
+      mockDependencies.bodyGraphService.getAllParts.mockReturnValue(['part_beak']);
+      mockDependencies.bodyGraphService.getCacheNode.mockImplementation((partId) => {
+        if (partId === 'part_beak') {
+          return { entityId: partId, partType: 'CHICKEN_BEAK', parentId: 'root123', children: [] };
+        }
+        return undefined;
+      });
       mockContext.actor = { id: 'actor123' };
 
       const result = operator.evaluate(['actor', 'beak'], mockContext);
@@ -121,9 +145,13 @@ describe('HasPartSubTypeContainingOperator', () => {
       // subType: 'chicken_beak', substring: 'BEAK' → true
       const bodyComponent = { root: 'root123' };
       mockDependencies.entityManager.getComponentData.mockReturnValue(bodyComponent);
-      mockDependencies.bodyGraphService.getAllParts.mockReturnValue([
-        { subType: 'chicken_beak' }
-      ]);
+      mockDependencies.bodyGraphService.getAllParts.mockReturnValue(['part_beak']);
+      mockDependencies.bodyGraphService.getCacheNode.mockImplementation((partId) => {
+        if (partId === 'part_beak') {
+          return { entityId: partId, partType: 'chicken_beak', parentId: 'root123', children: [] };
+        }
+        return undefined;
+      });
       mockContext.actor = { id: 'actor123' };
 
       const result = operator.evaluate(['actor', 'BEAK'], mockContext);
@@ -238,9 +266,13 @@ describe('HasPartSubTypeContainingOperator', () => {
     it('should handle nested entity paths', () => {
       const bodyComponent = { root: 'root123' };
       mockDependencies.entityManager.getComponentData.mockReturnValue(bodyComponent);
-      mockDependencies.bodyGraphService.getAllParts.mockReturnValue([
-        { subType: 'beak' },
-      ]);
+      mockDependencies.bodyGraphService.getAllParts.mockReturnValue(['part_beak']);
+      mockDependencies.bodyGraphService.getCacheNode.mockImplementation((partId) => {
+        if (partId === 'part_beak') {
+          return { entityId: partId, partType: 'beak', parentId: 'root123', children: [] };
+        }
+        return undefined;
+      });
       mockContext.event = { actor: { id: 'eventActor123' } };
 
       const result = operator.evaluate(['event.actor', 'beak'], mockContext);
@@ -249,31 +281,49 @@ describe('HasPartSubTypeContainingOperator', () => {
       expect(result).toBe(true);
     });
 
-    it('should skip body parts without subType property', () => {
+    it('should skip body parts without partType in cache', () => {
       const bodyComponent = { root: 'root123' };
       mockDependencies.entityManager.getComponentData.mockReturnValue(bodyComponent);
       mockDependencies.bodyGraphService.getAllParts.mockReturnValue([
-        { type: 'root' }, // No subType
-        { subType: null }, // Null subType
-        { subType: 'beak' }, // Valid
+        'part_root',
+        'part_null',
+        'part_beak',
       ]);
+      mockDependencies.bodyGraphService.getCacheNode.mockImplementation((partId) => {
+        if (partId === 'part_root') {
+          return { entityId: partId, partType: undefined, parentId: null, children: [] };
+        }
+        if (partId === 'part_null') {
+          return { entityId: partId, partType: null, parentId: 'root123', children: [] };
+        }
+        if (partId === 'part_beak') {
+          return { entityId: partId, partType: 'beak', parentId: 'root123', children: [] };
+        }
+        return undefined;
+      });
       mockContext.actor = { id: 'actor123' };
 
       const result = operator.evaluate(['actor', 'beak'], mockContext);
 
       expect(result).toBe(true);
       expect(mockDependencies.logger.debug).toHaveBeenCalledWith(
-        'hasPartSubTypeContaining(actor123, beak) = true (found 1 parts)'
+        expect.stringContaining('hasPartSubTypeContaining(actor123, beak) = true')
       );
     });
 
-    it('should skip body parts with non-string subType', () => {
+    it('should skip body parts with non-string partType', () => {
       const bodyComponent = { root: 'root123' };
       mockDependencies.entityManager.getComponentData.mockReturnValue(bodyComponent);
-      mockDependencies.bodyGraphService.getAllParts.mockReturnValue([
-        { subType: 123 }, // Number, not string
-        { subType: {} }, // Object, not string
-      ]);
+      mockDependencies.bodyGraphService.getAllParts.mockReturnValue(['part_num', 'part_obj']);
+      mockDependencies.bodyGraphService.getCacheNode.mockImplementation((partId) => {
+        if (partId === 'part_num') {
+          return { entityId: partId, partType: 123, parentId: 'root123', children: [] };
+        }
+        if (partId === 'part_obj') {
+          return { entityId: partId, partType: {}, parentId: 'root123', children: [] };
+        }
+        return undefined;
+      });
       mockContext.actor = { id: 'actor123' };
 
       const result = operator.evaluate(['actor', 'beak'], mockContext);
@@ -285,18 +335,48 @@ describe('HasPartSubTypeContainingOperator', () => {
       const bodyComponent = { root: 'root123' };
       mockDependencies.entityManager.getComponentData.mockReturnValue(bodyComponent);
       mockDependencies.bodyGraphService.getAllParts.mockReturnValue([
-        { subType: 'beak' },
-        { subType: 'chicken_beak' },
-        { subType: 'tortoise_beak' },
+        'part_beak',
+        'part_chicken_beak',
+        'part_tortoise_beak',
       ]);
+      mockDependencies.bodyGraphService.getCacheNode.mockImplementation((partId) => {
+        const partTypes = {
+          part_beak: 'beak',
+          part_chicken_beak: 'chicken_beak',
+          part_tortoise_beak: 'tortoise_beak',
+        };
+        return partTypes[partId]
+          ? { entityId: partId, partType: partTypes[partId], parentId: 'root123', children: [] }
+          : undefined;
+      });
       mockContext.actor = { id: 'actor123' };
 
       const result = operator.evaluate(['actor', 'beak'], mockContext);
 
       expect(result).toBe(true);
       expect(mockDependencies.logger.debug).toHaveBeenCalledWith(
-        'hasPartSubTypeContaining(actor123, beak) = true (found 3 parts)'
+        expect.stringContaining('hasPartSubTypeContaining(actor123, beak) = true')
       );
+      expect(mockDependencies.logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('found 3 matching parts')
+      );
+    });
+
+    it('should handle parts not found in cache', () => {
+      const bodyComponent = { root: 'root123' };
+      mockDependencies.entityManager.getComponentData.mockReturnValue(bodyComponent);
+      mockDependencies.bodyGraphService.getAllParts.mockReturnValue(['missing_part', 'part_beak']);
+      mockDependencies.bodyGraphService.getCacheNode.mockImplementation((partId) => {
+        if (partId === 'part_beak') {
+          return { entityId: partId, partType: 'beak', parentId: 'root123', children: [] };
+        }
+        return undefined; // missing_part not in cache
+      });
+      mockContext.actor = { id: 'actor123' };
+
+      const result = operator.evaluate(['actor', 'beak'], mockContext);
+
+      expect(result).toBe(true);
     });
   });
 });

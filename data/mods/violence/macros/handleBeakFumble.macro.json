@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/macro.schema.json",
+  "id": "violence:handleBeakFumble",
+  "description": "Handles FUMBLE outcome for beak attacks - actor loses balance and falls. Expects context variables: actorName, targetName, attackVerbPast, actorPosition.",
+  "actions": [
+    {
+      "type": "ADD_COMPONENT",
+      "comment": "Fumble: actor falls from overextending",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "positioning:fallen",
+        "value": {}
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.actorName} lunges forward with their beak but completely misses, losing balance and falling to the ground!",
+        "perception_type": "action_target_general",
+        "actor_id": "{event.payload.actorId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} lunges forward with their beak but completely misses, losing balance and falling to the ground!"
+      }
+    },
+    {
+      "macro": "core:logFailureOutcomeAndEndTurn"
+    }
+  ]
+}

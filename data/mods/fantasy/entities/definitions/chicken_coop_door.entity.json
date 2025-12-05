@@ -9,7 +9,7 @@
             "text": "A heavy plank door with diagonal cross-bracing. A dark metal latch and lock fixture secure it."
         },
         "mechanisms:openable": {
-            "isLocked": true,
+            "isLocked": false,
             "isOpen": false,
             "requiredKeyId": "fantasy:coop_key_instance",
             "lockLabel": "simple iron lock"

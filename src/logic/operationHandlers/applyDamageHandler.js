@@ -718,24 +718,49 @@ class ApplyDamageHandler extends BaseOperationHandler {
     // This ensures death is checked once after all propagation completes
     if (isTopLevel) {
       const deathCheckOwnerEntityId = partComponent?.ownerEntityId || entityId;
-      const deathResult = this.#deathCheckService.checkDeathConditions(
-        deathCheckOwnerEntityId,
-        this.#extractActorId(executionContext)
-      );
 
-      if (deathResult.isDead) {
-        log.info(`APPLY_DAMAGE: Entity ${deathCheckOwnerEntityId} died from damage.`);
-      } else if (deathResult.isDying) {
+      // Step 1: EVALUATE death conditions (no events dispatched yet)
+      // This allows injury narratives to be dispatched BEFORE death events
+      let deathEvaluation;
+      try {
+        deathEvaluation = this.#deathCheckService.evaluateDeathConditions(
+          deathCheckOwnerEntityId,
+          this.#extractActorId(executionContext)
+        );
+      } catch (deathCheckError) {
+        log.warn(`APPLY_DAMAGE: evaluateDeathConditions failed for ${deathCheckOwnerEntityId}: ${deathCheckError.message}`);
+        // Default to no death if check fails
+        deathEvaluation = { isDead: false, isDying: false, shouldFinalize: false, finalizationParams: null, deathInfo: null };
+      }
+
+      // Log evaluation result for debugging
+      if (deathEvaluation.shouldFinalize) {
+        log.info(`APPLY_DAMAGE: Entity ${deathCheckOwnerEntityId} will die from damage.`);
+      } else if (deathEvaluation.isDying) {
         log.info(`APPLY_DAMAGE: Entity ${deathCheckOwnerEntityId} is now dying.`);
       }
 
-      // Finalize session and dispatch composed narrative + pending events
+      // Step 2: Finalize session and dispatch injury narrative FIRST
       if (session) {
-        const { entries, pendingEvents } = this.#damageAccumulator.finalize(session);
+        let entries, pendingEvents;
+        try {
+          const finalized = this.#damageAccumulator.finalize(session);
+          entries = finalized.entries;
+          pendingEvents = finalized.pendingEvents;
+        } catch (finalizeError) {
+          log.error('APPLY_DAMAGE: FAIL-FAST - Session finalization threw an error', finalizeError);
+          throw finalizeError;
+        }
 
         // Compose narrative from accumulated entries
         if (entries.length > 0) {
-          const composedNarrative = this.#damageNarrativeComposer.compose(entries);
+          let composedNarrative;
+          try {
+            composedNarrative = this.#damageNarrativeComposer.compose(entries);
+          } catch (composeError) {
+            log.error('APPLY_DAMAGE: FAIL-FAST - Narrative composition threw an error', composeError);
+            throw composeError;
+          }
 
           // Calculate total damage from all entries
           const totalDamage = entries.reduce((sum, e) => sum + (e.amount || 0), 0);
@@ -793,6 +818,11 @@ class ApplyDamageHandler extends BaseOperationHandler {
 
         // Clean up session from execution context
         delete executionContext.damageSession;
+      }
+
+      // Step 3: NOW finalize death (dispatch death events AFTER injury narrative)
+      if (deathEvaluation.shouldFinalize) {
+        this.#deathCheckService.finalizeDeathFromEvaluation(deathEvaluation);
       }
     }
   }

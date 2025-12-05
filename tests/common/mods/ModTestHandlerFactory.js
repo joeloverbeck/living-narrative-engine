@@ -1267,6 +1267,14 @@ export class ModTestHandlerFactory {
     };
     const deathCheckService = {
       checkDeathConditions: jest.fn(() => ({ isDead: false, isDying: false })),
+      evaluateDeathConditions: jest.fn(() => ({
+        isDead: false,
+        isDying: false,
+        shouldFinalize: false,
+        finalizationParams: null,
+        deathInfo: null,
+      })),
+      finalizeDeathFromEvaluation: jest.fn(),
     };
     const damageAccumulator = {
       createSession: jest.fn((entityId) => ({

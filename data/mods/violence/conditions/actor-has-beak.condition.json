@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "violence:actor-has-beak",
+  "description": "Checks if actor has a body part with subType containing 'beak'",
+  "logic": {
+    "hasPartSubTypeContaining": ["actor", "beak"]
+  }
+}

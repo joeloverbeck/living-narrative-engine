@@ -193,6 +193,12 @@ describe('APPLY_DAMAGE with anatomy lacking explicit hit_probability_weight', ()
         additionalPayload: { secondaryId: 'target' },
       });
 
+      // Debug: log all events
+      console.log('DEBUG (test 125): All events captured:', fixture.events.map(e => ({
+        type: e.eventType,
+        payload: JSON.stringify(e.payload || {}).slice(0, 300)
+      })));
+
       // Should complete without target resolution errors
       const turnEndedEvent = fixture.events.find(
         (event) => event.eventType === 'core:turn_ended'
@@ -335,6 +341,15 @@ describe('APPLY_DAMAGE with anatomy lacking explicit hit_probability_weight', ()
       await fixture.executeAction('attacker', 'sword', {
         additionalPayload: { secondaryId: 'target' },
       });
+
+      // Wait longer for async operations to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Debug: log all events
+      console.log('DEBUG (test 285 backward compat): All events captured:', fixture.events.map(e => ({
+        type: e.eventType,
+        payload: JSON.stringify(e.payload || {}).slice(0, 300)
+      })));
 
       // Should complete without errors
       const turnEndedEvent = fixture.events.find(

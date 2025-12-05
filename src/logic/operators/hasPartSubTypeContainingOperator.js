@@ -31,7 +31,7 @@ export class HasPartSubTypeContainingOperator extends BaseBodyPartOperator {
    * @param {object} bodyComponent - The body component
    * @returns {boolean} True if entity has at least one part with subType containing the substring
    */
-  evaluateInternal(entityId, rootId, params, context, _bodyComponent) {
+  evaluateInternal(entityId, rootId, params, context, bodyComponent) {
     const [substring] = params;
 
     if (!substring || typeof substring !== 'string') {
@@ -50,18 +50,22 @@ export class HasPartSubTypeContainingOperator extends BaseBodyPartOperator {
     // Build the cache for this anatomy if not already built
     this.bodyGraphService.buildAdjacencyCache(rootId);
 
-    // Get all body parts and check subType
-    const allParts = this.bodyGraphService.getAllParts(rootId);
+    // Get all body parts (returns entity IDs as strings)
+    const allParts = this.bodyGraphService.getAllParts(bodyComponent, entityId);
 
-    const matchingParts = allParts.filter(part => {
-      const subType = part.subType;
-      return subType && typeof subType === 'string' &&
-             subType.toLowerCase().includes(lowerSubstring);
+    // Look up each part in the cache to get its partType (subType)
+    const matchingParts = allParts.filter(partId => {
+      const node = this.bodyGraphService.getCacheNode(partId);
+      if (!node) return false;
+
+      const partType = node.partType;
+      return partType && typeof partType === 'string' &&
+             partType.toLowerCase().includes(lowerSubstring);
     });
 
     this.logger.debug(
       `hasPartSubTypeContaining(${entityId}, ${substring}) = ${matchingParts.length > 0} ` +
-        `(found ${matchingParts.length} parts)`
+        `(found ${matchingParts.length} matching parts out of ${allParts.length} total)`
     );
 
     return matchingParts.length > 0;

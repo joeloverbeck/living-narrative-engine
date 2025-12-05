@@ -37,6 +37,19 @@ const IMMEDIATE_DEATH_ORGANS = ['brain', 'heart', 'spine'];
  */
 
 /**
+ * @typedef {object} DeathEvaluation
+ * @property {boolean} isDead - Whether the entity is already dead
+ * @property {boolean} isDying - Whether the entity is now in dying state
+ * @property {boolean} shouldFinalize - Whether death should be finalized (events dispatched)
+ * @property {object|null} finalizationParams - Parameters for finalizeDeathFromEvaluation if shouldFinalize is true
+ * @property {string} [finalizationParams.entityId] - Entity ID
+ * @property {string} [finalizationParams.causeOfDeath] - Cause of death
+ * @property {string|null} [finalizationParams.damageCauserId] - Entity that caused the damage
+ * @property {string|null} [finalizationParams.vitalOrganDestroyed] - Vital organ destroyed if applicable
+ * @property {object|null} deathInfo - Death details for return value compatibility
+ */
+
+/**
  * Service that monitors vital organ damage and manages dying/death state transitions.
  *
  * Death can occur in two ways:
@@ -167,6 +180,114 @@ class DeathCheckService extends BaseService {
 
     // Entity is not dead or dying
     return { isDead: false, isDying: false, deathInfo: null };
+  }
+
+  /**
+   * Evaluates death conditions without dispatching any events.
+   * Use finalizeDeathFromEvaluation() to complete the death process after other events are dispatched.
+   *
+   * This enables proper event ordering where injury narratives can be dispatched before death events.
+   *
+   * @param {string} entityId - Entity to check
+   * @param {string|null} [damageCauserId=null] - Entity that caused the damage (for killedBy)
+   * @returns {DeathEvaluation} Evaluation result with state and finalization parameters
+   */
+  evaluateDeathConditions(entityId, damageCauserId = null) {
+    this.#logger.debug(`Evaluating death conditions for entity: ${entityId}`);
+
+    // Check if already dead
+    if (this.#entityManager.hasComponent(entityId, DEAD_COMPONENT_ID)) {
+      this.#logger.debug(`Entity ${entityId} is already dead`);
+      return {
+        isDead: true,
+        isDying: false,
+        shouldFinalize: false,
+        finalizationParams: null,
+        deathInfo: null
+      };
+    }
+
+    // Check for vital organ destruction (immediate death)
+    const vitalOrganInfo = this.#checkVitalOrganDestruction(entityId);
+    if (vitalOrganInfo) {
+      this.#logger.info(
+        `Entity ${entityId} will die from vital organ destruction: ${vitalOrganInfo.organType}`
+      );
+      return {
+        isDead: false,  // Not yet dead, will be after finalization
+        isDying: false,
+        shouldFinalize: true,
+        finalizationParams: {
+          entityId,
+          causeOfDeath: 'vital_organ_destroyed',
+          damageCauserId,
+          vitalOrganDestroyed: vitalOrganInfo.organType,
+        },
+        deathInfo: {
+          causeOfDeath: 'vital_organ_destroyed',
+          vitalOrganDestroyed: vitalOrganInfo.organType,
+          killedBy: damageCauserId,
+        },
+      };
+    }
+
+    // Check for critical overall health (dying state)
+    if (this.#checkOverallHealthCritical(entityId)) {
+      // Only add dying component if not already dying
+      if (!this.#entityManager.hasComponent(entityId, DYING_COMPONENT_ID)) {
+        this.#logger.info(
+          `Entity ${entityId} entering dying state due to critical health`
+        );
+        this.#addDyingComponent(entityId, 'overall_health_critical');
+        return {
+          isDead: false,
+          isDying: true,
+          shouldFinalize: false,
+          finalizationParams: null,
+          deathInfo: null,
+        };
+      }
+      // Already in dying state
+      return {
+        isDead: false,
+        isDying: true,
+        shouldFinalize: false,
+        finalizationParams: null,
+        deathInfo: null
+      };
+    }
+
+    // Entity is not dead or dying
+    return {
+      isDead: false,
+      isDying: false,
+      shouldFinalize: false,
+      finalizationParams: null,
+      deathInfo: null
+    };
+  }
+
+  /**
+   * Finalizes death for an entity based on prior evaluation.
+   * Dispatches death events and adds the dead component.
+   * Call only after evaluateDeathConditions() returns shouldFinalize=true.
+   *
+   * @param {DeathEvaluation} evaluation - Result from evaluateDeathConditions()
+   * @returns {void}
+   */
+  finalizeDeathFromEvaluation(evaluation) {
+    if (!evaluation || !evaluation.shouldFinalize) {
+      this.#logger.warn('finalizeDeathFromEvaluation called with invalid or non-finalizable evaluation');
+      return;
+    }
+
+    const { entityId, causeOfDeath, damageCauserId, vitalOrganDestroyed } = evaluation.finalizationParams;
+
+    this.#logger.info(
+      `Finalizing death for entity ${entityId}: ${causeOfDeath}${vitalOrganDestroyed ? ` (${vitalOrganDestroyed})` : ''}`
+    );
+
+    this.#finalizeDeath(entityId, causeOfDeath, damageCauserId, vitalOrganDestroyed);
   }
 
   /**

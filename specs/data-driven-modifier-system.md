@@ -23,7 +23,7 @@ This specification defines a fully data-driven modifier system for chance-based 
 8. [Implementation Architecture](#8-implementation-architecture)
 9. [Edge Cases and Constraints](#9-edge-cases-and-constraints)
 10. [Testing Considerations](#10-testing-considerations)
-11. [Migration and Backward Compatibility](#11-migration-and-backward-compatibility)
+11. [Implementation Notes](#11-implementation-notes)
 
 ---
 
@@ -179,16 +179,7 @@ Replace the current `chanceModifier` definition with:
 }
 ```
 
-### 3.2 Backward Compatibility
-
-The old `modifier` property (integer) should be accepted as an alias for:
-```json
-{ "type": "flat", "value": <modifier_value> }
-```
-
-Implementation can check for `modifier` and map to `value` with `type: "flat"`.
-
-### 3.3 Schema Constraints
+### 3.2 Schema Constraints
 
 | Field | Constraint | Rationale |
 |-------|------------|-----------|
@@ -913,34 +904,22 @@ Action Definition (JSON)
 
 ---
 
-## 11. Migration and Backward Compatibility
+## 11. Implementation Notes
 
 ### 11.1 Existing Actions
 
 All existing actions continue to work unchanged:
-- Actions without `modifiers` array: No change
+- Actions without `modifiers` array: No change needed
 - Templates without `{tags}`: Tags appended after chance if needed
 
-### 11.2 Schema Backward Compatibility
+### 11.2 Adding Modifiers to Existing Actions
 
-The old `modifier` field (integer) is accepted:
-```json
-{ "condition": {...}, "modifier": 10, "description": "..." }
-```
+When ready to add modifiers to existing chance-based actions:
+1. Add `modifiers` array with new format entries
+2. Update `template` to include `{tags}` placeholder
+3. Test that modifiers evaluate and display correctly
 
-Maps internally to:
-```json
-{ "condition": {...}, "type": "flat", "value": 10, "tag": "", "description": "..." }
-```
-
-Note: Old format without `tag` will have empty tag (no display).
-
-### 11.3 Migration Path
-
-1. **Phase 1**: Implement core functionality with new schema
-2. **Phase 2**: Update existing actions to use new modifier format
-3. **Phase 3**: Add modifiers to chance-based actions
-4. **Phase 4**: Deprecate old `modifier` field in schema
+Note: No migration needed - this is a greenfield implementation. No existing actions use the `modifiers` array or the old `modifier` property.
 
 ---
 

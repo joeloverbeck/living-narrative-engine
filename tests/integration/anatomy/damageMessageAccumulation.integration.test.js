@@ -94,6 +94,14 @@ describe('Damage Message Accumulation', () => {
         isDying: false,
         deathInfo: null,
       }),
+      evaluateDeathConditions: jest.fn().mockReturnValue({
+        isDead: false,
+        isDying: false,
+        shouldFinalize: false,
+        finalizationParams: null,
+        deathInfo: null,
+      }),
+      finalizeDeathFromEvaluation: jest.fn(),
     };
 
     handler = new ApplyDamageHandler({

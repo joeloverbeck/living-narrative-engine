@@ -371,6 +371,17 @@ export class BodyGraphService {
   }
 
   /**
+   * Gets the cache node for a specific entity ID.
+   * The cache node contains partType (subType), parentId, socketId, and children.
+   *
+   * @param {string} entityId - The entity ID to look up
+   * @returns {{entityId: string, partType: string, parentId: string|null, socketId: string|null, children: string[]}|undefined} The cache node or undefined if not in cache
+   */
+  getCacheNode(entityId) {
+    return this.#cacheManager.get(entityId);
+  }
+
+  /**
    * Get parent of an entity from the cache
    *
    * @param {string} entityId - The entity ID to get parent for
