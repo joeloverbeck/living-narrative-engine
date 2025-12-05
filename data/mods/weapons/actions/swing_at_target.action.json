@@ -59,6 +59,32 @@
     "outcomes": {
       "criticalSuccessThreshold": 5,
       "criticalFailureThreshold": 95
-    }
+    },
+    "modifiers": [
+      {
+        "condition": {
+          "logic": {
+            "!!": [{ "var": "entity.secondary.components.positioning:fallen" }]
+          }
+        },
+        "type": "flat",
+        "value": 15,
+        "tag": "target downed",
+        "targetRole": "secondary",
+        "description": "Bonus for attacking a fallen target"
+      },
+      {
+        "condition": {
+          "logic": {
+            "!!": [{ "var": "entity.secondary.components.positioning:being_restrained" }]
+          }
+        },
+        "type": "flat",
+        "value": 10,
+        "tag": "target restrained",
+        "targetRole": "secondary",
+        "description": "Bonus for attacking a restrained target"
+      }
+    ]
   }
 }

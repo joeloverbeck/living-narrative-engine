@@ -127,8 +127,14 @@ describe('handle_draw_salt_boundary rule', () => {
     expect(dispatch?.parameters.target_id).toBe('{event.payload.targetId}');
     expect(logMessage?.parameters.value).toBe(expectedMessage);
 
-    // No state changes on critical success for warding (just a message)
-    expect(actions.some((op) => op.type === 'ADD_COMPONENT')).toBe(false);
+    // Critical success adds warded_by_salt component to target
+    const addComponent = actions.find(
+      (op) =>
+        op.type === 'ADD_COMPONENT' &&
+        op.parameters.component_type === 'warding:warded_by_salt'
+    );
+    expect(addComponent).toBeDefined();
+    expect(addComponent?.parameters.entity_ref).toBe('target');
 
     const hasSuccessMacro = actions.some(
       (op) => op.macro === 'core:logSuccessOutcomeAndEndTurn'
@@ -153,8 +159,14 @@ describe('handle_draw_salt_boundary rule', () => {
     expect(dispatch?.parameters.description_text).toBe(expectedMessage);
     expect(logMessage?.parameters.value).toBe(expectedMessage);
 
-    // No state changes on success for warding (just a message)
-    expect(actions.some((op) => op.type === 'ADD_COMPONENT')).toBe(false);
+    // Success adds warded_by_salt component to target
+    const addComponent = actions.find(
+      (op) =>
+        op.type === 'ADD_COMPONENT' &&
+        op.parameters.component_type === 'warding:warded_by_salt'
+    );
+    expect(addComponent).toBeDefined();
+    expect(addComponent?.parameters.entity_ref).toBe('target');
 
     const hasSuccessMacro = actions.some(
       (op) => op.macro === 'core:logSuccessOutcomeAndEndTurn'

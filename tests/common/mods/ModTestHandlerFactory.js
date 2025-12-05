@@ -91,6 +91,13 @@ const MOUTH_OPERATION_TYPES = new Set([
   'UNLOCK_MOUTH_ENGAGEMENT',
 ]);
 
+/**
+ * Types that use "type" property but are NOT operation types.
+ * These are used in action schema structures like chanceOfSuccess.modifiers.
+ * @see data/schemas/action.schema.json - chanceModifier definition
+ */
+const NON_OPERATION_TYPES = new Set(['flat', 'percentage']);
+
 const MUTATION_OR_PERCEPTION_TYPES = new Set([
   'ADD_COMPONENT',
   'MODIFY_COMPONENT',
@@ -139,7 +146,10 @@ export class ModTestHandlerFactory {
     }
 
     if (typeof candidate.type === 'string') {
-      operations.add(candidate.type);
+      // Exclude non-operation types (e.g., chanceModifier types like "flat", "percentage")
+      if (!NON_OPERATION_TYPES.has(candidate.type)) {
+        operations.add(candidate.type);
+      }
     }
 
     if (typeof candidate.macro === 'string' && macroRefs) {

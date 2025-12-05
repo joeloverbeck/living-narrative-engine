@@ -645,10 +645,15 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
       return '';
     }
 
-    // Filter empty/whitespace tags and format each with brackets
+    // Filter empty/whitespace tags, strip any existing brackets, and format each with brackets
     return tags
       .filter((tag) => tag && tag.trim().length > 0)
-      .map((tag) => `[${tag.trim()}]`)
+      .map((tag) => {
+        // Strip leading/trailing brackets if modder accidentally included them
+        const cleanTag = tag.trim().replace(/^\[+/, '').replace(/\]+$/, '').trim();
+        return cleanTag.length > 0 ? `[${cleanTag}]` : '';
+      })
+      .filter((formatted) => formatted.length > 0)
       .join(' ');
   }
 

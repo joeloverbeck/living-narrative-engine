@@ -1,0 +1,31 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "warding:cross_salt_boundary",
+  "name": "Cross Salt Boundary",
+  "description": "Cross and break the protective salt boundary that contains you.",
+  "targets": "none",
+  "template": "cross the salt boundary, breaking it",
+  "required_components": {
+    "actor": [
+      "warding:corrupted",
+      "warding:warded_by_salt"
+    ]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:hugging",
+      "positioning:giving_blowjob",
+      "positioning:doing_complex_performance",
+      "positioning:bending_over",
+      "positioning:being_restrained",
+      "positioning:restraining",
+      "positioning:fallen"
+    ]
+  },
+  "visual": {
+    "backgroundColor": "#424242",
+    "textColor": "#fafafa",
+    "hoverBackgroundColor": "#616161",
+    "hoverTextColor": "#ffffff"
+  }
+}
