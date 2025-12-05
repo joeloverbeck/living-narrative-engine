@@ -20,6 +20,7 @@ import createUnionResolver from './nodes/unionResolver.js';
 import createArrayIterationResolver from './nodes/arrayIterationResolver.js';
 import createClothingStepResolver from './nodes/clothingStepResolver.js';
 import createSlotAccessResolver from './nodes/slotAccessResolver.js';
+import createBodyPartStepResolver from './nodes/bodyPartStepResolver.js';
 import createScopeReferenceResolver from './nodes/scopeReferenceResolver.js';
 import { ParameterValidator } from './core/parameterValidator.js';
 import { tokens } from '../dependencyInjection/tokens.js';
@@ -407,16 +408,30 @@ class ScopeEngine extends IScopeEngine {
       tokens.ClothingAccessibilityService
     ) || null;
 
+    // Get BodyGraphService from runtime context if available
+    const bodyGraphService = runtimeCtx?.container?.resolve?.(
+      tokens.BodyGraphService
+    ) || null;
+
     // Create clothing resolvers
     const clothingStepResolver = createClothingStepResolver({
       entitiesGateway,
     });
     const slotAccessResolver = createSlotAccessResolver({ entitiesGateway });
 
+    // Create body part resolver
+    const bodyPartStepResolver = createBodyPartStepResolver({
+      entitiesGateway,
+      errorHandler: this.errorHandler,
+    });
+
     const resolvers = [
       // Clothing resolvers get priority for their specific fields
       clothingStepResolver,
       slotAccessResolver,
+
+      // Body part resolver for body_parts field
+      bodyPartStepResolver,
 
       // Existing resolvers maintain their order
       createSourceResolver({
@@ -435,9 +450,11 @@ class ScopeEngine extends IScopeEngine {
         errorHandler: this.errorHandler,
       }),
       createUnionResolver(),
-      createArrayIterationResolver({ 
+      createArrayIterationResolver({
         errorHandler: this.errorHandler,
-        clothingAccessibilityService // Add service injection
+        clothingAccessibilityService,
+        bodyGraphService,
+        entitiesGateway,
       }),
     ];
 

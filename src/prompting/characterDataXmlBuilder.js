@@ -622,25 +622,13 @@ class CharacterDataXmlBuilder {
       )
     );
 
-    // Injuries list
-    if (healthState.injuries && healthState.injuries.length > 0) {
-      const injuryLines = healthState.injuries.map((injury) => {
-        const effectsStr =
-          injury.effects && injury.effects.length > 0
-            ? this.#xmlBuilder.escape(injury.effects.join(', '))
-            : '';
-        const partAttr = this.#xmlBuilder.escape(injury.partName);
-        return `      <injury part="${partAttr}" state="${injury.state}">${effectsStr}</injury>`;
-      });
-      parts.push(`    <injuries>\n${injuryLines.join('\n')}\n    </injuries>`);
-    }
-
-    // Active effects summary
-    if (healthState.activeEffects && healthState.activeEffects.length > 0) {
+    // Injuries as first-person narrative (uses same text as game.html Physical Condition panel)
+    // This replaces the technical <injury> elements with human-readable narrative
+    if (healthState.firstPersonNarrative) {
       parts.push(
         this.#xmlBuilder.wrap(
-          'active_effects',
-          this.#xmlBuilder.escape(healthState.activeEffects.join(', ')),
+          'injuries',
+          this.#xmlBuilder.escape(healthState.firstPersonNarrative),
           2
         )
       );
@@ -660,17 +648,6 @@ class CharacterDataXmlBuilder {
         this.#xmlBuilder.wrap(
           'critical_warning',
           'You are critically injured and may die soon.',
-          2
-        )
-      );
-    }
-
-    // First-person narrative experience
-    if (healthState.firstPersonNarrative) {
-      parts.push(
-        this.#xmlBuilder.wrap(
-          'first_person_experience',
-          this.#xmlBuilder.escape(healthState.firstPersonNarrative),
           2
         )
       );

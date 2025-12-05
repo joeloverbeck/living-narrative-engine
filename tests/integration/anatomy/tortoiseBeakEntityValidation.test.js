@@ -46,9 +46,9 @@ describe('Tortoise Beak Entity Validation', () => {
   });
 
   describe('Component structure', () => {
-    it('should have exactly 7 components (includes core:weight)', () => {
+    it('should have exactly 8 components (includes core:weight and damage capabilities)', () => {
       const componentKeys = Object.keys(beakEntity.components);
-      expect(componentKeys.length).toBe(7);
+      expect(componentKeys.length).toBe(8);
     });
 
     it('should have all required components', () => {
@@ -58,6 +58,7 @@ describe('Tortoise Beak Entity Validation', () => {
       expect(beakEntity.components['descriptors:texture']).toBeDefined();
       expect(beakEntity.components['descriptors:color_extended']).toBeDefined();
       expect(beakEntity.components['descriptors:shape_general']).toBeDefined();
+      expect(beakEntity.components['damage-types:damage_capabilities']).toBeDefined();
     });
 
     it('should not have anatomy:sockets component (mounted part)', () => {

@@ -20,7 +20,7 @@ const BODY_COMPONENT_ID = 'anatomy:body';
 const DAMAGE_PROPAGATION_COMPONENT_ID = 'anatomy:damage_propagation';
 const NAME_COMPONENT_ID = 'core:name';
 const GENDER_COMPONENT_ID = 'core:gender';
-const LOCATION_COMPONENT_ID = 'core:location';
+const POSITION_COMPONENT_ID = 'core:position';
 
 const PERCEPTIBLE_EVENT = 'core:perceptible_event';
 
@@ -87,9 +87,13 @@ describe('Damage Message Accumulation', () => {
       eventBus: dispatcher,
     });
 
-    // Mock deathCheckService
+    // Mock deathCheckService - synchronous return, not async
     const deathCheckService = {
-      checkDeathConditions: jest.fn().mockResolvedValue(undefined),
+      checkDeathConditions: jest.fn().mockReturnValue({
+        isDead: false,
+        isDying: false,
+        deathInfo: null,
+      }),
     };
 
     handler = new ApplyDamageHandler({
@@ -127,7 +131,7 @@ describe('Damage Message Accumulation', () => {
     entityManager.addComponent(ids.actor, GENDER_COMPONENT_ID, {
       value: 'female',
     });
-    entityManager.addComponent(ids.actor, LOCATION_COMPONENT_ID, {
+    entityManager.addComponent(ids.actor, POSITION_COMPONENT_ID, {
       locationId: 'test-location-1',
     });
 

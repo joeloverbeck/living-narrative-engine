@@ -25,6 +25,7 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { filterEligibleHitTargets } from '../../anatomy/utils/hitProbabilityWeightUtils.js';
 import { calculateStateFromPercentage } from '../../anatomy/registries/healthStateRegistry.js';
+import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js';
 
 const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
 const PART_COMPONENT_ID = 'anatomy:part';
@@ -169,18 +170,59 @@ class ApplyDamageHandler extends BaseOperationHandler {
   }
 
   /**
-   * Resolves the entity's location from the core:location component.
+   * Resolves the entity's location from the core:position component.
    * @param {string} entityId - Entity ID to resolve location for
    * @returns {string|null} Location ID or null if not found
    * @private
    */
   #getEntityLocation(entityId) {
     try {
-      const locationData = this.#entityManager.getComponentData(entityId, 'core:location');
+      const locationData = this.#entityManager.getComponentData(entityId, POSITION_COMPONENT_ID);
       return locationData?.locationId || null;
     } catch {
       return null;
     }
+  }
+
+  /**
+   * Extracts actor ID from execution context.
+   * Supports both nested structure (actor.id) and legacy top-level (actorId).
+   *
+   * @param {object} executionContext - Execution context
+   * @returns {string|null} Actor ID or null
+   * @private
+   */
+  #extractActorId(executionContext) {
+    return executionContext?.actor?.id || executionContext?.actorId || null;
+  }
+
+  /**
+   * Resolves location for perceptible event dispatch with fallback chain.
+   * Tries target entity first, then falls back to actor's location.
+   *
+   * @param {string} targetEntityId - Target entity to find location for
+   * @param {string|null} actorId - Actor entity ID as fallback
+   * @param {object} log - Logger instance
+   * @returns {string|null} Location ID or null if not resolvable
+   * @private
+   */
+  #resolveLocationForEvent(targetEntityId, actorId, log) {
+    // Primary: Target entity's location
+    let locationId = this.#getEntityLocation(targetEntityId);
+    if (locationId) return locationId;
+
+    // Fallback: Actor's location (they should be co-located for damage)
+    if (actorId) {
+      locationId = this.#getEntityLocation(actorId);
+      if (locationId) {
+        log.warn(
+          `APPLY_DAMAGE: Target entity ${targetEntityId} has no location, using actor's location`
+        );
+        return locationId;
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -379,9 +421,19 @@ class ApplyDamageHandler extends BaseOperationHandler {
     let session;
     if (isTopLevel) {
       session = this.#damageAccumulator.createSession(entityId);
+      if (!session) {
+        const errorMsg = 'APPLY_DAMAGE: Failed to create damage session';
+        safeDispatchError(this.#dispatcher, errorMsg, { entityId }, log);
+        return;
+      }
       executionContext.damageSession = session;
     } else {
       session = executionContext.damageSession;
+      if (!session) {
+        log.warn(
+          `APPLY_DAMAGE: Propagated damage call missing session in executionContext for entity ${entityId}`
+        );
+      }
     }
     if (!entityId) {
       safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Invalid entity_ref', { entity_ref }, log);
@@ -668,7 +720,7 @@ class ApplyDamageHandler extends BaseOperationHandler {
       const deathCheckOwnerEntityId = partComponent?.ownerEntityId || entityId;
       const deathResult = this.#deathCheckService.checkDeathConditions(
         deathCheckOwnerEntityId,
-        executionContext?.actorId || null
+        this.#extractActorId(executionContext)
       );
 
       if (deathResult.isDead) {
@@ -690,9 +742,13 @@ class ApplyDamageHandler extends BaseOperationHandler {
 
           // Dispatch composed perceptible event for NPC perception
           if (composedNarrative) {
-            const locationId = this.#getEntityLocation(deathCheckOwnerEntityId);
+            const actorId = this.#extractActorId(executionContext);
+            const locationId = this.#resolveLocationForEvent(
+              deathCheckOwnerEntityId,
+              actorId,
+              log
+            );
 
-            // Only dispatch if we have a valid location (required by schema)
             if (locationId) {
               this.#dispatcher.dispatch('core:perceptible_event', {
                 eventName: 'core:perceptible_event',
@@ -700,7 +756,7 @@ class ApplyDamageHandler extends BaseOperationHandler {
                 descriptionText: composedNarrative,
                 timestamp: new Date().toISOString(),
                 perceptionType: 'damage_received',
-                actorId: executionContext?.actorId || entityId,
+                actorId: actorId || entityId,
                 targetId: deathCheckOwnerEntityId,
                 involvedEntities: [deathCheckOwnerEntityId],
                 contextualData: { totalDamage },
@@ -708,8 +764,25 @@ class ApplyDamageHandler extends BaseOperationHandler {
 
               log.debug(`APPLY_DAMAGE: Dispatched composed narrative: "${composedNarrative}"`);
             } else {
-              log.debug(`APPLY_DAMAGE: Skipped perceptible event dispatch - no location for entity ${deathCheckOwnerEntityId}`);
+              // FAIL-FAST: Log error and dispatch error event instead of silent skip
+              const errorMsg = `APPLY_DAMAGE: Cannot dispatch perceptible event - no location found for target ${deathCheckOwnerEntityId} or actor ${actorId}`;
+              log.error(errorMsg);
+              safeDispatchError(
+                this.#dispatcher,
+                errorMsg,
+                {
+                  targetEntityId: deathCheckOwnerEntityId,
+                  actorId,
+                  composedNarrative,
+                  totalDamage,
+                },
+                log
+              );
             }
+          } else {
+            log.warn(
+              `APPLY_DAMAGE: Composer returned empty narrative for ${entries.length} entries`
+            );
           }
         }
 

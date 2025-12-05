@@ -3,15 +3,20 @@ import { ErrorCodes } from '../constants/errorCodes.js';
 
 /**
  * Creates an ArrayIterationStep node resolver for flattening array values.
- * Now delegates clothing accessibility logic to ClothingAccessibilityService.
+ * Delegates clothing accessibility logic to ClothingAccessibilityService.
+ * Delegates body part resolution to BodyGraphService.
  *
  * @param {object} deps - Dependencies
  * @param {object} [deps.clothingAccessibilityService] - Service for clothing queries
+ * @param {object} [deps.bodyGraphService] - Service for body part graph traversal
+ * @param {object} [deps.entitiesGateway] - Gateway for entity data access (fallback)
  * @param {object} [deps.errorHandler] - Optional error handler
  * @returns {object} NodeResolver with canResolve and resolve methods
  */
 export default function createArrayIterationResolver({
   clothingAccessibilityService = null,
+  bodyGraphService = null,
+  entitiesGateway = null,
   errorHandler = null,
 } = {}) {
   const safeConsoleDebug =
@@ -82,16 +87,16 @@ export default function createArrayIterationResolver({
         context: 'removal', // Default context for array iteration
         sortByPriority: true
       };
-      
+
       const accessibleItems = clothingAccessibilityService.getAccessibleItems(
-        entityId, 
+        entityId,
         options
       );
-      
+
       if (trace && trace.addStep) {
         trace.addStep(`Retrieved ${accessibleItems.length} accessible items for mode: ${mode}`);
       }
-      
+
       return accessibleItems;
     } catch (error) {
       if (trace && trace.addStep) {
@@ -103,6 +108,64 @@ export default function createArrayIterationResolver({
           { context: 'processClothingAccess', entityId, mode },
           'ArrayIterationResolver',
           ErrorCodes.CLOTHING_ACCESS_FAILED
+        );
+      }
+      return [];
+    }
+  }
+
+  /**
+   * Process body part access objects using BodyGraphService
+   *
+   * @param {object} bodyPartAccess - Body part access object with entityId and bodyComponent
+   * @param {object} trace - Trace context for logging
+   * @returns {Array<string>} Array of body part entity IDs
+   * @private
+   */
+  function processBodyPartAccess(bodyPartAccess, trace) {
+    const { entityId, bodyComponent } = bodyPartAccess;
+
+    if (!bodyGraphService) {
+      if (trace && trace.addStep) {
+        trace.addStep('No body graph service available, returning empty array');
+      }
+      if (errorHandler) {
+        errorHandler.handleError(
+          'Body graph service not available',
+          { context: 'processBodyPartAccess', entityId },
+          'ArrayIterationResolver',
+          ErrorCodes.SERVICE_NOT_FOUND
+        );
+      }
+      return [];
+    }
+
+    if (!bodyComponent?.body?.root) {
+      if (trace && trace.addStep) {
+        trace.addStep(`Entity ${entityId} has no valid body structure`);
+      }
+      return [];
+    }
+
+    try {
+      // Use BodyGraphService to get all body parts
+      const bodyPartIds = bodyGraphService.getAllParts(bodyComponent, entityId);
+
+      if (trace && trace.addStep) {
+        trace.addStep(`Retrieved ${bodyPartIds.length} body parts for entity: ${entityId}`);
+      }
+
+      return bodyPartIds;
+    } catch (error) {
+      if (trace && trace.addStep) {
+        trace.addStep(`Body part access failed: ${error.message}`);
+      }
+      if (errorHandler) {
+        errorHandler.handleError(
+          error,
+          { context: 'processBodyPartAccess', entityId },
+          'ArrayIterationResolver',
+          ErrorCodes.RESOLUTION_FAILED_GENERIC
         );
       }
       return [];
@@ -176,16 +239,16 @@ export default function createArrayIterationResolver({
         // Handle clothing access objects
         if (parentValue.__isClothingAccessObject === true) {
           const clothingItems = processClothingAccess(parentValue, ctx.trace);
-          
+
           for (const itemId of clothingItems) {
             totalArrayElements++;
             if (totalArrayElements > MAX_ARRAY_SIZE) {
               if (errorHandler) {
                 errorHandler.handleError(
                   'Array size limit exceeded',
-                  { 
-                    limit: MAX_ARRAY_SIZE, 
-                    current: totalArrayElements 
+                  {
+                    limit: MAX_ARRAY_SIZE,
+                    current: totalArrayElements
                   },
                   'ArrayIterationResolver',
                   ErrorCodes.MEMORY_LIMIT
@@ -194,6 +257,31 @@ export default function createArrayIterationResolver({
               break;
             }
             flattened.add(itemId);
+          }
+          continue;
+        }
+
+        // Handle body part access objects
+        if (parentValue.__isBodyPartAccessObject === true) {
+          const bodyPartIds = processBodyPartAccess(parentValue, ctx.trace);
+
+          for (const partId of bodyPartIds) {
+            totalArrayElements++;
+            if (totalArrayElements > MAX_ARRAY_SIZE) {
+              if (errorHandler) {
+                errorHandler.handleError(
+                  'Array size limit exceeded',
+                  {
+                    limit: MAX_ARRAY_SIZE,
+                    current: totalArrayElements
+                  },
+                  'ArrayIterationResolver',
+                  ErrorCodes.MEMORY_LIMIT
+                );
+              }
+              break;
+            }
+            flattened.add(partId);
           }
           continue;
         }

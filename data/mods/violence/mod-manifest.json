@@ -43,6 +43,9 @@
       "event-is-action-squeeze-neck-with-both-hands.condition.json",
       "event-is-action-sucker-punch.condition.json",
       "event-is-action-tear-out-throat.condition.json"
+    ],
+    "scopes": [
+      "actor_beak_body_parts.scope"
     ]
   }
 }

@@ -27,6 +27,19 @@
     },
     "descriptors:texture": {
       "texture": "ridged"
+    },
+    "damage-types:damage_capabilities": {
+      "entries": [
+        {
+          "name": "piercing",
+          "amount": 6,
+          "penetration": 0.2,
+          "fracture": {
+            "enabled": true,
+            "thresholdFraction": 0.9
+          }
+        }
+      ]
     }
   }
 }

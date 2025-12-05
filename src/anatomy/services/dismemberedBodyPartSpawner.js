@@ -42,6 +42,9 @@ class DismemberedBodyPartSpawner extends BaseService {
   /** @type {import('../../entities/services/entityLifecycleManager.js').default} */
   #entityLifecycleManager;
 
+  /** @type {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} */
+  #gameDataRepository;
+
   /** @type {Function|null} */
   #unsubscribe;
 
@@ -53,8 +56,15 @@ class DismemberedBodyPartSpawner extends BaseService {
    * @param {import('../../entities/entityManager.js').default} dependencies.entityManager - Entity manager for component access
    * @param {import('../../events/safeEventDispatcher.js').default} dependencies.eventBus - Event bus for subscribing and dispatching
    * @param {import('../../entities/services/entityLifecycleManager.js').default} dependencies.entityLifecycleManager - Entity lifecycle manager for creating entities
+   * @param {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} dependencies.gameDataRepository - Repository for entity definitions
    */
-  constructor({ logger, entityManager, eventBus, entityLifecycleManager }) {
+  constructor({
+    logger,
+    entityManager,
+    eventBus,
+    entityLifecycleManager,
+    gameDataRepository,
+  }) {
     super();
     this.#logger = this._init('DismemberedBodyPartSpawner', logger, {
       entityManager: {
@@ -69,11 +79,16 @@ class DismemberedBodyPartSpawner extends BaseService {
         value: entityLifecycleManager,
         requiredMethods: ['createEntityInstance'],
       },
+      gameDataRepository: {
+        value: gameDataRepository,
+        requiredMethods: ['getEntityDefinition'],
+      },
     });
 
     this.#entityManager = entityManager;
     this.#eventBus = eventBus;
     this.#entityLifecycleManager = entityLifecycleManager;
+    this.#gameDataRepository = gameDataRepository;
     this.#unsubscribe = null;
   }
 
@@ -158,8 +173,8 @@ class DismemberedBodyPartSpawner extends BaseService {
         partType
       );
 
-      // 5. Get weight from definition or use default
-      const weight = this.#getWeightForDefinition(definitionId, partData);
+      // 5. Get weight from entity definition's core:weight component or use default
+      const weight = this.#getWeightForDefinition(definitionId);
 
       // 6. Create the new entity with component overrides
       const componentOverrides = {
@@ -236,17 +251,18 @@ class DismemberedBodyPartSpawner extends BaseService {
   }
 
   /**
-   * Gets the weight value from the part data or returns the default.
+   * Gets the weight value from the entity definition's core:weight component.
    *
    * @param {string} definitionId - The entity definition ID
-   * @param {object} partData - The anatomy:part component data
    * @returns {number} The weight in kg
    * @private
    */
-  #getWeightForDefinition(definitionId, partData) {
-    // Check if the part data has weight information
-    if (partData.weight !== undefined && partData.weight !== null) {
-      return partData.weight;
+  #getWeightForDefinition(definitionId) {
+    const definition = this.#gameDataRepository.getEntityDefinition(definitionId);
+    const weight = definition?.components?.[WEIGHT_COMPONENT_ID]?.weight;
+
+    if (weight !== undefined && weight !== null) {
+      return weight;
     }
 
     this.#logger.warn(

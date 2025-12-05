@@ -30,6 +30,20 @@
     },
     "descriptors:texture": {
       "texture": "ridged"
+    },
+    "damage-types:damage_capabilities": {
+      "entries": [
+        {
+          "name": "piercing",
+          "amount": 15,
+          "penetration": 0.5,
+          "bleed": {
+            "enabled": true,
+            "severity": "minor",
+            "baseDurationTurns": 2
+          }
+        }
+      ]
     }
   }
 }

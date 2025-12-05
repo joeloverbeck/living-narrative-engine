@@ -128,6 +128,8 @@ class JsonLogicEvaluationService extends BaseService {
       'getSkillValue',
       // Damage capability operators
       'has_damage_capability',
+      // Body part substring matching operators
+      'hasPartSubTypeContaining',
     ]);
 
     // --- ADDED: Register the 'not' operator alias upon instantiation ---

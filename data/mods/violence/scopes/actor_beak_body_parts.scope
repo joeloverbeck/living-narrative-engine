@@ -1,0 +1,17 @@
+// Returns the actor's body part entities where subType contains "beak" and has damage capabilities
+//
+// BEHAVIOR: Iterates through all body parts in the actor's anatomy:body component
+// and filters for those with:
+// 1. subType containing "beak" (case-sensitive substring match)
+// 2. A damage-types:damage_capabilities component (required for dealing damage)
+//
+// Example: For a creature with chicken_beak in their body graph, returns
+// the entity ID of the beak body part so it can be used as an attack source.
+//
+// Usage: Primary target scope for peck_target action
+violence:actor_beak_body_parts := actor.body_parts[][{
+  "and": [
+    {"in": ["beak", {"var": "entity.components.anatomy:part.subType"}]},
+    {"!=": [{"var": "entity.components.damage-types:damage_capabilities"}, null]}
+  ]
+}]
