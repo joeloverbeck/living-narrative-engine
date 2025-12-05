@@ -1,0 +1,40 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "recovery",
+  "version": "0.1.0",
+  "name": "Recovery",
+  "description": "Actions that help actors stand back up after falling.",
+  "actionPurpose": "Restore mobility to fallen actors, either by self-effort or assistance.",
+  "actionConsiderWhen": "An actor or ally has fallen and needs to return to standing.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "help_target_to_their_feet.action.json",
+      "push_yourself_to_your_feet.action.json"
+    ],
+    "conditions": [
+      "event-is-action-help-target-to-their-feet.condition.json",
+      "event-is-action-push-yourself-to-your-feet.condition.json"
+    ],
+    "rules": [
+      "handle_help_target_to_their_feet.rule.json",
+      "handle_push_yourself_to_your_feet.rule.json"
+    ],
+    "components": [],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    }
+  }
+}

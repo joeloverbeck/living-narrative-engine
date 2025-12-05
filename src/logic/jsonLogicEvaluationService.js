@@ -143,6 +143,27 @@ class JsonLogicEvaluationService extends BaseService {
       return false;
     });
 
+    const coerceTextMatchOptions = (value, primaryKey) => {
+      if (value && typeof value === 'object') {
+        return {
+          matchAtEnd: Boolean(value.matchAtEnd),
+          matchWholeWord: Boolean(value.matchWholeWord),
+        };
+      }
+
+      return {
+        matchAtEnd: primaryKey === 'matchAtEnd' ? Boolean(value) : false,
+        matchWholeWord: primaryKey === 'matchWholeWord' ? Boolean(value) : false,
+      };
+    };
+
+    this.addOperation('matchAtEnd', (value) =>
+      coerceTextMatchOptions(value, 'matchAtEnd')
+    );
+    this.addOperation('matchWholeWord', (value) =>
+      coerceTextMatchOptions(value, 'matchWholeWord')
+    );
+
     this.#logger.debug('JsonLogicEvaluationService initialized.', {
       allowedOperationCount: this.#allowedOperations.size,
     });

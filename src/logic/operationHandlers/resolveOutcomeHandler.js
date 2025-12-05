@@ -185,8 +185,10 @@ class ResolveOutcomeHandler {
     const tertiaryTargetId =
       event?.payload?.tertiaryId || event?.payload?.targets?.tertiary?.entityId;
 
+    const selectedTargetRole = target_role || 'secondary';
+
     let targetId;
-    switch (target_role) {
+    switch (selectedTargetRole) {
       case 'primary':
         targetId = primaryTargetId || secondaryTargetId || tertiaryTargetId;
         break;
@@ -197,6 +199,23 @@ class ResolveOutcomeHandler {
       default:
         targetId = secondaryTargetId || primaryTargetId;
         break;
+    }
+
+    // Fail fast when opposed checks are asked to use a target role that is not available
+    if (target_skill_component && !targetId) {
+      const error = new ResolveOutcomeOperationError(
+        `RESOLVE_OUTCOME: target_role "${selectedTargetRole}" requested for opposed check but no targetId was found in event payload.`,
+        {
+          selectedTargetRole,
+          actorId,
+          primaryTargetId,
+          secondaryTargetId,
+          tertiaryTargetId,
+          eventPayload: event?.payload,
+        }
+      );
+      this.#logger.error(error.message, error.details);
+      throw error;
     }
 
     if (!actorId) {
@@ -231,7 +250,7 @@ class ResolveOutcomeHandler {
           ? {
               component: target_skill_component,
               default: target_skill_default,
-              targetRole: target_role,
+              targetRole: selectedTargetRole,
             }
           : undefined,
         formula,

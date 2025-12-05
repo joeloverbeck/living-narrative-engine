@@ -68,11 +68,20 @@ describe('JsonLogicCustomOperators - Whitelist Validation', () => {
         'not', 'has', 'toLowerCase', 'toUpperCase',
       ]);
 
-      const specialSyntax = new Set(['condition_ref']);
+      const specialSyntax = new Set([
+        'condition_ref',
+        // Added by JsonLogicEvaluationService for text matching helpers
+        'matchAtEnd',
+        'matchWholeWord',
+      ]);
 
       const unregisteredButWhitelisted = [];
       for (const op of allowedOps) {
-        if (!standardOperators.has(op) && !specialSyntax.has(op) && !registeredOps.has(op)) {
+        if (
+          !standardOperators.has(op) &&
+          !specialSyntax.has(op) &&
+          !registeredOps.has(op)
+        ) {
           unregisteredButWhitelisted.push(op);
         }
       }

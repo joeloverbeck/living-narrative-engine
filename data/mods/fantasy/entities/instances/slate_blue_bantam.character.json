@@ -1,0 +1,10 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "fantasy:slate_blue_bantam_instance",
+    "definitionId": "fantasy:slate_blue_bantam",
+    "componentOverrides": {
+        "core:position": {
+            "locationId": "fantasy:interior_of_chicken_coop_instance"
+        }
+    }
+}

@@ -30,7 +30,8 @@
         "actor_skill_default": 10,
         "target_skill_default": 0,
         "formula": "ratio",
-        "result_variable": "restrainResult"
+        "result_variable": "restrainResult",
+        "target_role": "primary"
       }
     },
     {

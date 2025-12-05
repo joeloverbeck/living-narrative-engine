@@ -64,6 +64,10 @@ checkHandlerFiles(operationsFromSchemas);
 console.log('\n📋 Step 8: Checking naming consistency...');
 checkNamingConsistency(operationsFromSchemas);
 
+// Step 9: Warn on RESOLVE_OUTCOME target role usage before schema validation
+console.log('\n📋 Step 9: Checking RESOLVE_OUTCOME target_role usage...');
+checkResolveOutcomeTargetRole();
+
 // Report results
 console.log('\n' + '='.repeat(70));
 console.log('📊 Validation Results\n');
@@ -447,6 +451,47 @@ function checkNamingConsistency(operations) {
     console.log('  ✓ All naming conventions followed');
   } else {
     console.log(`  ⚠️  ${inconsistencies} naming inconsistenc(ies) found`);
+  }
+}
+
+/**
+ * Warn when RESOLVE_OUTCOME in rules uses target_skill_component without target_role.
+ * Schema now enforces this, but this pre-schema check provides a clearer pointer to the rule file.
+ */
+function checkResolveOutcomeTargetRole() {
+  const rulePattern = path.join(projectRoot, 'data/mods/**/rules/*.rule.json');
+  const ruleFiles = glob.sync(rulePattern);
+
+  let missingCount = 0;
+
+  for (const ruleFile of ruleFiles) {
+    let rule;
+    try {
+      rule = JSON.parse(fs.readFileSync(ruleFile, 'utf8'));
+    } catch (error) {
+      warnings.push(`⚠️  Could not parse rule ${path.relative(projectRoot, ruleFile)}: ${error.message}`);
+      continue;
+    }
+
+    const operations = Array.isArray(rule?.actions) ? rule.actions : [];
+    operations.forEach((op, idx) => {
+      if (
+        op?.type === 'RESOLVE_OUTCOME' &&
+        op.parameters?.target_skill_component &&
+        !op.parameters?.target_role
+      ) {
+        missingCount += 1;
+        warnings.push(
+          `⚠️  ${path.relative(projectRoot, ruleFile)}: RESOLVE_OUTCOME #${idx} has target_skill_component but no target_role; set target_role to primary|secondary|tertiary.`
+        );
+      }
+    });
+  }
+
+  if (missingCount === 0) {
+    console.log('  ✓ All RESOLVE_OUTCOME operations specify target_role for opposed checks');
+  } else {
+    console.log(`  ⚠️  Found ${missingCount} RESOLVE_OUTCOME operation(s) missing target_role`);
   }
 }
 

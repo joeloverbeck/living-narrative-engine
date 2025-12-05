@@ -78,7 +78,8 @@ describe('Operator Whitelist Validation - Integration', () => {
       'substr', 'log', 'not', 'has', 'toLowerCase', 'toUpperCase',
     ]);
 
-    const specialSyntax = new Set(['condition_ref']);
+    // These are helper syntax operators registered at service startup but not part of the custom operator set
+    const specialSyntax = new Set(['condition_ref', 'matchAtEnd', 'matchWholeWord']);
 
     const unregisteredOps = [];
     for (const op of allowedOps) {

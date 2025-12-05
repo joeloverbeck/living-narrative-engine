@@ -141,6 +141,8 @@ function isStandardOperator(operator) {
 function isSpecialSyntax(operator) {
   const specialSyntax = new Set([
     'condition_ref', // Resolved to actual logic before evaluation
+    'matchAtEnd', // helper option object operators registered at service startup
+    'matchWholeWord',
   ]);
 
   return specialSyntax.has(operator);

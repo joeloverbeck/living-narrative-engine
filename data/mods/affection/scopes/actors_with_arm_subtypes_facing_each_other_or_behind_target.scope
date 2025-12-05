@@ -2,7 +2,7 @@
 // Blocks incompatible kneeling height differences and bending-over targets
 affection:actors_with_arm_subtypes_facing_each_other_or_behind_target := actor.components.positioning:closeness.partners[][{
   "and": [
-    {"hasPartSubTypeContaining": [".", "arm"]},
+    {"hasPartSubTypeContaining": [".", "arm", {"matchAtEnd": true}]},
     {
       "or": [
         {"condition_ref": "positioning:both-actors-facing-each-other"},

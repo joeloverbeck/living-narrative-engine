@@ -1,9 +1,9 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_push_yourself_to_your_feet",
-  "comment": "Handles the 'positioning:push_yourself_to_your_feet' action. Removes fallen component, dispatches descriptive text and ends the turn.",
+  "comment": "Handles the 'recovery:push_yourself_to_your_feet' action. Removes fallen component, dispatches descriptive text and ends the turn.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "positioning:event-is-action-push-yourself-to-your-feet" },
+  "condition": { "condition_ref": "recovery:event-is-action-push-yourself-to-your-feet" },
   "actions": [
     {
       "type": "QUERY_COMPONENT",

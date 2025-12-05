@@ -14,8 +14,8 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 ## Current Status
 
 **Total Schemes**: 48 defined color combinations
-**In Use**: 33 schemes actively implemented across mods
-**Available**: 15 schemes ready for future mods
+**In Use**: 34 schemes actively implemented across mods
+**Available**: 14 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
 
@@ -56,6 +56,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 | Item-Transfer            | Trade Amber        | 13.1    | `#7d5a00`        | Active   |
 | Personal-Space           | Molten Copper      | 11.6    | `#7c2d12`        | Active   |
 | Ranged                   | Archer's Focus     | 15.1    | `#2a4a3f`        | Active   |
+| Recovery                 | Evergreen Shadow   | 11.5    | `#123524`        | Active   |
 
 ## Available Color Schemes by Category
 
@@ -92,7 +93,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 (No available schemes - all in use)
 
 ### Expansion Set
-- **Evergreen Shadow** (11.5) - Stealth exploration, healing rituals
+- *(none available — all assigned)*
 
 ### Hex/Corruption
 - **Blighted Moss** (16.2) - Hexcraft rituals, entropic nature magic (available)
@@ -649,7 +650,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 - **Use Cases**: Musical performance actions, artistic performances, creative expression
 - **Theme**: Artistic sophistication and creative expression with calm, focused aesthetic
 
-#### 11.5 Evergreen Shadow 🟢 AVAILABLE
+#### 11.5 Evergreen Shadow ✅ IN USE: Recovery
 
 ```json
 {
@@ -662,8 +663,8 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 - **Normal Contrast**: 11.96:1 🌟 AAA
 - **Hover Contrast**: 7.87:1 🌟 AAA
-- **Use Cases**: Stealth exploration, nature attunement, healing rituals
-- **Theme**: Quiet resilience, verdant focus
+- **Use Cases**: Stealth exploration, nature attunement, healing rituals, physical recovery/support
+- **Theme**: Quiet resilience, verdant focus for restorative actions
 
 #### 11.6 Molten Copper ✅ IN USE: Personal-Space
 

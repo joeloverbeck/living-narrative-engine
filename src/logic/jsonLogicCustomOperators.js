@@ -510,9 +510,12 @@ export class JsonLogicCustomOperators extends BaseService {
     // Register hasPartSubTypeContaining operator
     this.#registerOperator(
       'hasPartSubTypeContaining',
-      function (entityPath, substring) {
+      function (entityPath, substring, options) {
         // 'this' is the evaluation context
-        return hasPartSubTypeContainingOp.evaluate([entityPath, substring], this);
+        return hasPartSubTypeContainingOp.evaluate(
+          [entityPath, substring, options],
+          this
+        );
       },
       jsonLogicEvaluationService
     );

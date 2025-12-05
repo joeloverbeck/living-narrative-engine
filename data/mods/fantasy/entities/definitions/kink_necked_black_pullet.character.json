@@ -1,19 +1,19 @@
 {
     "$schema": "http://example.com/schemas/entity-definition.schema.json",
-    "id": "fantasy:copper_backed_rooster",
+    "id": "fantasy:kink_necked_black_pullet",
     "components": {
         "core:name": {
-            "text": "copper-backed rooster"
+            "text": "kink-necked black pullet"
         },
         "core:gender": {
             "value": "male"
         },
         "core:portrait": {
-            "imagePath": "portraits/copper_backed_rooster.png",
-            "altText": "Copper-backed rooster"
+            "imagePath": "portraits/kink_necked_black_pullet.png",
+            "altText": "Kink-necked black pullet"
         },
         "anatomy:body": {
-            "recipeId": "fantasy:copper_backed_rooster_recipe"
+            "recipeId": "fantasy:kink_necked_black_pullet_recipe"
         },
         "core:actor": {},
         "core:player_type": {
@@ -24,17 +24,18 @@
             "logEntries": []
         },
         "warding:corrupted": {},
+        "hexing:is_hexer": {},
         "skills:melee_skill": {
-            "value": 57
+            "value": 32
         },
         "skills:defense_skill": {
-            "value": 46
+            "value": 33
         },
         "skills:grappling_skill": {
-            "value": 36
+            "value": 22
         },
         "skills:resolve_skill": {
-            "value": 62
+            "value": 89
         }
     }
 }

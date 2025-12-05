@@ -1,8 +1,8 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "positioning:event-is-action-push-yourself-to-your-feet",
+  "id": "recovery:event-is-action-push-yourself-to-your-feet",
   "description": "Checks if the event is attempting the 'Push Yourself To Your Feet' action.",
   "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "positioning:push_yourself_to_your_feet"]
+    "==": [{ "var": "event.payload.actionId" }, "recovery:push_yourself_to_your_feet"]
   }
 }

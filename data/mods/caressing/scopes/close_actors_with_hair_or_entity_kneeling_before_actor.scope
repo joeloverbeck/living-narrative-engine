@@ -2,7 +2,7 @@
 // Allows targets kneeling before the actor while blocking cases where the actor kneels before them
 caressing:close_actors_with_hair_or_entity_kneeling_before_actor := actor.components.positioning:closeness.partners[][{
   "and": [
-    {"hasPartSubTypeContaining": [".", "hair"]},
+    {"hasPartSubTypeContaining": [".", "hair", {"matchAtEnd": true}]},
     {"!": {"var": "actor.components.positioning:kneeling_before"}},
     {
       "or": [

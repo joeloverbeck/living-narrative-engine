@@ -1,0 +1,10 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "fantasy:kink_necked_black_pullet_instance",
+    "definitionId": "fantasy:kink_necked_black_pullet",
+    "componentOverrides": {
+        "core:position": {
+            "locationId": "fantasy:interior_of_chicken_coop_instance"
+        }
+    }
+}
