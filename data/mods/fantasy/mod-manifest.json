@@ -97,6 +97,7 @@
         "fitted_waistcoat.entity.json",
         "formal_sleeve_cuffs.entity.json",
         "interior_of_chicken_coop.location.json",
+        "kink_necked_black_pullet.character.json",
         "large_speckled_hen.character.json",
         "mudbrook_municipal_aid_registry.location.json",
         "mudbrook_on_the_bend.location.json",
@@ -111,13 +112,15 @@
         "registry_ledger.entity.json",
         "rill.character.json",
         "rill_practice_stick.entity.json",
+        "slate_blue_bantam.character.json",
         "surroundings_of_old_millrace.location.json",
         "threadscar_melissa.character.json",
         "threadscar_melissa_longsword.entity.json",
         "vespera_hybrid_lute_viol.entity.json",
         "vespera_main_gauche.entity.json",
         "vespera_nightwhisper.character.json",
-        "vespera_rapier.entity.json"
+        "vespera_rapier.entity.json",
+        "white_faced_buff_hen.character.json"
       ],
       "instances": [
         "12_kiln_lane.location.json",
@@ -132,6 +135,7 @@
         "coop_key.entity.json",
         "copper_backed_rooster.character.json",
         "interior_of_chicken_coop.location.json",
+        "kink_necked_black_pullet.character.json",
         "large_speckled_hen.character.json",
         "mudbrook_municipal_aid_registry.location.json",
         "mudbrook_on_the_bend.location.json",
@@ -148,6 +152,7 @@
         "rill_practice_stick.entity.json",
         "rough_wooden_bench.entity.json",
         "rustic_wooden_table.entity.json",
+        "slate_blue_bantam.character.json",
         "smoking_pipe.entity.json",
         "surroundings_of_old_millrace.location.json",
         "threadscar_ale_tankard.entity.json",
@@ -156,7 +161,8 @@
         "vespera_hybrid_lute_viol.entity.json",
         "vespera_main_gauche.entity.json",
         "vespera_nightwhisper.character.json",
-        "vespera_rapier.entity.json"
+        "vespera_rapier.entity.json",
+        "white_faced_buff_hen.character.json"
       ]
     },
     "events": [],
@@ -184,6 +190,7 @@
       "bertram_old.png",
       "copper_backed_rooster.png",
       "interior_of_chicken_coop.png",
+      "kink_necked_black_pullet.png",
       "large_speckled_hen.png",
       "large_speckled_hen_old.png",
       "mudbrook.png",
@@ -191,12 +198,14 @@
       "registrar_copperplate.png",
       "registrar_copperplate_old.png",
       "rill.png",
+      "slate_blue_bantam.png",
       "surroundings_of_old_millrace.png",
       "threadscar_melissa.png",
       "threadscar_melissa_old.png",
       "threadscar_melissa_old_2.png",
       "vespera_nightwhisper.png",
       "vespera_nightwhisper_old.png",
+      "white_faced_buff_hen.png",
       "yard_and_coop.png"
     ],
     "worlds": [

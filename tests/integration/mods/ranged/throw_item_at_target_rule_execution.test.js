@@ -118,6 +118,7 @@ describe('throw_item_at_target outcome resolution rule', () => {
       expect(resolveOutcomeOp.parameters.target_skill_default).toBe(0);
       expect(resolveOutcomeOp.parameters.formula).toBe('ratio');
       expect(resolveOutcomeOp.parameters.result_variable).toBe('attackResult');
+      expect(resolveOutcomeOp.parameters.target_role).toBe('secondary');
     });
 
     it('should have IF operations for outcome branching', () => {

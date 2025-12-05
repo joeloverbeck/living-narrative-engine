@@ -78,6 +78,7 @@ describe('handle_break_free_from_restraint rule', () => {
     expect(resolveOutcome?.parameters.target_skill_default).toBe(10);
     expect(resolveOutcome?.parameters.formula).toBe('ratio');
     expect(resolveOutcome?.parameters.result_variable).toBe('breakFreeResult');
+    expect(resolveOutcome?.parameters.target_role).toBe('primary');
   });
 
   it('sets up names, position lookup, and shared variables', () => {

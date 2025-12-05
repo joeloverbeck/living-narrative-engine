@@ -30,7 +30,8 @@
         "actor_skill_default": 10,
         "target_skill_default": 10,
         "formula": "ratio",
-        "result_variable": "breakFreeResult"
+        "result_variable": "breakFreeResult",
+        "target_role": "primary"
       }
     },
     {

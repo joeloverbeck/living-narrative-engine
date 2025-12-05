@@ -243,7 +243,11 @@ describe('handle_peck_target rule definition', () => {
       expect(resolveOp.parameters.actor_skill_component).toBe(
         'skills:melee_skill'
       );
+      expect(resolveOp.parameters.target_skill_component).toBe(
+        'skills:defense_skill'
+      );
       expect(resolveOp.parameters.result_variable).toBe('attackResult');
+      expect(resolveOp.parameters.target_role).toBe('secondary');
     });
 
     it('should set locationId from actor position', () => {

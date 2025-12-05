@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "recovery:help_target_to_their_feet",
+  "name": "Help {target} To Their Feet",
+  "description": "Help a fallen target back to their feet.",
+  "targets": {
+    "primary": {
+      "scope": "core:actors_in_location",
+      "placeholder": "target",
+      "description": "Fallen person to help up"
+    }
+  },
+  "required_components": {
+    "primary": [
+      "positioning:fallen"
+    ]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:being_restrained",
+      "positioning:fallen"
+    ]
+  },
+  "template": "help {target} to their feet",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#123524",
+    "textColor": "#e8f5e9",
+    "hoverBackgroundColor": "#1b5e20",
+    "hoverTextColor": "#ffffff"
+  }
+}

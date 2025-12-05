@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "recovery:event-is-action-help-target-to-their-feet",
+  "description": "Checks if the event is attempting the 'Help Target To Their Feet' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "recovery:help_target_to_their_feet"]
+  }
+}

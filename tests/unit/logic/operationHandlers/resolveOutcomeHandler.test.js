@@ -658,6 +658,31 @@ describe('ResolveOutcomeHandler', () => {
       );
     });
 
+    test('throws when opposed check requests a missing target role', () => {
+      const ctx = buildExecutionContext(mockLogger, {
+        actorId: 'actor-123',
+        targetId: undefined,
+        secondaryId: undefined,
+        primaryId: undefined,
+      });
+
+      const params = {
+        actor_skill_component: 'skills:melee',
+        target_skill_component: 'skills:defense',
+        result_variable: 'outcome',
+        target_role: 'secondary',
+      };
+
+      expect(() => handler.execute(params, ctx)).toThrow(
+        ResolveOutcomeOperationError
+      );
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('target_role "secondary" requested'),
+        expect.objectContaining({ selectedTargetRole: 'secondary' })
+      );
+    });
+
     test('does not modify event payload', () => {
       const ctx = buildExecutionContext(mockLogger);
       const originalPayload = JSON.stringify(ctx.evaluationContext.event.payload);

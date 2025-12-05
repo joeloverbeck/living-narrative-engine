@@ -1,12 +1,12 @@
 /**
- * @file Integration tests for the positioning:push_yourself_to_your_feet action and rule.
+ * @file Integration tests for the recovery:push_yourself_to_your_feet action and rule.
  * @description Tests the rule execution after the push_yourself_to_your_feet action is performed.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 
-describe('positioning:push_yourself_to_your_feet action integration', () => {
+describe('recovery:push_yourself_to_your_feet action integration', () => {
   let testFixture;
 
   const createFallenScenario = (options = {}) => {
@@ -30,7 +30,6 @@ describe('positioning:push_yourself_to_your_feet action integration', () => {
       },
     ];
 
-    // Add any extra entities if needed
     if (options.witnesses) {
       options.witnesses.forEach((witness) => {
         entities.push({
@@ -49,8 +48,8 @@ describe('positioning:push_yourself_to_your_feet action integration', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:push_yourself_to_your_feet'
+      'recovery',
+      'recovery:push_yourself_to_your_feet'
     );
   });
 
@@ -101,7 +100,6 @@ describe('positioning:push_yourself_to_your_feet action integration', () => {
       actorName: 'Alice',
     });
 
-    // Try with a different action - this should not trigger the rule
     await testFixture.eventBus.dispatch('core:attempt_action', {
       eventName: 'core:attempt_action',
       actorId: 'test:actor1',
@@ -110,7 +108,6 @@ describe('positioning:push_yourself_to_your_feet action integration', () => {
       originalInput: 'wait',
     });
 
-    // Should not have removed the fallen component
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
     expect(actor).toHaveComponent('positioning:fallen');
 
@@ -121,9 +118,7 @@ describe('positioning:push_yourself_to_your_feet action integration', () => {
     createFallenScenario({
       actorName: 'Alice',
       locationId: 'courtyard',
-      witnesses: [
-        { id: 'test:witness1', name: 'Bob' },
-      ],
+      witnesses: [{ id: 'test:witness1', name: 'Bob' }],
     });
 
     await testFixture.executeAction('test:actor1', 'none');
@@ -131,7 +126,6 @@ describe('positioning:push_yourself_to_your_feet action integration', () => {
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
     expect(actor).toNotHaveComponent('positioning:fallen');
 
-    // Perceptible event should be visible to all in location
     const perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
     );
@@ -140,20 +134,24 @@ describe('positioning:push_yourself_to_your_feet action integration', () => {
 
   it('verifies action discoverability', async () => {
     createFallenScenario({
-       actorName: 'Alice',
+      actorName: 'Alice',
     });
 
-    // The action should be available to the actor because they have the 'positioning:fallen' component
     const actions = await testFixture.testEnv.getAvailableActions('test:actor1');
-    const pushAction = actions.find(a => a.id === 'positioning:push_yourself_to_your_feet');
+    const pushAction = actions.find(
+      (a) => a.id === 'recovery:push_yourself_to_your_feet'
+    );
     expect(pushAction).toBeDefined();
 
-    // Remove the component and check availability
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
     testFixture.entityManager.removeComponent('test:actor1', 'positioning:fallen');
-    
-    const actionsWithoutComponent = await testFixture.testEnv.getAvailableActions('test:actor1');
-    const pushActionMissing = actionsWithoutComponent.find(a => a.id === 'positioning:push_yourself_to_your_feet');
+
+    const actionsWithoutComponent = await testFixture.testEnv.getAvailableActions(
+      'test:actor1'
+    );
+    const pushActionMissing = actionsWithoutComponent.find(
+      (a) => a.id === 'recovery:push_yourself_to_your_feet'
+    );
     expect(pushActionMissing).toBeUndefined();
   });
 });

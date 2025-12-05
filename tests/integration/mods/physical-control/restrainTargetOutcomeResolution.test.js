@@ -26,6 +26,7 @@ describe('handle_restrain_target outcome resolution', () => {
     expect(resolveOutcome.parameters.target_skill_default).toBe(0);
     expect(resolveOutcome.parameters.formula).toBe('ratio');
     expect(resolveOutcome.parameters.result_variable).toBe('restrainResult');
+    expect(resolveOutcome.parameters.target_role).toBe('primary');
   });
 
   it('keeps action chance config aligned with opposed grappling vs defense defaults', () => {

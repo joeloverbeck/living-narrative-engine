@@ -26,13 +26,14 @@ export class HasPartSubTypeContainingOperator extends BaseBodyPartOperator {
    * @protected
    * @param {string} entityId - The resolved entity ID
    * @param {string} rootId - The root ID from body component
-   * @param {Array} params - [substring] where substring is the text to search for in subType
+   * @param {Array} params - [substring, options] where substring is the text to search for in subType and options can enable stricter matching
    * @param {object} context - Evaluation context
    * @param {object} bodyComponent - The body component
    * @returns {boolean} True if entity has at least one part with subType containing the substring
    */
   evaluateInternal(entityId, rootId, params, context, bodyComponent) {
-    const [substring] = params;
+    const [substring, rawOptions] = params;
+    const options = this.#normalizeOptions(rawOptions);
 
     if (!substring || typeof substring !== 'string') {
       this.logger.warn(
@@ -59,8 +60,19 @@ export class HasPartSubTypeContainingOperator extends BaseBodyPartOperator {
       if (!node) return false;
 
       const partType = node.partType;
-      return partType && typeof partType === 'string' &&
-             partType.toLowerCase().includes(lowerSubstring);
+      if (!partType || typeof partType !== 'string') {
+        return false;
+      }
+
+      const partTypeLower = partType.toLowerCase();
+
+      if (options.matchAtEnd) {
+        return partTypeLower.endsWith(lowerSubstring);
+      }
+
+      return options.matchWholeWord
+        ? this.#matchesWholeWord(partType, lowerSubstring)
+        : partTypeLower.includes(lowerSubstring);
     });
 
     this.logger.debug(
@@ -69,5 +81,38 @@ export class HasPartSubTypeContainingOperator extends BaseBodyPartOperator {
     );
 
     return matchingParts.length > 0;
+  }
+
+  /**
+   * Normalizes optional options parameter.
+   * @param {unknown} rawOptions
+   * @returns {{matchWholeWord: boolean, matchAtEnd: boolean}}
+   */
+  #normalizeOptions(rawOptions) {
+    if (rawOptions === true) {
+      return { matchWholeWord: true, matchAtEnd: false };
+    }
+
+    if (!rawOptions || typeof rawOptions !== 'object') {
+      return { matchWholeWord: false, matchAtEnd: false };
+    }
+
+    return {
+      matchWholeWord: Boolean(rawOptions.matchWholeWord),
+      matchAtEnd: Boolean(rawOptions.matchAtEnd),
+    };
+  }
+
+  /**
+   * Matches substring on word boundaries (start/end or separated by non-alphanumeric characters).
+   * @param {string} partType
+   * @param {string} lowerSubstring
+   * @returns {boolean}
+   */
+  #matchesWholeWord(partType, lowerSubstring) {
+    const escaped = lowerSubstring.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const boundaryPattern = `(?:^|[^a-zA-Z0-9])${escaped}(?:$|[^a-zA-Z0-9])`;
+    const boundaryRegex = new RegExp(boundaryPattern, 'i');
+    return boundaryRegex.test(partType);
   }
 }

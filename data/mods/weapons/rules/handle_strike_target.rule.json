@@ -40,7 +40,8 @@
         "actor_skill_default": 10,
         "target_skill_default": 0,
         "formula": "ratio",
-        "result_variable": "attackResult"
+        "result_variable": "attackResult",
+        "target_role": "secondary"
       }
     },
     {

@@ -2,7 +2,7 @@
 // Excludes incompatible kneeling height differences
 affection:actors_with_hands_in_intimacy := actor.components.positioning:closeness.partners[][{
   "and": [
-    {"hasPartSubTypeContaining": [".", "hand"]},
+    {"hasPartSubTypeContaining": [".", "hand", {"matchAtEnd": true}]},
     {"!": {"condition_ref": "positioning:entity-kneeling-before-actor"}},
     {"!": {"condition_ref": "positioning:actor-kneeling-before-entity"}}
   ]

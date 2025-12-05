@@ -56,6 +56,9 @@
         }
       },
       "required": ["actor_skill_component", "result_variable"],
+      "dependencies": {
+        "target_skill_component": ["target_role"]
+      },
       "additionalProperties": false
     }
   }
