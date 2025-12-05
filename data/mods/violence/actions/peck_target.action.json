@@ -1,0 +1,70 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "violence:peck_target",
+  "name": "Peck Target",
+  "description": "Peck at a target with your beak",
+  "template": "peck {target} with {weapon} ({chance}% chance)",
+  "generateCombinations": true,
+  "required_components": {
+    "primary": ["damage-types:damage_capabilities"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:hugging",
+      "positioning:giving_blowjob",
+      "positioning:doing_complex_performance",
+      "positioning:bending_over",
+      "positioning:being_restrained",
+      "positioning:restraining",
+      "positioning:fallen"
+    ],
+    "secondary": ["core:dead"]
+  },
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "violence:actor-has-beak"
+      },
+      "failure_message": "You need a beak to peck."
+    }
+  ],
+  "targets": {
+    "primary": {
+      "scope": "violence:actor_beak_body_parts",
+      "placeholder": "weapon",
+      "description": "Beak to peck with"
+    },
+    "secondary": {
+      "scope": "core:actors_in_location",
+      "placeholder": "target",
+      "description": "Target to attack"
+    }
+  },
+  "chanceBased": {
+    "enabled": true,
+    "contestType": "opposed",
+    "actorSkill": {
+      "component": "skills:melee_skill",
+      "property": "value",
+      "default": 10
+    },
+    "targetSkill": {
+      "component": "skills:defense_skill",
+      "property": "value",
+      "default": 0,
+      "targetRole": "secondary"
+    },
+    "formula": "ratio",
+    "bounds": { "min": 5, "max": 95 },
+    "outcomes": {
+      "criticalSuccessThreshold": 5,
+      "criticalFailureThreshold": 95
+    }
+  },
+  "visual": {
+    "backgroundColor": "#8b0000",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#b71c1c",
+    "hoverTextColor": "#ffebee"
+  }
+}

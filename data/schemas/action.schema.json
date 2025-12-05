@@ -34,22 +34,43 @@
     },
     "chanceModifier": {
       "type": "object",
-      "description": "Conditional modifier to action success probability",
+      "description": "Conditional modifier to action success probability with display tag",
       "properties": {
         "condition": {
           "$ref": "./condition-container.schema.json#",
-          "description": "Condition that must be true for modifier to apply"
+          "description": "JSON Logic condition determining if modifier applies. Context provides: entity.actor, entity.primary, entity.secondary, entity.tertiary, entity.location"
         },
-        "modifier": {
-          "type": "integer",
-          "description": "Flat modifier to success chance (can be negative)"
+        "type": {
+          "type": "string",
+          "enum": ["flat", "percentage"],
+          "default": "flat",
+          "description": "Modifier type: 'flat' adds/subtracts directly, 'percentage' multiplies final chance"
+        },
+        "value": {
+          "type": "number",
+          "description": "Modifier value. For flat: integer added to chance. For percentage: multiplier (e.g., 10 means +10%, -20 means -20%)"
+        },
+        "tag": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 30,
+          "description": "Display tag text shown in action template when modifier is active"
+        },
+        "targetRole": {
+          "type": "string",
+          "enum": ["actor", "primary", "secondary", "tertiary", "location"],
+          "description": "Which entity this modifier primarily evaluates. Used for documentation and potential optimization."
         },
         "description": {
           "type": "string",
-          "description": "Human-readable description of modifier"
+          "description": "Human-readable description for documentation, tooltips, and debugging"
+        },
+        "stackId": {
+          "type": "string",
+          "description": "Optional grouping ID. Modifiers with same stackId use only the highest value (for flat) or multiply together (for percentage)"
         }
       },
-      "required": ["condition", "modifier"],
+      "required": ["condition", "value", "tag"],
       "additionalProperties": false
     }
   },

@@ -49,7 +49,7 @@ const PART_DESTROYED_EVENT = 'anatomy:part_destroyed';
 /** @type {{ getAllParts: jest.Mock }} */ let bodyGraphService;
 /** @type {{ applyEffectsForDamage: jest.Mock }} */ let damageTypeEffectsService;
 /** @type {{ propagateDamage: jest.Mock }} */ let damagePropagationService;
-/** @type {{ checkDeathConditions: jest.Mock }} */ let deathCheckService;
+/** @type {{ checkDeathConditions: jest.Mock, evaluateDeathConditions: jest.Mock, finalizeDeathFromEvaluation: jest.Mock }} */ let deathCheckService;
 /** @type {{ createSession: jest.Mock, recordDamage: jest.Mock, finalize: jest.Mock, hasEntries: jest.Mock }} */ let damageAccumulator;
 /** @type {{ compose: jest.Mock }} */ let damageNarrativeComposer;
 
@@ -78,6 +78,14 @@ beforeEach(() => {
       isDying: false,
       deathInfo: null,
     }),
+    evaluateDeathConditions: jest.fn().mockReturnValue({
+      isDead: false,
+      isDying: false,
+      shouldFinalize: false,
+      finalizationParams: null,
+      deathInfo: null,
+    }),
+    finalizeDeathFromEvaluation: jest.fn(),
   };
   // Create a mock session that accumulates queued events
   const mockSession = {
@@ -1027,7 +1035,7 @@ describe('ApplyDamageHandler', () => {
     });
 
     describe('death condition checks', () => {
-      test('should call checkDeathConditions after top-level damage is applied', async () => {
+      test('should call evaluateDeathConditions after top-level damage is applied', async () => {
         const params = {
           entity_ref: 'entity1',
           part_ref: 'part1',
@@ -1060,13 +1068,13 @@ describe('ApplyDamageHandler', () => {
 
         await handler.execute(params, executionContext);
 
-        expect(deathCheckService.checkDeathConditions).toHaveBeenCalledWith(
+        expect(deathCheckService.evaluateDeathConditions).toHaveBeenCalledWith(
           'owner-entity-id',
           null
         );
       });
 
-      test('should NOT call checkDeathConditions for propagated damage', async () => {
+      test('should NOT call evaluateDeathConditions for propagated damage', async () => {
         const params = {
           entity_ref: 'entity1',
           part_ref: 'child-part',
@@ -1087,10 +1095,10 @@ describe('ApplyDamageHandler', () => {
 
         await handler.execute(params, executionContext);
 
-        expect(deathCheckService.checkDeathConditions).not.toHaveBeenCalled();
+        expect(deathCheckService.evaluateDeathConditions).not.toHaveBeenCalled();
       });
 
-      test('should log death when entity dies', async () => {
+      test('should call finalizeDeathFromEvaluation when entity dies', async () => {
         const params = {
           entity_ref: 'entity1',
           part_ref: 'part1',
@@ -1121,20 +1129,21 @@ describe('ApplyDamageHandler', () => {
           return null;
         });
 
-        deathCheckService.checkDeathConditions.mockReturnValue({
-          isDead: true,
+        const deathEvaluation = {
+          isDead: false,
           isDying: false,
+          shouldFinalize: true,
+          finalizationParams: { entityId: 'victim-entity', causeType: 'vital_organ_destroyed' },
           deathInfo: { cause: 'vital_organ_destroyed' }
-        });
+        };
+        deathCheckService.evaluateDeathConditions.mockReturnValue(deathEvaluation);
 
         await handler.execute(params, executionContext);
 
-        expect(log.info).toHaveBeenCalledWith(
-          expect.stringContaining('victim-entity died from damage')
-        );
+        expect(deathCheckService.finalizeDeathFromEvaluation).toHaveBeenCalledWith(deathEvaluation);
       });
 
-      test('should log dying state when entity enters dying state', async () => {
+      test('should handle dying state evaluation correctly', async () => {
         const params = {
           entity_ref: 'entity1',
           part_ref: 'part1',
@@ -1165,20 +1174,22 @@ describe('ApplyDamageHandler', () => {
           return null;
         });
 
-        deathCheckService.checkDeathConditions.mockReturnValue({
+        // Dying state is recorded in evaluation but does not trigger finalization
+        deathCheckService.evaluateDeathConditions.mockReturnValue({
           isDead: false,
           isDying: true,
+          shouldFinalize: false,
+          finalizationParams: null,
           deathInfo: null
         });
 
         await handler.execute(params, executionContext);
 
-        expect(log.info).toHaveBeenCalledWith(
-          expect.stringContaining('dying-entity is now dying')
-        );
+        // Should not call finalizeDeathFromEvaluation for dying (not dead)
+        expect(deathCheckService.finalizeDeathFromEvaluation).not.toHaveBeenCalled();
       });
 
-      test('should pass damageCauserId from executionContext.actorId', async () => {
+      test('should pass damageCauserId from executionContext.actorId to evaluateDeathConditions', async () => {
         const params = {
           entity_ref: 'entity1',
           part_ref: 'part1',
@@ -1217,7 +1228,7 @@ describe('ApplyDamageHandler', () => {
 
         await handler.execute(params, executionContextWithActor);
 
-        expect(deathCheckService.checkDeathConditions).toHaveBeenCalledWith(
+        expect(deathCheckService.evaluateDeathConditions).toHaveBeenCalledWith(
           'victim-id',
           'attacker-id'
         );

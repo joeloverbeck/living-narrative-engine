@@ -18,13 +18,29 @@
       "version": "^1.0.0"
     },
     {
+      "id": "damage-types",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "skills",
+      "version": "^1.0.0"
+    },
+    {
       "id": "positioning",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "weapons",
       "version": "^1.0.0"
     }
   ],
   "content": {
+    "macros": [
+      "handleBeakFumble.macro.json"
+    ],
     "actions": [
       "grab_neck.action.json",
+      "peck_target.action.json",
       "slap.action.json",
       "squeeze_neck_with_both_hands.action.json",
       "sucker_punch.action.json",
@@ -32,13 +48,16 @@
     ],
     "rules": [
       "handle_grab_neck.rule.json",
+      "handle_peck_target.rule.json",
       "handle_slap.rule.json",
       "handle_squeeze_neck_with_both_hands.rule.json",
       "handle_sucker_punch.rule.json",
       "handle_tear_out_throat.rule.json"
     ],
     "conditions": [
+      "actor-has-beak.condition.json",
       "event-is-action-grab-neck.condition.json",
+      "event-is-action-peck-target.condition.json",
       "event-is-action-slap.condition.json",
       "event-is-action-squeeze-neck-with-both-hands.condition.json",
       "event-is-action-sucker-punch.condition.json",

@@ -74,9 +74,17 @@ describe('Damage Application Mechanics', () => {
       entityManager,
       eventBus: dispatcher,
     });
-    // Mock deathCheckService with required method
+    // Mock deathCheckService with required methods
     const deathCheckService = {
       checkDeathConditions: jest.fn().mockResolvedValue(undefined),
+      evaluateDeathConditions: jest.fn().mockReturnValue({
+        isDead: false,
+        isDying: false,
+        shouldFinalize: false,
+        finalizationParams: null,
+        deathInfo: null,
+      }),
+      finalizeDeathFromEvaluation: jest.fn(),
     };
     const damageAccumulator = new DamageAccumulator({
       logger,

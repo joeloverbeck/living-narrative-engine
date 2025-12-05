@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "violence:event-is-action-peck-target",
+  "description": "Checks if the event is a peck_target action attempt",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "violence:peck_target"
+    ]
+  }
+}

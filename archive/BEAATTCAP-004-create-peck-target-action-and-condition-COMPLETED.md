@@ -1,5 +1,7 @@
 # BEAATTCAP-004: Create peck_target Action and Condition Definition
 
+**Status**: ✅ COMPLETED
+
 ## Summary
 
 Create the `violence:peck_target` action definition and its corresponding `violence:event-is-action-peck-target` condition. This enables creatures with beaks to perform peck attacks.
@@ -14,6 +16,7 @@ This ticket defines the peck attack action following the established patterns fr
 |------|-------------|
 | `data/mods/violence/actions/peck_target.action.json` | **Create** |
 | `data/mods/violence/conditions/event-is-action-peck-target.condition.json` | **Create** |
+| `data/mods/violence/conditions/actor-has-beak.condition.json` | **Create** |
 
 ## Out of Scope
 
@@ -22,6 +25,13 @@ This ticket defines the peck attack action following the established patterns fr
 - **DO NOT** modify schema files
 - **DO NOT** create rule or macro files (separate tickets)
 - **DO NOT** add new skills (skill system is separate concern)
+
+## Assumptions Verified Against Codebase
+
+1. ✅ **Scope exists**: `violence:actor_beak_body_parts` scope exists at `data/mods/violence/scopes/actor_beak_body_parts.scope` (from BEAATTCAP-003)
+2. ✅ **Operator exists**: `hasPartSubTypeContaining` operator exists at `src/logic/operators/hasPartSubTypeContainingOperator.js` (from BEAATTCAP-002)
+3. ✅ **Condition schema uses `logic` not `condition`**: Actual codebase pattern verified in `weapons:event-is-action-strike-target` and `violence:event-is-action-slap`
+4. ✅ **Simple condition pattern**: Event-is-action conditions only check `event.payload.actionId`, not `event.type`
 
 ## Implementation Details
 
@@ -106,37 +116,41 @@ This ticket defines the peck attack action following the established patterns fr
 - Uses `skills:melee_skill` as fallback (no dedicated beak skill yet)
 - Same visual scheme as other violence actions (dark red)
 - Requires `damage-types:damage_capabilities` on primary (the beak)
-- Forbids dead targets
+- Forbids dead secondary targets
 - Template matches existing weapon attack patterns
 
-### 2. Condition Definition
+### 2. Condition Definition (CORRECTED)
 
 **File**: `data/mods/violence/conditions/event-is-action-peck-target.condition.json`
+
+**CORRECTED**: Uses `logic` field (not `condition`) and simple equality check (matching actual codebase patterns in `weapons:event-is-action-strike-target` and `violence:event-is-action-slap`).
 
 ```json
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "violence:event-is-action-peck-target",
   "description": "Checks if the event is a peck_target action attempt",
-  "condition": {
-    "and": [
-      { "==": [{ "var": "event.type" }, "core:attempt_action"] },
-      { "==": [{ "var": "event.payload.actionId" }, "violence:peck_target"] }
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "violence:peck_target"
     ]
   }
 }
 ```
 
-### 3. Actor Has Beak Condition (Prerequisite)
+### 3. Actor Has Beak Condition (CORRECTED)
 
 **File**: `data/mods/violence/conditions/actor-has-beak.condition.json`
+
+**CORRECTED**: Uses `logic` field (not `condition`) matching actual codebase pattern from `anatomy:actor-has-free-grabbing-appendage`.
 
 ```json
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "violence:actor-has-beak",
   "description": "Checks if actor has a body part with subType containing 'beak'",
-  "condition": {
+  "logic": {
     "hasPartSubTypeContaining": ["actor", "beak"]
   }
 }
@@ -161,8 +175,8 @@ This ticket defines the peck attack action following the established patterns fr
    - `visual` structure matches schema
 
 3. **Condition Schema Compliance**:
-   - Condition has valid JSON Logic structure
-   - References correct event type
+   - Condition has valid `logic` field with JSON Logic structure
+   - Uses simple equality check for `event.payload.actionId` (consistent with existing patterns)
 
 4. **Unit Tests** (create `tests/unit/mods/violence/peckTargetAction.test.js`):
    ```javascript
@@ -215,3 +229,51 @@ npx eslint tests/unit/mods/violence/
 ## Notes
 
 The action uses existing skill components (`skills:melee_skill`, `skills:defense_skill`) as the spec notes that a dedicated `combat:beak_fighting` skill may be created separately. This is intentional - the skill system is outside the scope of beak attack capability.
+
+## Outcome
+
+**Implementation completed successfully on 2025-12-05**
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `data/mods/violence/actions/peck_target.action.json` | Peck attack action for creatures with beaks |
+| `data/mods/violence/conditions/event-is-action-peck-target.condition.json` | Event matching condition for rule triggers |
+| `data/mods/violence/conditions/actor-has-beak.condition.json` | Prerequisite condition using hasPartSubTypeContaining operator |
+| `tests/integration/mods/violence/peck_target_prerequisites.test.js` | 26 test cases for action prerequisites |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `data/mods/violence/mod-manifest.json` | Added damage-types dependency, registered new action and conditions |
+
+### Ticket Corrections Applied
+
+1. **Condition schema pattern**: Original ticket incorrectly used `"condition": {"and": [...]}` - corrected to use `"logic": {...}` field
+2. **Event-is-action condition**: Simplified to only check `event.payload.actionId` (not `event.type`)
+3. **Actor-has-beak condition**: Corrected to use `logic` field directly with custom operator
+
+### Test Coverage
+
+- **26 new tests** in `peck_target_prerequisites.test.js`:
+  - 13 action definition structure tests
+  - 4 prerequisite pass case tests
+  - 3 prerequisite fail case tests
+  - 3 edge case tests
+  - 3 condition definition validation tests
+- All 143 violence mod tests passing
+- Schema validation passing (0 violations)
+
+### Verification
+
+```bash
+npm run validate:mod:violence  # ✅ 0 violations
+npm run test:unit -- --testPathPattern="violence" --silent  # ✅ 143 tests passing
+```
+
+### Ready for Next Tickets
+
+- BEAATTCAP-006: Rule for handling peck_target action execution
+- BEAATTCAP-007: End-to-end integration tests

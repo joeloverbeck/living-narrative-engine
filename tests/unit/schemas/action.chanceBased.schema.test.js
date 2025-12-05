@@ -219,7 +219,8 @@ describe('action.schema.json - chanceBased Property', () => {
               condition: {
                 condition_ref: 'combat:target-is-prone',
               },
-              modifier: 20,
+              value: 20,
+              tag: 'target prone',
               description: 'Bonus against prone targets',
             },
           ],
@@ -242,7 +243,8 @@ describe('action.schema.json - chanceBased Property', () => {
               condition: {
                 '==': [{ var: 'actor.position' }, 'elevated'],
               },
-              modifier: 15,
+              value: 15,
+              tag: 'elevated',
               description: 'Height advantage bonus',
             },
           ],
@@ -408,7 +410,7 @@ describe('action.schema.json - chanceBased Property', () => {
       expect(isValid).toBe(false);
     });
 
-    test('missing modifier value in modifiers should fail validation', () => {
+    test('missing value in modifiers should fail validation', () => {
       const action = createValidAction({
         chanceBased: {
           enabled: true,
@@ -421,7 +423,31 @@ describe('action.schema.json - chanceBased Property', () => {
               condition: {
                 condition_ref: 'combat:test',
               },
-              description: 'Missing modifier value',
+              tag: 'test tag',
+              description: 'Missing value',
+            },
+          ],
+        },
+      });
+      const isValid = validateAction(action);
+      expect(isValid).toBe(false);
+    });
+
+    test('missing tag in modifiers should fail validation', () => {
+      const action = createValidAction({
+        chanceBased: {
+          enabled: true,
+          contestType: 'opposed',
+          actorSkill: {
+            component: 'skills:melee_skill',
+          },
+          modifiers: [
+            {
+              condition: {
+                condition_ref: 'combat:test',
+              },
+              value: 20,
+              description: 'Missing tag',
             },
           ],
         },
@@ -587,7 +613,7 @@ describe('action.schema.json - chanceBased Property', () => {
       expect(isValid).toBe(false);
     });
 
-    test('modifier as float should fail validation', () => {
+    test('modifier value as float should validate (numbers allowed)', () => {
       const action = createValidAction({
         chanceBased: {
           enabled: true,
@@ -600,13 +626,214 @@ describe('action.schema.json - chanceBased Property', () => {
               condition: {
                 condition_ref: 'combat:test',
               },
-              modifier: 20.5,
+              value: 20.5,
+              tag: 'test',
+            },
+          ],
+        },
+      });
+      const isValid = validateAction(action);
+      expect(isValid).toBe(true);
+    });
+
+    test('invalid modifier type enum should fail validation', () => {
+      const action = createValidAction({
+        chanceBased: {
+          enabled: true,
+          contestType: 'opposed',
+          actorSkill: {
+            component: 'skills:melee_skill',
+          },
+          modifiers: [
+            {
+              condition: {
+                condition_ref: 'combat:test',
+              },
+              type: 'invalid_type',
+              value: 20,
+              tag: 'test',
             },
           ],
         },
       });
       const isValid = validateAction(action);
       expect(isValid).toBe(false);
+      expect(validateAction.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            keyword: 'enum',
+          }),
+        ])
+      );
+    });
+
+    test('tag exceeding maxLength (30) should fail validation', () => {
+      const action = createValidAction({
+        chanceBased: {
+          enabled: true,
+          contestType: 'opposed',
+          actorSkill: {
+            component: 'skills:melee_skill',
+          },
+          modifiers: [
+            {
+              condition: {
+                condition_ref: 'combat:test',
+              },
+              value: 20,
+              tag: 'this tag is way too long and exceeds thirty characters',
+            },
+          ],
+        },
+      });
+      const isValid = validateAction(action);
+      expect(isValid).toBe(false);
+      expect(validateAction.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            keyword: 'maxLength',
+          }),
+        ])
+      );
+    });
+
+    test('empty tag should fail validation (minLength: 1)', () => {
+      const action = createValidAction({
+        chanceBased: {
+          enabled: true,
+          contestType: 'opposed',
+          actorSkill: {
+            component: 'skills:melee_skill',
+          },
+          modifiers: [
+            {
+              condition: {
+                condition_ref: 'combat:test',
+              },
+              value: 20,
+              tag: '',
+            },
+          ],
+        },
+      });
+      const isValid = validateAction(action);
+      expect(isValid).toBe(false);
+      expect(validateAction.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            keyword: 'minLength',
+          }),
+        ])
+      );
+    });
+
+    test('invalid targetRole enum should fail validation', () => {
+      const action = createValidAction({
+        chanceBased: {
+          enabled: true,
+          contestType: 'opposed',
+          actorSkill: {
+            component: 'skills:melee_skill',
+          },
+          modifiers: [
+            {
+              condition: {
+                condition_ref: 'combat:test',
+              },
+              value: 20,
+              tag: 'test',
+              targetRole: 'invalid_role',
+            },
+          ],
+        },
+      });
+      const isValid = validateAction(action);
+      expect(isValid).toBe(false);
+      expect(validateAction.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            keyword: 'enum',
+          }),
+        ])
+      );
+    });
+
+    test('modifier with all new properties should validate', () => {
+      const action = createValidAction({
+        chanceBased: {
+          enabled: true,
+          contestType: 'opposed',
+          actorSkill: {
+            component: 'skills:melee_skill',
+          },
+          modifiers: [
+            {
+              condition: {
+                condition_ref: 'combat:elevated_position',
+              },
+              type: 'percentage',
+              value: 15,
+              tag: 'elevated position',
+              targetRole: 'actor',
+              description: 'Bonus from being in an elevated position',
+              stackId: 'position_bonus',
+            },
+          ],
+        },
+      });
+      const isValid = validateAction(action);
+      expect(isValid).toBe(true);
+    });
+
+    test('modifier with type flat should validate', () => {
+      const action = createValidAction({
+        chanceBased: {
+          enabled: true,
+          contestType: 'opposed',
+          actorSkill: {
+            component: 'skills:melee_skill',
+          },
+          modifiers: [
+            {
+              condition: {
+                condition_ref: 'combat:prone',
+              },
+              type: 'flat',
+              value: -10,
+              tag: 'prone',
+            },
+          ],
+        },
+      });
+      const isValid = validateAction(action);
+      expect(isValid).toBe(true);
+    });
+
+    test('modifier with valid targetRole values should validate', () => {
+      const validRoles = ['actor', 'primary', 'secondary', 'tertiary', 'location'];
+      for (const role of validRoles) {
+        const action = createValidAction({
+          chanceBased: {
+            enabled: true,
+            contestType: 'opposed',
+            actorSkill: {
+              component: 'skills:melee_skill',
+            },
+            modifiers: [
+              {
+                condition: {
+                  condition_ref: 'combat:test',
+                },
+                value: 10,
+                tag: 'test',
+                targetRole: role,
+              },
+            ],
+          },
+        });
+        const isValid = validateAction(action);
+        expect(isValid).toBe(true);
+      }
     });
   });
 

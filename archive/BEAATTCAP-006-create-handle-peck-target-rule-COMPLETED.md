@@ -1,5 +1,7 @@
 # BEAATTCAP-006: Create handle_peck_target Rule
 
+**STATUS: COMPLETED**
+
 ## Summary
 
 Create the `handle_peck_target` rule that processes peck attack attempts, resolving outcomes (CRITICAL_SUCCESS, SUCCESS, FAILURE, FUMBLE) and delegating to appropriate macros for damage application and narrative generation.
@@ -13,6 +15,8 @@ This rule bridges the action (user intent) and the game effects (damage, narrati
 | File | Change Type |
 |------|-------------|
 | `data/mods/violence/rules/handle_peck_target.rule.json` | **Create** |
+| `data/mods/violence/mod-manifest.json` | **Modify** - Add rule to `content.rules` array |
+| `tests/unit/mods/violence/rules/handlePeckTargetRule.test.js` | **Create** |
 
 ## Out of Scope
 
@@ -215,7 +219,7 @@ The rule reuses existing weapon macros where appropriate:
    - All operations have valid `type` values
    - All IF operations have valid condition and then_actions
 
-3. **Unit Tests** (create `tests/unit/mods/violence/handlePeckTargetRule.test.js`):
+3. **Unit Tests** (create `tests/unit/mods/violence/rules/handlePeckTargetRule.test.js`):
    ```javascript
    describe('handle_peck_target rule definition', () => {
      it('should have valid rule schema structure');
@@ -251,7 +255,7 @@ npm run validate
 node -e "console.log(JSON.parse(require('fs').readFileSync('data/mods/violence/rules/handle_peck_target.rule.json')))"
 
 # Run rule-related tests
-npm run test:unit -- --testPathPattern="handlePeckTarget" --verbose
+npm run test:unit -- --testPathPattern="handlePeckTargetRule" --verbose
 ```
 
 ## Dependencies
@@ -282,3 +286,33 @@ The rule uses `skills:melee_skill` and `skills:defense_skill` with defaults of 1
 2. Modifying this rule's `RESOLVE_OUTCOME` parameters
 
 This is outside the scope of the beak attack feature.
+
+## Outcome
+
+### What Was Actually Changed
+
+**Files Created:**
+1. `data/mods/violence/rules/handle_peck_target.rule.json` - The rule definition following the exact pattern of `handle_strike_target`
+2. `tests/unit/mods/violence/rules/handlePeckTargetRule.test.js` - Comprehensive unit tests (29 tests)
+
+**Files Modified:**
+1. `data/mods/violence/mod-manifest.json` - Added `handle_peck_target.rule.json` to `content.rules` array
+
+### Compared to Original Plan
+
+- **Implemented as planned**: Rule structure, peck-specific variables, macro delegation
+- **Ticket corrections made before implementation**:
+  - Added mod-manifest.json to Files to Touch (originally missing)
+  - Corrected test file path from `tests/unit/mods/violence/handlePeckTargetRule.test.js` to `tests/unit/mods/violence/rules/handlePeckTargetRule.test.js` for consistency with project structure
+
+### Test Results
+
+- **Unit tests**: 29 passing (handlePeckTargetRule.test.js)
+- **Related tests**: 47 passing (all violence unit tests including handleBeakFumble.test.js)
+- **Integration tests**: 26 passing (peck_target_prerequisites.test.js)
+- **JSON validation**: Passed
+- **ESLint**: No errors
+
+### Known Pre-existing Issues (Out of Scope)
+
+The validation revealed that the `violence` mod has missing dependencies on `skills` and `weapons` mods. This is a pre-existing issue affecting other rules in the violence mod, not introduced by this ticket. Fixing these dependencies should be addressed in a separate ticket.
