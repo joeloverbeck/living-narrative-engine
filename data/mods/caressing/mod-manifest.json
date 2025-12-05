@@ -82,6 +82,7 @@
       "close_actors_facing_each_other.scope",
       "close_actors_facing_each_other_or_behind_target.scope",
       "close_actors_facing_each_other_with_torso_clothing.scope",
+      "close_actors_with_hair_or_entity_kneeling_before_actor.scope",
       "close_actors_with_uncovered_back.scope"
     ]
   }

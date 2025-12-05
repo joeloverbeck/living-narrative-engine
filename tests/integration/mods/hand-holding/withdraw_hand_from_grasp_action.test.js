@@ -11,6 +11,50 @@ import withdrawCondition from '../../../../data/mods/hand-holding/conditions/eve
 import withdrawAction from '../../../../data/mods/hand-holding/actions/withdraw_hand_from_grasp.action.json';
 import holdHandAction from '../../../../data/mods/hand-holding/actions/hold_hand.action.json';
 
+/**
+ * Helper function to check if an entity has hand anatomy parts.
+ * @param {object} entity - The entity to check
+ * @param {object} entityManager - The entity manager instance
+ * @returns {boolean} True if the entity has hand body parts
+ */
+function entityHasHands(entity, entityManager) {
+  if (!entity || !entity.components) {
+    return false;
+  }
+
+  const bodyRoot =
+    entity.components['anatomy:body']?.body?.root ||
+    entity.components['anatomy:body']?.root;
+
+  if (!bodyRoot) {
+    return false;
+  }
+
+  const queue = [bodyRoot];
+  const visited = new Set(queue);
+
+  while (queue.length > 0) {
+    const partId = queue.shift();
+    const partEntity = entityManager.getEntityInstance(partId);
+    const part = partEntity?.components?.['anatomy:part'];
+    const subType = part?.subType;
+
+    if (typeof subType === 'string' && subType.toLowerCase().includes('hand')) {
+      return true;
+    }
+
+    const children = Array.isArray(part?.children) ? part.children : [];
+    for (const childId of children) {
+      if (!visited.has(childId)) {
+        visited.add(childId);
+        queue.push(childId);
+      }
+    }
+  }
+
+  return false;
+}
+
 describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
   let testFixture;
 
@@ -21,6 +65,8 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
       withdrawRule,
       withdrawCondition
     );
+    // Ensure actors have hand anatomy for hold_hand action discovery
+    testFixture.defaultEntityOptions = { withHands: true };
   });
 
   afterEach(() => {
@@ -42,10 +88,17 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
 
     scopeResolver.__withdrawHandOriginalResolve = originalResolve;
     scopeResolver.resolveSync = (scopeName, context) => {
+      // Handle both the base scope and the with_hands variant
       if (
         scopeName ===
-        'positioning:close_actors_facing_each_other_or_behind_target'
+          'positioning:close_actors_facing_each_other_or_behind_target' ||
+        scopeName ===
+          'positioning:close_actors_facing_each_other_or_behind_target_with_hands'
       ) {
+        const requireHands =
+          scopeName ===
+          'positioning:close_actors_facing_each_other_or_behind_target_with_hands';
+
         const actorId = context?.actor?.id;
         if (!actorId) {
           return { success: true, value: new Set() };
@@ -54,6 +107,11 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
         const { entityManager } = testEnv;
         const actorEntity = entityManager.getEntityInstance(actorId);
         if (!actorEntity) {
+          return { success: true, value: new Set() };
+        }
+
+        // For with_hands scope, actor must have hands
+        if (requireHands && !entityHasHands(actorEntity, entityManager)) {
           return { success: true, value: new Set() };
         }
 
@@ -72,12 +130,23 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
             return acc;
           }
 
+          // For with_hands scope (hold_hand), check if target has their hand already held
+          // Don't apply this check for base scope (let_go_of_hand needs target to have hand_held)
+          if (requireHands && partner.components?.['hand-holding:hand_held']) {
+            return acc;
+          }
+
           const partnerFacingAway =
             partner.components?.['positioning:facing_away']?.facing_away_from || [];
           const facingEachOther =
             !actorFacingAway.includes(partnerId) &&
             !partnerFacingAway.includes(actorId);
           const actorBehind = partnerFacingAway.includes(actorId);
+
+          // For with_hands scope, target must have hands
+          if (requireHands && !entityHasHands(partner, entityManager)) {
+            return acc;
+          }
 
           if (facingEachOther || actorBehind) {
             acc.add(partnerId);
@@ -250,7 +319,13 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
   it('restores hold hand availability while hiding the withdraw action afterward', async () => {
     const scenario = seedLinkedHandHoldingPair(['Sami', 'Tori']);
     const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-    testFixture.reset([room, scenario.actor, scenario.target]);
+    // Include extraEntities (hand anatomy parts) for hold_hand action discovery
+    testFixture.reset([
+      room,
+      scenario.actor,
+      scenario.target,
+      ...(scenario.extraEntities || []),
+    ]);
 
     configureActionDiscovery();
 

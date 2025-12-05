@@ -1642,6 +1642,163 @@ describe('InjuryNarrativeFormatterService', () => {
     });
   });
 
+  describe('formatThirdPersonVisible', () => {
+    it('should return perfect health for null summary', () => {
+      const result = service.formatThirdPersonVisible(null);
+
+      expect(result).toBe('Perfect health.');
+      expect(mockLogger.warn).toHaveBeenCalled();
+    });
+
+    it('should order visible injuries and filter vital organs', () => {
+      const summary = createBaseSummary({
+        injuredParts: [
+          {
+            partEntityId: 'torso-1',
+            partType: 'torso',
+            orientation: null,
+            state: 'critical',
+            isVitalOrgan: false,
+          },
+          {
+            partEntityId: 'arm-1',
+            partType: 'arm',
+            orientation: 'right',
+            state: 'wounded',
+            isVitalOrgan: false,
+          },
+          {
+            partEntityId: 'heart-1',
+            partType: 'heart',
+            orientation: null,
+            state: 'destroyed',
+            isVitalOrgan: true,
+          },
+        ],
+        destroyedParts: [
+          {
+            partEntityId: 'head-1',
+            partType: 'head',
+            orientation: null,
+            state: 'destroyed',
+            isVitalOrgan: false,
+          },
+          {
+            partEntityId: 'heart-1',
+            partType: 'heart',
+            orientation: null,
+            state: 'destroyed',
+            isVitalOrgan: true,
+          },
+        ],
+        dismemberedParts: [
+          {
+            partEntityId: 'ear-1',
+            partType: 'ear',
+            orientation: 'left',
+            isVitalOrgan: false,
+          },
+        ],
+        bleedingParts: [
+          {
+            partEntityId: 'torso-1',
+            partType: 'torso',
+            orientation: null,
+            bleedingSeverity: 'severe',
+            isVitalOrgan: false,
+          },
+          {
+            partEntityId: 'heart-1',
+            partType: 'heart',
+            orientation: null,
+            bleedingSeverity: 'severe',
+            isVitalOrgan: true,
+          },
+        ],
+        fracturedParts: [
+          {
+            partEntityId: 'arm-1',
+            partType: 'arm',
+            orientation: 'right',
+            isVitalOrgan: false,
+          },
+        ],
+      });
+
+      const result = service.formatThirdPersonVisible(summary);
+
+      const missingPos = result.indexOf('Left ear is missing');
+      const destroyedPos = result.indexOf('Head has been destroyed');
+      const criticalPos = result.indexOf('Torso is critically injured');
+      const bleedingPos = result.indexOf('Blood pours freely from torso');
+      const fracturePos = result.indexOf('Right arm is fractured');
+
+      expect(missingPos).toBeGreaterThan(-1);
+      expect(destroyedPos).toBeGreaterThan(missingPos);
+      expect(criticalPos).toBeGreaterThan(destroyedPos);
+      expect(bleedingPos).toBeGreaterThan(criticalPos);
+      expect(fracturePos).toBeGreaterThan(bleedingPos);
+      expect(result).not.toMatch(/pain|agony/i);
+      expect(result).not.toContain('heart');
+    });
+
+    it('should still report visible effects for non-living actors', () => {
+      const summary = createBaseSummary({
+        injuredParts: [],
+        bleedingParts: [
+          {
+            partEntityId: 'statue-arm',
+            partType: 'arm',
+            orientation: null,
+            bleedingSeverity: 'moderate',
+            isVitalOrgan: false,
+          },
+        ],
+        fracturedParts: [
+          {
+            partEntityId: 'statue-leg',
+            partType: 'leg',
+            orientation: 'left',
+            isVitalOrgan: false,
+          },
+        ],
+        entityPronoun: 'it',
+      });
+
+      const result = service.formatThirdPersonVisible(summary);
+
+      expect(result).toContain('Blood flows steadily from arm.');
+      expect(result).toContain('Left leg is fractured.');
+    });
+
+    it('should fall back to perfect health when only vital organs are injured', () => {
+      const summary = createBaseSummary({
+        injuredParts: [
+          {
+            partEntityId: 'heart-1',
+            partType: 'heart',
+            orientation: null,
+            state: 'critical',
+            isVitalOrgan: true,
+          },
+        ],
+        bleedingParts: [
+          {
+            partEntityId: 'heart-1',
+            partType: 'heart',
+            orientation: null,
+            bleedingSeverity: 'severe',
+            isVitalOrgan: true,
+          },
+        ],
+      });
+
+      const result = service.formatThirdPersonVisible(summary);
+
+      expect(result).toBe('Perfect health.');
+    });
+  });
+
   describe('formatDamageEvent', () => {
     describe('edge cases', () => {
       it('should return empty string for null data', () => {
@@ -1884,6 +2041,22 @@ describe('InjuryNarrativeFormatterService', () => {
       destroyedParts: [],
       isDying: false,
       isDead: false,
+    };
+  }
+
+  function createBaseSummary(overrides = {}) {
+    return {
+      entityId: 'entity-1',
+      injuredParts: [],
+      bleedingParts: [],
+      burningParts: [],
+      poisonedParts: [],
+      fracturedParts: [],
+      destroyedParts: [],
+      dismemberedParts: [],
+      isDying: false,
+      isDead: false,
+      ...overrides,
     };
   }
 

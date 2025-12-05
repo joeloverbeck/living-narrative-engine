@@ -24,6 +24,8 @@ export class BodyDescriptionComposer {
     partDescriptionGenerator,
     equipmentDescriptionService = null,
     activityDescriptionService = null,
+    injuryAggregationService = null,
+    injuryNarrativeFormatterService = null,
     logger = null,
   } = {}) {
     this.bodyPartDescriptionBuilder = bodyPartDescriptionBuilder;
@@ -33,6 +35,8 @@ export class BodyDescriptionComposer {
     this.partDescriptionGenerator = partDescriptionGenerator;
     this.equipmentDescriptionService = equipmentDescriptionService;
     this.activityDescriptionService = activityDescriptionService;
+    this.injuryAggregationService = injuryAggregationService;
+    this.injuryNarrativeFormatterService = injuryNarrativeFormatterService;
     this.#logger = ensureValidLogger(logger, 'BodyDescriptionComposer');
 
     // Initialize configuration and template services
@@ -114,6 +118,8 @@ export class BodyDescriptionComposer {
     const lines = [];
     const descriptionOrder = this.config.getDescriptionOrder();
     const processedTypes = new Set();
+    const healthLine = this.#composeHealthLine(bodyEntity);
+    let healthLineInserted = false;
 
     // FIRST: Add body-level descriptors using configured order
     const bodyLevelDescriptors = this.extractBodyLevelDescriptors(bodyEntity);
@@ -168,6 +174,12 @@ export class BodyDescriptionComposer {
         }
         processedTypes.add(partType);
         continue;
+      }
+
+      // Insert Health line after equipment and before inventory
+      if (!healthLineInserted && partType === 'inventory' && healthLine) {
+        lines.push(healthLine);
+        healthLineInserted = true;
       }
 
       // DIAGNOSTIC: Check if we reach activity partType
@@ -228,6 +240,10 @@ export class BodyDescriptionComposer {
         }
         processedTypes.add(partType);
       }
+    }
+
+    if (!healthLineInserted && healthLine) {
+      lines.push(healthLine);
     }
 
     // Join all lines with newlines
@@ -891,6 +907,46 @@ export class BodyDescriptionComposer {
       this.#logger.error(
         `Failed to generate inventory description for entity ${bodyEntity.id}`,
         error
+      );
+      return '';
+    }
+  }
+
+  /**
+   * Compose a third-person health line if formatter dependencies are available.
+   *
+   * @param {object} bodyEntity - The entity with anatomy:body
+   * @returns {string} Health line prefixed with "Health:" or empty string when unavailable
+   * @private
+   */
+  #composeHealthLine(bodyEntity) {
+    if (
+      !this.injuryAggregationService ||
+      !this.injuryNarrativeFormatterService ||
+      !bodyEntity?.id
+    ) {
+      return '';
+    }
+
+    try {
+      const summary = this.injuryAggregationService.aggregateInjuries(
+        bodyEntity.id
+      );
+      const narrative = this.injuryNarrativeFormatterService.formatThirdPersonVisible(
+        summary
+      );
+
+      if (!narrative) {
+        return '';
+      }
+
+      return `Health: ${narrative.trim()}`;
+    } catch (error) {
+      this.#logger.debug?.(
+        'BodyDescriptionComposer: failed to compose health line',
+        {
+          error,
+        }
       );
       return '';
     }

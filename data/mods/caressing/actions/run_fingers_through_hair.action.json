@@ -3,7 +3,7 @@
   "id": "caressing:run_fingers_through_hair",
   "name": "Run Fingers Through Hair",
   "description": "Gently run your fingers through the target's hair in an intimate, caring gesture.",
-  "targets": "caressing:close_actors_facing_each_other_or_behind_target",
+  "targets": "caressing:close_actors_with_hair_or_entity_kneeling_before_actor",
   "required_components": {
     "actor": ["positioning:closeness"]
   },

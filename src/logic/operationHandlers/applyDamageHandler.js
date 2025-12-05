@@ -418,6 +418,7 @@ class ApplyDamageHandler extends BaseOperationHandler {
 
     // Session lifecycle: Create session at top-level, reuse for recursive calls
     const isTopLevel = !propagatedFrom;
+    const hitLocationCache = executionContext?.hitLocationCache || null;
     let session;
     if (isTopLevel) {
       session = this.#damageAccumulator.createSession(entityId);
@@ -446,6 +447,11 @@ class ApplyDamageHandler extends BaseOperationHandler {
       partId = this.#resolveRef(part_ref, executionContext, log);
     }
 
+    // Reuse the same resolved hit location for multiple damage entries in the same action
+    if (!partId && isTopLevel && hitLocationCache?.[entityId]) {
+      partId = hitLocationCache[entityId];
+    }
+
     if (!partId) {
       // Auto-resolve if missing or failed to resolve
       partId = this.#selectRandomPart(entityId, log);
@@ -453,6 +459,12 @@ class ApplyDamageHandler extends BaseOperationHandler {
          safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Could not resolve target part', { entityId }, log);
          return;
       }
+    }
+
+    // Cache the chosen hit location so subsequent APPLY_DAMAGE calls for the same entity reuse it
+    if (isTopLevel) {
+      executionContext.hitLocationCache = executionContext.hitLocationCache || {};
+      executionContext.hitLocationCache[entityId] = partId;
     }
 
     // 3. Resolve damage entry or construct from legacy parameters

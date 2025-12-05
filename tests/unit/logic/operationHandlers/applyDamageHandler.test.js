@@ -566,6 +566,48 @@ describe('ApplyDamageHandler', () => {
         }));
     });
 
+    test('reuses the same auto-resolved part for multiple damage entries in one action', async () => {
+        const params = {
+            entity_ref: 'entity1',
+            amount: 10,
+            damage_type: 'piercing'
+        };
+
+        const components = {
+            entity1: {
+                [BODY_COMPONENT_ID]: { bodyId: 'body1' }
+            },
+            part1: {
+                [PART_COMPONENT_ID]: { subType: 'torso', ownerEntityId: 'entity1', hit_probability_weight: 1 },
+                [PART_HEALTH_COMPONENT_ID]: { currentHealth: 100, maxHealth: 100, state: 'healthy', turnsInState: 0 }
+            },
+            part2: {
+                [PART_COMPONENT_ID]: { subType: 'arm', ownerEntityId: 'entity1', hit_probability_weight: 1 },
+                [PART_HEALTH_COMPONENT_ID]: { currentHealth: 100, maxHealth: 100, state: 'healthy', turnsInState: 0 }
+            }
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => Boolean(components[id]?.[comp]));
+        em.getComponentData.mockImplementation((id, comp) => components[id]?.[comp] || null);
+        bodyGraphService.getAllParts.mockReturnValue(['part1', 'part2']);
+
+        // First roll selects part2; subsequent calls should reuse cached part2 without a new roll
+        jest.spyOn(Math, 'random').mockReturnValueOnce(0.6);
+
+        await handler.execute(params, executionContext);
+        await handler.execute(params, executionContext);
+
+        const damageAppliedCalls = dispatcher.dispatch.mock.calls.filter(
+          ([eventType]) => eventType === DAMAGE_APPLIED_EVENT
+        );
+
+        expect(damageAppliedCalls).toHaveLength(2);
+        for (const [, payload] of damageAppliedCalls) {
+          expect(payload.partId).toBe('part2');
+        }
+        expect(Math.random).toHaveBeenCalledTimes(1);
+    });
+
     test('auto-resolves part when hit_probability_weight is undefined (defaults to 1.0)', async () => {
         const params = {
             entity_ref: 'entity1',

@@ -769,6 +769,50 @@ describe('InjuryAggregationService', () => {
     });
 
     describe('vital organ health caps', () => {
+      it('should mark vital organs with an isVitalOrgan flag and leave others false', () => {
+        const partIds = ['part:brain', 'part:arm'];
+        mockEntityManager.getComponentData.mockImplementation(
+          (id, componentId) => {
+            if (componentId === 'anatomy:body') return { partIds };
+            if (id === 'part:brain' && componentId === 'anatomy:part_health') {
+              return { currentHealth: 15, maxHealth: 100, state: 'critical' };
+            }
+            if (id === 'part:arm' && componentId === 'anatomy:part_health') {
+              return { currentHealth: 60, maxHealth: 100, state: 'wounded' };
+            }
+            if (componentId === 'anatomy:part') {
+              if (id === 'part:brain')
+                return { subType: 'brain', orientation: null, health_calculation_weight: 2 };
+              if (id === 'part:arm')
+                return { subType: 'arm', orientation: 'left', health_calculation_weight: 1 };
+            }
+            if (componentId === 'anatomy:vital_organ' && id === 'part:brain') {
+              return {
+                organType: 'brain',
+                healthCapThreshold: 20,
+                healthCapValue: 30,
+              };
+            }
+            return null;
+          }
+        );
+        mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
+          if (componentId === 'anatomy:part_health') return true;
+          if (id === 'part:brain' && componentId === 'anatomy:vital_organ') return true;
+          return false;
+        });
+        mockBodyGraphService.getAllParts.mockReturnValue(partIds);
+
+        const result = service.aggregateInjuries(entityId);
+
+        const brain = result.injuredParts.find((p) => p.partEntityId === 'part:brain');
+        const arm = result.injuredParts.find((p) => p.partEntityId === 'part:arm');
+
+        expect(brain.isVitalOrgan).toBe(true);
+        expect(brain.vitalOrganCap).toEqual({ threshold: 20, capValue: 30 });
+        expect(arm.isVitalOrgan).toBe(false);
+      });
+
       it('should apply vital organ cap when health falls below threshold', () => {
         // Brain at 15% health (below 20% threshold) should cap overall health at 30%
         // Arm at 100% health, weight 1
@@ -1229,6 +1273,7 @@ describe('InjuryAggregationService', () => {
 
         // Vital organ cap should be null due to error handling
         expect(result.injuredParts[0].vitalOrganCap).toBeNull();
+        expect(result.injuredParts[0].isVitalOrgan).toBe(false);
         // Health should calculate normally without cap
         expect(result.overallHealthPercentage).toBe(50);
       });

@@ -127,6 +127,24 @@ describe('handle_thrust_at_target damage application', () => {
         var: 'context.excludeDamageTypes',
       });
     });
+
+    it('regenerates the damaged target description immediately after applying hit damage', () => {
+      const forEachOp = handleMeleeHit.actions.find(
+        (op) => op.type === 'FOR_EACH'
+      );
+
+      const actions = forEachOp.parameters.actions;
+      const applyDamageIndex = actions.findIndex(
+        (action) => action.type === 'APPLY_DAMAGE'
+      );
+      const regenIndex = actions.findIndex(
+        (action) => action.type === 'REGENERATE_DESCRIPTION'
+      );
+
+      expect(applyDamageIndex).toBeGreaterThanOrEqual(0);
+      expect(regenIndex).toBe(applyDamageIndex + 1);
+      expect(actions[regenIndex].parameters.entity_ref).toBe('secondary');
+    });
   });
 
   describe('Macro Damage Application (handleMeleeCritical)', () => {
@@ -158,6 +176,24 @@ describe('handle_thrust_at_target damage application', () => {
       expect(applyDamage.parameters.exclude_damage_types).toEqual({
         var: 'context.excludeDamageTypes',
       });
+    });
+
+    it('regenerates the damaged target description immediately after applying critical hit damage', () => {
+      const forEachOp = handleMeleeCritical.actions.find(
+        (op) => op.type === 'FOR_EACH'
+      );
+
+      const actions = forEachOp.parameters.actions;
+      const applyDamageIndex = actions.findIndex(
+        (action) => action.type === 'APPLY_DAMAGE'
+      );
+      const regenIndex = actions.findIndex(
+        (action) => action.type === 'REGENERATE_DESCRIPTION'
+      );
+
+      expect(applyDamageIndex).toBeGreaterThanOrEqual(0);
+      expect(regenIndex).toBe(applyDamageIndex + 1);
+      expect(actions[regenIndex].parameters.entity_ref).toBe('secondary');
     });
   });
 

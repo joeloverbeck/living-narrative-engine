@@ -56,6 +56,12 @@
               "entity_ref": "secondary",
               "damage_entry": { "var": "context.dmgEntry" }
             }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": {
+              "entity_ref": "secondary"
+            }
           }
         ]
       }

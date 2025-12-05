@@ -22,6 +22,208 @@ import thumbWipeCheekAction from '../../../../data/mods/caressing/actions/thumb_
  */
 describe('caressing actions forbidden when giving blowjob', () => {
   let testFixture;
+  const actionsUnderTest = [
+    cupChinAction,
+    lickLipsAction,
+    nuzzleFaceIntoNeckAction,
+    runFingersThroughHairAction,
+    runThumbAcrossLipsAction,
+    thumbWipeCheekAction,
+  ];
+
+  const configureActionDiscovery = () => {
+    const { testEnv } = testFixture;
+    if (!testEnv) {
+      return;
+    }
+
+    testEnv.actionIndex.buildIndex(actionsUnderTest);
+
+    const scopeResolver = testEnv.unifiedScopeResolver;
+    const originalResolve =
+      scopeResolver.__caressingOriginalResolve ||
+      scopeResolver.resolveSync.bind(scopeResolver);
+
+    const hasSubType = (entityId, subType) => {
+      const { entityManager } = testEnv;
+      const entity = entityManager.getEntityInstance(entityId);
+      const rootId = entity?.components?.['anatomy:body']?.body?.root;
+      if (!rootId) {
+        return false;
+      }
+
+      const stack = [rootId];
+      const visited = new Set();
+
+      while (stack.length > 0) {
+        const current = stack.pop();
+        if (!current || visited.has(current)) continue;
+        visited.add(current);
+
+        const part = entityManager.getEntityInstance(current);
+        const partData = part?.components?.['anatomy:part'];
+
+        if (
+          partData?.subType &&
+          partData.subType.toLowerCase().includes(subType.toLowerCase())
+        ) {
+          return true;
+        }
+
+        const children = partData?.children || [];
+        stack.push(...children);
+      }
+
+      return false;
+    };
+
+    const getFacingTargets = (context, allowActorBehind) => {
+      const actorId = context?.actor?.id;
+      if (!actorId) {
+        return new Set();
+      }
+
+      const { entityManager } = testEnv;
+      const actorEntity = entityManager.getEntityInstance(actorId);
+      if (!actorEntity) {
+        return new Set();
+      }
+
+      const closeness =
+        actorEntity.components?.['positioning:closeness']?.partners;
+      if (!Array.isArray(closeness) || closeness.length === 0) {
+        return new Set();
+      }
+
+      const actorFacingAway =
+        actorEntity.components?.['positioning:facing_away']?.facing_away_from ||
+        [];
+
+      return closeness.reduce((acc, partnerId) => {
+        const partner = entityManager.getEntityInstance(partnerId);
+        if (!partner) {
+          return acc;
+        }
+
+        const partnerFacingAway =
+          partner.components?.['positioning:facing_away']?.facing_away_from ||
+          [];
+        const facingEachOther =
+          !actorFacingAway.includes(partnerId) &&
+          !partnerFacingAway.includes(actorId);
+        const actorBehind =
+          allowActorBehind &&
+          actorFacingAway.includes(partnerId) &&
+          !partnerFacingAway.includes(actorId);
+
+        if (facingEachOther || actorBehind) {
+          acc.add(partnerId);
+        }
+
+        return acc;
+      }, new Set());
+    };
+
+    const resolveHairScope = (context) => {
+      const actorId = context?.actor?.id;
+      if (!actorId) {
+        return new Set();
+      }
+
+      const { entityManager } = testEnv;
+      const actorEntity = entityManager.getEntityInstance(actorId);
+      if (!actorEntity) {
+        return new Set();
+      }
+
+      const closeness =
+        actorEntity.components?.['positioning:closeness']?.partners;
+      if (!Array.isArray(closeness) || closeness.length === 0) {
+        return new Set();
+      }
+
+      const actorFacingAway =
+        actorEntity.components?.['positioning:facing_away']?.facing_away_from ||
+        [];
+      const actorKneelingBefore =
+        actorEntity.components?.['positioning:kneeling_before']?.entityId;
+
+      return closeness.reduce((acc, partnerId) => {
+        const partner = entityManager.getEntityInstance(partnerId);
+        if (!partner) {
+          return acc;
+        }
+
+        const partnerFacingAway =
+          partner.components?.['positioning:facing_away']?.facing_away_from ||
+          [];
+        const facingEachOther =
+          !actorFacingAway.includes(partnerId) &&
+          !partnerFacingAway.includes(actorId);
+        const actorBehind =
+          actorFacingAway.includes(partnerId) &&
+          !partnerFacingAway.includes(actorId);
+        const actorKneelingBeforePartner = actorKneelingBefore === partnerId;
+        const partnerKneelingBeforeActor =
+          partner.components?.['positioning:kneeling_before']?.entityId ===
+          actorId;
+
+        const hairAvailable = hasSubType(partnerId, 'hair');
+
+        if (
+          hairAvailable &&
+          ((facingEachOther || actorBehind) && !actorKneelingBeforePartner)
+        ) {
+          acc.add(partnerId);
+          return acc;
+        }
+
+        if (hairAvailable && partnerKneelingBeforeActor) {
+          acc.add(partnerId);
+        }
+
+        return acc;
+      }, new Set());
+    };
+
+    const resolveMouthScope = (context) => {
+      const potentialTargets = getFacingTargets(context, true);
+      return new Set(
+        [...potentialTargets].filter((partnerId) =>
+          hasSubType(partnerId, 'mouth')
+        )
+      );
+    };
+
+    scopeResolver.__caressingOriginalResolve = originalResolve;
+    scopeResolver.resolveSync = (scopeName, context) => {
+      if (
+        scopeName === 'caressing:close_actors_facing_each_other' ||
+        scopeName === 'caressing:close_actors_facing_each_other_or_behind_target'
+      ) {
+        return {
+          success: true,
+          value: getFacingTargets(context, scopeName.includes('or_behind_target')),
+        };
+      }
+
+      if (
+        scopeName ===
+        'caressing:close_actors_with_hair_or_entity_kneeling_before_actor'
+      ) {
+        return { success: true, value: resolveHairScope(context) };
+      }
+
+      if (
+        scopeName ===
+        'kissing:close_actors_with_mouth_facing_each_other_or_behind_target'
+      ) {
+        return { success: true, value: resolveMouthScope(context) };
+      }
+
+      return originalResolve(scopeName, context);
+    };
+  };
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('caressing', 'caressing:cup_chin');
@@ -72,93 +274,11 @@ describe('caressing actions forbidden when giving blowjob', () => {
   });
 
   describe('Action discovery when NOT giving blowjob', () => {
-    /**
-     * Helper to configure action discovery for caressing actions
-     */
-    const configureActionDiscovery = () => {
-      const { testEnv } = testFixture;
-      if (!testEnv) {
-        return;
-      }
-
-      // Build index with all caressing actions
-      testEnv.actionIndex.buildIndex([
-        cupChinAction,
-        lickLipsAction,
-        nuzzleFaceIntoNeckAction,
-        runFingersThroughHairAction,
-        runThumbAcrossLipsAction,
-        thumbWipeCheekAction,
-      ]);
-
-      // Mock scope resolver for close_actors_facing_each_other
-      const scopeResolver = testEnv.unifiedScopeResolver;
-      const originalResolve =
-        scopeResolver.__caressingOriginalResolve ||
-        scopeResolver.resolveSync.bind(scopeResolver);
-
-      scopeResolver.__caressingOriginalResolve = originalResolve;
-      scopeResolver.resolveSync = (scopeName, context) => {
-        if (
-          scopeName === 'caressing:close_actors_facing_each_other' ||
-          scopeName === 'caressing:close_actors_facing_each_other_or_behind_target'
-        ) {
-          const actorId = context?.actor?.id;
-          if (!actorId) {
-            return { success: true, value: new Set() };
-          }
-
-          const { entityManager } = testEnv;
-          const actorEntity = entityManager.getEntityInstance(actorId);
-          if (!actorEntity) {
-            return { success: true, value: new Set() };
-          }
-
-          const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
-          if (!Array.isArray(closeness) || closeness.length === 0) {
-            return { success: true, value: new Set() };
-          }
-
-          const actorFacingAway =
-            actorEntity.components?.['positioning:facing_away']
-              ?.facing_away_from || [];
-
-          const validTargets = closeness.reduce((acc, partnerId) => {
-            const partner = entityManager.getEntityInstance(partnerId);
-            if (!partner) {
-              return acc;
-            }
-
-            const partnerFacingAway =
-              partner.components?.['positioning:facing_away']
-                ?.facing_away_from || [];
-            const facingEachOther =
-              !actorFacingAway.includes(partnerId) &&
-              !partnerFacingAway.includes(actorId);
-
-            // For close_actors_facing_each_other_or_behind_target, also check if actor is behind target
-            const actorBehind = scopeName.includes('or_behind_target')
-              ? actorFacingAway.includes(partnerId) &&
-                !partnerFacingAway.includes(actorId)
-              : false;
-
-            if (facingEachOther || actorBehind) {
-              acc.add(partnerId);
-            }
-
-            return acc;
-          }, new Set());
-
-          return { success: true, value: validTargets };
-        }
-
-        return originalResolve(scopeName, context);
-      };
-    };
-
     it('cup_chin is available for close actors facing each other', () => {
-      const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
+      const scenario = testFixture.createAnatomyScenario(
+        ['Alice', 'Bob'],
+        ['torso', 'hair', 'mouth']
+      );
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
@@ -170,7 +290,10 @@ describe('caressing actions forbidden when giving blowjob', () => {
     });
 
     it('lick_lips is available for close actors facing each other', () => {
-      const scenario = testFixture.createCloseActors(['Charlie', 'Diana']);
+      const scenario = testFixture.createAnatomyScenario(
+        ['Charlie', 'Diana'],
+        ['torso', 'hair', 'mouth']
+      );
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
@@ -182,7 +305,10 @@ describe('caressing actions forbidden when giving blowjob', () => {
     });
 
     it('nuzzle_face_into_neck is available for close actors facing each other', () => {
-      const scenario = testFixture.createCloseActors(['Eve', 'Frank']);
+      const scenario = testFixture.createAnatomyScenario(
+        ['Eve', 'Frank'],
+        ['torso', 'hair', 'mouth']
+      );
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
@@ -194,7 +320,10 @@ describe('caressing actions forbidden when giving blowjob', () => {
     });
 
     it('run_fingers_through_hair is available for close actors', () => {
-      const scenario = testFixture.createCloseActors(['Grace', 'Henry']);
+      const scenario = testFixture.createAnatomyScenario(
+        ['Grace', 'Henry'],
+        ['torso', 'hair', 'mouth']
+      );
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
@@ -206,7 +335,10 @@ describe('caressing actions forbidden when giving blowjob', () => {
     });
 
     it('run_thumb_across_lips is available for close actors facing each other', () => {
-      const scenario = testFixture.createCloseActors(['Ivy', 'Jack']);
+      const scenario = testFixture.createAnatomyScenario(
+        ['Ivy', 'Jack'],
+        ['torso', 'hair', 'mouth']
+      );
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
@@ -218,7 +350,10 @@ describe('caressing actions forbidden when giving blowjob', () => {
     });
 
     it('thumb_wipe_cheek is available for close actors facing each other', () => {
-      const scenario = testFixture.createCloseActors(['Kate', 'Leo']);
+      const scenario = testFixture.createAnatomyScenario(
+        ['Kate', 'Leo'],
+        ['torso', 'hair', 'mouth']
+      );
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
@@ -231,93 +366,11 @@ describe('caressing actions forbidden when giving blowjob', () => {
   });
 
   describe('Action discovery when giving blowjob', () => {
-    /**
-     * Helper to configure action discovery for caressing actions
-     */
-    const configureActionDiscovery = () => {
-      const { testEnv } = testFixture;
-      if (!testEnv) {
-        return;
-      }
-
-      // Build index with all caressing actions
-      testEnv.actionIndex.buildIndex([
-        cupChinAction,
-        lickLipsAction,
-        nuzzleFaceIntoNeckAction,
-        runFingersThroughHairAction,
-        runThumbAcrossLipsAction,
-        thumbWipeCheekAction,
-      ]);
-
-      // Mock scope resolver for close_actors_facing_each_other
-      const scopeResolver = testEnv.unifiedScopeResolver;
-      const originalResolve =
-        scopeResolver.__caressingOriginalResolve ||
-        scopeResolver.resolveSync.bind(scopeResolver);
-
-      scopeResolver.__caressingOriginalResolve = originalResolve;
-      scopeResolver.resolveSync = (scopeName, context) => {
-        if (
-          scopeName === 'caressing:close_actors_facing_each_other' ||
-          scopeName === 'caressing:close_actors_facing_each_other_or_behind_target'
-        ) {
-          const actorId = context?.actor?.id;
-          if (!actorId) {
-            return { success: true, value: new Set() };
-          }
-
-          const { entityManager } = testEnv;
-          const actorEntity = entityManager.getEntityInstance(actorId);
-          if (!actorEntity) {
-            return { success: true, value: new Set() };
-          }
-
-          const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
-          if (!Array.isArray(closeness) || closeness.length === 0) {
-            return { success: true, value: new Set() };
-          }
-
-          const actorFacingAway =
-            actorEntity.components?.['positioning:facing_away']
-              ?.facing_away_from || [];
-
-          const validTargets = closeness.reduce((acc, partnerId) => {
-            const partner = entityManager.getEntityInstance(partnerId);
-            if (!partner) {
-              return acc;
-            }
-
-            const partnerFacingAway =
-              partner.components?.['positioning:facing_away']
-                ?.facing_away_from || [];
-            const facingEachOther =
-              !actorFacingAway.includes(partnerId) &&
-              !partnerFacingAway.includes(actorId);
-
-            // For close_actors_facing_each_other_or_behind_target, also check if actor is behind target
-            const actorBehind = scopeName.includes('or_behind_target')
-              ? actorFacingAway.includes(partnerId) &&
-                !partnerFacingAway.includes(actorId)
-              : false;
-
-            if (facingEachOther || actorBehind) {
-              acc.add(partnerId);
-            }
-
-            return acc;
-          }, new Set());
-
-          return { success: true, value: validTargets };
-        }
-
-        return originalResolve(scopeName, context);
-      };
-    };
-
     it('cup_chin is NOT available when actor is giving blowjob', () => {
-      const scenario = testFixture.createCloseActors(['Maya', 'Noah']);
+      const scenario = testFixture.createAnatomyScenario(
+        ['Maya', 'Noah'],
+        ['torso', 'hair', 'mouth']
+      );
 
       // Add giving_blowjob component to actor
       scenario.actor.components['positioning:giving_blowjob'] = {
@@ -327,7 +380,7 @@ describe('caressing actions forbidden when giving blowjob', () => {
       };
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
+      testFixture.reset([room, ...scenario.allEntities]);
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
@@ -339,7 +392,10 @@ describe('caressing actions forbidden when giving blowjob', () => {
     });
 
     it('lick_lips is NOT available when actor is giving blowjob', () => {
-      const scenario = testFixture.createCloseActors(['Olivia', 'Peter']);
+      const scenario = testFixture.createAnatomyScenario(
+        ['Olivia', 'Peter'],
+        ['torso', 'hair', 'mouth']
+      );
 
       // Add giving_blowjob component to actor
       scenario.actor.components['positioning:giving_blowjob'] = {
@@ -349,7 +405,7 @@ describe('caressing actions forbidden when giving blowjob', () => {
       };
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
+      testFixture.reset([room, ...scenario.allEntities]);
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
@@ -361,7 +417,10 @@ describe('caressing actions forbidden when giving blowjob', () => {
     });
 
     it('nuzzle_face_into_neck is NOT available when actor is giving blowjob', () => {
-      const scenario = testFixture.createCloseActors(['Quinn', 'Rachel']);
+      const scenario = testFixture.createAnatomyScenario(
+        ['Quinn', 'Rachel'],
+        ['torso', 'hair', 'mouth']
+      );
 
       // Add giving_blowjob component to actor
       scenario.actor.components['positioning:giving_blowjob'] = {
@@ -371,7 +430,7 @@ describe('caressing actions forbidden when giving blowjob', () => {
       };
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
+      testFixture.reset([room, ...scenario.allEntities]);
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
@@ -383,7 +442,10 @@ describe('caressing actions forbidden when giving blowjob', () => {
     });
 
     it('run_fingers_through_hair is NOT available when actor is giving blowjob', () => {
-      const scenario = testFixture.createCloseActors(['Sam', 'Tina']);
+      const scenario = testFixture.createAnatomyScenario(
+        ['Sam', 'Tina'],
+        ['torso', 'hair', 'mouth']
+      );
 
       // Add giving_blowjob component to actor
       scenario.actor.components['positioning:giving_blowjob'] = {
@@ -393,7 +455,7 @@ describe('caressing actions forbidden when giving blowjob', () => {
       };
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
+      testFixture.reset([room, ...scenario.allEntities]);
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
@@ -405,7 +467,10 @@ describe('caressing actions forbidden when giving blowjob', () => {
     });
 
     it('run_thumb_across_lips is NOT available when actor is giving blowjob', () => {
-      const scenario = testFixture.createCloseActors(['Uma', 'Victor']);
+      const scenario = testFixture.createAnatomyScenario(
+        ['Uma', 'Victor'],
+        ['torso', 'hair', 'mouth']
+      );
 
       // Add giving_blowjob component to actor
       scenario.actor.components['positioning:giving_blowjob'] = {
@@ -415,7 +480,7 @@ describe('caressing actions forbidden when giving blowjob', () => {
       };
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
+      testFixture.reset([room, ...scenario.allEntities]);
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
@@ -427,7 +492,10 @@ describe('caressing actions forbidden when giving blowjob', () => {
     });
 
     it('thumb_wipe_cheek is NOT available when actor is giving blowjob', () => {
-      const scenario = testFixture.createCloseActors(['Wendy', 'Xavier']);
+      const scenario = testFixture.createAnatomyScenario(
+        ['Wendy', 'Xavier'],
+        ['torso', 'hair', 'mouth']
+      );
 
       // Add giving_blowjob component to actor
       scenario.actor.components['positioning:giving_blowjob'] = {
@@ -437,7 +505,7 @@ describe('caressing actions forbidden when giving blowjob', () => {
       };
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
+      testFixture.reset([room, ...scenario.allEntities]);
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(

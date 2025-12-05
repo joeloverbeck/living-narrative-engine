@@ -641,7 +641,8 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
         }
 
         // Format character description as bullet points if it contains attribute-like information
-        if (descriptionText.includes(':') && descriptionText.includes(',')) {
+        const hasStructuredDelimiter = /[;,\n]/.test(descriptionText);
+        if (descriptionText.includes(':') && hasStructuredDelimiter) {
           // Parse structured character description into bullet points
           const attributes = this._parseCharacterDescription(descriptionText);
           attributes.forEach((attr) => segments.push(attr));

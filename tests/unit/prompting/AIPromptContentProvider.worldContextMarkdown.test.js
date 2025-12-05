@@ -222,7 +222,8 @@ describe('AIPromptContentProvider - Markdown World Context Enhancement', () => {
       // Check Young Character with exact age
       expect(result).toContain('### Young Character');
       expect(result).toContain('- **Apparent age**: 18 years old');
-      expect(result).toContain('- **Description**: Hair: blonde; Eyes: green.');
+      expect(result).toContain('- **Hair**: blonde');
+      expect(result).toContain('- **Eyes**: green.');
 
       // Check Older Character with range
       expect(result).toContain('### Older Character');
@@ -275,6 +276,29 @@ describe('AIPromptContentProvider - Markdown World Context Enhancement', () => {
       expect(result).toContain(
         '- **Description**: A simple character without structured attributes.'
       );
+    });
+
+    test('should parse newline-delimited Wearing/Health/Inventory without commas', () => {
+      const mockGameState = {
+        currentLocation: {
+          name: 'Test Location',
+          description: 'A test location.',
+          exits: [],
+          characters: [
+            {
+              name: 'Scout',
+              description:
+                'Wearing: Cloak.\nHealth: Perfect health.\nInventory: Coin.',
+            },
+          ],
+        },
+      };
+
+      const result = provider.getWorldContextContent(mockGameState);
+
+      expect(result).toContain('- **Wearing**: Cloak.');
+      expect(result).toContain('- **Health**: Perfect health.');
+      expect(result).toContain('- **Inventory**: Coin.');
     });
 
     test('should handle empty exits with fallback message', () => {

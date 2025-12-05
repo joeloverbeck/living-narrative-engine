@@ -658,6 +658,26 @@ describe('ChanceCalculationService', () => {
         );
       });
 
+      it('should map schema outcome thresholds with *Threshold keys', () => {
+        const actionDef = createChanceBasedActionDef({
+          outcomes: {
+            criticalSuccessThreshold: 7,
+            criticalFailureThreshold: 93,
+          },
+        });
+
+        service.resolveOutcome({
+          actorId: 'actor-123',
+          actionDef,
+        });
+
+        expect(mocks.outcomeDeterminerService.determine).toHaveBeenCalledWith(
+          expect.objectContaining({
+            thresholds: { criticalSuccess: 7, criticalFailure: 93 },
+          })
+        );
+      });
+
       it('should pass forcedRoll for deterministic testing', () => {
         const actionDef = createChanceBasedActionDef();
 

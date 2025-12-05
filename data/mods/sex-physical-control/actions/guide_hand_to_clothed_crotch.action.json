@@ -5,7 +5,7 @@
   "description": "Take your partner's hand and nestle it against the clothed swell of your crotch.",
   "targets": {
     "primary": {
-      "scope": "positioning:close_actors_facing_each_other_or_behind_target",
+      "scope": "positioning:close_actors_facing_each_other_or_behind_target_with_hands",
       "placeholder": "primary",
       "description": "Partner whose hand you guide"
     }

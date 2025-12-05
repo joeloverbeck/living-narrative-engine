@@ -724,6 +724,7 @@ export class ModEntityScenarios {
       names = ['Alice', 'Bob'],
       location = 'room1',
       closeProximity = false,
+      withHands = false,
       idPrefix = '',
     } = options;
 
@@ -743,6 +744,41 @@ export class ModEntityScenarios {
       .withLocationComponent(location)
       .asActor();
 
+    const extraEntities = [];
+
+    if (withHands) {
+      const actorRootId = `${actorId}-torso`;
+      const actorHandId = `${actorId}-hand-right`;
+      const targetRootId = `${targetId}-torso`;
+      const targetHandId = `${targetId}-hand-right`;
+
+      actor.withBody(actorRootId);
+      target.withBody(targetRootId);
+
+      extraEntities.push(
+        new ModEntityBuilder(actorRootId)
+          .asBodyPart({ parent: null, children: [actorHandId], subType: 'torso' })
+          .atLocation(location)
+          .withLocationComponent(location)
+          .build(),
+        new ModEntityBuilder(actorHandId)
+          .asBodyPart({ parent: actorRootId, children: [], subType: 'hand' })
+          .atLocation(location)
+          .withLocationComponent(location)
+          .build(),
+        new ModEntityBuilder(targetRootId)
+          .asBodyPart({ parent: null, children: [targetHandId], subType: 'torso' })
+          .atLocation(location)
+          .withLocationComponent(location)
+          .build(),
+        new ModEntityBuilder(targetHandId)
+          .asBodyPart({ parent: targetRootId, children: [], subType: 'hand' })
+          .atLocation(location)
+          .withLocationComponent(location)
+          .build()
+      );
+    }
+
     if (closeProximity) {
       actor.closeToEntity(targetId);
       target.closeToEntity(actorId);
@@ -751,6 +787,7 @@ export class ModEntityScenarios {
     return {
       actor: actor.build(),
       target: target.build(),
+      extraEntities,
     };
   }
 
