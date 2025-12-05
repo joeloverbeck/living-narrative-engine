@@ -77,6 +77,22 @@ describe('renderCharacterListItem', () => {
     expect(li.classList.contains('tooltip-open')).toBe(false);
   });
 
+  it('renders Health line with newlines preserved in tooltip', () => {
+    const domFactory = createDomFactory();
+    const ul = document.createElement('ul');
+    const item = {
+      name: 'Dana',
+      description: 'Wearing: Cloak.\nHealth: Perfect health.\nInventory: Coin.',
+    };
+
+    renderCharacterListItem(item, ul, domFactory, documentContext);
+
+    const tooltip = ul.querySelector('.character-tooltip');
+    expect(tooltip?.innerHTML).toBe(
+      'Wearing: Cloak.<br>Health: Perfect health.<br>Inventory: Coin.'
+    );
+  });
+
   it('falls back to document-based elements when factory methods are missing', () => {
     const ul = document.createElement('ul');
     const item = {

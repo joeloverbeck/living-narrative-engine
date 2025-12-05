@@ -57,6 +57,12 @@
               "damage_entry": { "var": "context.dmgEntry" },
               "damage_multiplier": 1.5
             }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": {
+              "entity_ref": "secondary"
+            }
           }
         ]
       }

@@ -22,7 +22,7 @@
     },
     {
       "type": "PICK_RANDOM_ENTITY",
-      "comment": "Try to find a random non-actor entity at location (excluding actor, target, and the thrown item itself)",
+      "comment": "Pick a random other actor at the same location (not the throwing actor, the target, or the thrown item)",
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
         "exclude_entities": [
@@ -30,13 +30,13 @@
           "{event.payload.secondaryId}",
           "{event.payload.primaryId}"
         ],
-        "exclude_components": ["core:actor"],
+        "require_components": ["core:actor"],
         "result_variable": "fumbleVictim"
       }
     },
     {
       "type": "IF",
-      "comment": "If we found a non-actor entity to hit",
+      "comment": "If we found an actor entity to hit",
       "parameters": {
         "condition": { "!!": { "var": "context.fumbleVictim" } },
         "then_actions": [
@@ -67,20 +67,26 @@
           {
             "type": "FOR_EACH",
             "comment": "Apply damage to the fumble victim (the entity that was accidentally hit)",
-            "parameters": {
-              "collection": "context.throwableDamage",
-              "item_variable": "dmgEntry",
-              "actions": [
-                {
-                  "type": "APPLY_DAMAGE",
-                  "parameters": {
-                    "entity_ref": { "var": "context.fumbleVictim" },
-                    "damage_entry": { "var": "context.dmgEntry" }
-                  }
+          "parameters": {
+            "collection": "context.throwableDamage",
+            "item_variable": "dmgEntry",
+            "actions": [
+              {
+                "type": "APPLY_DAMAGE",
+                "parameters": {
+                  "entity_ref": { "var": "context.fumbleVictim" },
+                  "damage_entry": { "var": "context.dmgEntry" }
                 }
-              ]
-            }
+              },
+              {
+                "type": "REGENERATE_DESCRIPTION",
+                "parameters": {
+                  "entity_ref": { "var": "context.fumbleVictim" }
+                }
+              }
+            ]
           }
+        }
         ],
         "else_actions": [
           {

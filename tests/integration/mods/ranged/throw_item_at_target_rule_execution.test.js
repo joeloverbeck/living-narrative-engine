@@ -436,6 +436,24 @@ describe('throw_item_at_target outcome resolution rule', () => {
       expect(macroString).toContain('context.throwableName');
     });
 
+    it('should regenerate description for the critical target immediately after applying damage', () => {
+      const forEachAction = handleThrowCritical.actions.find(
+        (action) => action.type === 'FOR_EACH'
+      );
+
+      const actions = forEachAction.parameters.actions;
+      const applyDamageIndex = actions.findIndex(
+        (action) => action.type === 'APPLY_DAMAGE'
+      );
+      const regenIndex = actions.findIndex(
+        (action) => action.type === 'REGENERATE_DESCRIPTION'
+      );
+
+      expect(applyDamageIndex).toBeGreaterThanOrEqual(0);
+      expect(regenIndex).toBe(applyDamageIndex + 1);
+      expect(actions[regenIndex].parameters.entity_ref).toBe('secondary');
+    });
+
     it('should have hit macro with standard throw description', () => {
       const macroString = JSON.stringify(handleThrowHit);
 
@@ -447,6 +465,24 @@ describe('throw_item_at_target outcome resolution rule', () => {
       expect(macroString).toContain('hits');
     });
 
+    it('should regenerate description for the hit target immediately after applying damage', () => {
+      const forEachAction = handleThrowHit.actions.find(
+        (action) => action.type === 'FOR_EACH'
+      );
+
+      const actions = forEachAction.parameters.actions;
+      const applyDamageIndex = actions.findIndex(
+        (action) => action.type === 'APPLY_DAMAGE'
+      );
+      const regenIndex = actions.findIndex(
+        (action) => action.type === 'REGENERATE_DESCRIPTION'
+      );
+
+      expect(applyDamageIndex).toBeGreaterThanOrEqual(0);
+      expect(regenIndex).toBe(applyDamageIndex + 1);
+      expect(actions[regenIndex].parameters.entity_ref).toBe('secondary');
+    });
+
     it('should have fumble macro with PICK_RANDOM_ENTITY for collateral damage', () => {
       const macroString = JSON.stringify(handleThrowFumble);
 
@@ -454,8 +490,8 @@ describe('throw_item_at_target outcome resolution rule', () => {
       expect(macroString).toContain('PICK_RANDOM_ENTITY');
       expect(macroString).toContain('fumbleVictim');
       expect(macroString).toContain('exclude_entities');
-      expect(macroString).toContain('exclude_components');
-      expect(macroString).toContain('core:actor'); // Excludes actors for fumble victim
+      expect(macroString).toContain('require_components');
+      expect(macroString).toContain('core:actor'); // Targets other actors for collateral damage
     });
 
     it('should exclude the thrown item from fumble victim selection', () => {
@@ -510,6 +546,24 @@ describe('throw_item_at_target outcome resolution rule', () => {
       expect(applyDamageAction.parameters.entity_ref).toEqual({
         var: 'context.fumbleVictim',
       });
+
+      const regenAction = forEachAction.parameters.actions.find(
+        (action) => action.type === 'REGENERATE_DESCRIPTION'
+      );
+
+      expect(regenAction).toBeDefined();
+      expect(regenAction.parameters.entity_ref).toEqual({
+        var: 'context.fumbleVictim',
+      });
+
+      const applyIndex = forEachAction.parameters.actions.findIndex(
+        (action) => action.type === 'APPLY_DAMAGE'
+      );
+      const regenIndex = forEachAction.parameters.actions.findIndex(
+        (action) => action.type === 'REGENERATE_DESCRIPTION'
+      );
+
+      expect(regenIndex).toBe(applyIndex + 1);
     });
 
     it('should have fumble macro with fallback for no collateral target', () => {

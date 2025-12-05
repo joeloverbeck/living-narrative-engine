@@ -50,6 +50,7 @@ const PRONOUN_MAP = {
  * @property {boolean} isFractured - Has anatomy:fractured component
  * @property {boolean} isDismembered - Has anatomy:dismembered component
  * @property {boolean} isStunned - Has anatomy:stunned component
+ * @property {boolean} isVitalOrgan - Has anatomy:vital_organ component
  */
 
 /**
@@ -353,6 +354,7 @@ class InjuryAggregationService extends BaseService {
             capValue: vitalOrganData.healthCapValue,
           }
         : null,
+      isVitalOrgan: Boolean(vitalOrganData),
       isBleeding: bleedingData.isBleeding,
       bleedingSeverity: bleedingData.severity,
       isBurning: this.#entityManager.hasComponent(

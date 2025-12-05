@@ -628,6 +628,10 @@ export function registerWorldAndEntity(container) {
         tokens.EquipmentDescriptionService
       ),
       activityDescriptionService: c.resolve(tokens.ActivityDescriptionService),
+      injuryAggregationService: c.resolve(tokens.InjuryAggregationService),
+      injuryNarrativeFormatterService: c.resolve(
+        tokens.InjuryNarrativeFormatterService
+      ),
       logger: c.resolve(tokens.ILogger),
     });
   });

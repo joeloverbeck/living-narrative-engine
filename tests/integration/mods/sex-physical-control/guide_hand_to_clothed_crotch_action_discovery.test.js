@@ -22,8 +22,46 @@ function registerGuideHandAction(fixture) {
   fixture.testEnv.actionIndex.buildIndex([guideHandAction]);
 }
 
+function entityHasHands(entityId, fixture) {
+  const entity = fixture.entityManager.getEntityInstance(entityId);
+  if (!entity) {
+    return false;
+  }
+
+  const bodyRoot =
+    entity.components?.['anatomy:body']?.body?.root ||
+    entity.components?.['anatomy:body']?.root;
+  if (!bodyRoot) {
+    return false;
+  }
+
+  const queue = [bodyRoot];
+  const visited = new Set(queue);
+
+  while (queue.length > 0) {
+    const partId = queue.shift();
+    const partEntity = fixture.entityManager.getEntityInstance(partId);
+    const part = partEntity?.components?.['anatomy:part'];
+    const subType = part?.subType;
+
+    if (typeof subType === 'string' && subType.toLowerCase().includes('hand')) {
+      return true;
+    }
+
+    const children = Array.isArray(part?.children) ? part.children : [];
+    for (const childId of children) {
+      if (!visited.has(childId)) {
+        visited.add(childId);
+        queue.push(childId);
+      }
+    }
+  }
+
+  return false;
+}
+
 /**
- * Installs a scope override for positioning:close_actors_facing_each_other_or_behind_target.
+ * Installs a scope override for positioning:close_actors_facing_each_other_or_behind_target_with_hands.
  * Mirrors the production kneeling exclusions while leveraging the simplified test anatomy fixtures.
  *
  * @param {ModTestFixture} fixture - Active mod test fixture.
@@ -34,7 +72,10 @@ function installCloseActorsFacingOrBehindOverride(fixture) {
   const originalResolveSync = resolver.resolveSync.bind(resolver);
 
   resolver.resolveSync = (scopeName, context) => {
-    if (scopeName === 'positioning:close_actors_facing_each_other_or_behind_target') {
+    if (
+      scopeName ===
+      'positioning:close_actors_facing_each_other_or_behind_target_with_hands'
+    ) {
       const actorId = context?.actor?.id;
 
       if (!actorId) {
@@ -44,6 +85,10 @@ function installCloseActorsFacingOrBehindOverride(fixture) {
       const actor = fixture.entityManager.getEntityInstance(actorId);
 
       if (!actor) {
+        return { success: true, value: new Set() };
+      }
+
+      if (!entityHasHands(actorId, fixture)) {
         return { success: true, value: new Set() };
       }
 
@@ -89,7 +134,11 @@ function installCloseActorsFacingOrBehindOverride(fixture) {
           !partnerFacingAway.includes(actorId);
         const actorBehind = partnerFacingAway.includes(actorId);
 
-        return facingEachOther || actorBehind;
+        if (!(facingEachOther || actorBehind)) {
+          return false;
+        }
+
+        return entityHasHands(partnerId, fixture);
       });
 
       return { success: true, value: new Set(validPartners) };
@@ -172,6 +221,19 @@ describe('sex-physical-control:guide_hand_to_clothed_crotch discovery', () => {
   it('is absent without positioning closeness', async () => {
     const { entities } = buildGuideHandToClothedCrotchScenario({
       includeCloseness: false,
+    });
+    testFixture.reset(entities);
+    registerGuideHandAction(testFixture);
+
+    const actions = await testFixture.discoverActions(ACTOR_ID);
+    const discovered = actions.find((action) => action.id === ACTION_ID);
+
+    expect(discovered).toBeUndefined();
+  });
+
+  it('is absent when the primary target lacks hands', async () => {
+    const { entities } = buildGuideHandToClothedCrotchScenario({
+      includeHandAnatomy: false,
     });
     testFixture.reset(entities);
     registerGuideHandAction(testFixture);

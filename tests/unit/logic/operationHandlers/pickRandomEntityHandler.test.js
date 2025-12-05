@@ -428,18 +428,17 @@ describe('PickRandomEntityHandler', () => {
       const entities = [
         { id: 'actor1' },
         { id: 'target1' },
+        { id: 'bystander1' },
         { id: 'furniture1' },
-        { id: 'item1' },
-        { id: 'item2' },
       ];
 
       mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
       mockEntityManager.getComponentData.mockReturnValue({ locationId });
 
-      // Simulate fumble scenario: exclude actor and target, exclude actors, find non-actor entity
+      // Simulate fumble scenario: exclude actor and target, require collateral target to be another actor
       mockEntityManager.hasComponent.mockImplementation((id, type) => {
         if (type === 'core:actor') {
-          return id === 'actor1' || id === 'target1';
+          return id === 'actor1' || id === 'target1' || id === 'bystander1';
         }
         return false;
       });
@@ -448,16 +447,14 @@ describe('PickRandomEntityHandler', () => {
         {
           location_id: locationId,
           exclude_entities: ['actor1', 'target1'],
-          exclude_components: ['core:actor'],
+          require_components: ['core:actor'],
           result_variable: 'fumbleVictim',
         },
         context
       );
 
-      // Result should be one of furniture1, item1, item2
-      expect(['furniture1', 'item1', 'item2']).toContain(
-        context.evaluationContext.context.fumbleVictim
-      );
+      // Result should be the remaining actor
+      expect(context.evaluationContext.context.fumbleVictim).toBe('bystander1');
     });
 
     test('should return null when combined filters exclude all', async () => {

@@ -8,6 +8,7 @@ import {
   getFirstPersonDescription,
   getFirstPersonDescriptionPlural,
   getStateOrder,
+  getThirdPersonDescription,
 } from '../../anatomy/registries/healthStateRegistry.js';
 
 // --- Effect-to-Description Mappings (First-Person) ---
@@ -153,6 +154,74 @@ class InjuryNarrativeFormatterService extends BaseService {
     }
 
     return narrativeParts.join(' ') || 'I feel fine.';
+  }
+
+  /**
+   * Formats injury summary in third-person voice for visible injuries only.
+   * Mirrors first-person ordering while filtering out vital organs and pain language.
+   *
+   * @param {InjurySummaryDTO} summary - The injury summary to format
+   * @returns {string} Third-person visible-injury description
+   */
+  formatThirdPersonVisible(summary) {
+    if (!summary) {
+      this.#logger.warn('formatThirdPersonVisible called with null/undefined summary');
+      return 'Perfect health.';
+    }
+
+    const hasVisibleData =
+      (summary.injuredParts && summary.injuredParts.length > 0) ||
+      (summary.destroyedParts && summary.destroyedParts.length > 0) ||
+      (summary.dismemberedParts && summary.dismemberedParts.length > 0) ||
+      (summary.bleedingParts && summary.bleedingParts.length > 0) ||
+      (summary.burningParts && summary.burningParts.length > 0) ||
+      (summary.poisonedParts && summary.poisonedParts.length > 0) ||
+      (summary.fracturedParts && summary.fracturedParts.length > 0);
+
+    if (!hasVisibleData) {
+      return 'Perfect health.';
+    }
+
+    const dismemberedPartIds = this.#buildDismemberedPartIdSet(summary);
+    const visibleNarrative = [];
+
+    const visibleDismembered = (summary.dismemberedParts || []).filter(
+      (p) => !p.isVitalOrgan
+    );
+    if (visibleDismembered.length > 0) {
+      visibleNarrative.push(
+        this.#formatDismembermentThirdPerson(visibleDismembered)
+      );
+    }
+
+    const states = getStateOrder(false);
+    for (const state of states) {
+      if (state === 'healthy') continue;
+
+      const partsForState = state === 'destroyed'
+        ? summary.destroyedParts || []
+        : (summary.injuredParts || []).filter((p) => p.state === state);
+
+      const visibleParts = partsForState.filter(
+        (p) => !p.isVitalOrgan && !dismemberedPartIds.has(p.partEntityId)
+      );
+
+      if (visibleParts.length > 0) {
+        visibleNarrative.push(
+          this.#formatPartGroupThirdPerson(visibleParts, state)
+        );
+      }
+    }
+
+    const effectDescriptions = this.#formatEffectsThirdPerson(
+      summary,
+      dismemberedPartIds
+    );
+    if (effectDescriptions) {
+      visibleNarrative.push(effectDescriptions);
+    }
+
+    return visibleNarrative.join(' ') || 'Perfect health.';
   }
 
   /**
@@ -378,6 +447,149 @@ class InjuryNarrativeFormatterService extends BaseService {
   }
 
   /**
+   * Formats a group of parts with the same state for third-person voice.
+   *
+   * @param {InjuredPartInfo[]} parts
+   * @param {string} state
+   * @returns {string}
+   * @private
+   */
+  #formatPartGroupThirdPerson(parts, state) {
+    if (parts.length === 0) {
+      return '';
+    }
+
+    const partNames = parts.map((p) =>
+      this.#formatPartName(p.partType, p.orientation)
+    );
+
+    const stateDesc = getThirdPersonDescription(state) || `is ${state}`;
+    const stateDescPlural = this.#pluralizeThirdPersonDescription(stateDesc);
+
+    const formattedList = this.#formatList(partNames);
+    const description = partNames.length === 1 ? stateDesc : stateDescPlural;
+
+    return `${this.#capitalizeFirst(formattedList)} ${description}.`;
+  }
+
+  /**
+   * Formats effect descriptions for third-person voice.
+   *
+   * @param {InjurySummaryDTO} summary
+   * @param {Set<string>} dismemberedPartIds
+   * @returns {string}
+   * @private
+   */
+  #formatEffectsThirdPerson(summary, dismemberedPartIds = new Set()) {
+    const effectParts = [];
+
+    const bleedingParts = (summary.bleedingParts || []).filter(
+      (p) => !dismemberedPartIds.has(p.partEntityId) && !p.isVitalOrgan
+    );
+    const bleedingNarrative = this.#formatBleedingEffectsThirdPerson(
+      bleedingParts
+    );
+    if (bleedingNarrative) {
+      effectParts.push(bleedingNarrative);
+    }
+
+    const burningParts = (summary.burningParts || []).filter(
+      (p) => !dismemberedPartIds.has(p.partEntityId) && !p.isVitalOrgan
+    );
+    for (const part of burningParts) {
+      const partName = this.#formatPartName(part.partType, part.orientation);
+      effectParts.push(
+        `${this.#capitalizeFirst(partName)} ${THIRD_PERSON_EFFECT_MAP.burning}.`
+      );
+    }
+
+    const poisonedParts = (summary.poisonedParts || []).filter(
+      (p) => !dismemberedPartIds.has(p.partEntityId) && !p.isVitalOrgan
+    );
+    for (const part of poisonedParts) {
+      const partName = this.#formatPartName(part.partType, part.orientation);
+      effectParts.push(
+        `${this.#capitalizeFirst(partName)} ${THIRD_PERSON_EFFECT_MAP.poisoned}.`
+      );
+    }
+
+    const fracturedParts = (summary.fracturedParts || []).filter(
+      (p) => !dismemberedPartIds.has(p.partEntityId) && !p.isVitalOrgan
+    );
+    for (const part of fracturedParts) {
+      const partName = this.#formatPartName(part.partType, part.orientation);
+      effectParts.push(
+        `${this.#capitalizeFirst(partName)} ${THIRD_PERSON_EFFECT_MAP.fractured}.`
+      );
+    }
+
+    return effectParts.join(' ');
+  }
+
+  /**
+   * Formats bleeding effects grouped by severity for third-person voice.
+   *
+   * @param {Array<object>} bleedingParts
+   * @returns {string}
+   * @private
+   */
+  #formatBleedingEffectsThirdPerson(bleedingParts) {
+    if (!bleedingParts || bleedingParts.length === 0) return '';
+
+    const bySeverity = {};
+    for (const part of bleedingParts) {
+      const severity = part.bleedingSeverity || 'moderate';
+      if (!bySeverity[severity]) bySeverity[severity] = [];
+      bySeverity[severity].push(part);
+    }
+
+    const sentences = [];
+    const severityOrder = ['severe', 'moderate', 'minor'];
+    const bleedingSeverityThirdPerson = {
+      minor: 'Blood seeps from',
+      moderate: 'Blood flows steadily from',
+      severe: 'Blood pours freely from',
+    };
+
+    for (const severity of severityOrder) {
+      const parts = bySeverity[severity];
+      if (!parts || parts.length === 0) continue;
+
+      const bleedingDesc =
+        bleedingSeverityThirdPerson[severity] || 'Blood flows from';
+      const partNames = parts.map((p) =>
+        this.#formatPartName(p.partType, p.orientation)
+      );
+      const combined = this.#formatList(partNames);
+      sentences.push(`${bleedingDesc} ${combined}.`);
+    }
+
+    return sentences.join(' ');
+  }
+
+  /**
+   * Formats dismemberment descriptions for third-person narrative.
+   *
+   * @param {InjurySummaryDTO['dismemberedParts']} dismemberedParts
+   * @returns {string}
+   * @private
+   */
+  #formatDismembermentThirdPerson(dismemberedParts) {
+    if (!dismemberedParts || dismemberedParts.length === 0) {
+      return '';
+    }
+
+    const partNames = dismemberedParts.map((part) =>
+      this.#formatPartName(part.partType, part.orientation)
+    );
+
+    const formattedList = this.#formatList(partNames);
+    const verb = dismemberedParts.length === 1 ? 'is' : 'are';
+
+    return `${this.#capitalizeFirst(formattedList)} ${verb} missing.`;
+  }
+
+  /**
    * Formats a list with a possessive prefix on the first item only.
    *
    * @param {string[]} items - List of items to format
@@ -393,6 +605,23 @@ class InjuryNarrativeFormatterService extends BaseService {
     const allButLast = items.slice(0, -1);
     const lastItem = items[items.length - 1];
     return `${possessive} ${allButLast.join(', ')}, and ${lastItem}`;
+  }
+
+  /**
+   * Formats a plain list with Oxford comma rules.
+   *
+   * @param {string[]} items
+   * @returns {string}
+   * @private
+   */
+  #formatList(items) {
+    if (items.length === 0) return '';
+    if (items.length === 1) return `${items[0]}`;
+    if (items.length === 2) return `${items[0]} and ${items[1]}`;
+
+    const allButLast = items.slice(0, -1);
+    const lastItem = items[items.length - 1];
+    return `${allButLast.join(', ')}, and ${lastItem}`;
   }
 
   /**
@@ -442,6 +671,31 @@ class InjuryNarrativeFormatterService extends BaseService {
     const verb = dismemberedParts.length === 1 ? 'is' : 'are';
 
     return [`${formattedList} ${verb} missing.`];
+  }
+
+  /**
+   * Converts a singular third-person description to plural (basic heuristic).
+   *
+   * @param {string} description
+   * @returns {string}
+   * @private
+   */
+  #pluralizeThirdPersonDescription(description) {
+    if (!description) return '';
+
+    if (description.startsWith('is ')) {
+      return description.replace('is ', 'are ');
+    }
+
+    if (description.startsWith('has ')) {
+      return description.replace('has ', 'have ');
+    }
+
+    if (description.startsWith('has been ')) {
+      return description.replace('has been ', 'have been ');
+    }
+
+    return description;
   }
 
   /**

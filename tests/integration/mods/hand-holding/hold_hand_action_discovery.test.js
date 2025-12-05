@@ -10,12 +10,51 @@ import holdHandAction from '../../../../data/mods/hand-holding/actions/hold_hand
 
 const ACTION_ID = 'hand-holding:hold_hand';
 
+function entityHasHands(entity, entityManager) {
+  if (!entity || !entity.components) {
+    return false;
+  }
+
+  const bodyRoot =
+    entity.components['anatomy:body']?.body?.root ||
+    entity.components['anatomy:body']?.root;
+
+  if (!bodyRoot) {
+    return false;
+  }
+
+  const queue = [bodyRoot];
+  const visited = new Set(queue);
+
+  while (queue.length > 0) {
+    const partId = queue.shift();
+    const partEntity = entityManager.getEntityInstance(partId);
+    const part = partEntity?.components?.['anatomy:part'];
+    const subType = part?.subType;
+
+    if (typeof subType === 'string' && subType.toLowerCase().includes('hand')) {
+      return true;
+    }
+
+    const children = Array.isArray(part?.children) ? part.children : [];
+    for (const childId of children) {
+      if (!visited.has(childId)) {
+        visited.add(childId);
+        queue.push(childId);
+      }
+    }
+  }
+
+  return false;
+}
+
 describe('hand-holding:hold_hand action discovery', () => {
   let testFixture;
   let configureActionDiscovery;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('hand-holding', ACTION_ID);
+    testFixture.defaultEntityOptions = { withHands: true };
 
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
@@ -34,7 +73,7 @@ describe('hand-holding:hold_hand action discovery', () => {
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
           scopeName ===
-          'positioning:close_actors_facing_each_other_or_behind_target'
+          'positioning:close_actors_facing_each_other_or_behind_target_with_hands'
         ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
@@ -44,6 +83,10 @@ describe('hand-holding:hold_hand action discovery', () => {
           const { entityManager } = testEnv;
           const actorEntity = entityManager.getEntityInstance(actorId);
           if (!actorEntity) {
+            return { success: true, value: new Set() };
+          }
+
+          if (!entityHasHands(actorEntity, entityManager)) {
             return { success: true, value: new Set() };
           }
 
@@ -75,7 +118,9 @@ describe('hand-holding:hold_hand action discovery', () => {
               !partnerFacingAway.includes(actorId);
             const actorBehind = partnerFacingAway.includes(actorId);
 
-            if (facingEachOther || actorBehind) {
+            const partnerHasHands = entityHasHands(partner, entityManager);
+
+            if (partnerHasHands && (facingEachOther || actorBehind)) {
               acc.add(partnerId);
             }
 
@@ -102,7 +147,7 @@ describe('hand-holding:hold_hand action discovery', () => {
       expect(holdHandAction.id).toBe(ACTION_ID);
       expect(holdHandAction.template).toBe("hold {target}'s hand");
       expect(holdHandAction.targets).toBe(
-        'positioning:close_actors_facing_each_other_or_behind_target'
+        'positioning:close_actors_facing_each_other_or_behind_target_with_hands'
       );
       expect(holdHandAction.forbidden_components.actor).toEqual([
         'hand-holding:holding_hand',
@@ -128,6 +173,20 @@ describe('hand-holding:hold_hand action discovery', () => {
       expect(ids).toContain(ACTION_ID);
     });
 
+    it('is not available when the target lacks hand anatomy', () => {
+      const scenario = testFixture.createCloseActors(['Chloe', 'Evan'], {
+        withHands: false,
+      });
+      configureActionDiscovery();
+
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).not.toContain(ACTION_ID);
+    });
+
     it('is blocked when the actor already holds a hand and returns once released', () => {
       const scenario = testFixture.createCloseActors(['Nina', 'Owen']);
       scenario.actor.components['hand-holding:holding_hand'] = {
@@ -140,7 +199,13 @@ describe('hand-holding:hold_hand action discovery', () => {
       };
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
+      // Include extraEntities (hand anatomy parts) for hold_hand action discovery
+      testFixture.reset([
+        room,
+        scenario.actor,
+        scenario.target,
+        ...(scenario.extraEntities || []),
+      ]);
       configureActionDiscovery();
 
       let availableActions = testFixture.testEnv.getAvailableActions(
@@ -151,7 +216,12 @@ describe('hand-holding:hold_hand action discovery', () => {
 
       delete scenario.actor.components['hand-holding:holding_hand'];
       delete scenario.target.components['hand-holding:hand_held'];
-      testFixture.reset([room, scenario.actor, scenario.target]);
+      testFixture.reset([
+        room,
+        scenario.actor,
+        scenario.target,
+        ...(scenario.extraEntities || []),
+      ]);
       configureActionDiscovery();
 
       availableActions = testFixture.testEnv.getAvailableActions(

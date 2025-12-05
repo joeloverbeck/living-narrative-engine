@@ -43,6 +43,12 @@
               "damage_multiplier": 1.5,
               "exclude_damage_types": { "var": "context.excludeDamageTypes" }
             }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": {
+              "entity_ref": "secondary"
+            }
           }
         ]
       }

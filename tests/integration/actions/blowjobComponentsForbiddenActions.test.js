@@ -66,7 +66,45 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
       partners: [actor.id, targetGiving.id],
     };
 
-    return { actor, targetGiving, targetNormal, room };
+    const bodyParts = [];
+
+    const addMouthAnatomy = (entity, prefix) => {
+      const torsoId = `${prefix}-torso`;
+      const mouthId = `${prefix}-mouth`;
+
+      entity.components['anatomy:body'] = {
+        body: { root: torsoId },
+      };
+
+      bodyParts.push(
+        new ModEntityBuilder(torsoId)
+          .asBodyPart({
+            parent: null,
+            children: [mouthId],
+            subType: 'torso',
+          })
+          .atLocation('room1')
+          .withLocationComponent('room1')
+          .build()
+      );
+
+      bodyParts.push(
+        new ModEntityBuilder(mouthId)
+          .asBodyPart({
+            parent: torsoId,
+            children: [],
+            subType: 'mouth',
+          })
+          .atLocation('room1')
+          .withLocationComponent('room1')
+          .build()
+      );
+    };
+
+    addMouthAnatomy(targetGiving, 'targetGiving');
+    addMouthAnatomy(targetNormal, 'targetNormal');
+
+    return { actor, targetGiving, targetNormal, room, bodyParts };
   }
 
   /**
@@ -76,6 +114,38 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
   function setupScopeResolver(testEnv) {
     const scopeResolver = testEnv.unifiedScopeResolver;
     const originalResolve = scopeResolver.resolveSync.bind(scopeResolver);
+
+    const hasMouth = (entityId) => {
+      const entity = testEnv.entityManager.getEntityInstance(entityId);
+      const rootId = entity?.components?.['anatomy:body']?.body?.root;
+      if (!rootId) {
+        return false;
+      }
+
+      const stack = [rootId];
+      const visited = new Set();
+
+      while (stack.length > 0) {
+        const current = stack.pop();
+        if (!current || visited.has(current)) continue;
+        visited.add(current);
+
+        const part = testEnv.entityManager.getEntityInstance(current);
+        const partData = part?.components?.['anatomy:part'];
+
+        if (
+          partData?.subType &&
+          partData.subType.toLowerCase().includes('mouth')
+        ) {
+          return true;
+        }
+
+        const children = partData?.children || [];
+        stack.push(...children);
+      }
+
+      return false;
+    };
 
     scopeResolver.resolveSync = (scopeName, context) => {
       if (
@@ -96,6 +166,29 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
           return { success: true, value: new Set() };
         }
         return { success: true, value: new Set(closeness) };
+      }
+      if (
+        scopeName ===
+        'kissing:close_actors_with_mouth_facing_each_other_or_behind_target'
+      ) {
+        const actorId = context?.actor?.id;
+        if (!actorId) {
+          return { success: true, value: new Set() };
+        }
+        const actorEntity = testEnv.entityManager.getEntityInstance(actorId);
+        if (!actorEntity) {
+          return { success: true, value: new Set() };
+        }
+        const closeness =
+          actorEntity.components?.['positioning:closeness']?.partners;
+        if (!Array.isArray(closeness) || closeness.length === 0) {
+          return { success: true, value: new Set() };
+        }
+
+        const validTargets = closeness.filter((partnerId) =>
+          hasMouth(partnerId)
+        );
+        return { success: true, value: new Set(validTargets) };
       }
       return originalResolve(scopeName, context);
     };
@@ -136,9 +229,9 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
     });
 
     it('should reject when target has giving_blowjob component', async () => {
-      const { actor, targetGiving, targetNormal, room } =
+      const { actor, targetGiving, targetNormal, room, bodyParts } =
         createBlowjobScenario();
-      testFixture.reset([room, actor, targetGiving, targetNormal]);
+      testFixture.reset([room, actor, targetGiving, targetNormal, ...bodyParts]);
 
       const { testEnv } = testFixture;
       testEnv.actionIndex.buildIndex([kissNeckSensuallyAction]);
@@ -150,9 +243,9 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
     });
 
     it('should allow when target does NOT have giving_blowjob component', async () => {
-      const { actor, targetGiving, targetNormal, room } =
+      const { actor, targetGiving, targetNormal, room, bodyParts } =
         createBlowjobScenario();
-      testFixture.reset([room, actor, targetGiving, targetNormal]);
+      testFixture.reset([room, actor, targetGiving, targetNormal, ...bodyParts]);
 
       const { testEnv } = testFixture;
       testEnv.actionIndex.buildIndex([kissNeckSensuallyAction]);
@@ -179,9 +272,9 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
     });
 
     it('should reject when target has giving_blowjob component', async () => {
-      const { actor, targetGiving, targetNormal, room } =
+      const { actor, targetGiving, targetNormal, room, bodyParts } =
         createBlowjobScenario();
-      testFixture.reset([room, actor, targetGiving, targetNormal]);
+      testFixture.reset([room, actor, targetGiving, targetNormal, ...bodyParts]);
 
       const { testEnv } = testFixture;
       testEnv.actionIndex.buildIndex([lickLipsAction]);
@@ -193,9 +286,9 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
     });
 
     it('should allow when target does NOT have giving_blowjob component', async () => {
-      const { actor, targetGiving, targetNormal, room } =
+      const { actor, targetGiving, targetNormal, room, bodyParts } =
         createBlowjobScenario();
-      testFixture.reset([room, actor, targetGiving, targetNormal]);
+      testFixture.reset([room, actor, targetGiving, targetNormal, ...bodyParts]);
 
       const { testEnv } = testFixture;
       testEnv.actionIndex.buildIndex([lickLipsAction]);

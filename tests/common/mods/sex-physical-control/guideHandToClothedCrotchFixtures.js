@@ -66,6 +66,7 @@ export const GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_PENIS_ID =
  * @property {boolean} [coverActorPenis=true] - Whether the actor's penis socket reports coveredBy metadata and slot coverage.
  * @property {boolean} [includeReceivingBlowjob=false] - Whether the actor includes positioning:receiving_blowjob.
  * @property {boolean} [includeKneelingConflict=false] - Whether the actor kneels before the target, breaking the shared scope.
+ * @property {boolean} [includeHandAnatomy=true] - Whether to attach basic hand anatomy to both participants.
  */
 
 /**
@@ -88,6 +89,7 @@ export function buildGuideHandToClothedCrotchScenario(options = {}) {
     coverActorPenis = true,
     includeReceivingBlowjob = false,
     includeKneelingConflict = false,
+    includeHandAnatomy = true,
   } = options;
 
   const roomId = GUIDE_HAND_TO_CLOTHED_CROTCH_ROOM_ID;
@@ -96,6 +98,10 @@ export function buildGuideHandToClothedCrotchScenario(options = {}) {
   const actorClothingId = GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_CLOTHING_ID;
   const actorGroinId = GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_GROIN_ID;
   const actorPenisId = GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_PENIS_ID;
+  const actorHandId = `${actorId}_hand`;
+  const actorHandRootId = includeActorPenis ? actorGroinId : `${actorId}_torso`;
+  const primaryHandRootId = `${primaryId}_torso`;
+  const primaryHandId = `${primaryId}_hand`;
 
   const room = new ModEntityBuilder(roomId).asRoom('Amber Suite').build();
 
@@ -139,6 +145,8 @@ export function buildGuideHandToClothedCrotchScenario(options = {}) {
         },
       },
     });
+  } else if (includeHandAnatomy) {
+    actorBuilder.withBody(actorHandRootId);
   }
 
   const primaryBuilder = new ModEntityBuilder(primaryId)
@@ -151,6 +159,10 @@ export function buildGuideHandToClothedCrotchScenario(options = {}) {
     primaryBuilder.closeToEntity(actorId);
   }
 
+  if (includeHandAnatomy) {
+    primaryBuilder.withBody(primaryHandRootId);
+  }
+
   const entities = [room];
 
   const actor = actorBuilder.build();
@@ -158,10 +170,18 @@ export function buildGuideHandToClothedCrotchScenario(options = {}) {
   entities.push(actor, primary);
 
   if (includeActorPenis) {
+    const groinChildren = [];
+    if (includeActorPenis) {
+      groinChildren.push(actorPenisId);
+    }
+    if (includeHandAnatomy) {
+      groinChildren.push(actorHandId);
+    }
+
     const actorGroin = new ModEntityBuilder(actorGroinId)
       .asBodyPart({
         parent: null,
-        children: includeActorPenis ? [actorPenisId] : [],
+        children: groinChildren,
         subType: 'groin',
         sockets: {
           penis: {
@@ -184,6 +204,15 @@ export function buildGuideHandToClothedCrotchScenario(options = {}) {
       entities.push(penis);
     }
 
+    if (includeHandAnatomy) {
+      const actorHand = new ModEntityBuilder(actorHandId)
+        .asBodyPart({ parent: actorGroinId, children: [], subType: 'hand' })
+        .atLocation(roomId)
+        .withLocationComponent(roomId)
+        .build();
+      entities.push(actorHand);
+    }
+
     const clothing = new ModEntityBuilder(actorClothingId)
       .withName('Charcoal Slacks')
       .build();
@@ -191,6 +220,48 @@ export function buildGuideHandToClothedCrotchScenario(options = {}) {
     if (coverActorPenis) {
       entities.push(clothing);
     }
+  } else if (includeHandAnatomy) {
+    const actorTorso = new ModEntityBuilder(actorHandRootId)
+      .asBodyPart({
+        parent: null,
+        children: [actorHandId],
+        subType: 'torso',
+      })
+      .atLocation(roomId)
+      .withLocationComponent(roomId)
+      .build();
+
+    const actorHand = new ModEntityBuilder(actorHandId)
+      .asBodyPart({ parent: actorHandRootId, children: [], subType: 'hand' })
+      .atLocation(roomId)
+      .withLocationComponent(roomId)
+      .build();
+
+    entities.push(actorTorso, actorHand);
+  }
+
+  if (includeHandAnatomy) {
+    const primaryTorso = new ModEntityBuilder(primaryHandRootId)
+      .asBodyPart({
+        parent: null,
+        children: [primaryHandId],
+        subType: 'torso',
+      })
+      .atLocation(roomId)
+      .withLocationComponent(roomId)
+      .build();
+
+    const primaryHand = new ModEntityBuilder(primaryHandId)
+      .asBodyPart({
+        parent: primaryHandRootId,
+        children: [],
+        subType: 'hand',
+      })
+      .atLocation(roomId)
+      .withLocationComponent(roomId)
+      .build();
+
+    entities.push(primaryTorso, primaryHand);
   }
 
   return {

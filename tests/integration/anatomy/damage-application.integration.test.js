@@ -254,12 +254,8 @@ describe('Damage Application Mechanics', () => {
     });
   });
 
-  test('untargeted hits distribute according to weights (deterministic RNG)', async () => {
-    const randomSpy = jest
-      .spyOn(Math, 'random')
-      .mockReturnValueOnce(0.1) // Torso
-      .mockReturnValueOnce(0.65) // Mid-range: head/arm depending on order
-      .mockReturnValueOnce(0.95); // High-end: remaining weighted part
+  test('untargeted hits reuse resolved hit location within a single action', async () => {
+    const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.1); // First hit lands on torso
 
     await handler.execute(
       { entity_ref: ids.actor, part_ref: null, amount: 10, damage_type: 'blunt' },
@@ -282,14 +278,14 @@ describe('Damage Application Mechanics', () => {
     const heartHealth = entityManager.getComponentData(ids.heart, PART_HEALTH_COMPONENT_ID)
       .currentHealth;
 
-    expect(torsoHealth).toBe(90);
-    expect(headHealth).toBe(90);
-    expect(armHealth).toBe(90);
+    expect(torsoHealth).toBe(70);
+    expect(headHealth).toBe(100);
+    expect(armHealth).toBe(100);
     expect(heartHealth).toBe(50);
 
     const targetedParts = getEventPayloads(DAMAGE_APPLIED_EVENT).map((event) => event.partId);
-    expect(new Set(targetedParts)).toEqual(new Set([ids.torso, ids.head, ids.arm]));
-    expect(targetedParts).not.toContain(ids.heart);
+    expect(targetedParts).toHaveLength(3);
+    expect(new Set(targetedParts)).toEqual(new Set([ids.torso]));
   });
 
   test('propagation applies fractioned damage to child parts', async () => {

@@ -984,6 +984,7 @@ class BaseModTestFixture {
     this.testEnv = null;
     this.diagnostics = null; // Will be created on demand
     this.scopeTracer = new ScopeEvaluationTracer();
+    this.defaultEntityOptions = {};
   }
 
   /**
@@ -1854,6 +1855,7 @@ export class ModActionTestFixture extends BaseModTestFixture {
         'positioning:furniture_actor_behind',
         'positioning:actor_being_bitten_by_me',
         'positioning:close_actors_facing_each_other_or_behind_target',
+        'positioning:close_actors_facing_each_other_or_behind_target_with_hands',
         'positioning:close_actors',
         'positioning:close_actors_facing_each_other',
         'positioning:actors_both_sitting_close',
@@ -1906,17 +1908,23 @@ export class ModActionTestFixture extends BaseModTestFixture {
    * @returns {object} Object with actor and target entities
    */
   createStandardActorTarget(names = ['Alice', 'Bob'], options = {}) {
+    const mergedOptions = { ...(this.defaultEntityOptions || {}), ...options };
+
     const scenario = ModEntityScenarios.createActorTargetPair({
       names,
       location: 'room1',
       closeProximity: true,
-      ...options,
+      ...mergedOptions,
     });
 
-    const entities = [scenario.actor, scenario.target];
+    const entities = [
+      scenario.actor,
+      scenario.target,
+      ...(scenario.extraEntities || []),
+    ];
 
     // Add room if needed
-    if (options.includeRoom !== false) {
+    if (mergedOptions.includeRoom !== false) {
       entities.unshift(ModEntityScenarios.createRoom('room1', 'Test Room'));
     }
 

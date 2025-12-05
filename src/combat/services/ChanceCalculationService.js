@@ -257,9 +257,16 @@ class ChanceCalculationService {
     });
 
     // Determine outcome
-    const thresholds = chanceBased.outcomes ?? {
-      criticalSuccess: 5,
-      criticalFailure: 95,
+    const thresholds = {
+      // Support both schema naming (criticalSuccessThreshold) and the service naming (criticalSuccess)
+      criticalSuccess:
+        chanceBased.outcomes?.criticalSuccess ??
+        chanceBased.outcomes?.criticalSuccessThreshold ??
+        5,
+      criticalFailure:
+        chanceBased.outcomes?.criticalFailure ??
+        chanceBased.outcomes?.criticalFailureThreshold ??
+        95,
     };
 
     const outcome = this.#outcomeDeterminerService.determine({
