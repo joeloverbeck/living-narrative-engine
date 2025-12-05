@@ -5,7 +5,6 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
 import brushHairBehindEarAction from '../../../../data/mods/affection/actions/brush_hair_behind_ear.action.json';
 
 const ACTION_ID = 'affection:brush_hair_behind_ear';
@@ -17,7 +16,7 @@ describe('affection:brush_hair_behind_ear action discovery', () => {
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('affection', ACTION_ID);
 
-    configureActionDiscovery = () => {
+    configureActionDiscovery = async () => {
       const { testEnv } = testFixture;
       if (!testEnv) {
         return;
@@ -31,11 +30,37 @@ describe('affection:brush_hair_behind_ear action discovery', () => {
         scopeResolver.__brushHairOriginalResolve ||
         scopeResolver.resolveSync.bind(scopeResolver);
 
+      const hasSubType = (entityId, subType) => {
+        const { entityManager } = testEnv;
+        const entity = entityManager.getEntityInstance(entityId);
+        const rootId = entity?.components?.['anatomy:body']?.body?.root;
+        if (!rootId) return false;
+
+        const stack = [rootId];
+        const visited = new Set();
+        while (stack.length > 0) {
+          const current = stack.pop();
+          if (!current || visited.has(current)) continue;
+          visited.add(current);
+          const part = entityManager.getEntityInstance(current);
+          const partData = part?.components?.['anatomy:part'];
+          if (
+            partData?.subType &&
+            partData.subType.toLowerCase().includes(subType)
+          ) {
+            return true;
+          }
+          const children = partData?.children || [];
+          stack.push(...children);
+        }
+        return false;
+      };
+
       scopeResolver.__brushHairOriginalResolve = originalResolve;
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
           scopeName ===
-          'positioning:close_actors_or_entity_kneeling_before_actor'
+          'affection:close_actors_with_hair_or_entity_kneeling_before_actor'
         ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
@@ -72,7 +97,6 @@ describe('affection:brush_hair_behind_ear action discovery', () => {
               !partnerFacingAway.includes(actorId);
             const actorBehind = partnerFacingAway.includes(actorId);
 
-            // Check kneeling states
             const actorKneelingBefore =
               actorEntity.components?.['positioning:kneeling_before']
                 ?.entityId === partnerId;
@@ -80,14 +104,13 @@ describe('affection:brush_hair_behind_ear action discovery', () => {
               partner.components?.['positioning:kneeling_before']?.entityId ===
               actorId;
 
-            // Available if:
-            // - (facing each other OR actor behind) AND actor not kneeling before partner
-            // - OR partner is kneeling before actor
+            const hairAvailable = hasSubType(partnerId, 'hair');
+
             const normalPosition =
               (facingEachOther || actorBehind) && !actorKneelingBefore;
             const partnerKneeling = partnerKneelingBefore;
 
-            if (normalPosition || partnerKneeling) {
+            if ((normalPosition || partnerKneeling) && hairAvailable) {
               acc.add(partnerId);
             }
 
@@ -115,7 +138,7 @@ describe('affection:brush_hair_behind_ear action discovery', () => {
         "brush a lock of hair behind {target}'s ear"
       );
       expect(brushHairBehindEarAction.targets).toBe(
-        'positioning:close_actors_or_entity_kneeling_before_actor'
+        'affection:close_actors_with_hair_or_entity_kneeling_before_actor'
       );
       expect(brushHairBehindEarAction.required_components.actor).toEqual([
         'positioning:closeness',
@@ -131,106 +154,131 @@ describe('affection:brush_hair_behind_ear action discovery', () => {
 
   describe('Positive Discovery Scenarios', () => {
     it('is available for close actors facing each other', () => {
-      const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-      configureActionDiscovery();
-
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        scenario.actor.id
+      const scenario = testFixture.createAnatomyScenario(
+        ['Alice', 'Bob'],
+        ['torso', 'hair']
       );
-      const ids = availableActions.map((action) => action.id);
+      return configureActionDiscovery().then(() => {
+        const availableActions = testFixture.testEnv.getAvailableActions(
+          scenario.actor.id
+        );
+        const ids = availableActions.map((action) => action.id);
 
-      expect(ids).toContain(ACTION_ID);
+        expect(ids).toContain(ACTION_ID);
+      });
     });
 
     it('is available when the actor stands behind the target', () => {
-      const scenario = testFixture.createCloseActors(['Maya', 'Noah']);
+      const scenario = testFixture.createAnatomyScenario(
+        ['Maya', 'Noah'],
+        ['torso', 'hair']
+      );
       scenario.target.components['positioning:facing_away'] = {
         facing_away_from: [scenario.actor.id],
       };
 
-      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
-      configureActionDiscovery();
+      testFixture.reset([...scenario.allEntities]);
+      return configureActionDiscovery().then(() => {
+        const availableActions = testFixture.testEnv.getAvailableActions(
+          scenario.actor.id
+        );
+        const ids = availableActions.map((action) => action.id);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        scenario.actor.id
-      );
-      const ids = availableActions.map((action) => action.id);
-
-      expect(ids).toContain(ACTION_ID);
+        expect(ids).toContain(ACTION_ID);
+      });
     });
 
     it('is available when the target is kneeling before the actor', () => {
-      const scenario = testFixture.createCloseActors(['Sophia', 'Liam']);
+      const scenario = testFixture.createAnatomyScenario(
+        ['Sophia', 'Liam'],
+        ['torso', 'hair']
+      );
       scenario.target.components['positioning:kneeling_before'] = {
         entityId: scenario.actor.id,
       };
 
-      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
-      configureActionDiscovery();
+      testFixture.reset([...scenario.allEntities]);
+      return configureActionDiscovery().then(() => {
+        const availableActions = testFixture.testEnv.getAvailableActions(
+          scenario.actor.id
+        );
+        const ids = availableActions.map((action) => action.id);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        scenario.actor.id
-      );
-      const ids = availableActions.map((action) => action.id);
-
-      expect(ids).toContain(ACTION_ID);
+        expect(ids).toContain(ACTION_ID);
+      });
     });
   });
 
   describe('Negative Discovery Scenarios', () => {
     it('is not available when actors are not in closeness', () => {
-      const scenario = testFixture.createCloseActors(['Ivy', 'Liam']);
+      const scenario = testFixture.createAnatomyScenario(
+        ['Ivy', 'Liam'],
+        ['torso', 'hair']
+      );
       delete scenario.actor.components['positioning:closeness'];
       delete scenario.target.components['positioning:closeness'];
 
-      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
-      configureActionDiscovery();
+      testFixture.reset([...scenario.allEntities]);
+      return configureActionDiscovery().then(() => {
+        const availableActions = testFixture.testEnv.getAvailableActions(
+          scenario.actor.id
+        );
+        const ids = availableActions.map((action) => action.id);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        scenario.actor.id
-      );
-      const ids = availableActions.map((action) => action.id);
-
-      expect(ids).not.toContain(ACTION_ID);
+        expect(ids).not.toContain(ACTION_ID);
+      });
     });
 
     it('is not available when the actor faces away from the target', () => {
-      const scenario = testFixture.createCloseActors(['Chloe', 'Evan']);
+      const scenario = testFixture.createAnatomyScenario(
+        ['Chloe', 'Evan'],
+        ['torso', 'hair']
+      );
       scenario.actor.components['positioning:facing_away'] = {
         facing_away_from: [scenario.target.id],
       };
 
-      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
-      configureActionDiscovery();
+      testFixture.reset([...scenario.allEntities]);
+      return configureActionDiscovery().then(() => {
+        const availableActions = testFixture.testEnv.getAvailableActions(
+          scenario.actor.id
+        );
+        const ids = availableActions.map((action) => action.id);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        scenario.actor.id
-      );
-      const ids = availableActions.map((action) => action.id);
-
-      expect(ids).not.toContain(ACTION_ID);
+        expect(ids).not.toContain(ACTION_ID);
+      });
     });
 
     it('is not available when the actor is kneeling before the target', () => {
-      const scenario = testFixture.createCloseActors(['Emma', 'Oliver']);
+      const scenario = testFixture.createAnatomyScenario(
+        ['Emma', 'Oliver'],
+        ['torso', 'hair']
+      );
       scenario.actor.components['positioning:kneeling_before'] = {
         entityId: scenario.target.id,
       };
 
-      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
-      configureActionDiscovery();
+      testFixture.reset([...scenario.allEntities]);
+      return configureActionDiscovery().then(() => {
+        const availableActions = testFixture.testEnv.getAvailableActions(
+          scenario.actor.id
+        );
+        const ids = availableActions.map((action) => action.id);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        scenario.actor.id
-      );
-      const ids = availableActions.map((action) => action.id);
+        expect(ids).not.toContain(ACTION_ID);
+      });
+    });
 
-      expect(ids).not.toContain(ACTION_ID);
+    it('is not available when the target lacks hair anatomy', () => {
+      const scenario = testFixture.createCloseActors(['Hare', 'Chicken']);
+      return configureActionDiscovery().then(() => {
+        const availableActions = testFixture.testEnv.getAvailableActions(
+          scenario.actor.id
+        );
+        const ids = availableActions.map((action) => action.id);
+
+        expect(ids).not.toContain(ACTION_ID);
+      });
     });
   });
 });

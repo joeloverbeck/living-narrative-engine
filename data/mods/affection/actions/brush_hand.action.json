@@ -3,7 +3,7 @@
   "id": "affection:brush_hand",
   "name": "Brush hand",
   "description": "Brush someone's hand with your own in a gentle, intimate gesture",
-  "targets": "positioning:close_actors",
+  "targets": "affection:actors_with_hands_in_intimacy",
   "required_components": {
     "actor": ["positioning:closeness"]
   },

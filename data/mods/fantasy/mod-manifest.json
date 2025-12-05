@@ -70,6 +70,10 @@
     {
       "id": "warding",
       "version": "^1.0.0"
+    },
+    {
+      "id": "hexing",
+      "version": "^1.0.0"
     }
   ],
   "content": {

@@ -1,0 +1,24 @@
+// Scope for close partners who have a nose available for tender touches
+// Allows targets kneeling before the actor while blocking cases where the actor kneels before them
+affection:close_actors_with_nose_or_entity_kneeling_before_actor := actor.components.positioning:closeness.partners[][{
+  "and": [
+    {"hasPartSubTypeContaining": [".", "nose"]},
+    {"!": {"var": "actor.components.positioning:kneeling_before"}},
+    {
+      "or": [
+        {
+          "and": [
+            {
+              "or": [
+                {"condition_ref": "positioning:both-actors-facing-each-other"},
+                {"condition_ref": "positioning:actor-is-behind-entity"}
+              ]
+            },
+            {"!": {"condition_ref": "positioning:actor-kneeling-before-entity"}}
+          ]
+        },
+        {"condition_ref": "positioning:entity-kneeling-before-actor"}
+      ]
+    }
+  ]
+}]

@@ -101,7 +101,12 @@ describe('Kissing actions forbidden when targeting actor giving blowjob', () => 
           scope === scopeName ||
           scope === 'kissing:close_actors_facing_each_other' ||
           scope === 'kissing:actors_with_mouth_facing_each_other' ||
-          scope === 'kissing:close_actors_facing_each_other_or_behind_target'
+          scope ===
+            'kissing:close_actors_facing_each_other_or_behind_target' ||
+          scope ===
+            'kissing:close_actors_with_ear_subtype_facing_each_other_or_behind_target' ||
+          scope ===
+            'kissing:close_actors_with_mouth_facing_each_other_or_behind_target'
         ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
@@ -246,7 +251,7 @@ describe('Kissing actions forbidden when targeting actor giving blowjob', () => 
       ]);
       configureActionDiscovery(
         nibbleEarlobePlayfullyAction,
-        'kissing:close_actors_facing_each_other_or_behind_target'
+        'kissing:close_actors_with_ear_subtype_facing_each_other_or_behind_target'
       );
 
       await expect(async () => {
@@ -264,7 +269,7 @@ describe('Kissing actions forbidden when targeting actor giving blowjob', () => 
       ]);
       configureActionDiscovery(
         peckOnLipsAction,
-        'kissing:close_actors_facing_each_other'
+        'kissing:close_actors_with_mouth_facing_each_other_or_behind_target'
       );
 
       await expect(async () => {

@@ -5,13 +5,38 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import {
-  ModEntityScenarios,
-  ModEntityBuilder,
-} from '../../../common/mods/ModEntityBuilder.js';
+import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import linkArmsAction from '../../../../data/mods/affection/actions/link_arms.action.json';
 
 const ACTION_ID = 'affection:link_arms';
+
+function createActorWithArmAnatomy(id, name, location, partners = []) {
+  const torsoId = `${id}-torso`;
+  const armId = `${id}-arm`;
+
+  const entity = new ModEntityBuilder(id)
+    .withName(name)
+    .atLocation(location)
+    .withLocationComponent(location)
+    .asActor()
+    .withComponent('positioning:closeness', { partners })
+    .withBody(torsoId)
+    .build();
+
+  const torso = new ModEntityBuilder(torsoId)
+    .asBodyPart({ parent: null, children: [armId], subType: 'torso' })
+    .atLocation(location)
+    .withLocationComponent(location)
+    .build();
+
+  const arm = new ModEntityBuilder(armId)
+    .asBodyPart({ parent: torsoId, children: [], subType: 'arm' })
+    .atLocation(location)
+    .withLocationComponent(location)
+    .build();
+
+  return { entity, parts: [torso, arm] };
+}
 
 describe('affection:link_arms - giving_blowjob forbidden component', () => {
   let testFixture;
@@ -20,7 +45,7 @@ describe('affection:link_arms - giving_blowjob forbidden component', () => {
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('affection', ACTION_ID);
 
-    configureActionDiscovery = () => {
+    configureActionDiscovery = async () => {
       const { testEnv } = testFixture;
       if (!testEnv) {
         return;
@@ -33,11 +58,37 @@ describe('affection:link_arms - giving_blowjob forbidden component', () => {
         scopeResolver.__linkArmsOriginalResolve ||
         scopeResolver.resolveSync.bind(scopeResolver);
 
+      const hasSubType = (entityId, subType) => {
+        const { entityManager } = testEnv;
+        const entity = entityManager.getEntityInstance(entityId);
+        const rootId = entity?.components?.['anatomy:body']?.body?.root;
+        if (!rootId) return false;
+
+        const stack = [rootId];
+        const visited = new Set();
+        while (stack.length > 0) {
+          const current = stack.pop();
+          if (!current || visited.has(current)) continue;
+          visited.add(current);
+          const part = entityManager.getEntityInstance(current);
+          const partData = part?.components?.['anatomy:part'];
+          if (
+            partData?.subType &&
+            partData.subType.toLowerCase().includes(subType)
+          ) {
+            return true;
+          }
+          const children = partData?.children || [];
+          stack.push(...children);
+        }
+        return false;
+      };
+
       scopeResolver.__linkArmsOriginalResolve = originalResolve;
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
           scopeName ===
-          'positioning:close_actors_facing_each_other_or_behind_target'
+          'affection:actors_with_arm_subtypes_facing_each_other_or_behind_target'
         ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
@@ -56,28 +107,11 @@ describe('affection:link_arms - giving_blowjob forbidden component', () => {
             return { success: true, value: new Set() };
           }
 
-          const actorFacingAway =
-            actorEntity.components?.['positioning:facing_away']
-              ?.facing_away_from || [];
-
           const validTargets = closeness.reduce((acc, partnerId) => {
-            const partner = entityManager.getEntityInstance(partnerId);
-            if (!partner) {
+            if (!hasSubType(partnerId, 'arm')) {
               return acc;
             }
-
-            const partnerFacingAway =
-              partner.components?.['positioning:facing_away']
-                ?.facing_away_from || [];
-            const facingEachOther =
-              !actorFacingAway.includes(partnerId) &&
-              !partnerFacingAway.includes(actorId);
-            const actorBehind = partnerFacingAway.includes(actorId);
-
-            if (facingEachOther || actorBehind) {
-              acc.add(partnerId);
-            }
-
+            acc.add(partnerId);
             return acc;
           }, new Set());
 
@@ -96,9 +130,12 @@ describe('affection:link_arms - giving_blowjob forbidden component', () => {
   });
 
   describe('Baseline: Action available without giving_blowjob', () => {
-    it('should be available when target does NOT have giving_blowjob component', () => {
-      const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-      configureActionDiscovery();
+    it('should be available when target does NOT have giving_blowjob component', async () => {
+      const scenario = testFixture.createAnatomyScenario(
+        ['Alice', 'Bob'],
+        ['torso', 'arm', 'arm']
+      );
+      await configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
         scenario.actor.id
@@ -111,7 +148,10 @@ describe('affection:link_arms - giving_blowjob forbidden component', () => {
 
   describe('Forbidden: Action not available when target giving blowjob', () => {
     it('should NOT be available when target has giving_blowjob component', async () => {
-      const scenario = testFixture.createCloseActors(['Charlie', 'Diana']);
+      const scenario = testFixture.createAnatomyScenario(
+        ['Charlie', 'Diana'],
+        ['torso', 'arm', 'arm']
+      );
 
       // Target is giving a blowjob
       scenario.target.components['positioning:giving_blowjob'] = {
@@ -120,9 +160,8 @@ describe('affection:link_arms - giving_blowjob forbidden component', () => {
         consented: true,
       };
 
-      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
-      configureActionDiscovery();
+      testFixture.reset([...scenario.allEntities]);
+      await configureActionDiscovery();
 
       // Test through actual action execution which goes through full pipeline
       // The action should be blocked by target validation with forbidden component error
@@ -135,64 +174,74 @@ describe('affection:link_arms - giving_blowjob forbidden component', () => {
   describe('Three-actor scenario: Actor with receiving_blowjob can target others', () => {
     it('should be available to actor with receiving_blowjob when targeting a third actor without giving_blowjob', async () => {
       // Create three actors using ModEntityBuilder
-      const actor = new ModEntityBuilder('actor1')
-        .withName('Alex')
-        .atLocation('room1')
-        .asActor()
-        .build();
+      const actorData = createActorWithArmAnatomy('actor1', 'Alex', 'room1', [
+        'target1',
+        'target2',
+      ]);
 
-      const targetGiving = new ModEntityBuilder('target1')
-        .withName('Blair')
-        .atLocation('room1')
-        .asActor()
-        .build();
+      const targetGivingData = createActorWithArmAnatomy(
+        'target1',
+        'Blair',
+        'room1',
+        ['actor1', 'target2']
+      );
 
-      const targetThird = new ModEntityBuilder('target2')
-        .withName('Casey')
-        .atLocation('room1')
-        .asActor()
-        .build();
+      const targetThirdData = createActorWithArmAnatomy(
+        'target2',
+        'Casey',
+        'room1',
+        ['actor1', 'target1']
+      );
 
-      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
       // Alex is receiving a blowjob from Blair
-      actor.components['positioning:receiving_blowjob'] = {
-        giving_entity_id: targetGiving.id,
+      actorData.entity.components['positioning:receiving_blowjob'] = {
+        giving_entity_id: targetGivingData.entity.id,
         consented: true,
       };
 
       // Blair is giving a blowjob to Alex
-      targetGiving.components['positioning:giving_blowjob'] = {
-        receiving_entity_id: actor.id,
+      targetGivingData.entity.components['positioning:giving_blowjob'] = {
+        receiving_entity_id: actorData.entity.id,
         initiated: true,
         consented: true,
       };
 
       // Set up closeness for all three actors
-      actor.components['positioning:closeness'] = {
-        partners: [targetGiving.id, targetThird.id],
-      };
-      targetGiving.components['positioning:closeness'] = {
-        partners: [actor.id, targetThird.id],
-      };
-      targetThird.components['positioning:closeness'] = {
-        partners: [actor.id, targetGiving.id],
-      };
-
-      testFixture.reset([room, actor, targetGiving, targetThird]);
-      configureActionDiscovery();
+      testFixture.reset([
+        room,
+        actorData.entity,
+        targetGivingData.entity,
+        targetThirdData.entity,
+        ...actorData.parts,
+        ...targetGivingData.parts,
+        ...targetThirdData.parts,
+      ]);
+      await configureActionDiscovery();
 
       // Test 1: Action should succeed when targeting Casey (no forbidden component)
       await expect(
-        testFixture.executeAction(actor.id, targetThird.id)
+        testFixture.executeAction(actorData.entity.id, targetThirdData.entity.id)
       ).resolves.not.toThrow();
 
       // Test 2: Action should fail when targeting Blair (has giving_blowjob)
-      testFixture.reset([room, actor, targetGiving, targetThird]);
-      configureActionDiscovery();
+      testFixture.reset([
+        room,
+        actorData.entity,
+        targetGivingData.entity,
+        targetThirdData.entity,
+        ...actorData.parts,
+        ...targetGivingData.parts,
+        ...targetThirdData.parts,
+      ]);
+      await configureActionDiscovery();
 
       await expect(async () => {
-        await testFixture.executeAction(actor.id, targetGiving.id);
+        await testFixture.executeAction(
+          actorData.entity.id,
+          targetGivingData.entity.id
+        );
       }).rejects.toThrow(/forbidden component.*positioning:giving_blowjob/i);
     });
   });

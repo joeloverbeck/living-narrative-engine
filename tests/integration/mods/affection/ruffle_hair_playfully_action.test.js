@@ -12,6 +12,7 @@ const ACTION_ID = 'affection:ruffle_hair_playfully';
 
 describe('affection:ruffle_hair_playfully action integration', () => {
   let testFixture;
+  let addHairAnatomy;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
@@ -20,6 +21,34 @@ describe('affection:ruffle_hair_playfully action integration', () => {
       handleRuffleHairPlayfullyRule,
       eventIsActionRuffleHairPlayfully
     );
+
+    addHairAnatomy = (entityId) => {
+      const entityManager = testFixture?.testEnv?.entityManager;
+      if (!entityManager) return;
+
+      const headId = `${entityId}_head`;
+      const hairId = `${entityId}_hair`;
+
+      entityManager.createEntity(headId);
+      entityManager.addComponent(headId, 'anatomy:part', {
+        parent: null,
+        children: [hairId],
+        subType: 'head',
+      });
+
+      entityManager.createEntity(hairId);
+      entityManager.addComponent(hairId, 'anatomy:part', {
+        parent: headId,
+        children: [],
+        subType: 'hair',
+      });
+      entityManager.addComponent(hairId, 'anatomy:joint', {
+        parentId: headId,
+        socketId: 'head-hair',
+      });
+
+      entityManager.addComponent(entityId, 'anatomy:body', { root: headId });
+    };
   });
 
   afterEach(() => {
@@ -32,6 +61,8 @@ describe('affection:ruffle_hair_playfully action integration', () => {
     const scenario = testFixture.createCloseActors(['Amelia', 'Jonah'], {
       location: 'garden',
     });
+    addHairAnatomy(scenario.actor.id);
+    addHairAnatomy(scenario.target.id);
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 

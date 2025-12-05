@@ -5,7 +5,6 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
 import brushHairBehindEarAction from '../../../../data/mods/affection/actions/brush_hair_behind_ear.action.json';
 
 const ACTION_ID = 'affection:brush_hair_behind_ear';
@@ -17,7 +16,7 @@ describe('affection:brush_hair_behind_ear - giving_blowjob forbidden component',
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('affection', ACTION_ID);
 
-    configureActionDiscovery = () => {
+    configureActionDiscovery = async () => {
       const { testEnv } = testFixture;
       if (!testEnv) {
         return;
@@ -30,10 +29,36 @@ describe('affection:brush_hair_behind_ear - giving_blowjob forbidden component',
         scopeResolver.__brushHairOriginalResolve ||
         scopeResolver.resolveSync.bind(scopeResolver);
 
+      const hasSubType = (entityId, subType) => {
+        const { entityManager } = testEnv;
+        const entity = entityManager.getEntityInstance(entityId);
+        const rootId = entity?.components?.['anatomy:body']?.body?.root;
+        if (!rootId) return false;
+
+        const stack = [rootId];
+        const visited = new Set();
+        while (stack.length > 0) {
+          const current = stack.pop();
+          if (!current || visited.has(current)) continue;
+          visited.add(current);
+          const part = entityManager.getEntityInstance(current);
+          const partData = part?.components?.['anatomy:part'];
+          if (
+            partData?.subType &&
+            partData.subType.toLowerCase().includes(subType)
+          ) {
+            return true;
+          }
+          const children = partData?.children || [];
+          stack.push(...children);
+        }
+        return false;
+      };
+
       scopeResolver.__brushHairOriginalResolve = originalResolve;
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
-          scopeName === 'positioning:close_actors_or_entity_kneeling_before_actor'
+          scopeName === 'affection:close_actors_with_hair_or_entity_kneeling_before_actor'
         ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
@@ -52,7 +77,18 @@ describe('affection:brush_hair_behind_ear - giving_blowjob forbidden component',
             return { success: true, value: new Set() };
           }
 
-          return { success: true, value: new Set(closeness) };
+          const validTargets = closeness.reduce((acc, partnerId) => {
+            const partner = entityManager.getEntityInstance(partnerId);
+            if (!partner) return acc;
+
+            if (!hasSubType(partnerId, 'hair')) {
+              return acc;
+            }
+
+            return acc.add(partnerId);
+          }, new Set());
+
+          return { success: true, value: validTargets };
         }
 
         return originalResolve(scopeName, context);
@@ -76,21 +112,27 @@ describe('affection:brush_hair_behind_ear - giving_blowjob forbidden component',
 
   describe('Baseline: Action available without giving_blowjob', () => {
     it('should be available when actor does NOT have giving_blowjob component', () => {
-      const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-      configureActionDiscovery();
-
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        scenario.actor.id
+      const scenario = testFixture.createAnatomyScenario(
+        ['Alice', 'Bob'],
+        ['torso', 'hair']
       );
-      const ids = availableActions.map((action) => action.id);
+      return configureActionDiscovery().then(() => {
+        const availableActions = testFixture.testEnv.getAvailableActions(
+          scenario.actor.id
+        );
+        const ids = availableActions.map((action) => action.id);
 
-      expect(ids).toContain(ACTION_ID);
+        expect(ids).toContain(ACTION_ID);
+      });
     });
   });
 
   describe('Forbidden: Action not available when actor giving blowjob', () => {
     it('should NOT be available when actor has giving_blowjob component', () => {
-      const scenario = testFixture.createCloseActors(['Charlie', 'Dana']);
+      const scenario = testFixture.createAnatomyScenario(
+        ['Charlie', 'Dana'],
+        ['torso', 'hair']
+      );
 
       // Actor is giving a blowjob
       scenario.actor.components['positioning:giving_blowjob'] = {
@@ -99,16 +141,15 @@ describe('affection:brush_hair_behind_ear - giving_blowjob forbidden component',
         consented: true,
       };
 
-      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
-      configureActionDiscovery();
+      testFixture.reset([...scenario.allEntities]);
+      return configureActionDiscovery().then(() => {
+        const availableActions = testFixture.testEnv.getAvailableActions(
+          scenario.actor.id
+        );
+        const ids = availableActions.map((action) => action.id);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        scenario.actor.id
-      );
-      const ids = availableActions.map((action) => action.id);
-
-      expect(ids).not.toContain(ACTION_ID);
+        expect(ids).not.toContain(ACTION_ID);
+      });
     });
   });
 });

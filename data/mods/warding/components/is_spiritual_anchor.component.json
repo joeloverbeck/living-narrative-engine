@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "warding:is_spiritual_anchor",
+  "description": "Marker for items that can serve as spiritual anchors during corruption extraction and similar rituals.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  }
+}

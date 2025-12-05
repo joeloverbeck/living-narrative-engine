@@ -3,7 +3,7 @@
   "id": "affection:brush_hair_behind_ear",
   "name": "Brush hair behind ear",
   "description": "Gently brush a stray lock of hair behind the target's ear.",
-  "targets": "positioning:close_actors_or_entity_kneeling_before_actor",
+  "targets": "affection:close_actors_with_hair_or_entity_kneeling_before_actor",
   "required_components": {
     "actor": ["positioning:closeness"]
   },

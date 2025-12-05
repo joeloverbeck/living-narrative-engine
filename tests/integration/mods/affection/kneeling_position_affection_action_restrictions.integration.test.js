@@ -57,10 +57,14 @@ function createMockBodyGraphService() {
     getPartsOfType: jest.fn(() => []),
     getBodyPart: jest.fn().mockReturnValue(null),
     hasPartWithComponentValue: jest.fn().mockReturnValue(false),
-    findPartsByType: jest.fn().mockReturnValue([]),
+    findPartsByType: jest.fn().mockReturnValue([{ id: 'mock-arm' }]),
     buildAdjacencyCache: jest.fn(),
     clearCache: jest.fn(),
-    getAllParts: jest.fn().mockReturnValue([]),
+    getAllParts: jest.fn().mockReturnValue(['mock-arm']),
+    getCacheNode: jest.fn().mockReturnValue({
+      entityId: 'mock-arm',
+      partType: 'arm',
+    }),
   };
 }
 
@@ -110,6 +114,7 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       'data/mods/positioning/scopes/close_actors.scope',
       'data/mods/affection/scopes/close_actors_facing_each_other.scope',
       'data/mods/positioning/scopes/close_actors_or_entity_kneeling_before_actor.scope',
+      'data/mods/affection/scopes/actors_with_arm_subtypes_facing_each_other_or_behind_target.scope',
     ];
 
     const parsedScopes = [];
@@ -317,6 +322,9 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       location: location,
     });
     entityManager.addComponent(entityId, 'core:actor', {});
+    entityManager.addComponent(entityId, 'anatomy:body', {
+      body: { root: `${entityId}-root` },
+    });
     // Add empty facing_away component to indicate actors are facing each other
     entityManager.addComponent(entityId, 'positioning:facing_away', {
       facing_away_from: [],

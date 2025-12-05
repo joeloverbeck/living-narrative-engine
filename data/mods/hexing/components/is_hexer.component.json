@@ -1,0 +1,12 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "hexing:is_hexer",
+  "name": "Hexer",
+  "description": "Marks an actor as capable of performing hexing actions such as corrupting gaze.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  }
+}

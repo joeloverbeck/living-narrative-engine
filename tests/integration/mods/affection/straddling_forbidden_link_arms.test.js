@@ -10,6 +10,34 @@ import linkArmsAction from '../../../../data/mods/affection/actions/link_arms.ac
 
 const ACTION_ID = 'affection:link_arms';
 
+function createActorWithArms(id, name, location, partners = []) {
+  const torsoId = `${id}-torso`;
+  const armId = `${id}-arm`;
+
+  const entity = new ModEntityBuilder(id)
+    .withName(name)
+    .atLocation(location)
+    .withLocationComponent(location)
+    .asActor()
+    .withComponent('positioning:closeness', { partners })
+    .withBody(torsoId)
+    .build();
+
+  const torso = new ModEntityBuilder(torsoId)
+    .asBodyPart({ parent: null, children: [armId], subType: 'torso' })
+    .atLocation(location)
+    .withLocationComponent(location)
+    .build();
+
+  const arm = new ModEntityBuilder(armId)
+    .asBodyPart({ parent: torsoId, children: [], subType: 'arm' })
+    .atLocation(location)
+    .withLocationComponent(location)
+    .build();
+
+  return { entity, parts: [torso, arm] };
+}
+
 describe('link_arms forbidden when straddling - Integration Tests', () => {
   let testFixture;
   let configureActionDiscovery;
@@ -17,7 +45,7 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('affection', ACTION_ID);
 
-    configureActionDiscovery = () => {
+    configureActionDiscovery = async () => {
       const { testEnv } = testFixture;
       if (!testEnv) {
         return;
@@ -30,11 +58,37 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
         scopeResolver.__linkArmsOriginalResolve ||
         scopeResolver.resolveSync.bind(scopeResolver);
 
+      const hasSubType = (entityId, subType) => {
+        const { entityManager } = testEnv;
+        const entity = entityManager.getEntityInstance(entityId);
+        const rootId = entity?.components?.['anatomy:body']?.body?.root;
+        if (!rootId) return false;
+
+        const stack = [rootId];
+        const visited = new Set();
+        while (stack.length > 0) {
+          const current = stack.pop();
+          if (!current || visited.has(current)) continue;
+          visited.add(current);
+          const part = entityManager.getEntityInstance(current);
+          const partData = part?.components?.['anatomy:part'];
+          if (
+            partData?.subType &&
+            partData.subType.toLowerCase().includes(subType)
+          ) {
+            return true;
+          }
+          const children = partData?.children || [];
+          stack.push(...children);
+        }
+        return false;
+      };
+
       scopeResolver.__linkArmsOriginalResolve = originalResolve;
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
           scopeName ===
-          'positioning:close_actors_facing_each_other_or_behind_target'
+          'affection:actors_with_arm_subtypes_facing_each_other_or_behind_target'
         ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
@@ -71,7 +125,20 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
               !partnerFacingAway.includes(actorId);
             const actorBehind = partnerFacingAway.includes(actorId);
 
-            if (facingEachOther || actorBehind) {
+            const actorKneelingBefore =
+              actorEntity.components?.['positioning:kneeling_before']
+                ?.entityId === partnerId;
+            const partnerKneelingBefore =
+              partner.components?.['positioning:kneeling_before']?.entityId ===
+              actorId;
+
+            const armAvailable = hasSubType(partnerId, 'arm');
+
+            const normalPosition =
+              (facingEachOther || actorBehind) && !actorKneelingBefore;
+            const partnerKneeling = partnerKneelingBefore;
+
+            if (armAvailable && (normalPosition || partnerKneeling)) {
               acc.add(partnerId);
             }
 
@@ -91,33 +158,33 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
   });
 
   describe('Action Discovery - Straddling Constraints', () => {
-    it('should NOT be available when actor is straddling target (facing)', () => {
+    it('should NOT be available when actor is straddling target (facing)', async () => {
       const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
-      const actor = new ModEntityBuilder('actor1')
-        .withName('Alice')
-        .atLocation('room1')
-        .asActor()
-        .withComponent('positioning:closeness', { partners: ['target1'] })
-        .withComponent('positioning:straddling_waist', {
-          target_id: 'target1',
-          facing_away: false,
-        })
-        .build();
+      const actor = createActorWithArms('actor1', 'Alice', 'room1', [
+        'target1',
+      ]);
+      actor.entity.components['positioning:straddling_waist'] = {
+        target_id: 'target1',
+        facing_away: false,
+      };
 
-      const target = new ModEntityBuilder('target1')
-        .withName('Bob')
-        .atLocation('room1')
-        .asActor()
-        .withComponent('positioning:closeness', { partners: ['actor1'] })
-        .withComponent('positioning:sitting_on', {
-          furniture_id: 'chair1',
-          spot_index: 0,
-        })
-        .build();
+      const target = createActorWithArms('target1', 'Bob', 'room1', [
+        'actor1',
+      ]);
+      target.entity.components['positioning:sitting_on'] = {
+        furniture_id: 'chair1',
+        spot_index: 0,
+      };
 
-      testFixture.reset([room, actor, target]);
-      configureActionDiscovery();
+      testFixture.reset([
+        room,
+        actor.entity,
+        target.entity,
+        ...actor.parts,
+        ...target.parts,
+      ]);
+      await configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions('actor1');
       const actionIds = availableActions.map(action => action.id);
@@ -125,33 +192,33 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
       expect(actionIds).not.toContain(ACTION_ID);
     });
 
-    it('should NOT be available when actor is straddling target (facing away)', () => {
+    it('should NOT be available when actor is straddling target (facing away)', async () => {
       const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
-      const actor = new ModEntityBuilder('actor1')
-        .withName('Alice')
-        .atLocation('room1')
-        .asActor()
-        .withComponent('positioning:closeness', { partners: ['target1'] })
-        .withComponent('positioning:straddling_waist', {
-          target_id: 'target1',
-          facing_away: true,
-        })
-        .build();
+      const actor = createActorWithArms('actor1', 'Alice', 'room1', [
+        'target1',
+      ]);
+      actor.entity.components['positioning:straddling_waist'] = {
+        target_id: 'target1',
+        facing_away: true,
+      };
 
-      const target = new ModEntityBuilder('target1')
-        .withName('Bob')
-        .atLocation('room1')
-        .asActor()
-        .withComponent('positioning:closeness', { partners: ['actor1'] })
-        .withComponent('positioning:sitting_on', {
-          furniture_id: 'chair1',
-          spot_index: 0,
-        })
-        .build();
+      const target = createActorWithArms('target1', 'Bob', 'room1', [
+        'actor1',
+      ]);
+      target.entity.components['positioning:sitting_on'] = {
+        furniture_id: 'chair1',
+        spot_index: 0,
+      };
 
-      testFixture.reset([room, actor, target]);
-      configureActionDiscovery();
+      testFixture.reset([
+        room,
+        actor.entity,
+        target.entity,
+        ...actor.parts,
+        ...target.parts,
+      ]);
+      await configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions('actor1');
       const actionIds = availableActions.map(action => action.id);
@@ -159,17 +226,18 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
       expect(actionIds).not.toContain(ACTION_ID);
     });
 
-    it('should BE available when actor is close but NOT straddling', () => {
-      const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
-        location: 'room1',
-      });
+    it('should BE available when actor is close but NOT straddling', async () => {
+      const scenario = testFixture.createAnatomyScenario(
+        ['Alice', 'Bob'],
+        ['torso', 'arm', 'arm'],
+        { location: 'room1' }
+      );
 
       // Ensure no straddling component exists
       delete scenario.actor.components['positioning:straddling_waist'];
 
-      const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
-      testFixture.reset([room, scenario.actor, scenario.target]);
-      configureActionDiscovery();
+      testFixture.reset([...scenario.allEntities]);
+      await configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
         scenario.actor.id
@@ -179,26 +247,26 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
       expect(actionIds).toContain(ACTION_ID);
     });
 
-    it('should BE available when actor was straddling but dismounted', () => {
+    it('should BE available when actor was straddling but dismounted', async () => {
       const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
       // Actor who was straddling but has dismounted (no straddling component)
-      const actor = new ModEntityBuilder('actor1')
-        .withName('Alice')
-        .atLocation('room1')
-        .asActor()
-        .withComponent('positioning:closeness', { partners: ['target1'] })
-        .build();
+      const actor = createActorWithArms('actor1', 'Alice', 'room1', [
+        'target1',
+      ]);
 
-      const target = new ModEntityBuilder('target1')
-        .withName('Bob')
-        .atLocation('room1')
-        .asActor()
-        .withComponent('positioning:closeness', { partners: ['actor1'] })
-        .build();
+      const target = createActorWithArms('target1', 'Bob', 'room1', [
+        'actor1',
+      ]);
 
-      testFixture.reset([room, actor, target]);
-      configureActionDiscovery();
+      testFixture.reset([
+        room,
+        actor.entity,
+        target.entity,
+        ...actor.parts,
+        ...target.parts,
+      ]);
+      await configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions('actor1');
       const actionIds = availableActions.map(action => action.id);
@@ -211,36 +279,38 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
     it('should throw validation error if action somehow attempted while straddling', async () => {
       const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
-      const actor = new ModEntityBuilder('actor1')
-        .withName('Alice')
-        .atLocation('room1')
-        .asActor()
-        .withComponent('positioning:closeness', { partners: ['target1'] })
-        .withComponent('positioning:straddling_waist', {
-          target_id: 'target1',
-          facing_away: false,
-        })
-        .build();
+      const actor = createActorWithArms('actor1', 'Alice', 'room1', [
+        'target1',
+      ]);
+      actor.entity.components['positioning:straddling_waist'] = {
+        target_id: 'target1',
+        facing_away: false,
+      };
 
-      const target = new ModEntityBuilder('target1')
-        .withName('Bob')
-        .atLocation('room1')
-        .asActor()
-        .withComponent('positioning:closeness', { partners: ['actor1'] })
-        .build();
+      const target = createActorWithArms('target1', 'Bob', 'room1', [
+        'actor1',
+      ]);
 
-      testFixture.reset([room, actor, target]);
+      testFixture.reset([
+        room,
+        actor.entity,
+        target.entity,
+        ...actor.parts,
+        ...target.parts,
+      ]);
 
       // Attempt to execute action (should throw validation error)
       await expect(async () => {
-        await testFixture.executeAction('actor1', 'target1');
+        await testFixture.executeAction(actor.entity.id, target.entity.id);
       }).rejects.toThrow(/forbidden component.*positioning:straddling_waist/i);
     });
 
     it('should succeed when actor is NOT straddling', async () => {
-      const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
-        location: 'room1',
-      });
+      const scenario = testFixture.createAnatomyScenario(
+        ['Alice', 'Bob'],
+        ['torso', 'arm', 'arm'],
+        { location: 'room1' }
+      );
 
       await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -249,38 +319,35 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
   });
 
   describe('Multiple Actor Scenarios', () => {
-    it('should NOT be available when actor straddles one of multiple close partners', () => {
+    it('should NOT be available when actor straddles one of multiple close partners', async () => {
       const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
-      const actor = new ModEntityBuilder('actor1')
-        .withName('Alice')
-        .atLocation('room1')
-        .asActor()
-        .withComponent('positioning:closeness', {
-          partners: ['target1', 'target2'],
-        })
-        .withComponent('positioning:straddling_waist', {
-          target_id: 'target1',
-          facing_away: false,
-        })
-        .build();
+      const actor = createActorWithArms('actor1', 'Alice', 'room1', [
+        'target1',
+        'target2',
+      ]);
+      actor.entity.components['positioning:straddling_waist'] = {
+        target_id: 'target1',
+        facing_away: false,
+      };
 
-      const target1 = new ModEntityBuilder('target1')
-        .withName('Bob')
-        .atLocation('room1')
-        .asActor()
-        .withComponent('positioning:closeness', { partners: ['actor1'] })
-        .build();
+      const target1 = createActorWithArms('target1', 'Bob', 'room1', [
+        'actor1',
+      ]);
+      const target2 = createActorWithArms('target2', 'Charlie', 'room1', [
+        'actor1',
+      ]);
 
-      const target2 = new ModEntityBuilder('target2')
-        .withName('Charlie')
-        .atLocation('room1')
-        .asActor()
-        .withComponent('positioning:closeness', { partners: ['actor1'] })
-        .build();
-
-      testFixture.reset([room, actor, target1, target2]);
-      configureActionDiscovery();
+      testFixture.reset([
+        room,
+        actor.entity,
+        target1.entity,
+        target2.entity,
+        ...actor.parts,
+        ...target1.parts,
+        ...target2.parts,
+      ]);
+      await configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions('actor1');
       const actionIds = availableActions.map(action => action.id);

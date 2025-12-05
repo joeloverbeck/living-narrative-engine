@@ -11,9 +11,38 @@ const ACTION_ID = 'affection:touch_nose_tenderly';
 
 describe('affection:touch_nose_tenderly action integration', () => {
   let testFixture;
+  let addNoseAnatomy;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('affection', ACTION_ID);
+
+    addNoseAnatomy = (entityId) => {
+      const entityManager = testFixture?.testEnv?.entityManager;
+      if (!entityManager) return;
+
+      const headId = `${entityId}_head`;
+      const noseId = `${entityId}_nose`;
+
+      entityManager.createEntity(headId);
+      entityManager.addComponent(headId, 'anatomy:part', {
+        parent: null,
+        children: [noseId],
+        subType: 'head',
+      });
+
+      entityManager.createEntity(noseId);
+      entityManager.addComponent(noseId, 'anatomy:part', {
+        parent: headId,
+        children: [],
+        subType: 'nose',
+      });
+      entityManager.addComponent(noseId, 'anatomy:joint', {
+        parentId: headId,
+        socketId: 'head-nose',
+      });
+
+      entityManager.addComponent(entityId, 'anatomy:body', { root: headId });
+    };
   });
 
   afterEach(() => {
@@ -26,6 +55,8 @@ describe('affection:touch_nose_tenderly action integration', () => {
     const scenario = testFixture.createCloseActors(['Avery', 'Rowan'], {
       location: 'conservatory',
     });
+    addNoseAnatomy(scenario.actor.id);
+    addNoseAnatomy(scenario.target.id);
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -48,6 +79,8 @@ describe('affection:touch_nose_tenderly action integration', () => {
     const scenario = testFixture.createCloseActors(['Isabella', 'Lucas'], {
       location: 'library',
     });
+    addNoseAnatomy(scenario.actor.id);
+    addNoseAnatomy(scenario.target.id);
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 

@@ -21,7 +21,7 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
   const MIGRATED_ACTIONS = Object.keys(ACTION_LOCATIONS);
 
   const EXPECTED_TARGETS = {
-    brush_hand: 'positioning:close_actors',
+    brush_hand: 'affection:actors_with_hands_in_intimacy',
     feel_arm_muscles:
       'caressing:actors_with_muscular_arms_facing_each_other_or_behind_target',
     fondle_ass: {
@@ -82,7 +82,7 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
   });
 
   describe('Cross-Mod Reference Preservation', () => {
-    const crossModActions = ['brush_hand', 'place_hand_on_waist'];
+    const crossModActions = ['place_hand_on_waist'];
 
     it.each(crossModActions)(
       'should preserve cross-mod positioning reference in %s',
@@ -93,8 +93,8 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
         );
         const content = JSON.parse(await fs.readFile(filePath, 'utf8'));
 
-        expect(content.targets).toBe('positioning:close_actors');
-        expect(content.targets).toMatch(/^positioning:/);
+        expect(content.targets).toBe(EXPECTED_TARGETS[actionName]);
+        expect(content.targets).toMatch(/:/);
       }
     );
   });

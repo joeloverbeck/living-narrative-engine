@@ -5,6 +5,7 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 import handleBrushHairBehindEarRule from '../../../../data/mods/affection/rules/handle_brush_hair_behind_ear.rule.json';
 import eventIsActionBrushHairBehindEar from '../../../../data/mods/affection/conditions/event-is-action-brush-hair-behind-ear.condition.json';
 
@@ -28,6 +29,12 @@ describe('affection:brush_hair_behind_ear action integration', () => {
       handleBrushHairBehindEarRule,
       eventIsActionBrushHairBehindEar
     );
+
+    await ScopeResolverHelpers.registerCustomScope(
+      testFixture.testEnv,
+      'affection',
+      'close_actors_with_hair_or_entity_kneeling_before_actor'
+    );
   });
 
   afterEach(() => {
@@ -37,9 +44,11 @@ describe('affection:brush_hair_behind_ear action integration', () => {
   });
 
   it('emits matching success and perceptible messages when executed', async () => {
-    const scenario = testFixture.createCloseActors(['Amelia', 'Jonah'], {
-      location: 'garden',
-    });
+    const scenario = testFixture.createAnatomyScenario(
+      ['Amelia', 'Jonah'],
+      ['torso', 'hair'],
+      { location: 'garden' }
+    );
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -60,9 +69,11 @@ describe('affection:brush_hair_behind_ear action integration', () => {
   });
 
   it('includes correct metadata in perceptible event', async () => {
-    const scenario = testFixture.createCloseActors(['Isabella', 'Lucas'], {
-      location: 'library',
-    });
+    const scenario = testFixture.createAnatomyScenario(
+      ['Isabella', 'Lucas'],
+      ['torso', 'hair'],
+      { location: 'library' }
+    );
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -79,9 +90,11 @@ describe('affection:brush_hair_behind_ear action integration', () => {
   });
 
   it('only triggers for brush_hair_behind_ear action', async () => {
-    const scenario = testFixture.createCloseActors(['Ava', 'Mason'], {
-      location: 'study',
-    });
+    const scenario = testFixture.createAnatomyScenario(
+      ['Ava', 'Mason'],
+      ['torso', 'hair'],
+      { location: 'study' }
+    );
 
     // Execute different action
     await testFixture.executeAction(
@@ -98,9 +111,11 @@ describe('affection:brush_hair_behind_ear action integration', () => {
   });
 
   it('produces only expected events', async () => {
-    const scenario = testFixture.createCloseActors(['Charlotte', 'Ethan'], {
-      location: 'park',
-    });
+    const scenario = testFixture.createAnatomyScenario(
+      ['Charlotte', 'Ethan'],
+      ['torso', 'hair'],
+      { location: 'park' }
+    );
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 

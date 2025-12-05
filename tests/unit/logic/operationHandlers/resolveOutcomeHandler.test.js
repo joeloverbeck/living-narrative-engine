@@ -362,6 +362,9 @@ describe('ResolveOutcomeHandler', () => {
       expect(mockChanceCalculationService.resolveOutcome).toHaveBeenCalledWith({
         actorId: 'actor-123',
         targetId: 'target-456',
+        primaryTargetId: 'target-456',
+        secondaryTargetId: undefined,
+        tertiaryTargetId: undefined,
         actionDef: {
           id: 'RESOLVE_OUTCOME_OPERATION',
           chanceBased: {
@@ -392,6 +395,9 @@ describe('ResolveOutcomeHandler', () => {
       expect(mockChanceCalculationService.resolveOutcome).toHaveBeenCalledWith({
         actorId: 'actor-123',
         targetId: 'target-456',
+        primaryTargetId: 'target-456',
+        secondaryTargetId: undefined,
+        tertiaryTargetId: undefined,
         actionDef: {
           id: 'RESOLVE_OUTCOME_OPERATION',
           chanceBased: {
@@ -404,6 +410,7 @@ describe('ResolveOutcomeHandler', () => {
             targetSkill: {
               component: 'skills:defense',
               default: 0,
+              targetRole: 'secondary',
             },
             formula: 'ratio',
             fixedDifficulty: 0,
